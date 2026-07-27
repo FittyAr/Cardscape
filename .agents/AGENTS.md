@@ -128,6 +128,53 @@ on demand. List:
 | `create-skill-test` | Test skills | running skill tests |
 | `radzen-blazor` | Use Radzen.Blazor components in Cardscape.Web | implementing UI in `src/Cardscape.Web/` |
 
+Skills added from [github.com/dotnet/skills](https://github.com/dotnet/skills)
+(MIT-licensed, all attributed upstream). The project-local skills below
+extend the agent's toolkit; they are not loaded automatically — the agent
+reads them on demand when a task matches their trigger.
+
+**From `dotnet/dotnet`**
+
+| `setup-local-sdk` | Install a .NET SDK locally for safe preview testing, specific-version pinning, or reproducible team setups | trying .NET previews safely, testing specific SDK versions, installing MAUI or other workloads, or creating reproducible team/CI install scripts |
+
+**From `dotnet/dotnet11`**
+
+| `system-text-json-net11` | Imperative guidance for the System.Text.Json APIs added in .NET 11: `JsonNodelessStreaming`, source-generated `JsonTypeInfo`, and trimmed/AOT-safe serializer configuration | serializing or deserializing JSON in a net11.0-or-later project when you need the new built-in streaming or AOT-friendly metadata |
+
+**From `dotnet/dotnet-aspnetcore`**
+
+| `configuring-opentelemetry-dotnet` | Configure OpenTelemetry distributed tracing, metrics, and logging in ASP.NET Core using the .NET OpenTelemetry SDK | adding or changing observability configuration (matches `docs/design/02-logging-observability.md`) |
+| `convert-blazor-server-to-webapp` | Convert a pre-.NET 8 Blazor Server app to a .NET 8+ Blazor Web App | migrating legacy Blazor Server codebases (Cardscape is already Blazor WebAssembly, not a target) |
+| `dotnet-webapi` | Create or modify ASP.NET Core Web API endpoints with controllers or minimal APIs, correct HTTP semantics, and OpenAPI/Swagger | adding new endpoints under `src/Cardscape.Api/` |
+| `minimal-api-file-upload` | File upload endpoints in ASP.NET minimal APIs (.NET 8+) | implementing attachment or asset upload in `src/Cardscape.Api/` |
+
+**From `dotnet/dotnet-data`**
+
+| `optimizing-ef-core-queries` | Optimize EF Core queries: fix N+1 problems, pick the right tracking mode, use split queries, project to DTOs | writing queries against `DbContext` in `src/Cardscape.Infrastructure/Persistence/` |
+
+**From `dotnet/dotnet-test`** (MSTest / xUnit / NUnit / Microsoft.Testing.Platform)
+
+| `assertion-quality` | Analyze the variety and depth of assertions across test suites in any language | reviewing test quality (use together with `test-anti-patterns`) |
+| `code-testing-agent` | MANDATORY entry point for generating or writing tests; orchestrates the other testing skills | writing new tests (entry point) |
+| `code-testing-extensions` | Reference data for language-specific extension files used by the code-testing pipeline | when `code-testing-agent` asks for an extension file |
+| `coverage-analysis` | Project-wide code coverage and CRAP (Change Risk Anti-Patterns) score analysis for .NET solutions | coverage stuck or plateaued, audit before a release |
+| `crap-score` | Calculate targeted CRAP scores for a named .NET method, class, or namespace | pinpoint risk on a specific surface |
+| `detect-static-dependencies` | Scan C# source for hard-to-test static dependencies (`DateTime.Now`, `File.*`, `Environment.*`) | testability audit, identifying hard-to-mock code |
+| `filter-syntax` | Reference data for test filter syntax across VSTest and Microsoft.Testing.Platform | building a `dotnet test --filter` expression |
+| `find-untested-sources` | Find and list untested source files or modules from coverage reports | targeting the next test-writing effort |
+| `generate-testability-wrappers` | Generate wrapper interfaces and DI registration for hard-to-test static dependencies in C# | wrapping `DateTime.UtcNow`, `File.*`, etc. for testability |
+| `grade-tests` | Grade a specified set of test methods individually with a concise table | per-test review, surfacing low-quality tests |
+| `migrate-static-to-wrapper` | Replace existing static dependency call sites with a wrapper or built-in abstraction (`TimeProvider`, `IFileSystem`) | migrating a class to use `TimeProvider` and constructor injection |
+| `mtp-hot-reload` | Use Microsoft Testing Platform hot reload to iterate on failing tests | iterating on a failing test without restarting the runner |
+| `platform-detection` | Reference data for detecting VSTest vs Microsoft.Testing.Platform from the test runner output | diagnosing which test platform a project is using |
+| `run-tests` | Recommend or run the exact `dotnet test` command for a given scope | running all tests, a specific class, category, or trait |
+| `test-analysis-extensions` | Reference data for language-specific extension files used by the test-analysis pipeline | when a test-analysis skill asks for an extension file |
+| `test-anti-patterns` | Audit an existing test file or suite for anti-patterns and quality issues | reviewing tests before merging, CI audit |
+| `test-gap-analysis` | Pseudo-mutation analysis on production code to find gaps in existing test coverage | finding what the test suite is missing |
+| `test-smell-detection` | Deep-dive audit using the full testsmells.org 19-smell academic catalog | exhaustive academic-grade smell review |
+| `test-tagging` | Analyze test suites and tag each test with standardized traits (positive, negative, edge) | normalizing tags across the test matrix |
+| `writing-mstest-tests` | Write, create, modernize, or fix comprehensive MSTest unit tests with MSTest 3.x/4.x APIs | writing or fixing MSTest tests in `tests/` (matches the existing `csharp-mstest` skill) |
+
 ## Onboarding a new agent
 
 1. Read this file.
