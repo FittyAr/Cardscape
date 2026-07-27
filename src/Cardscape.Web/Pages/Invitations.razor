@@ -1,0 +1,78 @@
+@page "/invitations"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@inject IInvitationsApiClient InvitationsApi
+@inject Microsoft.AspNetCore.Components.NavigationManager Nav
+
+<PageTitle>Invitations — Cardscape</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>Invitations</h1>
+        <small class="muted">Pending invites to your email address</small>
+    </div>
+
+    @if (invitations is null)
+    {
+        <p>Loading…</p>
+    }
+    else if (invitations.Count == 0)
+    {
+        <p>You have no pending invitations. Workspace owners will email you a link when one is waiting.</p>
+    }
+    else
+    {
+        <div class="invitation-list">
+            @foreach (WorkspaceInvitationDto inv in invitations)
+            {
+                <RadzenCard class="invitation-card">
+                    <div class="invitation-row">
+                        <div class="invitation-meta">
+                            <h3>@inv.WorkspaceName</h3>
+                            <small>
+                                Role: @RoleName(inv.Role) ·
+                                Invited by @(inv.InvitedBy == Guid.Empty ? "system" : inv.InvitedBy.ToString()) ·
+                                Expires @inv.ExpiresAt.LocalDateTime.ToString("yyyy-MM-dd")
+                            </small>
+                        </div>
+                    </div>
+                </RadzenCard>
+            }
+        </div>
+        <p class="muted">
+            To accept an invitation, follow the link the owner emailed you
+            (it points to <code>/invitations/accept?token=...</code>). The
+            link is single-use and bound to your account's email.
+        </p>
+    }
+
+    @if (error is not null)
+    {
+        <div class="auth-error" role="alert">@error</div>
+    }
+</div>
+
+@code {
+    private IReadOnlyList<WorkspaceInvitationDto>? invitations;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ApiResult<IReadOnlyList<WorkspaceInvitationDto>> result = await InvitationsApi.ListPendingAsync();
+        invitations = result.IsSuccess ? result.Value : [];
+        if (!result.IsSuccess)
+        {
+            error = result.Error;
+        }
+    }
+
+    private static string RoleName(int role) => role switch
+    {
+        0 => "Admin",
+        1 => "Member",
+        2 => "Observer",
+        _ => "Unknown"
+    };
+}

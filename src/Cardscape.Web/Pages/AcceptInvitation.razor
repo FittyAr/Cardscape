@@ -1,0 +1,84 @@
+@page "/invitations/accept"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@inject IInvitationsApiClient InvitationsApi
+@inject Microsoft.AspNetCore.Components.NavigationManager Nav
+
+<PageTitle>Accept invitation — Cardscape</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>Accept invitation</h1>
+    </div>
+
+    @if (string.IsNullOrWhiteSpace(Token))
+    {
+        <p class="auth-error" role="alert">
+            The invitation link is missing a <code>token</code> query
+            parameter. Open the link the workspace owner sent you.
+        </p>
+    }
+    else if (busy)
+    {
+        <p>Accepting…</p>
+    }
+    else if (accepted is not null)
+    {
+        <RadzenCard class="invitation-card">
+            <h3>@accepted.Name</h3>
+            <p>You are now a member of <strong>@accepted.Name</strong>.</p>
+            <RadzenButton Text="Open workspace" Icon="open_in_new" ButtonStyle="ButtonStyle.Primary"
+                          Click="@(() => Nav.NavigateTo($"workspaces/{accepted.Id}"))" />
+        </RadzenCard>
+    }
+    else if (error is not null)
+    {
+        <div class="auth-error" role="alert">
+            <strong>Could not accept the invitation.</strong>
+            <p>@error</p>
+        </div>
+        <p class="muted">
+            If the link came from someone other than your workspace
+            owner, it may be addressed to a different email. Sign in
+            with the email that received the invite, or ask the
+            owner to resend.
+        </p>
+    }
+</div>
+
+@code {
+    [Parameter, SupplyParameterFromQuery(Name = "token")]
+    public string? Token { get; set; }
+
+    private WorkspaceDto? accepted;
+    private string? error;
+    private bool busy;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Token) || accepted is not null)
+        {
+            return;
+        }
+
+        busy = true;
+        try
+        {
+            ApiResult<WorkspaceDto> result = await InvitationsApi.AcceptAsync(Token);
+            if (result.IsSuccess)
+            {
+                accepted = result.Value;
+            }
+            else
+            {
+                error = result.Error;
+            }
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

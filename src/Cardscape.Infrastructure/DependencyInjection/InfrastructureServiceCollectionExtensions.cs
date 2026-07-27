@@ -105,6 +105,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRepository<ApiToken, ApiTokenId>, ApiTokenRepository>(sp => sp.GetRequiredService<ApiTokenRepository>());
         services.AddScoped<IApiTokenRepository, ApiTokenRepository>(sp => sp.GetRequiredService<ApiTokenRepository>());
 
+        services.AddScoped<WorkspaceInvitationRepository>();
+        services.AddScoped<IRepository<WorkspaceInvitation, WorkspaceInvitationId>, WorkspaceInvitationRepository>(sp => sp.GetRequiredService<WorkspaceInvitationRepository>());
+        services.AddScoped<IWorkspaceInvitationRepository, WorkspaceInvitationRepository>(sp => sp.GetRequiredService<WorkspaceInvitationRepository>());
+
         // Identity-shaped repositories (a few extra generics to satisfy the IRepository
         // contract for non-aggregate roots). The Application layer depends only on the
         // typed interfaces above.
@@ -112,8 +116,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddSingleton<ITokenService, JwtTokenService>();
         services.AddScoped<IApiTokenService, ApiTokenService>();
+        services.AddScoped<IInvitationService, InvitationService>();
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
         services.AddSingleton<IEmailService, ConsoleEmailService>();
+        services.AddSingleton<IInvitationEmailService, ConsoleInvitationEmailService>();
         services.AddSingleton<ISearchIndex, InMemorySearchIndex>();
 
         var storageRoot = configuration["Storage:LocalRoot"] ?? Path.Combine(AppContext.BaseDirectory, "storage");

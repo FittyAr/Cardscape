@@ -26,9 +26,14 @@ public sealed class WorkspaceRepository(CardscapeDbContext db) : RepositoryBase<
 
     public async Task<Workspace?> GetWithMembersAsync(WorkspaceId id, CancellationToken ct = default)
     {
-        var idValue = id.Value;
+        // Strongly-typed id comparison: EF Core 10's HasConversion
+        // pipeline converts the WorkspaceId to the underlying Guid
+        // column for both the WHERE clause and the materialization.
+        // Don't reach into EF.Property<Guid> here — that path collides
+        // with the converter and throws "Object must implement
+        // IConvertible" at materialization time.
         return await Db.Set<Workspace>()
             .Include(w => w.Members)
-            .FirstOrDefaultAsync(w => EF.Property<Guid>(w, "Id") == idValue, ct);
+            .FirstOrDefaultAsync(w => w.Id == id, ct);
     }
 }

@@ -39,6 +39,7 @@ builder.Services.AddScoped<ICardsApiClient, CardsApiClient>();
 builder.Services.AddScoped<ILabelsApiClient, LabelsApiClient>();
 builder.Services.AddScoped<ICommentsApiClient, CommentsApiClient>();
 builder.Services.AddScoped<ISecurityApiClient, SecurityApiClient>();
+builder.Services.AddScoped<IInvitationsApiClient, InvitationsApiClient>();
 
 // ── Real-time (SignalR client) ──────────────────────────────
 builder.Services.AddScoped<BoardHubClient>();

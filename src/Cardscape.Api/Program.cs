@@ -67,6 +67,7 @@ app.MapGet("/health", () => Results.Ok(new
 
 app.MapAuthEndpoints();
 app.MapWorkspaceEndpoints();
+app.MapWorkspaceInvitationEndpoints();
 app.MapBoardEndpoints();
 app.MapListEndpoints();
 app.MapCardEndpoints();

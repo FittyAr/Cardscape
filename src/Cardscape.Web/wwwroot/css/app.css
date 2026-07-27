@@ -518,3 +518,53 @@ code {
     align-items: center;
     gap: 0.75rem;
 }
+
+/* -- Workspace invitations (v0.5) ----------------------- */
+.invitation-list,
+.member-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.invitation-card,
+.member-card {
+    padding: 1rem 1.25rem;
+}
+
+.invitation-row,
+.member-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.invitation-meta h3,
+.invitation-meta strong {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+}
+
+.invitation-meta small,
+.member-row small {
+    color: #6b7280;
+}
+
+.invitation-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.page-header-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.muted {
+    color: #6b7280;
+    font-size: 0.9rem;
+}

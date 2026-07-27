@@ -8,6 +8,7 @@ public interface IWorkspacesApiClient
     Task<ApiResult<IReadOnlyList<WorkspaceDto>>> ListAsync(CancellationToken ct = default);
     Task<ApiResult<WorkspaceDto>> GetAsync(Guid workspaceId, CancellationToken ct = default);
     Task<ApiResult<WorkspaceDto>> CreateAsync(string name, CancellationToken ct = default);
+    Task<ApiResult<IReadOnlyList<WorkspaceMemberDto>>> ListMembersAsync(Guid workspaceId, CancellationToken ct = default);
 }
 
 public sealed class WorkspacesApiClient(IHttpClientFactory http) : ApiClientBase(http), IWorkspacesApiClient
@@ -31,5 +32,13 @@ public sealed class WorkspacesApiClient(IHttpClientFactory http) : ApiClientBase
             new CreateWorkspaceRequestDto(name),
             ct);
         return await ReadAsync<WorkspaceDto>(response, ct);
+    }
+
+    public async Task<ApiResult<IReadOnlyList<WorkspaceMemberDto>>> ListMembersAsync(
+        Guid workspaceId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().GetAsync(
+            $"api/workspaces/{workspaceId}/members", ct);
+        return await ReadAsync<IReadOnlyList<WorkspaceMemberDto>>(response, ct);
     }
 }
