@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Cards.Common;
 using Cardscape.Application.Cards.DTOs;
+using Cardscape.Application.Common;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Wolverine;
@@ -16,6 +17,8 @@ public static class GetCardQueryHandler
     public static async Task<Result<CardDto>> Handle(
         GetCardQuery query,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -31,6 +34,13 @@ public static class GetCardQueryHandler
             return Result.Failure<CardDto>(NotFound);
         }
 
+        var guard = await MembershipGuards.EnsureCanReadCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
+        }
+
         return Result.Success(card.MapToDto());
     }
 }
@@ -43,6 +53,7 @@ public static class ListCardsForBoardQueryHandler
     public static async Task<Result<IReadOnlyList<CardSummaryDto>>> Handle(
         ListCardsForBoardQuery query,
         ICardRepository cards,
+        IBoardRepository boards,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -50,6 +61,13 @@ public static class ListCardsForBoardQueryHandler
         {
             return Result.Failure<IReadOnlyList<CardSummaryDto>>(DomainError.Unauthenticated(
                 "auth.required", "Authentication is required."));
+        }
+
+        var guard = await MembershipGuards.EnsureCanReadBoardAsync(
+            boards, currentUser.Id.Value, query.BoardId, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<IReadOnlyList<CardSummaryDto>>(guard.Error);
         }
 
         var items = await cards.ListForBoardAsync(

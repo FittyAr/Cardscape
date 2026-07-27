@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Common;
 using Cardscape.Application.Lists.DTOs;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
@@ -15,6 +16,7 @@ public static class GetListQueryHandler
     public static async Task<Result<BoardListDto>> Handle(
         GetListQuery query,
         IBoardListRepository lists,
+        IBoardRepository boards,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -24,12 +26,14 @@ public static class GetListQueryHandler
                 "auth.required", "Authentication is required."));
         }
 
-        var list = await lists.GetByIdAsync(new BoardListId(query.ListId), cancellationToken);
-        if (list is null)
+        var guard = await MembershipGuards.EnsureCanReadListAsync(
+            lists, boards, currentUser.Id.Value, query.ListId, cancellationToken);
+        if (guard.IsFailure)
         {
-            return Result.Failure<BoardListDto>(NotFound);
+            return Result.Failure<BoardListDto>(guard.Error);
         }
 
+        var list = guard.Value.List;
         return Result.Success(new BoardListDto(
             list.Id.Value,
             list.BoardId.Value,
@@ -49,6 +53,7 @@ public static class ListListsForBoardQueryHandler
     public static async Task<Result<IReadOnlyList<BoardListDto>>> Handle(
         ListListsForBoardQuery query,
         IBoardListRepository lists,
+        IBoardRepository boards,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -56,6 +61,13 @@ public static class ListListsForBoardQueryHandler
         {
             return Result.Failure<IReadOnlyList<BoardListDto>>(DomainError.Unauthenticated(
                 "auth.required", "Authentication is required."));
+        }
+
+        var guard = await MembershipGuards.EnsureCanReadBoardAsync(
+            boards, currentUser.Id.Value, query.BoardId, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<IReadOnlyList<BoardListDto>>(guard.Error);
         }
 
         var items = await lists.ListForBoardAsync(

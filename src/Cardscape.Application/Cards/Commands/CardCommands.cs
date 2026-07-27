@@ -3,6 +3,8 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Cards.Common;
 using Cardscape.Application.Cards.DTOs;
+using Cardscape.Application.Common;
+using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
@@ -20,6 +22,7 @@ public static class CreateCardCommandHandler
     public static async Task<Result<CardDto>> Handle(
         CreateCardCommand command,
         IBoardListRepository lists,
+        IBoardRepository boards,
         ICardRepository cards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
@@ -37,6 +40,13 @@ public static class CreateCardCommandHandler
         {
             return Result.Failure<CardDto>(DomainError.NotFound(
                 "lists.not_found", "List was not found."));
+        }
+
+        var boardGuard = await MembershipGuards.EnsureCanMutateBoardAsync(
+            boards, currentUser.Id.Value, list.BoardId.Value, cancellationToken);
+        if (boardGuard.IsFailure)
+        {
+            return Result.Failure<CardDto>(boardGuard.Error);
         }
 
         var titleResult = CardTitle.Create(command.Title);
@@ -91,6 +101,8 @@ public static class RenameCardCommandHandler
     public static async Task<Result<CardDto>> Handle(
         RenameCardCommand command,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -106,6 +118,13 @@ public static class RenameCardCommandHandler
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
         }
 
         var titleResult = CardTitle.Create(command.NewTitle);
@@ -133,6 +152,8 @@ public static class ChangeCardDescriptionCommandHandler
     public static async Task<Result<CardDto>> Handle(
         ChangeCardDescriptionCommand command,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -148,6 +169,13 @@ public static class ChangeCardDescriptionCommandHandler
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
         }
 
         var descResult = CardDescription.Create(command.NewDescription);
@@ -175,6 +203,8 @@ public static class MoveCardCommandHandler
     public static async Task<Result<CardDto>> Handle(
         MoveCardCommand command,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -190,6 +220,27 @@ public static class MoveCardCommandHandler
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
+        }
+
+        // The destination list must live on the same board as the
+        // card. Otherwise an attacker who somehow has a target list
+        // id could shuffle cards across boards they don't own.
+        if (card.ListId.Value != command.NewListId)
+        {
+            var destinationList = await lists.GetByIdAsync(new BoardListId(command.NewListId), cancellationToken);
+            if (destinationList is null || destinationList.BoardId.Value != guard.Value.Board.Id.Value)
+            {
+                return Result.Failure<CardDto>(DomainError.Validation(
+                    "cards.invalid_move",
+                    "Destination list must belong to the same board as the card."));
+            }
         }
 
         var moveResult = card.Move(
@@ -215,6 +266,8 @@ public static class SetCardDueDateCommandHandler
     public static async Task<Result<CardDto>> Handle(
         SetCardDueDateCommand command,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -230,6 +283,13 @@ public static class SetCardDueDateCommandHandler
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
         }
 
         var result = card.SetDueDate(command.DueDate, clock.UtcNow);
@@ -250,6 +310,8 @@ public static class ClearCardDueDateCommandHandler
     public static async Task<Result<CardDto>> Handle(
         ClearCardDueDateCommand command,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -265,6 +327,13 @@ public static class ClearCardDueDateCommandHandler
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
         }
 
         var result = card.ClearDueDate(clock.UtcNow);
@@ -285,6 +354,8 @@ public static class CompleteCardCommandHandler
     public static async Task<Result<CardDto>> Handle(
         CompleteCardCommand command,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -300,6 +371,13 @@ public static class CompleteCardCommandHandler
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
         }
 
         var result = card.Complete(clock.UtcNow);
@@ -320,6 +398,8 @@ public static class ReopenCardCommandHandler
     public static async Task<Result<CardDto>> Handle(
         ReopenCardCommand command,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -335,6 +415,13 @@ public static class ReopenCardCommandHandler
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
         }
 
         var result = card.Reopen(clock.UtcNow);
@@ -355,6 +442,8 @@ public static class ArchiveCardCommandHandler
     public static async Task<Result<CardDto>> Handle(
         ArchiveCardCommand command,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -370,6 +459,13 @@ public static class ArchiveCardCommandHandler
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
         }
 
         card.Archive(clock.UtcNow);
@@ -385,6 +481,8 @@ public static class RestoreCardCommandHandler
     public static async Task<Result<CardDto>> Handle(
         RestoreCardCommand command,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -400,6 +498,13 @@ public static class RestoreCardCommandHandler
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
         }
 
         card.Restore(clock.UtcNow);
@@ -415,6 +520,8 @@ public static class AssignCardCommandHandler
     public static async Task<Result<CardDto>> Handle(
         AssignCardCommand command,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -430,6 +537,13 @@ public static class AssignCardCommandHandler
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
         }
 
         var result = card.Assign(command.UserId, clock.UtcNow);
@@ -450,6 +564,8 @@ public static class UnassignCardCommandHandler
     public static async Task<Result<CardDto>> Handle(
         UnassignCardCommand command,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -465,6 +581,13 @@ public static class UnassignCardCommandHandler
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
         }
 
         var result = card.Unassign(command.UserId, clock.UtcNow);
@@ -485,6 +608,8 @@ public static class AttachLabelToCardCommandHandler
     public static async Task<Result<CardDto>> Handle(
         AttachLabelToCardCommand command,
         ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         ILabelRepository labels,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
@@ -503,11 +628,28 @@ public static class AttachLabelToCardCommandHandler
             return Result.Failure<CardDto>(NotFound);
         }
 
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
+        }
+
         var label = await labels.GetByIdAsync(new LabelId(command.LabelId), cancellationToken);
         if (label is null)
         {
             return Result.Failure<CardDto>(DomainError.NotFound(
                 "labels.not_found", "Label was not found."));
+        }
+
+        // The label must live on the same board as the card;
+        // otherwise a member of board A could attach arbitrary
+        // labels from board B to a card in board A.
+        if (label.BoardId.Value != guard.Value.Board.Id.Value)
+        {
+            return Result.Failure<CardDto>(DomainError.Validation(
+                "labels.wrong_board",
+                "Label must belong to the same board as the card."));
         }
 
         var link = CardLabel.Create(card.Id, label.Id, clock.UtcNow);
@@ -529,7 +671,8 @@ public static class DetachLabelFromCardCommandHandler
     public static async Task<Result<CardDto>> Handle(
         DetachLabelFromCardCommand command,
         ICardRepository cards,
-        ILabelRepository labels,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -545,6 +688,13 @@ public static class DetachLabelFromCardCommandHandler
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
         }
 
         var result = card.DetachLabel(new LabelId(command.LabelId), clock.UtcNow);

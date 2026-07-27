@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Common;
 using Cardscape.Application.Lists.DTOs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
@@ -30,17 +31,11 @@ public static class CreateListCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        var board = await boards.GetByIdAsync(new BoardId(command.BoardId), cancellationToken);
-        if (board is null)
+        var boardGuard = await MembershipGuards.EnsureCanMutateBoardAsync(
+            boards, currentUser.Id.Value, command.BoardId, cancellationToken);
+        if (boardGuard.IsFailure)
         {
-            return Result.Failure<BoardListDto>(DomainError.NotFound(
-                "boards.not_found", "Board was not found."));
-        }
-
-        if (!board.IsMember(currentUser.Id.Value))
-        {
-            return Result.Failure<BoardListDto>(DomainError.Forbidden(
-                "boards.not_member", "You are not a member of this board."));
+            return Result.Failure<BoardListDto>(boardGuard.Error);
         }
 
         var nameResult = ListName.Create(command.Name);
@@ -83,6 +78,7 @@ public static class RenameListCommandHandler
     public static async Task<Result<BoardListDto>> Handle(
         RenameListCommand command,
         IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -94,11 +90,14 @@ public static class RenameListCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        var list = await lists.GetByIdAsync(new BoardListId(command.ListId), cancellationToken);
-        if (list is null)
+        var guard = await MembershipGuards.EnsureCanMutateListAsync(
+            lists, boards, currentUser.Id.Value, command.ListId, cancellationToken);
+        if (guard.IsFailure)
         {
-            return Result.Failure<BoardListDto>(NotFound);
+            return Result.Failure<BoardListDto>(guard.Error);
         }
+
+        var list = guard.Value.List;
 
         var nameResult = ListName.Create(command.NewName);
         if (nameResult.IsFailure)
@@ -132,6 +131,7 @@ public static class MoveListCommandHandler
     public static async Task<Result<BoardListDto>> Handle(
         MoveListCommand command,
         IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -143,11 +143,14 @@ public static class MoveListCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        var list = await lists.GetByIdAsync(new BoardListId(command.ListId), cancellationToken);
-        if (list is null)
+        var guard = await MembershipGuards.EnsureCanMutateListAsync(
+            lists, boards, currentUser.Id.Value, command.ListId, cancellationToken);
+        if (guard.IsFailure)
         {
-            return Result.Failure<BoardListDto>(NotFound);
+            return Result.Failure<BoardListDto>(guard.Error);
         }
+
+        var list = guard.Value.List;
 
         var moveResult = list.Move(Position.From(command.NewPosition), clock.UtcNow);
         if (moveResult.IsFailure)
@@ -175,6 +178,7 @@ public static class ArchiveListCommandHandler
     public static async Task<Result<BoardListDto>> Handle(
         ArchiveListCommand command,
         IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -186,11 +190,14 @@ public static class ArchiveListCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        var list = await lists.GetByIdAsync(new BoardListId(command.ListId), cancellationToken);
-        if (list is null)
+        var guard = await MembershipGuards.EnsureCanMutateListAsync(
+            lists, boards, currentUser.Id.Value, command.ListId, cancellationToken);
+        if (guard.IsFailure)
         {
-            return Result.Failure<BoardListDto>(NotFound);
+            return Result.Failure<BoardListDto>(guard.Error);
         }
+
+        var list = guard.Value.List;
 
         list.Archive(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -213,6 +220,7 @@ public static class RestoreListCommandHandler
     public static async Task<Result<BoardListDto>> Handle(
         RestoreListCommand command,
         IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -224,11 +232,14 @@ public static class RestoreListCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        var list = await lists.GetByIdAsync(new BoardListId(command.ListId), cancellationToken);
-        if (list is null)
+        var guard = await MembershipGuards.EnsureCanMutateListAsync(
+            lists, boards, currentUser.Id.Value, command.ListId, cancellationToken);
+        if (guard.IsFailure)
         {
-            return Result.Failure<BoardListDto>(NotFound);
+            return Result.Failure<BoardListDto>(guard.Error);
         }
+
+        var list = guard.Value.List;
 
         list.Restore(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
