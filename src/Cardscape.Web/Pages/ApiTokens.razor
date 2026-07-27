@@ -1,0 +1,201 @@
+@page "/account/api-tokens"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@inject ISecurityApiClient Security
+
+<PageTitle>API tokens — Cardscape</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>API tokens</h1>
+        <RadzenButton Text="New token" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                      Click="@(() => showCreate = !showCreate)" Disabled="@(issuedSecret is not null)" />
+    </div>
+
+    <p class="page-hint">
+        Long-lived bearer secrets for the MCP server and any other AI client.
+        The cleartext is shown <strong>only once</strong> at creation; after that
+        only the prefix is recoverable.
+    </p>
+
+    @if (showCreate)
+    {
+        <RadzenCard class="create-form">
+            <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateToken">
+                <RadzenLabel Text="Name" Component="token-name" />
+                <RadzenTextBox @bind-Value="createModel.Name" Name="token-name"
+                               Placeholder="e.g. Cursor on laptop" Style="width:100%" />
+
+                <div class="scopes">
+                    <RadzenLabel Text="Scopes" />
+                    <RadzenCheckBox @bind-Value="createModel.Read" Name="scope-read" />
+                    <RadzenLabel Text="read" Component="scope-read" Style="margin-right:1rem" />
+                    <RadzenCheckBox @bind-Value="createModel.Write" Name="scope-write" />
+                    <RadzenLabel Text="write" Component="scope-write" />
+                </div>
+
+                @if (error is not null)
+                {
+                    <div class="auth-error" role="alert">@error</div>
+                }
+                <div class="create-actions">
+                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
+                    <RadzenButton Text="Create" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                                  IsBusy="@busy" />
+                </div>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    }
+
+    @if (issuedSecret is not null)
+    {
+        <RadzenCard class="issued-secret">
+            <h3>Token created</h3>
+            <p>Copy this secret now. It will not be shown again.</p>
+            <pre class="secret-box">@issuedSecret</pre>
+            <div class="create-actions">
+                <RadzenButton Text="I've copied it" ButtonStyle="ButtonStyle.Primary"
+                              Click="@DismissIssuedSecret" />
+            </div>
+        </RadzenCard>
+    }
+
+    @if (tokens is null)
+    {
+        <p>Loading…</p>
+    }
+    else if (tokens.Count == 0)
+    {
+        <p>You haven't minted any API tokens yet.</p>
+    }
+    else
+    {
+        <div class="token-list">
+            @foreach (ApiTokenSummaryDto token in tokens)
+            {
+                <RadzenCard class="token-card">
+                    <div class="token-row">
+                        <div>
+                            <h3>@token.Name</h3>
+                            <small>
+                                <code>@token.SecretPrefix…</code>
+                                · @string.Join(", ", token.Scopes)
+                                · created @token.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")
+                                @if (token.LastUsedAt is not null)
+                                {
+                                    <span> · last used @token.LastUsedAt.Value.LocalDateTime.ToString("yyyy-MM-dd")</span>
+                                }
+                            </small>
+                        </div>
+                        <div class="token-actions">
+                            @if (token.RevokedAt is null)
+                            {
+                                <RadzenBadge Text="Active" BadgeStyle="BadgeStyle.Success" />
+                                <RadzenButton Text="Revoke" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                              Click="@(() => Revoke(token))" />
+                            }
+                            else
+                            {
+                                <RadzenBadge Text="Revoked" BadgeStyle="BadgeStyle.Light" />
+                            }
+                        </div>
+                    </div>
+                </RadzenCard>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private IReadOnlyList<ApiTokenSummaryDto>? tokens;
+    private bool showCreate;
+    private bool busy;
+    private string? error;
+    private string? issuedSecret;
+    private readonly CreateModel createModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ApiResult<IReadOnlyList<ApiTokenSummaryDto>> result = await Security.ListTokensAsync();
+        tokens = result.IsSuccess ? result.Value : [];
+    }
+
+    private async Task CreateToken()
+    {
+        busy = true;
+        error = null;
+        try
+        {
+            List<string> scopes = new();
+            if (createModel.Read)
+            {
+                scopes.Add("read");
+            }
+
+            if (createModel.Write)
+            {
+                scopes.Add("write");
+            }
+
+            if (scopes.Count == 0)
+            {
+                error = "Pick at least one scope.";
+                return;
+            }
+
+            ApiResult<ApiTokenIssuanceDto> result = await Security.IssueTokenAsync(
+                createModel.Name, scopes, expiresAt: null);
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+                return;
+            }
+
+            issuedSecret = result.Value!.CleartextSecret;
+            createModel.Name = string.Empty;
+            createModel.Read = true;
+            createModel.Write = true;
+            showCreate = false;
+
+            ApiResult<IReadOnlyList<ApiTokenSummaryDto>> refreshed = await Security.ListTokensAsync();
+            tokens = refreshed.IsSuccess ? refreshed.Value : tokens;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void CancelCreate()
+    {
+        showCreate = false;
+        error = null;
+        createModel.Name = string.Empty;
+        createModel.Read = true;
+        createModel.Write = true;
+    }
+
+    private void DismissIssuedSecret()
+    {
+        issuedSecret = null;
+    }
+
+    private async Task Revoke(ApiTokenSummaryDto token)
+    {
+        ApiResult result = await Security.RevokeTokenAsync(token.Id, null);
+        if (result.IsSuccess)
+        {
+            ApiResult<IReadOnlyList<ApiTokenSummaryDto>> refreshed = await Security.ListTokensAsync();
+            tokens = refreshed.IsSuccess ? refreshed.Value : tokens;
+        }
+    }
+
+    private sealed class CreateModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public bool Read { get; set; } = true;
+        public bool Write { get; set; } = true;
+    }
+}

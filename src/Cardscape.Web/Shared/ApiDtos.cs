@@ -119,5 +119,20 @@ public sealed record CommentDto(
 
 public sealed record AddCommentRequestDto(string Body);
 
+// ── API tokens (long-lived; for the MCP server) ───────────
+public sealed record ApiTokenSummaryDto(
+    Guid Id,
+    string Name,
+    string SecretPrefix,
+    IReadOnlyCollection<string> Scopes,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? ExpiresAt,
+    DateTimeOffset? LastUsedAt,
+    DateTimeOffset? RevokedAt);
+
+public sealed record ApiTokenIssuanceDto(Guid Id, string CleartextSecret);
+
+public sealed record IssueApiTokenRequestDto(string Name, IReadOnlyCollection<string> Scopes, DateTimeOffset? ExpiresAt);
+
 // ── Error envelope (matches Results.Problem shape) ──────
 public sealed record ApiErrorDto(string? Title, string? Detail, int? Status);

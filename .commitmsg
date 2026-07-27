@@ -1,56 +1,28 @@
-feat(security): first-class ApiToken entity + MCP auth switch
+feat(web): API tokens page (mint, list, revoke)
 
-The v0.2 MCP server accepted the same short-lived JWT bearer
-tokens the REST API issues, which forced AI clients to log in
-and out like a Web user. v0.3 replaces that path with a
-first-class long-lived API token:
+The v0.3 ApiToken entity has a REST surface, but the only
+client was a curl smoke test. Add the user-facing page so
+humans can mint, see, and revoke their tokens without leaving
+the Web app.
 
-- New domain entity ApiToken (id, userId, name, hashedSecret,
-  secretPrefix, scopes, expiresAt, lastUsedAt, revokedAt,
-  revokedBy, revokedReason) + value objects ApiTokenName and
-  ApiTokenScopes (with a Scope enum and parser). The cleartext
-  secret is generated via RandomNumberGenerator, base64url
-  encoded, and SHA-256 hashed before persistence; the prefix is
-  the first 8 chars of the cleartext for UI display.
+What changed:
+- New Page Pages/ApiTokens.razor: lists every token owned by
+  the current user (with prefix, scopes, created/last-used/
+  revoked timestamps), shows an "Active" / "Revoked" badge,
+  exposes a mint form (name + read/write scope checkboxes), and
+  a one-shot secret panel that surfaces the cleartext secret
+  exactly once at issuance with a "I've copied it" dismiss.
+- New ISecurityApiClient (Services/Api/SecurityApiClient.cs)
+  with ListTokensAsync, IssueTokenAsync, RevokeTokenAsync.
+  Mirrors the rest of the typed-client surface.
+- Three new DTOs in Shared/ApiDtos.cs: ApiTokenSummaryDto,
+  ApiTokenIssuanceDto, IssueApiTokenRequestDto.
+- NavMenu gets an "API tokens" link under Workspaces for
+  authenticated users.
+- wwwroot/css/app.css gets styles for the page-hint, scopes
+  row, issued-secret warning panel, secret box, token list.
+- Program.cs registers ISecurityApiClient in DI.
 
-- Application layer: IApiTokenRepository (FindByHashedSecretAsync,
-  ListForUserAsync) + IApiTokenService (Issue/Validate/Revoke/
-  ListForUser) + IssueApiTokenCommand + RevokeApiTokenCommand +
-  ListApiTokensForUserQuery + DTOs.
-
-- Infrastructure: ApiTokenRepository (EF Core with
-  AsAsyncEnumerable for the value-object filter, matching the
-  existing LabelRepository pattern) + ApiTokenService
-  implementation + ApiTokenConfiguration (RowVersion with
-  IsConcurrencyToken + HasDefaultValue(0u), HashedSecret unique
-  index, Scopes serialized as ;-joined TEXT).
-
-- New migration IssueApiTokens (api_tokens table, 17 columns,
-  2 indexes, FK-less by design since ApiToken is its own aggregate
-  root scoped to a single user).
-
-- REST API: POST/GET/DELETE under /api/security/api-tokens. Issue
-  returns the cleartext secret exactly once; subsequent lists
-  return only the prefix.
-
-- MCP: ApiTokenAuthenticationHandler replaces the v0.2 JWT-bearer
-  handler. The handler reads the bearer, calls
-  IApiTokenService.ValidateAsync, and produces a ClaimsPrincipal
-  with NameIdentifier (user id), token_id, and one scope claim
-  per granted scope. McpCurrentUser now exposes Scopes alongside
-  the existing Roles.
-
-- Removed unused stubs: ApiTokenAuthenticationOptions.cs,
-  ICurrentUserResolver.cs, McpCurrentUserResolver.cs, and the old
-  JwtBearerAuthenticationHandler.cs.
-
-- Tests: 7 new unit tests on the domain entity (issue/revoke/
-  expiry/idempotency/validation) and 4 new integration tests on
-  the full HTTP lifecycle (issue + list + revoke roundtrip,
-  cross-user revoke rejected, anonymous issue rejected, empty
-  name rejected with 400).
-
-Verified: 187 unit + 20 integration tests green. The full
-vertical smoke (register -> workspace -> board -> list ->
-card -> comment -> label -> issue-and-use API token) still
-works on real SQLite.
+Verified: 187 unit + 20 integration tests still green. Build
+passes with no warnings; the Blazor output bundle picks up
+the new page and the new CSS rules.

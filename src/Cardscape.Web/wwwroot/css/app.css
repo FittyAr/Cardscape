@@ -450,3 +450,71 @@ code {
     padding: 0.5rem 0.75rem;
     background: #f9fafb;
 }
+
+/* API tokens page. */
+.page-hint {
+    color: #6b7280;
+    margin: 0 0 1rem;
+}
+
+.scopes {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+}
+
+.issued-secret {
+    border: 1px solid #fbbf24;
+    background: #fffbeb;
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+}
+
+.issued-secret h3 {
+    margin: 0 0 0.5rem;
+}
+
+.secret-box {
+    background: #1f2937;
+    color: #f9fafb;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.875rem;
+    overflow-x: auto;
+    white-space: pre;
+    margin: 0.5rem 0 1rem;
+}
+
+.token-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.token-card {
+    padding: 1rem 1.25rem;
+}
+
+.token-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.token-row h3 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+}
+
+.token-row small {
+    color: #6b7280;
+}
+
+.token-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
