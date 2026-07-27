@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.DependencyInjection;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Mcp.Authentication;
+using Cardscape.Mcp.Realtime;
 using ModelContextProtocol.Server;
 
 namespace Cardscape.Mcp.Extensions;
@@ -47,12 +48,23 @@ public static class ServiceCollectionExtensions
 
         // ── Real-time (MCP tools that mutate can push to the
         //    same SignalR hub the Web client listens to) ──────
-        // The Mcp process does not own the hub (the API does), so
-        // tools that need to broadcast go through a thin HTTP
-        // client to the API's /hubs/board endpoint. For v0.3 the
-        // MCP surface is read + write without broadcasting; the
-        // hub side stays in v0.4.
-        services.AddHttpContextAccessor();
+        // The MCP process does not own the hub (the API does), so
+        // every successful mutating tool calls the IBoardPushClient
+        // which HTTP-calls the API's /api/internal/broadcast
+        // webhook. The API dispatches the matching IBoardClient
+        // method on the board:{boardId} SignalR group, so a Web
+        // client that has joined the board sees the AI's edit in
+        // real time.
+        string? apiBaseUrl = configuration["Cardscape:ApiBaseUrl"]
+            ?? configuration["ApiBaseUrl"]
+            ?? Environment.GetEnvironmentVariable("CARDS_CAPE__APIBASEURL")
+            ?? "http://localhost:5291/";
+        services.AddHttpClient("Cardscape.Api", client =>
+        {
+            client.BaseAddress = new Uri(apiBaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+        services.AddSingleton<IBoardPushClient, HttpBoardPushClient>();
 
         // ── MCP server (stdio transport) ─────────────────────
         services

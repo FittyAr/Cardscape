@@ -1,3 +1,4 @@
+using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.Commands;
 using Cardscape.Application.Boards.DTOs;
@@ -14,9 +15,12 @@ using Cardscape.Application.Labels.Queries;
 using Cardscape.Application.Lists.Commands;
 using Cardscape.Application.Lists.DTOs;
 using Cardscape.Application.Lists.Queries;
+using Cardscape.Application.Realtime;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Application.Workspaces.Queries;
+using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
+using Cardscape.Mcp.Realtime;
 using ModelContextProtocol.Server;
 using Wolverine;
 
@@ -27,10 +31,16 @@ namespace Cardscape.Mcp.Tools;
 /// board. Every tool goes through the same Application-layer
 /// commands and queries the REST API uses, so authorization,
 /// validation, and side effects (domain events, audit) all stay
-/// in one place.
+/// in one place. Every mutating tool additionally calls
+/// <see cref="IBoardPushClient"/> after success so the live Web
+/// UI sees the AI's edit without polling.
 /// </summary>
 [McpServerToolType]
-public sealed class BoardsTools(IMessageBus bus, ICurrentUser currentUser)
+public sealed class BoardsTools(
+    IMessageBus bus,
+    ICurrentUser currentUser,
+    IBoardPushClient push,
+    ICardRepository cards)
 {
     // ── Workspaces ─────────────────────────────────────────
 
@@ -105,7 +115,10 @@ public sealed class BoardsTools(IMessageBus bus, ICurrentUser currentUser)
     {
         RequireAuth();
         var result = await bus.InvokeAsync<Result<BoardListDto>>(new CreateListCommand(boardId, name), ct);
-        return Ensure(result);
+        var dto = Ensure(result);
+        await push.PushListCreatedAsync(new ListEventPayload(
+            dto.Id, dto.BoardId, dto.Name, DateTimeOffset.UtcNow), ct);
+        return dto;
     }
 
     // ── Cards ───────────────────────────────────────────────
@@ -135,7 +148,10 @@ public sealed class BoardsTools(IMessageBus bus, ICurrentUser currentUser)
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardDto>>(
             new CreateCardCommand(listId, title, description), ct);
-        return Ensure(result);
+        var dto = Ensure(result);
+        await push.PushCardCreatedAsync(new CardEventPayload(
+            dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
+        return dto;
     }
 
     [McpServerTool(Name = "cards_move")]
@@ -143,9 +159,19 @@ public sealed class BoardsTools(IMessageBus bus, ICurrentUser currentUser)
         Guid cardId, Guid newListId, double newPosition, CancellationToken ct)
     {
         RequireAuth();
+        // The board-resolving server side needs the source list id
+        // to compute the from-list; we look it up via the loaded
+        // card before invoking the command. This is one cheap
+        // repository call on the move hot path.
+        var existing = await cards.GetByIdAsync(new CardId(cardId), ct);
+        var fromListId = existing?.ListId.Value;
         var result = await bus.InvokeAsync<Result<CardDto>>(
             new MoveCardCommand(cardId, newListId, newPosition), ct);
-        return Ensure(result);
+        var dto = Ensure(result);
+        await push.PushCardMovedAsync(new CardMovedPayload(
+            dto.Id, Guid.Empty, fromListId ?? dto.ListId, newListId, newPosition,
+            DateTimeOffset.UtcNow), ct);
+        return dto;
     }
 
     [McpServerTool(Name = "cards_complete")]
@@ -153,7 +179,10 @@ public sealed class BoardsTools(IMessageBus bus, ICurrentUser currentUser)
     {
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardDto>>(new CompleteCardCommand(cardId), ct);
-        return Ensure(result);
+        var dto = Ensure(result);
+        await push.PushCardCompletedAsync(new CardEventPayload(
+            dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
+        return dto;
     }
 
     [McpServerTool(Name = "cards_reopen")]
@@ -161,7 +190,10 @@ public sealed class BoardsTools(IMessageBus bus, ICurrentUser currentUser)
     {
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardDto>>(new ReopenCardCommand(cardId), ct);
-        return Ensure(result);
+        var dto = Ensure(result);
+        await push.PushCardReopenedAsync(new CardEventPayload(
+            dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
+        return dto;
     }
 
     [McpServerTool(Name = "cards_assign")]
@@ -189,7 +221,10 @@ public sealed class BoardsTools(IMessageBus bus, ICurrentUser currentUser)
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CommentDto>>(
             new AddCommentCommand(cardId, body), ct);
-        return Ensure(result);
+        var dto = Ensure(result);
+        await push.PushCommentAddedAsync(new CommentEventPayload(
+            dto.Id, dto.CardId, Guid.Empty, dto.AuthorId, DateTimeOffset.UtcNow), ct);
+        return dto;
     }
 
     [McpServerTool(Name = "comments_list")]

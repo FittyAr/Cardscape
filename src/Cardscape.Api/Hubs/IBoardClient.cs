@@ -1,9 +1,13 @@
+using Cardscape.Application.Realtime;
+
 namespace Cardscape.Api.Hubs;
 
 /// <summary>
 /// Server-to-client events broadcast by <see cref="BoardHub"/> when
-/// something changes on a board a client is subscribed to. Pure
-/// data records so the wire shape stays stable.
+/// something changes on a board a client is subscribed to. The
+/// payload records themselves live in the Application layer so
+/// the MCP project can serialise the same shape over its
+/// internal broadcast webhook.
 /// </summary>
 public interface IBoardClient
 {
@@ -28,55 +32,3 @@ public interface IBoardClient
     Task BoardStarred(BoardEventPayload payload);
     Task BoardUnstarred(BoardEventPayload payload);
 }
-
-public sealed record CardEventPayload(
-    Guid CardId,
-    Guid BoardId,
-    Guid ListId,
-    string Title,
-    DateTimeOffset At);
-
-public sealed record CardMovedPayload(
-    Guid CardId,
-    Guid BoardId,
-    Guid FromListId,
-    Guid ToListId,
-    double NewPosition,
-    DateTimeOffset At);
-
-public sealed record CardAssignedPayload(
-    Guid CardId,
-    Guid BoardId,
-    Guid UserId,
-    DateTimeOffset At);
-
-public sealed record CardLabelPayload(
-    Guid CardId,
-    Guid BoardId,
-    Guid LabelId,
-    DateTimeOffset At);
-
-public sealed record ListEventPayload(
-    Guid ListId,
-    Guid BoardId,
-    string Name,
-    DateTimeOffset At);
-
-public sealed record CommentEventPayload(
-    Guid CommentId,
-    Guid CardId,
-    Guid BoardId,
-    Guid AuthorId,
-    DateTimeOffset At);
-
-public sealed record LabelEventPayload(
-    Guid LabelId,
-    Guid BoardId,
-    string Name,
-    string Color,
-    DateTimeOffset At);
-
-public sealed record BoardEventPayload(
-    Guid BoardId,
-    string Name,
-    DateTimeOffset At);
