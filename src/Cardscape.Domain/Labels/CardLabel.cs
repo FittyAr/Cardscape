@@ -20,6 +20,6 @@ public sealed class CardLabel : Entity<CardLabelId>
         CreatedAt = at;
     }
 
-    internal static CardLabel Create(CardId cardId, LabelId labelId, DateTimeOffset at) =>
+    public static CardLabel Create(CardId cardId, LabelId labelId, DateTimeOffset at) =>
         new(cardId, labelId, at);
 }
