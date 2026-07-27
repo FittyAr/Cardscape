@@ -26,7 +26,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -48,7 +48,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -73,7 +73,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -93,7 +93,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -113,7 +113,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -134,7 +134,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -156,7 +156,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -179,7 +179,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -199,7 +199,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -220,7 +220,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -246,7 +246,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -271,7 +271,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -297,7 +297,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -324,7 +324,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false),
+                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>

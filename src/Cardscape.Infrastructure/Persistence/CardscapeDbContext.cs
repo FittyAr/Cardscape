@@ -29,6 +29,15 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<Notification> Notifications => Set<Notification>();
 
+    /// <summary>
+    /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't
+    /// expose a default-value or concurrency-token convention, so
+    /// every <c>*Configuration.cs</c> applies
+    /// <c>.IsConcurrencyToken().HasDefaultValue(0u)</c> to its
+    /// <c>RowVersion</c> property explicitly. See
+    /// <c>Common.Entity&lt;TId&gt;.RowVersion</c> for the
+    /// optimistic-concurrency contract.
+    /// </summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());

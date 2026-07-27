@@ -22,7 +22,7 @@ public sealed class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion);
+        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
 
         b.OwnsMany(x => x.Members, mb =>
         {
@@ -33,6 +33,7 @@ public sealed class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
             mb.Property(m => m.UserId).IsRequired();
             mb.Property(m => m.Role).HasConversion<int>().IsRequired();
             mb.Property(m => m.JoinedAt).IsRequired();
+            mb.Property(m => m.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
             mb.HasIndex(m => new { m.WorkspaceId, m.UserId }).IsUnique();
         });
     }

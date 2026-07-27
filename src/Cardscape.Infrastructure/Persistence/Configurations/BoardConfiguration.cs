@@ -29,7 +29,7 @@ public sealed class BoardConfiguration : IEntityTypeConfiguration<Board>
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion);
+        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
         b.HasIndex(x => x.WorkspaceId);
 
         b.OwnsMany(x => x.Members, mb =>
@@ -41,6 +41,7 @@ public sealed class BoardConfiguration : IEntityTypeConfiguration<Board>
             mb.Property(m => m.UserId).IsRequired();
             mb.Property(m => m.Role).HasConversion<int>().IsRequired();
             mb.Property(m => m.JoinedAt).IsRequired();
+            mb.Property(m => m.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
             mb.HasIndex(m => new { m.BoardId, m.UserId }).IsUnique();
         });
 
@@ -51,6 +52,7 @@ public sealed class BoardConfiguration : IEntityTypeConfiguration<Board>
             sb.Property(s => s.BoardId).HasConversion(id => id.Value, v => new BoardId(v));
             sb.Property(s => s.UserId).IsRequired();
             sb.Property(s => s.StarredAt).IsRequired();
+            sb.Property(s => s.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
             sb.HasIndex(s => new { s.BoardId, s.UserId }).IsUnique();
         });
     }
