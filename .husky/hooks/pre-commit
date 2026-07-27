@@ -1,6 +1,0 @@
-#!/usr/bin/env sh
-# Pre-commit hook — runs Husky.Net tasks.
-# The actual task definitions live in .husky/task-runner.json.
-# This script is the entry point that .git/hooks/pre-commit delegates to.
-
-dotnet husky run --group pre-commit

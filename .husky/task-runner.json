@@ -38,9 +38,8 @@
     {
       "name": "commit-msg",
       "group": "commit-msg",
-      "command": "husky",
+      "command": "sh",
       "args": [
-        "exec",
         ".husky/hooks/commit-msg.sh"
       ]
     }

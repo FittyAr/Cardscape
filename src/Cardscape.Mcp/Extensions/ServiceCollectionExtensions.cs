@@ -1,5 +1,5 @@
-using ModelContextProtocol.Server;
 using Cardscape.Mcp.Authentication;
+using ModelContextProtocol.Server;
 
 namespace Cardscape.Mcp.Extensions;
 

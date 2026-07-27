@@ -24,11 +24,11 @@ app.UseHttpsRedirection();
 
 // ── Health check ─────────────────────────────────────────
 app.MapGet("/health", () => Results.Ok(new
-    {
-        status = "healthy",
-        service = "Cardscape.Api",
-        timestamp = DateTime.UtcNow
-    }))
+{
+    status = "healthy",
+    service = "Cardscape.Api",
+    timestamp = DateTime.UtcNow
+}))
    .WithName("HealthCheck")
    .WithTags("Health");
 
