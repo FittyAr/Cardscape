@@ -65,24 +65,50 @@ docs/
 ├── README.md                          # you are here
 ├── AGENTS.md                          # contract for agents (mirror of .agents/AGENTS.md)
 ├── adr/                               # Architecture Decision Records
+├── ai/                                # MCP server + AI features
+│   ├── 01-mcp-deep-dive.md            # the "how to add a tool" recipe
+│   ├── 02-prompt-library.md            # canonical MCP prompts
+│   └── 03-ai-ethics.md                # what we build, what we don't
+├── api/                               # public API conventions
 ├── architecture/                      # how the solution is shaped
 │   ├── 00-overview.md                 # the layers and the directory layout
 │   ├── 01-bounded-contexts.md         # vertical slices
 │   ├── 02-multi-provider-persistence.md  # companion to ADR 0001
 │   └── 03-mcp-server.md               # companion to ADR 0002
+├── blog/                              # public-facing blog posts
+│   └── 01-cardscape-rebrand.md        # the rebrand announcement
+├── brand/                             # visual identity (palette, typography, logo)
+│   └── 00-brand-kit.md
+├── design/                            # patterns the implementation will follow
+│   ├── 01-error-handling.md           # Result<T>, ProblemDetails, error codes
+│   ├── 02-logging-observability.md    # Serilog + OTel, correlation IDs
+│   ├── 03-auth-and-authz.md           # the auth/authz model in detail
+│   ├── 04-accessibility.md            # WCAG 2.1 AA target
+│   ├── 05-performance-budgets.md      # quantified performance targets
+│   └── 06-feature-flags.md            # the flag lifecycle, the "no flag left behind" rule
 ├── development/                       # how to set up and work on the solution
 │   ├── 00-onboarding.md              # 10-minute local setup
 │   ├── 01-conventions.md             # C# style, async, EF Core rules
 │   ├── 02-vertical-slices.md         # recipe for adding a feature
 │   ├── 03-testing-strategy.md        # SQLite-only test matrix
 │   └── 04-release-process.md         # versioning, tags, NuGet, Docker
-├── api/                               # public API conventions
-├── brand/                             # visual identity (palette, typography, logo)
-│   └── 00-brand-kit.md
-└── roadmap/                           # where we're going (and how we present ourselves)
-    ├── 00-feature-inventory.md        # the target feature surface
-    ├── 01-implementation-plan.md     # the phased delivery plan
-    └── 02-product-positioning.md     # name, tagline, pillars, vocabulary, voice
+├── i18n/                              # internationalization (EN + ES today)
+│   ├── 01-policy.md                  # what gets translated, who translates
+│   └── 02-translation-workflow.md     # the file layout, the PR process
+├── operations/                        # runbooks for self-hosting
+│   ├── 01-deployment.md               # the Docker Compose setup
+│   ├── 02-backup-restore.md          # the backup and restore procedure
+│   ├── 03-monitoring.md              # the OTel pipeline, the dashboards, the alerts
+│   └── 04-incident-response.md       # the on-call playbook
+├── positioning/                      # marketing and external positioning
+│   └── 01-comparison.md              # the vendor-neutral feature comparison
+├── roadmap/                           # where we're going (and how we present ourselves)
+│   ├── 00-feature-inventory.md        # the target feature surface
+│   ├── 01-implementation-plan.md     # the phased delivery plan
+│   └── 02-product-positioning.md     # name, tagline, pillars, vocabulary, voice
+└── security/                          # threat model + secure-coding checklist
+    ├── 01-threat-model.md             # STRIDE per bounded context
+    └── 02-secure-coding-checklist.md  # the reviewer checklist
 ```
 
 ## 4. Mirror folders
@@ -113,7 +139,14 @@ the right starting point.
 | Writer (docs, blog, social) | [`roadmap/02-product-positioning.md`](roadmap/02-product-positioning.md) — name, tagline, pillars, vocabulary, voice |
 | Designer (UI, marketing, social) | [`brand/00-brand-kit.md`](brand/00-brand-kit.md) — palette, typography, logo concept |
 | Release manager | [`development/04-release-process.md`](development/04-release-process.md) — versioning, tags, NuGet, Docker |
+| Self-hoster (deploying Cardscape) | [`operations/01-deployment.md`](operations/01-deployment.md) — the Docker Compose setup, then [`operations/02-backup-restore.md`](operations/02-backup-restore.md) for backups |
 | Maintainer doing the phased plan review | [`roadmap/01-implementation-plan.md`](roadmap/01-implementation-plan.md) — the canonical plan |
+| Implementer working on the MCP server | [`ai/01-mcp-deep-dive.md`](ai/01-mcp-deep-dive.md) — the "how to add a tool" recipe |
+| Implementer working on errors, logging, auth, accessibility, performance, or feature flags | the matching file in [`design/`](design/) — the pattern the implementation will follow |
+| Security reviewer | [`security/01-threat-model.md`](security/01-threat-model.md) — STRIDE per bounded context, then [`security/02-secure-coding-checklist.md`](security/02-secure-coding-checklist.md) — the reviewer checklist |
+| Translator | [`i18n/01-policy.md`](i18n/01-policy.md) — what gets translated, then [`i18n/02-translation-workflow.md`](i18n/02-translation-workflow.md) — the file layout and the PR process |
+| Prospective user evaluating Cardscape | [`positioning/01-comparison.md`](positioning/01-comparison.md) — the vendor-neutral feature comparison |
+| On-call responder | [`operations/04-incident-response.md`](operations/04-incident-response.md) — the playbook |
 
 ## 6. Conventions for contributing to these docs
 
