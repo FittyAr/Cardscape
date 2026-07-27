@@ -1,0 +1,40 @@
+# Self-contained development stack — SQLite only, no Postgres.
+# Use this when you want a one-command spin-up for trying Cardscape
+# without external dependencies.
+#
+#     docker compose -f docker-compose.dev.yml up -d
+#
+# Then open http://localhost:8080.
+
+services:
+  cardscape.api:
+    build:
+      context: .
+      dockerfile: src/Cardscape.Api/Dockerfile
+    image: cardscape/api:0.1.0-mvp
+    container_name: cardscape.api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      Database__Provider: Sqlite
+      ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
+      Storage__LocalRoot: /app/Storage
+      Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:-dev-only-insecure-signing-key-please-override-in-production-32+chars}
+      Jwt__Issuer: Cardscape
+      Jwt__Audience: Cardscape
+    ports:
+      - "8080:8080"
+    volumes:
+      - cardscape.data:/app/Data
+      - cardscape.uploads:/app/Storage
+    healthcheck:
+      test: ["CMD", "dotnet", "Cardscape.Api.dll", "--health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  cardscape.data:
+  cardscape.uploads:

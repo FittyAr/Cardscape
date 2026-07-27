@@ -51,7 +51,7 @@ The Model Context Protocol (MCP) is the open standard for
 **first-party MCP server** in `src/Cardscape.Mcp/`. It is a
 thin transport layer on top of the same `Application` layer the
 REST API uses. Every MCP tool maps to an existing command or
-query. The same MediatR pipeline, the same FluentValidation
+query. The same Wolverine pipeline, the same FluentValidation
 rules, the same `Result<T>`.
 
 What that means in practice — an AI assistant with your
@@ -80,20 +80,25 @@ See:
 
 ## Status
 
-Cardscape is in **pre-alpha, design and Phase 0 scaffold
-complete**.
+Cardscape is in **alpha, Phase 1 (MVP) shipped**. The codebase
+runs end to end: a user can register, create a workspace, drop
+in boards/lists/cards, comment, label, star, and the full HTTP
+pipeline is covered by integration tests against the real
+Program + DI + Wolverine + EF Core stack.
 
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Solution scaffold, multi-DB plumbing, RPL-1.5, AGENTS contract, MCP server project skeleton, full documentation set | **DONE** |
-| 1 | MVP: single user, sign-up, workspace, board, list, card, drag and drop, sign in tomorrow | not started |
+| 1 | MVP: single user, sign-up, workspace, board, list, card, sign in, Web UI | **DONE** (`v0.1.0-mvp`) |
 | 2 | Collaboration + real-time + **MCP server end-to-end** (the differentiator ships here) | not started |
 | 3 | Extensions + automation engine | not started |
 | 4 | Enterprise + AI features | not started |
 | 5 | Polish + scale | ongoing |
 
-`dotnet build` is green today. The product has no domain
-entities yet — that is by design. See
+`dotnet build` is green. 179 unit tests + 10 integration tests
+are green. The Blazor WebAssembly client talks to the API over
+JWT. The Docker image boots, applies migrations, and serves the
+SPA on port 8080. See
 [the implementation plan](docs/roadmap/01-implementation-plan.md)
 for the full phased delivery schedule and
 [the working contract](docs/AGENTS.md) for how work is done on
@@ -101,25 +106,117 @@ this codebase.
 
 ---
 
-## Quickstart (today)
+## Quickstart
 
-The application is a scaffold; there is no runnable product
-yet. The honest quickstart is the developer one:
+### 1. Self-host with Docker (recommended)
+
+The fastest way to a running Cardscape instance:
 
 ```bash
-git clone https://github.com/<owner>/Cardscape.git
-cd Cardscape
-dotnet build                       # 11/11 projects, 0 errors, 0 warnings
-dotnet test                        # 0/0 tests (no domain yet) — green by default
+# Clone the repo
+git clone https://github.com/cardscape/cardscape.git
+cd cardscape
+
+# Generate a real JWT signing key for production
+export CARDS_CAPE_JWT_KEY=$(openssl rand -base64 48)
+
+# (optional) Override the default Postgres password
+export CARDS_CAPE_DB_PASSWORD=cardscape-dev-password
+
+# Bring the stack up
+docker compose up -d
+
+# Open the UI
+open http://localhost:8080
 ```
 
-The first runnable self-hostable build (with a demo workspace,
-seeded data, and `docker compose up` to go) ships with the
-`v0.1.0-mvp` tag at the end of **Phase 1**.
+You can also use the SQLite-only dev compose if you do not want
+to run Postgres:
 
-If you want to follow along: watch the
-[GitHub releases](https://github.com/<owner>/Cardscape/releases)
-and the [roadmap](docs/roadmap/01-implementation-plan.md).
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+### 2. Developer quickstart (dotnet CLI)
+
+For iterating on the source:
+
+```bash
+git clone https://github.com/cardscape/cardscape.git
+cd cardscape
+dotnet build                       # 11 projects, 0 errors, 0 warnings
+dotnet test                        # 179 unit + 10 integration, all green
+dotnet run --project src/Cardscape.Api          # API on http://localhost:5291
+dotnet run --project src/Cardscape.Web          # Web on http://localhost:5206
+```
+
+The Blazor client reads its API base URL from
+`src/Cardscape.Web/wwwroot/appsettings.json` and defaults to
+`http://localhost:5291/`. Override with
+`-- "ApiBaseUrl=http://your-api:8080/"` or by editing that
+file before running.
+
+### 3. Picking a database
+
+Cardscape supports three providers, all switchable at runtime
+through configuration:
+
+| Provider | Connection string example | When to use |
+|---|---|---|
+| SQLite | `Data Source=Data/cardscape.db` | Solo, dev, single-node self-host |
+| PostgreSQL | `Host=db;Port=5432;Database=cardscape;Username=…;Password=…` | Production, multi-user |
+| MariaDB | `Server=db;Port=3306;Database=cardscape;Uid=…;Pwd=…` | Production, MySQL shops |
+
+Set `Database__Provider` to `Sqlite`, `PostgreSQL`, or `MariaDB`
+to match the connection string. Migrations live in a single set
+under `src/Cardscape.Infrastructure/Persistence/Migrations/`
+that runs on all three engines.
+
+---
+
+## What's in `v0.1.0-mvp`
+
+This is the first self-hostable build. It ships the full
+end-to-end vertical slice for a single user:
+
+- **Auth**: register, login, JWT bearer (HS256), refresh token,
+  password hashing (Pbkdf2), 60-minute access / 30-day refresh.
+- **Workspaces, boards, lists, cards** with create / rename /
+  archive / move. Boards can be **starred**; cards can be
+  **assigned**, **labeled**, **dated**, **completed**, and
+  **commented on**.
+- **Multi-DB**: SQLite (default), PostgreSQL, MariaDB. The
+  same EF Core migration runs on all three; the provider is
+  picked at boot from configuration.
+- **Blazor WebAssembly client** (`src/Cardscape.Web/`) that
+  covers the full surface: sign up, sign in, workspaces, boards,
+  board detail (kanban columns), card detail (metadata +
+  comments), star/unstar, archive/restore.
+- **REST API** with 60+ endpoints under `/api/...`, all using
+  the same `Result<T>` pattern, RFC 7807 ProblemDetails on
+  failure, JWT-gated.
+- **Wolverine** for command/query routing (no MediatR, no
+  source-generated dispatcher boilerplate).
+- **Mapperly** for compile-time DTO mapping.
+- **Docker** multi-stage build + `docker compose.yml` (API +
+  Postgres) and `docker-compose.dev.yml` (SQLite only).
+- **Tests**: 179 unit tests (domain + application, all fakes
+  in-memory) and 10 integration tests (full HTTP stack via
+  `WebApplicationFactory<Program>` with SQLite shared-memory).
+  Both suites are green in under 10 seconds combined.
+
+What is **not** in v0.1.0-mvp (per the [implementation plan](docs/roadmap/01-implementation-plan.md)):
+
+- Multi-user collaboration (workspaces are single-owner; members
+  and board sharing are scaffolded but not wired up).
+- Real-time updates, SignalR hub, activity feed UI.
+- The MCP server end-to-end.
+- Extensions, automation engine, calendar, Inbox, Planner.
+- Search.
+- Attachments and storage providers other than the local
+  filesystem.
+
+These land in Phases 2 through 5.
 
 ---
 
@@ -128,9 +225,9 @@ and the [roadmap](docs/roadmap/01-implementation-plan.md).
 ```
                  ┌────────────────────────┐
                  │     Cardscape.Web      │   Blazor WASM client
-                 │   no server deps       │
+                 │   no server deps       │   (AuthService + typed API clients)
                  └────────────┬───────────┘
-                              │  HTTP (JSON)
+                              │  HTTP (JSON, JWT bearer)
                               ▼
    ┌─────────────────────────────────────────────────────┐
    │                       Cardscape.Api                   │  ← presentation
@@ -142,7 +239,8 @@ and the [roadmap](docs/roadmap/01-implementation-plan.md).
    ┌────────────────────┐          ┌────────────────────────┐
    │   Application      │  ←────   │    Infrastructure     │  ← technical
    │   use cases        │          │    EF Core, Identity,  │
-   │   (MediatR + FV)   │          │    Storage, Email     │
+   │ (Wolverine + FV +  │          │    Storage, Email     │
+   │  Mapperly)         │          │                        │
    └────────┬───────────┘          └────────────────────────┘
             ▲                                   ▲
             │                                   │
@@ -172,14 +270,17 @@ Full layout and dependency rules:
 |---|---|---|
 | Runtime | .NET 11 | SDK `11.0.100-preview.6` |
 | Web framework | ASP.NET Core minimal APIs | 11.0 preview 6 |
-| Client | Blazor WebAssembly | 11.0 preview 6 |
+| Client | Blazor WebAssembly | 11.0 preview 6, Radzen components |
 | UI components | Radzen.Blazor | 11.1.8 |
 | ORM | Entity Framework Core | 10.0.10 LTS (third-party providers trail .NET) |
 | DB providers | Sqlite, Npgsql, MySql.EntityFrameworkCore | runtime, all switchable via config |
 | Validation | FluentValidation | 11.11.0 |
-| CQRS / Mediator | MediatR | 12.4.1 |
+| CQRS / Mediator | Wolverine | 6.23.1 (JasperFx), source-generator |
+| Mapping | Mapperly | 4.3.1 (Riok), source-generator |
+| Auth | JWT bearer + Pbkdf2 password hasher | built-in + `System.IdentityModel.Tokens.Jwt` 8.2.1 |
 | AI integration | Model Context Protocol | .NET SDK `1.4.1`, stdio today |
-| Tests | xUnit + FluentAssertions + Moq + NetArchTest | 2.9.2 / 6.12.2 / 4.20.72 / 1.3.2 |
+| Tests | xUnit + FluentAssertions + `WebApplicationFactory` | 2.9.2 / 6.12.2 / 11.0 preview 6 |
+| Containers | Docker + docker compose | multi-stage Dockerfile, Postgres + API |
 | License | Reciprocal Public License 1.5 | RPL-1.5 |
 
 Stack rationale and pinned versions are in

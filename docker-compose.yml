@@ -1,0 +1,68 @@
+# Cardscape self-hostable stack.
+# - `cardscape.api` — the REST + Blazor-served API. SQLite by default; override
+#   with `Database__Provider=PostgreSQL` + `ConnectionStrings__Default=...` to
+#   use a real database (see docker-compose.dev.yml for the Postgres variant).
+# - `cardscape.postgres` — optional production-grade database.
+# - `cardscape.data` — named volume so the SQLite file and uploaded storage
+#   survive container restarts.
+#
+# Bring the whole thing up with:
+#     docker compose up -d
+# Then open http://localhost:8080 in your browser.
+
+services:
+  cardscape.api:
+    build:
+      context: .
+      dockerfile: src/Cardscape.Api/Dockerfile
+    image: cardscape/api:0.1.0-mvp
+    container_name: cardscape.api
+    restart: unless-stopped
+    depends_on:
+      cardscape.postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      # Switch to PostgreSQL when the Postgres service is up; flip to
+      # `Sqlite` and remove the dependency to run fully self-contained.
+      Database__Provider: PostgreSQL
+      ConnectionStrings__Default: Host=cardscape.postgres;Port=5432;Database=cardscape;Username=cardscape;Password=${CARDS_CAPE_DB_PASSWORD:-cardscape-dev-password}
+      Storage__LocalRoot: /app/Storage
+      # IMPORTANT: override the dev default in production. Generate with
+      #   openssl rand -base64 48
+      Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:?Set CARDS_CAPE_JWT_KEY in your .env file (openssl rand -base64 48)}
+      Jwt__Issuer: Cardscape
+      Jwt__Audience: Cardscape
+    ports:
+      - "8080:8080"
+    volumes:
+      - cardscape.data:/app/Data
+      - cardscape.uploads:/app/Storage
+    healthcheck:
+      test: ["CMD", "dotnet", "Cardscape.Api.dll", "--health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  cardscape.postgres:
+    image: postgres:17-alpine
+    container_name: cardscape.postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cardscape
+      POSTGRES_USER: cardscape
+      POSTGRES_PASSWORD: ${CARDS_CAPE_DB_PASSWORD:-cardscape-dev-password}
+    volumes:
+      - cardscape.pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cardscape -d cardscape"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  cardscape.pgdata:
+  cardscape.data:
+  cardscape.uploads:

@@ -483,6 +483,10 @@ $RECYCLE.BIN/
 
 # Cardscape local development
 .apilog.txt
+.weblog.txt
+.buildlog.txt
+.fmtlog.txt
+.testlog.txt
 src/Cardscape.Api/Data/
 **/*.db
 **/*.db-wal
