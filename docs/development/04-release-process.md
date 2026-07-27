@@ -85,7 +85,7 @@ Before cutting a release, the following must be true.
 - [ ] `README.md` reflects the current status.
 - [ ] [`docs/roadmap/01-implementation-plan.md`](../roadmap/01-implementation-plan.md)
       has the phase status updated.
-- [ ] [`CHANGELOG.md`](../../CHANGELOG.md) has the
+- [ ] [`CHANGELOG.md`](../../docs/community/CHANGELOG.md) has the
       `[<version>]` section filled in with the
       Added / Changed / Removed / Fixed / Security entries
       for this release.
@@ -176,7 +176,7 @@ The actual steps. The order matters.
 
 1. **Freeze the changelog.** Finalize the
    `[<version>]` section in
-   [`CHANGELOG.md`](../../CHANGELOG.md). Commit on master.
+   [`CHANGELOG.md`](../../docs/community/CHANGELOG.md). Commit on master.
 2. **Run the pre-release checklist.** See §3.
 3. **Create the release-prep branch.**
    `git checkout -b release-prep/v<version> master`.

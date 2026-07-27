@@ -283,8 +283,8 @@ cadences.
 
 | Axis | Cardscape | Other self-hostable kanban (typical) | Hosted kanban (typical) |
 |---|---|---|---|
-| Decision model | solo maintainer today; lazy consensus + quorum when the project outgrows one person (see [GOVERNANCE.md](../../GOVERNANCE.md)) | varies (BDFL, foundation, vendor) | the vendor |
-| Public roadmap | ✅ yes ([`ROADMAP.md`](../../ROADMAP.md)) | varies | rarely (the vendor's roadmap) |
+| Decision model | solo maintainer today; lazy consensus + quorum when the project outgrows one person (see [docs/community/GOVERNANCE.md](../../docs/community/GOVERNANCE.md)) | varies (BDFL, foundation, vendor) | the vendor |
+| Public roadmap | ✅ yes ([`docs/community/ROADMAP.md`](../../docs/community/ROADMAP.md)) | varies | rarely (the vendor's roadmap) |
 | Public ADRs | ✅ yes ([`docs/adr/`](../adr/)) | rarely | rarely |
 | Contribution flow documented | ✅ yes ([`CONTRIBUTING.md`](../../CONTRIBUTING.md)) | varies | n/a |
 | Code of Conduct | ✅ yes (Contributor Covenant v2.1) | varies | n/a |

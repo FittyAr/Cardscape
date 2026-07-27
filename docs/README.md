@@ -106,6 +106,13 @@ docs/
 │   ├── 00-feature-inventory.md        # the target feature surface
 │   ├── 01-implementation-plan.md     # the phased delivery plan
 │   └── 02-product-positioning.md     # name, tagline, pillars, vocabulary, voice
+├── community/                         # community-facing reference docs
+│   ├── CHANGELOG.md                   # Keep a Changelog format
+│   ├── ROADMAP.md                     # community-readable version of the implementation plan
+│   ├── GOVERNANCE.md                  # decision-making model + path to multi-maintainer
+│   ├── MAINTAINERS.md                 # areas of responsibility
+│   ├── CONTRIBUTORS.md                # who contributed what (auto-generated)
+│   └── LAUNCH.md                      # internal marketing runbook
 └── security/                          # threat model + secure-coding checklist
     ├── 01-threat-model.md             # STRIDE per bounded context
     └── 02-secure-coding-checklist.md  # the reviewer checklist

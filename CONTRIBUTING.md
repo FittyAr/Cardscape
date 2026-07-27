@@ -277,7 +277,7 @@ open a dedicated forum and announce it in the Discussions.
 
 ## 11. Recognition
 
-Contributors are listed in `CONTRIBUTORS.md` (added with the
+Contributors are listed in [`docs/community/CONTRIBUTORS.md`](docs/community/CONTRIBUTORS.md) (added with the
 first external contribution). Significant contributions are
 called out in the release notes of the version that ships them.
 

@@ -201,7 +201,8 @@ Cardscape/
 │   ├── architecture/             # how the solution is shaped
 │   ├── development/              # how to set up and work on the solution
 │   ├── api/                      # public API conventions
-│   └── roadmap/                  # where the project is going
+│   ├── roadmap/                  # where the project is going
+│   └── community/                # community-facing reference docs (changelog, roadmap, governance, maintainers, launch)
 ├── src/                          # 6 source projects (Domain, Application, Infrastructure, Api, Web, Mcp)
 ├── tests/                        # 5 test projects (xUnit)
 ├── tools/                        # developer tooling
@@ -277,8 +278,7 @@ external contribution. Until then, the working rules in
 | `CODE_OF_CONDUCT.md` | **present** | Contributor Covenant v2.1 |
 | `SECURITY.md` | **present** | vulnerability reporting process |
 | `SUPPORT.md` | **present** | where to ask questions |
-| `CHANGELOG.md` | **present** | Keep a Changelog format, initial entry |
-| `ROADMAP.md` | **present** | community-readable version of the implementation plan |
+| `docs/community/` | **present** | changelog, roadmap, governance, maintainers, contributors, launch runbook |
 | `docs/AGENTS.md` | **present** | working contract for any agent |
 | `.agents/AGENTS.md` | **present** | operational contract for AI tools |
 | `docs/adr/` | **present** | 2 ADRs, append-only |

@@ -65,7 +65,7 @@ the alerts are silenced with an explicit "I'm out" message
 in the `Announcements` category. The user is expected to
 understand that a solo-maintained project has a single
 point of failure; this is documented in the
-[LAUNCH.md](../../LAUNCH.md) §4.
+[LAUNCH.md](../../docs/community/LAUNCH.md) §4.
 
 ---
 

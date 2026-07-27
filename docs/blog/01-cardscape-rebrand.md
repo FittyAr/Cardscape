@@ -82,11 +82,11 @@ a [`CONTRIBUTING.md`](../../CONTRIBUTING.md), a
 (Contributor Covenant v2.1), a
 [`SECURITY.md`](../../SECURITY.md) with a private
 reporting channel, a [`SUPPORT.md`](../../SUPPORT.md)
-with a public support matrix, a [`CHANGELOG.md`](../../CHANGELOG.md)
-in Keep a Changelog format, a [`ROADMAP.md`](../../ROADMAP.md)
+with a public support matrix, a [`CHANGELOG.md`](../../docs/community/CHANGELOG.md)
+in Keep a Changelog format, a [`ROADMAP.md`](../../docs/community/ROADMAP.md)
 for the community-readable view of the plan, a
-[`MAINTAINERS.md`](../../MAINTAINERS.md) and a
-[`GOVERNANCE.md`](../../GOVERNANCE.md) for how the project
+[`MAINTAINERS.md`](../../docs/community/MAINTAINERS.md) and a
+[`GOVERNANCE.md`](../../docs/community/GOVERNANCE.md) for how the project
 makes decisions today and how it will make them when more
 maintainers join. We also added GitHub issue templates
 (bug, feature, question), a pull request template, and
@@ -182,7 +182,7 @@ source of truth; the code is the implementation.
 ## What is next
 
 The next milestone is **Milestone 1: the MVP** (see
-[`LAUNCH.md`](../../LAUNCH.md) §2). The MVP is the first
+[`LAUNCH.md`](../../docs/community/LAUNCH.md) §2). The MVP is the first
 runnable build: a single user can sign up, create a
 workspace, create a board, add lists and cards, drag
 cards between lists, and sign in tomorrow to see the same

@@ -211,7 +211,7 @@ explicit. For now:
 
 A future PR (Phase 5+) introduces a "status page" that
 displays the SLOs to the users. The status page is part
-of the [LAUNCH.md](../../LAUNCH.md) Phase 5 deliverable.
+of the [LAUNCH.md](../../docs/community/LAUNCH.md) Phase 5 deliverable.
 
 ---
 

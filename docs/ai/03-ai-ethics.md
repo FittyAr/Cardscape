@@ -12,7 +12,7 @@
 > maintainer's commitment to the community. When the
 > project grows to multi-maintainer, this document is
 > ratified by the maintainers per
-> [GOVERNANCE.md](../../GOVERNANCE.md).
+> [docs/community/GOVERNANCE.md](../../docs/community/GOVERNANCE.md).
 
 ---
 
