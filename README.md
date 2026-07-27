@@ -80,11 +80,14 @@ See:
 
 ## Status
 
-Cardscape is in **alpha, Phase 3 shipped**. The codebase
+Cardscape is in **alpha, Phase 4 in flight**. The codebase
 runs end to end: a user can register, create a workspace, drop
 in boards/lists/cards, comment, label, star, mint and revoke
-API tokens, and the full HTTP pipeline is covered by integration
-tests against the real Program + DI + Wolverine + EF Core stack.
+API tokens, send and accept workspace invitations, and the
+full HTTP pipeline is covered by integration tests against the
+real Program + DI + Wolverine + EF Core stack. The MCP server
+exposes the same surface to AI clients and pushes its writes
+back to the Web UI in real time.
 
 | Phase | Scope | Status |
 |---|---|---|
@@ -92,11 +95,12 @@ tests against the real Program + DI + Wolverine + EF Core stack.
 | 1 | MVP: single user, sign-up, workspace, board, list, card, sign in, Web UI | **DONE** (`v0.1.0-mvp`) |
 | 2 | Real-time (SignalR) + **MCP server end-to-end** (the differentiator ships here) | **DONE** (`v0.2.0-core-mcp`) |
 | 3 | Access control on cards/lists + **first-class API tokens** for the MCP server + Web UI token management | **DONE** (`v0.3.0-api-tokens`) |
-| 4 | Workspace member invitations + extensions + automation engine + calendar + Inbox + Planner | not started |
-| 5 | Enterprise + AI features | not started |
-| 6 | Polish + scale | ongoing |
+| 4 | Workspace member invitations + cross-process MCP→API real-time broadcast | **DONE** (`v0.4.0-realtime-mcp`, `v0.5.0-invitations`) |
+| 5 | Extensions + automation engine + calendar + Inbox + Planner | not started |
+| 6 | Enterprise + AI features | not started |
+| 7 | Polish + scale | ongoing |
 
-`dotnet build` is green. 179 unit tests + 10 integration tests
+`dotnet build` is green. **200 unit tests + 31 integration tests**
 are green. The Blazor WebAssembly client talks to the API over
 JWT. The Docker image boots, applies migrations, and serves the
 SPA on port 8080. See
@@ -146,7 +150,7 @@ For iterating on the source:
 git clone https://github.com/cardscape/cardscape.git
 cd cardscape
 dotnet build                       # 11 projects, 0 errors, 0 warnings
-dotnet test                        # 179 unit + 10 integration, all green
+dotnet test                        # 200 unit + 31 integration, all green
 dotnet run --project src/Cardscape.Api          # API on http://localhost:5291
 dotnet run --project src/Cardscape.Web          # Web on http://localhost:5206
 ```
@@ -172,6 +176,123 @@ Set `Database__Provider` to `Sqlite`, `PostgreSQL`, or `MariaDB`
 to match the connection string. Migrations live in a single set
 under `src/Cardscape.Infrastructure/Persistence/Migrations/`
 that runs on all three engines.
+
+---
+
+## What's in `v0.5.0-invitations`
+
+This release closes the first slice of Phase 4: **workspace
+member invitations**. A workspace owner can mint an invitation
+by email, the invitee gets an email link, follows it, and is
+added to the workspace with the granted role. The whole
+lifecycle (issue, accept, list pending, revoke) is exposed
+through the REST API, the MCP server, and the Blazor Web UI.
+
+- **`WorkspaceInvitation` aggregate** (`src/Cardscape.Domain/
+  Workspaces/`): stores the SHA-256 hash of a 32-byte random
+  cleartext token + a 10-char display prefix. 14-day default
+  expiry (max 60). `Issue`, `Accept`, `Revoke` domain methods
+  with idempotent failure modes. Domain events
+  `WorkspaceInvitationIssued`, `Accepted`, `Revoked`.
+- **`IInvitationService`** owns the secret-generation +
+  validation logic: `RandomNumberGenerator.GetBytes(32)` →
+  base64url → SHA-256. The cleartext is returned exactly once
+  at issuance; the server only persists the hash + prefix.
+  `ValidateAsync` distinguishes "expired" / "revoked" /
+  "already accepted" with specific error codes so the UI can
+  show a useful message.
+- **`IInvitationEmailService`** with a default `Console…`
+  implementation that logs the invite URL. The public base
+  URL is read from `App:PublicBaseUrl` (default
+  `http://localhost:5206`, the Blazor WASM port); in
+  production this is swapped for an SMTP / SES / SendGrid
+  adapter behind the same interface.
+- **REST surface** under `/api/workspaces/{id}/invitations` and
+  `/api/invitations` (anonymous, owner-gated by
+  `Authorization`): `POST` issues, `GET` lists, `DELETE`
+  revokes, `POST /api/invitations/accept` redeems, `GET
+  /api/invitations/pending` is the invitee-facing inbox.
+- **MCP server** gets five new tools: `workspaces_invite`,
+  `workspaces_list_invitations`, `workspaces_revoke_invitation`,
+  `invitations_list_pending`, `invitations_accept`. The
+  `workspaces_invite` tool returns the cleartext token in the
+  same shape as the REST API.
+- **Blazor UI**: `/invitations` is the invitee's read-only
+  inbox (workspace name + role + expiry). `/invitations/accept`
+  is the email-link landing page. `/workspaces/{id}/members`
+  is the owner's members + invitations page, with an invite
+  form (email + role) that shows the cleartext token in a
+  one-shot panel — copy it into the email you actually send.
+- **Bugfix**: `WorkspaceRepository.GetWithMembersAsync` was
+  using `EF.Property<Guid>(w, "Id")` to compare the strongly-
+  typed `WorkspaceId` against the parameter, which collided
+  with the `HasConversion` pipeline and threw
+  `Object must implement IConvertible` at materialization.
+  The query is now `w.Id == id` and EF Core 10 handles the
+  converter end to end. No production had hit this yet (no
+  handler was using the path), but the integration test now
+  pins the contract.
+- **Tests**: 231 in total — 200 unit + 31 integration.
+  `WorkspaceInvitationTests` (13 unit tests) covers email
+  normalization, default + custom lifetime, hash/prefix
+  validation, accept/revoke idempotency, expiry transitions.
+  `WorkspaceInvitationTests` (6 integration tests) covers the
+  full issue → accept → membership flow, wrong-email
+  redemption, inbox filtering, non-owner rejection, and
+  revoke-before-accept.
+
+What is **not** in v0.5.0-invitations (still in Phase 4):
+
+- Extensions, automation engine, calendar, Inbox, Planner.
+- Search relevance + PostgreSQL FTS / Lucene.NET.
+- Attachments and storage providers other than the local
+  filesystem.
+
+---
+
+## What's in `v0.4.0-realtime-mcp`
+
+This release turns the MCP server into a **peer** of the REST
+API for real-time: any card/list/comment the AI creates or
+moves on your behalf is broadcast through the same SignalR
+hub the Web UI listens to, so the human user sees the change
+without a page reload.
+
+- **`/api/internal/broadcast` endpoint** in the API
+  (X-Internal-Secret auth, configurable via `Internal:Secret`).
+  The MCP process POSTs a `{boardId?, listId?, cardId?,
+  method, payload}` envelope; the API resolves the
+  `board:{boardId:N}` group and dispatches the matching
+  `IBoardClient` method. 503 if the secret is not configured
+  (sandboxed dev), 401 on a wrong secret, 400 on an unknown
+  method.
+- **`IBoardPushClient` + `HttpBoardPushClient`** in
+  `src/Cardscape.Mcp/Realtime/`: typed methods for every
+  pushed event. The MCP calls the push client after a
+  successful command; failures log a warning and never block
+  the tool result.
+- **Shared payload records** moved from `Cardscape.Api/Hubs/
+  IBoardClient.cs` to `Cardscape.Application/Realtime/
+  BoardEventPayloads.cs`, so the API hub and the MCP push
+  client serialize the same shape without duplication.
+- **MCP tool coverage widened**: `lists_create`, `cards_create`,
+  `cards_move`, `cards_complete`, `cards_reopen`, `comments_add`
+  all push their result through the broadcast endpoint.
+  `cards_move` looks up the source list id before invoking
+  so the `FromListId` field in `CardMovedPayload` is correct.
+- **`BoardBroadcastEndpointTests`** (5 integration tests):
+  unconfigured (503), wrong secret (401), unknown method
+  (400), happy path with `boardId` (202), `listId` resolver
+  path.
+- **Tests**: 212 in total — 187 unit + 25 integration.
+
+What is **not** in v0.4.0-realtime-mcp:
+
+- Workspace member invitations (the next slice, v0.5).
+- Extensions, automation engine, calendar, Inbox, Planner.
+- Search relevance + PostgreSQL FTS / Lucene.NET.
+- Attachments and storage providers other than the local
+  filesystem.
 
 ---
 

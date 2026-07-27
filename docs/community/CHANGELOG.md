@@ -14,6 +14,188 @@ patch or feature release.
 
 ---
 
+## [v0.5.0-invitations] — 2026-07-27
+
+Phase 4, first slice. Workspace member invitations: owner
+mints by email, invitee redeems a one-shot token, MCP server
+exposes the same surface to AI clients.
+
+### Added
+
+- **`WorkspaceInvitation` aggregate** (`src/Cardscape.Domain/
+  Workspaces/`): 32-byte random cleartext token (base64url),
+  SHA-256 hash persisted, 10-char display prefix kept in the
+  cleartext so the UI can show the prefix after the fact. 14-
+  day default expiry, max 60 days. Email is normalized
+  (trimmed + lowercased) at issue time. `Issue`, `Accept`,
+  `Revoke` domain methods with idempotent failure modes.
+  Domain events `WorkspaceInvitationIssued`, `Accepted`,
+  `Revoked`.
+- **`IInvitationService`** in Application owns the
+  `RandomNumberGenerator` + base64url + SHA-256 secret
+  pipeline. `IssueAsync` mints and persists; `ValidateAsync`
+  hashes the cleartext, looks it up, and distinguishes
+  `expired` / `revoked` / `already_accepted` with specific
+  error codes so the UI can render the right message.
+- **`IInvitationEmailService`** with a default `Console…`
+  implementation (`src/Cardscape.Infrastructure/Email/`) that
+  logs the invite URL. Public base URL read from
+  `App:PublicBaseUrl` (default `http://localhost:5206`); in
+  production the same interface is implemented by an SMTP /
+  SES / SendGrid adapter.
+- **`IWorkspaceInvitationRepository`** with
+  `FindByTokenHashAsync` (the accept hot path),
+  `ListForWorkspaceAsync` (members page, optional include
+  terminal rows), and `ListPendingForEmailAsync` (inbox).
+  The email query streams client-side via
+  `AsAsyncEnumerable` because the strongly-typed `Email`
+  value object can't be translated to SQL through the
+  converter (same trap as `ApiTokenRepository`).
+- **REST surface** under `/api/workspaces/{id}/invitations`
+  and `/api/invitations`:
+  - `POST /api/workspaces/{id}/invitations` — issue
+    (owner-only). Returns the cleartext token exactly once.
+  - `GET /api/workspaces/{id}/invitations` — list, with
+    optional `?includeTerminal=true` (owner-only).
+  - `DELETE /api/workspaces/{id}/invitations/{invitationId}`
+    — revoke (owner-only).
+  - `GET /api/invitations/pending` — invitee-facing inbox
+    (current user's email only).
+  - `POST /api/invitations/accept` — redeem a cleartext
+    token. Server-side email-mismatch check rejects if the
+    authenticated user's email does not match the
+    invitation's email (case-insensitive). Idempotent: if
+    the user is already a member, returns 200 with the
+    workspace DTO.
+- **MCP server** gets five new tools:
+  `workspaces_invite`, `workspaces_list_invitations`,
+  `workspaces_revoke_invitation`, `invitations_list_pending`,
+  `invitations_accept`. Same auth pipeline (API tokens) as
+  the rest of the MCP surface.
+- **Blazor UI**:
+  - `/invitations` — read-only inbox. Lists every pending
+    invitation addressed to the current user's email
+    (workspace name + role + expiry). Explains the email-
+    link accept flow.
+  - `/invitations/accept?token=…` — the email-link landing
+    page. Calls `POST /api/invitations/accept` and shows
+    success or a specific error (expired, revoked, wrong
+    email).
+  - `/workspaces/{id}/members` — owner's members +
+    invitations page. Lists current members, lists pending
+    invitations (revoke button per row), and an invite form
+    (email + role dropdown) that shows the cleartext token
+    in a one-shot panel — copy it into the email you send.
+- **Migration `IssueWorkspaceInvitations`**: new
+  `workspace_invitations` table (17 columns, 3 indexes:
+  unique on `TokenHash`, regular on `Email` and
+  `WorkspaceId`). `RowVersion` is
+  `IsConcurrencyToken().HasDefaultValue(0u)` like every
+  other table.
+
+### Changed
+
+- **`WorkspaceRepository.GetWithMembersAsync`** simplified
+  from `EF.Property<Guid>(w, "Id") == idValue` to
+  `w.Id == id`. The old shadow-property form collided with
+  the `HasConversion` pipeline and threw
+  `Object must implement IConvertible` at materialization
+  time. EF Core 10 handles the strongly-typed id end to end
+  when compared directly. No production path had hit this
+  yet (no handler was calling the method), but the new
+  invitation handler exposes it; the integration test now
+  pins the contract.
+
+### Tests
+
+- **`WorkspaceInvitationTests`** (13 unit tests) on the
+  domain entity: email normalization, default + custom
+  lifetime, hash/prefix validation, accept/revoke
+  idempotency, expiry transitions, accept-after-expiry
+  rejection, revoke-after-accept rejection.
+- **`WorkspaceInvitationTests`** (6 integration tests) over
+  the full HTTP stack: full issue → accept → membership
+  flow with member-count assertion, wrong-email
+  redemption, inbox filtering by current user, non-owner
+  rejection, revoke-before-accept rejection, anonymous
+  invite rejection.
+- **Total: 231 in total** — 200 unit + 31 integration, all
+  green.
+
+---
+
+## [v0.4.0-realtime-mcp] — 2026-07-27
+
+Phase 4, prep slice. Cross-process real-time broadcast from
+the MCP server back to the Web UI, sharing the SignalR hub
+the same Web UI already listens to.
+
+### Added
+
+- **`/api/internal/broadcast` endpoint** in the API
+  (`src/Cardscape.Api/Endpoints/Internal/BoardBroadcastEndpoints.cs`).
+  Auth via `X-Internal-Secret` header, configurable through
+  `Internal:Secret`. The MCP process POSTs a `{boardId?,
+  listId?, cardId?, method, payload}` envelope; the API
+  resolves the board (via `AsAsyncEnumerable` because the
+  strongly-typed id value-object access path can't be
+  translated to SQL) and dispatches the matching `IBoardClient`
+  method on the `board:{boardId:N}` SignalR group. Returns
+  503 if `Internal:Secret` is not configured (sandboxed dev
+  safety), 401 on a wrong secret, 400 on an unknown method,
+  202 on success.
+- **`IBoardPushClient` + `HttpBoardPushClient`** in
+  `src/Cardscape.Mcp/Realtime/`. Typed methods for every
+  event the MCP can produce (`PushCardCreatedAsync`,
+  `PushCardMovedAsync`, `PushCardCompletedAsync`, etc.). The
+  MCP calls the push client after every successful mutating
+  tool. Failures log a warning and never block the tool
+  result.
+- **Shared payload records** in
+  `src/Cardscape.Application/Realtime/BoardEventPayloads.cs`
+  (moved out of `Cardscape.Api/Hubs/IBoardClient.cs`): the
+  same `CardEventPayload`, `CardMovedPayload`,
+  `ListEventPayload`, `CommentEventPayload` types are used
+  by both the API hub (as the parameter of `IBoardClient`
+  methods) and the MCP push client (as the request body
+  shape).
+- **MCP tools widened** to push after success: `lists_create`,
+  `cards_create`, `cards_complete`, `cards_reopen`,
+  `comments_add`, and `cards_move` (looks up the source
+  list id via `ICardRepository.GetByIdAsync` before invoking
+  so the `FromListId` field is correct). `workspaces_*` and
+  `boards_*` don't push because they don't change board
+  state from the realtime-consumer's point of view.
+- **MCP DI**: `AddHttpClient("Cardscape.Api", baseUrl:
+  config["Cardscape:ApiBaseUrl"])` + a singleton
+  `IBoardPushClient` registration in
+  `src/Cardscape.Mcp/Extensions/ServiceCollectionExtensions.cs`.
+  `appsettings.json` documents the commented
+  `Cardscape:ApiBaseUrl` and `Internal:Secret` placeholders
+  so a developer can copy them into a real
+  `appsettings.Development.json` (the secret is a per-
+  environment value and is not committed).
+
+### Tests
+
+- **`BoardBroadcastEndpointTests`** (5 integration tests):
+  unconfigured (503), wrong secret (401), unknown method
+  (400), happy path with explicit `boardId` (202),
+  `listId`-resolver path.
+- **Total: 212** — 187 unit + 25 integration, all green.
+
+### Security
+
+- **Cross-process broadcast requires a shared secret**. The
+  endpoint refuses to start serving if `Internal:Secret` is
+  empty (returns 503). Production deployments must set
+  `Internal:Secret` to the same value in both the API and
+  the MCP server. Documented in the new
+  `docker-compose.yml` env block; the secret is not
+  committed.
+
+---
+
 ## [v0.3.0-api-tokens] — 2026-07-27
 
 Phase 3. Long-lived API tokens, access-control hardening on
