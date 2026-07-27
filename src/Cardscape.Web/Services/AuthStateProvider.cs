@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json;
-using Microsoft.AspNetCore.Components.Authorization;
 using Cardscape.Web.Shared;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Cardscape.Web.Services;
 

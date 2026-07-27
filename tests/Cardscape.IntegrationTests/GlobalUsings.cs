@@ -1,0 +1,14 @@
+global using System.Net;
+global using System.Net.Http.Json;
+global using System.Text.Json;
+global using System.Text.Json.Serialization;
+global using Xunit;
+global using FluentAssertions;
+global using Cardscape.IntegrationTests.Fixtures;
+global using Cardscape.Application.Authentication.DTOs;
+global using Cardscape.Application.Workspaces.DTOs;
+global using Cardscape.Application.Boards.DTOs;
+global using Cardscape.Application.Lists.DTOs;
+global using Cardscape.Application.Cards.DTOs;
+global using Cardscape.Application.Labels.DTOs;
+global using Cardscape.Application.Comments.DTOs;

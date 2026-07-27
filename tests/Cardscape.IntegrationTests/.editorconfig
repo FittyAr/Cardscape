@@ -1,0 +1,10 @@
+# Integration tests follow the same BDD-style sentence names
+# as the unit tests (Method_Scenario_Result). Disable the
+# analyzers that flag underscores in identifiers for this project.
+
+root = true
+
+[*.cs]
+# Underscores in method names are allowed for BDD-style test names.
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1709.severity = none
