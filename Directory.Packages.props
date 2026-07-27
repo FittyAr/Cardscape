@@ -29,6 +29,9 @@
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="11.0.0-preview.6.26359.118" />
 
+    <!-- Override transitive Newtonsoft.Json (transitive from SignalR.Client 1.2.0; 11.0.2 has a known high-severity advisory GHSA-5crp-9r3c-p9vr). -->
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+
     <!-- EF Core 10 LTS + Identity. -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
@@ -49,6 +52,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="11.0.0-preview.6.26359.118" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="11.0.0-preview.6.26359.118" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="11.0.0-preview.6.26359.118" />
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="11.0.0-preview.6.26359.118" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="11.0.0-preview.6.26359.118" />
     <PackageVersion Include="Radzen.Blazor" Version="11.1.8" />
 

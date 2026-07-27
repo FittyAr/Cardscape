@@ -294,6 +294,40 @@ code {
     margin: 0;
 }
 
+.board-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 1rem;
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.live-indicator .dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #9ca3af;
+}
+
+.live-indicator.live-on {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.live-indicator.live-on .dot {
+    background: #16a34a;
+    box-shadow: 0 0 0 0.25rem rgba(22, 163, 74, 0.25);
+}
+
 .board-description {
     color: #6b7280;
     margin-bottom: 1rem;

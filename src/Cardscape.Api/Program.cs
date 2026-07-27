@@ -9,7 +9,9 @@ using Cardscape.Api.Endpoints.Notifications;
 using Cardscape.Api.Endpoints.Search;
 using Cardscape.Api.Endpoints.Workspaces;
 using Cardscape.Api.Extensions;
+using Cardscape.Api.Hubs;
 using Cardscape.Api.Middleware;
+using Cardscape.Api.Realtime;
 using Cardscape.Application.DependencyInjection;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Persistence;
@@ -25,6 +27,15 @@ builder.Services.AddValidation();
 builder.Services.AddCardscapeApplication();
 builder.Services.AddCardscapeInfrastructure(builder.Configuration);
 builder.Services.AddApiAuthentication(builder.Configuration);
+
+// ── Real-time (SignalR) ───────────────────────────────────────
+// Subscribed clients join board:{boardId} on demand. The
+// DomainEventBroadcaster (static Wolverine handlers in
+// Cardscape.Api.Realtime) bridges domain events from the
+// Wolverine bus to the IBoardNotifier, which fans out to every
+// connection in the matching group.
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IBoardNotifier, BoardNotifier>();
 
 var app = builder.Build();
 
@@ -62,6 +73,12 @@ app.MapLabelEndpoints();
 app.MapNotificationEndpoints();
 app.MapActivityEndpoints();
 app.MapSearchEndpoints();
+
+// Real-time board hub. Sits at /hubs/board with the same JWT
+// bearer authentication as the REST API; clients bring the
+// access token in the query string (the SignalR client
+// appends it automatically).
+app.MapHub<BoardHub>("/hubs/board");
 
 app.Run();
 

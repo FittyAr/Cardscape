@@ -39,6 +39,9 @@ builder.Services.AddScoped<ICardsApiClient, CardsApiClient>();
 builder.Services.AddScoped<ILabelsApiClient, LabelsApiClient>();
 builder.Services.AddScoped<ICommentsApiClient, CommentsApiClient>();
 
+// ── Real-time (SignalR client) ──────────────────────────────
+builder.Services.AddScoped<BoardHubClient>();
+
 // Radzen component services.
 builder.Services.AddRadzenComponents();
 

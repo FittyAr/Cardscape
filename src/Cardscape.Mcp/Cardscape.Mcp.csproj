@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Cardscape.Application\Cardscape.Application.csproj" />
+    <ProjectReference Include="..\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

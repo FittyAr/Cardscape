@@ -48,7 +48,7 @@ public sealed class Label : AggregateRoot<LabelId>
         }
 
         var label = new Label(id, boardId, name, color, createdBy, at);
-        label.AddDomainEvent(new LabelCreated(id, boardId, name, at));
+        label.AddDomainEvent(new LabelCreated(id, boardId, name, color, at));
         return Result.Success(label);
     }
 

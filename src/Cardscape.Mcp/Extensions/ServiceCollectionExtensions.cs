@@ -1,3 +1,6 @@
+using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.DependencyInjection;
+using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Mcp.Authentication;
 using ModelContextProtocol.Server;
 
@@ -8,40 +11,51 @@ public static class ServiceCollectionExtensions
     public const string McpServerName = "Cardscape";
 
     /// <summary>
-    /// Registers the Model Context Protocol server, including the
-    /// authentication handler, the API-token scheme, the
-    /// <see cref="ICurrentUserResolver"/> implementation, and the
-    /// tool / resource / prompt discovery.
+    /// Registers the Model Context Protocol server on top of the
+    /// same Application + Infrastructure composition the REST API
+    /// uses. Auth is JWT bearer (the same tokens the API issues);
+    /// tools are static methods on classes decorated with
+    /// <see cref="McpServerToolAttribute"/>.
     /// </summary>
-    /// <remarks>
-    /// The MCP C# SDK 1.4.1 (the latest stable release) only ships
-    /// the <c>stdio</c> transport. The HTTP+SSE transport is in
-    /// the 2.0 preview and will be wired in when Cardscape ships
-    /// hosted MCP deployments in Phase 5 (or earlier if a
-    /// maintainer wants it before then).
-    /// </remarks>
     public static IServiceCollection AddCardscapeMcp(
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // ── API-token authentication ────────────────────────
-        services.AddAuthentication(ApiTokenAuthenticationHandler.SchemeName)
-                .AddScheme<ApiTokenAuthenticationOptions,
-                           ApiTokenAuthenticationHandler>(
-                    ApiTokenAuthenticationHandler.SchemeName,
-                    _ => { });
+        // ── Composition: same as the API ─────────────────────
+        services.AddCardscapeApplication();
+        services.AddCardscapeInfrastructure(configuration);
+
+        // ── Auth (JWT bearer matching the REST API) ──────────
+        services.AddAuthentication(JwtBearerAuthenticationHandler.SchemeName)
+                .AddScheme<JwtBearerAuthenticationOptions,
+                           JwtBearerAuthenticationHandler>(
+                    JwtBearerAuthenticationHandler.SchemeName,
+                    options =>
+                    {
+                        options.Issuer = configuration["Jwt:Issuer"] ?? "Cardscape";
+                        options.Audience = configuration["Jwt:Audience"] ?? "Cardscape";
+                        options.SigningKey = configuration["Jwt:SigningKey"]
+                            ?? "dev-only-insecure-signing-key-please-override-in-production-32+chars";
+                    });
 
         services.AddAuthorization();
-
         services.AddHttpContextAccessor();
-        services.AddScoped<ICurrentUserResolver, McpCurrentUserResolver>();
+
+        // The MCP server has its own ICurrentUser implementation so
+        // Application layer handlers can read the JWT principal
+        // without coupling to ASP.NET.
+        services.AddScoped<ICurrentUser, McpCurrentUser>();
+
+        // ── Real-time (MCP tools that mutate can push to the
+        //    same SignalR hub the Web client listens to) ──────
+        // The Mcp process does not own the hub (the API does), so
+        // tools that need to broadcast go through a thin HTTP
+        // client to the API's /hubs/board endpoint. For v0.2 the
+        // MCP surface is read + write without broadcasting; the
+        // hub side is wired in v0.3.
+        services.AddHttpContextAccessor();
 
         // ── MCP server (stdio transport) ─────────────────────
-        // The 1.4.1 SDK exposes AddMcpServer + WithStdioServerTransport
-        // + WithToolsFromAssembly / WithPromptsFromAssembly /
-        // WithResourcesFromAssembly. The 2.0 preview adds
-        // WithHttpServerTransport + WithDistributedEventStore for
-        // SSE-based live updates.
         services
             .AddMcpServer()
             .WithStdioServerTransport()
@@ -53,10 +67,10 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Maps the MCP server pipeline. The stdio transport doesn't
-    /// need an HTTP endpoint, but the auth handler is still
-    /// registered for future use (the HTTP transport will be
-    /// added when the SDK 2.0 stable ships).
+    /// Maps the MCP server pipeline. Stdio doesn't need HTTP
+    /// endpoints, but we still wire auth + authorization so tools
+    /// that reach into <see cref="ICurrentUser"/> get a fully
+    /// resolved principal.
     /// </summary>
     public static WebApplication UseCardscapeMcp(this WebApplication app)
     {

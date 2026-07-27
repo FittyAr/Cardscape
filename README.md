@@ -90,8 +90,8 @@ Program + DI + Wolverine + EF Core stack.
 |---|---|---|
 | 0 | Solution scaffold, multi-DB plumbing, RPL-1.5, AGENTS contract, MCP server project skeleton, full documentation set | **DONE** |
 | 1 | MVP: single user, sign-up, workspace, board, list, card, sign in, Web UI | **DONE** (`v0.1.0-mvp`) |
-| 2 | Collaboration + real-time + **MCP server end-to-end** (the differentiator ships here) | not started |
-| 3 | Extensions + automation engine | not started |
+| 2 | Real-time (SignalR) + **MCP server end-to-end** (the differentiator ships here) | **DONE** (`v0.2.0-core-mcp`) |
+| 3 | Collaboration + workspace sharing + extensions + automation engine | not started |
 | 4 | Enterprise + AI features | not started |
 | 5 | Polish + scale | ongoing |
 
@@ -174,6 +174,53 @@ that runs on all three engines.
 
 ---
 
+## What's in `v0.2.0-core-mcp`
+
+This release adds **real-time board sync** (SignalR) and the
+**MCP server end-to-end** — the differentiator. The full vertical
+slice for a single user still works as in `v0.1.0-mvp`, plus:
+
+- **Real-time board sync** (`/hubs/board`): every command
+  (create, move, complete, comment, label, etc.) fires a
+  domain event that the `DomainEventBroadcaster` ships to a
+  `BoardHub` SignalR group. The Blazor client connects on
+  board load, joins `board:{boardId}`, and reloads the board
+  on any push — the "Live" indicator in the top-right shows
+  connection state. Reconnect with backoff is built in.
+- **MCP server end-to-end** (`src/Cardscape.Mcp/`): the same
+  `Application` layer the REST API uses is now exposed to AI
+  clients through 19 MCP tools — `workspaces_list`,
+  `boards_list/get/create/star/unstar`, `lists_list/create`,
+  `cards_list/get/create/move/complete/reopen/assign/attach_label`,
+  `comments_add/list`, `labels_list/create`. Every tool goes
+  through the same Wolverine bus, so authorization, validation,
+  and side effects are exactly the same as the REST surface.
+  Auth is JWT bearer (the same tokens the API issues); the
+  planned `ApiToken` first-class entity lands in v0.3.
+- **Newtonsoft.Json pin** to 13.0.3 — SignalR.Client 1.2.0
+  pulled a transitive 11.0.2 that has a high-severity advisory
+  (GHSA-5crp-9r3c-p9vr).
+- **Tests**: 192 in total — 179 unit + 13 integration
+  (added three SignalR hub tests: 401 without token, reachable
+  with token, and the create-card → list-cards flow that
+  exercises the broadcaster pipeline end-to-end).
+
+What is **not** in v0.2.0-core-mcp (per the [implementation plan](docs/roadmap/01-implementation-plan.md)):
+
+- Multi-user collaboration (workspaces are single-owner; the
+  `board_members` / `workspace_members` tables are scaffolded
+  but not yet enforced on read).
+- API-token entity (the long-lived, scoped, revocable token
+  the MCP server should ideally use instead of JWTs).
+- Extensions, automation engine, calendar, Inbox, Planner.
+- Search relevance + PostgreSQL FTS / Lucene.NET.
+- Attachments and storage providers other than the local
+  filesystem.
+
+These land in Phases 3 through 5.
+
+---
+
 ## What's in `v0.1.0-mvp`
 
 This is the first self-hostable build. It ships the full
@@ -204,19 +251,6 @@ end-to-end vertical slice for a single user:
   in-memory) and 10 integration tests (full HTTP stack via
   `WebApplicationFactory<Program>` with SQLite shared-memory).
   Both suites are green in under 10 seconds combined.
-
-What is **not** in v0.1.0-mvp (per the [implementation plan](docs/roadmap/01-implementation-plan.md)):
-
-- Multi-user collaboration (workspaces are single-owner; members
-  and board sharing are scaffolded but not wired up).
-- Real-time updates, SignalR hub, activity feed UI.
-- The MCP server end-to-end.
-- Extensions, automation engine, calendar, Inbox, Planner.
-- Search.
-- Attachments and storage providers other than the local
-  filesystem.
-
-These land in Phases 2 through 5.
 
 ---
 

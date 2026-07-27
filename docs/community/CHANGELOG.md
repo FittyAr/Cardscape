@@ -14,6 +14,96 @@ patch or feature release.
 
 ---
 
+## [v0.2.0-core-mcp] — 2026-07-27
+
+Phase 2. Real-time board sync + the MCP server end-to-end
+(the differentiator that Cardscape is built around).
+
+### Added
+
+- **SignalR `BoardHub`** at `/hubs/board`. Authenticated with
+  the same JWT bearer scheme as the REST API. Clients join
+  `board:{boardId}` on demand via the `JoinBoard` method.
+  `IBoardClient` declares 14 server-to-client events:
+  `CardCreated`, `CardUpdated`, `CardMoved`, `CardCompleted`,
+  `CardReopened`, `CardArchived`, `CardRestored`, `ListCreated`,
+  `ListRenamed`, `ListArchived`, `ListRestored`, `CommentAdded`,
+  `LabelCreated`, plus a few un-implemented placeholders for
+  assign/label-attach.
+- **`DomainEventBroadcaster`** in the API project: a static
+  set of Wolverine handlers that bridge every domain event
+  raised by the command handlers to `IBoardNotifier`, which
+  fans out to the matching SignalR group. The pattern is
+  "command raises domain event → Wolverine bus invokes handler
+  in API → handler calls hub". No new abstractions in the
+  Application layer.
+- **`LabelCreated` event** now carries the `Color` value
+  object so the broadcaster can ship it to the hub without
+  re-fetching the label.
+- **`BoardHubClient`** in the Blazor WASM project. Uses
+  `Microsoft.AspNetCore.SignalR.Client` 11.0-preview, brings
+  the access token via the `AccessTokenProvider`, and exposes
+  a C# event for every server-to-client event. `BoardDetail.razor`
+  connects on parameter set, subscribes to the events that
+  affect its UI, and reloads the board on each push. A "Live"
+  indicator in the top-right shows connection state.
+- **MCP server end-to-end** (`src/Cardscape.Mcp/`): the same
+  Application + Infrastructure composition the REST API uses
+  is now wired up. A JWT bearer auth scheme (matching the API)
+  populates `ICurrentUser` so every tool goes through the
+  same authorization pipeline. 19 MCP tools are registered
+  via `[McpServerTool]` discovery:
+  - `workspaces_list`
+  - `boards_list`, `boards_get`, `boards_create`, `boards_star`,
+    `boards_unstar`
+  - `lists_list`, `lists_create`
+  - `cards_list`, `cards_get`, `cards_create`, `cards_move`,
+    `cards_complete`, `cards_reopen`, `cards_assign`,
+    `cards_attach_label`
+  - `comments_add`, `comments_list`
+  - `labels_list`, `labels_create`
+
+  Every tool is a thin adapter that calls `IMessageBus.InvokeAsync`
+  on the same commands/queries the REST API uses. The MCP
+  surface therefore inherits authorization, validation, and
+  the `Result<T>` pattern for free.
+
+### Changed
+
+- **`Label` aggregate** now passes its `Color` to `LabelCreated`
+  in the constructor, so the broadcaster can ship the colour
+  payload to the hub without re-fetching.
+- **`Cardscape.Mcp`** now references `Cardscape.Infrastructure`
+  (it was Application-only) and wires up
+  `AddCardscapeApplication` + `AddCardscapeInfrastructure` from
+  its own composition root. The stdio transport brings the
+  Application's Wolverine handlers online automatically.
+- **`Newtonsoft.Json`** pinned to **13.0.3** in
+  `Directory.Packages.props`. SignalR.Client 1.2.0 pulls
+  11.0.2 transitively; that version has the high-severity
+  advisory GHSA-5crp-9r3c-p9vr.
+
+### Removed
+
+- **`ApiTokenAuthenticationHandler`** + `ApiTokenAuthenticationOptions`
+  + `ICurrentUserResolver` + `McpCurrentUserResolver`: the
+  in-line stubs that returned `NoResult()` and threw on use.
+  Replaced by `JwtBearerAuthenticationHandler` + `McpCurrentUser`
+  (which implements the Application layer's `ICurrentUser`).
+  The proper `ApiToken` first-class entity lands in v0.3.
+
+### Security
+
+- The MCP server's `Authorization: Bearer <jwt>` path is
+  validated with the same key, issuer, audience, and clock
+  skew as the REST API. Rejecting the token on the MCP side
+  produces the same failure message as the API side.
+- The `ICurrentUser.IsAuthenticated` check is enforced
+  before every MCP tool call: anonymous tool calls fail
+  fast with `UnauthorizedAccessException` and a clear message.
+
+---
+
 ## [v0.1.0-mvp] — 2026-07-27
 
 Phase 1 complete. The first self-hostable, runnable build of

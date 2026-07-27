@@ -8,6 +8,7 @@ public sealed record LabelCreated(
     LabelId LabelId,
     BoardId BoardId,
     LabelName Name,
+    Common.Color Color,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
 
 /// <summary>Raised when a label is renamed or recolored.</summary>
