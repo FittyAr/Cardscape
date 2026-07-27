@@ -1,0 +1,16 @@
+# Cardscape.UnitTests — local editorconfig overrides
+#
+# xUnit community style for test names is BDD-style sentences with
+# underscores (e.g. `Create_WithValidEmail_ReturnsSuccess`). The
+# repo-wide .editorconfig inherits the Microsoft convention which
+# rejects underscores via CA1707; that rule doesn't fit tests.
+# We override here for this project only.
+
+[*.cs]
+# Disable CA1707 (Identifiers should not contain underscores) in
+# this test project so BDD-style test names like
+# `Star_WithSameUserTwice_IsIdempotent` are allowed.
+dotnet_diagnostic.CA1707.severity = none
+
+# Make test names readable in test runner output.
+dotnet_diagnostic.CA1709.severity = none
