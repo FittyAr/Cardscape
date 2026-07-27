@@ -5,7 +5,7 @@
     <RootNamespace>Cardscape.IntegrationTests</RootNamespace>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <Description>Integration tests that boot the API/Persistence in-process. Multi-provider: SQLite, PostgreSQL, MariaDB.</Description>
+    <Description>Integration tests that boot the API/Persistence in-process. CURRENTLY: SQLite only. Designed to be portable to PostgreSQL/MariaDB once their EF Core 11+ providers ship — see docs/adr/0001-multi-provider-strategy.md.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,11 +17,20 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
-    <PackageReference Include="MySql.EntityFrameworkCore" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
-  </ItemGroup>
+  <!--
+    Tests currently run against SQLite only (Microsoft.EntityFrameworkCore.Sqlite,
+    referenced transitively via Cardscape.Infrastructure). The other two providers
+    (Npgsql for PostgreSQL, MySql.EntityFrameworkCore for MariaDB) are NOT
+    referenced here on purpose: their .NET 11 / EF Core 11 binaries are not yet
+    stable, and shipping them as test dependencies would lock the test matrix
+    to a broken state.
+
+    The runtime side (Cardscape.Api) DOES reference all three providers, so the
+    application itself can be configured to run on any of them at deployment
+    time. See docs/adr/0001-multi-provider-strategy.md for the full rationale
+    and the migration plan to bring PostgreSQL / MariaDB back into the test
+    matrix once the providers stabilize.
+  -->
 
   <ItemGroup>
     <ProjectReference Include="..\TestCommon\TestCommon.csproj" />
