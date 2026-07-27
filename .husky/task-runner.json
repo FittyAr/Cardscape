@@ -1,0 +1,48 @@
+{
+  "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
+  "tasks": [
+    {
+      "name": "pre-commit",
+      "group": "pre-commit",
+      "command": "dotnet",
+      "args": [
+        "format",
+        "--verify-no-changes",
+        "--verbosity",
+        "quiet",
+        "--include",
+        "src/",
+        "--include",
+        "tests/"
+      ],
+      "include": [
+        "**/*.cs",
+        "**/*.csproj"
+      ]
+    },
+    {
+      "name": "pre-commit-build",
+      "group": "pre-commit",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "--verbosity",
+        "quiet",
+        "--nologo"
+      ],
+      "include": [
+        "**/*.cs",
+        "**/*.csproj"
+      ]
+    },
+    {
+      "name": "commit-msg",
+      "group": "commit-msg",
+      "command": "husky",
+      "args": [
+        "exec",
+        ".husky/hooks/commit-msg.sh"
+      ]
+    }
+  ]
+}
