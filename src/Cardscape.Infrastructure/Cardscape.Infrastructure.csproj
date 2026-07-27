@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Cardscape.Infrastructure</AssemblyName>
+    <RootNamespace>Cardscape.Infrastructure</RootNamespace>
+    <Description>Infrastructure layer: EF Core, Identity, storage, email, background jobs. Multi-provider (SQLite / PostgreSQL / MariaDB).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <!--
+    Database providers are NOT referenced from this project. The Application
+    layer only depends on Microsoft.EntityFrameworkCore. The concrete provider
+    (SQLite, PostgreSQL, or MariaDB) is selected at composition time in the
+    API project via a runtime configuration switch — this is what allows
+    the same artifacts to target any of the three engines.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cardscape.Application\Cardscape.Application.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>Cardscape.Api</AssemblyName>
+    <RootNamespace>Cardscape.Api</RootNamespace>
+    <UserSecretsId>cardscape-api-secrets</UserSecretsId>
+    <Description>Cardscape REST API. ASP.NET Core minimal APIs.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+
+    <!--
+      The API project composes the database provider chosen at runtime.
+      Only one of these three should be referenced per build flavor, but
+      having all three available makes it trivial to switch via configuration.
+    -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="MySql.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cardscape.Application\Cardscape.Application.csproj" />
+    <ProjectReference Include="..\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Migrations: each provider has its own migration assembly. We use a
+      separate folder per provider and tag migrations explicitly with the
+      output-dir argument and the right provider so the schema can be
+      generated for any of the three engines from the same code.
+    -->
+    <EmbeddedResource Include="..\Cardscape.Infrastructure\Persistence\Migrations\**\*.cs" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Cardscape.ArchitectureTests</AssemblyName>
+    <RootNamespace>Cardscape.ArchitectureTests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <Description>NetArchTest rules: enforces layer boundaries, naming, dependency direction.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="NetArchTest.Rules" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestCommon\TestCommon.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Domain\Cardscape.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Application\Cardscape.Application.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Api\Cardscape.Api.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Web\Cardscape.Web.csproj" />
+  </ItemGroup>
+
+</Project>

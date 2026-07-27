@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Cardscape.Domain/Cardscape.Domain.csproj" />
+    <Project Path="src/Cardscape.Application/Cardscape.Application.csproj" />
+    <Project Path="src/Cardscape.Infrastructure/Cardscape.Infrastructure.csproj" />
+    <Project Path="src/Cardscape.Api/Cardscape.Api.csproj" />
+    <Project Path="src/Cardscape.Web/Cardscape.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TestCommon/TestCommon.csproj" />
+    <Project Path="tests/Cardscape.UnitTests/Cardscape.UnitTests.csproj" />
+    <Project Path="tests/Cardscape.IntegrationTests/Cardscape.IntegrationTests.csproj" />
+    <Project Path="tests/Cardscape.ArchitectureTests/Cardscape.ArchitectureTests.csproj" />
+    <Project Path="tests/Cardscape.FunctionalTests/Cardscape.FunctionalTests.csproj" />
+  </Folder>
+</Solution>

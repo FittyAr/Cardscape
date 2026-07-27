@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Cardscape.Application</AssemblyName>
+    <RootNamespace>Cardscape.Application</RootNamespace>
+    <Description>Application layer: use cases (CQRS via MediatR), validations, DTOs, abstractions.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <!-- Microsoft.Extensions.{DependencyInjection,Logging}.Abstractions
+         are auto-included in the .NET 11 SDK; no explicit reference required. -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cardscape.Domain\Cardscape.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
