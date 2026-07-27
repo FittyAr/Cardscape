@@ -1,26 +1,25 @@
-#  features — analysis
+# Feature inventory
 
-> The feature inventory Cardscape must match (or exceed) to be a
-> credible open-source  alternative. Sources:
-> https://trello.com/features, public marketing pages, third-party
-> 2026 reviews, and the Atlassian /  product pages.
+> The target feature surface for Cardscape as an open-source kanban
+> and project-management tool. This document is **not** a feature
+> comparison; it is the set of features we are intentionally building
+> toward, informed by the kanban-tool landscape in 2026 and by the
+> maintainer's direction (see `01-implementation-plan.md`).
 
-This is a **scraped inventory** of what  offers as of July
-2026, not a feature spec for Cardscape. The implementation plan
-that turns this into a delivery schedule is in
-[`01-implementation-plan.md`](01-implementation-plan.md).
+The implementation plan that turns this inventory into a delivery
+schedule is in [`01-implementation-plan.md`](01-implementation-plan.md).
 
 ---
 
 ## 1. Core model
 
-| Feature | Description | Source |
-|---|---|---|
-| **Workspaces** | Top-level container that groups boards and members |  help center |
-| **Boards** | The kanban surface. Holds lists, members, labels, extensions. Has a name, description, background, visibility. |  help center |
-| **Lists** | Columns within a board. Ordered, can be archived. Hold cards. |  help center |
-| **Cards** | The atomic unit. Title, description, members, labels, due date, attachments, comments, checklists, custom fields, cover image, activity. |  help center |
-| **Members / Users** | Profile (name, avatar, email, initials). Assigned to cards, boards, workspaces. |  help center |
+| Concept | Description |
+|---|---|
+| **Workspaces** | Top-level container that groups boards and members |
+| **Boards** | The kanban surface. Holds lists, members, labels, extensions. Has a name, description, background, visibility. |
+| **Lists** | Columns within a board. Ordered, can be archived. Hold cards. |
+| **Cards** | The atomic unit. Title, description, members, labels, due date, attachments, comments, checklists, custom fields, cover image, activity. |
+| **Members / Users** | Profile (name, avatar, email, initials). Assigned to cards, boards, workspaces. |
 
 ## 2. Card-level features
 
@@ -32,16 +31,16 @@ that turns this into a delivery schedule is in
 | **Due date** | Optional date with optional time. Reminders configurable. |
 | **Labels** | Color-coded tags per board. |
 | **Checklists** | Subtasks on the card. Each item has a name, optional due date, optional assignee, completed state. |
-| **Attachments** | Files up to 250 MB on paid plans; links with previews. |
+| **Attachments** | Files (size cap is a deployment concern, not a product limit). Links with previews. |
 | **Comments** | Conversation on the card, with mentions, reactions, edits. |
 | **Activity** | Append-only log of every change to the card. |
 | **Cover** | Image or color used as the visual background. |
-| **Custom fields** | Paid feature. Dropdowns, dates, numbers, text — schema defined per board. |
+| **Custom fields** | Dropdowns, dates, numbers, text — schema defined per board. |
 | **Card mirror** | Same card linked across multiple boards. |
-| **Card aging** | Free power-up. Visually fades cards that haven't seen activity. |
-| **Card snooze** | Free power-up. Hide the card until a date/time. |
-| **Card repeater** | Free power-up. Create a copy of the card on a schedule. |
-| **Voting** | Free power-up. Members add votes to cards. |
+| **Card aging** | Visually fades cards that haven't seen activity. |
+| **Card snooze** | Hide the card until a date/time. |
+| **Card repeater** | Create a copy of the card on a schedule. |
+| **Voting** | Members add votes to cards. |
 | **Watch** | Subscribe to a card's notifications. |
 
 ## 3. Board-level features
@@ -49,15 +48,15 @@ that turns this into a delivery schedule is in
 | Feature | Description |
 |---|---|
 | **Drag and drop** | Move cards within and across lists. Reorder lists. |
-| **Board templates** | Pre-built boards (Kanban, Scrum, Calendar, etc.). Free, with many categories. |
+| **Board templates** | Pre-built boards (Kanban, Scrum, Calendar, etc.). |
 | **Board filtering** | Filter cards by member, label, due date, custom field. |
-| **Board background** | Color or image (including uploaded custom images on paid). |
+| **Board background** | Color or image (including uploaded custom images). |
 | **Archive** | Archive cards and lists. Board-level archive accessible from a sidebar. |
 | **Activity log** | All changes to the board in one place. |
-| **Power-Ups** | Add integrations and feature extensions. |
-| **Automation automation** | Rules, buttons, and scheduled commands. |
+| **Extensions** | Add integrations and feature extensions. |
+| **Automation** | Rules, buttons, and scheduled commands. |
 | **Permissions** | Public, private (workspace), private (invite-only). |
-| **Views** | Board (Kanban), Timeline (Gantt), Calendar, Table, Dashboard, Map. Most views are paid. |
+| **Views** | Board (Kanban), Timeline (Gantt), Calendar, Table, Dashboard, Map. |
 | **Star / Watch** | Mark a board as a favorite; subscribe to its notifications. |
 
 ## 4. List-level features
@@ -68,7 +67,7 @@ that turns this into a delivery schedule is in
 | **Archive list** | Move list (and all its cards) to the archive. |
 | **Move all cards** | Bulk action to move all cards in a list to another list. |
 | **Subscribe** | Get notifications on every change in a list. |
-| **List limits** (power-up) | Cap the number of cards; turn the list red when over. |
+| **List limits** (extension) | Cap the number of cards; turn the list red when over. |
 
 ## 5. Workspace features
 
@@ -78,8 +77,8 @@ that turns this into a delivery schedule is in
 | **Members** | Workspace members with roles (admin / member). |
 | **Templates** | Workspace-level board templates visible to all members. |
 | **Visibility** | Workspace visibility (private, public). |
-| **org-wide security policies** (enterprise) | Security policies enforced org-wide. |
-| **Org-wide permissions** (enterprise) | SAML, SCIM, audit logs, data residency. |
+| **Org-wide policies** | Security and compliance policies enforced org-wide. |
+| **Org-wide permissions** | SAML, SCIM, audit logs, data residency. |
 
 ## 6. Comments
 
@@ -110,7 +109,7 @@ that turns this into a delivery schedule is in
 | **Operator syntax** | `label:urgent @me due:overdue` style operators. |
 | **Saved searches** | Save a filter as a named search. |
 
-## 9. Automation automation
+## 9. Automation engine
 
 | Feature | Description |
 |---|---|
@@ -119,12 +118,12 @@ that turns this into a delivery schedule is in
 | **Scheduled commands** | Cron-like, run actions on a schedule. |
 | **Card buttons** | Buttons shown on the card back. |
 | **Board buttons** | Buttons shown on the board view. |
-| **List of built-in actions** | Move, copy, archive, add label, assign member, post comment, set due date, mark complete, etc. |
-| **Quotas** | 250 runs / month free, unlimited paid. |
+| **Built-in actions** | Move, copy, archive, add label, assign member, post comment, set due date, mark complete, etc. |
+| **Quotas** | Per-user quota (configurable; default 250 runs / month). |
 
-## 10. Power-Ups (integrations)
+## 10. Extensions (integrations)
 
-### 10.1 First-party (-maintained)
+### 10.1 First-party (Cardscape-maintained)
 
 - **Calendar** — Monthly calendar view of due dates.
 - **Card Aging** — Fade stale cards.
@@ -133,37 +132,30 @@ that turns this into a delivery schedule is in
 - **Dashcards** — Card counters (overdue, by member, etc.).
 - **List Limits** — Cap cards per list.
 - **Voting** — Member voting on cards.
-- **Custom Fields** (paid) — Dropdowns, dates, numbers, text.
+- **Custom Fields** — Dropdowns, dates, numbers, text.
 - **Slack** — Link Slack channels to boards.
 - **Google Drive** — Attach Drive files with live previews.
 - **OneDrive** — Attach OneDrive files.
 - **Dropbox** — Attach Dropbox files.
 - **Box** — Attach Box files.
-- **Atlassian Intelligence** (paid) — AI-generated descriptions,
-  summaries, smart fields.
+- **AI** — AI-generated descriptions, summaries, smart fields.
 
-### 10.2 Third-party (most-used)
+### 10.2 Third-party (most-requested)
 
-- **Jira Cloud** — Link  cards to Jira issues.
-- **Confluence** — Embed Confluence pages in cards.
-- **Bitbucket** — Link PRs to cards.
 - **GitHub** — Link branches, PRs, issues to cards.
 - **GitLab** — Same as GitHub.
 - **Microsoft Teams** — Channel notifications.
 - **Outlook / Gmail** — Card from email.
-- **Salesforce** — Sync accounts / opportunities.
-- **HubSpot** — Marketing / CRM.
-- **Mailchimp** — Campaigns on the board.
 - **Figma** — Embed Figma designs.
 - **Miro** — Embed boards.
 - **Loom** — Embed videos.
-- **Zapier** — Connect to 5000+ apps.
-- **Make** (Integromat) — Alternative to Zapier.
+- **Zapier** — Connect to thousands of apps.
+- **Make** — Alternative to Zapier.
 - **Toggl / Harvest / Hubstaff** — Time tracking.
 - **iCalendar** — Subscribe to board changes.
 - **Webhooks** — Outgoing POST on any board event.
 
-## 11. AI features (Atlassian Intelligence, paid)
+## 11. AI features
 
 | Feature | Description |
 |---|---|
@@ -187,11 +179,10 @@ that turns this into a delivery schedule is in
 
 | Feature | Description |
 |---|---|
-| **iOS app** | Full feature parity with the web app. |
-| **Android app** | Same. |
-| **Offline mode** | View and edit cards offline; sync on reconnect. |
+| **Responsive web** | Layout down to phone width. |
+| **PWA** | Installable, offline shell. |
 | **Push notifications** | Native push. |
-| **Widgets** | iOS / Android home-screen widgets. |
+| **Widgets** | Home-screen widgets (PWA / native). |
 
 ## 14. Authentication & security
 
@@ -201,40 +192,27 @@ that turns this into a delivery schedule is in
 | **OAuth (Google, Microsoft, Apple)** | Federated login. |
 | **SSO (SAML / OIDC)** | Enterprise. |
 | **Two-factor authentication** | TOTP-based. |
-| **org-wide security policies** (enterprise) | Org-wide security policies. |
+| **Org-wide security policies** | Workspace-level policy enforcement. |
 | **API tokens** | Personal access tokens for the REST API. |
-| **Audit logs** (enterprise) | Every action with who, what, when. |
+| **Audit logs** | Every action with who, what, when. |
 
 ## 15. Developer-facing
 
 | Feature | Description |
 |---|---|
-| **REST API** | First-class REST API (subject of these conventions). |
+| **REST API** | First-class REST API (subject of `api/00-conventions.md`). |
 | **Webhooks** | Outgoing POSTs on board events. |
 | **OAuth for third-party apps** | Token-based, scope-controlled. |
-| **Power-Up framework** | Build your own Power-Up. |
+| **Extension framework** | Build your own extension. |
+| **MCP server** | Model Context Protocol server (see ADR 0002). |
 
-## 16. Pricing tiers (for context, not for our spec)
+## 16. Source landscape
 
-| Plan | Boards | Power-Ups / board | File size | Automations / month |
-|---|---|---|---|---|
-| **Free** | 10 per workspace | unlimited | 10 MB | 250 |
-| **Standard** | unlimited | unlimited | 250 MB | 1,000 |
-| **Premium** | unlimited | unlimited | 250 MB | unlimited |
-| **Enterprise** | unlimited | unlimited | 250 MB | unlimited |
-
-Self-hosting is **not** a  tier; it's a Cardscape value
-proposition.
-
-## 17. Source list
-
--  product pages and help center
-- https://www.taskrhino.ca/blog/trello-review/
-- https://www.sendboard.com/blog/best-free-trello-extensions
-- https://www.smartsuite.com/blog/trello-review
-- https://saasrat.com/products/trello
-- https://match-vs.com/en/tool/trello
-- https://www.techstackdaily.com/review/trello-review-2026/
+The shape of the inventory above is informed by the kanban and
+project-management tooling landscape in 2026, including the
+open-source self-hostable projects in the same niche, the SaaS
+incumbents, and the maintainer's own product judgment. It is not
+derived from any single competitor's feature matrix.
 
 ---
 

@@ -7,9 +7,10 @@
 
 ## 1. What Cardscape is
 
-**Cardscape is a public, open-source, self-hostable -like
-kanban** with a complete feature surface (kanban + calendar +
-Automation automation + extensions + Inbox + Planner + AI) and a
+**Cardscape is a public, open-source, self-hostable kanban and
+project-management tool** with a complete feature surface
+(workspaces / boards / lists / cards / calendar /
+automation / extensions / Inbox / Planner / AI) and a
 **Model Context Protocol (MCP) server** that lets any
 AI-compatible client (Claude Desktop, Cursor, Windsurf, custom
 agents, etc.) drive the boards conversationally.
@@ -17,9 +18,9 @@ agents, etc.) drive the boards conversationally.
 The maintainer works on this project solo. The bar is **"think
 big and professional"**: ADR-grade decisions, polished
 documentation, an architecture that scales, a UX that competes
-with hosted , and an AI integration that no other 
-clone has. We do not cut corners. We do not ship a "demo MVP"
-and call it done.
+with hosted kanban tools, and an AI integration that no other
+self-hostable kanban has. We do not cut corners. We do not
+ship a "demo MVP" and call it done.
 
 The persistence layer supports **SQLite**, **PostgreSQL**, and
 **MariaDB**; the test matrix currently runs **only on SQLite**.
@@ -74,7 +75,7 @@ strict and one-directional:
             │                                   │
             │         ┌─────────────────────────┐
             │         │     Cardscape.Mcp       │   ← AI integration
-            └─────────┤  Model Context Protocol │     (stdin/stdout or HTTP+SSE)
+            └─────────┤  Model Context Protocol │     (stdio or HTTP+SSE)
                       │  talks to Application   │
                       └─────────────────────────┘
 ```
@@ -104,8 +105,7 @@ The dependency direction is enforced by the
 
 Cardscape ships a first-class Model Context Protocol server in
 `src/Cardscape.Mcp/`. It's the project's differentiator: **no
-other self-hostable  alternative has MCP**. With it, an AI
-client can:
+other self-hostable kanban has MCP**. With it, an AI client can:
 
 - Read boards, lists, cards, comments, members.
 - Create, update, move, archive cards.

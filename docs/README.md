@@ -1,10 +1,10 @@
 # Cardscape — Documentation
 
 This is the documentation index for **Cardscape**, an open-source
--like kanban built on .NET 11 with a full  feature
-surface (kanban + calendar + Automation + extensions + Inbox + AI)
-and a **Model Context Protocol (MCP) server** that lets any
-AI-compatible client drive the boards conversationally.
+kanban and project-management tool built on .NET 11 with a full
+feature surface (kanban + calendar + automation + extensions +
+Inbox + AI) and a **Model Context Protocol (MCP) server** that
+lets any AI-compatible client drive the boards conversationally.
 
 Every file here is meant to be read in order the first time you
 join the project, and then referenced individually as needed.
@@ -18,8 +18,8 @@ If you are a new contributor (human or AI agent), follow this order:
    stack, design philosophy, working rules, the MCP pillar,
    the SQLite-only test matrix, and the available skills.
 2. [`roadmap/00-feature-inventory.md`](roadmap/00-feature-inventory.md)
-   — the feature inventory scraped from 's public
-   marketing. Tells you what we're building toward.
+   — the feature inventory Cardscape is building toward.
+   Tells you what's in scope.
 3. [`roadmap/01-implementation-plan.md`](roadmap/01-implementation-plan.md)
    — the phased delivery plan. Tells you what's next and
    what's deferred. The MCP server ships in **Phase 2**.

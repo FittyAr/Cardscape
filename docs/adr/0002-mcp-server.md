@@ -8,7 +8,7 @@
 
 ## Context
 
-Cardscape is a public, open-source -like kanban. The
+Cardscape is a public, open-source kanban and project-management tool. The
 maintainer wants to **connect Cardscape to AI assistants** (Claude
 Desktop in the first place, but also any MCP-compatible client:
 Cursor, Windsurf, Continue, JetBrains AI, custom agents, etc.) so
@@ -139,10 +139,10 @@ is returned.
 
 Positive:
 
-- **One more reason to use Cardscape over other  clones.**
-  The MCP server makes the project the **only** self-hostable
-   alternative with first-class AI integration. It's a
-  clear differentiator for the open-source release.
+- **One more reason to choose Cardscape.** The MCP server
+  makes the project the **only** self-hostable kanban and
+  project-management tool with first-class AI integration.
+  It's a clear differentiator for the open-source release.
 - **No HTTP tax.** Tool calls are direct in-process calls into
   the application layer. No JSON serialization on the wire, no
   HTTP latency, no extra round-trip.

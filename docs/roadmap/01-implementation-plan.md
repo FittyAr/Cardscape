@@ -2,14 +2,14 @@
 
 > The phased delivery plan for Cardscape, derived from
 > [`00-feature-inventory.md`](00-feature-inventory.md).
-> Phases are ordered; the bar is **full  parity** plus
-> Cardscape's MCP differentiator.
+> Phases are ordered; the bar is a **complete kanban and
+> project-management surface** plus Cardscape's MCP differentiator.
 >
 > **Maintainer's directive**: "pensar en grande y profesional.
->  tiene más que el sistema de columnas y tarjetas.
-> También debemos incluir el calendario y todas las features
-> que tiene ese proyecto, al menos todo lo que podamos
-> replicar."
+> Leading kanban tools have more than just columns and cards;
+> they also include calendar, automation, extensions, and a
+> rich feature surface. We should include all the surface we
+> can reasonably build."
 
 ## 0. Status
 
@@ -18,7 +18,7 @@
 | 0 — Solution scaffold | **DONE** | Commits `cd2170b`, `dc8e68b`, `31c21d6`. |
 | 1 — MVP (workspaces / boards / cards / auth) | not started | Target: end of August 2026 (4–6 weeks). |
 | 2 — Core + MCP server (differentiation pillar) | not started | Target: end of October 2026. |
-| 3 — Power-ups & Automation | not started | Target: end of December 2026. |
+| 3 — Extensions & automation | not started | Target: end of December 2026. |
 | 4 — Enterprise & AI | not started | Target: end of Q1 2027. |
 | 5 — Polish & scale | not started | ongoing, no fixed target. |
 
@@ -27,13 +27,13 @@ bandwidth. Each phase ends with a tagged release
 (`v0.1.0-mvp`, `v0.2.0-core`, etc.) and a self-hosted demo
 deployable from a single `docker-compose up`.
 
-The ambition is **"all of , plus the MCP pillar"**. The
-MVP (Phase 1) is the smallest shippable cut. From Phase 2
-onward, every  feature surface listed in
-[`00-feature-inventory.md`](00-feature-inventory.md)
-is in scope; we explicitly call out the ones we are **not**
-shipping (e.g. paid-only Atlassian Intelligence features) in the
-relevant phase section.
+The ambition is **"a complete kanban and project-management surface,
+plus the MCP pillar"**. The MVP (Phase 1) is the smallest shippable
+cut. From Phase 2 onward, every feature surface listed in
+[`00-feature-inventory.md`](00-feature-inventory.md) is in scope;
+we explicitly call out the ones we are **not** shipping
+(e.g. third-party AI assistants that require a paid license) in
+the relevant phase section.
 
 ---
 
@@ -172,7 +172,7 @@ smallest end-to-end vertical that proves the architecture.
 
 **Goal:** collaboration features, real-time, **and the MCP
 server that differentiates Cardscape from every other
- clone**. After this phase, an AI client can drive
+self-hostable kanban**. After this phase, an AI client can drive
 Cardscape end-to-end via the MCP protocol.
 
 ### 3.1 MCP server (`Cardscape.Mcp`)
@@ -254,13 +254,12 @@ and [ADR 0002](../adr/0002-mcp-server.md).
 
 - `v0.2.0-core-mcp` tag.
 - Public blog post: "Cardscape ships a Model Context Protocol
-  server. No other  clone does this."
+  server. No other self-hostable kanban does this."
 
-## 4. Phase 3 — Power-ups & Automation (6–8 weeks)
+## 4. Phase 3 — Extensions & automation (6–8 weeks)
 
-**Goal:** match 's "extensibility" story. We build the
-most-requested first-party extensions and a Automation-equivalent
-automation engine.
+**Goal:** ship the most-requested first-party extensions and a
+full automation engine that the project owns.
 
 ### 4.1 Power-up framework
 
@@ -286,7 +285,7 @@ automation engine.
 - [ ] **List Limits** (WIP cap).
 - [ ] **Dashcards**.
 
-### 4.3 Automation automation
+### 4.3 Automation engine
 
 - [ ] Rule engine: trigger → actions.
 - [ ] Triggers: card created, moved, archived, due date,
@@ -370,7 +369,7 @@ trust Cardscape with their work.
   English + Spanish, then more.
 - [ ] Theming: full dark mode, custom themes.
 - [ ] Performance: caching (Redis), CDN for attachments.
-- [ ] Background jobs: Hangfire for Automation schedules.
+- [ ] Background jobs: Hangfire for automation schedules.
 - [ ] Rate limiting: per-user and per-IP.
 - [ ] Webhooks v2: retry with backoff, dead-letter queue.
 - [ ] Mobile native apps (MAUI or PWA-only).
@@ -378,16 +377,16 @@ trust Cardscape with their work.
 - [ ] MCP subscriptions: live updates over the MCP protocol
   (resource subscriptions).
 - [ ] Export: per-board archive download (JSON + attachments).
-- [ ] **Import:  JSON import** (parse
-  `boards.cardscape.json` files). Critical for adoption
-  — let users move from  to Cardscape.
+- [ ] **Import: JSON from other kanban tools** (parse
+  exported `boards.json` files). Critical for adoption
+  — let users move from other tools to Cardscape.
 - [ ] API client SDK: ship a C# client, generated from
   OpenAPI via Kiota.
 - [ ] Public status page.
 - [ ] Security audit (third-party).
 - [ ] Pen test.
 - [ ] SOC 2 / GDPR compliance docs.
-- [ ] Migration tooling from  to Cardscape.
+- [ ] Migration tooling from other kanban tools to Cardscape.
 
 ## 7. What we are explicitly NOT building
 
@@ -419,7 +418,7 @@ stays in the same order.
 ## 9. References
 
 - [`00-feature-inventory.md`](00-feature-inventory.md)
-  — the source feature list.
+  — the target feature surface.
 - [`../architecture/00-overview.md`](../architecture/00-overview.md)
   — how the solution is shaped.
 - [`../architecture/03-mcp-server.md`](../architecture/03-mcp-server.md)

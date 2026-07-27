@@ -170,12 +170,12 @@ incrementally as the roadmap unfolds:
 | `Activities` | activity event | Append-only audit log |
 | `Notifications` | in-app + email subscription | Phase 1 |
 | `Search` | full-text index | Phase 1 |
-| `PowerUps` | power-up definition, board-power-up join | Extension API (Phase 3) |
-| `Automation` | butler rule, butler button, butler schedule | Automation engine (Phase 3) |
+| `Extensions` | extension definition, board-extension join | Extension API (Phase 3) |
+| `Automation` | rule, button, schedule | Automation engine (Phase 3) |
 | `Integrations` | webhook, OAuth app, third-party mapping | Phase 3 |
 | `Inbox` | inbox item | Personal capture (Phase 2) |
 | `Planner` | scheduled reminder, calendar event | Phase 2 |
-| `AI` | AI request log, AI suggestion | Phase 4 (Cardscape AI-style) |
+| `AI` | AI request log, AI suggestion | Phase 4 (Cardscape AI) |
 | `MCP` | (thin) tool / resource / prompt dispatch | Phase 2 (this ADR's pillar) |
 | `Admin` | org-wide settings, SSO, audit log | Phase 4 |
 

@@ -6,7 +6,7 @@
 
 ## Context
 
-Cardscape is a kanban / -like application. The persistence layer must
+Cardscape is a kanban and project-management application. The persistence layer must
 run on three different relational database engines:
 
 1. **SQLite** — local dev, single-file, zero-config, used for CI and unit

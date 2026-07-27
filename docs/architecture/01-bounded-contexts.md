@@ -53,7 +53,7 @@ reference each other's entities directly.
 | **MCP** | not started | (thin) tool / resource / prompt dispatch | every context that exposes a tool | 2 |
 | **Inbox** | not started | inbox item | Members, Cards | 2 |
 | **Planner** | not started | scheduled reminder, calendar event | Members, Cards | 2 |
-| **PowerUps** | not started | power-up definition, board power-up, per-board config | Boards | 3 |
+| **Extensions** | not started | extension definition, board extension, per-board config | Boards | 3 |
 | **Automation** | not started | rule, custom button, scheduled command, run log | Cards, Boards, Lists, Members | 3 |
 | **Integrations** | not started | webhook, OAuth app, third-party mapping | Boards, Members | 3 |
 | **AI** | not started | AI request log, AI suggestion | Cards, Comments, Boards | 4 |
