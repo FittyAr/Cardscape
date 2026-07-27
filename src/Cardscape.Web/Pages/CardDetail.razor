@@ -1,0 +1,145 @@
+@page "/cards/{CardId:guid}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@inject ICardsApiClient Cards
+@inject ICommentsApiClient Comments
+
+<PageTitle>@(card?.Title ?? "Card") — Cardscape</PageTitle>
+
+<div class="card-detail-shell">
+    @if (card is null)
+    {
+        <p>Loading card…</p>
+    }
+    else
+    {
+        <RadzenCard>
+            <div class="card-detail-header">
+                <h1>@card.Title</h1>
+                <div class="card-detail-actions">
+                    @if (card.IsCompleted)
+                    {
+                        <RadzenButton Text="Reopen" ButtonStyle="ButtonStyle.Light" Click="@Reopen" />
+                    }
+                    else
+                    {
+                        <RadzenButton Text="Complete" ButtonStyle="ButtonStyle.Success" Click="@Complete" />
+                    }
+                    <RadzenButton Text="@(card.IsArchived ? "Restore" : "Archive")"
+                                  ButtonStyle="ButtonStyle.Warning" Click="@ToggleArchive" />
+                </div>
+            </div>
+
+            <dl class="card-meta">
+                <dt>Due date</dt>
+                <dd>
+                    @if (card.DueDate is null)
+                    {
+                        <span>none</span>
+                    }
+                    else
+                    {
+                        @card.DueDate.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm")
+                    }
+                </dd>
+                <dt>Members</dt>
+                <dd>@card.MemberCount</dd>
+                <dt>Labels</dt>
+                <dd>@card.LabelCount</dd>
+            </dl>
+
+            <h3>Description</h3>
+            <p class="card-description">@(string.IsNullOrWhiteSpace(card.Description) ? "(no description)" : card.Description)</p>
+
+            <h3>Comments</h3>
+            @if (comments is null)
+            {
+                <p>Loading comments…</p>
+            }
+            else
+            {
+                @foreach (CommentDto c in comments)
+                {
+                    <RadzenCard class="comment-card">
+                        <small>@c.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm") · @c.AuthorId</small>
+                        <p>@c.Body</p>
+                    </RadzenCard>
+                }
+            }
+
+            <RadzenTemplateForm TItem="AddCommentModel" Data="@addCommentModel" Submit="@AddComment">
+                <RadzenTextArea @bind-Value="addCommentModel.Body" Rows="2" Placeholder="Write a comment…"
+                                Style="width:100%; margin-top:.5rem" />
+                <RadzenButton Text="Comment" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                              IsBusy="@addingComment" Style="margin-top:.5rem" />
+            </RadzenTemplateForm>
+        </RadzenCard>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid CardId { get; set; }
+
+    private CardDto? card;
+    private IReadOnlyList<CommentDto>? comments;
+    private bool addingComment;
+    private readonly AddCommentModel addCommentModel = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        ApiResult<CardDto> cardResult = await Cards.GetAsync(CardId);
+        card = cardResult.IsSuccess ? cardResult.Value : null;
+
+        ApiResult<IReadOnlyList<CommentDto>> commentsResult = await Comments.ListForCardAsync(CardId);
+        comments = commentsResult.IsSuccess ? commentsResult.Value : [];
+    }
+
+    private async Task Complete()
+    {
+        if (card is null) return;
+        ApiResult<CardDto> result = await Cards.CompleteAsync(CardId);
+        if (result.IsSuccess) card = result.Value;
+    }
+
+    private async Task Reopen()
+    {
+        if (card is null) return;
+        ApiResult<CardDto> result = await Cards.ReopenAsync(CardId);
+        if (result.IsSuccess) card = result.Value;
+    }
+
+    private async Task ToggleArchive()
+    {
+        if (card is null) return;
+        ApiResult<CardDto> result = card.IsArchived
+            ? await Cards.RestoreAsync(CardId)
+            : await Cards.ArchiveAsync(CardId);
+        if (result.IsSuccess) card = result.Value;
+    }
+
+    private async Task AddComment()
+    {
+        if (string.IsNullOrWhiteSpace(addCommentModel.Body)) return;
+        addingComment = true;
+        try
+        {
+            ApiResult<CommentDto> result = await Comments.AddAsync(CardId, addCommentModel.Body);
+            if (result.IsSuccess)
+            {
+                comments = [.. (comments ?? Array.Empty<CommentDto>()), result.Value!];
+                addCommentModel.Body = string.Empty;
+            }
+        }
+        finally
+        {
+            addingComment = false;
+        }
+    }
+
+    private sealed class AddCommentModel
+    {
+        public string Body { get; set; } = string.Empty;
+    }
+}

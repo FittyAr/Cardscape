@@ -1,12 +1,38 @@
 ﻿@inherits LayoutComponentBase
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Cardscape.Web.Services
+@inject AuthenticationStateProvider AuthState
+@inject AuthService Auth
+@inject NavigationManager Nav
+
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    <AuthorizeView>
+        <Authorized>
+            <div class="sidebar">
+                <NavMenu />
+            </div>
+        </Authorized>
+    </AuthorizeView>
 
     <main>
         <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            <AuthorizeView>
+                <Authorized>
+                    <span class="user-info">
+                        <span class="user-name">@context.User.Identity?.Name</span>
+                        <span class="user-email">@context.User.FindFirst(ClaimTypes.Email)?.Value</span>
+                    </span>
+                    <RadzenButton Text="Log out"
+                                  ButtonStyle="ButtonStyle.Light"
+                                  Size="ButtonSize.Small"
+                                  Click="@HandleLogout" />
+                </Authorized>
+                <NotAuthorized>
+                    <a href="login" class="top-link">Sign in</a>
+                    <a href="register" class="top-link">Create account</a>
+                </NotAuthorized>
+            </AuthorizeView>
         </div>
 
         <article class="content px-4">
@@ -14,3 +40,11 @@
         </article>
     </main>
 </div>
+
+@code {
+    private async Task HandleLogout()
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("login", forceLoad: true);
+    }
+}

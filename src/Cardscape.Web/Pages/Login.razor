@@ -1,0 +1,74 @@
+@page "/login"
+@layout EmptyLayout
+@using System.Web
+@using Cardscape.Web.Services
+@using Microsoft.AspNetCore.Components
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Sign in — Cardscape</PageTitle>
+
+<div class="auth-shell">
+    <RadzenCard class="auth-card">
+        <h1 class="auth-title">Sign in to Cardscape</h1>
+
+        <RadzenTemplateForm TItem="LoginModel" Data="@model" Submit="@HandleSubmit">
+            <RadzenLabel Text="Email" Component="email" />
+            <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%" autocomplete="email" />
+
+            <RadzenLabel Text="Password" Component="password" Style="margin-top:1rem" />
+            <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%" autocomplete="current-password" />
+
+            @if (error is not null)
+            {
+                <div class="auth-error" role="alert">@error</div>
+            }
+
+            <RadzenButton ButtonType="ButtonType.Submit"
+                          Text="Sign in"
+                          ButtonStyle="ButtonStyle.Primary"
+                          IsBusy="@busy"
+                          BusyText="Signing in..."
+                          Style="width:100%; margin-top:1.5rem" />
+        </RadzenTemplateForm>
+
+        <p class="auth-footer">
+            No account? <a href="register">Create one</a>.
+        </p>
+    </RadzenCard>
+</div>
+
+@code {
+    private readonly LoginModel model = new();
+    private bool busy;
+    private string? error;
+
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+
+    private async Task HandleSubmit()
+    {
+        busy = true;
+        error = null;
+        try
+        {
+            ApiResult<Shared.UserSummaryDto> result = await Auth.LoginAsync(model.Email, model.Password);
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+                return;
+            }
+
+            Nav.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : HttpUtility.UrlDecode(ReturnUrl), forceLoad: true);
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private sealed class LoginModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}

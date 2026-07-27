@@ -1,0 +1,11 @@
+@using Microsoft.AspNetCore.Components
+
+@code {
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        string returnUrl = Nav.Uri;
+        Nav.NavigateTo($"login?returnUrl={Uri.EscapeDataString(Nav.ToBaseRelativePath(returnUrl))}", forceLoad: true);
+    }
+}

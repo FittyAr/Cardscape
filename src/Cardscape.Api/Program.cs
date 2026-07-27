@@ -31,6 +31,8 @@ var app = builder.Build();
 // ── Middleware pipeline ─────────────────────────────────
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
+app.UseCors();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

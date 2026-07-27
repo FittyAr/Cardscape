@@ -27,6 +27,21 @@ public static class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
 
+        // CORS for the Blazor WASM client in development. The client
+        // (http(s)://localhost:5206 / 7188) needs to be allowed to
+        // call this API with credentials. In production the API is
+        // expected to be served behind a reverse proxy on the same
+        // origin as the SPA, so the policy is intentionally permissive
+        // on localhost in dev only.
+        string[] allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:5206", "https://localhost:7188" };
+
+        services.AddCors(options => options.AddDefaultPolicy(policy =>
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials()));
+
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options => options.TokenValidationParameters = new TokenValidationParameters

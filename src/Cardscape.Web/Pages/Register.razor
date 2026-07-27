@@ -1,0 +1,76 @@
+@page "/register"
+@layout EmptyLayout
+@using Cardscape.Web.Services
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Create account — Cardscape</PageTitle>
+
+<div class="auth-shell">
+    <RadzenCard class="auth-card">
+        <h1 class="auth-title">Create your Cardscape account</h1>
+
+        <RadzenTemplateForm TItem="RegisterModel" Data="@model" Submit="@HandleSubmit">
+            <RadzenLabel Text="Display name" Component="displayName" />
+            <RadzenTextBox @bind-Value="model.DisplayName" Name="displayName" Style="width:100%" autocomplete="name" />
+
+            <RadzenLabel Text="Email" Component="email" Style="margin-top:1rem" />
+            <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%" autocomplete="email" />
+
+            <RadzenLabel Text="Password" Component="password" Style="margin-top:1rem" />
+            <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%" autocomplete="new-password" />
+            <small class="auth-hint">At least 8 characters.</small>
+
+            @if (error is not null)
+            {
+                <div class="auth-error" role="alert">@error</div>
+            }
+
+            <RadzenButton ButtonType="ButtonType.Submit"
+                          Text="Create account"
+                          ButtonStyle="ButtonStyle.Primary"
+                          IsBusy="@busy"
+                          BusyText="Creating..."
+                          Style="width:100%; margin-top:1.5rem" />
+        </RadzenTemplateForm>
+
+        <p class="auth-footer">
+            Already have an account? <a href="login">Sign in</a>.
+        </p>
+    </RadzenCard>
+</div>
+
+@code {
+    private readonly RegisterModel model = new();
+    private bool busy;
+    private string? error;
+
+    private async Task HandleSubmit()
+    {
+        busy = true;
+        error = null;
+        try
+        {
+            ApiResult<Shared.UserSummaryDto> result = await Auth.RegisterAsync(
+                model.Email, model.DisplayName, model.Password);
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+                return;
+            }
+
+            Nav.NavigateTo("/", forceLoad: true);
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private sealed class RegisterModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}

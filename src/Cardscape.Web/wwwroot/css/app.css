@@ -113,3 +113,306 @@ code {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* ──────────────────────────────────────────────────────────
+   Cardscape custom styles — Trello-flavoured kanban.
+   ────────────────────────────────────────────────────────── */
+
+.auth-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.auth-shell {
+    width: 100%;
+    max-width: 28rem;
+}
+
+.auth-card {
+    padding: 2rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.auth-title {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.5rem;
+}
+
+.auth-error {
+    color: #b91c1c;
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+}
+
+.auth-hint {
+    color: #6b7280;
+    font-size: 0.75rem;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Top-row user info. */
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-right: 1rem;
+    line-height: 1.2;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.user-email {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.top-link {
+    color: #1d4ed8;
+    margin-left: 1rem;
+    font-size: 0.95rem;
+}
+
+/* Generic page shell. */
+.page-shell {
+    max-width: 80rem;
+    margin: 0 auto;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+    margin: 0;
+}
+
+/* Home grid. */
+.home-shell {
+    max-width: 64rem;
+    margin: 2rem auto;
+}
+
+.home-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.home-grid h3 {
+    margin-top: 0;
+}
+
+/* Create form (workspace, board, list). */
+.create-form {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+}
+
+.create-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+/* Workspace grid. */
+.workspace-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 1rem;
+}
+
+.workspace-card {
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.workspace-card:hover {
+    transform: translateY(-2px);
+}
+
+.workspace-card h3 {
+    margin: 0 0 0.5rem 0;
+}
+
+/* Board grid. */
+.board-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 1rem;
+}
+
+.board-card {
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.board-card:hover {
+    transform: translateY(-2px);
+}
+
+.board-card h3 {
+    margin: 0 0 0.5rem 0;
+}
+
+/* Board detail — horizontal lists. */
+.board-shell {
+    max-width: 100%;
+}
+
+.board-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.board-header h1 {
+    margin: 0;
+}
+
+.board-description {
+    color: #6b7280;
+    margin-bottom: 1rem;
+}
+
+.board-actions {
+    margin-bottom: 1rem;
+}
+
+.add-list-form {
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+}
+
+.lists-row {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    align-items: flex-start;
+}
+
+.list-column {
+    background: #ebecf0;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    min-width: 18rem;
+    max-width: 18rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+}
+
+.list-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 1rem;
+}
+
+.card-mini {
+    background: #ffffff;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    box-shadow: 0 1px 1px rgba(9, 30, 66, 0.25);
+    transition: background 0.1s ease;
+}
+
+.card-mini:hover {
+    background: #f4f5f7;
+}
+
+.card-mini-title {
+    font-size: 0.875rem;
+    word-break: break-word;
+}
+
+.card-mini-title.completed {
+    text-decoration: line-through;
+    color: #6b7280;
+}
+
+.list-add-card {
+    margin-top: 0.25rem;
+}
+
+/* Card detail. */
+.card-detail-shell {
+    max-width: 48rem;
+    margin: 0 auto;
+}
+
+.card-detail-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.card-detail-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.card-detail-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.card-meta {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 0.5rem 1rem;
+    margin: 1rem 0;
+}
+
+.card-meta dt {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.card-meta dd {
+    margin: 0;
+}
+
+.card-description {
+    white-space: pre-wrap;
+}
+
+.comment-card {
+    margin: 0.5rem 0;
+    padding: 0.5rem 0.75rem;
+    background: #f9fafb;
+}

@@ -1,0 +1,195 @@
+@page "/boards/{BoardId:guid}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@inject IBoardsApiClient BoardsApi
+@inject IListsApiClient ListsApi
+@inject ICardsApiClient CardsApi
+
+<PageTitle>@(board?.Name ?? "Board") — Cardscape</PageTitle>
+
+<div class="board-shell">
+    @if (board is null)
+    {
+        <p>Loading board…</p>
+    }
+    else
+    {
+        <div class="board-header">
+            <h1>@board.Name</h1>
+            <RadzenButton Text="@(board.IsStarred ? "★ Starred" : "☆ Star")"
+                          ButtonStyle="ButtonStyle.Secondary"
+                          Click="@ToggleStar" />
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(board.Description))
+        {
+            <p class="board-description">@board.Description</p>
+        }
+
+        <div class="board-actions">
+            <RadzenButton Text="Add list" Icon="add" ButtonStyle="ButtonStyle.Light"
+                          Click="@(() => showAddList = !showAddList)" />
+        </div>
+
+        @if (showAddList)
+        {
+            <RadzenCard class="add-list-form">
+                <RadzenTemplateForm TItem="AddListModel" Data="@addListModel" Submit="@AddList">
+                    <RadzenTextBox @bind-Value="addListModel.Name" Placeholder="List name…" Style="width:100%" />
+                    <div class="create-actions">
+                        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => showAddList = false)" />
+                        <RadzenButton Text="Add" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" IsBusy="@addingList" />
+                    </div>
+                </RadzenTemplateForm>
+            </RadzenCard>
+        }
+
+        <div class="lists-row">
+            @if (lists is null)
+            {
+                <p>Loading lists…</p>
+            }
+            else
+            {
+                @foreach (BoardListDto list in lists)
+                {
+                    <div class="list-column">
+                        <header class="list-header">
+                            <strong>@list.Name</strong>
+                            <small>@list.CardCount</small>
+                        </header>
+                        <div class="list-cards">
+                            @{
+                                IReadOnlyList<CardSummaryDto> inList = cardsByList.GetValueOrDefault(list.Id, []);
+                            }
+                            @foreach (CardSummaryDto card in inList)
+                            {
+                                <RadzenCard class="card-mini" @onclick="@(() => Nav.NavigateTo($"cards/{card.Id}"))">
+                                    <div class="card-mini-title @(card.IsCompleted ? "completed" : "")">@card.Title</div>
+                                    @if (card.DueDate is not null)
+                                    {
+                                        <small>📅 @card.DueDate.Value.LocalDateTime.ToString("yyyy-MM-dd")</small>
+                                    }
+                                </RadzenCard>
+                            }
+                        </div>
+                        <div class="list-add-card">
+                            @if (openAddCardFor == list.Id)
+                            {
+                                <RadzenTextBox @bind-Value="newCardTitle" Placeholder="Card title…" Style="width:100%" />
+                                <div class="create-actions">
+                                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                                  Click="@(() => { openAddCardFor = null; newCardTitle = string.Empty; })" />
+                                    <RadzenButton Text="Add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                                  Click="@(() => ConfirmAddCard(list.Id))" />
+                                </div>
+                            }
+                            else
+                            {
+                                <RadzenButton Text="+ Add card" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                              Click="@(() => openAddCardFor = list.Id)" />
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid BoardId { get; set; }
+
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private BoardDto? board;
+    private IReadOnlyList<BoardListDto>? lists;
+    private readonly Dictionary<Guid, IReadOnlyList<CardSummaryDto>> cardsByList = new();
+    private bool showAddList;
+    private bool addingList;
+    private readonly AddListModel addListModel = new();
+
+    private Guid? openAddCardFor;
+    private string newCardTitle = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        ApiResult<BoardDto> boardResult = await BoardsApi.GetAsync(BoardId);
+        board = boardResult.IsSuccess ? boardResult.Value : null;
+
+        await ReloadListsAndCardsAsync();
+    }
+
+    private async Task ReloadListsAndCardsAsync()
+    {
+        ApiResult<IReadOnlyList<BoardListDto>> listsResult = await ListsApi.ListForBoardAsync(BoardId);
+        lists = listsResult.IsSuccess ? listsResult.Value : [];
+
+        cardsByList.Clear();
+        ApiResult<IReadOnlyList<CardSummaryDto>> cardsResult = await CardsApi.ListForBoardAsync(BoardId);
+        if (cardsResult.IsSuccess)
+        {
+            foreach (CardSummaryDto card in cardsResult.Value!)
+            {
+                if (!cardsByList.TryGetValue(card.ListId, out IReadOnlyList<CardSummaryDto>? bucket))
+                {
+                    bucket = [];
+                    cardsByList[card.ListId] = bucket;
+                }
+
+                cardsByList[card.ListId] = [.. bucket, card];
+            }
+        }
+    }
+
+    private async Task ToggleStar()
+    {
+        if (board is null) return;
+        ApiResult<BoardDto> result = board.IsStarred
+            ? await BoardsApi.UnstarAsync(BoardId)
+            : await BoardsApi.StarAsync(BoardId);
+        if (result.IsSuccess)
+        {
+            board = result.Value;
+        }
+    }
+
+    private async Task AddList()
+    {
+        if (string.IsNullOrWhiteSpace(addListModel.Name)) return;
+        addingList = true;
+        try
+        {
+            ApiResult<BoardListDto> result = await ListsApi.CreateAsync(BoardId, addListModel.Name);
+            if (result.IsSuccess)
+            {
+                lists = [.. (lists ?? Array.Empty<BoardListDto>()), result.Value!];
+                addListModel.Name = string.Empty;
+                showAddList = false;
+            }
+        }
+        finally
+        {
+            addingList = false;
+        }
+    }
+
+    private async Task ConfirmAddCard(Guid listId)
+    {
+        if (string.IsNullOrWhiteSpace(newCardTitle)) return;
+        ApiResult<CardDto> result = await CardsApi.CreateAsync(listId, newCardTitle, null);
+        if (result.IsSuccess)
+        {
+            newCardTitle = string.Empty;
+            openAddCardFor = null;
+            await ReloadListsAndCardsAsync();
+        }
+    }
+
+    private sealed class AddListModel
+    {
+        public string Name { get; set; } = string.Empty;
+    }
+}

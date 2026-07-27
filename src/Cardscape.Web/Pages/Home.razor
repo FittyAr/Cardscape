@@ -1,7 +1,29 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Cardscape.Web.Services
+@inject IWorkspacesApiClient Workspaces
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Home — Cardscape</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="home-shell">
+    <h1>Welcome to Cardscape</h1>
+    <p>Your self-hostable Trello-compatible kanban, built on .NET 11.</p>
 
-Welcome to your new app.
+    <div class="home-grid">
+        <RadzenCard>
+            <h3>Workspaces</h3>
+            <p>Pick a workspace to see its boards.</p>
+            <RadzenButton Text="Open workspaces" ButtonStyle="ButtonStyle.Primary"
+                          Click="@(() => Nav.NavigateTo("workspaces"))" />
+        </RadzenCard>
+
+        <RadzenCard>
+            <h3>Starred boards</h3>
+            <p>Quickly jump to the boards you star.</p>
+            <RadzenButton Text="See starred" ButtonStyle="ButtonStyle.Secondary"
+                          Click="@(() => Nav.NavigateTo("starred"))" />
+        </RadzenCard>
+    </div>
+</div>
