@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>Cardscape.Mcp</AssemblyName>
+    <RootNamespace>Cardscape.Mcp</RootNamespace>
+    <UserSecretsId>cardscape-mcp-secrets</UserSecretsId>
+    <Description>Cardscape MCP server. Model Context Protocol surface that exposes tools / resources / prompts on top of the Application layer. See docs/architecture/03-mcp-server.md and ADR 0002.</Description>
+
+    <!--
+      The MCP server is a scaffold in Phase 0 / Phase 1. Some usings
+      and the IConfiguration parameter are reserved for Phase 2 (when
+      the auth handler, IApiTokenService, and database wiring come
+      online). Suppress the style warnings on the placeholder code.
+    -->
+    <NoWarn>$(NoWarn);IDE0005;IDE0060;IDE0028</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cardscape.Application\Cardscape.Application.csproj" />
+  </ItemGroup>
+
+</Project>

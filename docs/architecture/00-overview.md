@@ -5,9 +5,9 @@
 
 ## 1. The Clean Architecture stack
 
-Cardscape follows a Clean Architecture with **five source projects**
-and **five test projects**. The dependency graph is strict and
-one-directional:
+Cardscape follows a Clean Architecture with **seven source
+projects** and **five test projects**. The dependency graph is
+strict and one-directional:
 
 ```
                     ┌────────────────────────┐
@@ -17,7 +17,7 @@ one-directional:
                                  │  HTTP (JSON)
                                  ▼
    ┌──────────────────────────────────────────────────────┐
-   │                      Cardscape.Api                    │  ← presentation
+   │                      Cardscape.Api                    │  ← public REST
    │   minimal API endpoints, JWT bearer, Swagger,         │
    │   DI composition root, provider selection             │
    └──────┬───────────────────────────────────┬────────────┘
@@ -28,13 +28,13 @@ one-directional:
    │   use cases        │          │    EF Core, Identity,  │
    │   (MediatR + FV)   │          │    Storage, Email     │
    └────────┬───────────┘          └────────────────────────┘
-            │
-            ▼
-   ┌─────────────────────────┐
-   │       Domain            │  ← pure
-   │   entities, VOs,        │     (no external
-   │   events, errors        │      references)
-   └─────────────────────────┘
+            ▲                                   ▲
+            │                                   │
+            │         ┌─────────────────────────┐
+            │         │     Cardscape.Mcp       │   ← AI integration
+            └─────────┤  Model Context Protocol │     (stdio or HTTP+SSE)
+                      │  talks to Application   │
+                      └─────────────────────────┘
 ```
 
 Key rules:
@@ -44,20 +44,21 @@ Key rules:
 - **Application** depends only on Domain. It defines the
   abstractions (`IRepository<T>`, `IUnitOfWork`, `IStorageService`,
   `IEmailService`, etc.).
-- **Infrastructure** depends on Application and Domain. It provides
-  the concrete implementations: `CardscapeDbContext` for EF Core,
-  `AspNetIdentityService` for Identity, `LocalFileStorageService`
-  for Storage, etc.
-- **Api** depends on Application and Infrastructure. It composes the
-  DI container and exposes HTTP endpoints.
-- **Web** depends on nothing server-side. It is a Blazor WASM client
-  that calls the Api over HTTP. It has its own DTOs (mirroring the
-  Api's DTOs, kept in sync manually or via a future shared
-  contracts project — out of scope for the MVP).
+- **Infrastructure** depends on Application and Domain. It
+  provides the concrete implementations: `CardscapeDbContext`
+  for EF Core, `AspNetIdentityService` for Identity, etc.
+- **Api** depends on Application and Infrastructure. It composes
+  the DI container and exposes HTTP endpoints.
+- **Mcp** depends on Application and Domain. It composes the
+  same DI container as the API, plus an `ICurrentUser` resolver
+  from the API token, and exposes the MCP server. It is
+  **independent** of the REST API: a deployment can run the
+  MCP server without exposing the REST API, and vice versa.
+- **Web** depends on nothing server-side. It is a Blazor WASM
+  client that calls the API over HTTP.
 
-The dependency direction is enforced by the `Cardscape.ArchitectureTests`
-project via NetArchTest. If a Domain class ever does
-`using Microsoft.EntityFrameworkCore;`, the test fails the build.
+The dependency direction is enforced by the
+`Cardscape.ArchitectureTests` project via NetArchTest.
 
 ## 2. Directory layout
 
@@ -71,7 +72,7 @@ src/
 │   ├── Lists/                   ← column within a board
 │   ├── Cards/                   ← task
 │   ├── Labels/                  ← color tag
-│   ├── Members/                 ← user + membership
+│   ├── Members/                 ← user + membership + api token
 │   ├── Comments/
 │   ├── Attachments/
 │   ├── Activities/              ← audit log
@@ -116,12 +117,29 @@ src/
 │   ├── HealthChecks/            ← liveness + readiness
 │   └── Program.cs
 │
+├── Cardscape.Mcp/                          ← ★ AI integration
+│   ├── Tools/                              ← McpTool classes per BC
+│   │   ├── BoardsTool.cs                   ← list_workspaces, list_boards, get_board
+│   │   ├── CardsTool.cs                    ← list_cards, get_card, create_card, move_card, ...
+│   │   ├── CommentsTool.cs                 ← add_comment
+│   │   ├── MembersTool.cs                  ← assign_card
+│   │   └── SearchTool.cs                   ← search
+│   ├── Resources/                          ← McpResource classes
+│   │   ├── BoardResource.cs                ← board://{boardId}
+│   │   ├── CardResource.cs                 ← card://{cardId}
+│   │   └── WorkspaceResource.cs            ← workspace://{workspaceId}
+│   ├── Prompts/                            ← templated user instructions
+│   ├── Authentication/                    ← ApiTokenAuthenticationHandler
+│   ├── Extensions/                        ← AddCardscapeMcp
+│   └── Program.cs
+│
 └── Cardscape.Web/
     ├── Components/
     │   ├── Layout/              ← MainLayout.razor, NavMenu.razor
     │   ├── Pages/               ← route components
     │   ├── Boards/              ← domain-specific Radzen wrappers
     │   ├── Cards/
+    │   ├── Settings/            ← profile, API tokens, theme
     │   └── Shared/              ← generic UI (CardView, UserAvatar, ...)
     ├── Services/
     │   ├── Api/                  ← typed HTTP clients (Refit)
@@ -145,49 +163,61 @@ incrementally as the roadmap unfolds:
 | `Lists` | list (column), list position | Sorts and reorders within a board |
 | `Cards` | card, card position, card mirror, card snooze | The atomic unit of work |
 | `Labels` | label, label-on-card join | Reusable across the board |
-| `Members` | user, member profile, presence | Identity + collaboration |
+| `Members` | user, member profile, presence, **API token** | Identity + collaboration + AI auth |
 | `Checklists` | checklist, checklist item | Subtasks on a card |
 | `Comments` | comment, reaction | Conversation on a card |
 | `Attachments` | file attachment, link attachment | Files on a card |
 | `Activities` | activity event | Append-only audit log |
+| `Notifications` | in-app + email subscription | Phase 1 |
+| `Search` | full-text index | Phase 1 |
 | `PowerUps` | power-up definition, board-power-up join | Extension API (Phase 3) |
 | `Automation` | butler rule, butler button, butler schedule | Automation engine (Phase 3) |
-| `Inbox` | inbox item | Personal capture (Phase 4) |
+| `Integrations` | webhook, OAuth app, third-party mapping | Phase 3 |
+| `Inbox` | inbox item | Personal capture (Phase 2) |
+| `Planner` | scheduled reminder, calendar event | Phase 2 |
+| `AI` | AI request log, AI suggestion | Phase 4 (Cardscape AI-style) |
+| `MCP` | (thin) tool / resource / prompt dispatch | Phase 2 (this ADR's pillar) |
+| `Admin` | org-wide settings, SSO, audit log | Phase 4 |
 
-Each context owns:
-
-- **Domain** entity + value objects + domain events.
-- **Application** commands + queries + DTOs + validators +
-  event handlers.
-- **Infrastructure** (when needed) repository + EF Core
-  configuration.
-
-Two contexts are allowed to reference each other **only** through:
-
-1. Domain events raised by one and handled by the other.
-2. Application-layer queries that read across contexts (e.g. a
-   `BoardDetailsQuery` returns the board plus its lists plus the
-   members' avatars — those reads are expressed in `Application`,
-   not in `Domain`).
+See [`01-bounded-contexts.md`](01-bounded-contexts.md) for the
+full catalog and the context map.
 
 ## 4. Cross-cutting concerns
 
-- **Authentication / authorization** lives in `Cardscape.Api`. The
-  Blazor client receives a JWT, stores it in browser storage, and
-  attaches it to every request.
+- **Authentication / authorization** lives in `Cardscape.Api`
+  (cookie-based JWT for the web client) and `Cardscape.Mcp`
+  (API-token-based for the AI client). Both share the same
+  `ICurrentUser` abstraction in the Application layer.
 - **Validation** is implemented with **FluentValidation** as
-  MediatR pipeline behaviors, not as data annotations on the
-  domain entities. This keeps `Domain` clean.
-- **Logging** is `ILogger<T>` everywhere, structured logging only,
-  no `Console.WriteLine`.
+  MediatR pipeline behaviors.
+- **Logging** is `ILogger<T>` everywhere, structured logging only.
 - **Exception handling** is a single middleware in `Cardscape.Api`
-  that maps domain errors to HTTP status codes and unexpected
-  exceptions to a 500 with a correlation id.
-- **Health checks** live in `Cardscape.Api/HealthChecks/` and
-  expose `/health/live` (process up) and `/health/ready`
-  (DB reachable + migrations applied).
+  and a single filter in `Cardscape.Mcp` that maps domain
+  errors to HTTP/MCP status codes.
+- **Health checks** live in each deployable project
+  (`Cardscape.Api/HealthChecks/`, `Cardscape.Mcp/HealthChecks/`)
+  and expose `/health/live` and `/health/ready`.
 
-## 5. Where to add a new feature
+## 5. The AI integration pillar
+
+The MCP server in `src/Cardscape.Mcp/` is Cardscape's
+**differentiator** for the open-source release. It is a thin
+transport layer on top of the Application layer:
+
+- Every MCP tool is a one-line wrapper around an existing
+  command or query handler.
+- The Application layer doesn't know whether it's being
+  called from the REST API, the MCP server, or a future
+  third client (CLI, PowerShell module, etc.).
+- Idempotency keys make AI retries safe.
+- The same `Result<T>` error-handling shape is used; the MCP
+  SDK maps `Result.Failure` to `McpToolException`.
+
+See [`03-mcp-server.md`](03-mcp-server.md) and
+[ADR 0002](../adr/0002-mcp-server.md) for the design and the
+decision.
+
+## 6. Where to add a new feature
 
 See [`../development/02-vertical-slices.md`](../development/02-vertical-slices.md)
 for the recipe. The short version:
@@ -200,32 +230,37 @@ for the recipe. The short version:
 5. Add an EF Core configuration in
    `Infrastructure/Persistence/Configurations/`.
 6. Add a migration in all three provider folders.
-7. Add an endpoint in `Api/Endpoints/<Context>/`.
-8. Add a typed client in `Web/Services/Api/`.
-9. Add a component in `Web/Components/<Context>/`.
-10. Add unit tests and (later) integration tests with the
-    `[Trait("Database", "<Engine>")]` attribute.
+7. **For the REST surface**: add an endpoint in
+   `Api/Endpoints/<Context>/`.
+8. **For the AI surface**: add a tool method in
+   `Mcp/Tools/<Context>Tool.cs`. The body is one
+   `await _sender.Send(new MyCommand(...))`.
+9. Add a typed client in `Web/Services/Api/`.
+10. Add a component in `Web/Components/<Context>/`.
+11. Add unit tests, integration tests (with the right trait),
+    and (if it's a write operation) a happy-path MCP smoke
+    test.
 
-## 6. What we don't have yet (and why)
+## 7. What we don't have yet (and why)
 
-- **No shared contracts project** between Api and Web. We duplicate
-  DTOs intentionally until the surface stabilizes. Later, we may
-  extract `Cardscape.Contracts` shared by both.
-- **No MediatR on the client.** The Blazor WASM client uses typed
-  `HttpClient` (Refit) to call the Api. A client-side MediatR for
-  client-only events is a future possibility.
-- **No gRPC / GraphQL.** REST + JSON over HTTP only. We may add
-  GraphQL for read-heavy views later (boards, timelines) if the
-  payload sizes make REST painful.
-- **No event bus / message broker.** Domain events are dispatched
-  in-process via MediatR. A real event bus (RabbitMQ, Service Bus,
-  Kafka) is a Phase 5+ concern, only when we need cross-process
-  communication.
+- **No shared contracts project** between Api and Web. We
+  duplicate DTOs intentionally until the surface stabilizes.
+- **No MediatR on the client.** The Blazor WASM client uses
+  typed `HttpClient` (Refit) to call the API.
+- **No gRPC / GraphQL.** REST + JSON over HTTP only.
+- **No event bus / message broker.** Domain events are
+  dispatched in-process via MediatR.
+- **No MCP subscription support yet** (Phase 2 deliverable).
+  Resources are read-only for now; live subscriptions are
+  scheduled for Phase 5 (RealTime) when SignalR is wired in.
 
-## 7. References
+## 8. References
 
 - [`../adr/0001-multi-provider-strategy.md`](../adr/0001-multi-provider-strategy.md)
+- [`../adr/0002-mcp-server.md`](../adr/0002-mcp-server.md)
+- [`01-bounded-contexts.md`](01-bounded-contexts.md)
+- [`03-mcp-server.md`](03-mcp-server.md)
 - [`../development/01-conventions.md`](../development/01-conventions.md)
 - [`../development/02-vertical-slices.md`](../development/02-vertical-slices.md)
 - [Microsoft — Clean Architecture with .NET](https://learn.microsoft.com/dotnet/architecture/modern-web-apps-azure/)
-- [Jason Taylor — Clean Architecture template](https://github.com/jasontaylordev/CleanArchitecture)
+- [Model Context Protocol — official spec](https://modelcontextprotocol.io/)

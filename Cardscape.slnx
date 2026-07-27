@@ -5,6 +5,7 @@
     <Project Path="src/Cardscape.Infrastructure/Cardscape.Infrastructure.csproj" />
     <Project Path="src/Cardscape.Api/Cardscape.Api.csproj" />
     <Project Path="src/Cardscape.Web/Cardscape.Web.csproj" />
+    <Project Path="src/Cardscape.Mcp/Cardscape.Mcp.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/TestCommon/TestCommon.csproj" />
