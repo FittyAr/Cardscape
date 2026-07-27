@@ -1,25 +1,25 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Application.Common.Exceptions;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
-using MediatR;
+using Wolverine;
 using static Cardscape.Domain.Workspaces.Errors.WorkspaceErrors;
 
 namespace Cardscape.Application.Workspaces.Commands;
 
-public sealed record CreateWorkspaceCommand(string Name) : IRequest<Result<WorkspaceDto>>;
+public sealed record CreateWorkspaceCommand(string Name) : IMessage;
 
-public sealed class CreateWorkspaceCommandHandler(
-    IRepository<Workspace, WorkspaceId> workspaces,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<CreateWorkspaceCommand, Result<WorkspaceDto>>
+public static class CreateWorkspaceCommandHandler
 {
-    public async Task<Result<WorkspaceDto>> Handle(
-        CreateWorkspaceCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<WorkspaceDto>> Handle(
+        CreateWorkspaceCommand command,
+        IRepository<Workspace, WorkspaceId> workspaces,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (!currentUser.IsAuthenticated || currentUser.Id is null)
         {
@@ -27,7 +27,7 @@ public sealed class CreateWorkspaceCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var nameResult = WorkspaceName.Create(request.Name);
+        var nameResult = WorkspaceName.Create(command.Name);
         if (nameResult.IsFailure)
         {
             return Result.Failure<WorkspaceDto>(nameResult.Error);
@@ -57,17 +57,17 @@ public sealed class CreateWorkspaceCommandHandler(
     }
 }
 
-public sealed record RenameWorkspaceCommand(Guid WorkspaceId, string NewName)
-    : IRequest<Result<WorkspaceDto>>;
+public sealed record RenameWorkspaceCommand(Guid WorkspaceId, string NewName) : IMessage;
 
-public sealed class RenameWorkspaceCommandHandler(
-    IRepository<Workspace, WorkspaceId> workspaces,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<RenameWorkspaceCommand, Result<WorkspaceDto>>
+public static class RenameWorkspaceCommandHandler
 {
-    public async Task<Result<WorkspaceDto>> Handle(
-        RenameWorkspaceCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<WorkspaceDto>> Handle(
+        RenameWorkspaceCommand command,
+        IRepository<Workspace, WorkspaceId> workspaces,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -75,7 +75,7 @@ public sealed class RenameWorkspaceCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(request.WorkspaceId), cancellationToken);
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(command.WorkspaceId), cancellationToken);
         if (workspace is null)
         {
             return Result.Failure<WorkspaceDto>(NotFound);
@@ -86,7 +86,7 @@ public sealed class RenameWorkspaceCommandHandler(
             return Result.Failure<WorkspaceDto>(NotMember);
         }
 
-        var nameResult = WorkspaceName.Create(request.NewName);
+        var nameResult = WorkspaceName.Create(command.NewName);
         if (nameResult.IsFailure)
         {
             return Result.Failure<WorkspaceDto>(nameResult.Error);
@@ -110,16 +110,17 @@ public sealed class RenameWorkspaceCommandHandler(
     }
 }
 
-public sealed record ArchiveWorkspaceCommand(Guid WorkspaceId) : IRequest<Result<WorkspaceDto>>;
+public sealed record ArchiveWorkspaceCommand(Guid WorkspaceId) : IMessage;
 
-public sealed class ArchiveWorkspaceCommandHandler(
-    IRepository<Workspace, WorkspaceId> workspaces,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<ArchiveWorkspaceCommand, Result<WorkspaceDto>>
+public static class ArchiveWorkspaceCommandHandler
 {
-    public async Task<Result<WorkspaceDto>> Handle(
-        ArchiveWorkspaceCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<WorkspaceDto>> Handle(
+        ArchiveWorkspaceCommand command,
+        IRepository<Workspace, WorkspaceId> workspaces,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -127,7 +128,7 @@ public sealed class ArchiveWorkspaceCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(request.WorkspaceId), cancellationToken);
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(command.WorkspaceId), cancellationToken);
         if (workspace is null)
         {
             return Result.Failure<WorkspaceDto>(NotFound);
@@ -152,16 +153,17 @@ public sealed class ArchiveWorkspaceCommandHandler(
 }
 
 public sealed record AddWorkspaceMemberCommand(Guid WorkspaceId, Guid UserId, WorkspaceRole Role)
-    : IRequest<Result<WorkspaceDto>>;
+    : IMessage;
 
-public sealed class AddWorkspaceMemberCommandHandler(
-    IRepository<Workspace, WorkspaceId> workspaces,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<AddWorkspaceMemberCommand, Result<WorkspaceDto>>
+public static class AddWorkspaceMemberCommandHandler
 {
-    public async Task<Result<WorkspaceDto>> Handle(
-        AddWorkspaceMemberCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<WorkspaceDto>> Handle(
+        AddWorkspaceMemberCommand command,
+        IRepository<Workspace, WorkspaceId> workspaces,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -169,7 +171,7 @@ public sealed class AddWorkspaceMemberCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(request.WorkspaceId), cancellationToken);
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(command.WorkspaceId), cancellationToken);
         if (workspace is null)
         {
             return Result.Failure<WorkspaceDto>(NotFound);
@@ -180,7 +182,7 @@ public sealed class AddWorkspaceMemberCommandHandler(
             return Result.Failure<WorkspaceDto>(InsufficientPermissions);
         }
 
-        var addResult = workspace.AddMember(request.UserId, request.Role, clock.UtcNow);
+        var addResult = workspace.AddMember(command.UserId, command.Role, clock.UtcNow);
         if (addResult.IsFailure)
         {
             return Result.Failure<WorkspaceDto>(addResult.Error);
@@ -199,16 +201,17 @@ public sealed class AddWorkspaceMemberCommandHandler(
 }
 
 public sealed record RemoveWorkspaceMemberCommand(Guid WorkspaceId, Guid UserId)
-    : IRequest<Result<WorkspaceDto>>;
+    : IMessage;
 
-public sealed class RemoveWorkspaceMemberCommandHandler(
-    IRepository<Workspace, WorkspaceId> workspaces,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<RemoveWorkspaceMemberCommand, Result<WorkspaceDto>>
+public static class RemoveWorkspaceMemberCommandHandler
 {
-    public async Task<Result<WorkspaceDto>> Handle(
-        RemoveWorkspaceMemberCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<WorkspaceDto>> Handle(
+        RemoveWorkspaceMemberCommand command,
+        IRepository<Workspace, WorkspaceId> workspaces,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -216,7 +219,7 @@ public sealed class RemoveWorkspaceMemberCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(request.WorkspaceId), cancellationToken);
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(command.WorkspaceId), cancellationToken);
         if (workspace is null)
         {
             return Result.Failure<WorkspaceDto>(NotFound);
@@ -227,7 +230,7 @@ public sealed class RemoveWorkspaceMemberCommandHandler(
             return Result.Failure<WorkspaceDto>(InsufficientPermissions);
         }
 
-        var removeResult = workspace.RemoveMember(request.UserId, clock.UtcNow);
+        var removeResult = workspace.RemoveMember(command.UserId, clock.UtcNow);
         if (removeResult.IsFailure)
         {
             return Result.Failure<WorkspaceDto>(removeResult.Error);

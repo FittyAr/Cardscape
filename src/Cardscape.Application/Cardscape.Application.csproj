@@ -3,13 +3,15 @@
   <PropertyGroup>
     <AssemblyName>Cardscape.Application</AssemblyName>
     <RootNamespace>Cardscape.Application</RootNamespace>
-    <Description>Application layer: use cases (CQRS via MediatR), validations, DTOs, abstractions.</Description>
+    <Description>Application layer: use cases (CQRS via Wolverine), validations, DTOs, abstractions, mapping.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MediatR" />
+    <PackageReference Include="WolverineFx" />
+    <PackageReference Include="WolverineFx.RuntimeCompilation" />
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Riok.Mapperly" />
     <!-- Microsoft.Extensions.{DependencyInjection,Logging}.Abstractions
          are auto-included in the .NET 11 SDK; no explicit reference required. -->
   </ItemGroup>

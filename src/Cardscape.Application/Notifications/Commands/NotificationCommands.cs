@@ -4,20 +4,21 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Notifications.DTOs;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Notifications;
-using MediatR;
+using Wolverine;
 
 namespace Cardscape.Application.Notifications.Commands;
 
-public sealed record MarkNotificationReadCommand(Guid NotificationId) : IRequest<Result>;
+public sealed record MarkNotificationReadCommand(Guid NotificationId) : IMessage;
 
-public sealed class MarkNotificationReadCommandHandler(
-    INotificationRepository notifications,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<MarkNotificationReadCommand, Result>
+public static class MarkNotificationReadCommandHandler
 {
-    public async Task<Result> Handle(
-        MarkNotificationReadCommand request, CancellationToken cancellationToken)
+    public static async Task<Result> Handle(
+        MarkNotificationReadCommand command,
+        INotificationRepository notifications,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -25,7 +26,7 @@ public sealed class MarkNotificationReadCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var notification = await notifications.GetByIdAsync(new NotificationId(request.NotificationId), cancellationToken);
+        var notification = await notifications.GetByIdAsync(new NotificationId(command.NotificationId), cancellationToken);
         if (notification is null)
         {
             return Result.Failure(DomainError.NotFound(
@@ -44,16 +45,17 @@ public sealed class MarkNotificationReadCommandHandler(
     }
 }
 
-public sealed record MarkAllNotificationsReadCommand : IRequest<Result>;
+public sealed record MarkAllNotificationsReadCommand : IMessage;
 
-public sealed class MarkAllNotificationsReadCommandHandler(
-    INotificationRepository notifications,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<MarkAllNotificationsReadCommand, Result>
+public static class MarkAllNotificationsReadCommandHandler
 {
-    public async Task<Result> Handle(
-        MarkAllNotificationsReadCommand request, CancellationToken cancellationToken)
+    public static async Task<Result> Handle(
+        MarkAllNotificationsReadCommand command,
+        INotificationRepository notifications,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {

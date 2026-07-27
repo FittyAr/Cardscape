@@ -480,3 +480,10 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Cardscape local development
+.apilog.txt
+src/Cardscape.Api/Data/
+**/*.db
+**/*.db-wal
+**/*.db-shm

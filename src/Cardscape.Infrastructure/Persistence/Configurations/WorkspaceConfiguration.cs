@@ -22,7 +22,7 @@ public sealed class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsRowVersion();
+        b.Property(x => x.RowVersion);
 
         b.OwnsMany(x => x.Members, mb =>
         {

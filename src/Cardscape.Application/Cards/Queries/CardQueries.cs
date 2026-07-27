@@ -4,19 +4,20 @@ using Cardscape.Application.Cards.Common;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
-using MediatR;
+using Wolverine;
 using static Cardscape.Domain.Cards.Errors.CardErrors;
 
 namespace Cardscape.Application.Cards.Queries;
 
-public sealed record GetCardQuery(Guid CardId) : IRequest<Result<CardDto>>;
+public sealed record GetCardQuery(Guid CardId) : IMessage;
 
-public sealed class GetCardQueryHandler(
-    ICardRepository cards,
-    ICurrentUser currentUser) : IRequestHandler<GetCardQuery, Result<CardDto>>
+public static class GetCardQueryHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        GetCardQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        GetCardQuery query,
+        ICardRepository cards,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -24,7 +25,7 @@ public sealed class GetCardQueryHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(query.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
@@ -35,14 +36,15 @@ public sealed class GetCardQueryHandler(
 }
 
 public sealed record ListCardsForBoardQuery(Guid BoardId, bool IncludeArchived = false)
-    : IRequest<Result<IReadOnlyList<CardSummaryDto>>>;
+    : IMessage;
 
-public sealed class ListCardsForBoardQueryHandler(
-    ICardRepository cards,
-    ICurrentUser currentUser) : IRequestHandler<ListCardsForBoardQuery, Result<IReadOnlyList<CardSummaryDto>>>
+public static class ListCardsForBoardQueryHandler
 {
-    public async Task<Result<IReadOnlyList<CardSummaryDto>>> Handle(
-        ListCardsForBoardQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<IReadOnlyList<CardSummaryDto>>> Handle(
+        ListCardsForBoardQuery query,
+        ICardRepository cards,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -51,8 +53,8 @@ public sealed class ListCardsForBoardQueryHandler(
         }
 
         var items = await cards.ListForBoardAsync(
-            new Domain.Boards.BoardId(request.BoardId),
-            request.IncludeArchived,
+            new Domain.Boards.BoardId(query.BoardId),
+            query.IncludeArchived,
             cancellationToken);
 
         var rows = items

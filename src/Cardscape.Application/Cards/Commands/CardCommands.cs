@@ -7,23 +7,24 @@ using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
-using MediatR;
+using Wolverine;
 using static Cardscape.Domain.Cards.Errors.CardErrors;
 
 namespace Cardscape.Application.Cards.Commands;
 
 public sealed record CreateCardCommand(Guid ListId, string Title, string? Description)
-    : IRequest<Result<CardDto>>;
+    : IMessage;
 
-public sealed class CreateCardCommandHandler(
-    ICardRepository cards,
-    IBoardListRepository lists,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<CreateCardCommand, Result<CardDto>>
+public static class CreateCardCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        CreateCardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        CreateCardCommand command,
+        IBoardListRepository lists,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -31,20 +32,20 @@ public sealed class CreateCardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var list = await lists.GetByIdAsync(new BoardListId(request.ListId), cancellationToken);
+        var list = await lists.GetByIdAsync(new BoardListId(command.ListId), cancellationToken);
         if (list is null)
         {
             return Result.Failure<CardDto>(DomainError.NotFound(
                 "lists.not_found", "List was not found."));
         }
 
-        var titleResult = CardTitle.Create(request.Title);
+        var titleResult = CardTitle.Create(command.Title);
         if (titleResult.IsFailure)
         {
             return Result.Failure<CardDto>(titleResult.Error);
         }
 
-        var descResult = CardDescription.Create(request.Description);
+        var descResult = CardDescription.Create(command.Description);
         if (descResult.IsFailure)
         {
             return Result.Failure<CardDto>(descResult.Error);
@@ -52,7 +53,7 @@ public sealed class CreateCardCommandHandler(
 
         var cardResult = Card.Create(
             CardId.New(),
-            new BoardListId(request.ListId),
+            new BoardListId(command.ListId),
             titleResult.Value,
             descResult.Value,
             Position.Start(),
@@ -83,16 +84,17 @@ public sealed class CreateCardCommandHandler(
     }
 }
 
-public sealed record RenameCardCommand(Guid CardId, string NewTitle) : IRequest<Result<CardDto>>;
+public sealed record RenameCardCommand(Guid CardId, string NewTitle) : IMessage;
 
-public sealed class RenameCardCommandHandler(
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<RenameCardCommand, Result<CardDto>>
+public static class RenameCardCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        RenameCardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        RenameCardCommand command,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -100,13 +102,13 @@ public sealed class RenameCardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
         }
 
-        var titleResult = CardTitle.Create(request.NewTitle);
+        var titleResult = CardTitle.Create(command.NewTitle);
         if (titleResult.IsFailure)
         {
             return Result.Failure<CardDto>(titleResult.Error);
@@ -124,16 +126,17 @@ public sealed class RenameCardCommandHandler(
 }
 
 public sealed record ChangeCardDescriptionCommand(Guid CardId, string NewDescription)
-    : IRequest<Result<CardDto>>;
+    : IMessage;
 
-public sealed class ChangeCardDescriptionCommandHandler(
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<ChangeCardDescriptionCommand, Result<CardDto>>
+public static class ChangeCardDescriptionCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        ChangeCardDescriptionCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        ChangeCardDescriptionCommand command,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -141,13 +144,13 @@ public sealed class ChangeCardDescriptionCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
         }
 
-        var descResult = CardDescription.Create(request.NewDescription);
+        var descResult = CardDescription.Create(command.NewDescription);
         if (descResult.IsFailure)
         {
             return Result.Failure<CardDto>(descResult.Error);
@@ -165,16 +168,17 @@ public sealed class ChangeCardDescriptionCommandHandler(
 }
 
 public sealed record MoveCardCommand(Guid CardId, Guid NewListId, double NewPosition)
-    : IRequest<Result<CardDto>>;
+    : IMessage;
 
-public sealed class MoveCardCommandHandler(
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<MoveCardCommand, Result<CardDto>>
+public static class MoveCardCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        MoveCardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        MoveCardCommand command,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -182,15 +186,15 @@ public sealed class MoveCardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
         }
 
         var moveResult = card.Move(
-            new BoardListId(request.NewListId),
-            Position.From(request.NewPosition),
+            new BoardListId(command.NewListId),
+            Position.From(command.NewPosition),
             clock.UtcNow);
 
         if (moveResult.IsFailure)
@@ -204,16 +208,17 @@ public sealed class MoveCardCommandHandler(
 }
 
 public sealed record SetCardDueDateCommand(Guid CardId, DateTimeOffset DueDate)
-    : IRequest<Result<CardDto>>;
+    : IMessage;
 
-public sealed class SetCardDueDateCommandHandler(
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<SetCardDueDateCommand, Result<CardDto>>
+public static class SetCardDueDateCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        SetCardDueDateCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        SetCardDueDateCommand command,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -221,13 +226,13 @@ public sealed class SetCardDueDateCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
         }
 
-        var result = card.SetDueDate(request.DueDate, clock.UtcNow);
+        var result = card.SetDueDate(command.DueDate, clock.UtcNow);
         if (result.IsFailure)
         {
             return Result.Failure<CardDto>(result.Error);
@@ -238,16 +243,17 @@ public sealed class SetCardDueDateCommandHandler(
     }
 }
 
-public sealed record ClearCardDueDateCommand(Guid CardId) : IRequest<Result<CardDto>>;
+public sealed record ClearCardDueDateCommand(Guid CardId) : IMessage;
 
-public sealed class ClearCardDueDateCommandHandler(
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<ClearCardDueDateCommand, Result<CardDto>>
+public static class ClearCardDueDateCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        ClearCardDueDateCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        ClearCardDueDateCommand command,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -255,7 +261,7 @@ public sealed class ClearCardDueDateCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
@@ -272,16 +278,17 @@ public sealed class ClearCardDueDateCommandHandler(
     }
 }
 
-public sealed record CompleteCardCommand(Guid CardId) : IRequest<Result<CardDto>>;
+public sealed record CompleteCardCommand(Guid CardId) : IMessage;
 
-public sealed class CompleteCardCommandHandler(
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<CompleteCardCommand, Result<CardDto>>
+public static class CompleteCardCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        CompleteCardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        CompleteCardCommand command,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -289,7 +296,7 @@ public sealed class CompleteCardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
@@ -306,16 +313,17 @@ public sealed class CompleteCardCommandHandler(
     }
 }
 
-public sealed record ReopenCardCommand(Guid CardId) : IRequest<Result<CardDto>>;
+public sealed record ReopenCardCommand(Guid CardId) : IMessage;
 
-public sealed class ReopenCardCommandHandler(
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<ReopenCardCommand, Result<CardDto>>
+public static class ReopenCardCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        ReopenCardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        ReopenCardCommand command,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -323,7 +331,7 @@ public sealed class ReopenCardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
@@ -340,16 +348,17 @@ public sealed class ReopenCardCommandHandler(
     }
 }
 
-public sealed record ArchiveCardCommand(Guid CardId) : IRequest<Result<CardDto>>;
+public sealed record ArchiveCardCommand(Guid CardId) : IMessage;
 
-public sealed class ArchiveCardCommandHandler(
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<ArchiveCardCommand, Result<CardDto>>
+public static class ArchiveCardCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        ArchiveCardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        ArchiveCardCommand command,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -357,7 +366,7 @@ public sealed class ArchiveCardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
@@ -369,16 +378,17 @@ public sealed class ArchiveCardCommandHandler(
     }
 }
 
-public sealed record RestoreCardCommand(Guid CardId) : IRequest<Result<CardDto>>;
+public sealed record RestoreCardCommand(Guid CardId) : IMessage;
 
-public sealed class RestoreCardCommandHandler(
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<RestoreCardCommand, Result<CardDto>>
+public static class RestoreCardCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        RestoreCardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        RestoreCardCommand command,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -386,7 +396,7 @@ public sealed class RestoreCardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
@@ -398,16 +408,17 @@ public sealed class RestoreCardCommandHandler(
     }
 }
 
-public sealed record AssignCardCommand(Guid CardId, Guid UserId) : IRequest<Result<CardDto>>;
+public sealed record AssignCardCommand(Guid CardId, Guid UserId) : IMessage;
 
-public sealed class AssignCardCommandHandler(
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<AssignCardCommand, Result<CardDto>>
+public static class AssignCardCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        AssignCardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        AssignCardCommand command,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -415,13 +426,13 @@ public sealed class AssignCardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
         }
 
-        var result = card.Assign(request.UserId, clock.UtcNow);
+        var result = card.Assign(command.UserId, clock.UtcNow);
         if (result.IsFailure)
         {
             return Result.Failure<CardDto>(result.Error);
@@ -432,16 +443,17 @@ public sealed class AssignCardCommandHandler(
     }
 }
 
-public sealed record UnassignCardCommand(Guid CardId, Guid UserId) : IRequest<Result<CardDto>>;
+public sealed record UnassignCardCommand(Guid CardId, Guid UserId) : IMessage;
 
-public sealed class UnassignCardCommandHandler(
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<UnassignCardCommand, Result<CardDto>>
+public static class UnassignCardCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        UnassignCardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        UnassignCardCommand command,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -449,13 +461,13 @@ public sealed class UnassignCardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
         }
 
-        var result = card.Unassign(request.UserId, clock.UtcNow);
+        var result = card.Unassign(command.UserId, clock.UtcNow);
         if (result.IsFailure)
         {
             return Result.Failure<CardDto>(result.Error);
@@ -466,17 +478,18 @@ public sealed class UnassignCardCommandHandler(
     }
 }
 
-public sealed record AttachLabelToCardCommand(Guid CardId, Guid LabelId) : IRequest<Result<CardDto>>;
+public sealed record AttachLabelToCardCommand(Guid CardId, Guid LabelId) : IMessage;
 
-public sealed class AttachLabelToCardCommandHandler(
-    ICardRepository cards,
-    ILabelRepository labels,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<AttachLabelToCardCommand, Result<CardDto>>
+public static class AttachLabelToCardCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        AttachLabelToCardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        AttachLabelToCardCommand command,
+        ICardRepository cards,
+        ILabelRepository labels,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -484,13 +497,13 @@ public sealed class AttachLabelToCardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
         }
 
-        var label = await labels.GetByIdAsync(new LabelId(request.LabelId), cancellationToken);
+        var label = await labels.GetByIdAsync(new LabelId(command.LabelId), cancellationToken);
         if (label is null)
         {
             return Result.Failure<CardDto>(DomainError.NotFound(
@@ -509,16 +522,18 @@ public sealed class AttachLabelToCardCommandHandler(
     }
 }
 
-public sealed record DetachLabelFromCardCommand(Guid CardId, Guid LabelId) : IRequest<Result<CardDto>>;
+public sealed record DetachLabelFromCardCommand(Guid CardId, Guid LabelId) : IMessage;
 
-public sealed class DetachLabelFromCardCommandHandler(
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<DetachLabelFromCardCommand, Result<CardDto>>
+public static class DetachLabelFromCardCommandHandler
 {
-    public async Task<Result<CardDto>> Handle(
-        DetachLabelFromCardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CardDto>> Handle(
+        DetachLabelFromCardCommand command,
+        ICardRepository cards,
+        ILabelRepository labels,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -526,13 +541,13 @@ public sealed class DetachLabelFromCardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CardDto>(NotFound);
         }
 
-        var result = card.DetachLabel(new LabelId(request.LabelId), clock.UtcNow);
+        var result = card.DetachLabel(new LabelId(command.LabelId), clock.UtcNow);
         if (result.IsFailure)
         {
             return Result.Failure<CardDto>(result.Error);

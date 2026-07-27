@@ -1,10 +1,10 @@
 using System.Reflection;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Application.Common.Behaviors;
 using FluentValidation;
-using MediatR;
+using JasperFx.CodeGeneration.Model;
 using Microsoft.Extensions.DependencyInjection;
+using Wolverine;
 
 namespace Cardscape.Application.DependencyInjection;
 
@@ -12,7 +12,8 @@ namespace Cardscape.Application.DependencyInjection;
 public static class ApplicationServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers MediatR, all validators, the pipeline behaviors,
+    /// Registers Wolverine (which discovers the static command/query
+    /// handlers in this assembly), all FluentValidation validators,
     /// and the shared abstractions (<see cref="IClock"/>,
     /// <see cref="ICurrentUser"/>, <see cref="IPasswordHasher"/>,
     /// <see cref="ITokenService"/>).
@@ -21,12 +22,12 @@ public static class ApplicationServiceCollectionExtensions
     {
         var assembly = Assembly.GetExecutingAssembly();
 
-        services.AddMediatR(cfg =>
+        services.AddWolverine(opts =>
         {
-            cfg.RegisterServicesFromAssembly(assembly);
-            cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
-            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            cfg.AddOpenBehavior(typeof(UnitOfWorkBehavior<,>));
+            opts.Discovery.IncludeAssembly(assembly);
+            // EF Core registers DbContextOptions as a scoped factory, which
+            // conflicts with Wolverine's default "no service location" policy.
+            opts.ServiceLocationPolicy = ServiceLocationPolicy.AllowedButWarn;
         });
 
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);

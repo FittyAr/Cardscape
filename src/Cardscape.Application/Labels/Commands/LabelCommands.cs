@@ -5,23 +5,24 @@ using Cardscape.Application.Labels.DTOs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
-using MediatR;
+using Wolverine;
 using static Cardscape.Domain.Labels.Errors.LabelErrors;
 
 namespace Cardscape.Application.Labels.Commands;
 
 public sealed record CreateLabelCommand(Guid BoardId, string Name, string Color)
-    : IRequest<Result<LabelDto>>;
+    : IMessage;
 
-public sealed class CreateLabelCommandHandler(
-    ILabelRepository labels,
-    IBoardRepository boards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<CreateLabelCommand, Result<LabelDto>>
+public static class CreateLabelCommandHandler
 {
-    public async Task<Result<LabelDto>> Handle(
-        CreateLabelCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<LabelDto>> Handle(
+        CreateLabelCommand command,
+        IBoardRepository boards,
+        ILabelRepository labels,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -29,7 +30,7 @@ public sealed class CreateLabelCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var board = await boards.GetByIdAsync(new BoardId(request.BoardId), cancellationToken);
+        var board = await boards.GetByIdAsync(new BoardId(command.BoardId), cancellationToken);
         if (board is null)
         {
             return Result.Failure<LabelDto>(DomainError.NotFound(
@@ -42,13 +43,13 @@ public sealed class CreateLabelCommandHandler(
                 "boards.not_member", "You are not a member of this board."));
         }
 
-        var nameResult = LabelName.Create(request.Name);
+        var nameResult = LabelName.Create(command.Name);
         if (nameResult.IsFailure)
         {
             return Result.Failure<LabelDto>(nameResult.Error);
         }
 
-        var colorResult = Color.Create(request.Color);
+        var colorResult = Color.Create(command.Color);
         if (colorResult.IsFailure)
         {
             return Result.Failure<LabelDto>(colorResult.Error);
@@ -56,7 +57,7 @@ public sealed class CreateLabelCommandHandler(
 
         var labelResult = Label.Create(
             LabelId.New(),
-            new BoardId(request.BoardId),
+            new BoardId(command.BoardId),
             nameResult.Value,
             colorResult.Value,
             currentUser.Id.Value,
@@ -79,16 +80,17 @@ public sealed class CreateLabelCommandHandler(
 }
 
 public sealed record UpdateLabelCommand(Guid LabelId, string Name, string Color)
-    : IRequest<Result<LabelDto>>;
+    : IMessage;
 
-public sealed class UpdateLabelCommandHandler(
-    ILabelRepository labels,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<UpdateLabelCommand, Result<LabelDto>>
+public static class UpdateLabelCommandHandler
 {
-    public async Task<Result<LabelDto>> Handle(
-        UpdateLabelCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<LabelDto>> Handle(
+        UpdateLabelCommand command,
+        ILabelRepository labels,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -96,19 +98,19 @@ public sealed class UpdateLabelCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var label = await labels.GetByIdAsync(new LabelId(request.LabelId), cancellationToken);
+        var label = await labels.GetByIdAsync(new LabelId(command.LabelId), cancellationToken);
         if (label is null)
         {
             return Result.Failure<LabelDto>(NotFound);
         }
 
-        var nameResult = LabelName.Create(request.Name);
+        var nameResult = LabelName.Create(command.Name);
         if (nameResult.IsFailure)
         {
             return Result.Failure<LabelDto>(nameResult.Error);
         }
 
-        var colorResult = Color.Create(request.Color);
+        var colorResult = Color.Create(command.Color);
         if (colorResult.IsFailure)
         {
             return Result.Failure<LabelDto>(colorResult.Error);
@@ -129,16 +131,17 @@ public sealed class UpdateLabelCommandHandler(
     }
 }
 
-public sealed record DeleteLabelCommand(Guid LabelId) : IRequest<Result>;
+public sealed record DeleteLabelCommand(Guid LabelId) : IMessage;
 
-public sealed class DeleteLabelCommandHandler(
-    ILabelRepository labels,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<DeleteLabelCommand, Result>
+public static class DeleteLabelCommandHandler
 {
-    public async Task<Result> Handle(
-        DeleteLabelCommand request, CancellationToken cancellationToken)
+    public static async Task<Result> Handle(
+        DeleteLabelCommand command,
+        ILabelRepository labels,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -146,7 +149,7 @@ public sealed class DeleteLabelCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var label = await labels.GetByIdAsync(new LabelId(request.LabelId), cancellationToken);
+        var label = await labels.GetByIdAsync(new LabelId(command.LabelId), cancellationToken);
         if (label is null)
         {
             return Result.Failure(NotFound);

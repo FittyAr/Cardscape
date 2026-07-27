@@ -4,7 +4,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
-using MediatR;
+using Wolverine;
 using static Cardscape.Domain.Members.Errors.UserErrors;
 
 namespace Cardscape.Application.Authentication.Commands;
@@ -13,31 +13,32 @@ namespace Cardscape.Application.Authentication.Commands;
 public sealed record RegisterUserCommand(
     string Email,
     string DisplayName,
-    string Password) : IRequest<Result<AuthResponse>>;
+    string Password) : IMessage;
 
-public sealed class RegisterUserCommandHandler(
-    IUserRepository users,
-    IUnitOfWork unitOfWork,
-    IPasswordHasher hasher,
-    ITokenService tokens,
-    IClock clock) : IRequestHandler<RegisterUserCommand, Result<AuthResponse>>
+public static class RegisterUserCommandHandler
 {
-    public async Task<Result<AuthResponse>> Handle(
-        RegisterUserCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<AuthResponse>> Handle(
+        RegisterUserCommand command,
+        IUserRepository users,
+        IPasswordHasher hasher,
+        IUnitOfWork unitOfWork,
+        ITokenService tokens,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
-        var emailResult = EmailAddress.Create(request.Email);
+        var emailResult = EmailAddress.Create(command.Email);
         if (emailResult.IsFailure)
         {
             return Result.Failure<AuthResponse>(emailResult.Error);
         }
 
-        var displayNameResult = DisplayName.Create(request.DisplayName);
+        var displayNameResult = DisplayName.Create(command.DisplayName);
         if (displayNameResult.IsFailure)
         {
             return Result.Failure<AuthResponse>(displayNameResult.Error);
         }
 
-        if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
+        if (string.IsNullOrWhiteSpace(command.Password) || command.Password.Length < 8)
         {
             return Result.Failure<AuthResponse>(InvalidPassword(
                 "Password must be at least 8 characters long."));
@@ -49,7 +50,7 @@ public sealed class RegisterUserCommandHandler(
             return Result.Failure<AuthResponse>(EmailAlreadyTaken);
         }
 
-        var hash = hasher.Hash(request.Password);
+        var hash = hasher.Hash(command.Password);
         var userResult = User.Register(
             UserId.New(),
             emailResult.Value,

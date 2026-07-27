@@ -4,19 +4,20 @@ using Cardscape.Application.Boards.DTOs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
-using MediatR;
+using Wolverine;
 using static Cardscape.Domain.Boards.Errors.BoardErrors;
 
 namespace Cardscape.Application.Boards.Queries;
 
-public sealed record GetBoardQuery(Guid BoardId) : IRequest<Result<BoardDto>>;
+public sealed record GetBoardQuery(Guid BoardId) : IMessage;
 
-public sealed class GetBoardQueryHandler(
-    IBoardRepository boards,
-    ICurrentUser currentUser) : IRequestHandler<GetBoardQuery, Result<BoardDto>>
+public static class GetBoardQueryHandler
 {
-    public async Task<Result<BoardDto>> Handle(
-        GetBoardQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<BoardDto>> Handle(
+        GetBoardQuery query,
+        IBoardRepository boards,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -24,7 +25,7 @@ public sealed class GetBoardQueryHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var board = await boards.GetByIdAsync(new BoardId(request.BoardId), cancellationToken);
+        var board = await boards.GetByIdAsync(new BoardId(query.BoardId), cancellationToken);
         if (board is null)
         {
             return Result.Failure<BoardDto>(NotFound);
@@ -48,15 +49,16 @@ public sealed class GetBoardQueryHandler(
     }
 }
 
-public sealed record ListBoardsForWorkspaceQuery(Guid WorkspaceId) : IRequest<Result<IReadOnlyList<BoardSummaryDto>>>;
+public sealed record ListBoardsForWorkspaceQuery(Guid WorkspaceId) : IMessage;
 
-public sealed class ListBoardsForWorkspaceQueryHandler(
-    IBoardRepository boards,
-    IRepository<Workspace, WorkspaceId> workspaces,
-    ICurrentUser currentUser) : IRequestHandler<ListBoardsForWorkspaceQuery, Result<IReadOnlyList<BoardSummaryDto>>>
+public static class ListBoardsForWorkspaceQueryHandler
 {
-    public async Task<Result<IReadOnlyList<BoardSummaryDto>>> Handle(
-        ListBoardsForWorkspaceQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<IReadOnlyList<BoardSummaryDto>>> Handle(
+        ListBoardsForWorkspaceQuery query,
+        IBoardRepository boards,
+        IRepository<Workspace, WorkspaceId> workspaces,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -64,7 +66,7 @@ public sealed class ListBoardsForWorkspaceQueryHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(request.WorkspaceId), cancellationToken);
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(query.WorkspaceId), cancellationToken);
         if (workspace is null)
         {
             return Result.Failure<IReadOnlyList<BoardSummaryDto>>(DomainError.NotFound(
@@ -77,7 +79,7 @@ public sealed class ListBoardsForWorkspaceQueryHandler(
                 "workspaces.not_member", "You are not a member of this workspace."));
         }
 
-        var items = await boards.ListForWorkspaceAsync(new WorkspaceId(request.WorkspaceId), cancellationToken);
+        var items = await boards.ListForWorkspaceAsync(new WorkspaceId(query.WorkspaceId), cancellationToken);
         var rows = items
             .Select(b => new BoardSummaryDto(
                 b.Id.Value,
@@ -92,14 +94,15 @@ public sealed class ListBoardsForWorkspaceQueryHandler(
     }
 }
 
-public sealed record ListStarredBoardsQuery() : IRequest<Result<IReadOnlyList<BoardSummaryDto>>>;
+public sealed record ListStarredBoardsQuery() : IMessage;
 
-public sealed class ListStarredBoardsQueryHandler(
-    IBoardRepository boards,
-    ICurrentUser currentUser) : IRequestHandler<ListStarredBoardsQuery, Result<IReadOnlyList<BoardSummaryDto>>>
+public static class ListStarredBoardsQueryHandler
 {
-    public async Task<Result<IReadOnlyList<BoardSummaryDto>>> Handle(
-        ListStarredBoardsQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<IReadOnlyList<BoardSummaryDto>>> Handle(
+        ListStarredBoardsQuery query,
+        IBoardRepository boards,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {

@@ -21,7 +21,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var signingKey = configuration["Jwt:SigningKey"]
+        string signingKey = configuration["Jwt:SigningKey"]
             ?? "dev-only-insecure-signing-key-please-override-in-production-32+chars";
 
         services.AddHttpContextAccessor();
@@ -29,19 +29,16 @@ public static class ServiceCollectionExtensions
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+            .AddJwtBearer(options => options.TokenValidationParameters = new TokenValidationParameters
             {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = configuration["Jwt:Issuer"] ?? "Cardscape",
-                    ValidAudience = configuration["Jwt:Audience"] ?? "Cardscape",
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
-                    ClockSkew = TimeSpan.FromMinutes(1)
-                };
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = configuration["Jwt:Issuer"] ?? "Cardscape",
+                ValidAudience = configuration["Jwt:Audience"] ?? "Cardscape",
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
+                ClockSkew = TimeSpan.FromMinutes(1)
             });
 
         services.AddAuthorization();

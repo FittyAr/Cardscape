@@ -62,19 +62,43 @@ public static class InfrastructureServiceCollectionExtensions
         });
 
         services.AddScoped<DomainEventsInterceptor>();
-        services.AddScoped<IDomainEventDispatcher, MediatRDomainEventDispatcher>();
+        services.AddScoped<IDomainEventDispatcher, WolverineDomainEventDispatcher>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<IRepository<User, UserId>, UserRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
-        services.AddScoped<IBoardRepository, BoardRepository>();
-        services.AddScoped<IBoardListRepository, BoardListRepository>();
-        services.AddScoped<ICardRepository, CardRepository>();
-        services.AddScoped<ILabelRepository, LabelRepository>();
-        services.AddScoped<ICommentRepository, CommentRepository>();
-        services.AddScoped<INotificationRepository, NotificationRepository>();
-        services.AddScoped<IActivityRepository, ActivityRepository>();
+
+        services.AddScoped<WorkspaceRepository>();
+        services.AddScoped<IRepository<Workspace, WorkspaceId>, WorkspaceRepository>(sp => sp.GetRequiredService<WorkspaceRepository>());
+        services.AddScoped<IWorkspaceRepository, WorkspaceRepository>(sp => sp.GetRequiredService<WorkspaceRepository>());
+
+        services.AddScoped<BoardRepository>();
+        services.AddScoped<IRepository<Board, BoardId>, BoardRepository>(sp => sp.GetRequiredService<BoardRepository>());
+        services.AddScoped<IBoardRepository, BoardRepository>(sp => sp.GetRequiredService<BoardRepository>());
+
+        services.AddScoped<BoardListRepository>();
+        services.AddScoped<IRepository<BoardList, BoardListId>, BoardListRepository>(sp => sp.GetRequiredService<BoardListRepository>());
+        services.AddScoped<IBoardListRepository, BoardListRepository>(sp => sp.GetRequiredService<BoardListRepository>());
+
+        services.AddScoped<CardRepository>();
+        services.AddScoped<IRepository<Card, CardId>, CardRepository>(sp => sp.GetRequiredService<CardRepository>());
+        services.AddScoped<ICardRepository, CardRepository>(sp => sp.GetRequiredService<CardRepository>());
+
+        services.AddScoped<LabelRepository>();
+        services.AddScoped<IRepository<Label, LabelId>, LabelRepository>(sp => sp.GetRequiredService<LabelRepository>());
+        services.AddScoped<ILabelRepository, LabelRepository>(sp => sp.GetRequiredService<LabelRepository>());
+
+        services.AddScoped<CommentRepository>();
+        services.AddScoped<IRepository<Comment, CommentId>, CommentRepository>(sp => sp.GetRequiredService<CommentRepository>());
+        services.AddScoped<ICommentRepository, CommentRepository>(sp => sp.GetRequiredService<CommentRepository>());
+
+        services.AddScoped<NotificationRepository>();
+        services.AddScoped<IRepository<Notification, NotificationId>, NotificationRepository>(sp => sp.GetRequiredService<NotificationRepository>());
+        services.AddScoped<INotificationRepository, NotificationRepository>(sp => sp.GetRequiredService<NotificationRepository>());
+
+        services.AddScoped<ActivityRepository>();
+        services.AddScoped<IRepository<Activity, ActivityId>, ActivityRepository>(sp => sp.GetRequiredService<ActivityRepository>());
+        services.AddScoped<IActivityRepository, ActivityRepository>(sp => sp.GetRequiredService<ActivityRepository>());
 
         // Identity-shaped repositories (a few extra generics to satisfy the IRepository
         // contract for non-aggregate roots). The Application layer depends only on the

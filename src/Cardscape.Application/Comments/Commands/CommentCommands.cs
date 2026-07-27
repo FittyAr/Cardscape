@@ -5,22 +5,23 @@ using Cardscape.Application.Comments.DTOs;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Comments;
 using Cardscape.Domain.Common;
-using MediatR;
+using Wolverine;
 using static Cardscape.Domain.Comments.Errors.CommentErrors;
 
 namespace Cardscape.Application.Comments.Commands;
 
-public sealed record AddCommentCommand(Guid CardId, string Body) : IRequest<Result<CommentDto>>;
+public sealed record AddCommentCommand(Guid CardId, string Body) : IMessage;
 
-public sealed class AddCommentCommandHandler(
-    ICommentRepository comments,
-    ICardRepository cards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<AddCommentCommand, Result<CommentDto>>
+public static class AddCommentCommandHandler
 {
-    public async Task<Result<CommentDto>> Handle(
-        AddCommentCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CommentDto>> Handle(
+        AddCommentCommand command,
+        ICardRepository cards,
+        ICommentRepository comments,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -28,14 +29,14 @@ public sealed class AddCommentCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(request.CardId), cancellationToken);
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
         if (card is null)
         {
             return Result.Failure<CommentDto>(DomainError.NotFound(
                 "cards.not_found", "Card was not found."));
         }
 
-        var bodyResult = CommentBody.Create(request.Body);
+        var bodyResult = CommentBody.Create(command.Body);
         if (bodyResult.IsFailure)
         {
             return Result.Failure<CommentDto>(bodyResult.Error);
@@ -43,7 +44,7 @@ public sealed class AddCommentCommandHandler(
 
         var commentResult = Comment.Create(
             CommentId.New(),
-            new CardId(request.CardId),
+            new CardId(command.CardId),
             currentUser.Id.Value,
             bodyResult.Value,
             clock.UtcNow);
@@ -66,16 +67,17 @@ public sealed class AddCommentCommandHandler(
     }
 }
 
-public sealed record EditCommentCommand(Guid CommentId, string NewBody) : IRequest<Result<CommentDto>>;
+public sealed record EditCommentCommand(Guid CommentId, string NewBody) : IMessage;
 
-public sealed class EditCommentCommandHandler(
-    ICommentRepository comments,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<EditCommentCommand, Result<CommentDto>>
+public static class EditCommentCommandHandler
 {
-    public async Task<Result<CommentDto>> Handle(
-        EditCommentCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<CommentDto>> Handle(
+        EditCommentCommand command,
+        ICommentRepository comments,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -83,13 +85,13 @@ public sealed class EditCommentCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var comment = await comments.GetByIdAsync(new CommentId(request.CommentId), cancellationToken);
+        var comment = await comments.GetByIdAsync(new CommentId(command.CommentId), cancellationToken);
         if (comment is null)
         {
             return Result.Failure<CommentDto>(NotFound);
         }
 
-        var bodyResult = CommentBody.Create(request.NewBody);
+        var bodyResult = CommentBody.Create(command.NewBody);
         if (bodyResult.IsFailure)
         {
             return Result.Failure<CommentDto>(bodyResult.Error);
@@ -108,16 +110,17 @@ public sealed class EditCommentCommandHandler(
     }
 }
 
-public sealed record DeleteCommentCommand(Guid CommentId) : IRequest<Result>;
+public sealed record DeleteCommentCommand(Guid CommentId) : IMessage;
 
-public sealed class DeleteCommentCommandHandler(
-    ICommentRepository comments,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<DeleteCommentCommand, Result>
+public static class DeleteCommentCommandHandler
 {
-    public async Task<Result> Handle(
-        DeleteCommentCommand request, CancellationToken cancellationToken)
+    public static async Task<Result> Handle(
+        DeleteCommentCommand command,
+        ICommentRepository comments,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -125,7 +128,7 @@ public sealed class DeleteCommentCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var comment = await comments.GetByIdAsync(new CommentId(request.CommentId), cancellationToken);
+        var comment = await comments.GetByIdAsync(new CommentId(command.CommentId), cancellationToken);
         if (comment is null)
         {
             return Result.Failure(NotFound);

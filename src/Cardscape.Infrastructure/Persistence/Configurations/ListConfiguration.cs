@@ -26,7 +26,7 @@ public sealed class BoardListConfiguration : IEntityTypeConfiguration<BoardList>
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsRowVersion();
+        b.Property(x => x.RowVersion);
         b.HasIndex(x => x.BoardId);
         b.HasIndex(x => new { x.BoardId, x.Position });
     }

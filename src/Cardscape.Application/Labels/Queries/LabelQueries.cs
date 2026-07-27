@@ -3,19 +3,20 @@ using Cardscape.Application.Labels.DTOs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
-using MediatR;
+using Wolverine;
 
 namespace Cardscape.Application.Labels.Queries;
 
-public sealed record ListLabelsForBoardQuery(Guid BoardId) : IRequest<Result<IReadOnlyList<LabelDto>>>;
+public sealed record ListLabelsForBoardQuery(Guid BoardId) : IMessage;
 
-public sealed class ListLabelsForBoardQueryHandler(
-    ILabelRepository labels) : IRequestHandler<ListLabelsForBoardQuery, Result<IReadOnlyList<LabelDto>>>
+public static class ListLabelsForBoardQueryHandler
 {
-    public async Task<Result<IReadOnlyList<LabelDto>>> Handle(
-        ListLabelsForBoardQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<IReadOnlyList<LabelDto>>> Handle(
+        ListLabelsForBoardQuery query,
+        ILabelRepository labels,
+        CancellationToken cancellationToken)
     {
-        var items = await labels.ListForBoardAsync(new BoardId(request.BoardId), cancellationToken);
+        var items = await labels.ListForBoardAsync(new BoardId(query.BoardId), cancellationToken);
         var rows = items
             .Where(l => !l.IsDeleted)
             .Select(l => new LabelDto(

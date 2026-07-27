@@ -5,7 +5,7 @@ using Cardscape.Application.Boards.DTOs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
-using MediatR;
+using Wolverine;
 using static Cardscape.Domain.Boards.Errors.BoardErrors;
 using BoardEntity = Cardscape.Domain.Boards.Board;
 using WorkspaceEntity = Cardscape.Domain.Workspaces.Workspace;
@@ -16,17 +16,18 @@ public sealed record CreateBoardCommand(
     Guid WorkspaceId,
     string Name,
     string? Description,
-    BoardVisibility Visibility) : IRequest<Result<BoardDto>>;
+    BoardVisibility Visibility) : IMessage;
 
-public sealed class CreateBoardCommandHandler(
-    IBoardRepository boards,
-    IRepository<WorkspaceEntity, WorkspaceId> workspaces,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<CreateBoardCommand, Result<BoardDto>>
+public static class CreateBoardCommandHandler
 {
-    public async Task<Result<BoardDto>> Handle(
-        CreateBoardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<BoardDto>> Handle(
+        CreateBoardCommand command,
+        IBoardRepository boards,
+        IRepository<WorkspaceEntity, WorkspaceId> workspaces,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -34,7 +35,7 @@ public sealed class CreateBoardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(request.WorkspaceId), cancellationToken);
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(command.WorkspaceId), cancellationToken);
         if (workspace is null)
         {
             return Result.Failure<BoardDto>(DomainError.NotFound(
@@ -46,13 +47,13 @@ public sealed class CreateBoardCommandHandler(
             return Result.Failure<BoardDto>(NotMember);
         }
 
-        var nameResult = BoardName.Create(request.Name);
+        var nameResult = BoardName.Create(command.Name);
         if (nameResult.IsFailure)
         {
             return Result.Failure<BoardDto>(nameResult.Error);
         }
 
-        var descResult = BoardDescription.Create(request.Description);
+        var descResult = BoardDescription.Create(command.Description);
         if (descResult.IsFailure)
         {
             return Result.Failure<BoardDto>(descResult.Error);
@@ -60,10 +61,10 @@ public sealed class CreateBoardCommandHandler(
 
         var boardResult = BoardEntity.Create(
             BoardId.New(),
-            new WorkspaceId(request.WorkspaceId),
+            new WorkspaceId(command.WorkspaceId),
             nameResult.Value,
             descResult.Value,
-            request.Visibility,
+            command.Visibility,
             currentUser.Id.Value,
             clock.UtcNow);
 
@@ -88,16 +89,17 @@ public sealed class CreateBoardCommandHandler(
     }
 }
 
-public sealed record RenameBoardCommand(Guid BoardId, string NewName) : IRequest<Result<BoardDto>>;
+public sealed record RenameBoardCommand(Guid BoardId, string NewName) : IMessage;
 
-public sealed class RenameBoardCommandHandler(
-    IBoardRepository boards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<RenameBoardCommand, Result<BoardDto>>
+public static class RenameBoardCommandHandler
 {
-    public async Task<Result<BoardDto>> Handle(
-        RenameBoardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<BoardDto>> Handle(
+        RenameBoardCommand command,
+        IBoardRepository boards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -105,7 +107,7 @@ public sealed class RenameBoardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var board = await boards.GetByIdAsync(new BoardId(request.BoardId), cancellationToken);
+        var board = await boards.GetByIdAsync(new BoardId(command.BoardId), cancellationToken);
         if (board is null)
         {
             return Result.Failure<BoardDto>(NotFound);
@@ -116,7 +118,7 @@ public sealed class RenameBoardCommandHandler(
             return Result.Failure<BoardDto>(NotMember);
         }
 
-        var nameResult = BoardName.Create(request.NewName);
+        var nameResult = BoardName.Create(command.NewName);
         if (nameResult.IsFailure)
         {
             return Result.Failure<BoardDto>(nameResult.Error);
@@ -144,16 +146,17 @@ public sealed class RenameBoardCommandHandler(
 }
 
 public sealed record ChangeBoardDescriptionCommand(Guid BoardId, string NewDescription)
-    : IRequest<Result<BoardDto>>;
+    : IMessage;
 
-public sealed class ChangeBoardDescriptionCommandHandler(
-    IBoardRepository boards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<ChangeBoardDescriptionCommand, Result<BoardDto>>
+public static class ChangeBoardDescriptionCommandHandler
 {
-    public async Task<Result<BoardDto>> Handle(
-        ChangeBoardDescriptionCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<BoardDto>> Handle(
+        ChangeBoardDescriptionCommand command,
+        IBoardRepository boards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -161,7 +164,7 @@ public sealed class ChangeBoardDescriptionCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var board = await boards.GetByIdAsync(new BoardId(request.BoardId), cancellationToken);
+        var board = await boards.GetByIdAsync(new BoardId(command.BoardId), cancellationToken);
         if (board is null)
         {
             return Result.Failure<BoardDto>(NotFound);
@@ -172,7 +175,7 @@ public sealed class ChangeBoardDescriptionCommandHandler(
             return Result.Failure<BoardDto>(NotMember);
         }
 
-        var descResult = BoardDescription.Create(request.NewDescription);
+        var descResult = BoardDescription.Create(command.NewDescription);
         if (descResult.IsFailure)
         {
             return Result.Failure<BoardDto>(descResult.Error);
@@ -200,16 +203,17 @@ public sealed class ChangeBoardDescriptionCommandHandler(
 }
 
 public sealed record ChangeBoardVisibilityCommand(Guid BoardId, BoardVisibility NewVisibility)
-    : IRequest<Result<BoardDto>>;
+    : IMessage;
 
-public sealed class ChangeBoardVisibilityCommandHandler(
-    IBoardRepository boards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<ChangeBoardVisibilityCommand, Result<BoardDto>>
+public static class ChangeBoardVisibilityCommandHandler
 {
-    public async Task<Result<BoardDto>> Handle(
-        ChangeBoardVisibilityCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<BoardDto>> Handle(
+        ChangeBoardVisibilityCommand command,
+        IBoardRepository boards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -217,7 +221,7 @@ public sealed class ChangeBoardVisibilityCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var board = await boards.GetByIdAsync(new BoardId(request.BoardId), cancellationToken);
+        var board = await boards.GetByIdAsync(new BoardId(command.BoardId), cancellationToken);
         if (board is null)
         {
             return Result.Failure<BoardDto>(NotFound);
@@ -228,7 +232,7 @@ public sealed class ChangeBoardVisibilityCommandHandler(
             return Result.Failure<BoardDto>(NotMember);
         }
 
-        var changeResult = board.ChangeVisibility(request.NewVisibility, clock.UtcNow);
+        var changeResult = board.ChangeVisibility(command.NewVisibility, clock.UtcNow);
         if (changeResult.IsFailure)
         {
             return Result.Failure<BoardDto>(changeResult.Error);
@@ -249,16 +253,17 @@ public sealed class ChangeBoardVisibilityCommandHandler(
     }
 }
 
-public sealed record ArchiveBoardCommand(Guid BoardId) : IRequest<Result<BoardDto>>;
+public sealed record ArchiveBoardCommand(Guid BoardId) : IMessage;
 
-public sealed class ArchiveBoardCommandHandler(
-    IBoardRepository boards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<ArchiveBoardCommand, Result<BoardDto>>
+public static class ArchiveBoardCommandHandler
 {
-    public async Task<Result<BoardDto>> Handle(
-        ArchiveBoardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<BoardDto>> Handle(
+        ArchiveBoardCommand command,
+        IBoardRepository boards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -266,7 +271,7 @@ public sealed class ArchiveBoardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var board = await boards.GetByIdAsync(new BoardId(request.BoardId), cancellationToken);
+        var board = await boards.GetByIdAsync(new BoardId(command.BoardId), cancellationToken);
         if (board is null)
         {
             return Result.Failure<BoardDto>(NotFound);
@@ -293,16 +298,17 @@ public sealed class ArchiveBoardCommandHandler(
     }
 }
 
-public sealed record UnarchiveBoardCommand(Guid BoardId) : IRequest<Result<BoardDto>>;
+public sealed record UnarchiveBoardCommand(Guid BoardId) : IMessage;
 
-public sealed class UnarchiveBoardCommandHandler(
-    IBoardRepository boards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<UnarchiveBoardCommand, Result<BoardDto>>
+public static class UnarchiveBoardCommandHandler
 {
-    public async Task<Result<BoardDto>> Handle(
-        UnarchiveBoardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<BoardDto>> Handle(
+        UnarchiveBoardCommand command,
+        IBoardRepository boards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -310,7 +316,7 @@ public sealed class UnarchiveBoardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var board = await boards.GetByIdAsync(new BoardId(request.BoardId), cancellationToken);
+        var board = await boards.GetByIdAsync(new BoardId(command.BoardId), cancellationToken);
         if (board is null)
         {
             return Result.Failure<BoardDto>(NotFound);
@@ -337,16 +343,17 @@ public sealed class UnarchiveBoardCommandHandler(
     }
 }
 
-public sealed record StarBoardCommand(Guid BoardId) : IRequest<Result<BoardDto>>;
+public sealed record StarBoardCommand(Guid BoardId) : IMessage;
 
-public sealed class StarBoardCommandHandler(
-    IBoardRepository boards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<StarBoardCommand, Result<BoardDto>>
+public static class StarBoardCommandHandler
 {
-    public async Task<Result<BoardDto>> Handle(
-        StarBoardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<BoardDto>> Handle(
+        StarBoardCommand command,
+        IBoardRepository boards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -354,7 +361,7 @@ public sealed class StarBoardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var board = await boards.GetByIdAsync(new BoardId(request.BoardId), cancellationToken);
+        var board = await boards.GetByIdAsync(new BoardId(command.BoardId), cancellationToken);
         if (board is null)
         {
             return Result.Failure<BoardDto>(NotFound);
@@ -381,16 +388,17 @@ public sealed class StarBoardCommandHandler(
     }
 }
 
-public sealed record UnstarBoardCommand(Guid BoardId) : IRequest<Result<BoardDto>>;
+public sealed record UnstarBoardCommand(Guid BoardId) : IMessage;
 
-public sealed class UnstarBoardCommandHandler(
-    IBoardRepository boards,
-    IUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IClock clock) : IRequestHandler<UnstarBoardCommand, Result<BoardDto>>
+public static class UnstarBoardCommandHandler
 {
-    public async Task<Result<BoardDto>> Handle(
-        UnstarBoardCommand request, CancellationToken cancellationToken)
+    public static async Task<Result<BoardDto>> Handle(
+        UnstarBoardCommand command,
+        IBoardRepository boards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -398,7 +406,7 @@ public sealed class UnstarBoardCommandHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var board = await boards.GetByIdAsync(new BoardId(request.BoardId), cancellationToken);
+        var board = await boards.GetByIdAsync(new BoardId(command.BoardId), cancellationToken);
         if (board is null)
         {
             return Result.Failure<BoardDto>(NotFound);

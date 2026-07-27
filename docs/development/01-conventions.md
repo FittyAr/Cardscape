@@ -89,8 +89,13 @@ The naming rules are also enforced by the
 - **Use `Include` / `ThenInclude` for eager loading.** Lazy
   loading is disabled by configuration in
   `CardscapeDbContext`.
-- **Use `ProjectTo` (AutoMapper) for projections.** Don't
-  materialize entities just to map them to DTOs.
+- **Mapping uses Mapperly source generation, not reflection-based
+  mappers.** Every context has a partial `XxxMappers` class under
+  `Application/<Context>/Mapping/` annotated with
+  `[Mapper]`. Hand-written DTO constructors are still preferred for
+  simple shapes; reach for Mapperly only when a projection diverges
+  from the entity shape. We do **not** use AutoMapper (slow startup,
+  reflection-heavy) or any mapping library from Jimmy Bogard.
 - **Domain events** are dispatched in the same transaction as
   the `SaveChangesAsync` call, via an interceptor:
   ```csharp
@@ -113,9 +118,12 @@ The naming rules are also enforced by the
 
 - **FluentValidation** for all user input. Validators are
   classes in `Application/<Context>/Validations/`.
-- **Validators are registered as MediatR pipeline behaviors.**
-  `ValidationBehavior<TRequest, TResponse>` runs every
-  validator before the handler.
+- **Validators run inside Wolverine handlers.** We do not use
+  MediatR pipeline behaviors (Wolverine has its own middleware
+  composition via `WolverineFx.Handlers`). Each command/query
+  handler that needs validation injects the matching
+  `IValidator<TRequest>` and runs `validator.ValidateAsync` at the
+  top of its `Handle` method.
 - **Domain rules live in the entity.** A `Board` cannot be
   renamed to an empty string — that check is in the
   `Board.Rename` method, not in a validator. Validators check

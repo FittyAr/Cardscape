@@ -1,6 +1,6 @@
 using Cardscape.Application.Abstractions.Persistence;
-using Cardscape.Infrastructure.Persistence;
 using Cardscape.Domain.Notifications;
+using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cardscape.Infrastructure.Repositories;

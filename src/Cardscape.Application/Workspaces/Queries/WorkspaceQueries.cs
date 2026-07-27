@@ -3,19 +3,20 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
-using MediatR;
+using Wolverine;
 using static Cardscape.Domain.Workspaces.Errors.WorkspaceErrors;
 
 namespace Cardscape.Application.Workspaces.Queries;
 
-public sealed record GetWorkspaceQuery(Guid WorkspaceId) : IRequest<Result<WorkspaceDto>>;
+public sealed record GetWorkspaceQuery(Guid WorkspaceId) : IMessage;
 
-public sealed class GetWorkspaceQueryHandler(
-    IWorkspaceRepository workspaces,
-    ICurrentUser currentUser) : IRequestHandler<GetWorkspaceQuery, Result<WorkspaceDto>>
+public static class GetWorkspaceQueryHandler
 {
-    public async Task<Result<WorkspaceDto>> Handle(
-        GetWorkspaceQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<WorkspaceDto>> Handle(
+        GetWorkspaceQuery query,
+        IWorkspaceRepository workspaces,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -23,7 +24,7 @@ public sealed class GetWorkspaceQueryHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var workspace = await workspaces.GetWithMembersAsync(new WorkspaceId(request.WorkspaceId), cancellationToken);
+        var workspace = await workspaces.GetWithMembersAsync(new WorkspaceId(query.WorkspaceId), cancellationToken);
         if (workspace is null)
         {
             return Result.Failure<WorkspaceDto>(NotFound);
@@ -44,14 +45,15 @@ public sealed class GetWorkspaceQueryHandler(
     }
 }
 
-public sealed record ListWorkspacesForUserQuery() : IRequest<Result<IReadOnlyList<WorkspaceDto>>>;
+public sealed record ListWorkspacesForUserQuery() : IMessage;
 
-public sealed class ListWorkspacesForUserQueryHandler(
-    IWorkspaceRepository workspaces,
-    ICurrentUser currentUser) : IRequestHandler<ListWorkspacesForUserQuery, Result<IReadOnlyList<WorkspaceDto>>>
+public static class ListWorkspacesForUserQueryHandler
 {
-    public async Task<Result<IReadOnlyList<WorkspaceDto>>> Handle(
-        ListWorkspacesForUserQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<IReadOnlyList<WorkspaceDto>>> Handle(
+        ListWorkspacesForUserQuery query,
+        IWorkspaceRepository workspaces,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -74,15 +76,16 @@ public sealed class ListWorkspacesForUserQueryHandler(
     }
 }
 
-public sealed record ListWorkspaceMembersQuery(Guid WorkspaceId) : IRequest<Result<IReadOnlyList<WorkspaceMemberDto>>>;
+public sealed record ListWorkspaceMembersQuery(Guid WorkspaceId) : IMessage;
 
-public sealed class ListWorkspaceMembersQueryHandler(
-    IWorkspaceRepository workspaces,
-    IUserRepository users,
-    ICurrentUser currentUser) : IRequestHandler<ListWorkspaceMembersQuery, Result<IReadOnlyList<WorkspaceMemberDto>>>
+public static class ListWorkspaceMembersQueryHandler
 {
-    public async Task<Result<IReadOnlyList<WorkspaceMemberDto>>> Handle(
-        ListWorkspaceMembersQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<IReadOnlyList<WorkspaceMemberDto>>> Handle(
+        ListWorkspaceMembersQuery query,
+        IWorkspaceRepository workspaces,
+        IUserRepository users,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -90,7 +93,7 @@ public sealed class ListWorkspaceMembersQueryHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var workspace = await workspaces.GetWithMembersAsync(new WorkspaceId(request.WorkspaceId), cancellationToken);
+        var workspace = await workspaces.GetWithMembersAsync(new WorkspaceId(query.WorkspaceId), cancellationToken);
         if (workspace is null)
         {
             return Result.Failure<IReadOnlyList<WorkspaceMemberDto>>(NotFound);

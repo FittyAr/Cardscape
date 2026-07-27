@@ -3,7 +3,7 @@ using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
-using MediatR;
+using Wolverine;
 
 namespace Cardscape.Application.Activities.Queries;
 
@@ -17,19 +17,20 @@ public sealed record ActivityDto(
     DateTimeOffset OccurredAt);
 
 public sealed record ListActivitiesForBoardQuery(Guid BoardId, int Skip = 0, int Take = 50)
-    : IRequest<Result<IReadOnlyList<ActivityDto>>>;
+    : IMessage;
 
 public sealed record ListActivitiesForCardQuery(Guid CardId, int Skip = 0, int Take = 50)
-    : IRequest<Result<IReadOnlyList<ActivityDto>>>;
+    : IMessage;
 
-public sealed class ListActivitiesForBoardQueryHandler(
-    IActivityRepository activities) : IRequestHandler<ListActivitiesForBoardQuery, Result<IReadOnlyList<ActivityDto>>>
+public static class ListActivitiesForBoardQueryHandler
 {
-    public async Task<Result<IReadOnlyList<ActivityDto>>> Handle(
-        ListActivitiesForBoardQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<IReadOnlyList<ActivityDto>>> Handle(
+        ListActivitiesForBoardQuery query,
+        IActivityRepository activities,
+        CancellationToken cancellationToken)
     {
         var items = await activities.ListForBoardAsync(
-            new BoardId(request.BoardId), request.Skip, request.Take, cancellationToken);
+            new BoardId(query.BoardId), query.Skip, query.Take, cancellationToken);
 
         var rows = items.Select(Map).ToList();
         return Result.Success<IReadOnlyList<ActivityDto>>(rows);
@@ -45,14 +46,15 @@ public sealed class ListActivitiesForBoardQueryHandler(
         a.OccurredAt);
 }
 
-public sealed class ListActivitiesForCardQueryHandler(
-    IActivityRepository activities) : IRequestHandler<ListActivitiesForCardQuery, Result<IReadOnlyList<ActivityDto>>>
+public static class ListActivitiesForCardQueryHandler
 {
-    public async Task<Result<IReadOnlyList<ActivityDto>>> Handle(
-        ListActivitiesForCardQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<IReadOnlyList<ActivityDto>>> Handle(
+        ListActivitiesForCardQuery query,
+        IActivityRepository activities,
+        CancellationToken cancellationToken)
     {
         var items = await activities.ListForCardAsync(
-            new CardId(request.CardId), request.Skip, request.Take, cancellationToken);
+            new CardId(query.CardId), query.Skip, query.Take, cancellationToken);
 
         var rows = items.Select(Map).ToList();
         return Result.Success<IReadOnlyList<ActivityDto>>(rows);

@@ -3,19 +3,20 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Lists.DTOs;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
-using MediatR;
+using Wolverine;
 using static Cardscape.Domain.Lists.Errors.ListErrors;
 
 namespace Cardscape.Application.Lists.Queries;
 
-public sealed record GetListQuery(Guid ListId) : IRequest<Result<BoardListDto>>;
+public sealed record GetListQuery(Guid ListId) : IMessage;
 
-public sealed class GetListQueryHandler(
-    IBoardListRepository lists,
-    ICurrentUser currentUser) : IRequestHandler<GetListQuery, Result<BoardListDto>>
+public static class GetListQueryHandler
 {
-    public async Task<Result<BoardListDto>> Handle(
-        GetListQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<BoardListDto>> Handle(
+        GetListQuery query,
+        IBoardListRepository lists,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -23,7 +24,7 @@ public sealed class GetListQueryHandler(
                 "auth.required", "Authentication is required."));
         }
 
-        var list = await lists.GetByIdAsync(new BoardListId(request.ListId), cancellationToken);
+        var list = await lists.GetByIdAsync(new BoardListId(query.ListId), cancellationToken);
         if (list is null)
         {
             return Result.Failure<BoardListDto>(NotFound);
@@ -41,14 +42,15 @@ public sealed class GetListQueryHandler(
 }
 
 public sealed record ListListsForBoardQuery(Guid BoardId, bool IncludeArchived = false)
-    : IRequest<Result<IReadOnlyList<BoardListDto>>>;
+    : IMessage;
 
-public sealed class ListListsForBoardQueryHandler(
-    IBoardListRepository lists,
-    ICurrentUser currentUser) : IRequestHandler<ListListsForBoardQuery, Result<IReadOnlyList<BoardListDto>>>
+public static class ListListsForBoardQueryHandler
 {
-    public async Task<Result<IReadOnlyList<BoardListDto>>> Handle(
-        ListListsForBoardQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<IReadOnlyList<BoardListDto>>> Handle(
+        ListListsForBoardQuery query,
+        IBoardListRepository lists,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -57,8 +59,8 @@ public sealed class ListListsForBoardQueryHandler(
         }
 
         var items = await lists.ListForBoardAsync(
-            new Domain.Boards.BoardId(request.BoardId),
-            request.IncludeArchived,
+            new Domain.Boards.BoardId(query.BoardId),
+            query.IncludeArchived,
             cancellationToken);
 
         var rows = items

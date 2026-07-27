@@ -4,7 +4,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
-using MediatR;
+using Wolverine;
 using static Cardscape.Domain.Members.Errors.UserErrors;
 
 namespace Cardscape.Application.Authentication.Queries;
@@ -12,19 +12,20 @@ namespace Cardscape.Application.Authentication.Queries;
 /// <summary>Authenticates a user by email + password.</summary>
 public sealed record LoginUserQuery(
     string Email,
-    string Password) : IRequest<Result<AuthResponse>>;
+    string Password) : IMessage;
 
-public sealed class LoginUserQueryHandler(
-    IUserRepository users,
-    IUnitOfWork unitOfWork,
-    IPasswordHasher hasher,
-    ITokenService tokens,
-    IClock clock) : IRequestHandler<LoginUserQuery, Result<AuthResponse>>
+public static class LoginUserQueryHandler
 {
-    public async Task<Result<AuthResponse>> Handle(
-        LoginUserQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<AuthResponse>> Handle(
+        LoginUserQuery query,
+        IUserRepository users,
+        IPasswordHasher hasher,
+        IUnitOfWork unitOfWork,
+        ITokenService tokens,
+        IClock clock,
+        CancellationToken cancellationToken)
     {
-        var email = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
+        var email = query.Email?.Trim().ToLowerInvariant() ?? string.Empty;
 
         var user = await users.FindByEmailAsync(email, cancellationToken);
 
@@ -38,7 +39,7 @@ public sealed class LoginUserQueryHandler(
             return Result.Failure<AuthResponse>(Inactive);
         }
 
-        if (!hasher.Verify(request.Password, user.PasswordHash))
+        if (!hasher.Verify(query.Password, user.PasswordHash))
         {
             return Result.Failure<AuthResponse>(InvalidCredentials);
         }

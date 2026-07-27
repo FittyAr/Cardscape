@@ -24,7 +24,7 @@ public sealed class ActivityConfiguration : IEntityTypeConfiguration<Activity>
         b.Property(x => x.UpdatedAt);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsRowVersion();
+        b.Property(x => x.RowVersion);
         b.HasIndex(x => new { x.BoardId, x.OccurredAt });
     }
 }

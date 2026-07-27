@@ -37,7 +37,7 @@ public sealed class CardConfiguration : IEntityTypeConfiguration<Card>
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsRowVersion();
+        b.Property(x => x.RowVersion);
         b.HasIndex(x => x.ListId);
         b.HasIndex(x => new { x.ListId, x.Position });
 

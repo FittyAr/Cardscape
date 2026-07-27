@@ -1,6 +1,19 @@
+using Cardscape.Api.Endpoints.Activities;
+using Cardscape.Api.Endpoints.Auth;
+using Cardscape.Api.Endpoints.Boards;
+using Cardscape.Api.Endpoints.Cards;
+using Cardscape.Api.Endpoints.Comments;
+using Cardscape.Api.Endpoints.Labels;
+using Cardscape.Api.Endpoints.Lists;
+using Cardscape.Api.Endpoints.Notifications;
+using Cardscape.Api.Endpoints.Search;
+using Cardscape.Api.Endpoints.Workspaces;
 using Cardscape.Api.Extensions;
+using Cardscape.Api.Middleware;
 using Cardscape.Application.DependencyInjection;
 using Cardscape.Infrastructure.DependencyInjection;
+using Cardscape.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,27 +29,51 @@ builder.Services.AddApiAuthentication(builder.Configuration);
 var app = builder.Build();
 
 // ── Middleware pipeline ─────────────────────────────────
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.ApplyMigrations();
 }
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ── Health check ─────────────────────────────────────────
+// ── Endpoints ────────────────────────────────────────────
 app.MapGet("/health", () => Results.Ok(new
 {
     status = "healthy",
     service = "Cardscape.Api",
     timestamp = DateTime.UtcNow
-}))
-   .WithName("HealthCheck")
-   .WithTags("Health");
+})).WithName("HealthCheck").WithTags("Health").AllowAnonymous();
+
+app.MapAuthEndpoints();
+app.MapWorkspaceEndpoints();
+app.MapBoardEndpoints();
+app.MapListEndpoints();
+app.MapCardEndpoints();
+app.MapCommentEndpoints();
+app.MapLabelEndpoints();
+app.MapNotificationEndpoints();
+app.MapActivityEndpoints();
+app.MapSearchEndpoints();
 
 app.Run();
 
 // Required for WebApplicationFactory in integration tests.
 public partial class Program;
+
+/// <summary>Local helper that applies pending migrations on startup in Development.</summary>
+internal static class MigrationExtensions
+{
+    public static WebApplication ApplyMigrations(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<CardscapeDbContext>();
+        db.Database.Migrate();
+        return app;
+    }
+}

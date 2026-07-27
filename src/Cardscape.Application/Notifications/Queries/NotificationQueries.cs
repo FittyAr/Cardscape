@@ -2,19 +2,20 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Notifications.DTOs;
 using Cardscape.Domain.Common;
-using MediatR;
+using Wolverine;
 
 namespace Cardscape.Application.Notifications.Queries;
 
 public sealed record ListNotificationsQuery(bool UnreadOnly = false, int Skip = 0, int Take = 50)
-    : IRequest<Result<IReadOnlyList<NotificationDto>>>;
+    : IMessage;
 
-public sealed class ListNotificationsQueryHandler(
-    INotificationRepository notifications,
-    ICurrentUser currentUser) : IRequestHandler<ListNotificationsQuery, Result<IReadOnlyList<NotificationDto>>>
+public static class ListNotificationsQueryHandler
 {
-    public async Task<Result<IReadOnlyList<NotificationDto>>> Handle(
-        ListNotificationsQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<IReadOnlyList<NotificationDto>>> Handle(
+        ListNotificationsQuery query,
+        INotificationRepository notifications,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
@@ -23,7 +24,7 @@ public sealed class ListNotificationsQueryHandler(
         }
 
         var items = await notifications.ListForUserAsync(
-            currentUser.Id.Value, request.UnreadOnly, request.Skip, request.Take, cancellationToken);
+            currentUser.Id.Value, query.UnreadOnly, query.Skip, query.Take, cancellationToken);
 
         var rows = items
             .Select(n => new NotificationDto(
@@ -40,14 +41,15 @@ public sealed class ListNotificationsQueryHandler(
     }
 }
 
-public sealed record UnreadNotificationsCountQuery : IRequest<Result<int>>;
+public sealed record UnreadNotificationsCountQuery : IMessage;
 
-public sealed class UnreadNotificationsCountQueryHandler(
-    INotificationRepository notifications,
-    ICurrentUser currentUser) : IRequestHandler<UnreadNotificationsCountQuery, Result<int>>
+public static class UnreadNotificationsCountQueryHandler
 {
-    public async Task<Result<int>> Handle(
-        UnreadNotificationsCountQuery request, CancellationToken cancellationToken)
+    public static async Task<Result<int>> Handle(
+        UnreadNotificationsCountQuery query,
+        INotificationRepository notifications,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
         {
