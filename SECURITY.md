@@ -31,8 +31,8 @@ bug before a fix is available.
 
 Report privately by email to:
 
-**security@cardscape.dev** (placeholder — updated when the
-project gets a real domain)
+**security@fitty.ar** (this address is forwarded to the
+maintainer's personal inbox and masks it from the public)
 
 Include:
 

@@ -65,8 +65,9 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable
 behavior may be reported to the community leaders responsible
-for enforcement at **[conduct@cardscape.dev]** (placeholder —
-updated when the project gets a real domain). All complaints
+for enforcement at **[conduct@fitty.ar]** (this address is
+forwarded to the maintainer's personal inbox and masks it
+from the public). All complaints
 will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and

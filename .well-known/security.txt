@@ -1,0 +1,28 @@
+# security.txt — RFC 9116
+# https://www.rfc-editor.org/rfc/rfc9116
+#
+# This file tells security researchers and scanners where to
+# report vulnerabilities. The presence of this file at the
+# canonical well-known location (/.well-known/security.txt)
+# is recommended by the RFC and improves discoverability.
+
+# Contact: the security email. Replies within 3 business days.
+Contact: mailto:security@fitty.ar
+
+# The expiration date. Update this when the file is renewed;
+# the RFC recommends an expiration date one year in the
+# future. The maintainer renews this annually.
+Expires: 2027-07-27T00:00:00.000Z
+
+# The canonical URL of the project's SECURITY.md, in case
+# the reader needs the full policy.
+Canonical: https://cardscape.fitty.ar/SECURITY.md
+
+# Preferred languages for security reports.
+Preferred-Languages: en, es
+
+# Encryption key. (Optional — included so researchers can
+# encrypt sensitive disclosures. The key is a placeholder
+# placeholder; the maintainer publishes the real key in
+# the SECURITY.md and rotates it annually.)
+# Encryption: https://cardscape.fitty.ar/.well-known/security-key.asc

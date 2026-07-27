@@ -1,0 +1,79 @@
+# CODEOWNERS — automatic reviewer assignment by path.
+#
+# Today the project is solo-maintained, so this file lists
+# one GitHub handle per line. When more maintainers join,
+# this file gets @-prefixed GitHub teams (e.g. @cardscape/mcp-maintainers).
+# See MAINTAINERS.md for the maintainer-team model.
+#
+# Order matters: the last matching rule wins. The most
+# specific rule should be the last one for a given path.
+
+# Default owner: the project maintainer.
+/                                          @cardscape
+
+# Bounded contexts (mirrors docs/architecture/01-bounded-contexts.md).
+# When teams are created, replace @cardscape with the team.
+
+# Domain + Application
+/src/Cardscape.Domain/                    @cardscape
+/src/Cardscape.Application/               @cardscape
+
+# Infrastructure (EF Core, Identity, Storage, Email)
+/src/Cardscape.Infrastructure/            @cardscape
+/src/Cardscape.Infrastructure/Persistence/ @cardscape
+
+# Public REST API
+/src/Cardscape.Api/                       @cardscape
+/docs/api/                                @cardscape
+
+# Blazor WASM client
+/src/Cardscape.Web/                       @cardscape
+
+# MCP server
+/src/Cardscape.Mcp/                       @cardscape
+/docs/architecture/03-mcp-server.md       @cardscape
+
+# Documentation
+/docs/                                    @cardscape
+/docs/roadmap/                            @cardscape
+/docs/architecture/                       @cardscape
+/docs/development/                        @cardscape
+/docs/adr/                                @cardscape
+/docs/brand/                              @cardscape
+/docs/security/                           @cardscape
+/docs/positioning/                        @cardscape
+/docs/design/                             @cardscape
+/docs/ai/                                 @cardscape
+/docs/operations/                         @cardscape
+/docs/i18n/                               @cardscape
+/README.md                                @cardscape
+/CHANGELOG.md                             @cardscape
+/ROADMAP.md                               @cardscape
+/CONTRIBUTING.md                          @cardscape
+/CODE_OF_CONDUCT.md                       @cardscape
+/SECURITY.md                              @cardscape
+/SUPPORT.md                               @cardscape
+/MAINTAINERS.md                           @cardscape
+/GOVERNANCE.md                            @cardscape
+/CONTRIBUTORS.md                          @cardscape
+
+# Community / governance files
+/.github/                                 @cardscape
+/.github/CODEOWNERS                       @cardscape
+
+# Public website (on the site branch)
+/site/                                    @cardscape
+
+# Build and CI configuration
+/Directory.Build.props                    @cardscape
+/Directory.Packages.props                 @cardscape
+/global.json                              @cardscape
+/Cardscape.slnx                           @cardscape
+/.editorconfig                            @cardscape
+/.gitignore                               @cardscape
+
+# Tests
+/tests/                                   @cardscape
+
+# License
+/LICENSE                                  @cardscape
