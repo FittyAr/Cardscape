@@ -40,6 +40,7 @@
 
     <!-- API surface. -->
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0-preview.6.26359.118" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.3" />
 
     <!-- Blazor WASM + Radzen. -->

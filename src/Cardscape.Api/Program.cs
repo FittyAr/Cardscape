@@ -1,15 +1,17 @@
+using Cardscape.Api.Extensions;
+using Cardscape.Application.DependencyInjection;
+using Cardscape.Infrastructure.DependencyInjection;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Services ─────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddValidation();
 
-// TODO step 3 (out of scope for this commit):
-// builder.Services.AddApplication();
-// builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
-// builder.Services.AddApiAuthentication(builder.Configuration);
-//   ^ AddInfrastructure picks the EF Core provider from configuration:
-//     Database:Provider = Sqlite | PostgreSQL | MariaDB
+builder.Services.AddCardscapeApplication();
+builder.Services.AddCardscapeInfrastructure(builder.Configuration);
+builder.Services.AddApiAuthentication(builder.Configuration);
 
 var app = builder.Build();
 
@@ -21,6 +23,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // ── Health check ─────────────────────────────────────────
 app.MapGet("/health", () => Results.Ok(new

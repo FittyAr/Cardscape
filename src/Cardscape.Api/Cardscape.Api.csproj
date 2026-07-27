@@ -10,6 +10,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
 
     <!--
       The API project composes the database provider chosen at runtime.
@@ -27,12 +31,13 @@
 
   <ItemGroup>
     <!--
-      Migrations: each provider has its own migration assembly. We use a
-      separate folder per provider and tag migrations explicitly with the
-      output-dir argument and the right provider so the schema can be
-      generated for any of the three engines from the same code.
+      Migrations: a single set of migrations under
+      src/Cardscape.Infrastructure/Persistence\Migrations is the canonical
+      schema. EF Core's relational abstractions let the same migration
+      code run on SQLite, PostgreSQL, and MariaDB; per-provider overrides
+      go inside the Up/Down methods with explicit provider checks.
     -->
-    <EmbeddedResource Include="..\Cardscape.Infrastructure\Persistence\Migrations\**\*.cs" />
+    <EmbeddedResource Include="..\Cardscape.Infrastructure\Persistence\Migrations\*.cs" />
   </ItemGroup>
 
 </Project>
