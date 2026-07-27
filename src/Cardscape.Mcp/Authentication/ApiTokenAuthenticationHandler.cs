@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using Cardscape.Application.Abstractions.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -7,26 +8,17 @@ using Microsoft.Extensions.Options;
 namespace Cardscape.Mcp.Authentication;
 
 /// <summary>
-/// Authentication handler for the MCP server. Reads the
-/// <c>Authorization: Bearer &lt;secret&gt;</c> header, validates it
-/// against the API-token store, and produces a
-/// <see cref="ClaimsPrincipal"/> with the user id, the token id,
-/// and the granted scopes.
+/// Authentication handler for the MCP server. v0.3 accepts the
+/// long-lived API tokens minted via <see cref="IApiTokenService"/>.
+/// The cleartext secret travels in the <c>Authorization: Bearer</c>
+/// header, the handler hashes it with the same SHA-256 used at
+/// issuance, and the <see cref="IApiTokenService"/> decides whether
+/// the token is active. A successful validation produces a
+/// <see cref="ClaimsPrincipal"/> with the user id (as
+/// <see cref="ClaimTypes.NameIdentifier"/>), the token id (as
+/// <c>"token_id"</c>), and one <c>"scope"</c> claim per granted
+/// scope.
 /// </summary>
-/// <remarks>
-/// The actual API-token storage, hashing, and validation logic
-/// live in the Application + Infrastructure layers (the
-/// <c>ApiToken</c> entity, the <c>IApiTokenService</c>, and the
-/// <c>CardscapeDbContext</c> mapping). This handler is the
-/// transport-level adapter that turns a Bearer header into a
-/// successful or failed authentication result.
-///
-/// The handler is intentionally minimal: it does not log secrets,
-/// does not block on the database, and never throws. All the
-/// detailed business rules (revocation, expiry, scope checking)
-/// happen inside the <c>IApiTokenService.ValidateAsync</c> call,
-/// which the handler awaits.
-/// </remarks>
 public sealed class ApiTokenAuthenticationHandler
     : AuthenticationHandler<ApiTokenAuthenticationOptions>
 {
@@ -35,36 +27,60 @@ public sealed class ApiTokenAuthenticationHandler
     public ApiTokenAuthenticationHandler(
         IOptionsMonitor<ApiTokenAuthenticationOptions> options,
         ILoggerFactory logger,
-        UrlEncoder encoder)
+        UrlEncoder encoder,
+        IApiTokenService tokens)
         : base(options, logger, encoder)
     {
+        Tokens = tokens;
     }
 
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    public IApiTokenService Tokens { get; }
+
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        // The concrete lookup is implemented in Phase 2 once the
-        // Members context has been built. For now, the MCP server
-        // boots and accepts the unauthenticated anonymous user
-        // (the SDK marks every tool call as unauthenticated, so
-        // the ICurrentUserResolver will throw if a tool tries to
-        // read the current user — this is the right behavior for
-        // a not-yet-implemented auth path).
-        //
-        // The shape of the eventual handler is:
-        //
-        //   1. Read the Authorization header.
-        //   2. Parse "Bearer <secret>".
-        //   3. Call IApiTokenService.ValidateAsync(secret, ct).
-        //   4. If the token is valid, build a ClaimsPrincipal with
-        //      NameIdentifier = userId, "token_id" = tokenId,
-        //      and one Claim("scope", ...) per granted scope.
-        //   5. Return AuthenticateResult.Success(ticket).
-        //
-        // Until the IApiTokenService is built, the MCP server is
-        // effectively open: it will accept any request and the
-        // ICurrentUserResolver will throw if a tool tries to read
-        // the current user. This is the desired fail-fast
-        // behavior for an incomplete auth path.
-        return Task.FromResult(AuthenticateResult.NoResult());
+        if (!Request.Headers.TryGetValue("Authorization", out var authHeader))
+        {
+            return AuthenticateResult.NoResult();
+        }
+
+        string raw = authHeader.ToString();
+        if (string.IsNullOrWhiteSpace(raw)
+            || !raw.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            return AuthenticateResult.Fail(
+                "Authorization header must be 'Bearer <secret>'.");
+        }
+
+        string secret = raw["Bearer ".Length..].Trim();
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            return AuthenticateResult.Fail("Empty bearer secret.");
+        }
+
+        var validation = await Tokens.ValidateAsync(secret, Context.RequestAborted);
+        if (validation.IsFailure)
+        {
+            Logger.LogInformation(
+                "Rejected MCP API token: {ErrorCode}", validation.Error.Code);
+            return AuthenticateResult.Fail(validation.Error.Message);
+        }
+
+        ClaimsIdentity identity = new(SchemeName, ClaimTypes.Name, ClaimTypes.Role);
+        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier,
+                                   validation.Value.UserId.Value.ToString()));
+        identity.AddClaim(new Claim("token_id",
+                                   validation.Value.TokenId.Value.ToString()));
+        foreach (var scope in validation.Value.Scopes)
+        {
+            identity.AddClaim(new Claim("scope", scope));
+        }
+
+        ClaimsPrincipal principal = new(identity);
+        AuthenticationTicket ticket = new(principal, SchemeName);
+        return AuthenticateResult.Success(ticket);
     }
+}
+
+public sealed class ApiTokenAuthenticationOptions : AuthenticationSchemeOptions
+{
 }

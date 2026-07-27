@@ -7,6 +7,7 @@ using Cardscape.Api.Endpoints.Labels;
 using Cardscape.Api.Endpoints.Lists;
 using Cardscape.Api.Endpoints.Notifications;
 using Cardscape.Api.Endpoints.Search;
+using Cardscape.Api.Endpoints.Security;
 using Cardscape.Api.Endpoints.Workspaces;
 using Cardscape.Api.Extensions;
 using Cardscape.Api.Hubs;
@@ -73,6 +74,7 @@ app.MapLabelEndpoints();
 app.MapNotificationEndpoints();
 app.MapActivityEndpoints();
 app.MapSearchEndpoints();
+app.MapSecurityEndpoints();
 
 // Real-time board hub. Sits at /hubs/board with the same JWT
 // bearer authentication as the REST API; clients bring the

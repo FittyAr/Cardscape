@@ -13,8 +13,9 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Registers the Model Context Protocol server on top of the
     /// same Application + Infrastructure composition the REST API
-    /// uses. Auth is JWT bearer (the same tokens the API issues);
-    /// tools are static methods on classes decorated with
+    /// uses. Auth is API-token bearer (long-lived tokens minted
+    /// by the user via the Web UI's "API tokens" page); tools are
+    /// static methods on classes decorated with
     /// <see cref="McpServerToolAttribute"/>.
     /// </summary>
     public static IServiceCollection AddCardscapeMcp(
@@ -25,34 +26,32 @@ public static class ServiceCollectionExtensions
         services.AddCardscapeApplication();
         services.AddCardscapeInfrastructure(configuration);
 
-        // ── Auth (JWT bearer matching the REST API) ──────────
-        services.AddAuthentication(JwtBearerAuthenticationHandler.SchemeName)
-                .AddScheme<JwtBearerAuthenticationOptions,
-                           JwtBearerAuthenticationHandler>(
-                    JwtBearerAuthenticationHandler.SchemeName,
-                    options =>
-                    {
-                        options.Issuer = configuration["Jwt:Issuer"] ?? "Cardscape";
-                        options.Audience = configuration["Jwt:Audience"] ?? "Cardscape";
-                        options.SigningKey = configuration["Jwt:SigningKey"]
-                            ?? "dev-only-insecure-signing-key-please-override-in-production-32+chars";
-                    });
+        // ── Auth (API-token bearer) ─────────────────────────
+        // v0.3 replaces the v0.2 JWT-bearer plumbing with a
+        // first-class API-token scheme. The same token works
+        // for any AI client; the Web UI mints them via the
+        // /api/security/api-tokens endpoints.
+        services.AddAuthentication(ApiTokenAuthenticationHandler.SchemeName)
+                .AddScheme<ApiTokenAuthenticationOptions,
+                           ApiTokenAuthenticationHandler>(
+                    ApiTokenAuthenticationHandler.SchemeName,
+                    _ => { });
 
         services.AddAuthorization();
         services.AddHttpContextAccessor();
 
         // The MCP server has its own ICurrentUser implementation so
-        // Application layer handlers can read the JWT principal
-        // without coupling to ASP.NET.
+        // Application layer handlers can read the API-token
+        // principal without coupling to ASP.NET.
         services.AddScoped<ICurrentUser, McpCurrentUser>();
 
         // ── Real-time (MCP tools that mutate can push to the
         //    same SignalR hub the Web client listens to) ──────
         // The Mcp process does not own the hub (the API does), so
         // tools that need to broadcast go through a thin HTTP
-        // client to the API's /hubs/board endpoint. For v0.2 the
+        // client to the API's /hubs/board endpoint. For v0.3 the
         // MCP surface is read + write without broadcasting; the
-        // hub side is wired in v0.3.
+        // hub side stays in v0.4.
         services.AddHttpContextAccessor();
 
         // ── MCP server (stdio transport) ─────────────────────

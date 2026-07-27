@@ -11,6 +11,7 @@ using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Notifications;
+using Cardscape.Domain.Security;
 using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Email;
 using Cardscape.Infrastructure.Persistence;
@@ -100,12 +101,17 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRepository<Activity, ActivityId>, ActivityRepository>(sp => sp.GetRequiredService<ActivityRepository>());
         services.AddScoped<IActivityRepository, ActivityRepository>(sp => sp.GetRequiredService<ActivityRepository>());
 
+        services.AddScoped<ApiTokenRepository>();
+        services.AddScoped<IRepository<ApiToken, ApiTokenId>, ApiTokenRepository>(sp => sp.GetRequiredService<ApiTokenRepository>());
+        services.AddScoped<IApiTokenRepository, ApiTokenRepository>(sp => sp.GetRequiredService<ApiTokenRepository>());
+
         // Identity-shaped repositories (a few extra generics to satisfy the IRepository
         // contract for non-aggregate roots). The Application layer depends only on the
         // typed interfaces above.
 
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddSingleton<ITokenService, JwtTokenService>();
+        services.AddScoped<IApiTokenService, ApiTokenService>();
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
         services.AddSingleton<IEmailService, ConsoleEmailService>();
         services.AddSingleton<ISearchIndex, InMemorySearchIndex>();
