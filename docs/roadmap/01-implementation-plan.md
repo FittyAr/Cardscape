@@ -15,7 +15,7 @@
 
 | Phase | Status | Notes |
 |---|---|---|
-| 0 — Solution scaffold | **DONE** | Commits `cd2170b`, `dc8e68b`, `31c21d6`. |
+| 0 — Solution scaffold | **DONE** | Commits `c1b9800`, `72abc83`, `9683c22`, `3186a9d`, `289a370` (initial scaffold + docs + MCP project + rebrand to vendor-neutral positioning). |
 | 1 — MVP (workspaces / boards / cards / auth) | not started | Target: end of August 2026 (4–6 weeks). |
 | 2 — Core + MCP server (differentiation pillar) | not started | Target: end of October 2026. |
 | 3 — Extensions & automation | not started | Target: end of December 2026. |
@@ -39,12 +39,12 @@ the relevant phase section.
 
 ## 1. Phase 0 — Solution scaffold (DONE)
 
-**Commits:** `cd2170b` + `dc8e68b` + `31c21d6`
+**Commits:** `c1b9800` + `72abc83` + `9683c22` + `3186a9d` + `289a370`
 
 Deliverables:
 
-- 10-project Clean Architecture skeleton in `src/` and
-  `tests/`.
+- 11-project Clean Architecture skeleton in `src/` and
+  `tests/` (6 source projects + 5 test projects).
 - Central Package Management on `Directory.Packages.props`.
 - RPL-1.5 LICENSE.
 - Project-local `.agents/` folder with the working contract
@@ -57,10 +57,19 @@ Deliverables:
 - Radzen.Blazor wired into the Blazor WASM client
   (`AddRadzenComponents()`, providers in `App.razor`, `@using`
   in `_Imports.razor`).
+- `Cardscape.Mcp` project skeleton (`src/Cardscape.Mcp/`) with
+  stdio transport, auth handler placeholder, and a registered
+  `ICurrentUser` resolver — the MCP server is wired but has no
+  tools yet.
 - `docs/` set with the full onboarding, conventions,
-  architecture, API, and roadmap documents (13 markdown files,
-  116 KB).
-- `dotnet build` green (10/10 projects, 0 errors, 0 warnings).
+  architecture, API, and roadmap documents (15 markdown files
+  as of the rebrand: feature inventory, implementation plan,
+  product positioning, working contract, ADRs, architecture,
+  development, API).
+- Vendor-neutral positioning: root `README.md` (the public
+  pitch) and `docs/roadmap/02-product-positioning.md` (the
+  name, tagline, pillars, vocabulary, voice).
+- `dotnet build` green (11/11 projects, 0 errors, 0 warnings).
 
 What's intentionally **not** in this phase:
 
@@ -146,7 +155,7 @@ smallest end-to-end vertical that proves the architecture.
 - [ ] Card detail: description, comments, checklists,
   attachments, activity tabs.
 - [ ] Radzen components throughout.
-- [ ] Material theme + dark mode toggle.
+- [ ] Radzen default theme + dark mode toggle.
 - [ ] Responsive layout down to tablet.
 
 ### 2.5 Tests
@@ -188,7 +197,9 @@ and [ADR 0002](../adr/0002-mcp-server.md).
   `Authorization: Bearer <secret>`).
 - [ ] `ICurrentUser` resolved from the authenticated principal.
 - [ ] MCP server registered via
-  `services.AddMcpServer(...).WithHttpTransport().WithStdioServerTransport().WithToolsFromAssembly(...)`.
+  `services.AddMcpServer(...).WithStdioServerTransport().WithToolsFromAssembly(...)`.
+  HTTP+SSE transport lands with the .NET MCP SDK 2.0 stable
+  (see ADR 0002 §"Transport").
 - [ ] Initial tools: `workspaces_list`, `boards_list`,
   `boards_get`, `cards_list`, `cards_get`, `cards_create`,
   `cards_update`, `cards_move`, `cards_archive`,
@@ -233,14 +244,14 @@ and [ADR 0002](../adr/0002-mcp-server.md).
 
 - [ ] Board templates (workspace-level).
 - [ ] Saved filters per board.
-- [ ] Quick capture: Inbox endpoint, voice capture via
-  browser MediaRecorder API.
 - [ ] Command palette (Cmd-K style).
 - [ ] Recent boards in the home page.
 
 ### 3.5 Real-time
 
 - [ ] SignalR hub per board: live card moves, live comments.
+- [ ] Live drag-and-drop over SignalR (so a teammate sees
+  the move as it happens, not on refresh).
 - [ ] Presence indicators.
 - [ ] Typing indicators in comments.
 
@@ -261,16 +272,18 @@ and [ADR 0002](../adr/0002-mcp-server.md).
 **Goal:** ship the most-requested first-party extensions and a
 full automation engine that the project owns.
 
-### 4.1 Power-up framework
+### 4.1 Extension framework
 
-- [ ] `IPowerUp` interface and DI registration.
-- [ ] UI: a "Power-Ups" tab in board settings.
+- [ ] `IExtension` interface and DI registration.
+- [ ] UI: an "Extensions" tab in board settings.
+- [ ] Extension manifest format (per-extension `extension.json`
+  with name, version, capabilities, configuration schema).
 
 ### 4.2 First-party extensions
 
 - [ ] **Calendar** — board view showing due-date cards on a
-  monthly grid. **Specifically called out by the
-  maintainer** as a Phase 3 priority.
+  monthly grid. The first extension the maintainer wants
+  shipped.
 - [ ] **Table** — board view with cards as rows.
 - [ ] **Timeline** (Gantt) — board view with start / end
   dates.
@@ -346,7 +359,7 @@ trust Cardscape with their work.
 - [ ] Google Calendar sync (OAuth).
 - [ ] Smart scheduling.
 
-### 5.4 AI (Cardscape AI-style)
+### 5.4 AI features (Cardscape AI)
 
 - [ ] **Provider abstraction** in
   `Application/Abstractions/IAiService.cs`.
@@ -388,12 +401,16 @@ trust Cardscape with their work.
 - [ ] SOC 2 / GDPR compliance docs.
 - [ ] Migration tooling from other kanban tools to Cardscape.
 
+The realtime items previously listed here (presence, typing
+indicators, live drag) are not deferred — they ship with the
+collaboration phase (Phase 2, §3.5).
+
 ## 7. What we are explicitly NOT building
 
 - **No AI image generation** beyond the AI features listed
   in Phase 4. We're not Stable Diffusion for boards.
-- **No marketplace** for third-party extensions. Power-ups are
-  first-party only. The `IPowerUp` interface is public so
+- **No marketplace** for third-party extensions. Extensions are
+  first-party only. The `IExtension` interface is public so
   self-hosters can build their own; we don't curate or
   distribute them.
 - **No billing / subscription**. Cardscape is open-source

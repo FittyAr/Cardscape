@@ -17,30 +17,35 @@ If you are a new contributor (human or AI agent), follow this order:
    (human or AI) working on the repo must follow. Covers
    stack, design philosophy, working rules, the MCP pillar,
    the SQLite-only test matrix, and the available skills.
-2. [`roadmap/00-feature-inventory.md`](roadmap/00-feature-inventory.md)
+2. [`roadmap/02-product-positioning.md`](roadmap/02-product-positioning.md)
+   — the project's name, tagline, positioning pillars,
+   vocabulary guide, and voice. **Read this before writing
+   about the project** in any doc, blog post, or commit
+   message.
+3. [`roadmap/00-feature-inventory.md`](roadmap/00-feature-inventory.md)
    — the feature inventory Cardscape is building toward.
    Tells you what's in scope.
-3. [`roadmap/01-implementation-plan.md`](roadmap/01-implementation-plan.md)
+4. [`roadmap/01-implementation-plan.md`](roadmap/01-implementation-plan.md)
    — the phased delivery plan. Tells you what's next and
    what's deferred. The MCP server ships in **Phase 2**.
-4. [`architecture/00-overview.md`](architecture/00-overview.md) —
+5. [`architecture/00-overview.md`](architecture/00-overview.md) —
    the Clean Architecture layers, the directory layout (now
    including `Cardscape.Mcp/`), and the dependency rules.
-5. [`architecture/03-mcp-server.md`](architecture/03-mcp-server.md)
+6. [`architecture/03-mcp-server.md`](architecture/03-mcp-server.md)
    — the MCP server operational guide. Read this before
    any MCP work.
-6. [`development/00-onboarding.md`](development/00-onboarding.md) —
+7. [`development/00-onboarding.md`](development/00-onboarding.md) —
    get the solution building on your machine in 10 minutes.
-7. [`development/01-conventions.md`](development/01-conventions.md) —
+8. [`development/01-conventions.md`](development/01-conventions.md) —
    the C# style, naming, async, and EF Core rules we
    enforce.
-8. [`development/02-vertical-slices.md`](development/02-vertical-slices.md)
+9. [`development/02-vertical-slices.md`](development/02-vertical-slices.md)
    — recipe for adding a new feature (use case → endpoint
    → MCP tool → UI).
-9. [`development/03-testing-strategy.md`](development/03-testing-strategy.md)
-   — why the test matrix is SQLite-only today and how it
-   grows.
-10. [`api/00-conventions.md`](api/00-conventions.md) — REST
+10. [`development/03-testing-strategy.md`](development/03-testing-strategy.md)
+    — why the test matrix is SQLite-only today and how it
+    grows.
+11. [`api/00-conventions.md`](api/00-conventions.md) — REST
     conventions for the public API.
 
 ## 2. Architecture Decision Records (ADRs)
@@ -67,7 +72,10 @@ docs/
 │   └── 03-mcp-server.md               # companion to ADR 0002
 ├── development/                       # how to set up and work on the solution
 ├── api/                               # public API conventions
-└── roadmap/                           # where we're going
+└── roadmap/                           # where we're going (and how we present ourselves)
+    ├── 00-feature-inventory.md        # the target feature surface
+    ├── 01-implementation-plan.md     # the phased delivery plan
+    └── 02-product-positioning.md     # name, tagline, pillars, vocabulary, voice
 ```
 
 ## 4. Mirror folders
