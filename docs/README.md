@@ -71,7 +71,14 @@ docs/
 │   ├── 02-multi-provider-persistence.md  # companion to ADR 0001
 │   └── 03-mcp-server.md               # companion to ADR 0002
 ├── development/                       # how to set up and work on the solution
+│   ├── 00-onboarding.md              # 10-minute local setup
+│   ├── 01-conventions.md             # C# style, async, EF Core rules
+│   ├── 02-vertical-slices.md         # recipe for adding a feature
+│   ├── 03-testing-strategy.md        # SQLite-only test matrix
+│   └── 04-release-process.md         # versioning, tags, NuGet, Docker
 ├── api/                               # public API conventions
+├── brand/                             # visual identity (palette, typography, logo)
+│   └── 00-brand-kit.md
 └── roadmap/                           # where we're going (and how we present ourselves)
     ├── 00-feature-inventory.md        # the target feature surface
     ├── 01-implementation-plan.md     # the phased delivery plan
@@ -88,13 +95,27 @@ Some folders are duplicated between the repository root and
 | `.agents/AGENTS.md` | `docs/AGENTS.md` | `.agents/` is the contract for **AI agents**; `docs/` is the contract for **humans** |
 | `.agents/skills/` | (pointers in `docs/AGENTS.md`) | Skills stay in `.agents/` because tools load them by path |
 | `docs/adr/0001-…`, `0002-…` | (canonical) | ADRs live only in `docs/adr/` |
+| `site/` (on the `site` branch) | (canonical) | The public website lives on its own orphan branch |
 
 The two locations are kept in sync manually. The
 `docs/AGENTS.md` is the "human-friendly" rendering;
 `.agents/AGENTS.md` is the operational contract an agent reads
 at runtime.
 
-## 5. Conventions for contributing to these docs
+## 5. Reference docs by role
+
+Different roles read different docs. Use this table to find
+the right starting point.
+
+| If you are a… | Start with |
+|---|---|
+| New contributor (human or AI agent) | [`AGENTS.md`](AGENTS.md) + the onboarding path in §1 above |
+| Writer (docs, blog, social) | [`roadmap/02-product-positioning.md`](roadmap/02-product-positioning.md) — name, tagline, pillars, vocabulary, voice |
+| Designer (UI, marketing, social) | [`brand/00-brand-kit.md`](brand/00-brand-kit.md) — palette, typography, logo concept |
+| Release manager | [`development/04-release-process.md`](development/04-release-process.md) — versioning, tags, NuGet, Docker |
+| Maintainer doing the phased plan review | [`roadmap/01-implementation-plan.md`](roadmap/01-implementation-plan.md) — the canonical plan |
+
+## 6. Conventions for contributing to these docs
 
 - **Markdown only.** No Word, no PDF, no Notion exports.
 - **One H1 per file** (the file's title). The index in
@@ -111,7 +132,7 @@ at runtime.
   [`adr/`](adr/). Never delete or edit an existing ADR;
   supersede it with a new one.
 
-## 6. License
+## 7. License
 
 All documentation in this folder is licensed under the
 [Reciprocal Public License 1.5 (RPL-1.5)](../LICENSE), the same

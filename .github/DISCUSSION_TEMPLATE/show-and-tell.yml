@@ -1,0 +1,30 @@
+title: "[show] "
+labels: ["show-and-tell"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this category to share what you built with Cardscape:
+        an integration, a deployment, a UI tweak, a migration,
+        a script. Anything that other users might learn from
+        or be inspired by.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What I built
+      description: A short description of the thing.
+      placeholder: "A deployment of Cardscape on a Raspberry Pi 5 with a 2 TB SSD, serving 3 users in our team."
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: How it works
+      description: The full description. Markdown is supported. Include screenshots, configs, and gotchas.
+    validations:
+      required: true
+  - type: input
+    id: links
+    attributes:
+      label: Links
+      description: Links to repos, docs, blog posts, screenshots. One per line.

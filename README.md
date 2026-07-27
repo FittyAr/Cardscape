@@ -273,17 +273,48 @@ external contribution. Until then, the working rules in
 |---|---|---|
 | `README.md` | **this file** | public pitch + status |
 | `LICENSE` | **present** | RPL-1.5, full text |
+| `CONTRIBUTING.md` | **present** | formal contribution flow |
+| `CODE_OF_CONDUCT.md` | **present** | Contributor Covenant v2.1 |
+| `SECURITY.md` | **present** | vulnerability reporting process |
+| `SUPPORT.md` | **present** | where to ask questions |
+| `CHANGELOG.md` | **present** | Keep a Changelog format, initial entry |
+| `ROADMAP.md` | **present** | community-readable version of the implementation plan |
 | `docs/AGENTS.md` | **present** | working contract for any agent |
 | `.agents/AGENTS.md` | **present** | operational contract for AI tools |
 | `docs/adr/` | **present** | 2 ADRs, append-only |
-| `docs/roadmap/` | **present** | inventory + implementation plan + (this batch) positioning |
-| `CODE_OF_CONDUCT.md` | not yet | will land with first external contributor |
-| `CONTRIBUTING.md` | not yet | will land with first external contributor |
-| `SECURITY.md` | not yet | will land with the first release that has a CVE pipeline |
-| `SUPPORT.md` | not yet | will land when there is a public channel |
+| `docs/roadmap/` | **present** | inventory + implementation plan + product positioning |
+| `docs/brand/` | **present** | brand kit (palette, typography, logo) |
+| `.github/ISSUE_TEMPLATE/` | **present** | bug, feature, question templates |
+| `.github/PULL_REQUEST_TEMPLATE.md` | **present** | PR template with checklists |
+| `.github/DISCUSSION_TEMPLATE/` | **present** | announcements, ideas, Q&A, show-and-tell |
+| `site` branch | **present** | public website (orphan branch, single-page HTML+CSS) |
 
-The project is honest about what is and is not in place. None
-of the "not yet" items are promised by a date.
+Everything in the table is in the repo. New community files
+land as the project needs them.
+
+---
+
+## Contributing
+
+Cardscape is a **solo-maintained**, public, open-source project.
+The bar is "think big and professional". Contributions are
+welcome.
+
+- Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for the formal
+  contribution flow.
+- The working contract every contributor (human or AI agent)
+  reads first is [`docs/AGENTS.md`](docs/AGENTS.md).
+- For "how do I…" questions, use
+  [GitHub Discussions → Q&A](https://github.com/cardscape/cardscape/discussions/categories/q-a).
+- For bug reports, use the
+  [bug report issue template](https://github.com/cardscape/cardscape/issues/new?template=bug_report.md).
+- For feature requests, use the
+  [feature request issue template](https://github.com/cardscape/cardscape/issues/new?template=feature_request.md).
+- For security disclosures, read [`SECURITY.md`](SECURITY.md)
+  — do **not** file a public issue.
+
+By participating, you agree to the
+[Contributor Covenant v2.1](CODE_OF_CONDUCT.md).
 
 ---
 

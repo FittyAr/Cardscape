@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and how-to help
+    url: https://github.com/cardscape/cardscape/discussions/categories/q-a
+    about: Use Discussions → Q&A for "how do I..." questions. The issue tracker is for bugs and feature requests only.
+  - name: Ideas and feature proposals
+    url: https://github.com/cardscape/cardscape/discussions/categories/ideas
+    about: Use Discussions → Ideas for open-ended "what if we built X?" conversations. Use the Feature request issue template for scoped proposals.
+  - name: Show and tell
+    url: https://github.com/cardscape/cardscape/discussions/categories/show-and-tell
+    about: Use Discussions → Show and tell to share what you built with Cardscape.
+  - name: Security disclosures
+    url: https://github.com/cardscape/cardscape/security/advisories/new
+    about: File security vulnerabilities as private draft advisories. See SECURITY.md for the full process.

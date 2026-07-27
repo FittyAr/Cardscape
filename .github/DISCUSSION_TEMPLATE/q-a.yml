@@ -1,0 +1,40 @@
+title: "[q] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this category for "how do I..." questions that are
+        not bugs and not feature requests. Examples: "How do I
+        configure the database provider?", "How do I run the
+        MCP server in stdio mode?", "How do I add a new bounded
+        context?"
+  - type: textarea
+    id: goal
+    attributes:
+      label: What I'm trying to do
+      description: The goal, in one or two sentences.
+      placeholder: "I want to run the MCP server in HTTP+SSE mode so I can ..."
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What I've tried
+      description: What you already tried, including the docs you read and the commands you ran.
+      placeholder: "I read docs/architecture/03-mcp-server.md and ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What I expected
+      description: The behavior or answer you expected.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Cardscape version, .NET SDK, OS. One line is fine.
+      placeholder: "Cardscape @ 8f2ac78, .NET 11.0.100-preview.6, macOS 14.5"

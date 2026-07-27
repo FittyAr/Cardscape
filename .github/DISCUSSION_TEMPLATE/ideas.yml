@@ -1,0 +1,39 @@
+title: "[idea] "
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this category for open-ended "what if we built X?"
+        conversations. Ideas are not commitments — they are
+        conversations. If an idea becomes a real proposal, open
+        a feature-request issue (or wait for the maintainer to
+        convert the discussion into one).
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What user-facing problem would this idea solve? Describe the problem first, the solution second.
+      placeholder: "I have a hard time keeping track of cards that are waiting on external dependencies. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: The idea
+      description: How would you solve it? UI, data model, MCP surface, integrations — whatever is relevant.
+      placeholder: "Add a 'Waiting on' list, with a per-card 'blocked by' field that ..."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: What else could solve the same problem? Why is your idea better?
+      placeholder: "I considered using a label, but labels are categorical and ..."
+  - type: input
+    id: scope
+    attributes:
+      label: Scope
+      description: How big is this? Small / medium / large, and which phase it would belong to.
+      placeholder: "Medium, Phase 3 (Extensions & automation)"

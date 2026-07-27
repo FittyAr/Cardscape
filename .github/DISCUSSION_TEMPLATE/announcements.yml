@@ -1,0 +1,34 @@
+title: "[announce] "
+labels: ["announcement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this category for maintainer announcements: new
+        releases, roadmap updates, governance changes, community
+        events, or anything the maintainer wants to broadcast
+        to the whole community.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A one-paragraph description of the announcement.
+      placeholder: "Cardscape v0.1.0-mvp is out. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: The full text of the announcement. Markdown is supported.
+      placeholder: "## What is in this release\n\n- ...\n\n## How to install\n\n```bash\n...\n```"
+    validations:
+      required: true
+  - type: input
+    id: links
+    attributes:
+      label: Links
+      description: Links to the release, the docs, the PRs, the issues. One per line.
+      placeholder: |
+        - Release: https://github.com/cardscape/cardscape/releases/tag/v0.1.0-mvp
+        - Docs: docs/roadmap/01-implementation-plan.md
