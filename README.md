@@ -80,20 +80,21 @@ See:
 
 ## Status
 
-Cardscape is in **alpha, Phase 1 (MVP) shipped**. The codebase
+Cardscape is in **alpha, Phase 3 shipped**. The codebase
 runs end to end: a user can register, create a workspace, drop
-in boards/lists/cards, comment, label, star, and the full HTTP
-pipeline is covered by integration tests against the real
-Program + DI + Wolverine + EF Core stack.
+in boards/lists/cards, comment, label, star, mint and revoke
+API tokens, and the full HTTP pipeline is covered by integration
+tests against the real Program + DI + Wolverine + EF Core stack.
 
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Solution scaffold, multi-DB plumbing, RPL-1.5, AGENTS contract, MCP server project skeleton, full documentation set | **DONE** |
 | 1 | MVP: single user, sign-up, workspace, board, list, card, sign in, Web UI | **DONE** (`v0.1.0-mvp`) |
 | 2 | Real-time (SignalR) + **MCP server end-to-end** (the differentiator ships here) | **DONE** (`v0.2.0-core-mcp`) |
-| 3 | Collaboration + workspace sharing + extensions + automation engine | not started |
-| 4 | Enterprise + AI features | not started |
-| 5 | Polish + scale | ongoing |
+| 3 | Access control on cards/lists + **first-class API tokens** for the MCP server + Web UI token management | **DONE** (`v0.3.0-api-tokens`) |
+| 4 | Workspace member invitations + extensions + automation engine + calendar + Inbox + Planner | not started |
+| 5 | Enterprise + AI features | not started |
+| 6 | Polish + scale | ongoing |
 
 `dotnet build` is green. 179 unit tests + 10 integration tests
 are green. The Blazor WebAssembly client talks to the API over

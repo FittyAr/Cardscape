@@ -14,6 +14,129 @@ patch or feature release.
 
 ---
 
+## [v0.3.0-api-tokens] — 2026-07-27
+
+Phase 3. Long-lived API tokens, access-control hardening on
+cards/lists, and a user-facing token management page.
+
+### Added
+
+- **`ApiToken` aggregate** (`src/Cardscape.Domain/Security/`):
+  long-lived, user-owned bearer tokens. Stores SHA-256 hash of
+  the cleartext secret, the 8-char display prefix, granted
+  scopes (read/write), optional expiry, and last-used/revoked
+  audit fields. Two value objects: `ApiTokenName` (1..80
+  chars) and `ApiTokenScopes` (a `Scope` enum with `Read` and
+  `Write`). Domain methods `IsActive(now)`, `RecordUse(at)`,
+  `Revoke(by, reason, at)`. Domain events `ApiTokenIssued` and
+  `ApiTokenRevoked`.
+- **`IApiTokenService` + `IApiTokenRepository`**: service owns
+  secret generation (`RandomNumberGenerator` + base64url +
+  SHA-256); repository exposes `FindByHashedSecretAsync` (the
+  MCP hot path) and `ListForUserAsync`. Returns a `Result<>` on
+  validation failures so the handler can map them to proper 400
+  responses instead of 500s.
+- **REST surface** under `/api/security/api-tokens`:
+  `GET /` lists, `POST /` mints and returns the cleartext
+  secret exactly once, `POST /{id}/revoke` revokes.
+- **MCP server now uses API tokens** instead of JWT bearer
+  (replaces the v0.2 `JwtBearerAuthenticationHandler` with
+  `ApiTokenAuthenticationHandler` in
+  `src/Cardscape.Mcp/Authentication/`). The cleartext secret
+  travels in the standard `Authorization: Bearer <secret>`
+  header; the handler hashes it and calls `IApiTokenService.
+  ValidateAsync`, then builds a `ClaimsPrincipal` with the user
+  id (`NameIdentifier`), the token id (`token_id`), and one
+  `scope` claim per granted scope. `McpCurrentUser` now exposes
+  a `Scopes` collection alongside the existing `Roles`.
+- **Migration `IssueApiTokens`** adds the `api_tokens` table
+  (17 columns, unique index on `HashedSecret`, regular index
+  on `UserId`).
+- **Web page** at `/account/api-tokens` (Blazor WASM): the
+  user-facing token management surface. Lists every token
+  with prefix + scopes + timestamps, mints new ones (name +
+  read/write checkboxes), and shows the cleartext secret in a
+  one-shot warning panel that can only be dismissed with an
+  "I've copied it" click. Revoke button per row. Reachable
+  via the new "API tokens" entry in the left nav.
+- **`MembershipGuards`** (`src/Cardscape.Application/Common/`):
+  static helpers every card and list handler now uses to
+  enforce access control. `EnsureCanReadBoardAsync` allows
+  members always, non-members only on public boards.
+  `EnsureCanMutateBoardAsync` requires membership regardless
+  of visibility (Trello model). Card / list variants resolve
+  the parent board and apply the same rule.
+- **`CardscapeAccessControlTests`** integration test suite
+  (3 tests): outsider read on a private board returns 403 on
+  cards/lists/board; outsider write on the same board returns
+  403 on rename/complete/move/create-card/create-list;
+  outsider read on a public board returns 200 but write still
+  returns 403.
+- **`ApiTokenLifecycleTests`** integration test suite
+  (4 tests): full issue+list+revoke roundtrip, cross-user
+  revoke rejected with 404, anonymous issue rejected with
+  401, empty name rejected with 400.
+- **`ApiTokenTests`** unit test suite (7 tests) on the
+  domain entity: hash + prefix persistence, `IsActive` against
+  revoked and expired tokens, revoke idempotency, validation
+  failures (empty hash, expiry in the past).
+
+### Changed
+
+- **All 14 card command handlers** (Create, Rename, Description,
+  Move, SetDueDate, ClearDueDate, Complete, Reopen, Archive,
+  Restore, Assign, Unassign, AttachLabel, DetachLabel) now
+  call `EnsureCanMutateCardAsync` after loading the card.
+  `MoveCardCommand` additionally checks the destination list is
+  on the same board; `AttachLabelToCardCommand` checks the
+  label is on the same board. **All 5 list command handlers**
+  (Create, Rename, Move, Archive, Restore) now use the guards
+  too. `CreateListCommand` swapped its inline `board.IsMember`
+  call for the shared helper. **All 4 card/list query handlers**
+  (`GetCard`, `GetList`, `ListCardsForBoard`,
+  `ListListsForBoard`) enforce read access on private boards.
+- **Every `*Configuration.cs` in the Infrastructure layer** now
+  applies `IsConcurrencyToken().HasDefaultValue(0u)` to its
+  `RowVersion` property (9 root + 5 owned-many configurations).
+  `InitialSchema` migration regenerated to match (renamed
+  from `20260727192207` to `20260727221445`; `defaultValue: 0u`
+  on all 14 `RowVersion` columns). This fixes a runtime bug
+  where EF Core 10 excluded the `RowVersion` column from
+  INSERTs on a property marked only with `IsConcurrencyToken()`,
+  tripping the SQLite `NOT NULL` constraint.
+
+### Removed
+
+- **`ApiTokenAuthenticationHandler` + `ApiTokenAuthenticationOptions`
+  + `ICurrentUserResolver` + `McpCurrentUserResolver`**: the
+  v0.2 stubs that returned `NoResult()` and threw on use.
+  Replaced by the working `ApiTokenAuthenticationHandler` in
+  v0.3 (same file name, new implementation backed by
+  `IApiTokenService`).
+- **`JwtBearerAuthenticationHandler` + `JwtBearerAuthenticationOptions`**:
+  the v0.2 MCP JWT-bearer plumbing, replaced by the
+  API-token handler.
+
+### Security
+
+- **Card and list endpoints are no longer accessible by id
+  alone**. Every read and write now requires the caller to be a
+  member of the card/list's parent board. Members can always
+  read; non-members can only read public boards. Writes always
+  require membership regardless of board visibility.
+- **API tokens are SHA-256 hashed** at rest. The cleartext
+  secret is generated via `RandomNumberGenerator.GetBytes(32)`
+  and base64url-encoded; only the SHA-256 hash and the 8-char
+  display prefix are persisted. The cleartext is returned to
+  the caller exactly once at issuance and is never logged.
+- **Token validation updates `LastUsedAt`** on every
+  successful authentication, so users can spot stale tokens.
+- **Token revocation is irreversible and idempotent**;
+  revoking a token that's already revoked returns
+  `security.api_token.already_revoked` (409).
+
+---
+
 ## [v0.2.0-core-mcp] — 2026-07-27
 
 Phase 2. Real-time board sync + the MCP server end-to-end

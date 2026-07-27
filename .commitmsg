@@ -1,28 +1,11 @@
-feat(web): API tokens page (mint, list, revoke)
+chore(release): v0.3.0-api-tokens artifacts (README + CHANGELOG)
 
-The v0.3 ApiToken entity has a REST surface, but the only
-client was a curl smoke test. Add the user-facing page so
-humans can mint, see, and revoke their tokens without leaving
-the Web app.
+Phase 3 done. Bump the README status table to mark v0.3.0 done
+and re-frame Phase 4 as the collaboration/extensions/automation
+wave. Add the v0.3.0 entry to CHANGELOG.md with the Added /
+Changed / Removed / Security breakdown that matches the project
+convention.
 
-What changed:
-- New Page Pages/ApiTokens.razor: lists every token owned by
-  the current user (with prefix, scopes, created/last-used/
-  revoked timestamps), shows an "Active" / "Revoked" badge,
-  exposes a mint form (name + read/write scope checkboxes), and
-  a one-shot secret panel that surfaces the cleartext secret
-  exactly once at issuance with a "I've copied it" dismiss.
-- New ISecurityApiClient (Services/Api/SecurityApiClient.cs)
-  with ListTokensAsync, IssueTokenAsync, RevokeTokenAsync.
-  Mirrors the rest of the typed-client surface.
-- Three new DTOs in Shared/ApiDtos.cs: ApiTokenSummaryDto,
-  ApiTokenIssuanceDto, IssueApiTokenRequestDto.
-- NavMenu gets an "API tokens" link under Workspaces for
-  authenticated users.
-- wwwroot/css/app.css gets styles for the page-hint, scopes
-  row, issued-secret warning panel, secret box, token list.
-- Program.cs registers ISecurityApiClient in DI.
-
-Verified: 187 unit + 20 integration tests still green. Build
-passes with no warnings; the Blazor output bundle picks up
-the new page and the new CSS rules.
+No code changes; the test count is the same as on master
+(187 unit + 20 integration). The tag will follow in a
+separate commit so the commit graph reads naturally.
