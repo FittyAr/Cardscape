@@ -275,3 +275,61 @@ public sealed class InMemoryBoardExtensionRepository
         return Task.FromResult(match);
     }
 }
+
+/// <summary>In-memory <see cref="ICustomFieldDefinitionRepository"/>.</summary>
+public sealed class InMemoryCustomFieldDefinitionRepository
+    : InMemoryRepositoryBase<CustomFieldDefinition, CustomFieldDefinitionId>, ICustomFieldDefinitionRepository
+{
+    public Task<IReadOnlyList<CustomFieldDefinition>> ListForBoardAsync(
+        BoardId boardId, CancellationToken ct = default)
+    {
+        IReadOnlyList<CustomFieldDefinition> rows = Store.Values
+            .Where(d => d.BoardId.Value == boardId.Value)
+            .OrderBy(d => d.Position)
+            .ToList();
+        return Task.FromResult(rows);
+    }
+}
+
+/// <summary>In-memory <see cref="ICustomFieldValueRepository"/>.</summary>
+public sealed class InMemoryCustomFieldValueRepository
+    : InMemoryRepositoryBase<CustomFieldValue, CustomFieldValueId>, ICustomFieldValueRepository
+{
+    private readonly InMemoryCustomFieldDefinitionRepository definitions;
+
+    public InMemoryCustomFieldValueRepository(InMemoryCustomFieldDefinitionRepository definitions)
+    {
+        this.definitions = definitions;
+    }
+
+    public Task<IReadOnlyList<CustomFieldValue>> ListForCardAsync(
+        CardId cardId, CancellationToken ct = default)
+    {
+        IReadOnlyList<CustomFieldValue> rows = Store.Values
+            .Where(v => v.CardId.Value == cardId.Value)
+            .ToList();
+        return Task.FromResult(rows);
+    }
+
+    public async Task<IReadOnlyList<CustomFieldValue>> ListForBoardAsync(
+        BoardId boardId, CancellationToken ct = default)
+    {
+        IReadOnlyList<CustomFieldDefinition> fields =
+            await definitions.ListForBoardAsync(boardId, ct);
+        HashSet<Guid> fieldIds = fields.Select(f => f.Id.Value).ToHashSet();
+        IReadOnlyList<CustomFieldValue> rows = Store.Values
+            .Where(v => fieldIds.Contains(v.FieldDefinitionId.Value))
+            .ToList();
+        return rows;
+    }
+
+    public Task<CustomFieldValue?> GetByFieldAndCardAsync(
+        CustomFieldDefinitionId fieldId, CardId cardId, CancellationToken ct = default)
+    {
+        CustomFieldValue? match = Store.Values
+            .FirstOrDefault(v =>
+                v.FieldDefinitionId.Value == fieldId.Value &&
+                v.CardId.Value == cardId.Value);
+        return Task.FromResult(match);
+    }
+}

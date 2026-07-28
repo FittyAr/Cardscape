@@ -1,0 +1,286 @@
+@page "/boards/{BoardId:guid}/custom-fields"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Text.Json
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@inject ICustomFieldsApiClient CustomFieldsClient
+@inject DialogService DialogService
+
+<PageTitle>Custom fields — Cardscape</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>Custom fields</h1>
+        <RadzenButton Text="New field" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                      Click="@ShowCreateForm" />
+    </div>
+
+    <p class="page-hint">
+        Board-scoped structured fields. Each card on this board can have a value
+        for every active field. Supported kinds: text, number, date, dropdown
+        (with custom options), checkbox.
+    </p>
+
+    @if (rows is null)
+    {
+        <p>Loading…</p>
+    }
+    else if (rows.Count == 0 && !showCreate)
+    {
+        <p class="empty-state">No custom fields yet. Click <em>New field</em> to add one.</p>
+    }
+    else if (rows.Count > 0)
+    {
+        <div class="field-list">
+            @foreach (CustomFieldDefinitionDto field in rows)
+            {
+                <RadzenCard class="field-card">
+                    <div class="field-row">
+                        <div class="field-meta">
+                            <strong>@field.Name</strong>
+                            <span class="field-kind-badge">@KindLabel(field.Kind)</span>
+                            @if (field.Kind == 3)
+                            {
+                                <small>Options: @string.Join(", ", ParseOptions(field.OptionsJson))</small>
+                            }
+                        </div>
+                        <div class="field-actions">
+                            @if (renamingId == field.Id)
+                            {
+                                <RadzenTextBox @bind-Value="renameValue" Style="width:200px" />
+                                <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                                              Size="ButtonSize.Small" Click="@(() => SaveRenameAsync(field))" />
+                                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light"
+                                              Size="ButtonSize.Small" Click="@CancelRename" />
+                            }
+                            else
+                            {
+                                <RadzenButton Text="Rename" ButtonStyle="ButtonStyle.Light"
+                                              Size="ButtonSize.Small" Click="@(() => StartRename(field))" />
+                                <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                                              Size="ButtonSize.Small" Click="@(() => DeleteAsync(field))" />
+                            }
+                        </div>
+                    </div>
+                </RadzenCard>
+            }
+        </div>
+    }
+
+    @if (showCreate)
+    {
+        <RadzenCard class="create-form">
+            <h3>New custom field</h3>
+            <div class="form-row">
+                <label>Name</label>
+                <RadzenTextBox @bind-Value="createModel.Name" Placeholder="e.g. Priority" Style="width:100%" />
+            </div>
+            <div class="form-row">
+                <label>Kind</label>
+                <RadzenDropDown @bind-Value="createModel.KindValue" Data="@allKinds"
+                               TextProperty="Label" ValueProperty="Value" Style="width:100%" />
+            </div>
+            @if (createModel.KindValue == 3)
+            {
+                <div class="form-row">
+                    <label>Dropdown options (comma-separated)</label>
+                    <RadzenTextBox @bind-Value="createModel.OptionsRaw"
+                                   Placeholder="Low, Medium, High" Style="width:100%" />
+                </div>
+            }
+            <div class="form-actions">
+                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
+                <RadzenButton Text="Create" ButtonStyle="ButtonStyle.Primary"
+                              IsBusy="@creating" Click="@CreateAsync" />
+            </div>
+        </RadzenCard>
+    }
+
+    @if (error is not null)
+    {
+        <div class="auth-error" role="alert">@error</div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid BoardId { get; set; }
+
+    private IReadOnlyList<CustomFieldDefinitionDto>? rows;
+    private string? error;
+    private bool showCreate;
+    private bool creating;
+    private CreateModel createModel = new();
+    private Guid? renamingId;
+    private string renameValue = string.Empty;
+
+    private static readonly IReadOnlyList<KindOption> allKinds = new[]
+    {
+        new KindOption(0, "Text"),
+        new KindOption(1, "Number"),
+        new KindOption(2, "Date"),
+        new KindOption(3, "Dropdown"),
+        new KindOption(4, "Checkbox"),
+    };
+
+    protected override async Task OnParametersSetAsync() => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        ApiResult<IReadOnlyList<CustomFieldDefinitionDto>> result =
+            await CustomFieldsClient.ListForBoardAsync(BoardId);
+        if (result.IsSuccess)
+        {
+            rows = result.Value;
+            error = null;
+        }
+        else
+        {
+            rows = [];
+            error = result.Error;
+        }
+    }
+
+    private void ShowCreateForm()
+    {
+        createModel = new CreateModel();
+        showCreate = true;
+        error = null;
+    }
+
+    private void CancelCreate()
+    {
+        showCreate = false;
+        createModel = new CreateModel();
+    }
+
+    private async Task CreateAsync()
+    {
+        if (string.IsNullOrWhiteSpace(createModel.Name))
+        {
+            error = "Name is required.";
+            return;
+        }
+
+        IReadOnlyList<string>? options = null;
+        if (createModel.KindValue == 3)
+        {
+            options = (createModel.OptionsRaw ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (options.Count == 0)
+            {
+                error = "Dropdown fields require at least one option.";
+                return;
+            }
+        }
+
+        creating = true;
+        try
+        {
+            ApiResult<CustomFieldDefinitionDto> result = await CustomFieldsClient.CreateAsync(
+                BoardId,
+                new CreateCustomFieldRequestDto(
+                    createModel.Name.Trim(),
+                    createModel.KindValue,
+                    options,
+                    rows?.Count ?? 0));
+            if (result.IsSuccess)
+            {
+                showCreate = false;
+                createModel = new CreateModel();
+                await ReloadAsync();
+            }
+            else
+            {
+                error = result.Error;
+            }
+        }
+        finally
+        {
+            creating = false;
+        }
+    }
+
+    private void StartRename(CustomFieldDefinitionDto field)
+    {
+        renamingId = field.Id;
+        renameValue = field.Name;
+        error = null;
+    }
+
+    private void CancelRename()
+    {
+        renamingId = null;
+        renameValue = string.Empty;
+    }
+
+    private async Task SaveRenameAsync(CustomFieldDefinitionDto field)
+    {
+        if (string.IsNullOrWhiteSpace(renameValue) || renameValue == field.Name)
+        {
+            CancelRename();
+            return;
+        }
+
+        ApiResult<CustomFieldDefinitionDto> result = await CustomFieldsClient.RenameAsync(
+            BoardId, field.Id, new RenameCustomFieldRequestDto(renameValue.Trim()));
+        if (result.IsSuccess)
+        {
+            CancelRename();
+            await ReloadAsync();
+        }
+        else
+        {
+            error = result.Error;
+        }
+    }
+
+    private async Task DeleteAsync(CustomFieldDefinitionDto field)
+    {
+        bool? ok = await DialogService.Confirm(
+            $"Delete '{field.Name}'? All values for this field across all cards will be lost.",
+            "Delete field", new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        if (ok != true)
+        {
+            return;
+        }
+
+        ApiResult result = await CustomFieldsClient.DeleteAsync(BoardId, field.Id);
+        if (result.IsSuccess)
+        {
+            await ReloadAsync();
+        }
+        else
+        {
+            error = result.Error;
+        }
+    }
+
+    private static string KindLabel(int kind) => allKinds.FirstOrDefault(k => k.Value == kind)?.Label ?? $"Kind {kind}";
+
+    private static IEnumerable<string> ParseOptions(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<string[]>(json) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private sealed record KindOption(int Value, string Label);
+
+    private sealed class CreateModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public int KindValue { get; set; } = 0;
+        public string OptionsRaw { get; set; } = string.Empty;
+    }
+}

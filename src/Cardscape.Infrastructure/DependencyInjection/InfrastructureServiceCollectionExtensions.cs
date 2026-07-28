@@ -127,6 +127,14 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IBackgroundJobScheduler, BackgroundJobScheduler>();
         services.AddSingleton<IBackgroundJobHandlerRegistry, BackgroundJobHandlerRegistry>();
 
+        services.AddScoped<CustomFieldDefinitionRepository>();
+        services.AddScoped<IRepository<CustomFieldDefinition, CustomFieldDefinitionId>, CustomFieldDefinitionRepository>(sp => sp.GetRequiredService<CustomFieldDefinitionRepository>());
+        services.AddScoped<ICustomFieldDefinitionRepository, CustomFieldDefinitionRepository>(sp => sp.GetRequiredService<CustomFieldDefinitionRepository>());
+
+        services.AddScoped<CustomFieldValueRepository>();
+        services.AddScoped<IRepository<CustomFieldValue, CustomFieldValueId>, CustomFieldValueRepository>(sp => sp.GetRequiredService<CustomFieldValueRepository>());
+        services.AddScoped<ICustomFieldValueRepository, CustomFieldValueRepository>(sp => sp.GetRequiredService<CustomFieldValueRepository>());
+
         // Identity-shaped repositories (a few extra generics to satisfy the IRepository
         // contract for non-aggregate roots). The Application layer depends only on the
         // typed interfaces above.

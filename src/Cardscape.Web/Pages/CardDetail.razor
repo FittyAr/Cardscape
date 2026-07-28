@@ -5,6 +5,7 @@
 @using Cardscape.Web.Shared
 @inject ICardsApiClient Cards
 @inject ICommentsApiClient Comments
+@inject ICustomFieldsApiClient CustomFields
 
 <PageTitle>@(card?.Title ?? "Card") — Cardscape</PageTitle>
 
@@ -53,6 +54,18 @@
             <h3>Description</h3>
             <p class="card-description">@(string.IsNullOrWhiteSpace(card.Description) ? "(no description)" : card.Description)</p>
 
+            @if (fieldValues is not null && fieldValues.Count > 0)
+            {
+                <h3>Custom fields</h3>
+                <dl class="card-meta">
+                    @foreach (CustomFieldValueDto v in fieldValues)
+                    {
+                        <dt>@FieldKindLabel(v.Kind)</dt>
+                        <dd>@FormatFieldValue(v)</dd>
+                    }
+                </dl>
+            }
+
             <h3>Comments</h3>
             @if (comments is null)
             {
@@ -84,6 +97,7 @@
 
     private CardDto? card;
     private IReadOnlyList<CommentDto>? comments;
+    private IReadOnlyList<CustomFieldValueDto>? fieldValues;
     private bool addingComment;
     private readonly AddCommentModel addCommentModel = new();
 
@@ -94,6 +108,10 @@
 
         ApiResult<IReadOnlyList<CommentDto>> commentsResult = await Comments.ListForCardAsync(CardId);
         comments = commentsResult.IsSuccess ? commentsResult.Value : [];
+
+        ApiResult<IReadOnlyList<CustomFieldValueDto>> valuesResult =
+            await CustomFields.ListValuesForCardAsync(CardId);
+        fieldValues = valuesResult.IsSuccess ? valuesResult.Value : [];
     }
 
     private async Task Complete()
@@ -141,5 +159,32 @@
     private sealed class AddCommentModel
     {
         public string Body { get; set; } = string.Empty;
+    }
+
+    private static string FieldKindLabel(int kind) => kind switch
+    {
+        0 => "Text",
+        1 => "Number",
+        2 => "Date",
+        3 => "Dropdown",
+        4 => "Checkbox",
+        _ => $"Kind {kind}",
+    };
+
+    private static string FormatFieldValue(CustomFieldValueDto value)
+    {
+        // Values are stored as JSON strings; strip outer quotes for display.
+        string raw = value.ValueJson?.Trim('"') ?? string.Empty;
+        if (string.IsNullOrEmpty(raw))
+        {
+            return "(empty)";
+        }
+
+        return value.Kind switch
+        {
+            4 => raw.Equals("true", StringComparison.OrdinalIgnoreCase) ? "☑ Yes" : "☐ No",
+            2 => raw, // ISO date; render as-is
+            _ => raw,
+        };
     }
 }

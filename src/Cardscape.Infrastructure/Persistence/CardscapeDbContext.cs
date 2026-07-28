@@ -32,6 +32,8 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<WorkspaceInvitation> WorkspaceInvitations => Set<WorkspaceInvitation>();
     public DbSet<BoardExtension> BoardExtensions => Set<BoardExtension>();
     public DbSet<BackgroundJob> BackgroundJobs => Set<BackgroundJob>();
+    public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
+    public DbSet<CustomFieldValue> CustomFieldValues => Set<CustomFieldValue>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't

@@ -219,3 +219,29 @@ public sealed record BoardExtensionDto(
 
 public sealed record EnableExtensionRequestDto(int Kind, string? ConfigJson);
 public sealed record UpdateExtensionConfigRequestDto(string? ConfigJson);
+
+// ── Custom fields (v0.7.1) ─────────────────────────────────
+// Kind enum: 0 = Text, 1 = Number, 2 = Date, 3 = Dropdown, 4 = Checkbox
+public sealed record CustomFieldDefinitionDto(
+    Guid Id,
+    Guid BoardId,
+    string Name,
+    int Kind,
+    string OptionsJson,
+    int Position);
+
+public sealed record CustomFieldValueDto(
+    Guid FieldDefinitionId,
+    Guid CardId,
+    int Kind,
+    string ValueJson);
+
+public sealed record CreateCustomFieldRequestDto(
+    string Name,
+    int Kind,
+    IReadOnlyList<string>? DropdownOptions,
+    int Position = 0);
+
+public sealed record RenameCustomFieldRequestDto(string NewName);
+
+public sealed record SetCustomFieldValueRequestDto(string? ValueJson);
