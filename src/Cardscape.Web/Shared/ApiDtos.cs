@@ -279,3 +279,9 @@ public sealed record ActivityDto(
 public sealed record ActivityPageDto(
     IReadOnlyList<ActivityDto> Items,
     string? NextCursor);
+
+// ── Voting (v0.7.x) ─────────────────────────────────────────
+public sealed record CardVoteStateDto(
+    Guid CardId,
+    int VoteCount,
+    bool CurrentUserHasVoted);

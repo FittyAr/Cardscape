@@ -8,6 +8,7 @@ using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
+using Cardscape.Domain.Voting;
 using Cardscape.Domain.Workspaces;
 
 namespace Cardscape.Tests.Common.Fakes;
@@ -397,4 +398,19 @@ public sealed class InMemoryActivityRepository
 
         return a.Id.Value.CompareTo(cursorId) < 0;
     }
+}
+
+
+public sealed class InMemoryCardVoteRepository
+    : InMemoryRepositoryBase<CardVote, CardVoteId>, ICardVoteRepository
+{
+    public Task<int> CountForCardAsync(CardId cardId, CancellationToken ct = default) =>
+        Task.FromResult(Store.Values.Count(v => v.CardId.Value == cardId.Value));
+
+    public Task<bool> HasVotedAsync(CardId cardId, Guid userId, CancellationToken ct = default) =>
+        Task.FromResult(Store.Values.Any(v => v.CardId.Value == cardId.Value && v.UserId == userId));
+
+    public Task<IReadOnlyList<CardVote>> ListForCardAsync(CardId cardId, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<CardVote>>(
+            Store.Values.Where(v => v.CardId.Value == cardId.Value).OrderBy(v => v.VotedAt).ToList());
 }

@@ -14,6 +14,7 @@ using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Notifications;
 using Cardscape.Domain.Security;
+using Cardscape.Domain.Voting;
 using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.BackgroundJobs;
 using Cardscape.Infrastructure.Email;
@@ -134,6 +135,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<CustomFieldValueRepository>();
         services.AddScoped<IRepository<CustomFieldValue, CustomFieldValueId>, CustomFieldValueRepository>(sp => sp.GetRequiredService<CustomFieldValueRepository>());
         services.AddScoped<ICustomFieldValueRepository, CustomFieldValueRepository>(sp => sp.GetRequiredService<CustomFieldValueRepository>());
+
+        services.AddScoped<CardVoteRepository>();
+        services.AddScoped<IRepository<CardVote, CardVoteId>, CardVoteRepository>(sp => sp.GetRequiredService<CardVoteRepository>());
+        services.AddScoped<ICardVoteRepository, CardVoteRepository>(sp => sp.GetRequiredService<CardVoteRepository>());
 
         // Identity-shaped repositories (a few extra generics to satisfy the IRepository
         // contract for non-aggregate roots). The Application layer depends only on the

@@ -8,6 +8,7 @@
 @inject ICommentsApiClient Comments
 @inject ICustomFieldsApiClient CustomFields
 @inject IActivitiesApiClient Activities
+@inject IVotingApiClient Votes
 
 <PageTitle>@(card?.Title ?? "Card") — Cardscape</PageTitle>
 
@@ -32,6 +33,13 @@
                     }
                     <RadzenButton Text="@(card.IsArchived ? "Restore" : "Archive")"
                                   ButtonStyle="ButtonStyle.Warning" Click="@ToggleArchive" />
+                    <RadzenButton Text="@(voteState is { CurrentUserHasVoted: true } ? "♥ " : "♡ ")"
+                                  ButtonStyle="@(voteState is { CurrentUserHasVoted: true } ? ButtonStyle.Danger : ButtonStyle.Light)"
+                                  Click="@ToggleVoteAsync"
+                                  Disabled="@togglingVote"
+                                  IsBusy="@togglingVote"
+                                  title="Vote on this card" />
+                    <small class="vote-count">@voteState?.VoteCount ?? 0</small>
                 </div>
             </div>
 
@@ -124,7 +132,9 @@
     private IReadOnlyList<CommentDto>? comments;
     private IReadOnlyList<CustomFieldValueDto>? fieldValues;
     private IReadOnlyList<ActivityDto>? recentActivity;
+    private CardVoteStateDto? voteState;
     private bool addingComment;
+    private bool togglingVote;
     private readonly AddCommentModel addCommentModel = new();
 
     protected override async Task OnParametersSetAsync()
@@ -142,6 +152,27 @@
         ApiResult<ActivityPageDto> activityResult =
             await Activities.ListForCardAsync(CardId, cursor: null, limit: 20);
         recentActivity = activityResult.IsSuccess ? activityResult.Value?.Items : [];
+
+        ApiResult<CardVoteStateDto> voteResult = await Votes.GetStateAsync(CardId);
+        voteState = voteResult.IsSuccess ? voteResult.Value : null;
+    }
+
+    private async Task ToggleVoteAsync()
+    {
+        if (togglingVote) return;
+        togglingVote = true;
+        try
+        {
+            ApiResult<CardVoteStateDto> result = await Votes.ToggleAsync(CardId);
+            if (result.IsSuccess)
+            {
+                voteState = result.Value;
+            }
+        }
+        finally
+        {
+            togglingVote = false;
+        }
     }
 
     private async Task Complete()
