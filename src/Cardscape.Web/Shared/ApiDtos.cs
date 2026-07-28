@@ -207,3 +207,15 @@ public sealed record UnreadCountDto(int Count);
 
 // ── Error envelope (matches Results.Problem shape) ──────
 public sealed record ApiErrorDto(string? Title, string? Detail, int? Status);
+
+// v0.6.4: Board extensions
+// Kind enum: 0 = CustomFields, 1 = Voting, 2 = CardRepeater
+public sealed record BoardExtensionDto(
+    Guid Id,
+    Guid BoardId,
+    int Kind,
+    string? ConfigJson,
+    bool IsEnabled);
+
+public sealed record EnableExtensionRequestDto(int Kind, string? ConfigJson);
+public sealed record UpdateExtensionConfigRequestDto(string? ConfigJson);

@@ -1,0 +1,122 @@
+@page "/boards/{BoardId:guid}/extensions"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@inject IBoardExtensionsApiClient ExtensionsClient
+
+<PageTitle>Extensions — Cardscape</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>Board extensions</h1>
+    </div>
+
+    <p class="page-hint">
+        Extensions are per-board toggles. Enabling one stores its
+        configuration here; the actual feature (custom fields,
+        voting, card repeater) reads the JSON at runtime.
+    </p>
+
+    @if (rows is null)
+    {
+        <p>Loading…</p>
+    }
+    else
+    {
+        <div class="extension-list">
+            @foreach (ExtensionOption option in allOptions)
+            {
+                BoardExtensionDto? match = rows.FirstOrDefault(r => r.Kind == option.Kind);
+                bool isEnabled = match is { IsEnabled: true };
+                <RadzenCard class="@(isEnabled ? "extension-card" : "extension-card extension-card--off")">
+                    <div class="extension-row">
+                        <div class="extension-meta">
+                            <strong>@option.Name</strong>
+                            <small>@option.Description</small>
+                        </div>
+                        <div class="extension-actions">
+                            @if (isEnabled)
+                            {
+                                <RadzenButton Text="Disable" ButtonStyle="ButtonStyle.Light"
+                                              Size="ButtonSize.Small"
+                                              Click="@(() => DisableAsync(option.Kind))" />
+                            }
+                            else
+                            {
+                                <RadzenButton Text="Enable" ButtonStyle="ButtonStyle.Success"
+                                              Size="ButtonSize.Small"
+                                              Click="@(() => EnableAsync(option.Kind))" />
+                            }
+                        </div>
+                    </div>
+                </RadzenCard>
+            }
+        </div>
+
+        @if (error is not null)
+        {
+            <div class="auth-error" role="alert">@error</div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public Guid BoardId { get; set; }
+
+    private IReadOnlyList<BoardExtensionDto>? rows;
+    private string? error;
+
+    private readonly List<ExtensionOption> allOptions = new()
+    {
+        new(0, "Custom fields", "Per-card structured fields (Priority, Estimate, etc.)."),
+        new(1, "Voting", "Up/down votes on cards with tally summaries."),
+        new(2, "Card repeater", "Automatically recreate a card on completion.")
+    };
+
+    protected override async Task OnParametersSetAsync() => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        ApiResult<IReadOnlyList<BoardExtensionDto>> result = await ExtensionsClient.ListAsync(BoardId);
+        if (result.IsSuccess)
+        {
+            rows = result.Value;
+            error = null;
+        }
+        else
+        {
+            rows = [];
+            error = result.Error;
+        }
+    }
+
+    private async Task EnableAsync(int kind)
+    {
+        ApiResult<BoardExtensionDto> result = await ExtensionsClient.EnableAsync(
+            BoardId, new EnableExtensionRequestDto(kind, ConfigJson: null));
+        if (result.IsSuccess)
+        {
+            await ReloadAsync();
+        }
+        else
+        {
+            error = result.Error;
+        }
+    }
+
+    private async Task DisableAsync(int kind)
+    {
+        ApiResult result = await ExtensionsClient.DisableAsync(BoardId, kind);
+        if (result.IsSuccess)
+        {
+            await ReloadAsync();
+        }
+        else
+        {
+            error = result.Error;
+        }
+    }
+
+    private sealed record ExtensionOption(int Kind, string Name, string Description);
+}

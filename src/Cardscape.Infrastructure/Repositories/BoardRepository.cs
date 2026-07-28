@@ -49,10 +49,12 @@ public sealed class BoardRepository(CardscapeDbContext db) : RepositoryBase<Boar
 
     public async Task<Board?> GetWithMembersAsync(BoardId id, CancellationToken ct = default)
     {
-        var idValue = id.Value;
+        // EF Core 10 + HasConversion: EF.Property<Guid>(b, "Id") trips
+        // the converter pipeline (InvalidCastException: Object must
+        // implement IConvertible). b.Id == id is the safe form.
         return await Db.Set<Board>()
             .Include(b => b.Members)
             .Include(b => b.Stars)
-            .FirstOrDefaultAsync(b => EF.Property<Guid>(b, "Id") == idValue, ct);
+            .FirstOrDefaultAsync(b => b.Id == id, ct);
     }
 }

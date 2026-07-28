@@ -29,6 +29,7 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<WorkspaceInvitation> WorkspaceInvitations => Set<WorkspaceInvitation>();
+    public DbSet<BoardExtension> BoardExtensions => Set<BoardExtension>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't

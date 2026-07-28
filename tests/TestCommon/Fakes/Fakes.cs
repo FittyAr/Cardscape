@@ -252,3 +252,26 @@ public sealed class InMemoryLabelRepository : InMemoryRepositoryBase<Label, Labe
         return Task.FromResult(rows);
     }
 }
+
+/// <summary>In-memory <see cref="IBoardExtensionRepository"/>.</summary>
+public sealed class InMemoryBoardExtensionRepository
+    : InMemoryRepositoryBase<BoardExtension, BoardExtensionId>, IBoardExtensionRepository
+{
+    public Task<IReadOnlyList<BoardExtension>> ListForBoardAsync(
+        BoardId boardId, CancellationToken ct = default)
+    {
+        IReadOnlyList<BoardExtension> rows = Store.Values
+            .Where(e => e.BoardId.Value == boardId.Value)
+            .OrderBy(e => (int)e.Kind)
+            .ToList();
+        return Task.FromResult(rows);
+    }
+
+    public Task<BoardExtension?> GetByBoardAndKindAsync(
+        BoardId boardId, ExtensionKind kind, CancellationToken ct = default)
+    {
+        BoardExtension? match = Store.Values
+            .FirstOrDefault(e => e.BoardId.Value == boardId.Value && e.Kind == kind);
+        return Task.FromResult(match);
+    }
+}

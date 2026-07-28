@@ -42,6 +42,7 @@ builder.Services.AddScoped<ISecurityApiClient, SecurityApiClient>();
 builder.Services.AddScoped<IInvitationsApiClient, InvitationsApiClient>();
 builder.Services.AddScoped<INotificationsApiClient, NotificationsApiClient>();
 builder.Services.AddScoped<IAutomationApiClient, AutomationApiClient>();
+builder.Services.AddScoped<IBoardExtensionsApiClient, BoardExtensionsApiClient>();
 
 // ── Real-time (SignalR client) ──────────────────────────────
 builder.Services.AddScoped<BoardHubClient>();
