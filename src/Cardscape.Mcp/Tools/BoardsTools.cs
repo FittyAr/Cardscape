@@ -213,6 +213,16 @@ public sealed class BoardsTools(
         return Ensure(result);
     }
 
+    [McpServerTool(Name = "cards_calendar")]
+    public async Task<IReadOnlyList<CalendarEntryDto>> Calendar(
+        DateTimeOffset from, DateTimeOffset to, Guid? boardId, CancellationToken ct)
+    {
+        RequireAuth();
+        var result = await bus.InvokeAsync<Result<IReadOnlyList<CalendarEntryDto>>>(
+            new ListCardsDueInRangeQuery(from, to, boardId), ct);
+        return Ensure(result);
+    }
+
     // ── Comments ────────────────────────────────────────────
 
     [McpServerTool(Name = "comments_add")]

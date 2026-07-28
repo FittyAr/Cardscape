@@ -207,6 +207,17 @@ public sealed class InMemoryCardRepository : InMemoryRepositoryBase<Card, CardId
         return Task.FromResult(rows);
     }
 
+    public Task<IReadOnlyList<Card>> ListDueInRangeForBoardAsync(
+        BoardId boardId, DateTimeOffset from, DateTimeOffset to, CancellationToken ct = default)
+    {
+        IReadOnlyList<Card> rows = Store.Values
+            .Where(c => c.DueDate is not null
+                        && c.DueDate.Value >= from
+                        && c.DueDate.Value < to)
+            .ToList();
+        return Task.FromResult(rows);
+    }
+
     public Task<Card?> GetWithDetailsAsync(CardId id, CancellationToken ct = default) =>
         GetByIdAsync(id, ct);
 }
@@ -220,6 +231,13 @@ public sealed class InMemoryBoardListRepository : InMemoryRepositoryBase<BoardLi
             .Where(l => l.BoardId.Value == boardId.Value && (!l.IsArchived || includeArchived))
             .ToList();
         return Task.FromResult(rows);
+    }
+
+    public Task<IReadOnlyDictionary<Guid, Guid>> ListBoardIdsByListIdAsync(CancellationToken ct = default)
+    {
+        IReadOnlyDictionary<Guid, Guid> map = Store.Values
+            .ToDictionary(l => l.Id.Value, l => l.BoardId.Value);
+        return Task.FromResult(map);
     }
 }
 

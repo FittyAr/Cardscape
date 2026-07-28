@@ -21,6 +21,21 @@ public static class CardEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
+        // Calendar / planner view: cards with a due date in the
+        // given range. `boardId` is optional; when null, the query
+        // spans every board the caller can read.
+        group.MapGet("/calendar", async (
+            DateTimeOffset from,
+            DateTimeOffset to,
+            Guid? boardId,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<CalendarEntryDto>>>(
+                new ListCardsDueInRangeQuery(from, to, boardId), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+        });
+
         group.MapGet("/{cardId:guid}", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new GetCardQuery(cardId), ct);

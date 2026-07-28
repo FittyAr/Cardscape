@@ -1,0 +1,106 @@
+@page "/calendar"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@inject ICardsApiClient Cards
+@inject Microsoft.AspNetCore.Components.NavigationManager Nav
+
+<PageTitle>Calendar — Cardscape</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>Calendar</h1>
+        <div class="page-header-actions">
+            <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth" />
+            <strong class="month-label">@monthLabel</strong>
+            <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth" />
+        </div>
+    </div>
+
+    <p class="page-hint">
+        Cards with a due date in @monthLabel.
+        Click a card to open it; click an empty day to add a new card (coming soon).
+    </p>
+
+    <div class="calendar-grid">
+        @foreach (string day in DayNames)
+        {
+            <div class="calendar-day-header">@day</div>
+        }
+
+        @for (int i = 0; i < leadingBlanks; i++)
+        {
+            <div class="calendar-cell calendar-cell--blank"></div>
+        }
+
+        @for (int day = 1; day <= daysInMonth; day++)
+        {
+            DateTimeOffset cellDate = firstOfMonth.AddDays(day - 1);
+            IReadOnlyList<CalendarEntryDto> cellEntries = entriesByDay.GetValueOrDefault(day, []);
+            <div class="calendar-cell @(cellDate.Date == DateTimeOffset.UtcNow.Date ? "calendar-cell--today" : null)">
+                <div class="calendar-cell-day">@day</div>
+                @foreach (CalendarEntryDto entry in cellEntries)
+                {
+                    <button class="calendar-entry @(entry.IsCompleted ? "calendar-entry--done" : null)"
+                            @onclick="@(() => Nav.NavigateTo($"cards/{entry.CardId}"))"
+                            title="@entry.BoardName">
+                        @entry.Title
+                    </button>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private DateTimeOffset firstOfMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
+    private IReadOnlyList<CalendarEntryDto> entries = [];
+    private Dictionary<int, IReadOnlyList<CalendarEntryDto>> entriesByDay = new();
+    private int leadingBlanks;
+    private int daysInMonth;
+    private string monthLabel = string.Empty;
+
+    private static readonly string[] DayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        daysInMonth = DateTime.DaysInMonth(firstOfMonth.Year, firstOfMonth.Month);
+        // Monday-first: DayOfWeek.Sunday (0) → 6, Monday (1) → 0, etc.
+        int dow = ((int)firstOfMonth.DayOfWeek + 6) % 7;
+        leadingBlanks = dow;
+
+        DateTimeOffset from = firstOfMonth;
+        DateTimeOffset to = firstOfMonth.AddDays(daysInMonth);
+        monthLabel = firstOfMonth.ToString("MMMM yyyy");
+
+        ApiResult<IReadOnlyList<CalendarEntryDto>> result = await Cards.CalendarAsync(from, to, boardId: null);
+        IReadOnlyList<CalendarEntryDto> rows = result.IsSuccess && result.Value is not null
+            ? result.Value
+            : (IReadOnlyList<CalendarEntryDto>)Array.Empty<CalendarEntryDto>();
+        entries = rows;
+
+        entriesByDay = (entries ?? Enumerable.Empty<CalendarEntryDto>())
+            .GroupBy(e => e.DueDate.UtcDateTime.Date)
+            .ToDictionary(
+                g => (firstOfMonth.UtcDateTime.Date.AddDays((g.Key - firstOfMonth.UtcDateTime.Date).Days)).Day,
+                g => (IReadOnlyList<CalendarEntryDto>)g.OrderBy(e => e.Title).ToList());
+    }
+
+    private async Task PrevMonth()
+    {
+        firstOfMonth = firstOfMonth.AddMonths(-1);
+        await ReloadAsync();
+    }
+
+    private async Task NextMonth()
+    {
+        firstOfMonth = firstOfMonth.AddMonths(1);
+        await ReloadAsync();
+    }
+}

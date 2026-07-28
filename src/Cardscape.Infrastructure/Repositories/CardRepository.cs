@@ -64,6 +64,55 @@ public sealed class CardRepository(CardscapeDbContext db) : RepositoryBase<Card,
         return rows;
     }
 
+    public async Task<IReadOnlyList<Card>> ListDueInRangeForBoardAsync(
+        BoardId boardId, DateTimeOffset from, DateTimeOffset to, CancellationToken ct = default)
+    {
+        var boardValue = boardId.Value;
+        // Collect the lists under this board (streamed because the
+        // list-id value-object can't be translated by EF).
+        var listIds = new HashSet<Guid>();
+        await foreach (var l in Db.Set<BoardList>().AsAsyncEnumerable().WithCancellation(ct))
+        {
+            if (l.BoardId.Value == boardValue)
+            {
+                listIds.Add(l.Id.Value);
+            }
+        }
+
+        if (listIds.Count == 0)
+        {
+            return [];
+        }
+
+        // Cards with a due date in [from, to) on one of the board's
+        // lists. We use a ListId Guid round-trip to keep the LINQ
+        // expression translatable.
+        var rows = new List<Card>();
+        await foreach (var c in Db.Set<Card>().AsAsyncEnumerable().WithCancellation(ct))
+        {
+            if (!listIds.Contains(c.ListId.Value))
+            {
+                continue;
+            }
+
+            DateTimeOffset? due = c.DueDate;
+            if (due is null)
+            {
+                continue;
+            }
+
+            if (due.Value < from || due.Value >= to)
+            {
+                continue;
+            }
+
+            rows.Add(c);
+        }
+
+        rows.Sort((a, b) => a.DueDate!.Value.CompareTo(b.DueDate!.Value));
+        return rows;
+    }
+
     public async Task<Card?> GetWithDetailsAsync(CardId id, CancellationToken ct = default)
     {
         var idValue = id.Value;

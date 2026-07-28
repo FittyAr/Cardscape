@@ -30,4 +30,15 @@ public sealed class BoardListRepository(CardscapeDbContext db) : RepositoryBase<
         rows.Sort((a, b) => a.Position.Value.CompareTo(b.Position.Value));
         return rows;
     }
+
+    public async Task<IReadOnlyDictionary<Guid, Guid>> ListBoardIdsByListIdAsync(CancellationToken ct = default)
+    {
+        var map = new Dictionary<Guid, Guid>();
+        await foreach (var l in Db.Set<BoardList>().AsAsyncEnumerable().WithCancellation(ct))
+        {
+            map[l.Id.Value] = l.BoardId.Value;
+        }
+
+        return map;
+    }
 }

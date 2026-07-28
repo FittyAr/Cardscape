@@ -26,6 +26,9 @@ public interface ICardsApiClient
     Task<ApiResult<CardDto>> UnassignAsync(Guid cardId, Guid userId, CancellationToken ct = default);
     Task<ApiResult<CardDto>> AttachLabelAsync(Guid cardId, Guid labelId, CancellationToken ct = default);
     Task<ApiResult<CardDto>> DetachLabelAsync(Guid cardId, Guid labelId, CancellationToken ct = default);
+
+    Task<ApiResult<IReadOnlyList<CalendarEntryDto>>> CalendarAsync(
+        DateTimeOffset from, DateTimeOffset to, Guid? boardId = null, CancellationToken ct = default);
 }
 
 public sealed class CardsApiClient(IHttpClientFactory http) : ApiClientBase(http), ICardsApiClient
@@ -145,5 +148,20 @@ public sealed class CardsApiClient(IHttpClientFactory http) : ApiClientBase(http
     {
         HttpResponseMessage response = await CreateClient().DeleteAsync($"api/cards/{cardId}/labels/{labelId}", ct);
         return await ReadAsync<CardDto>(response, ct);
+    }
+
+    public async Task<ApiResult<IReadOnlyList<CalendarEntryDto>>> CalendarAsync(
+        DateTimeOffset from, DateTimeOffset to, Guid? boardId = null, CancellationToken ct = default)
+    {
+        string fromStr = Uri.EscapeDataString(from.ToString("o"));
+        string toStr = Uri.EscapeDataString(to.ToString("o"));
+        string url = $"api/cards/calendar?from={fromStr}&to={toStr}";
+        if (boardId is Guid bid)
+        {
+            url += $"&boardId={bid}";
+        }
+
+        HttpResponseMessage response = await CreateClient().GetAsync(url, ct);
+        return await ReadAsync<IReadOnlyList<CalendarEntryDto>>(response, ct);
     }
 }

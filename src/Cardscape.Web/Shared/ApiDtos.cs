@@ -162,7 +162,16 @@ public sealed record IssueWorkspaceInvitationRequestDto(
 
 public sealed record AcceptWorkspaceInvitationRequestDto(string Token);
 
-// ── Notifications (v0.6 inbox) ──────────────────────────
+// ── Calendar (v0.6.1) ───────────────────────────────────
+public sealed record CalendarEntryDto(
+    Guid CardId,
+    Guid ListId,
+    Guid BoardId,
+    string BoardName,
+    string Title,
+    DateTimeOffset DueDate,
+    bool IsCompleted);
+
 public sealed record NotificationDto(
     Guid Id,
     Guid UserId,
