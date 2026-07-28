@@ -45,7 +45,8 @@ public sealed class RateLimitTests
     [Fact]
     public async Task ApiToken_DefaultLimits_AllowsRequest()
     {
-        ApiTokenIssuanceDto issued = await IssueTokenAsync(rateLimitPerHour: null, burstSize: null);
+        HttpClient jwtClient = await CreateJwtClientAsync();
+        ApiTokenIssuanceDto issued = await IssueTokenAsync(jwtClient, rateLimitPerHour: null, burstSize: null);
         HttpClient client = _factory.CreateApiClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", issued.CleartextSecret);
@@ -63,7 +64,8 @@ public sealed class RateLimitTests
     {
         // Issue a token with a tiny burst so we can exhaust it
         // in one test.
-        ApiTokenIssuanceDto issued = await IssueTokenAsync(rateLimitPerHour: 60, burstSize: 2);
+        HttpClient jwtClient = await CreateJwtClientAsync();
+        ApiTokenIssuanceDto issued = await IssueTokenAsync(jwtClient, rateLimitPerHour: 60, burstSize: 2);
 
         HttpClient client = _factory.CreateApiClient();
         client.DefaultRequestHeaders.Authorization =
@@ -89,17 +91,28 @@ public sealed class RateLimitTests
     [Fact]
     public async Task PatchRateLimit_UpdatesBucketAndStaysInSync()
     {
-        ApiTokenIssuanceDto issued = await IssueTokenAsync(rateLimitPerHour: 60, burstSize: 1);
-
+        // Same JWT client issues AND patches the token, so the
+        // authenticated user is the owner of the token.
         HttpClient jwtClient = await CreateJwtClientAsync();
+        ApiTokenIssuanceDto issued = await IssueTokenAsync(jwtClient, rateLimitPerHour: 60, burstSize: 1);
 
         // PATCH the limit to burst=1, rate=3600 (1/s refill).
         HttpResponseMessage patch = await jwtClient.PatchAsJsonAsync(
             $"api/security/api-tokens/{issued.Id}/rate-limit",
             new { rateLimitPerHour = 3600, burstSize = 1 });
+        if (!patch.IsSuccessStatusCode)
+        {
+            string body = await patch.Content.ReadAsStringAsync();
+            throw new Xunit.Sdk.XunitException($"PATCH failed: {(int)patch.StatusCode} {patch.StatusCode} body={body}");
+        }
         patch.IsSuccessStatusCode.Should().BeTrue();
 
         ApiTokenRateLimitDto? after = await patch.Content.ReadFromJsonAsync<ApiTokenRateLimitDto>();
+        if (after is null)
+        {
+            string raw = await patch.Content.ReadAsStringAsync();
+            throw new Xunit.Sdk.XunitException($"PATCH body deserialized null. Raw: {raw}");
+        }
         after.Should().NotBeNull();
         after!.RateLimitPerHour.Should().Be(3600);
         after.BurstSize.Should().Be(1);
@@ -108,11 +121,16 @@ public sealed class RateLimitTests
     [Fact]
     public async Task GetRateLimitStatus_ReturnsCurrentBucketState()
     {
-        ApiTokenIssuanceDto issued = await IssueTokenAsync(rateLimitPerHour: 1000, burstSize: 7);
-
         HttpClient jwtClient = await CreateJwtClientAsync();
+        ApiTokenIssuanceDto issued = await IssueTokenAsync(jwtClient, rateLimitPerHour: 1000, burstSize: 7);
+
         HttpResponseMessage status = await jwtClient.GetAsync(
             $"api/security/api-tokens/{issued.Id}/rate-limit-status");
+        if (!status.IsSuccessStatusCode)
+        {
+            string body = await status.Content.ReadAsStringAsync();
+            throw new Xunit.Sdk.XunitException($"GET rate-limit-status failed: {(int)status.StatusCode} {status.StatusCode} body={body}");
+        }
         status.IsSuccessStatusCode.Should().BeTrue();
 
         ApiTokenRateLimitStatusDto? dto = await status.Content.ReadFromJsonAsync<ApiTokenRateLimitStatusDto>();
@@ -127,7 +145,8 @@ public sealed class RateLimitTests
     public async Task GetRateLimitStatus_ForOtherUsersToken_Returns404()
     {
         // Owner issues a token.
-        ApiTokenIssuanceDto ownerToken = await IssueTokenAsync(rateLimitPerHour: null, burstSize: null);
+        HttpClient ownerClient = await CreateJwtClientAsync();
+        ApiTokenIssuanceDto ownerToken = await IssueTokenAsync(ownerClient, rateLimitPerHour: null, burstSize: null);
 
         // Different authenticated user tries to inspect it.
         HttpClient intruder = await CreateJwtClientAsync();
@@ -150,7 +169,8 @@ public sealed class RateLimitTests
     {
         // The middleware explicitly skips /health so a throttled
         // user can still see liveness.
-        ApiTokenIssuanceDto issued = await IssueTokenAsync(rateLimitPerHour: 60, burstSize: 1);
+        HttpClient jwtClient = await CreateJwtClientAsync();
+        ApiTokenIssuanceDto issued = await IssueTokenAsync(jwtClient, rateLimitPerHour: 60, burstSize: 1);
 
         HttpClient client = _factory.CreateApiClient();
         client.DefaultRequestHeaders.Authorization =
@@ -164,16 +184,19 @@ public sealed class RateLimitTests
         health.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    private async Task<ApiTokenIssuanceDto> IssueTokenAsync(int? rateLimitPerHour, int? burstSize)
+    private static async Task<ApiTokenIssuanceDto> IssueTokenAsync(
+        HttpClient client, int? rateLimitPerHour, int? burstSize)
     {
-        HttpClient client = await CreateJwtClientAsync();
-
         object body = rateLimitPerHour is null
             ? (object)new { name = "rate-limit-test", scopes = new[] { "read" } }
             : new { name = "rate-limit-test", scopes = new[] { "read" }, rateLimitPerHour, burstSize };
 
         HttpResponseMessage issue = await client.PostAsJsonAsync("api/security/api-tokens/", body);
-        issue.IsSuccessStatusCode.Should().BeTrue();
+        if (!issue.IsSuccessStatusCode)
+        {
+            string raw = await issue.Content.ReadAsStringAsync();
+            throw new Xunit.Sdk.XunitException($"Issue failed: {(int)issue.StatusCode} {issue.StatusCode} body={raw}");
+        }
         ApiTokenIssuanceDto? issued = await issue.Content.ReadFromJsonAsync<ApiTokenIssuanceDto>();
         issued.Should().NotBeNull();
         return issued!;

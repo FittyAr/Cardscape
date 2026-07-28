@@ -1,5 +1,3 @@
-using Cardscape.IntegrationTests.Authentication;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -47,17 +45,10 @@ public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Progr
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // Add a second auth scheme (alongside the production JWT
-        // scheme) that lets tests authenticate with an API token
-        // so the rate-limit middleware can be exercised end-to-
-        // end. The middleware decides which scheme to apply by
-        // inspecting User.Identity.AuthenticationType, so both
-        // schemes can coexist without one cancelling the other.
-        builder.ConfigureServices(services =>
-        {
-            services.AddAuthentication()
-                    .AddTestApiTokenAuth();
-        });
+        // The API's AddApiAuthentication already registers both
+        // the JWT bearer scheme and the API-token scheme behind a
+        // "BearerPolicy" wrapper. Tests just use the production
+        // setup as-is — no extra wiring needed here.
     }
 
     protected override void Dispose(bool disposing)

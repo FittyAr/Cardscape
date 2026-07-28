@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Cardscape.Api.Authentication;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Security;
@@ -31,14 +32,11 @@ public sealed class RateLimitMiddleware(
     IClock clock,
     ILogger<RateLimitMiddleware> logger)
 {
-    private const string ApiTokenItemKey = "ApiToken";
-
     /// <summary>Authentication scheme name expected on
     /// <see cref="HttpContext.User"/> for API-token requests.
-    /// Must match the constant the auth handler registers as
-    /// its scheme name (see
-    /// <c>Cardscape.Mcp.Authentication.ApiTokenAuthenticationHandler.SchemeName</c>).</summary>
-    private const string ApiTokenSchemeName = "ApiToken";
+    /// Must match
+    /// <see cref="ApiTokenAuthenticationHandler.SchemeName"/>.</summary>
+    private const string ApiTokenSchemeName = ApiTokenAuthenticationHandler.SchemeName;
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -48,7 +46,8 @@ public sealed class RateLimitMiddleware(
             return;
         }
 
-        if (context.Items[ApiTokenItemKey] is not ApiToken token)
+        if (context.Items[ApiTokenAuthenticationHandler.HttpContextItemKey]
+            is not ApiToken token)
         {
             // The auth pipeline didn't attach the token. The
             // request is either JWT-authenticated (humans), or
