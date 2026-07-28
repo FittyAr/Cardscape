@@ -43,6 +43,8 @@
                           Click="@(() => Nav.NavigateTo($"boards/{BoardId}/custom-fields"))" />
             <RadzenButton Text="Extensions" Icon="extension" ButtonStyle="ButtonStyle.Light"
                           Click="@(() => Nav.NavigateTo($"boards/{BoardId}/extensions"))" />
+            <RadzenButton Text="Activity" Icon="history" ButtonStyle="ButtonStyle.Light"
+                          Click="@(() => Nav.NavigateTo($"boards/{BoardId}/activity"))" />
         </div>
 
         @if (showAddList)

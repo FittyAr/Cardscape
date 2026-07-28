@@ -1,0 +1,191 @@
+@page "/boards/{BoardId:guid}/activity"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Text.Json
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@inject IActivitiesApiClient Activities
+@inject Microsoft.AspNetCore.Components.NavigationManager Nav
+
+<PageTitle>Activity — Cardscape</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>Activity</h1>
+        <div class="page-header-actions">
+            <RadzenButton Text="Back to board" Icon="arrow_back" ButtonStyle="ButtonStyle.Light"
+                          Click="@(() => Nav.NavigateTo($"boards/{BoardId}"))" />
+        </div>
+    </div>
+
+    @if (loading && items is null)
+    {
+        <p>Loading activity…</p>
+    }
+    else if (items is null || items.Count == 0)
+    {
+        <p>No activity recorded on this board yet.</p>
+    }
+    else
+    {
+        <div class="activity-list">
+            @foreach (ActivityDto a in items)
+            {
+                <RadzenCard class="activity-card">
+                    <div class="activity-row">
+                        <RadzenBadge Text="@KindLabel(a.KindName)" BadgeStyle="@KindBadgeStyle(a.KindName)" />
+                        <strong>@a.KindName</strong>
+                        <small> · @a.OccurredAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</small>
+                    </div>
+                    <div class="activity-meta">
+                        @if (a.CardId is Guid cardId)
+                        {
+                            <small>card: </small>
+                            <a href="@($"cards/{cardId}")">@cardId.ToString()[..8]</a>
+                        }
+                        <small> · actor: @a.ActorId.ToString()[..8]</small>
+                    </div>
+                    @if (!string.IsNullOrEmpty(FormatPayload(a)))
+                    {
+                        <p class="activity-payload">@FormatPayload(a)</p>
+                    }
+                </RadzenCard>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(nextCursor))
+        {
+            <div class="activity-loadmore">
+                <RadzenButton Text="Load more" ButtonStyle="ButtonStyle.Light" Disabled="@loading"
+                              Click="@LoadMoreAsync" IsBusy="@loading" />
+            </div>
+        }
+    }
+
+    @if (error is not null)
+    {
+        <div class="auth-error" role="alert">@error</div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid BoardId { get; set; }
+
+    private List<ActivityDto>? items;
+    private string? nextCursor;
+    private bool loading;
+    private string? error;
+
+    protected override async Task OnParametersSetAsync() => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        loading = true;
+        error = null;
+        try
+        {
+            ApiResult<ActivityPageDto> result = await Activities.ListForBoardAsync(BoardId);
+            if (result.IsSuccess && result.Value is not null)
+            {
+                items = result.Value.Items.ToList();
+                nextCursor = result.Value.NextCursor;
+            }
+            else
+            {
+                error = result.Error;
+                items = [];
+                nextCursor = null;
+            }
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task LoadMoreAsync()
+    {
+        if (string.IsNullOrEmpty(nextCursor))
+        {
+            return;
+        }
+
+        loading = true;
+        error = null;
+        try
+        {
+            ApiResult<ActivityPageDto> result = await Activities.ListForBoardAsync(
+                BoardId, cursor: nextCursor);
+            if (result.IsSuccess && result.Value is not null)
+            {
+                items ??= [];
+                items.AddRange(result.Value.Items);
+                nextCursor = result.Value.NextCursor;
+            }
+            else
+            {
+                error = result.Error;
+            }
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private static string KindLabel(string kind) => kind switch
+    {
+        "BoardCreated" => "Board",
+        "CardCreated" => "Card",
+        "CardMoved" => "Move",
+        "CardCompleted" => "Done",
+        "CardReopened" => "Reopen",
+        "CardRenamed" => "Rename",
+        "CardArchived" => "Archive",
+        "CardRestored" => "Restore",
+        "CommentAdded" => "Comment",
+        _ => kind
+    };
+
+    private static BadgeStyle KindBadgeStyle(string kind) => kind switch
+    {
+        "CardCreated" => BadgeStyle.Success,
+        "CardMoved" => BadgeStyle.Info,
+        "CardCompleted" => BadgeStyle.Success,
+        "CardReopened" => BadgeStyle.Warning,
+        "CardArchived" => BadgeStyle.Dark,
+        "CardRestored" => BadgeStyle.Light,
+        "CommentAdded" => BadgeStyle.Info,
+        "BoardCreated" => BadgeStyle.Primary,
+        _ => BadgeStyle.Light
+    };
+
+    private static string FormatPayload(ActivityDto a)
+    {
+        if (string.IsNullOrEmpty(a.PayloadJson) || a.PayloadJson == "{}")
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(a.PayloadJson);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                List<string> parts = [];
+                foreach (JsonProperty p in doc.RootElement.EnumerateObject())
+                {
+                    parts.Add($"{p.Name}: {p.Value}");
+                }
+
+                return string.Join(" · ", parts);
+            }
+        }
+        catch
+        {
+            // fall through
+        }
+
+        return a.PayloadJson;
+    }
+}

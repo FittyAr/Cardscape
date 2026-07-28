@@ -1,11 +1,13 @@
 @page "/cards/{CardId:guid}"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Text.Json
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
 @inject ICardsApiClient Cards
 @inject ICommentsApiClient Comments
 @inject ICustomFieldsApiClient CustomFields
+@inject IActivitiesApiClient Activities
 
 <PageTitle>@(card?.Title ?? "Card") — Cardscape</PageTitle>
 
@@ -88,6 +90,29 @@
                 <RadzenButton Text="Comment" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
                               IsBusy="@addingComment" Style="margin-top:.5rem" />
             </RadzenTemplateForm>
+
+            <h3>Activity</h3>
+            @if (recentActivity is null)
+            {
+                <p>Loading activity…</p>
+            }
+            else if (recentActivity.Count == 0)
+            {
+                <p>No activity recorded for this card yet.</p>
+            }
+            else
+            {
+                <ul class="card-activity-list">
+                    @foreach (ActivityDto a in recentActivity)
+                    {
+                        <li>
+                            <strong>@a.KindName</strong>
+                            <small> · @a.OccurredAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</small>
+                            <span> · @FormatActivityPayload(a)</span>
+                        </li>
+                    }
+                </ul>
+            }
         </RadzenCard>
     }
 </div>
@@ -98,6 +123,7 @@
     private CardDto? card;
     private IReadOnlyList<CommentDto>? comments;
     private IReadOnlyList<CustomFieldValueDto>? fieldValues;
+    private IReadOnlyList<ActivityDto>? recentActivity;
     private bool addingComment;
     private readonly AddCommentModel addCommentModel = new();
 
@@ -112,6 +138,10 @@
         ApiResult<IReadOnlyList<CustomFieldValueDto>> valuesResult =
             await CustomFields.ListValuesForCardAsync(CardId);
         fieldValues = valuesResult.IsSuccess ? valuesResult.Value : [];
+
+        ApiResult<ActivityPageDto> activityResult =
+            await Activities.ListForCardAsync(CardId, cursor: null, limit: 20);
+        recentActivity = activityResult.IsSuccess ? activityResult.Value?.Items : [];
     }
 
     private async Task Complete()
@@ -186,5 +216,34 @@
             2 => raw, // ISO date; render as-is
             _ => raw,
         };
+    }
+
+    private static string FormatActivityPayload(ActivityDto a)
+    {
+        if (string.IsNullOrEmpty(a.PayloadJson) || a.PayloadJson == "{}")
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(a.PayloadJson);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                List<string> parts = [];
+                foreach (JsonProperty p in doc.RootElement.EnumerateObject())
+                {
+                    parts.Add($"{p.Name}: {p.Value}");
+                }
+
+                return string.Join(" · ", parts);
+            }
+        }
+        catch
+        {
+            // fall through
+        }
+
+        return a.PayloadJson;
     }
 }

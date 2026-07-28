@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
@@ -331,5 +332,69 @@ public sealed class InMemoryCustomFieldValueRepository
                 v.FieldDefinitionId.Value == fieldId.Value &&
                 v.CardId.Value == cardId.Value);
         return Task.FromResult(match);
+    }
+}
+
+/// <summary>In-memory <see cref="IActivityRepository"/>. Mirrors
+/// the EF Core repo's cursor-paginated contract: filter by
+/// board/card, sort by <c>OccurredAt</c> descending, then
+/// <c>Id</c> descending as a tie-breaker, take the requested
+/// limit.</summary>
+public sealed class InMemoryActivityRepository
+    : InMemoryRepositoryBase<Activity, ActivityId>, IActivityRepository
+{
+    public Task<IReadOnlyList<Activity>> ListForBoardAsync(
+        BoardId boardId,
+        int limit,
+        DateTimeOffset? beforeOccurredAt,
+        Guid? beforeId,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Activity> rows = Store.Values
+            .Where(a => a.BoardId.Value == boardId.Value
+                        && PassesCursor(a, beforeOccurredAt, beforeId))
+            .OrderByDescending(a => a.OccurredAt)
+            .ThenByDescending(a => a.Id.Value)
+            .Take(limit)
+            .ToList();
+        return Task.FromResult(rows);
+    }
+
+    public Task<IReadOnlyList<Activity>> ListForCardAsync(
+        CardId cardId,
+        int limit,
+        DateTimeOffset? beforeOccurredAt,
+        Guid? beforeId,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Activity> rows = Store.Values
+            .Where(a => a.CardId == cardId.Value
+                        && PassesCursor(a, beforeOccurredAt, beforeId))
+            .OrderByDescending(a => a.OccurredAt)
+            .ThenByDescending(a => a.Id.Value)
+            .Take(limit)
+            .ToList();
+        return Task.FromResult(rows);
+    }
+
+    private static bool PassesCursor(
+        Activity a, DateTimeOffset? beforeOccurredAt, Guid? beforeId)
+    {
+        if (beforeOccurredAt is not { } cursorTime || beforeId is not { } cursorId)
+        {
+            return true;
+        }
+
+        if (a.OccurredAt < cursorTime)
+        {
+            return true;
+        }
+
+        if (a.OccurredAt > cursorTime)
+        {
+            return false;
+        }
+
+        return a.Id.Value.CompareTo(cursorId) < 0;
     }
 }
