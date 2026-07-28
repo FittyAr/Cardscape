@@ -4,6 +4,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
+using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
@@ -413,4 +414,23 @@ public sealed class InMemoryCardVoteRepository
     public Task<IReadOnlyList<CardVote>> ListForCardAsync(CardId cardId, CancellationToken ct = default) =>
         Task.FromResult<IReadOnlyList<CardVote>>(
             Store.Values.Where(v => v.CardId.Value == cardId.Value).OrderBy(v => v.VotedAt).ToList());
+}
+
+
+public sealed class InMemoryChecklistRepository
+    : InMemoryRepositoryBase<Checklist, ChecklistId>, IChecklistRepository
+{
+    public Task<IReadOnlyList<Checklist>> ListForCardAsync(Guid cardId, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<Checklist>>(
+            Store.Values.Where(c => c.CardId.Value == cardId && !c.IsDeleted)
+                .OrderBy(c => c.CreatedAt).ToList());
+}
+
+public sealed class InMemoryChecklistItemRepository
+    : InMemoryRepositoryBase<ChecklistItem, ChecklistItemId>, IChecklistItemRepository
+{
+    public Task<IReadOnlyList<ChecklistItem>> ListForChecklistAsync(Guid checklistId, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<ChecklistItem>>(
+            Store.Values.Where(i => i.ChecklistId.Value == checklistId)
+                .OrderBy(i => i.Position.Value).ToList());
 }

@@ -8,6 +8,7 @@ using Cardscape.Domain.Activities;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
+using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Comments;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
@@ -139,6 +140,14 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<CardVoteRepository>();
         services.AddScoped<IRepository<CardVote, CardVoteId>, CardVoteRepository>(sp => sp.GetRequiredService<CardVoteRepository>());
         services.AddScoped<ICardVoteRepository, CardVoteRepository>(sp => sp.GetRequiredService<CardVoteRepository>());
+
+        services.AddScoped<ChecklistRepository>();
+        services.AddScoped<IRepository<Checklist, ChecklistId>, ChecklistRepository>(sp => sp.GetRequiredService<ChecklistRepository>());
+        services.AddScoped<IChecklistRepository, ChecklistRepository>(sp => sp.GetRequiredService<ChecklistRepository>());
+
+        services.AddScoped<ChecklistItemRepository>();
+        services.AddScoped<IRepository<ChecklistItem, ChecklistItemId>, ChecklistItemRepository>(sp => sp.GetRequiredService<ChecklistItemRepository>());
+        services.AddScoped<IChecklistItemRepository, ChecklistItemRepository>(sp => sp.GetRequiredService<ChecklistItemRepository>());
 
         // Identity-shaped repositories (a few extra generics to satisfy the IRepository
         // contract for non-aggregate roots). The Application layer depends only on the

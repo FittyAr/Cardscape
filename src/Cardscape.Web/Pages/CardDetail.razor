@@ -9,6 +9,7 @@
 @inject ICustomFieldsApiClient CustomFields
 @inject IActivitiesApiClient Activities
 @inject IVotingApiClient Votes
+@inject IChecklistsApiClient Checklists
 
 <PageTitle>@(card?.Title ?? "Card") — Cardscape</PageTitle>
 
@@ -99,6 +100,50 @@
                               IsBusy="@addingComment" Style="margin-top:.5rem" />
             </RadzenTemplateForm>
 
+            <h3>Checklists</h3>
+            @if (checklists is null)
+            {
+                <p>Loading checklists…</p>
+            }
+            else
+            {
+                @foreach (ChecklistDto cl in checklists)
+                {
+                    <RadzenCard class="checklist-card">
+                        <div class="checklist-header">
+                            <strong>@cl.Title</strong>
+                            <RadzenProgressBar Value="@cl.CompletedCount" Max="@Math.Max(1, cl.TotalCount)"
+                                                ShowValue="true" Style="flex:1; margin: 0 .5rem;" />
+                            <small>@cl.CompletedCount / @cl.TotalCount</small>
+                            <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                          Click="@(() => DeleteChecklistAsync(cl.Id))" />
+                        </div>
+                        @foreach (ChecklistItemDto item in cl.Items)
+                        {
+                            <div class="checklist-item">
+                                <RadzenCheckBox Value="@item.IsCompleted"
+                                                Change="@(async (bool _) => await ToggleItemAsync(cl.Id, item.Id))" />
+                                <span class="@(item.IsCompleted ? "checklist-item-done" : "")">@item.Text</span>
+                                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
+                                              Click="@(() => DeleteItemAsync(cl.Id, item.Id))" />
+                            </div>
+                        }
+                        <div class="checklist-add-item">
+                            <RadzenTextBox @bind-Value="newChecklistItemText" Placeholder="Add an item…"
+                                           Style="flex:1; margin-right:.5rem" />
+                            <RadzenButton Text="Add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                          Click="@(() => AddItemAsync(cl.Id))" />
+                        </div>
+                    </RadzenCard>
+                }
+                <div class="checklist-create">
+                    <RadzenTextBox @bind-Value="newChecklistTitle" Placeholder="New checklist title…"
+                                   Style="flex:1; margin-right:.5rem" />
+                    <RadzenButton Text="Create checklist" Icon="add" ButtonStyle="ButtonStyle.Secondary"
+                                  Click="@CreateChecklistAsync" />
+                </div>
+            }
+
             <h3>Activity</h3>
             @if (recentActivity is null)
             {
@@ -133,6 +178,9 @@
     private IReadOnlyList<CustomFieldValueDto>? fieldValues;
     private IReadOnlyList<ActivityDto>? recentActivity;
     private CardVoteStateDto? voteState;
+    private IReadOnlyList<ChecklistDto>? checklists;
+    private string newChecklistTitle = string.Empty;
+    private string newChecklistItemText = string.Empty;
     private bool addingComment;
     private bool togglingVote;
     private readonly AddCommentModel addCommentModel = new();
@@ -155,6 +203,58 @@
 
         ApiResult<CardVoteStateDto> voteResult = await Votes.GetStateAsync(CardId);
         voteState = voteResult.IsSuccess ? voteResult.Value : null;
+
+        ApiResult<IReadOnlyList<ChecklistDto>> checklistsResult = await Checklists.ListForCardAsync(CardId);
+        checklists = checklistsResult.IsSuccess ? checklistsResult.Value : [];
+    }
+
+    private async Task CreateChecklistAsync()
+    {
+        if (string.IsNullOrWhiteSpace(newChecklistTitle)) return;
+        ApiResult<ChecklistDto> result = await Checklists.CreateAsync(CardId, newChecklistTitle);
+        if (result.IsSuccess && checklists is not null)
+        {
+            checklists = [.. checklists, result.Value!];
+            newChecklistTitle = string.Empty;
+        }
+    }
+
+    private async Task AddItemAsync(Guid checklistId)
+    {
+        if (string.IsNullOrWhiteSpace(newChecklistItemText)) return;
+        ApiResult<ChecklistDto> result = await Checklists.AddItemAsync(checklistId, newChecklistItemText);
+        if (result.IsSuccess) await ReplaceChecklistAsync(result.Value!);
+        newChecklistItemText = string.Empty;
+    }
+
+    private async Task ToggleItemAsync(Guid checklistId, Guid itemId)
+    {
+        ApiResult<ChecklistDto> result = await Checklists.ToggleItemAsync(checklistId, itemId);
+        if (result.IsSuccess) await ReplaceChecklistAsync(result.Value!);
+    }
+
+    private async Task DeleteItemAsync(Guid checklistId, Guid itemId)
+    {
+        ApiResult<ChecklistDto> result = await Checklists.DeleteItemAsync(checklistId, itemId);
+        if (result.IsSuccess) await ReplaceChecklistAsync(result.Value!);
+    }
+
+    private async Task DeleteChecklistAsync(Guid checklistId)
+    {
+        ApiResult result = await Checklists.DeleteAsync(checklistId);
+        if (result.IsSuccess && checklists is not null)
+        {
+            checklists = checklists.Where(c => c.Id != checklistId).ToList();
+        }
+    }
+
+    private async Task ReplaceChecklistAsync(ChecklistDto updated)
+    {
+        if (checklists is null) return;
+        checklists = checklists
+            .Select(c => c.Id == updated.Id ? updated : c)
+            .ToList();
+        await Task.CompletedTask;
     }
 
     private async Task ToggleVoteAsync()

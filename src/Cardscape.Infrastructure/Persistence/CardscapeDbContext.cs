@@ -3,6 +3,7 @@ using Cardscape.Domain.Activities;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
+using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Comments;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
@@ -38,6 +39,8 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<CustomFieldValue> CustomFieldValues => Set<CustomFieldValue>();
     public DbSet<ApiToken> ApiTokens => Set<ApiToken>();
     public DbSet<CardVote> CardVotes => Set<CardVote>();
+    public DbSet<Checklist> Checklists => Set<Checklist>();
+    public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't

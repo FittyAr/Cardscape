@@ -46,6 +46,7 @@ builder.Services.AddScoped<IBoardExtensionsApiClient, BoardExtensionsApiClient>(
 builder.Services.AddScoped<ICustomFieldsApiClient, CustomFieldsApiClient>();
 builder.Services.AddScoped<IActivitiesApiClient, ActivitiesApiClient>();
 builder.Services.AddScoped<IVotingApiClient, VotingApiClient>();
+builder.Services.AddScoped<IChecklistsApiClient, ChecklistsApiClient>();
 
 // ── Real-time (SignalR client) ──────────────────────────────
 builder.Services.AddScoped<BoardHubClient>();
