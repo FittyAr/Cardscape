@@ -80,10 +80,12 @@ See:
 
 ## Status
 
-Cardscape is in **alpha, Phase 4 in flight**. The codebase
+Cardscape is in **alpha, Phase 4 complete**. The codebase
 runs end to end: a user can register, create a workspace, drop
 in boards/lists/cards, comment, label, star, mint and revoke
-API tokens, send and accept workspace invitations, and the
+API tokens, send and accept workspace invitations, manage the
+inbox, browse the calendar, plan in the swimlane view, set up
+board automation rules, and toggle per-board extensions. The
 full HTTP pipeline is covered by integration tests against the
 real Program + DI + Wolverine + EF Core stack. The MCP server
 exposes the same surface to AI clients and pushes its writes
@@ -95,12 +97,11 @@ back to the Web UI in real time.
 | 1 | MVP: single user, sign-up, workspace, board, list, card, sign in, Web UI | **DONE** (`v0.1.0-mvp`) |
 | 2 | Real-time (SignalR) + **MCP server end-to-end** (the differentiator ships here) | **DONE** (`v0.2.0-core-mcp`) |
 | 3 | Access control on cards/lists + **first-class API tokens** for the MCP server + Web UI token management | **DONE** (`v0.3.0-api-tokens`) |
-| 4 | Workspace member invitations + cross-process MCP→API real-time broadcast | **DONE** (`v0.4.0-realtime-mcp`, `v0.5.0-invitations`) |
-| 5 | Extensions + automation engine + calendar + Inbox + Planner | not started |
-| 6 | Enterprise + AI features | not started |
-| 7 | Polish + scale | ongoing |
+| 4 | Workspace invitations, Inbox, Calendar, Planner, automation engine, board extensions | **DONE** (`v0.4.0-realtime-mcp` through `v0.6.4-extensions`) |
+| 5 | Enterprise + AI features | not started |
+| 6 | Polish + scale | ongoing |
 
-`dotnet build` is green. **200 unit tests + 31 integration tests**
+`dotnet build` is green. **216 unit tests + 46 integration tests**
 are green. The Blazor WebAssembly client talks to the API over
 JWT. The Docker image boots, applies migrations, and serves the
 SPA on port 8080. See
@@ -243,10 +244,65 @@ through the REST API, the MCP server, and the Blazor Web UI.
 
 What is **not** in v0.5.0-invitations (still in Phase 4):
 
-- Extensions, automation engine, calendar, Inbox, Planner.
+- Extensions, automation engine, calendar, Inbox, Planner —
+  these ship across `v0.6.0-inbox` through `v0.6.4-extensions`.
 - Search relevance + PostgreSQL FTS / Lucene.NET.
 - Attachments and storage providers other than the local
   filesystem.
+
+---
+
+## What's in `v0.6.x` (Inbox, Calendar, Planner, Automation, Extensions)
+
+The remaining five slices of Phase 4 ship as a series of small
+releases so each one is reviewable in isolation. The shared
+pattern: per-board or per-user feature, full REST + MCP + Web
+UI coverage, integration tests against the real pipeline.
+
+- **`v0.6.0-inbox`** — `Notification` inbox (`/inbox`),
+  unread-count bell in the global nav (60s poll), auto-create
+  on `AssignCardCommand` (skipped for self-assign), MCP tools
+  `inbox_list` / `inbox_unread_count` / `inbox_mark_read` /
+  `inbox_mark_all_read`.
+- **`v0.6.1-calendar`** — month grid view of due-date cards
+  (`/calendar`), `ListCardsDueInRangeQuery`, REST
+  `GET /api/cards/calendar?from&to&boardId?`, MCP
+  `cards_calendar`.
+- **`v0.6.2-planner`** — swimlane roadmap view of due-date
+  cards (`/planner`), one row per list, weeks of the month as
+  columns. Pure read-only Web UI on top of the calendar query.
+- **`v0.6.3-automation`** — `BoardAutomationRule` aggregate
+  with 4 triggers (CardMoved / Completed / Reopened /
+  CreatedInList) and 4 actions (Move / Assign / SetDueDate /
+  MarkComplete). Server-side dispatcher wired to the card
+  domain events; failed rules never block the user request.
+  REST `/api/boards/{id}/automation`, MCP
+  `automation_list_rules` / `create` / `enable` / `disable` /
+  `delete`.
+- **`v0.6.4-extensions`** — per-board extension toggles
+  (`/boards/{id}/extensions`) for Custom Fields, Voting, and
+  Card Repeater. Opaque `ConfigJson` per row; the
+  feature-specific UI reads the JSON at runtime. Trello
+  power-ups style, without committing to a full plugin loader
+  yet. REST + 4 MCP tools (`boards_list_extensions` / `enable` /
+  `disable` / `update_extension_config`).
+
+Two recurring EF Core 10 traps bit each new repository and
+forced fixes:
+
+- **Strongly-typed-id value-object filter** — `e.BoardId.Value
+  == x` cannot be translated to SQL. The fix is the same
+  client-side filter via `AsAsyncEnumerable` we already use in
+  `ApiTokenRepository` and `WorkspaceInvitationRepository`.
+- **`EF.Property<T>(entity, "Id")` + `HasConversion`** — the
+  shadow-property form collides with the converter pipeline and
+  throws `InvalidCastException: Object must implement
+  IConvertible` at materialization. The safe form is
+  `entity.Id == id` (typed id comparison). `BoardRepository.
+  GetWithMembersAsync` regressed to the broken form during
+  Phase 4.6; restored.
+
+Tests: **216 unit + 46 integration** = 262 in total, all green.
 
 ---
 

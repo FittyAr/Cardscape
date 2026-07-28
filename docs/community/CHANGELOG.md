@@ -14,6 +14,157 @@ patch or feature release.
 
 ---
 
+## [v0.6.4-extensions] — 2026-07-27
+
+Phase 4, last slice. Per-board extension toggles (Custom Fields,
+Voting, Card Repeater) with opaque JSON config — the first move
+from the Trello power-ups playbook without committing to a full
+plugin loader.
+
+### Added
+
+- **`BoardExtension` aggregate** (`src/Cardscape.Domain/Boards/`)
+  with `(BoardId, ExtensionKind)` as the natural key, an opaque
+  `ConfigJson` blob, and an `IsEnabled` flag. `ExtensionKind`
+  enum: `CustomFields=0`, `Voting=1`, `CardRepeater=2`. Aggregate
+  methods `Enable`, `Disable` (idempotent failure), and
+  `UpdateConfig` (validates JSON shape and a 8KB size cap).
+- **`IBoardExtensionRepository`** with `ListForBoardAsync` and
+  `GetByBoardAndKindAsync`; both use `AsAsyncEnumerable` for the
+  strongly-typed-id filter (the EF Core 10 / HasConversion trap).
+- **REST** under `/api/boards/{boardId}/extensions`:
+  - `GET /` — list all extensions for a board (members only).
+  - `POST /` — enable; idempotent if the same kind already
+    exists (re-enables + optionally updates the config).
+  - `DELETE /{kind}` — disable (idempotent failure if already
+    off; 404 if never enabled).
+  - `PUT /{kind}/config` — replace the config JSON of an
+    enabled extension.
+- **MCP tools** `boards_list_extensions`,
+  `boards_enable_extension`, `boards_disable_extension`,
+  `boards_update_extension_config`.
+- **Web UI** `/boards/{id}/extensions` (Radzen `Card` toggles
+  per kind, no nav link from the global menu — reached from a
+  board context).
+- **DB** — new table `board_extensions` with unique
+  `(BoardId, Kind)` index, migration `IssueBoardExtensions`.
+- **Tests** — 10 unit (aggregate + config validation) and 7
+  integration (lifecycle, idempotency, RBAC, 404/400 paths).
+- **Bugfix** — `BoardRepository.GetWithMembersAsync` had
+  regressed to the `EF.Property<Guid>(b, "Id")` form, which
+  collides with the `HasConversion` pipeline and throws
+  `InvalidCastException: Object must implement IConvertible`
+  at materialization. Restored the safe `b.Id == id` form.
+  Same trap also required `AsAsyncEnumerable` in the new
+  `BoardExtensionRepository` for the typed `BoardId.Value`
+  filter.
+
+---
+
+## [v0.6.3-automation] — 2026-07-27
+
+Phase 4, third slice. Board-scoped automation rules that react
+to card domain events (move / complete / reopen / created in
+list) and run server-side actions (move / assign / set due date
+/ mark complete) against the same card. Best-effort: a failed
+rule never blocks the originating request.
+
+### Added
+
+- **`BoardAutomationRule` aggregate** with `AutomationTrigger`
+  (4 values) and `AutomationAction` (4 values) enums.
+  Validation: name required + ≤120 chars, `MoveCardToList`
+  requires a target list id argument, `CardCreatedInList`
+  requires a trigger list id.
+- **`AutomationDispatcher`** — 4 static Wolverine handlers
+  (`CardMoved`, `CardCompleted`, `CardReopened`, `CardCreated`)
+  that resolve the board id from the source list id, fetch
+  enabled rules for the board, and execute matching actions
+  via the card domain methods. Try/catch around the whole
+  action so a rule failure never surfaces to the user.
+- **REST** under `/api/boards/{boardId}/automation`:
+  list, create, enable, disable, delete.
+- **MCP tools** `automation_list_rules`,
+  `automation_create_rule`, `automation_enable_rule`,
+  `automation_disable_rule`, `automation_delete_rule`.
+- **Web UI** `/boards/{id}/automation` — rule list with
+  per-row toggle + delete, and a create form with
+  `RadzenDropDown` for trigger and action.
+- **DB** — new table `board_automation_rules`, migration
+  `IssueBoardAutomationRules`.
+- **Tests** — 6 unit + 6 integration (lifecycle, RBAC, dispatcher
+  end-to-end via the card commands).
+
+### Bugfix
+
+- The Razor page class `Automation.razor` was renamed from the
+  injected `IAutomationApiClient` to avoid name shadowing with
+  the `Cardscape.Application.Automation` namespace.
+
+---
+
+## [v0.6.2-planner] — 2026-07-27
+
+Phase 4, planner slice. Swimlane roadmap view of every due-date
+card on a board. Pure read-only Web UI — reuses the calendar
+query, no new endpoints.
+
+### Added
+
+- `/planner` page: one row per list as a swimlane, weeks of
+  the month as columns, cards positioned by day-of-month %.
+  Completed cards struck through.
+
+---
+
+## [v0.6.1-calendar] — 2026-07-27
+
+Phase 4, calendar slice. Month grid view of due-date cards,
+optionally scoped to a single board.
+
+### Added
+
+- `ListCardsDueInRangeQuery(From, To, BoardId?)` plus
+  `CalendarEntryDto` and `ICardRepository.ListDueInRangeForBoardAsync`.
+- New `IBoardListRepository.ListBoardIdsByListIdAsync` returns
+  the `(listId -> boardId)` map in one pass (avoids N+1).
+- **REST** `GET /api/cards/calendar?from=...&to=...&boardId=...`
+  (cross-board when `boardId` is omitted).
+- **MCP tool** `cards_calendar`.
+- **Web UI** `/calendar` — month grid, prev/next navigation,
+  today highlight, completed cards struck through.
+- **Tests** — 4 integration (range filtering, board scoping,
+  empty range).
+
+---
+
+## [v0.6.0-inbox] — 2026-07-27
+
+Phase 4, inbox slice. In-app notification inbox with a 60s
+polling bell in the global nav.
+
+### Added
+
+- `Notification` aggregate already existed; this slice adds
+  the per-user inbox + auto-creation on card assignment.
+- **Auto-create** on `AssignCardCommand` (skipped for self-
+  assign; payload contains cardId, cardTitle, assignedBy,
+  boardId).
+- **MCP tools** `inbox_list`, `inbox_unread_count`,
+  `inbox_mark_read`, `inbox_mark_all_read`.
+- **Web UI** `/inbox` (Radzen `SelectBar` filter All/Unread,
+  mark-all-read button, individual mark-read, clickable card
+  link to detail) and `Shared/InboxBell.razor` widget in
+  `NavMenu` with unread badge and 60s poll.
+- **Bugfix** — `NotificationRepository.ListForUserAsync` had to
+  switch from a SQL `ORDER BY CreatedAt` (SQLite cannot order
+  on `DateTimeOffset` columns) to `AsAsyncEnumerable` +
+  client-side sort.
+- **Tests** — 6 unit + 4 integration (lifecycle, unread count,
+  auto-creation on assign).
+
+---
+
 ## [v0.5.0-invitations] — 2026-07-27
 
 Phase 4, first slice. Workspace member invitations: owner
