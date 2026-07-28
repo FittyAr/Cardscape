@@ -1,5 +1,6 @@
 using System.Reflection;
 using Cardscape.Domain.Activities;
+using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Comments;
@@ -30,6 +31,7 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<WorkspaceInvitation> WorkspaceInvitations => Set<WorkspaceInvitation>();
     public DbSet<BoardExtension> BoardExtensions => Set<BoardExtension>();
+    public DbSet<BackgroundJob> BackgroundJobs => Set<BackgroundJob>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't

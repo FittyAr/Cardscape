@@ -1,6 +1,8 @@
+using Cardscape.Api.BackgroundJobs;
 using Cardscape.Api.Endpoints.Activities;
 using Cardscape.Api.Endpoints.Auth;
 using Cardscape.Api.Endpoints.Automation;
+using Cardscape.Api.Endpoints.BackgroundJobs;
 using Cardscape.Api.Endpoints.Boards;
 using Cardscape.Api.Endpoints.Cards;
 using Cardscape.Api.Endpoints.Comments;
@@ -41,7 +43,22 @@ builder.Services.AddApiAuthentication(builder.Configuration);
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IBoardNotifier, BoardNotifier>();
 
+// ── Background job dispatcher (v0.7) ────────────────────────────
+// Polls the background_jobs table for due work and dispatches it
+// through Wolverine. See BackgroundJobDispatcherService for the
+// concurrency story.
+builder.Services.AddCardscapeBackgroundJobDispatcher(o =>
+{
+    o.PollInterval = TimeSpan.FromSeconds(2);
+    o.BatchSize = 10;
+});
+
 var app = builder.Build();
+
+// Resolve the registry and pull every IBackgroundJobHandler out
+// of DI so the dispatcher can find them by type at runtime. This
+// is a no-op until at least one handler is registered.
+app.Services.UseCardscapeBackgroundJobHandlers();
 
 // ── Middleware pipeline ─────────────────────────────────
 app.UseMiddleware<GlobalExceptionMiddleware>();
@@ -81,6 +98,7 @@ app.MapSearchEndpoints();
 app.MapSecurityEndpoints();
 app.MapAutomationEndpoints();
 app.MapBoardExtensionEndpoints();
+app.MapBackgroundJobEndpoints();
 app.MapBoardBroadcastEndpoints();
 
 // Real-time board hub. Sits at /hubs/board with the same JWT

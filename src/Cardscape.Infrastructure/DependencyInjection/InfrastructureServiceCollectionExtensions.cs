@@ -1,9 +1,11 @@
+using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Email;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Storage;
 using Cardscape.Domain.Activities;
+using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Comments;
@@ -13,6 +15,7 @@ using Cardscape.Domain.Members;
 using Cardscape.Domain.Notifications;
 using Cardscape.Domain.Security;
 using Cardscape.Domain.Workspaces;
+using Cardscape.Infrastructure.BackgroundJobs;
 using Cardscape.Infrastructure.Email;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Persistence.Interceptors;
@@ -116,6 +119,13 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<BoardExtensionRepository>();
         services.AddScoped<IRepository<BoardExtension, BoardExtensionId>, BoardExtensionRepository>(sp => sp.GetRequiredService<BoardExtensionRepository>());
         services.AddScoped<IBoardExtensionRepository, BoardExtensionRepository>(sp => sp.GetRequiredService<BoardExtensionRepository>());
+
+        services.AddScoped<BackgroundJobRepository>();
+        services.AddScoped<IRepository<BackgroundJob, BackgroundJobId>, BackgroundJobRepository>(sp => sp.GetRequiredService<BackgroundJobRepository>());
+        services.AddScoped<IBackgroundJobStore, BackgroundJobRepository>(sp => sp.GetRequiredService<BackgroundJobRepository>());
+
+        services.AddScoped<IBackgroundJobScheduler, BackgroundJobScheduler>();
+        services.AddSingleton<IBackgroundJobHandlerRegistry, BackgroundJobHandlerRegistry>();
 
         // Identity-shaped repositories (a few extra generics to satisfy the IRepository
         // contract for non-aggregate roots). The Application layer depends only on the
