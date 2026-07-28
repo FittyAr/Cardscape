@@ -728,3 +728,79 @@ code {
     opacity: 0.55;
     border-left-color: #9ca3af;
 }
+
+/* ── Planner (v0.6.2) ──────────────────────────────────── */
+.planner-board {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.planner-row {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.4rem;
+    display: grid;
+    grid-template-columns: 12rem 1fr;
+    min-height: 4.5rem;
+}
+
+.planner-row-header {
+    padding: 0.5rem 0.75rem;
+    border-right: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 0.4rem 0 0 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    justify-content: center;
+}
+
+.planner-row-track {
+    position: relative;
+    padding: 0.5rem 0;
+}
+
+.planner-row-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    color: #9ca3af;
+    font-size: 0.7rem;
+    text-align: left;
+    padding-left: 0.25rem;
+}
+
+.planner-week-marker {
+    padding-left: 0.25rem;
+    border-left: 1px dashed #f3f4f6;
+}
+
+.planner-card {
+    position: absolute;
+    top: 2rem;
+    background: #3b82f6;
+    color: #fff;
+    border: 1px solid #2563eb;
+    border-radius: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 30%;
+    transform: translateX(-2px);
+    font-family: inherit;
+}
+
+.planner-card:hover {
+    background: #2563eb;
+}
+
+.planner-card--done {
+    background: #9ca3af;
+    border-color: #6b7280;
+    text-decoration: line-through;
+}

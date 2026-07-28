@@ -1,0 +1,124 @@
+@page "/planner"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@inject ICardsApiClient Cards
+@inject Microsoft.AspNetCore.Components.NavigationManager Nav
+
+<PageTitle>Planner — Cardscape</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>Planner</h1>
+        <div class="page-header-actions">
+            <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth" />
+            <strong class="month-label">@monthLabel</strong>
+            <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth" />
+        </div>
+    </div>
+
+    <p class="page-hint">
+        Cards with a due date in @monthLabel, grouped by list (one swimlane per list).
+        Click a card to open it.
+    </p>
+
+    @if (swimlanes.Count == 0)
+    {
+        <p>No due dates in this range.</p>
+    }
+    else
+    {
+        <div class="planner-board">
+            @foreach (Swimlane lane in swimlanes)
+            {
+                <div class="planner-row">
+                    <div class="planner-row-header">
+                        <strong>@lane.Title</strong>
+                        <small class="muted">@lane.BoardName</small>
+                    </div>
+                    <div class="planner-row-track">
+                        <div class="planner-row-grid">
+                            @for (int i = 0; i < weeksInMonth; i++)
+                            {
+                                <div class="planner-week-marker">@WeekLabel(firstOfMonth, i)</div>
+                            }
+                        </div>
+                        @foreach (CalendarEntryDto entry in lane.Entries)
+                        {
+                            int dayOfMonth = entry.DueDate.UtcDateTime.Day;
+                            double leftPct = (double)(dayOfMonth - 1) / (double)daysInMonth * 100.0;
+                            <button class="planner-card @(entry.IsCompleted ? "planner-card--done" : null)"
+                                    style="left:@(leftPct.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%"
+                                    @onclick="@(() => Nav.NavigateTo($"cards/{entry.CardId}"))"
+                                    title="@entry.Title — @entry.DueDate.LocalDateTime.ToString("yyyy-MM-dd")">
+                                @entry.Title
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private DateTimeOffset firstOfMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
+    private IReadOnlyList<CalendarEntryDto> entries = [];
+    private List<Swimlane> swimlanes = [];
+    private int daysInMonth;
+    private int weeksInMonth;
+    private string monthLabel = string.Empty;
+
+    private sealed record Swimlane(Guid ListId, string Title, string BoardName, List<CalendarEntryDto> Entries);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        daysInMonth = DateTime.DaysInMonth(firstOfMonth.Year, firstOfMonth.Month);
+        weeksInMonth = (int)Math.Ceiling(daysInMonth / 7.0);
+        monthLabel = firstOfMonth.ToString("MMMM yyyy");
+
+        DateTimeOffset from = firstOfMonth;
+        DateTimeOffset to = firstOfMonth.AddDays(daysInMonth);
+
+        ApiResult<IReadOnlyList<CalendarEntryDto>> result = await Cards.CalendarAsync(from, to, boardId: null);
+        IReadOnlyList<CalendarEntryDto> rows = result.IsSuccess && result.Value is not null
+            ? result.Value
+            : (IReadOnlyList<CalendarEntryDto>)Array.Empty<CalendarEntryDto>();
+        entries = rows;
+
+        swimlanes = entries
+            .GroupBy(e => e.ListId)
+            .Select(g => new Swimlane(
+                g.Key,
+                $"List {g.Key.ToString()[..8]}",
+                g.First().BoardName,
+                g.OrderBy(e => e.DueDate).ToList()))
+            .OrderBy(s => s.BoardName)
+            .ThenBy(s => s.Title)
+            .ToList();
+    }
+
+    private async Task PrevMonth()
+    {
+        firstOfMonth = firstOfMonth.AddMonths(-1);
+        await ReloadAsync();
+    }
+
+    private async Task NextMonth()
+    {
+        firstOfMonth = firstOfMonth.AddMonths(1);
+        await ReloadAsync();
+    }
+
+    private static string WeekLabel(DateTimeOffset monthStart, int weekIndex)
+    {
+        DateTimeOffset monday = monthStart.AddDays(weekIndex * 7);
+        return monday.ToString("MMM d");
+    }
+}
