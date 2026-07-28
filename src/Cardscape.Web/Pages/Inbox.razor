@@ -1,0 +1,196 @@
+@page "/inbox"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Text.Json
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@inject INotificationsApiClient Notifications
+@inject Microsoft.AspNetCore.Components.NavigationManager Nav
+
+<PageTitle>Inbox — Cardscape</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>Inbox</h1>
+        <div class="page-header-actions">
+            <RadzenSelectBar @bind-Value="filter" TValue="string" Change="@OnFilterChanged">
+                <Items>
+                    <RadzenSelectBarItem Text="All" Value="@("all")" />
+                    <RadzenSelectBarItem Text="Unread" Value="@("unread")" />
+                </Items>
+            </RadzenSelectBar>
+            <RadzenButton Text="Mark all read" Icon="done_all" ButtonStyle="ButtonStyle.Light"
+                          Disabled="@(unreadCount == 0)" Click="@MarkAllReadAsync" />
+        </div>
+    </div>
+
+    @if (notifications is null)
+    {
+        <p>Loading…</p>
+    }
+    else if (notifications.Count == 0)
+    {
+        <p>
+            @if (filter == "unread")
+            {
+                <span>You have no unread notifications.</span>
+            }
+            else
+            {
+                <span>Your inbox is empty. Workspace activity will show up here.</span>
+            }
+        </p>
+    }
+    else
+    {
+        <div class="inbox-list">
+            @foreach (NotificationDto n in notifications)
+            {
+                <RadzenCard class="@(n.IsRead ? "inbox-item inbox-item--read" : "inbox-item inbox-item--unread")">
+                    <div class="inbox-row">
+                        <div class="inbox-meta">
+                            <RadzenBadge Text="@KindLabel(n.Kind)" BadgeStyle="@KindBadgeStyle(n.Kind)" />
+                            <strong>@FormatPayload(n)</strong>
+                            <small>· @n.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</small>
+                        </div>
+                        <div class="inbox-actions">
+                            @if (!n.IsRead)
+                            {
+                                <RadzenButton Text="Mark read" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                              Click="@(() => MarkReadAsync(n))" />
+                            }
+                            @if (TryGetCardId(n, out Guid cardId))
+                            {
+                                <RadzenButton Text="Open card" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                              Click="@(() => Nav.NavigateTo($"cards/{cardId}"))" />
+                            }
+                        </div>
+                    </div>
+                </RadzenCard>
+            }
+        </div>
+    }
+
+    @if (error is not null)
+    {
+        <div class="auth-error" role="alert">@error</div>
+    }
+</div>
+
+@code {
+    private IReadOnlyList<NotificationDto>? notifications;
+    private int unreadCount;
+    private string filter = "all";
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        ApiResult<int> count = await Notifications.GetUnreadCountAsync();
+        unreadCount = count.IsSuccess ? count.Value : 0;
+
+        ApiResult<IReadOnlyList<NotificationDto>> list = await Notifications.ListAsync(
+            unreadOnly: filter == "unread", take: 100);
+        notifications = list.IsSuccess ? list.Value : [];
+        if (!list.IsSuccess)
+        {
+            error = list.Error;
+        }
+    }
+
+    private async Task OnFilterChanged()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task MarkReadAsync(NotificationDto n)
+    {
+        ApiResult result = await Notifications.MarkReadAsync(n.Id);
+        if (result.IsSuccess)
+        {
+            await ReloadAsync();
+        }
+    }
+
+    private async Task MarkAllReadAsync()
+    {
+        ApiResult result = await Notifications.MarkAllReadAsync();
+        if (result.IsSuccess)
+        {
+            await ReloadAsync();
+        }
+    }
+
+    private static string KindLabel(string kind) => kind switch
+    {
+        "AddedAsMember" => "Added as member",
+        "AssignedToCard" => "Assigned to card",
+        "Mentioned" => "Mentioned",
+        "DueSoon" => "Due soon",
+        "Overdue" => "Overdue",
+        _ => kind
+    };
+
+    private static BadgeStyle KindBadgeStyle(string kind) => kind switch
+    {
+        "AddedAsMember" => BadgeStyle.Success,
+        "AssignedToCard" => BadgeStyle.Info,
+        "Mentioned" => BadgeStyle.Warning,
+        "DueSoon" => BadgeStyle.Warning,
+        "Overdue" => BadgeStyle.Danger,
+        _ => BadgeStyle.Light
+    };
+
+    private static string FormatPayload(NotificationDto n)
+    {
+        if (string.IsNullOrEmpty(n.PayloadJson) || n.PayloadJson == "{}")
+        {
+            return n.Kind;
+        }
+
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(n.PayloadJson);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                List<string> parts = [];
+                foreach (JsonProperty p in doc.RootElement.EnumerateObject())
+                {
+                    parts.Add($"{p.Name}: {p.Value}");
+                }
+
+                return string.Join(" · ", parts);
+            }
+        }
+        catch
+        {
+            // Fall through to the raw JSON string below.
+        }
+
+        return n.PayloadJson;
+    }
+
+    private static bool TryGetCardId(NotificationDto n, out Guid cardId)
+    {
+        cardId = Guid.Empty;
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(n.PayloadJson);
+            if (doc.RootElement.TryGetProperty("cardId", out JsonElement el)
+                && Guid.TryParse(el.GetString(), out cardId))
+            {
+                return true;
+            }
+        }
+        catch
+        {
+            // Best effort; the link is a nice-to-have.
+        }
+
+        return false;
+    }
+}

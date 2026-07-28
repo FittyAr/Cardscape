@@ -162,5 +162,17 @@ public sealed record IssueWorkspaceInvitationRequestDto(
 
 public sealed record AcceptWorkspaceInvitationRequestDto(string Token);
 
+// ── Notifications (v0.6 inbox) ──────────────────────────
+public sealed record NotificationDto(
+    Guid Id,
+    Guid UserId,
+    string Kind,
+    string PayloadJson,
+    bool IsRead,
+    DateTimeOffset? ReadAt,
+    DateTimeOffset CreatedAt);
+
+public sealed record UnreadCountDto(int Count);
+
 // ── Error envelope (matches Results.Problem shape) ──────
 public sealed record ApiErrorDto(string? Title, string? Detail, int? Status);

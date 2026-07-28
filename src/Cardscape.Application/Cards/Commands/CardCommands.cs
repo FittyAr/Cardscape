@@ -9,6 +9,7 @@ using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
+using Cardscape.Domain.Notifications;
 using Wolverine;
 using static Cardscape.Domain.Cards.Errors.CardErrors;
 
@@ -522,6 +523,7 @@ public static class AssignCardCommandHandler
         ICardRepository cards,
         IBoardListRepository lists,
         IBoardRepository boards,
+        INotificationRepository notifications,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -550,6 +552,21 @@ public static class AssignCardCommandHandler
         if (result.IsFailure)
         {
             return Result.Failure<CardDto>(result.Error);
+        }
+
+        // Notify the assignee (skip self-assign to avoid noise).
+        if (command.UserId != currentUser.Id.Value)
+        {
+            string payload = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                cardId = card.Id.Value.ToString(),
+                cardTitle = card.Title.Value,
+                assignedBy = currentUser.Id.Value.ToString(),
+                boardId = guard.Value.Board.Id.Value.ToString()
+            });
+            await notifications.AddAsync(
+                Notification.Create(command.UserId, NotificationKind.AssignedToCard, payload, clock.UtcNow),
+                cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

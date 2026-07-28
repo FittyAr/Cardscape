@@ -40,6 +40,7 @@ builder.Services.AddScoped<ILabelsApiClient, LabelsApiClient>();
 builder.Services.AddScoped<ICommentsApiClient, CommentsApiClient>();
 builder.Services.AddScoped<ISecurityApiClient, SecurityApiClient>();
 builder.Services.AddScoped<IInvitationsApiClient, InvitationsApiClient>();
+builder.Services.AddScoped<INotificationsApiClient, NotificationsApiClient>();
 
 // ── Real-time (SignalR client) ──────────────────────────────
 builder.Services.AddScoped<BoardHubClient>();

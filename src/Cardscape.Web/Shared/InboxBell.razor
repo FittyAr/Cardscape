@@ -1,0 +1,66 @@
+@using System.Timers
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@inject INotificationsApiClient Notifications
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthState
+@inject Microsoft.AspNetCore.Components.NavigationManager Nav
+@implements IDisposable
+
+<a class="inbox-bell" href="inbox" title="@(count > 0 ? $"{count} unread" : "Inbox")">
+    <span class="inbox-bell-icon">@BellGlyph</span>
+    @if (count > 0)
+    {
+        <span class="inbox-bell-badge">@Display(count)</span>
+    }
+</a>
+
+@code {
+    private int count;
+    private Timer? refreshTimer;
+    private Microsoft.AspNetCore.Components.Authorization.AuthenticationState? authState;
+
+    private const string BellGlyph = "\u2407"; // ␇ — bell-like glyph that works in any font
+
+    protected override async Task OnInitializedAsync()
+    {
+        authState = await AuthState.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            await RefreshCountAsync();
+            // Refresh every 60 s while the user is on a page.
+            refreshTimer = new Timer(60_000);
+            refreshTimer.Elapsed += async (_, _) => await InvokeAsync(RefreshCountAsync);
+            refreshTimer.AutoReset = true;
+            refreshTimer.Start();
+        }
+    }
+
+    private async Task RefreshCountAsync()
+    {
+        if (authState?.User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        try
+        {
+            ApiResult<int> result = await Notifications.GetUnreadCountAsync();
+            if (result.IsSuccess)
+            {
+                count = result.Value;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch
+        {
+            // Best effort. The bell just shows 0 if the API is down.
+        }
+    }
+
+    public void Dispose()
+    {
+        refreshTimer?.Dispose();
+    }
+
+    private static string Display(int n) => n > 99 ? "99+" : n.ToString();
+}

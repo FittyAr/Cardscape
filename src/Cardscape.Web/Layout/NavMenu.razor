@@ -30,9 +30,17 @@
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="inbox">
+                        <span class="bi bi-bell-nav-menu" aria-hidden="true"></span> Inbox
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
                     <NavLink class="nav-link" href="account/api-tokens">
                         <span class="bi bi-key-nav-menu" aria-hidden="true"></span> API tokens
                     </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <InboxBell />
                 </div>
             </Authorized>
             <NotAuthorized>
