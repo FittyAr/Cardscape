@@ -36,6 +36,16 @@
                     <RadzenLabel Text="write" Component="scope-write" />
                 </div>
 
+                <RadzenLabel Text="Rate limit per hour" Component="token-rate" Style="margin-top:1rem" />
+                <RadzenNumeric TValue="int" @bind-Value="createModel.RateLimitPerHour" Name="token-rate"
+                               Min="0" Max="100000" Style="width:100%" />
+                <small>0 disables the limit (token is never throttled).</small>
+
+                <RadzenLabel Text="Burst size" Component="token-burst" Style="margin-top:1rem" />
+                <RadzenNumeric TValue="int" @bind-Value="createModel.BurstSize" Name="token-burst"
+                               Min="1" Max="10000" Style="width:100%" />
+                <small>Maximum back-to-back requests before the per-hour refill kicks in.</small>
+
                 @if (error is not null)
                 {
                     <div class="auth-error" role="alert">@error</div>
@@ -88,6 +98,25 @@
                                     <span> · last used @token.LastUsedAt.Value.LocalDateTime.ToString("yyyy-MM-dd")</span>
                                 }
                             </small>
+                            <div class="rate-limit">
+                                <small>
+                                    @if (token.RateLimitPerHour == 0)
+                                    {
+                                        <span>rate limit: <strong>disabled</strong></span>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            rate limit: <strong>@token.RateLimitPerHour/hr</strong>,
+                                            burst <strong>@token.BurstSize</strong>
+                                        </span>
+                                    }
+                                    @if (rateLimitById.TryGetValue(token.Id, out ApiTokenRateLimitStatusDto? status))
+                                    {
+                                        <span> · remaining <strong>@(Math.Floor(status.AvailableTokens))/@status.BurstSize</strong></span>
+                                    }
+                                </small>
+                            </div>
                         </div>
                         <div class="token-actions">
                             @if (token.RevokedAt is null)
@@ -110,6 +139,7 @@
 
 @code {
     private IReadOnlyList<ApiTokenSummaryDto>? tokens;
+    private Dictionary<Guid, ApiTokenRateLimitStatusDto> rateLimitById = new();
     private bool showCreate;
     private bool busy;
     private string? error;
@@ -118,8 +148,33 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await RefreshAsync();
+    }
+
+    private async Task RefreshAsync()
+    {
         ApiResult<IReadOnlyList<ApiTokenSummaryDto>> result = await Security.ListTokensAsync();
         tokens = result.IsSuccess ? result.Value : [];
+
+        rateLimitById.Clear();
+        if (tokens is null)
+        {
+            return;
+        }
+
+        foreach (ApiTokenSummaryDto t in tokens)
+        {
+            if (t.RevokedAt is not null)
+            {
+                continue;
+            }
+
+            ApiResult<ApiTokenRateLimitStatusDto> s = await Security.GetRateLimitStatusAsync(t.Id);
+            if (s.IsSuccess && s.Value is not null)
+            {
+                rateLimitById[t.Id] = s.Value;
+            }
+        }
     }
 
     private async Task CreateToken()
@@ -146,7 +201,9 @@
             }
 
             ApiResult<ApiTokenIssuanceDto> result = await Security.IssueTokenAsync(
-                createModel.Name, scopes, expiresAt: null);
+                createModel.Name, scopes, expiresAt: null,
+                rateLimitPerHour: createModel.RateLimitPerHour,
+                burstSize: createModel.BurstSize);
             if (!result.IsSuccess)
             {
                 error = result.Error;
@@ -159,8 +216,7 @@
             createModel.Write = true;
             showCreate = false;
 
-            ApiResult<IReadOnlyList<ApiTokenSummaryDto>> refreshed = await Security.ListTokensAsync();
-            tokens = refreshed.IsSuccess ? refreshed.Value : tokens;
+            await RefreshAsync();
         }
         finally
         {
@@ -187,8 +243,7 @@
         ApiResult result = await Security.RevokeTokenAsync(token.Id, null);
         if (result.IsSuccess)
         {
-            ApiResult<IReadOnlyList<ApiTokenSummaryDto>> refreshed = await Security.ListTokensAsync();
-            tokens = refreshed.IsSuccess ? refreshed.Value : tokens;
+            await RefreshAsync();
         }
     }
 
@@ -197,5 +252,7 @@
         public string Name { get; set; } = string.Empty;
         public bool Read { get; set; } = true;
         public bool Write { get; set; } = true;
+        public int RateLimitPerHour { get; set; } = 1000;
+        public int BurstSize { get; set; } = 50;
     }
 }

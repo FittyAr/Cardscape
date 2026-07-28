@@ -27,7 +27,8 @@ public static class SecurityEndpoints
         group.MapPost("/", async (IssueApiTokenBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<ApiTokenIssuanceDto>>(
-                new IssueApiTokenCommand(body.Name, body.Scopes, body.ExpiresAt), ct);
+                new IssueApiTokenCommand(body.Name, body.Scopes, body.ExpiresAt, body.RateLimitPerHour, body.BurstSize),
+                ct);
             return result.IsSuccess
                 ? Results.Created($"/api/security/api-tokens/{result.Value.Id}", result.Value)
                 : MapError(result.Error);
@@ -51,11 +52,37 @@ public static class SecurityEndpoints
                 : MapError(result.Error);
         });
 
+        group.MapPatch("/{tokenId:guid}/rate-limit", async (Guid tokenId, UpdateRateLimitBody body, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<ApiTokenRateLimitDto>>(
+                new UpdateApiTokenRateLimitCommand(tokenId, body.RateLimitPerHour, body.BurstSize), ct);
+            return result.IsSuccess
+                ? Results.Ok(result.Value)
+                : MapError(result.Error);
+        });
+
+        group.MapGet("/{tokenId:guid}/rate-limit-status", async (Guid tokenId, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<ApiTokenRateLimitStatusDto>>(
+                new GetApiTokenRateLimitStatusQuery(tokenId), ct);
+            return result.IsSuccess
+                ? Results.Ok(result.Value)
+                : MapError(result.Error);
+        });
+
         return app;
     }
 
-    public sealed record IssueApiTokenBody(string Name, IReadOnlyCollection<string> Scopes, DateTimeOffset? ExpiresAt);
+    public sealed record IssueApiTokenBody(
+        string Name,
+        IReadOnlyCollection<string> Scopes,
+        DateTimeOffset? ExpiresAt,
+        int? RateLimitPerHour = null,
+        int? BurstSize = null);
+
     public sealed record RevokeApiTokenBody(string? Reason);
+
+    public sealed record UpdateRateLimitBody(int RateLimitPerHour, int BurstSize);
 
     private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
     {

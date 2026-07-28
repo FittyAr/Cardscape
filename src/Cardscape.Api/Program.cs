@@ -76,6 +76,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<RateLimitMiddleware>();
 
 // ── Endpoints ────────────────────────────────────────────
 app.MapGet("/health", () => Results.Ok(new

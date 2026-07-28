@@ -46,6 +46,13 @@ public sealed class ApiTokenConfiguration : IEntityTypeConfiguration<ApiToken>
         b.Property(t => t.RevokedBy);
         b.Property(t => t.RevokedReason).HasMaxLength(200);
 
+        b.Property(t => t.RateLimitPerHour)
+            .IsRequired()
+            .HasDefaultValue(ApiToken.DefaultRateLimitPerHour);
+        b.Property(t => t.BurstSize)
+            .IsRequired()
+            .HasDefaultValue(ApiToken.DefaultBurstSize);
+
         b.Property(t => t.CreatedAt).IsRequired();
         b.Property(t => t.UpdatedAt);
         b.Property(t => t.CreatedBy);

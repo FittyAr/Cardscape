@@ -18,11 +18,24 @@ public interface IApiTokenService
     /// latter is the only time the secret is ever returned to
     /// the caller).
     /// </summary>
+    /// <param name="userId">Owner of the new token.</param>
+    /// <param name="name">Human-readable label.</param>
+    /// <param name="scopes">Granted scopes (e.g. read, write).</param>
+    /// <param name="expiresAt">Optional expiry.</param>
+    /// <param name="rateLimitPerHour">Long-run rate cap. <c>0</c>
+    /// disables rate limiting. <c>null</c> applies the
+    /// <see cref="ApiToken.DefaultRateLimitPerHour"/> default.</param>
+    /// <param name="burstSize">Burst capacity. <c>null</c>
+    /// applies the <see cref="ApiToken.DefaultBurstSize"/>
+    /// default.</param>
+    /// <param name="ct">Cancellation token.</param>
     Task<ApiTokenIssuance> IssueAsync(
         UserId userId,
         string name,
         IReadOnlyCollection<string> scopes,
         DateTimeOffset? expiresAt,
+        int? rateLimitPerHour,
+        int? burstSize,
         CancellationToken ct);
 
     /// <summary>
@@ -40,6 +53,26 @@ public interface IApiTokenService
     /// <summary>Lists every token owned by the given user. Used
     /// by the Web UI "API tokens" page.</summary>
     Task<IReadOnlyList<ApiTokenSummary>> ListForUserAsync(UserId userId, CancellationToken ct);
+
+    /// <summary>Updates the rate-limit configuration for a token
+    /// owned by the given user. Returns <c>NotFound</c> if the
+    /// token doesn't exist or isn't owned by the caller.</summary>
+    Task<Result> UpdateRateLimitAsync(
+        UserId userId,
+        ApiTokenId tokenId,
+        int rateLimitPerHour,
+        int burstSize,
+        CancellationToken ct);
+
+    /// <summary>Returns the current rate-limit configuration for
+    /// a token, plus a live snapshot of the bucket state
+    /// (remaining / refilled-at). Returns <c>NotFound</c> if the
+    /// token doesn't exist or isn't owned by the caller.</summary>
+    Task<Result<ApiTokenRateLimitStatus>> GetRateLimitStatusAsync(
+        UserId userId,
+        ApiTokenId tokenId,
+        DateTimeOffset at,
+        CancellationToken ct);
 }
 
 /// <summary>
@@ -68,4 +101,16 @@ public sealed record ApiTokenSummary(
     DateTimeOffset CreatedAt,
     DateTimeOffset? ExpiresAt,
     DateTimeOffset? LastUsedAt,
-    DateTimeOffset? RevokedAt);
+    DateTimeOffset? RevokedAt,
+    int RateLimitPerHour,
+    int BurstSize);
+
+/// <summary>Result of <see cref="IApiTokenService.GetRateLimitStatusAsync"/>:
+/// the current configuration and a snapshot of the in-memory
+/// bucket state at <see cref="At"/>.</summary>
+public sealed record ApiTokenRateLimitStatus(
+    Guid TokenId,
+    int RateLimitPerHour,
+    int BurstSize,
+    double AvailableTokens,
+    DateTimeOffset At);

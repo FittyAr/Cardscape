@@ -1,6 +1,9 @@
+using Cardscape.IntegrationTests.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Xunit;
 
@@ -40,6 +43,21 @@ public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Progr
             "integration-tests-signing-key-please-override-in-production-32+chars");
         Environment.SetEnvironmentVariable("Storage__LocalRoot", _storageRoot);
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        // Add a second auth scheme (alongside the production JWT
+        // scheme) that lets tests authenticate with an API token
+        // so the rate-limit middleware can be exercised end-to-
+        // end. The middleware decides which scheme to apply by
+        // inspecting User.Identity.AuthenticationType, so both
+        // schemes can coexist without one cancelling the other.
+        builder.ConfigureServices(services =>
+        {
+            services.AddAuthentication()
+                    .AddTestApiTokenAuth();
+        });
     }
 
     protected override void Dispose(bool disposing)

@@ -128,11 +128,27 @@ public sealed record ApiTokenSummaryDto(
     DateTimeOffset CreatedAt,
     DateTimeOffset? ExpiresAt,
     DateTimeOffset? LastUsedAt,
-    DateTimeOffset? RevokedAt);
+    DateTimeOffset? RevokedAt,
+    int RateLimitPerHour,
+    int BurstSize);
 
 public sealed record ApiTokenIssuanceDto(Guid Id, string CleartextSecret);
 
-public sealed record IssueApiTokenRequestDto(string Name, IReadOnlyCollection<string> Scopes, DateTimeOffset? ExpiresAt);
+public sealed record IssueApiTokenRequestDto(
+    string Name,
+    IReadOnlyCollection<string> Scopes,
+    DateTimeOffset? ExpiresAt,
+    int? RateLimitPerHour = null,
+    int? BurstSize = null);
+
+public sealed record ApiTokenRateLimitStatusDto(
+    Guid TokenId,
+    int RateLimitPerHour,
+    int BurstSize,
+    double AvailableTokens,
+    DateTimeOffset At);
+
+public sealed record UpdateApiTokenRateLimitRequestDto(int RateLimitPerHour, int BurstSize);
 
 // ── Workspace invitations (v0.5) ──────────────────────────
 // Note: the API token issuance dropped the URL from the

@@ -20,13 +20,16 @@ namespace Cardscape.Infrastructure.Security;
 public sealed class ApiTokenService(
     IApiTokenRepository repository,
     IUnitOfWork unitOfWork,
-    IClock clock) : IApiTokenService
+    IClock clock,
+    IRateLimiter rateLimiter) : IApiTokenService
 {
     public async Task<ApiTokenIssuance> IssueAsync(
         UserId userId,
         string name,
         IReadOnlyCollection<string> scopes,
         DateTimeOffset? expiresAt,
+        int? rateLimitPerHour,
+        int? burstSize,
         CancellationToken ct)
     {
         var nameResult = ApiTokenName.Create(name);
@@ -50,7 +53,9 @@ public sealed class ApiTokenService(
             prefix,
             scopesResult.Value,
             expiresAt,
-            clock.UtcNow);
+            clock.UtcNow,
+            rateLimitPerHour,
+            burstSize);
 
         if (creation.IsFailure)
         {
@@ -59,6 +64,14 @@ public sealed class ApiTokenService(
 
         await repository.AddAsync(creation.Value, ct);
         await unitOfWork.SaveChangesAsync(ct);
+
+        // Pre-seed the in-memory bucket so the first request
+        // after issuance gets the configured burst headroom
+        // without an extra round-trip through Configure.
+        rateLimiter.Configure(
+            creation.Value.Id.Value,
+            creation.Value.RateLimitPerHour,
+            creation.Value.BurstSize);
 
         return new ApiTokenIssuance(creation.Value.Id, cleartext);
     }
@@ -129,8 +142,69 @@ public sealed class ApiTokenService(
                 t.CreatedAt,
                 t.ExpiresAt,
                 t.LastUsedAt,
-                t.RevokedAt))
+                t.RevokedAt,
+                t.RateLimitPerHour,
+                t.BurstSize))
             .ToList();
+    }
+
+    public async Task<Result> UpdateRateLimitAsync(
+        UserId userId,
+        ApiTokenId tokenId,
+        int rateLimitPerHour,
+        int burstSize,
+        CancellationToken ct)
+    {
+        var token = await repository.GetByIdAsync(tokenId, ct);
+        if (token is null || token.UserId.Value != userId.Value)
+        {
+            return Result.Failure(DomainError.NotFound(
+                "security.api_token.not_found", "API token was not found."));
+        }
+
+        var configure = token.Configure(rateLimitPerHour, burstSize);
+        if (configure.IsFailure)
+        {
+            return configure;
+        }
+
+        await unitOfWork.SaveChangesAsync(ct);
+
+        // Reload the in-memory bucket so the next request picks
+        // up the new cap and refill rate without a restart.
+        rateLimiter.Configure(token.Id.Value, token.RateLimitPerHour, token.BurstSize);
+
+        return Result.Success();
+    }
+
+    public async Task<Result<ApiTokenRateLimitStatus>> GetRateLimitStatusAsync(
+        UserId userId,
+        ApiTokenId tokenId,
+        DateTimeOffset at,
+        CancellationToken ct)
+    {
+        var token = await repository.GetByIdAsync(tokenId, ct);
+        if (token is null || token.UserId.Value != userId.Value)
+        {
+            return Result.Failure<ApiTokenRateLimitStatus>(DomainError.NotFound(
+                "security.api_token.not_found", "API token was not found."));
+        }
+
+        // Make sure the bucket reflects the latest config — same
+        // rationale as in UpdateRateLimitAsync.
+        rateLimiter.Configure(token.Id.Value, token.RateLimitPerHour, token.BurstSize);
+
+        RateLimitSnapshot? snapshot = rateLimiter.GetStatus(token.Id.Value, at);
+        double available = snapshot is null
+            ? Math.Max(0, token.BurstSize)
+            : snapshot.AvailableTokens;
+
+        return Result.Success(new ApiTokenRateLimitStatus(
+            TokenId: token.Id.Value,
+            RateLimitPerHour: token.RateLimitPerHour,
+            BurstSize: token.BurstSize,
+            AvailableTokens: available,
+            At: at));
     }
 
     private static (string cleartext, string hashed, string prefix) GenerateSecret()

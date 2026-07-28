@@ -22,6 +22,15 @@ public sealed class ApiToken : AggregateRoot<ApiTokenId>
     public const int SecretPrefixLength = 8;
     public const int SecretByteLength = 32;
 
+    /// <summary>Default long-run rate (requests / hour) applied
+    /// to freshly issued tokens.</summary>
+    public const int DefaultRateLimitPerHour = 1000;
+
+    /// <summary>Default burst capacity applied to freshly issued
+    /// tokens. Roughly the headroom a freshly-minted client can
+    /// spend in the first second after issuance.</summary>
+    public const int DefaultBurstSize = 50;
+
     /// <summary>Owner of the token.</summary>
     public UserId UserId { get; private set; } = null!;
 
@@ -61,6 +70,16 @@ public sealed class ApiToken : AggregateRoot<ApiTokenId>
     /// <summary>Free-text reason captured at revocation.</summary>
     public string? RevokedReason { get; private set; }
 
+    /// <summary>How many requests this token may make in any
+    /// rolling one-hour window. <c>0</c> disables rate limiting
+    /// for the token (callers are never throttled).</summary>
+    public int RateLimitPerHour { get; private set; } = DefaultRateLimitPerHour;
+
+    /// <summary>Maximum number of requests that can be served
+    /// back-to-back before the per-hour refill kicks in. Acts as
+    /// the burst capacity of the token bucket.</summary>
+    public int BurstSize { get; private set; } = DefaultBurstSize;
+
     // EF Core.
     private ApiToken() { }
 
@@ -72,7 +91,9 @@ public sealed class ApiToken : AggregateRoot<ApiTokenId>
         string secretPrefix,
         ApiTokenScopes scopes,
         DateTimeOffset? expiresAt,
-        DateTimeOffset at)
+        DateTimeOffset at,
+        int rateLimitPerHour,
+        int burstSize)
     {
         Id = id;
         UserId = userId;
@@ -82,6 +103,8 @@ public sealed class ApiToken : AggregateRoot<ApiTokenId>
         Scopes = scopes;
         ExpiresAt = expiresAt;
         CreatedAt = at;
+        RateLimitPerHour = rateLimitPerHour;
+        BurstSize = burstSize;
     }
 
     /// <summary>
@@ -89,6 +112,27 @@ public sealed class ApiToken : AggregateRoot<ApiTokenId>
     /// hashed secret and prefix; the aggregate just stores them.
     /// The cleartext secret is never touched by the domain.
     /// </summary>
+    /// <param name="userId">Owner of the new token.</param>
+    /// <param name="name">Human-readable label.</param>
+    /// <param name="hashedSecret">SHA-256 hash of the cleartext
+    /// secret; the cleartext itself is never stored.</param>
+    /// <param name="secretPrefix">First
+    /// <see cref="SecretPrefixLength"/> characters of the
+    /// cleartext secret, for UI display.</param>
+    /// <param name="scopes">Granted scopes.</param>
+    /// <param name="expiresAt">Optional expiry; <c>null</c> for
+    /// tokens that don't expire (still revocable).</param>
+    /// <param name="at">The current UTC time; used for
+    /// <see cref="IsActive"/> / <see cref="Configure"/>'s
+    /// audit timestamps and any expiry check.</param>
+    /// <param name="rateLimitPerHour">Long-run rate cap. <c>0</c>
+    /// disables rate limiting for the token. Defaults to
+    /// <see cref="DefaultRateLimitPerHour"/> when <c>null</c> or
+    /// negative is passed.</param>
+    /// <param name="burstSize">Burst capacity (max tokens that
+    /// can be served back-to-back). Defaults to
+    /// <see cref="DefaultBurstSize"/> when <c>null</c> or negative
+    /// is passed.</param>
     public static Result<ApiToken> Create(
         UserId userId,
         ApiTokenName name,
@@ -96,7 +140,9 @@ public sealed class ApiToken : AggregateRoot<ApiTokenId>
         string secretPrefix,
         ApiTokenScopes scopes,
         DateTimeOffset? expiresAt,
-        DateTimeOffset at)
+        DateTimeOffset at,
+        int? rateLimitPerHour = null,
+        int? burstSize = null)
     {
         if (string.IsNullOrWhiteSpace(hashedSecret))
         {
@@ -119,17 +165,49 @@ public sealed class ApiToken : AggregateRoot<ApiTokenId>
                 "Expiry must be in the future."));
         }
 
-        var token = new ApiToken(id: ApiTokenId.New(),
-                                 userId: userId,
-                                 name: name,
-                                 hashedSecret: hashedSecret,
-                                 secretPrefix: secretPrefix,
-                                 scopes: scopes,
-                                 expiresAt: expiresAt,
-                                 at: at);
+        int resolvedRate = rateLimitPerHour is null or < 0
+            ? DefaultRateLimitPerHour
+            : rateLimitPerHour.Value;
+        int resolvedBurst = burstSize is null or < 0
+            ? DefaultBurstSize
+            : burstSize.Value;
+
+        ApiToken token = new(id: ApiTokenId.New(),
+                             userId: userId,
+                             name: name,
+                             hashedSecret: hashedSecret,
+                             secretPrefix: secretPrefix,
+                             scopes: scopes,
+                             expiresAt: expiresAt,
+                             at: at,
+                             rateLimitPerHour: resolvedRate,
+                             burstSize: resolvedBurst);
 
         token.AddDomainEvent(new ApiTokenIssued(token.Id, userId, name, at));
         return Result.Success(token);
+    }
+
+    /// <summary>
+    /// Updates the rate-limit configuration for this token.
+    /// <paramref name="rateLimitPerHour"/> = 0 disables rate
+    /// limiting for the token (always allowed). Negative inputs
+    /// are normalised to 0; the burst size is clamped to at
+    /// least 1 if the rate is positive.
+    /// </summary>
+    public Result Configure(int rateLimitPerHour, int burstSize)
+    {
+        RateLimitPerHour = rateLimitPerHour < 0 ? 0 : rateLimitPerHour;
+
+        if (RateLimitPerHour == 0)
+        {
+            // Rate limit disabled: clear burst, the bucket
+            // becomes a no-op.
+            BurstSize = 0;
+            return Result.Success();
+        }
+
+        BurstSize = burstSize < 1 ? 1 : burstSize;
+        return Result.Success();
     }
 
     /// <summary>True if the token can still authenticate at the

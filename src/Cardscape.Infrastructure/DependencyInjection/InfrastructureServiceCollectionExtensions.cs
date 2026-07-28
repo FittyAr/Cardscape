@@ -143,6 +143,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ITokenService, JwtTokenService>();
         services.AddScoped<IApiTokenService, ApiTokenService>();
         services.AddScoped<IInvitationService, InvitationService>();
+        services.AddSingleton<IRateLimiter, RateLimiter>();
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
         services.AddSingleton<IEmailService, ConsoleEmailService>();
         services.AddSingleton<IInvitationEmailService, ConsoleInvitationEmailService>();

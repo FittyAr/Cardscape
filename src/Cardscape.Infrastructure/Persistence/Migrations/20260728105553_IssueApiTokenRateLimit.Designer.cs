@@ -3,6 +3,7 @@ using System;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cardscape.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(CardscapeDbContext))]
-    partial class CardscapeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260728105553_IssueApiTokenRateLimit")]
+    partial class IssueApiTokenRateLimit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
@@ -704,10 +706,6 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Cardscape.Domain.Security.ApiToken", b =>
                 {
-                    b.Property<int>("BurstSize")
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(50);
-
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
@@ -735,10 +733,6 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(80)
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("RateLimitPerHour")
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1000);
 
                     b.Property<DateTimeOffset?>("RevokedAt")
                         .HasColumnType("TEXT");

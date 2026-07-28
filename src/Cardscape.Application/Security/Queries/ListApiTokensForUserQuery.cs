@@ -33,7 +33,9 @@ public static class ListApiTokensForUserQueryHandler
                 r.CreatedAt,
                 r.ExpiresAt,
                 r.LastUsedAt,
-                r.RevokedAt))
+                r.RevokedAt,
+                r.RateLimitPerHour,
+                r.BurstSize))
             .ToList();
 
         return Result.Success<IReadOnlyList<ApiTokenSummaryDto>>(dtos);
@@ -48,4 +50,6 @@ public sealed record ApiTokenSummaryDto(
     DateTimeOffset CreatedAt,
     DateTimeOffset? ExpiresAt,
     DateTimeOffset? LastUsedAt,
-    DateTimeOffset? RevokedAt);
+    DateTimeOffset? RevokedAt,
+    int RateLimitPerHour,
+    int BurstSize);

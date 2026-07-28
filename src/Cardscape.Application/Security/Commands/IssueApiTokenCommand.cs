@@ -9,7 +9,9 @@ namespace Cardscape.Application.Security.Commands;
 public sealed record IssueApiTokenCommand(
     string Name,
     IReadOnlyCollection<string> Scopes,
-    DateTimeOffset? ExpiresAt) : IMessage;
+    DateTimeOffset? ExpiresAt,
+    int? RateLimitPerHour = null,
+    int? BurstSize = null) : IMessage;
 
 public static class IssueApiTokenCommandHandler
 {
@@ -45,6 +47,8 @@ public static class IssueApiTokenCommandHandler
             command.Name,
             command.Scopes,
             command.ExpiresAt,
+            command.RateLimitPerHour,
+            command.BurstSize,
             cancellationToken);
 
         return Result.Success(new ApiTokenIssuanceDto(

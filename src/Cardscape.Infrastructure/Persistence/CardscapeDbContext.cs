@@ -8,6 +8,7 @@ using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Notifications;
+using Cardscape.Domain.Security;
 using Cardscape.Domain.Workspaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -34,6 +35,7 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<BackgroundJob> BackgroundJobs => Set<BackgroundJob>();
     public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
     public DbSet<CustomFieldValue> CustomFieldValues => Set<CustomFieldValue>();
+    public DbSet<ApiToken> ApiTokens => Set<ApiToken>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't
