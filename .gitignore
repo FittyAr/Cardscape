@@ -491,3 +491,7 @@ src/Cardscape.Api/Data/
 **/*.db
 **/*.db-wal
 **/*.db-shm
+
+# Auto-installed agent skill caches (regenerated per session, never committed)
+.agents/skills/
+.github/skills/

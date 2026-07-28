@@ -162,6 +162,28 @@ public sealed record IssueWorkspaceInvitationRequestDto(
 
 public sealed record AcceptWorkspaceInvitationRequestDto(string Token);
 
+// ── Automation (v0.6.3) ────────────────────────────────
+// Trigger enum: 0 = CardMoved, 1 = CardCompleted, 2 = CardReopened, 3 = CardCreatedInList
+// Action  enum: 0 = MoveCardToList, 1 = AssignUser, 2 = SetDueDate, 3 = MarkComplete
+public sealed record BoardAutomationRuleDto(
+    Guid Id,
+    Guid BoardId,
+    string Name,
+    int Trigger,
+    Guid? TriggerListId,
+    int Action,
+    string? ActionArgument,
+    bool IsEnabled,
+    int Position);
+
+public sealed record CreateRuleRequestDto(
+    string Name,
+    int Trigger,
+    Guid? TriggerListId,
+    int Action,
+    string? ActionArgument,
+    int Position = 0);
+
 // ── Calendar (v0.6.1) ───────────────────────────────────
 public sealed record CalendarEntryDto(
     Guid CardId,

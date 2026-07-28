@@ -1,0 +1,256 @@
+@page "/boards/{BoardId:guid}/automation"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@inject IAutomationApiClient AutomationClient
+
+<PageTitle>Automation — Cardscape</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>Automation</h1>
+        <div class="page-header-actions">
+            <RadzenButton Text="New rule" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                          Click="@(() => showCreate = !showCreate)" />
+        </div>
+    </div>
+
+    <p class="page-hint">
+        Rules run server-side the moment a matching card event fires.
+        They're best-effort: a failed rule never blocks the user that
+        caused the event.
+    </p>
+
+    @if (showCreate)
+    {
+        <RadzenCard class="create-form">
+            <RadzenTemplateForm TItem="NewRuleModel" Data="@newRule" Submit="@CreateRule">
+                <RadzenLabel Text="Name" Component="rule-name" />
+                <RadzenTextBox @bind-Value="newRule.Name" Name="rule-name" Style="width:100%" />
+
+                <RadzenLabel Text="When…" Component="rule-trigger" Style="margin-top:.5rem;display:block" />
+                <RadzenDropDown @bind-Value="newRule.Trigger" Data="@triggerOptions"
+                                TextProperty="Label" ValueProperty="Value"
+                                Name="rule-trigger" Style="width:100%" Change="@OnTriggerChanged" />
+
+                @if (newRule.Trigger == 3)
+                {
+                    <RadzenLabel Text="In list (id)" Component="rule-trigger-list"
+                                 Style="margin-top:.5rem;display:block" />
+                    <RadzenTextBox @bind-Value="newRule.TriggerListIdText" Name="rule-trigger-list"
+                                   Style="width:100%" />
+                }
+
+                <RadzenLabel Text="Then…" Component="rule-action" Style="margin-top:.5rem;display:block" />
+                <RadzenDropDown @bind-Value="newRule.Action" Data="@actionOptions"
+                                TextProperty="Label" ValueProperty="Value"
+                                Name="rule-action" Style="width:100%" />
+
+                <RadzenLabel Text="Argument (list id / user id / ISO date)"
+                             Component="rule-arg" Style="margin-top:.5rem;display:block" />
+                <RadzenTextBox @bind-Value="newRule.ActionArgument" Name="rule-arg"
+                               Style="width:100%" />
+
+                @if (error is not null)
+                {
+                    <div class="auth-error" role="alert">@error</div>
+                }
+                <div class="create-actions">
+                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
+                    <RadzenButton Text="Create" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                                  IsBusy="@busy" />
+                </div>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    }
+
+    @if (rules is null)
+    {
+        <p>Loading…</p>
+    }
+    else if (rules.Count == 0)
+    {
+        <p>No automation rules yet. Create one above to get started.</p>
+    }
+    else
+    {
+        <div class="rule-list">
+            @foreach (BoardAutomationRuleDto rule in rules)
+            {
+                <RadzenCard class="@(rule.IsEnabled ? "rule-card" : "rule-card rule-card--disabled")">
+                    <div class="rule-row">
+                        <div class="rule-meta">
+                            <strong>@rule.Name</strong>
+                            <small>
+                                When: <em>@TriggerName(rule.Trigger)</em>
+                                @if (rule.Trigger == 3)
+                                {
+                                    <text> (list @rule.TriggerListId)</text>
+                                }
+                                · Do: <em>@ActionName(rule.Action)</em>
+                                @if (!string.IsNullOrEmpty(rule.ActionArgument))
+                                {
+                                    <text> → @rule.ActionArgument</text>
+                                }
+                            </small>
+                        </div>
+                        <div class="rule-actions">
+                            @if (rule.IsEnabled)
+                            {
+                                <RadzenButton Text="Disable" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                              Click="@(() => DisableAsync(rule))" />
+                            }
+                            else
+                            {
+                                <RadzenButton Text="Enable" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small"
+                                              Click="@(() => EnableAsync(rule))" />
+                            }
+                            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                          Click="@(() => DeleteAsync(rule))" />
+                        </div>
+                    </div>
+                </RadzenCard>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid BoardId { get; set; }
+
+    private IReadOnlyList<BoardAutomationRuleDto>? rules;
+    private bool showCreate;
+    private bool busy;
+    private string? error;
+    private readonly NewRuleModel newRule = new();
+
+    private readonly List<TriggerOption> triggerOptions = new()
+    {
+        new(0, "Card moved to any list"),
+        new(1, "Card completed"),
+        new(2, "Card reopened"),
+        new(3, "Card created in a specific list")
+    };
+
+    private readonly List<ActionOption> actionOptions = new()
+    {
+        new(0, "Move card to list (arg = list id)"),
+        new(1, "Assign user (arg = user id)"),
+        new(2, "Set due date (arg = ISO date)"),
+        new(3, "Mark complete")
+    };
+
+    protected override async Task OnParametersSetAsync() => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        ApiResult<IReadOnlyList<BoardAutomationRuleDto>> result = await AutomationClient.ListRulesAsync(BoardId);
+        rules = result.IsSuccess ? result.Value : [];
+        if (!result.IsSuccess)
+        {
+            error = result.Error;
+        }
+    }
+
+    private void OnTriggerChanged()
+    {
+        if (newRule.Trigger != 3)
+        {
+            newRule.TriggerListIdText = string.Empty;
+        }
+    }
+
+    private async Task CreateRule()
+    {
+        busy = true;
+        error = null;
+        try
+        {
+            Guid? triggerListId = null;
+            if (newRule.Trigger == 3 && Guid.TryParse(newRule.TriggerListIdText, out var tlid))
+            {
+                triggerListId = tlid;
+            }
+
+            var body = new CreateRuleRequestDto(
+                newRule.Name,
+                newRule.Trigger,
+                triggerListId,
+                newRule.Action,
+                string.IsNullOrWhiteSpace(newRule.ActionArgument) ? null : newRule.ActionArgument,
+                Position: 0);
+
+            ApiResult<BoardAutomationRuleDto> result = await AutomationClient.CreateRuleAsync(BoardId, body);
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+                return;
+            }
+
+            showCreate = false;
+            newRule.Name = string.Empty;
+            newRule.ActionArgument = string.Empty;
+            newRule.TriggerListIdText = string.Empty;
+            await ReloadAsync();
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void CancelCreate()
+    {
+        showCreate = false;
+        error = null;
+    }
+
+    private async Task EnableAsync(BoardAutomationRuleDto rule)
+    {
+        ApiResult r = await AutomationClient.EnableRuleAsync(BoardId, rule.Id);
+        if (r.IsSuccess) await ReloadAsync();
+    }
+
+    private async Task DisableAsync(BoardAutomationRuleDto rule)
+    {
+        ApiResult r = await AutomationClient.DisableRuleAsync(BoardId, rule.Id);
+        if (r.IsSuccess) await ReloadAsync();
+    }
+
+    private async Task DeleteAsync(BoardAutomationRuleDto rule)
+    {
+        ApiResult r = await AutomationClient.DeleteRuleAsync(BoardId, rule.Id);
+        if (r.IsSuccess) await ReloadAsync();
+    }
+
+    private static string TriggerName(int t) => t switch
+    {
+        0 => "card moved",
+        1 => "card completed",
+        2 => "card reopened",
+        3 => "card created in list",
+        _ => "unknown"
+    };
+
+    private static string ActionName(int a) => a switch
+    {
+        0 => "move card to list",
+        1 => "assign user",
+        2 => "set due date",
+        3 => "mark complete",
+        _ => "unknown"
+    };
+
+    private sealed class NewRuleModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public int Trigger { get; set; } = 1;
+        public string TriggerListIdText { get; set; } = string.Empty;
+        public int Action { get; set; } = 3;
+        public string ActionArgument { get; set; } = string.Empty;
+    }
+
+    private sealed record TriggerOption(int Value, string Label);
+    private sealed record ActionOption(int Value, string Label);
+}

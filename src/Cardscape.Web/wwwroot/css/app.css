@@ -804,3 +804,44 @@ code {
     border-color: #6b7280;
     text-decoration: line-through;
 }
+
+/* ── Automation (v0.6.3) ───────────────────────────────── */
+.rule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.rule-card {
+    padding: 0.75rem 1rem;
+    border-left: 3px solid #10b981;
+}
+
+.rule-card--disabled {
+    border-left-color: #9ca3af;
+    opacity: 0.65;
+}
+
+.rule-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.rule-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.rule-meta small {
+    color: #4b5563;
+}
+
+.rule-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}

@@ -1,5 +1,6 @@
 using Cardscape.Api.Endpoints.Activities;
 using Cardscape.Api.Endpoints.Auth;
+using Cardscape.Api.Endpoints.Automation;
 using Cardscape.Api.Endpoints.Boards;
 using Cardscape.Api.Endpoints.Cards;
 using Cardscape.Api.Endpoints.Comments;
@@ -77,6 +78,7 @@ app.MapNotificationEndpoints();
 app.MapActivityEndpoints();
 app.MapSearchEndpoints();
 app.MapSecurityEndpoints();
+app.MapAutomationEndpoints();
 app.MapBoardBroadcastEndpoints();
 
 // Real-time board hub. Sits at /hubs/board with the same JWT
