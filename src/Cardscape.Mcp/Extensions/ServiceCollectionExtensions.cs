@@ -66,6 +66,12 @@ public static class ServiceCollectionExtensions
         });
         services.AddSingleton<IBoardPushClient, HttpBoardPushClient>();
 
+        // MCP subscriptions: per-board fan-out of ResourceUpdated
+        // notifications. The broadcaster is process-wide; the
+        // Web UI's SignalR hub pushes every board change to
+        // BroadcastAsync through the internal broadcast endpoint.
+        services.AddSingleton<McpResourceBroadcaster>();
+
         // ── MCP server (stdio transport) ─────────────────────
         services
             .AddMcpServer()
