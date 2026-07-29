@@ -5,13 +5,30 @@ using Wolverine;
 
 namespace Cardscape.Application.Search;
 
-public sealed record SearchHitDto(string Id, string Kind, string Title, double Score);
+public sealed record SearchHitDto(
+    string Id,
+    SearchHitKind Kind,
+    string Title,
+    string Snippet,
+    Guid? BoardId,
+    Guid? CardId,
+    string Url,
+    double Score);
 
-public sealed record SearchQuery(string Query, int Limit = 20) : IMessage;
+public sealed record SearchPageDto(
+    IReadOnlyList<SearchHitDto> Items,
+    int Total);
+
+public sealed record SearchQuery(
+    string Query,
+    Guid? BoardId = null,
+    SearchHitKind? Kind = null,
+    int Page = 1,
+    int PageSize = 20) : IMessage;
 
 public static class SearchQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<SearchHitDto>>> Handle(
+    public static async Task<Result<SearchPageDto>> Handle(
         SearchQuery query,
         ISearchIndex index,
         ICurrentUser currentUser,
@@ -19,20 +36,23 @@ public static class SearchQueryHandler
     {
         if (currentUser.Id is null)
         {
-            return Result.Failure<IReadOnlyList<SearchHitDto>>(DomainError.Unauthenticated(
+            return Result.Failure<SearchPageDto>(DomainError.Unauthenticated(
                 "auth.required", "Authentication is required."));
         }
 
         if (string.IsNullOrWhiteSpace(query.Query))
         {
-            return Result.Success<IReadOnlyList<SearchHitDto>>([]);
+            return Result.Success(new SearchPageDto([], 0));
         }
 
-        var hits = await index.SearchAsync(query.Query, Math.Clamp(query.Limit, 1, 100), cancellationToken);
-        var rows = hits
-            .Select(h => new SearchHitDto(h.Id, h.Kind, h.Title, h.Score))
-            .ToList();
+        SearchPage page = await index.SearchAsync(
+            query.Query, query.BoardId, query.Kind, query.Page, query.PageSize,
+            cancellationToken);
 
-        return Result.Success<IReadOnlyList<SearchHitDto>>(rows);
+        IReadOnlyList<SearchHitDto> items = page.Hits
+            .Select(h => new SearchHitDto(
+                h.Id, h.Kind, h.Title, h.Snippet, h.BoardId, h.CardId, h.Url, h.Score))
+            .ToList();
+        return Result.Success(new SearchPageDto(items, page.Total));
     }
 }

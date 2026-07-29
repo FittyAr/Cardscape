@@ -1,3 +1,4 @@
+using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Search;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Builder;
@@ -13,18 +14,33 @@ public static class SearchEndpoints
     {
         var group = app.MapGroup("/api/search").RequireAuthorization().WithTags("Search");
 
-        group.MapGet("/", async (string q, int limit, IMessageBus bus, CancellationToken ct) =>
+        group.MapGet("/", async (
+            string? q,
+            Guid? boardId,
+            SearchHitKind? kind,
+            int? page,
+            int? pageSize,
+            IMessageBus bus,
+            CancellationToken ct) =>
         {
-            var result = await bus.InvokeAsync<Result<IReadOnlyList<SearchHitDto>>>(new SearchQuery(q ?? string.Empty, limit == 0 ? 20 : limit), ct);
+            var result = await bus.InvokeAsync<Result<SearchPageDto>>(
+                new SearchQuery(
+                    Query: q ?? string.Empty,
+                    BoardId: boardId,
+                    Kind: kind,
+                    Page: page ?? 1,
+                    PageSize: pageSize ?? 20),
+                ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
         return app;
     }
 
-    private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
+    private static IResult MapError(DomainError error) => error.Type switch
     {
-        Cardscape.Domain.Common.ErrorType.Unauthenticated => Results.Unauthorized(),
+        ErrorType.Unauthenticated => Results.Unauthorized(),
+        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
         _ => Results.BadRequest(new { error.Code, error.Message })
     };
 }

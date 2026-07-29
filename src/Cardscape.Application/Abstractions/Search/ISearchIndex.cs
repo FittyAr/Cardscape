@@ -1,24 +1,41 @@
+using Cardscape.Domain.Activities;
+using Cardscape.Domain.Cards;
+using Cardscape.Domain.Checklists;
+using Cardscape.Domain.Comments;
+using Cardscape.Domain.Labels;
+
 namespace Cardscape.Application.Abstractions.Search;
 
-/// <summary>
-/// Full-text search index. Phase 1 ships a simple in-process
-/// implementation; Phase 5 may add a Postgres / Meilisearch
-/// backed one.
-/// </summary>
-public interface ISearchIndex
+public enum SearchHitKind
 {
-    /// <summary>Indexes (or re-indexes) a document.</summary>
-    Task IndexAsync(SearchDocument document, CancellationToken ct = default);
-
-    /// <summary>Removes a document from the index.</summary>
-    Task RemoveAsync(string id, CancellationToken ct = default);
-
-    /// <summary>Searches across the index.</summary>
-    Task<IReadOnlyList<SearchHit>> SearchAsync(string query, int limit, CancellationToken ct = default);
+    Card = 0,
+    Comment = 1,
+    ChecklistItem = 2,
+    Label = 3,
+    Activity = 4
 }
 
-/// <summary>Indexable document shape.</summary>
-public sealed record SearchDocument(string Id, string Kind, string Title, string Body, IReadOnlyDictionary<string, string> Attributes);
+public sealed record SearchHit(
+    string Id,
+    SearchHitKind Kind,
+    string Title,
+    string Snippet,
+    Guid? BoardId,
+    Guid? CardId,
+    string Url,
+    double Score);
 
-/// <summary>A single search hit.</summary>
-public sealed record SearchHit(string Id, string Kind, string Title, double Score);
+public sealed record SearchPage(IReadOnlyList<SearchHit> Hits, int Total);
+
+public interface ISearchIndex
+{
+    Task IndexCardAsync(Card card, CancellationToken ct = default);
+    Task RemoveCardAsync(Guid cardId, CancellationToken ct = default);
+    Task IndexCommentAsync(Comment comment, CancellationToken ct = default);
+    Task IndexChecklistItemAsync(ChecklistItem item, Checklist checklist, CancellationToken ct = default);
+    Task IndexLabelAsync(Label label, CancellationToken ct = default);
+    Task IndexActivityAsync(Activity activity, CancellationToken ct = default);
+    Task<SearchPage> SearchAsync(
+        string query, Guid? boardId, SearchHitKind? kind, int page, int pageSize,
+        CancellationToken ct = default);
+}
