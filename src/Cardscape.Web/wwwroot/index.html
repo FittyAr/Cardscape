@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cardscape.Web</title>
     <base href="/" />
-    <link rel="preload" id="webassembly" />
+    <link rel="modulepreload" href="_framework/dotnet.js" />
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
@@ -28,7 +28,21 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
-    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+    <!--
+        Note: in the default .NET 11 Blazor WebAssembly template the
+        <link id="webassembly" /> and the <script src="_framework/
+        blazor.webassembly#[.{fingerprint}].js"> tags carry token
+        placeholders that the SDK is supposed to replace at build /
+        publish time. With the .NET 11 preview SDK
+        (11.0.100-preview.6.26359.118) the replacement does not run
+        and the browser fails to resolve the fingerprinted path,
+        leaving the app stuck on the initial loading spinner. We
+        point at the canonical non-fingerprinted paths instead. The
+        dev server and the publish output both serve the files at
+        these names, so dev and prod behave the same.
+    -->
+    <link rel="preload" id="webassembly" href="_framework/Cardscape.Web.wasm" as="fetch" crossorigin="anonymous" />
+    <script src="_framework/blazor.webassembly.js"></script>
 </body>
 
 </html>
