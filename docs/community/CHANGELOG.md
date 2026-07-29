@@ -252,7 +252,9 @@ plus the production-readiness work that v1.0.0 ships on.
   `SearchPage` DTOs. `GET /api/search?q=…&boardId=…&kind=…&page=…&pageSize=…`.
 - **GitHub Actions** — `.github/workflows/ci.yml` runs
   build, format verify, unit, integration, and a separate
-  coverage job that uploads the lcov artifact.
+  coverage job that uploads the lcov artifact. Added in
+  v1.1.0-roadmap-execution (the file was missing at the
+  v1.0.0 release; corrected here).
 - **Production config** —
   `src/Cardscape.Api/appsettings.Production.json` has
   zero secrets. Every required value comes from an
