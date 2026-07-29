@@ -24,7 +24,7 @@ public static class NotificationEndpoints
         group.MapGet("/unread-count", async (IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<int>>(new UnreadNotificationsCountQuery(), ct);
-            return result.IsSuccess ? Results.Ok(new { count = result.Value }) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
         group.MapPost("/mark-all-read", async (IMessageBus bus, CancellationToken ct) =>

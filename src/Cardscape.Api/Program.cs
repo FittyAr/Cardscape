@@ -25,7 +25,9 @@ using Cardscape.Api.Realtime;
 using Cardscape.Application.DependencyInjection;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Persistence;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,6 +80,35 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseCors();
 
+// ── Blazor WebAssembly client hosting ────────────────────────────────
+// The Cardscape.Web project is referenced above so its wwwroot (the
+// compiled WASM client + index.html) is copied into the API's output
+// by scripts/copy-blazor-client.ps1 (invoked by the API csproj's
+// AfterTargets=Build target). These middlewares serve the framework
+// files and static content; the fallback below lets Blazor's
+// client-side router handle non-API URLs.
+//
+// The .NET 11 preview SDK only registers blazor.webassembly.js in the
+// Web project's static web assets; the app's .wasm and the runtime
+// .wasm/.js files end up in $(OutDir)/wwwroot/_framework but aren't
+// auto-discovered. We add an extra UseStaticFiles with an explicit
+// file provider pointing at the copy location so UseBlazorFrameworkFiles
+// can resolve the rest of the framework files. This middleware must
+// run before UseBlazorFrameworkFiles so the framework middleware only
+// sees requests for files it doesn't already know about.
+var clientWwwroot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+if (Directory.Exists(clientWwwroot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(clientWwwroot),
+        ServeUnknownFileTypes = true,
+        ContentTypeProvider = new FileExtensionContentTypeProvider()
+    });
+}
+app.UseBlazorFrameworkFiles();
+app.UseStaticFiles();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -125,6 +156,11 @@ app.MapBoardBroadcastEndpoints();
 // access token in the query string (the SignalR client
 // appends it automatically).
 app.MapHub<BoardHub>("/hubs/board");
+
+// Anything that didn't match an API endpoint or the static files above
+// falls through to the Blazor client's index.html so its router can take
+// over (e.g. /boards/123, /login, /workspaces).
+app.MapFallbackToFile("index.html");
 
 app.Run();
 

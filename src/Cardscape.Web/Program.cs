@@ -17,6 +17,7 @@ string apiBaseUrl = builder.Configuration["ApiBaseUrl"]
     ?? throw new InvalidOperationException("ApiBaseUrl is required (set in wwwroot/appsettings.json).");
 
 // ── Auth + state providers ───────────────────────────────────────────
+builder.Services.AddAuthorizationCore();
 builder.Services.AddSingleton<TokenStore>();
 builder.Services.AddSingleton<AuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthStateProvider>());

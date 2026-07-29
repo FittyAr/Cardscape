@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -27,7 +28,20 @@
   <ItemGroup>
     <ProjectReference Include="..\Cardscape.Application\Cardscape.Application.csproj" />
     <ProjectReference Include="..\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
+    <ProjectReference Include="..\Cardscape.Web\Cardscape.Web.csproj" />
   </ItemGroup>
+
+  <!--
+    Workaround for the .NET 11 preview SDK (11.0.100-preview.6.26359.118)
+    not running the static-web-assets merge for referenced Blazor WASM
+    projects. Until the SDK ships the pass, publish Cardscape.Web and
+    copy the result (with the static-web-asset fingerprints stripped)
+    into the API's output wwwroot. The script lives in scripts/ to keep
+    the csproj clean.
+  -->
+  <Target Name="CopyBlazorClientWwwroot" AfterTargets="Build">
+    <Exec Command="pwsh -NoProfile -NonInteractive &quot;$(MSBuildThisFileDirectory)..\..\scripts\copy-blazor-client.ps1&quot; -ApiOutDir &quot;$(OutDir.TrimEnd('\\'))&quot; -WebProject &quot;$(MSBuildThisFileDirectory)..\Cardscape.Web\Cardscape.Web.csproj&quot; -Configuration &quot;$(Configuration)&quot;" />
+  </Target>
 
   <ItemGroup>
     <!--
