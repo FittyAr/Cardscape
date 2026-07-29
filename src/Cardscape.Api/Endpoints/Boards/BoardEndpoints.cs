@@ -103,6 +103,24 @@ public static class BoardEndpoints
             return Results.File(result.Value, "application/zip", fileName);
         });
 
+        // Public board calendars are reachable without a bearer
+        // token. Private boards still require membership and
+        // therefore an authenticated request; the inner service
+        // enforces the rule.
+        group.MapGet("/{boardId:guid}/ics", async (
+            Guid boardId,
+            Cardscape.Application.Calendar.IIcalendarService calendar,
+            CancellationToken ct) =>
+        {
+            var result = await calendar.RenderBoardAsync(boardId, ct);
+            if (result.IsFailure)
+            {
+                return MapError(result.Error);
+            }
+
+            return Results.File(result.Value, "text/calendar", $"board-{boardId}.ics");
+        }).AllowAnonymous();
+
         return app;
     }
 

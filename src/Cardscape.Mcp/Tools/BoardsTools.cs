@@ -6,6 +6,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.Commands;
 using Cardscape.Application.Boards.DTOs;
 using Cardscape.Application.Boards.Queries;
+using Cardscape.Application.Calendar;
 using Cardscape.Application.Cards.Commands;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Cards.Queries;
@@ -391,6 +392,37 @@ public sealed class BoardsTools(
                 "MCP tool call rejected: no authenticated principal. "
                 + "Pass a Bearer JWT in the Authorization header on the stdio/stdin transport.");
         }
+    }
+
+    [McpServerTool(Name = "boards_get_icalendar")]
+    public async Task<string> GetBoardICalendar(Guid boardId, CancellationToken ct)
+    {
+        using var __mcpSpan = McpToolSpan.Begin("boards_get_icalendar");
+        RequireAuth();
+        var result = await bus.InvokeAsync<Result<Stream>>(
+            new RenderBoardCalendarQuery(boardId), ct);
+        if (result.IsFailure)
+        {
+            throw new InvalidOperationException($"{result.Error.Code}: {result.Error.Message}");
+        }
+        using var reader = new StreamReader(result.Value);
+        return await reader.ReadToEndAsync(ct);
+    }
+
+    [McpServerTool(Name = "boards_export")]
+    public async Task<byte[]> ExportBoard(Guid boardId, CancellationToken ct)
+    {
+        using var __mcpSpan = McpToolSpan.Begin("boards_export");
+        RequireAuth();
+        var result = await bus.InvokeAsync<Result<Stream>>(
+            new ExportBoardQuery(boardId), ct);
+        if (result.IsFailure)
+        {
+            throw new InvalidOperationException($"{result.Error.Code}: {result.Error.Message}");
+        }
+        using var ms = new MemoryStream();
+        await result.Value.CopyToAsync(ms, ct);
+        return ms.ToArray();
     }
 
     private static T Ensure<T>(Result<T> result)
