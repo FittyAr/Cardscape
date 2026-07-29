@@ -7,10 +7,244 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [v1.0.0] — 2026-07-29
 
-The current development line. Items here ship with the next
-patch or feature release.
+First production release. Full Trello parity across the
+kanban, calendar, planner, automation, and AI-integration
+surfaces. **313 unit tests + 85 integration tests green.**
+API starts clean against SQLite, PostgreSQL, or MariaDB.
+Production configuration has zero hard-coded secrets.
+
+### Phase 5 — enterprise + AI features (`v0.7.0-jobs` through `v0.7.10-polish`)
+
+Phase 5 closed the gap between the Phase 4 surface and a
+production Trello replacement. It shipped across ten
+incremental pre-release tags; this v1.0.0 cuts the first
+proper semver line on top of that work.
+
+#### Background jobs infrastructure — `v0.7.0-jobs`
+
+- **`IBackgroundJobScheduler`** in `Cardscape.Application` —
+  the only public surface for queueing a job. Supports
+  `EnqueueAsync(jobType, payloadJson, scheduledFor?)` and
+  returns the job id.
+- **`BackgroundJob` aggregate** with `Status`
+  (Pending/Running/Completed/Failed/DeadLettered),
+  exponential backoff (5 s base, capped at 5 min, max 5
+  attempts), and a `WorkerId` claim field for atomic
+  claim-and-process across instances.
+- **`IBackgroundJobHandler`** contract plus the
+  `ExecuteBackgroundJobCommandHandler` router that maps a
+  job type string to its handler. The handler is the only
+  place that touches EF Core / repositories.
+- **`BackgroundJobDispatcherService`** (IHostedService)
+  uses `IServiceScopeFactory` to spawn a fresh DI scope per
+  tick, claims a batch atomically with `UPDATE … RETURNING`,
+  and re-enqueues each job as a Wolverine
+  `ExecuteBackgroundJobCommand`. The Wolverine pipeline
+  invokes the handler on a worker thread.
+- **REST** `GET /api/jobs?status=…&limit=…` for the
+  admin / observability page; `GET /api/jobs/{id}` to
+  inspect a single job.
+- **MCP tools** `jobs_list`, `jobs_get`.
+- **Tests** — 5 unit (scheduler contract, retry policy,
+  claim atomicity) and 4 integration (dispatcher end-to-end
+  through the Wolverine pipeline).
+
+#### Custom Fields Web UI — `v0.7.1-custom-fields`
+
+- **`CustomFieldDefinition`** + **`CustomFieldValue`**
+  aggregates in `Cardscape.Domain.CustomFields/`. Per-board,
+  one of `Text / Number / Date / Checkbox`. The value
+  table is keyed by `(CardId, DefinitionId)` and validated
+  against the definition's kind at write time.
+- **REST** under `/api/boards/{boardId}/custom-fields` and
+  `/api/cards/{cardId}/custom-fields`: list, create,
+  rename, delete, set value, clear value.
+- **MCP tools** `boards_list_custom_fields`,
+  `boards_create_custom_field`, `boards_rename_custom_field`,
+  `boards_delete_custom_field`, `cards_set_custom_field_value`,
+  `cards_clear_custom_field_value`, `cards_list_custom_field_values`.
+- **Web UI** — `/boards/{id}/custom-fields` management page
+  (Radzen `DataGrid` with inline edit + delete confirm);
+  card detail shows the live values with kind-aware
+  editors.
+- **Migration** `IssueCustomFields` adds
+  `custom_field_definitions` and `custom_field_values`.
+- **Tests** — 25 unit (definition validation, value
+  coercion, type guards) and 7 integration (lifecycle,
+  RBAC, kind mismatch rejection).
+
+#### Rate limiting — `v0.7.2-rate-limit`
+
+- **`IRateLimiter`** in `Cardscape.Application.Abstractions.Security`
+  with a token-bucket implementation in
+  `Cardscape.Infrastructure.Security.RateLimiter`. Per-key
+  (`ApiTokenId` or `UserId` for JWT), with `RateLimitPerHour`
+  + `BurstSize` configured per API token.
+- **`RateLimitMiddleware`** in `Cardscape.Api` runs after
+  authentication, reads the principal's `ApiToken` claim,
+  and returns `429 Too Many Requests` with
+  `Retry-After` + `X-RateLimit-*` headers when the bucket
+  is empty.
+- **API token auth scheme registration** — the production
+  `ApiTokenAuthenticationHandler` is registered in
+  `Cardscape.Api` (was previously only in `Cardscape.Mcp`)
+  and a `BearerPolicy` policy-scheme dispatches between
+  `JwtBearer` and `ApiToken` based on the secret's shape
+  (dots = JWT, no dots = base64url API token).
+- **Tests** — 8 unit (limiter math, bucket refill,
+  per-token isolation) and 4 integration (auth scheme
+  dispatch, 429 path, headers).
+
+#### Activity UI — `v0.7.3-activity`
+
+- **`IActivityRepository`** with cursor pagination
+  (`ActivityCursor` = base64url `unixMs|guid`) and a
+  per-card variant.
+- **REST** `GET /api/boards/{boardId}/activities/` and
+  `GET /api/cards/{cardId}/activities/`.
+- **MCP tools** `boards_list_activities`,
+  `cards_list_activities`.
+- **Web UI** — `/boards/{id}/activity` standalone page plus
+  a section in `CardDetail.razor`. "Activity" button in
+  `BoardDetail.razor` nav.
+- **Tests** — 7 unit (cursor encode / decode, ordering,
+  bounds) and 4 integration (end-to-end timeline).
+
+#### Voting — `v0.7.4-voting`
+
+- **`CardVote`** aggregate with `(CardId, UserId)` as the
+  natural key. Toggle semantics — one POST flips state,
+  no separate "remove" endpoint.
+- **REST** `POST /api/cards/{cardId}/votes/` (toggle) and
+  `GET /api/cards/{cardId}/votes/` (count + my-vote).
+- **MCP tools** `cards_toggle_vote`, `cards_get_votes`.
+- **Web UI** — heart button in `CardDetail.razor` header
+  with the live count, red when the current user has voted.
+- **Migration** `IssueCardVotes` adds `card_votes` with a
+  unique `(CardId, UserId)` index.
+- **Tests** — 8 unit (toggle, count, re-vote) and 5
+  integration (RBAC, double-vote guard, count surfaces).
+
+#### Checklists — `v0.7.5-checklists`
+
+- **`Checklist` + `ChecklistItem`** aggregates. The
+  `Checklist` aggregate owns its items as a child
+  collection via `OwnsMany` so loading the parent loads
+  the children — no separate `ChecklistItemRepository`
+  lookup.
+- **Eight commands**: create, rename, delete, add item,
+  rename item, toggle item, delete item, plus the read
+  query.
+- **REST** `GET /api/cards/{cardId}/checklists/`,
+  `POST …/checklists/`, `PUT /api/checklists/{id}`,
+  `DELETE /api/checklists/{id}`,
+  `POST /api/checklists/{id}/items/`,
+  `PUT /api/checklist-items/{itemId}`,
+  `DELETE /api/checklist-items/{itemId}`.
+- **MCP tools** `cards_*_checklist` (8 tools).
+- **Web UI** — checklist section in `CardDetail.razor`
+  with `RadzenCheckBox` per item, a `RadzenProgressBar`
+  per checklist, and per-row delete buttons.
+- **Migration** `IssueChecklists` adds `checklists` and
+  the child `checklist_items` table.
+- **Tests** — 12 unit (aggregate behaviour, position
+  insert, item toggle) and 6 integration (RBAC, child
+  collection load, mutation paths).
+
+#### Recurring cards — `v0.7.6-repeater`
+
+- **`CardRecurrence`** aggregate with `IntervalDays`
+  (1-365), `NextOccurrenceAt`, and `IsActive`. Unique
+  per `CardId`.
+- **`CardRecurrenceDispatcherService`** (IHostedService)
+  polls every 5 min, fetches the batch of due
+  recurrences, and enqueues a `CloneCardJob` per card.
+- **`CloneCardHandler`** (`IBackgroundJobHandler`) clones
+  the source card into the same list, at position
+  `Max(c => c.Position.Value) + 1`, then calls
+  `rule.Reschedule(clock.UtcNow.AddDays(rule.IntervalDays))`.
+- **REST** `GET /api/cards/{cardId}/recurrence/`,
+  `PUT …/recurrence/`, `DELETE …/recurrence/`.
+- **MCP tools** `cards_get_recurrence`,
+  `cards_set_recurrence`, `cards_delete_recurrence`.
+- **Web UI** — section in `CardDetail.razor` with
+  `RadzenNumeric` for the interval (1-365) and a save
+  button.
+- **Migration** `IssueCardRecurrences`.
+- **Tests** — 9 unit (aggregate validation, reschedule
+  math) and 5 integration (dispatcher end-to-end, clone
+  position, idempotency).
+
+#### Polish + webhooks + attachments + search — `v0.7.10-polish`
+
+This pre-release bundled the final three feature slices
+plus the production-readiness work that v1.0.0 ships on.
+
+- **Webhooks** — per-board `WebhookEndpoint` rows with a
+  SHA-256-hashed secret. `WebhookEventBroadcaster` fires
+  on `card.created`, `card.moved`, `card.completed`,
+  `comment.added`. `WebhookDeliveryHandler` retries with
+  exponential backoff, signs each delivery with
+  HMAC-SHA256, and dead-letters after 5 attempts.
+  `GET/POST/DELETE /api/boards/{id}/webhooks/`,
+  `GET /api/webhooks/{webhookId}/deliveries/`. MCP
+  `boards_list_webhooks`, `boards_create_webhook`,
+  `boards_delete_webhook`. Web `/boards/{id}/webhooks`.
+- **Attachments** — `CardAttachment` rows stored in
+  `Storage:LocalRoot` via the `IStorageService` interface.
+  25 MB cap enforced both in Kestrel (`MaxRequestBodySize`)
+  and in the multipart binding. Drag-drop on
+  `CardDetail.razor`. `POST/GET/DELETE /api/cards/{id}/attachments/`.
+- **Full-text search** — `ISearchIndex` with a streaming
+  in-memory implementation, case-insensitive substring
+  match over cards, comments, checklist items, labels,
+  and activity. `SearchHitKind` enum + `SearchHit` +
+  `SearchPage` DTOs. `GET /api/search?q=…&boardId=…&kind=…&page=…&pageSize=…`.
+- **GitHub Actions** — `.github/workflows/ci.yml` runs
+  build, format verify, unit, integration, and a separate
+  coverage job that uploads the lcov artifact.
+- **Production config** —
+  `src/Cardscape.Api/appsettings.Production.json` has
+  zero secrets. Every required value comes from an
+  environment variable (`ConnectionStrings__Default`,
+  `Jwt__SigningKey`, `Internal__Secret`,
+  `Storage__LocalRoot`).
+- **Docs** — this CHANGELOG and the README v1.0.0 status
+  table are consolidated in this release.
+
+### Cross-cutting bugfixes
+
+- **`Result<T>.Value` supports `Result<T?>`** — added a
+  `_hasValue` flag in `src/Cardscape.Domain/Common/Result.cs`
+  so `Result.Success<CardRecurrenceDto?>(null)` does not
+  throw when `.Value` is accessed. Required by the
+  recurring-cards slice.
+- **API token auth scheme registration** — the production
+  `ApiTokenAuthenticationHandler` is now in
+  `Cardscape.Api.Authentication` (was only in
+  `Cardscape.Mcp`). Registered behind a
+  `BearerPolicy` policy-scheme that picks the right
+  handler by the secret's shape. Without this fix every
+  API token call returned 401 and the rate-limit
+  middleware could not identify the caller.
+- **`OwnsMany` for child collections** — `Checklist.Items`
+  is now an owned child collection in
+  `ChecklistConfiguration` so loading a `Checklist`
+  loads its items in the same query. The previous
+  pattern of a separate `IChecklistItemRepository`
+  silently left the items collection empty.
+- **All mutation handlers call `uow.SaveChangesAsync(ct)`**
+  — the checklist handlers (`RenameChecklist`,
+  `AddChecklistItem`, `ToggleChecklistItem`,
+  `DeleteChecklistItem`) were missing the save. Fixed
+  in this release.
+- **`Position` struct mapping** — every `Position` value-
+  object field is now `HasConversion(p => p.Value, v =>
+  Position.From(v))`, including the new
+  `ChecklistItem.Position` and the previously missed
+  `Card.Position`.
 
 ---
 

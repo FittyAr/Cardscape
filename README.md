@@ -80,16 +80,20 @@ See:
 
 ## Status
 
-Cardscape is in **alpha, Phase 4 complete**. The codebase
-runs end to end: a user can register, create a workspace, drop
-in boards/lists/cards, comment, label, star, mint and revoke
-API tokens, send and accept workspace invitations, manage the
-inbox, browse the calendar, plan in the swimlane view, set up
-board automation rules, and toggle per-board extensions. The
-full HTTP pipeline is covered by integration tests against the
-real Program + DI + Wolverine + EF Core stack. The MCP server
-exposes the same surface to AI clients and pushes its writes
-back to the Web UI in real time.
+Cardscape is at **`v1.0.0`** — first production release with
+full Trello parity. The codebase runs end to end: a user can
+register, create a workspace, drop in boards/lists/cards,
+comment, label, star, attach files, vote with heart reactions,
+add checklists with progress, set up custom fields, schedule
+recurring cards, mint and revoke API tokens with per-token
+rate limits, send and accept workspace invitations, manage
+the Inbox, browse the calendar, plan in the swimlane view,
+set up board automation rules, toggle per-board extensions,
+push out per-board webhooks, and full-text search every
+card. The full HTTP pipeline is covered by integration tests
+against the real Program + DI + Wolverine + EF Core stack.
+The MCP server exposes the same surface to AI clients and
+pushes its writes back to the Web UI in real time.
 
 | Phase | Scope | Status |
 |---|---|---|
@@ -98,17 +102,84 @@ back to the Web UI in real time.
 | 2 | Real-time (SignalR) + **MCP server end-to-end** (the differentiator ships here) | **DONE** (`v0.2.0-core-mcp`) |
 | 3 | Access control on cards/lists + **first-class API tokens** for the MCP server + Web UI token management | **DONE** (`v0.3.0-api-tokens`) |
 | 4 | Workspace invitations, Inbox, Calendar, Planner, automation engine, board extensions | **DONE** (`v0.4.0-realtime-mcp` through `v0.6.4-extensions`) |
-| 5 | Enterprise + AI features | not started |
-| 6 | Polish + scale | ongoing |
+| 5 | Background jobs, custom fields, voting, checklists, recurring cards, webhooks, attachments, full-text search, activity, rate limit | **DONE** (`v0.7.0-jobs` through `v0.7.10-polish`) |
+| 6 | v1.0.0 release: full Trello parity, production config, CI with coverage, polished docs | **DONE** (`v1.0.0`) |
 
-`dotnet build` is green. **216 unit tests + 46 integration tests**
+`dotnet build` is green. **313 unit tests + 85 integration tests**
 are green. The Blazor WebAssembly client talks to the API over
-JWT. The Docker image boots, applies migrations, and serves the
-SPA on port 8080. See
+JWT or per-user API tokens. The Docker image boots, applies
+migrations, and serves the SPA on port 8080. Production
+configuration has zero hard-coded secrets — all required
+values come from environment variables. See
 [the implementation plan](docs/roadmap/01-implementation-plan.md)
 for the full phased delivery schedule and
 [the working contract](docs/AGENTS.md) for how work is done on
 this codebase.
+
+### What ships in `v1.0.0`
+
+Every Trello power-user feature is in:
+
+- **Workspaces, boards, lists, cards** with positional
+  re-ordering (decimal `Position` value object, not floats).
+- **Members, comments, labels, due dates, cover colors,
+  archiving, starring.**
+- **Attachments** — drag-drop a file (up to 25 MB) on a card,
+  stored in local disk under `Storage:LocalRoot` and streamed
+  back via a download endpoint.
+- **Voting** — heart-react on a card, per-user toggle, count
+  surfaced in the card detail header.
+- **Checklists** — per-card checklists with toggleable items
+  and a progress bar.
+- **Custom fields** — per-board typed fields (text / number /
+  date / checkbox), settable on each card, surfaced in the
+  card detail.
+- **Recurring cards** — set an interval (1-365 days) and the
+  background job dispatcher clones the card automatically
+  when the next occurrence is due.
+- **Webhooks** — register an HTTP endpoint per board, pick
+  which events (`card.created`, `card.moved`,
+  `card.completed`, `comment.added`) to forward, deliveries
+  are HMAC-SHA256 signed and retried with exponential
+  backoff (5 s base, capped at 5 min, max 5 attempts).
+- **Full-text search** — case-insensitive substring search
+  over cards, comments, checklist items, labels, and
+  activity, optionally scoped to a single board, paginated.
+- **Activity feed** — per-board and per-card timelines with
+  cursor pagination.
+- **Calendar & planner** — month grid and swimlane views
+  over due-date cards.
+- **Inbox** — in-app notifications, auto-created on card
+  assignment, with a 60s-polling bell.
+- **Workspace invitations** — owner mints by email, invitee
+  redeems a one-shot token.
+- **Automation engine** — per-board rules that react to
+  card events (move / complete / reopen / created in list)
+  and run server-side actions (move / assign / set due date /
+  mark complete). Best-effort: a failed rule never blocks
+  the user request.
+- **Board extensions** — per-board toggles for the power-up
+  features (Custom Fields, Voting, Card Repeater) with
+  opaque JSON config.
+- **Real-time (SignalR)** — board and card updates pushed
+  to all connected clients within the same ASP.NET Core
+  process.
+- **Per-API-token rate limit** — each API token has its own
+  `RateLimitPerHour` and `BurstSize`; the middleware uses
+  the `ApiToken` auth scheme to identify the caller.
+- **MCP server** — every domain command and query is
+  exposed as a tool, including the new
+  `cards_create_checklist`, `cards_vote`,
+  `cards_set_recurrence`, `boards_list_webhooks`,
+  `search`, and so on.
+- **CI** — GitHub Actions build, format, unit, integration,
+  and a separate coverage job that uploads an lcov
+  artifact.
+- **Production config** — `appsettings.Production.json` has
+  zero secrets; every required value comes from an
+  environment variable (`ConnectionStrings__Default`,
+  `Jwt__SigningKey`, `Internal__Secret`,
+  `Storage__LocalRoot`).
 
 ---
 
@@ -151,7 +222,7 @@ For iterating on the source:
 git clone https://github.com/cardscape/cardscape.git
 cd cardscape
 dotnet build                       # 11 projects, 0 errors, 0 warnings
-dotnet test                        # 200 unit + 31 integration, all green
+dotnet test                        # 313 unit + 85 integration, all green
 dotnet run --project src/Cardscape.Api          # API on http://localhost:5291
 dotnet run --project src/Cardscape.Web          # Web on http://localhost:5206
 ```
