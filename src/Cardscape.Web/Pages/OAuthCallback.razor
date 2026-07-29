@@ -1,0 +1,84 @@
+@page "/oauth/callback"
+@layout EmptyLayout
+@using System.Web
+@using Cardscape.Web.Services
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@inject TokenStore Tokens
+@inject AuthStateProvider Auth
+@inject NavigationManager Nav
+
+<PageTitle>Signing you in… — Cardscape</PageTitle>
+
+<div class="auth-shell">
+    <RadzenCard class="auth-card">
+        <h1 class="auth-title">@(error is null ? "Signing you in…" : "Sign-in failed")</h1>
+        <p style="color: #6b7280; font-size: 0.875rem;">
+            @(error ?? "Hold on while we finish your sign-in.")
+        </p>
+        @if (error is not null)
+        {
+            <a class="provider-button" href="/login" style="justify-content: center;">
+                <span>Back to sign in</span>
+            </a>
+        }
+    </RadzenCard>
+</div>
+
+@code {
+    private string? error;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        try
+        {
+            // The API redirects the browser back here with a
+            // #access_token=...&refresh_token=... fragment.
+            // We can't read the fragment from a Blazor page
+            // directly (the server only sees the path), so
+            // we ask the browser via JS for the current URL
+            // and parse the fragment ourselves.
+            string currentUrl = await JS.InvokeAsync<string>("eval",
+                "window.location.href");
+            var uri = new Uri(currentUrl);
+            string fragment = uri.Fragment.TrimStart('#');
+            if (string.IsNullOrWhiteSpace(fragment))
+            {
+                error = "The sign-in callback did not include a token fragment.";
+                StateHasChanged();
+                return;
+            }
+
+            var query = HttpUtility.ParseQueryString(fragment);
+            string? access = query["access_token"];
+            string? refresh = query["refresh_token"];
+            if (string.IsNullOrWhiteSpace(access) || string.IsNullOrWhiteSpace(refresh))
+            {
+                error = "The sign-in callback is missing an access or refresh token.";
+                StateHasChanged();
+                return;
+            }
+
+            var userId = Guid.TryParse(query["user_id"], out var id) ? id : Guid.Empty;
+            var user = new Shared.UserSummaryDto(
+                Id: userId,
+                Email: query["user_email"] ?? string.Empty,
+                DisplayName: query["user_name"] ?? string.Empty);
+
+            await Tokens.SetAsync(access, refresh, user);
+            Auth.Notify();
+            Nav.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            error = $"Could not finish signing in: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+}

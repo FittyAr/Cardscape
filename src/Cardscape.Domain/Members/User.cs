@@ -75,6 +75,39 @@ public sealed class User : AggregateRoot<UserId>
         return Result.Success(user);
     }
 
+    /// <summary>
+    /// Factory: register a user that has no password because
+    /// they signed in via an external OAuth provider (Google,
+    /// Microsoft, Apple). The user can later set a password
+    /// from the Web UI's "Account security" page via
+    /// <see cref="ChangePassword"/>.
+    /// </summary>
+    public static Result<User> RegisterExternal(
+        UserId id,
+        EmailAddress email,
+        DisplayName displayName,
+        DateTimeOffset at)
+    {
+        if (id.Value == Guid.Empty)
+        {
+            return Result.Failure<User>(DomainError.Validation(
+                "members.user.id_required",
+                "User id is required."));
+        }
+
+        // The placeholder hash is a fixed, non-empty value
+        // so the row passes the NOT NULL constraint. It is
+        // never used for authentication because the
+        // external-login flow never calls Verify on it.
+        var placeholderHash = PasswordHash.FromHashed("EXTERNAL::" + Guid.NewGuid().ToString("N")).Value;
+        var user = new User(id, email, displayName, placeholderHash)
+        {
+            CreatedAt = at
+        };
+        user.AddDomainEvent(new UserRegistered(id, email, at));
+        return Result.Success(user);
+    }
+
     /// <summary>Marks a successful login and stamps <see cref="LastLoginAt"/>.</summary>
     public void RecordLogin(DateTimeOffset at)
     {

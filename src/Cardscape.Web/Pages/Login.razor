@@ -1,22 +1,45 @@
-@page "/login"
+﻿@page "/login"
 @layout EmptyLayout
 @using System.Web
+@using Cardscape.Web.Resources
 @using Cardscape.Web.Services
 @using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Localization
 @inject AuthService Auth
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Sign in — Cardscape</PageTitle>
+<PageTitle>@L["AuthSignIn"] @L["PageTitleSuffix"]</PageTitle>
 
 <div class="auth-shell">
     <RadzenCard class="auth-card">
-        <h1 class="auth-title">Sign in to Cardscape</h1>
+        <h1 class="auth-title">@L["AuthSignInTitle"]</h1>
+
+        <div class="auth-providers">
+            <a class="provider-button provider-google"
+               href="/api/auth/external/google/start?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">
+                <span class="provider-glyph" aria-hidden="true">G</span>
+                <span>@L["AuthSignInWithGoogle"]</span>
+            </a>
+            <a class="provider-button provider-microsoft"
+               href="/api/auth/external/microsoft/start?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">
+                <span class="provider-glyph" aria-hidden="true">M</span>
+                <span>@L["AuthSignInWithMicrosoft"]</span>
+            </a>
+            @* TODO: wire Apple once the JWT client_secret story is sorted *@
+            <button class="provider-button provider-apple" disabled title="Apple sign-in is on the roadmap">
+                <span class="provider-glyph" aria-hidden="true">A</span>
+                <span>@L["AuthSignInWithApple"]</span>
+            </button>
+        </div>
+
+        <div class="auth-divider"><span>or</span></div>
 
         <RadzenTemplateForm TItem="LoginModel" Data="@model" Submit="@HandleSubmit">
-            <RadzenLabel Text="Email" Component="email" />
+            <RadzenLabel Text="@L["AuthEmail"]" Component="email" />
             <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%" autocomplete="email" />
 
-            <RadzenLabel Text="Password" Component="password" Style="margin-top:1rem" />
+            <RadzenLabel Text="@L["AuthPassword"]" Component="password" Style="margin-top:1rem" />
             <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%" autocomplete="current-password" />
 
             @if (error is not null)
@@ -25,15 +48,15 @@
             }
 
             <RadzenButton ButtonType="ButtonType.Submit"
-                          Text="Sign in"
+                          Text="@L["AuthSignIn"]"
                           ButtonStyle="ButtonStyle.Primary"
                           IsBusy="@busy"
-                          BusyText="Signing in..."
+                          BusyText="@L["AuthSigningIn"]"
                           Style="width:100%; margin-top:1.5rem" />
         </RadzenTemplateForm>
 
         <p class="auth-footer">
-            No account? <a href="register">Create one</a>.
+            @L["AuthNoAccount"] <a href="register">@L["AuthCreateOne"]</a>.
         </p>
     </RadzenCard>
 </div>

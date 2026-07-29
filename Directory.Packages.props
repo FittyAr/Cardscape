@@ -48,6 +48,14 @@
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.3" />
 
+    <!-- Localization (Blazor WASM). -->
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="11.0.0-preview.6.26359.118" />
+
+    <!-- OAuth 2.0 / OIDC external login providers. -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.Google" Version="11.0.0-preview.6.26359.118" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="11.0.0-preview.6.26359.118" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="11.0.0-preview.6.26359.118" />
+
     <!-- Blazor WASM + Radzen. -->
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="11.0.0-preview.6.26359.118" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="11.0.0-preview.6.26359.118" />

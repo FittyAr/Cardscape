@@ -2,7 +2,9 @@ using System.Text;
 using Cardscape.Api.Authentication;
 using Cardscape.Application.Abstractions.Security;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -121,6 +123,38 @@ public static class ServiceCollectionExtensions
         authBuilder.AddScheme<ApiTokenAuthenticationOptions, ApiTokenAuthenticationHandler>(
             ApiTokenAuthenticationHandler.SchemeName,
             _ => { });
+
+        // ── OAuth 2.0 / OIDC external login (P4.1) ──────────
+        // Google and Microsoft are wired in full. Apple
+        // requires generating a JWT client_secret per Apple's
+        // spec (see TODO in ExternalProvider.IsImplemented).
+        string? googleClientId = configuration["Authentication:Google:ClientId"];
+        string? googleClientSecret = configuration["Authentication:Google:ClientSecret"];
+        if (!string.IsNullOrWhiteSpace(googleClientId)
+            && !string.IsNullOrWhiteSpace(googleClientSecret))
+        {
+            authBuilder.AddGoogle(options =>
+            {
+                options.ClientId = googleClientId;
+                options.ClientSecret = googleClientSecret;
+                options.Scope.Add("email");
+                options.Scope.Add("profile");
+            });
+        }
+
+        string? microsoftClientId = configuration["Authentication:Microsoft:ClientId"];
+        string? microsoftClientSecret = configuration["Authentication:Microsoft:ClientSecret"];
+        if (!string.IsNullOrWhiteSpace(microsoftClientId)
+            && !string.IsNullOrWhiteSpace(microsoftClientSecret))
+        {
+            authBuilder.AddMicrosoftAccount(options =>
+            {
+                options.ClientId = microsoftClientId;
+                options.ClientSecret = microsoftClientSecret;
+                options.Scope.Add("email");
+                options.Scope.Add("profile");
+            });
+        }
 
         services.AddAuthorization();
         return services;

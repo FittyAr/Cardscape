@@ -45,6 +45,27 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddValidation();
 
+// ── Localization (i18n) ──────────────────────────────────────
+// Resources live in src/Cardscape.Web/Resources; the API
+// (which hosts the Blazor WASM client and the server-rendered
+// fallbacks) also registers the localization services so an
+// IStringLocalizer<SharedResource> resolved inside an endpoint
+// returns the same culture-aware text the Web client picked.
+// Supported cultures mirror the Web project; default is "en".
+builder.Services.AddLocalization();
+builder.Services.Configure<Microsoft.AspNetCore.Builder.RequestLocalizationOptions>(options =>
+{
+    var supported = new[] { "en", "es" };
+    options.DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("en");
+    options.SupportedCultures = supported.Select(c => new System.Globalization.CultureInfo(c)).ToList();
+    options.SupportedUICultures = supported.Select(c => new System.Globalization.CultureInfo(c)).ToList();
+    options.RequestCultureProviders = new Microsoft.AspNetCore.Localization.IRequestCultureProvider[]
+    {
+        new Microsoft.AspNetCore.Localization.AcceptLanguageHeaderRequestCultureProvider(),
+        new Microsoft.AspNetCore.Localization.QueryStringRequestCultureProvider()
+    };
+});
+
 builder.Services.AddCardscapeApplication();
 builder.Services.AddCardscapeInfrastructure(builder.Configuration);
 builder.Services.AddApiAuthentication(builder.Configuration);
@@ -77,6 +98,14 @@ app.Services.UseCardscapeBackgroundJobHandlers();
 
 // ── Middleware pipeline ─────────────────────────────────
 app.UseMiddleware<GlobalExceptionMiddleware>();
+
+// ── Localization middleware ────────────────────────────────
+// Honours the Accept-Language header (or the ?culture= query
+// string override) and sets the current request culture for
+// any IStringLocalizer<SharedResource> resolved inside an API
+// endpoint. Sits before UseRouting so the rest of the pipeline
+// sees the resolved culture.
+app.UseRequestLocalization();
 
 app.UseCors();
 
@@ -130,6 +159,7 @@ app.MapGet("/health", () => Results.Ok(new
 })).WithName("HealthCheck").WithTags("Health").AllowAnonymous();
 
 app.MapAuthEndpoints();
+app.MapExternalLoginEndpoints();
 app.MapWorkspaceEndpoints();
 app.MapWorkspaceInvitationEndpoints();
 app.MapBoardEndpoints();

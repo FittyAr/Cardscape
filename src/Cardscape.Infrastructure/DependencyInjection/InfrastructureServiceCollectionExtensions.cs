@@ -1,10 +1,12 @@
 using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Email;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Storage;
 using Cardscape.Domain.Activities;
+using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
@@ -21,6 +23,7 @@ using Cardscape.Domain.Voting;
 using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.BackgroundJobs;
 using Cardscape.Infrastructure.Ai;
+using Cardscape.Infrastructure.Authentication;
 using Cardscape.Infrastructure.Email;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Persistence.Interceptors;
@@ -165,6 +168,11 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IdempotencyKeyRepository>();
         services.AddScoped<IRepository<IdempotencyKey, IdempotencyKeyId>, IdempotencyKeyRepository>(sp => sp.GetRequiredService<IdempotencyKeyRepository>());
         services.AddScoped<IIdempotencyKeyStore, IdempotencyKeyRepository>(sp => sp.GetRequiredService<IdempotencyKeyRepository>());
+
+        services.AddScoped<ExternalLoginRepository>();
+        services.AddScoped<IRepository<ExternalLogin, ExternalLoginId>, ExternalLoginRepository>(sp => sp.GetRequiredService<ExternalLoginRepository>());
+        services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>(sp => sp.GetRequiredService<ExternalLoginRepository>());
+        services.AddScoped<IExternalLoginService, ExternalLoginService>();
 
         // Identity-shaped repositories (a few extra generics to satisfy the IRepository
         // contract for non-aggregate roots). The Application layer depends only on the
