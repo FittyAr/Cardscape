@@ -10,6 +10,7 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Comments;
+using Cardscape.Domain.Idempotency;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
@@ -160,6 +161,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<ICardAgingSettingsRepository, CardAgingSettingsRepository>();
         services.AddScoped<ICardSnoozeRepository, CardSnoozeRepository>();
         services.AddScoped<ICardMirrorRepository, CardMirrorRepository>();
+
+        services.AddScoped<IdempotencyKeyRepository>();
+        services.AddScoped<IRepository<IdempotencyKey, IdempotencyKeyId>, IdempotencyKeyRepository>(sp => sp.GetRequiredService<IdempotencyKeyRepository>());
+        services.AddScoped<IIdempotencyKeyStore, IdempotencyKeyRepository>(sp => sp.GetRequiredService<IdempotencyKeyRepository>());
 
         // Identity-shaped repositories (a few extra generics to satisfy the IRepository
         // contract for non-aggregate roots). The Application layer depends only on the

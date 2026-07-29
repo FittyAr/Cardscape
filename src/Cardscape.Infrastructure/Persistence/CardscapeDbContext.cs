@@ -5,6 +5,7 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Comments;
+using Cardscape.Domain.Idempotency;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
@@ -46,6 +47,7 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<CardAgingSettings> CardAgingSettings => Set<CardAgingSettings>();
     public DbSet<CardSnooze> CardSnoozes => Set<CardSnooze>();
     public DbSet<CardMirror> CardMirrors => Set<CardMirror>();
+    public DbSet<IdempotencyKey> IdempotencyKeys => Set<IdempotencyKey>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't

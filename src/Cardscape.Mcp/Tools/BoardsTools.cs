@@ -1,4 +1,7 @@
-﻿using Cardscape.Application.Abstractions.Persistence;
+﻿using System.Text.Json;
+using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Idempotency;
+using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.Commands;
 using Cardscape.Application.Boards.DTOs;
@@ -20,6 +23,7 @@ using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Application.Workspaces.Queries;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
+using Cardscape.Mcp.Idempotency;
 using Cardscape.Mcp.Realtime;
 using ModelContextProtocol.Server;
 using Cardscape.Mcp.Observability;
@@ -35,13 +39,21 @@ namespace Cardscape.Mcp.Tools;
 /// in one place. Every mutating tool additionally calls
 /// <see cref="IBoardPushClient"/> after success so the live Web
 /// UI sees the AI's edit without polling.
+///
+/// <para>Mutating tools accept an optional
+/// <c>idempotencyKey</c> parameter. When supplied, the tool
+/// short-circuits to the previously-recorded response on a
+/// retry (same owner + key + payload hash). Pass <c>null</c>
+/// to opt out of idempotency for a single call.</para>
 /// </summary>
 [McpServerToolType]
 public sealed class BoardsTools(
     IMessageBus bus,
     ICurrentUser currentUser,
     IBoardPushClient push,
-    ICardRepository cards)
+    ICardRepository cards,
+    IIdempotencyKeyStore idempotencyStore,
+    IClock clock)
 {
     // â”€â”€ Workspaces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -119,15 +131,31 @@ public sealed class BoardsTools(
     }
 
     [McpServerTool(Name = "lists_create")]
-    public async Task<BoardListDto> CreateList(Guid boardId, string name, CancellationToken ct)
+    public async Task<BoardListDto> CreateList(
+        Guid boardId,
+        string name,
+        string? idempotencyKey = null,
+        CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("lists_create");
         RequireAuth();
-        var result = await bus.InvokeAsync<Result<BoardListDto>>(new CreateListCommand(boardId, name), ct);
-        var dto = Ensure(result);
-        await push.PushListCreatedAsync(new ListEventPayload(
-            dto.Id, dto.BoardId, dto.Name, DateTimeOffset.UtcNow), ct);
-        return dto;
+        var payload = JsonSerializer.Serialize(new { boardId, name });
+        return await IdempotentToolRunner.RunAsync(
+            idempotencyKey: idempotencyKey,
+            requestJson: payload,
+            currentUser: currentUser,
+            store: idempotencyStore,
+            clock: clock,
+            handler: async () =>
+            {
+                var result = await bus.InvokeAsync<Result<BoardListDto>>(
+                    new CreateListCommand(boardId, name), ct);
+                var dto = Ensure(result);
+                await push.PushListCreatedAsync(new ListEventPayload(
+                    dto.Id, dto.BoardId, dto.Name, DateTimeOffset.UtcNow), ct);
+                return dto;
+            },
+            ct: ct);
     }
 
     // â”€â”€ Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -154,16 +182,31 @@ public sealed class BoardsTools(
 
     [McpServerTool(Name = "cards_create")]
     public async Task<CardDto> CreateCard(
-        Guid listId, string title, string? description, CancellationToken ct)
+        Guid listId,
+        string title,
+        string? description,
+        string? idempotencyKey = null,
+        CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_create");
         RequireAuth();
-        var result = await bus.InvokeAsync<Result<CardDto>>(
-            new CreateCardCommand(listId, title, description), ct);
-        var dto = Ensure(result);
-        await push.PushCardCreatedAsync(new CardEventPayload(
-            dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
-        return dto;
+        var payload = JsonSerializer.Serialize(new { listId, title, description });
+        return await IdempotentToolRunner.RunAsync(
+            idempotencyKey: idempotencyKey,
+            requestJson: payload,
+            currentUser: currentUser,
+            store: idempotencyStore,
+            clock: clock,
+            handler: async () =>
+            {
+                var result = await bus.InvokeAsync<Result<CardDto>>(
+                    new CreateCardCommand(listId, title, description), ct);
+                var dto = Ensure(result);
+                await push.PushCardCreatedAsync(new CardEventPayload(
+                    dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
+                return dto;
+            },
+            ct: ct);
     }
 
     [McpServerTool(Name = "cards_move")]
