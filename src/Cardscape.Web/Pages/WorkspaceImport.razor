@@ -1,0 +1,113 @@
+@page "/workspaces/{id:guid}/import"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Microsoft.Extensions.Localization
+@inject HttpClient Http
+@inject IStringLocalizer<SharedResource> L
+@inject NavigationManager Nav
+
+<PageTitle>@L["ImportTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<div class="page-shell">
+    <h1>@L["ImportTitle"]</h1>
+    <p>@L["ImportBlurb"]</p>
+
+    <RadzenCard>
+        <RadzenTemplateForm TItem="ImportForm" Data="@form" Submit="@HandleSubmit">
+            <RadzenLabel Text="@L["ImportTrelloFile"]" Component="file" />
+            <InputFile OnChange="@OnFileSelected" accept="application/json,.json" />
+
+            <div class="form-actions">
+                <RadzenButton Text="@L["ImportRun"]"
+                              ButtonType="ButtonType.Submit"
+                              ButtonStyle="ButtonStyle.Primary"
+                              IsBusy="@busy"
+                              Disabled="@(form.File is null)" />
+            </div>
+
+            @if (error is not null)
+            {
+                <div class="auth-error" role="alert">@error</div>
+            }
+            @if (result is not null)
+            {
+                <div class="import-summary" role="status">
+                    <p>@L["ImportResultSummary"]</p>
+                    <ul>
+                        <li>Boards: @result.ImportedBoardIds.Count</li>
+                        <li>Lists: @result.ImportedListIds.Count</li>
+                        <li>Cards: @result.ImportedCardIds.Count</li>
+                        <li>Labels: @result.ImportedLabelIds.Count</li>
+                    </ul>
+                </div>
+            }
+        </RadzenTemplateForm>
+    </RadzenCard>
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private readonly ImportForm form = new();
+    private bool busy;
+    private string? error;
+    private ImportResultDto? result;
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        form.File = e.File;
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (form.File is null)
+        {
+            error = L["ImportNoFile"];
+            return;
+        }
+
+        busy = true;
+        error = null;
+        try
+        {
+            using MultipartFormDataContent content = new();
+            using StreamContent fileContent = new(form.File.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024));
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+            content.Add(fileContent, "file", form.File.Name);
+            content.Add(new StringContent(Id.ToString()), "targetWorkspaceId");
+
+            HttpResponseMessage response = await Http.PostAsync("api/imports/trello", content);
+            if (response.IsSuccessStatusCode)
+            {
+                result = await response.Content.ReadFromJsonAsync<ImportResultDto>();
+            }
+            else
+            {
+                string body = await response.Content.ReadAsStringAsync();
+                error = $"{L["ImportFailed"]} ({(int)response.StatusCode}): {body}";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = $"{L["ImportFailed"]}: {ex.Message}";
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private sealed class ImportForm
+    {
+        public Microsoft.AspNetCore.Components.Forms.IBrowserFile? File { get; set; }
+    }
+
+    private sealed class ImportResultDto
+    {
+        public IReadOnlyList<Guid> ImportedBoardIds { get; set; } = [];
+        public IReadOnlyList<Guid> ImportedListIds { get; set; } = [];
+        public IReadOnlyList<Guid> ImportedCardIds { get; set; } = [];
+        public IReadOnlyList<Guid> ImportedLabelIds { get; set; } = [];
+    }
+}

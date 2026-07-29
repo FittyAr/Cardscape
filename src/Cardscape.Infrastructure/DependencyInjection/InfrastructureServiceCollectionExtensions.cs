@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Email;
+using Cardscape.Application.Abstractions.Import;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
@@ -27,6 +28,7 @@ using Cardscape.Infrastructure.BackgroundJobs;
 using Cardscape.Infrastructure.Ai;
 using Cardscape.Infrastructure.Authentication;
 using Cardscape.Infrastructure.Email;
+using Cardscape.Infrastructure.Import;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Persistence.Interceptors;
 using Cardscape.Infrastructure.Repositories;
@@ -202,6 +204,12 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IInvitationService, InvitationService>();
         services.AddSingleton<IRateLimiter, RateLimiter>();
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
+
+        // Import pipeline (Trello default implementation; other kanban
+        // tools can plug in their own IImportService). The import is
+        // fully scoped because the work touches the cardscape DB
+        // through the standard UnitOfWork pipeline.
+        services.AddScoped<IImportService, TrelloImportService>();
         services.AddSingleton<IEmailService, ConsoleEmailService>();
         services.AddSingleton<IInvitationEmailService, ConsoleInvitationEmailService>();
         services.AddSingleton<ISearchIndex, InMemorySearchIndex>();

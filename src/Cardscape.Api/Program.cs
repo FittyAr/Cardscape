@@ -9,6 +9,7 @@ using Cardscape.Api.Endpoints.Checklists;
 using Cardscape.Api.Endpoints.Comments;
 using Cardscape.Api.Endpoints.CustomFields;
 using Cardscape.Api.Endpoints.Extensions;
+using Cardscape.Api.Endpoints.Import;
 using Cardscape.Api.Endpoints.Internal;
 using Cardscape.Api.Endpoints.Labels;
 using Cardscape.Api.Endpoints.Lists;
@@ -180,6 +181,7 @@ app.MapRecurrenceEndpoints();
 app.MapBoardExtensionEndpoints();
 app.MapBackgroundJobEndpoints();
 app.MapBoardBroadcastEndpoints();
+app.MapImportEndpoints();
 
 // Real-time board hub. Sits at /hubs/board with the same JWT
 // bearer authentication as the REST API; clients bring the
