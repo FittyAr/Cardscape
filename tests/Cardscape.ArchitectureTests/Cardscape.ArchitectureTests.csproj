@@ -6,6 +6,10 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <Description>NetArchTest rules: enforces layer boundaries, naming, dependency direction.</Description>
+    <!-- Test naming convention: Method_Scenario_Expected. CA1707 is a global suppression
+         for the test projects only; production code follows PascalCase. -->
+    <!-- CA1865: NetArchTest's HaveNameStartingWith API requires a string parameter. -->
+    <NoWarn>$(NoWarn);CA1707;CA1865</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,6 +28,7 @@
     <ProjectReference Include="..\..\src\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Cardscape.Api\Cardscape.Api.csproj" />
     <ProjectReference Include="..\..\src\Cardscape.Web\Cardscape.Web.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Mcp\Cardscape.Mcp.csproj" />
   </ItemGroup>
 
 </Project>

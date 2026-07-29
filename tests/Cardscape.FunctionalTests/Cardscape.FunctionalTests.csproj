@@ -6,6 +6,9 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <Description>Black-box end-to-end tests against a running API instance.</Description>
+    <!-- Test naming convention: Method_Scenario_Expected. CA1707 is a global suppression
+         for the test projects only; production code follows PascalCase. -->
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,7 +22,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TestCommon\TestCommon.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Application\Cardscape.Application.csproj" />
     <ProjectReference Include="..\..\src\Cardscape.Api\Cardscape.Api.csproj" />
+    <ProjectReference Include="..\Cardscape.IntegrationTests\Cardscape.IntegrationTests.csproj" />
   </ItemGroup>
 
 </Project>

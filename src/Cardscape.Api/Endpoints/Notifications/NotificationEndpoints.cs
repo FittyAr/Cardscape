@@ -24,8 +24,17 @@ public static class NotificationEndpoints
         group.MapGet("/unread-count", async (IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<int>>(new UnreadNotificationsCountQuery(), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess
+                ? Results.Ok(new UnreadCountResponse(result.Value))
+                : MapError(result.Error);
         });
+
+        // Returns the unread notification count for the authenticated user.
+        // Wrapped in a DTO (rather than a raw int) so the response shape is
+        // self-describing and easy to extend with extra counters (e.g. by kind)
+        // without breaking the contract.
+        // Pinned to the public Cardscape.Api namespace so Swashbuckle
+        // surfaces it under the "Notifications" tag in the OpenAPI document.
 
         group.MapPost("/mark-all-read", async (IMessageBus bus, CancellationToken ct) =>
         {
@@ -50,3 +59,6 @@ public static class NotificationEndpoints
         _ => Results.BadRequest(new { error.Code, error.Message })
     };
 }
+
+/// <summary>Response shape for <c>GET /api/notifications/unread-count</c>.</summary>
+public sealed record UnreadCountResponse(int Count);
