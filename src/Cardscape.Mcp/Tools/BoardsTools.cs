@@ -196,6 +196,45 @@ public sealed class BoardsTools(
         return dto;
     }
 
+    [McpServerTool(Name = "cards_archive")]
+    public async Task<CardDto> ArchiveCard(Guid cardId, CancellationToken ct)
+    {
+        RequireAuth();
+        var result = await bus.InvokeAsync<Result<CardDto>>(new ArchiveCardCommand(cardId), ct);
+        return Ensure(result);
+    }
+
+    [McpServerTool(Name = "cards_restore")]
+    public async Task<CardDto> RestoreCard(Guid cardId, CancellationToken ct)
+    {
+        RequireAuth();
+        var result = await bus.InvokeAsync<Result<CardDto>>(new RestoreCardCommand(cardId), ct);
+        return Ensure(result);
+    }
+
+    [McpServerTool(Name = "cards_update")]
+    public async Task<CardDto> UpdateCard(
+        Guid cardId,
+        string? newTitle = null,
+        string? newDescription = null,
+        CancellationToken ct = default)
+    {
+        RequireAuth();
+        Result<CardDto> result = Result<CardDto>.Failure(DomainError.Validation(
+            "cards.nothing_to_update", "Provide at least one of newTitle or newDescription."));
+
+        if (!string.IsNullOrWhiteSpace(newTitle))
+        {
+            result = await bus.InvokeAsync<Result<CardDto>>(new RenameCardCommand(cardId, newTitle), ct);
+        }
+        if (result.IsSuccess && !string.IsNullOrWhiteSpace(newDescription))
+        {
+            result = await bus.InvokeAsync<Result<CardDto>>(
+                new ChangeCardDescriptionCommand(cardId, newDescription), ct);
+        }
+        return Ensure(result);
+    }
+
     [McpServerTool(Name = "cards_assign")]
     public async Task<CardDto> AssignCard(Guid cardId, Guid userId, CancellationToken ct)
     {
@@ -203,6 +242,14 @@ public sealed class BoardsTools(
         var result = await bus.InvokeAsync<Result<CardDto>>(new AssignCardCommand(cardId, userId), ct);
         return Ensure(result);
     }
+
+    /// <summary>
+    /// Alias of <c>cards_assign</c> for callers that prefer the
+    /// "members" verb. Both names return the same DTO.
+    /// </summary>
+    [McpServerTool(Name = "members_assign")]
+    public Task<CardDto> AssignMember(Guid cardId, Guid userId, CancellationToken ct) =>
+        AssignCard(cardId, userId, ct);
 
     [McpServerTool(Name = "cards_attach_label")]
     public async Task<CardDto> AttachLabel(Guid cardId, Guid labelId, CancellationToken ct)
