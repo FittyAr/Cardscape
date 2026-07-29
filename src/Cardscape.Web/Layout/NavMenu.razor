@@ -1,9 +1,12 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject AuthenticationStateProvider AuthState
+@inject IStringLocalizer<SharedResource> L
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Cardscape</a>
+        <a class="navbar-brand" href="">@L["AppName"]</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -16,37 +19,37 @@
             <Authorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> @L["NavHome"]
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="workspaces">
-                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Workspaces
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> @L["NavWorkspaces"]
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="invitations">
-                        <span class="bi bi-envelope-nav-menu" aria-hidden="true"></span> Invitations
+                        <span class="bi bi-envelope-nav-menu" aria-hidden="true"></span> @L["NavInvitations"]
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="inbox">
-                        <span class="bi bi-bell-nav-menu" aria-hidden="true"></span> Inbox
+                        <span class="bi bi-bell-nav-menu" aria-hidden="true"></span> @L["NavInbox"]
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="calendar">
-                        <span class="bi bi-calendar-nav-menu" aria-hidden="true"></span> Calendar
+                        <span class="bi bi-calendar-nav-menu" aria-hidden="true"></span> @L["NavCalendar"]
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="planner">
-                        <span class="bi bi-roadmap-nav-menu" aria-hidden="true"></span> Planner
+                        <span class="bi bi-roadmap-nav-menu" aria-hidden="true"></span> @L["NavPlanner"]
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="account/api-tokens">
-                        <span class="bi bi-key-nav-menu" aria-hidden="true"></span> API tokens
+                        <span class="bi bi-key-nav-menu" aria-hidden="true"></span> @L["NavApiTokens"]
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
@@ -56,12 +59,12 @@
             <NotAuthorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="login">
-                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Sign in
+                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> @L["NavSignIn"]
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="register">
-                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Create account
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> @L["NavCreateAccount"]
                     </NavLink>
                 </div>
             </NotAuthorized>
@@ -71,11 +74,6 @@
 
 @code {
     private bool collapseNavMenu = true;
-
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
+    private void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
 }

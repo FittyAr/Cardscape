@@ -1,11 +1,14 @@
+using System.Globalization;
 using System.Net.Http.Headers;
 using Cardscape.Web;
+using Cardscape.Web.Resources;
 using Cardscape.Web.Services;
 using Cardscape.Web.Services.Api;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Localization;
 using Radzen;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -16,12 +19,36 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 string apiBaseUrl = builder.Configuration["ApiBaseUrl"]
     ?? throw new InvalidOperationException("ApiBaseUrl is required (set in wwwroot/appsettings.json).");
 
+// ── Localization (i18n) ──────────────────────────────────────────────
+// Resources live under src/Cardscape.Web/Resources (SharedResource.resx
+// and per-culture variants like SharedResource.es.resx). Blazor
+// WebAssembly does not run the server-side UseRequestLocalization
+// middleware; the client picks the culture explicitly via the
+// CulturePicker and stores the choice in localStorage. The default
+// culture is "en"; the supported set is the union of every
+// SharedResource.<culture>.resx file shipped.
+const string defaultCulture = "en";
+string[] supportedCultures = { "en", "es" };
+
+builder.Services.AddLocalization(options =>
+{
+    options.ResourcesPath = "Resources";
+});
+
+string? configuredDefault = builder.Configuration["Culture:Default"];
+CultureInfo defaultCultureInfo = string.IsNullOrWhiteSpace(configuredDefault)
+    ? new CultureInfo(defaultCulture)
+    : new CultureInfo(configuredDefault);
+CultureInfo.DefaultThreadCurrentCulture = defaultCultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = defaultCultureInfo;
+
 // ── Auth + state providers ───────────────────────────────────────────
 builder.Services.AddAuthorizationCore();
 builder.Services.AddSingleton<TokenStore>();
 builder.Services.AddSingleton<AuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthStateProvider>());
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IStringLocalizer<SharedResource>, StringLocalizer<SharedResource>>();
 
 // ── HTTP client to the API ───────────────────────────────────────────
 builder.Services.AddTransient<AuthTokenHandler>();

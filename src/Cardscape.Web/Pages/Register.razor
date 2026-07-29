@@ -1,25 +1,28 @@
-@page "/register"
+﻿@page "/register"
 @layout EmptyLayout
+@using Cardscape.Web.Resources
 @using Cardscape.Web.Services
+@using Microsoft.Extensions.Localization
 @inject AuthService Auth
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Create account — Cardscape</PageTitle>
+<PageTitle>@L["AuthCreateAccount"] @L["PageTitleSuffix"]</PageTitle>
 
 <div class="auth-shell">
     <RadzenCard class="auth-card">
-        <h1 class="auth-title">Create your Cardscape account</h1>
+        <h1 class="auth-title">@L["AuthCreateAccountTitle"]</h1>
 
         <RadzenTemplateForm TItem="RegisterModel" Data="@model" Submit="@HandleSubmit">
-            <RadzenLabel Text="Display name" Component="displayName" />
+            <RadzenLabel Text="@L["AuthDisplayName"]" Component="displayName" />
             <RadzenTextBox @bind-Value="model.DisplayName" Name="displayName" Style="width:100%" autocomplete="name" />
 
-            <RadzenLabel Text="Email" Component="email" Style="margin-top:1rem" />
+            <RadzenLabel Text="@L["AuthEmail"]" Component="email" Style="margin-top:1rem" />
             <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%" autocomplete="email" />
 
-            <RadzenLabel Text="Password" Component="password" Style="margin-top:1rem" />
+            <RadzenLabel Text="@L["AuthPassword"]" Component="password" Style="margin-top:1rem" />
             <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%" autocomplete="new-password" />
-            <small class="auth-hint">At least 8 characters.</small>
+            <small class="auth-hint">@L["AuthPasswordHint"]</small>
 
             @if (error is not null)
             {
@@ -27,15 +30,15 @@
             }
 
             <RadzenButton ButtonType="ButtonType.Submit"
-                          Text="Create account"
+                          Text="@L["AuthCreateAccount"]"
                           ButtonStyle="ButtonStyle.Primary"
                           IsBusy="@busy"
-                          BusyText="Creating..."
+                          BusyText="@L["AuthCreating"]"
                           Style="width:100%; margin-top:1.5rem" />
         </RadzenTemplateForm>
 
         <p class="auth-footer">
-            Already have an account? <a href="login">Sign in</a>.
+            @L["AuthAlreadyAccount"] <a href="login">@L["AuthSignIn"]</a>.
         </p>
     </RadzenCard>
 </div>

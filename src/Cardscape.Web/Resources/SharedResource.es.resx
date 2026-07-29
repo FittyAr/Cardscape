@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="AppName" xml:space="preserve"><value>Cardscape</value></data>
+  <data name="AppTagline" xml:space="preserve"><value>Tu kanban compatible con Trello autoalojable, construido en .NET 11.</value></data>
+  <data name="HomeTitle" xml:space="preserve"><value>Bienvenido a Cardscape</value></data>
+  <data name="HomeWorkspacesHeading" xml:space="preserve"><value>Espacios de trabajo</value></data>
+  <data name="HomeWorkspacesBlurb" xml:space="preserve"><value>Elegí un espacio de trabajo para ver sus tableros.</value></data>
+  <data name="HomeStarredHeading" xml:space="preserve"><value>Tableros destacados</value></data>
+  <data name="HomeStarredBlurb" xml:space="preserve"><value>Saltá rápidamente a los tableros que destacaste.</value></data>
+  <data name="HomeOpenWorkspaces" xml:space="preserve"><value>Abrir espacios de trabajo</value></data>
+  <data name="HomeSeeStarred" xml:space="preserve"><value>Ver destacados</value></data>
+  <data name="NavHome" xml:space="preserve"><value>Inicio</value></data>
+  <data name="NavWorkspaces" xml:space="preserve"><value>Espacios</value></data>
+  <data name="NavInvitations" xml:space="preserve"><value>Invitaciones</value></data>
+  <data name="NavInbox" xml:space="preserve"><value>Bandeja</value></data>
+  <data name="NavCalendar" xml:space="preserve"><value>Calendario</value></data>
+  <data name="NavPlanner" xml:space="preserve"><value>Planificador</value></data>
+  <data name="NavApiTokens" xml:space="preserve"><value>Tokens de API</value></data>
+  <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="NavCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>
+  <data name="AuthSignInTitle" xml:space="preserve"><value>Iniciar sesión en Cardscape</value></data>
+  <data name="AuthSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="AuthSigningIn" xml:space="preserve"><value>Ingresando...</value></data>
+  <data name="AuthNoAccount" xml:space="preserve"><value>¿No tenés cuenta?</value></data>
+  <data name="AuthCreateOne" xml:space="preserve"><value>Crear una</value></data>
+  <data name="AuthAlreadyAccount" xml:space="preserve"><value>¿Ya tenés una cuenta?</value></data>
+  <data name="AuthCreateAccountTitle" xml:space="preserve"><value>Creá tu cuenta de Cardscape</value></data>
+  <data name="AuthCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>
+  <data name="AuthCreating" xml:space="preserve"><value>Creando...</value></data>
+  <data name="AuthEmail" xml:space="preserve"><value>Email</value></data>
+  <data name="AuthPassword" xml:space="preserve"><value>Contraseña</value></data>
+  <data name="AuthDisplayName" xml:space="preserve"><value>Nombre</value></data>
+  <data name="AuthPasswordHint" xml:space="preserve"><value>Al menos 8 caracteres.</value></data>
+  <data name="AuthSignInWithGoogle" xml:space="preserve"><value>Iniciar sesión con Google</value></data>
+  <data name="AuthSignInWithMicrosoft" xml:space="preserve"><value>Iniciar sesión con Microsoft</value></data>
+  <data name="AuthSignInWithApple" xml:space="preserve"><value>Iniciar sesión con Apple</value></data>
+  <data name="AuthSignInWithAppleSoon" xml:space="preserve"><value>Iniciar sesión con Apple (próximamente)</value></data>
+  <data name="AuthAppleSoon" xml:space="preserve"><value>El inicio de sesión con Apple está en la hoja de ruta</value></data>
+  <data name="AuthOr" xml:space="preserve"><value>o</value></data>
+  <data name="ActionSave" xml:space="preserve"><value>Guardar</value></data>
+  <data name="ActionCancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="ActionCreate" xml:space="preserve"><value>Crear</value></data>
+  <data name="ActionDelete" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="ActionClose" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="ActionLoading" xml:space="preserve"><value>Cargando…</value></data>
+  <data name="ActionArchived" xml:space="preserve"><value>Archivado</value></data>
+  <data name="WorkspacesTitle" xml:space="preserve"><value>Espacios de trabajo</value></data>
+  <data name="WorkspacesNew" xml:space="preserve"><value>Nuevo espacio</value></data>
+  <data name="WorkspacesName" xml:space="preserve"><value>Nombre</value></data>
+  <data name="WorkspacesEmpty" xml:space="preserve"><value>Aún no tenés espacios de trabajo. Creá el primero arriba.</value></data>
+  <data name="BoardsTitle" xml:space="preserve"><value>Tableros</value></data>
+  <data name="BoardsNew" xml:space="preserve"><value>Nuevo tablero</value></data>
+  <data name="BoardsEmpty" xml:space="preserve"><value>Aún no hay tableros.</value></data>
+  <data name="PageTitleSuffix" xml:space="preserve"><value>— Cardscape</value></data>
+  <data name="NotFoundTitle" xml:space="preserve"><value>No encontrado</value></data>
+  <data name="NotFoundBlurb" xml:space="preserve"><value>La página que buscás no existe.</value></data>
+</root>

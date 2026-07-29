@@ -1,16 +1,19 @@
 @page "/workspaces"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Microsoft.Extensions.Localization
 @inject IWorkspacesApiClient WorkspacesApi
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Workspaces — Cardscape</PageTitle>
+<PageTitle>@L["WorkspacesTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <div class="page-shell">
     <div class="page-header">
-        <h1>Workspaces</h1>
-        <RadzenButton Text="New workspace" Icon="add" ButtonStyle="ButtonStyle.Primary"
+        <h1>@L["WorkspacesTitle"]</h1>
+        <RadzenButton Text="@L["WorkspacesNew"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
                       Click="@(() => showCreate = !showCreate)" />
     </div>
 
@@ -18,15 +21,15 @@
     {
         <RadzenCard class="create-form">
             <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateWorkspace">
-                <RadzenLabel Text="Name" Component="ws-name" />
+                <RadzenLabel Text="@L["WorkspacesName"]" Component="ws-name" />
                 <RadzenTextBox @bind-Value="createModel.Name" Name="ws-name" Style="width:100%" />
                 @if (error is not null)
                 {
                     <div class="auth-error" role="alert">@error</div>
                 }
                 <div class="create-actions">
-                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => { showCreate = false; error = null; })" />
-                    <RadzenButton Text="Create" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                    <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => { showCreate = false; error = null; })" />
+                    <RadzenButton Text="@L["ActionCreate"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
                                   IsBusy="@busy" />
                 </div>
             </RadzenTemplateForm>
@@ -35,11 +38,11 @@
 
     @if (workspaces is null)
     {
-        <p>Loading…</p>
+        <p>@L["ActionLoading"]</p>
     }
     else if (workspaces.Count == 0)
     {
-        <p>You have no workspaces yet. Create your first one above.</p>
+        <p>@L["WorkspacesEmpty"]</p>
     }
     else
     {
@@ -51,7 +54,7 @@
                     <small>@ws.MemberCount members · created @ws.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")</small>
                     @if (ws.IsArchived)
                     {
-                        <RadzenBadge Text="Archived" BadgeStyle="BadgeStyle.Warning" Style="margin-top:.5rem" />
+                        <RadzenBadge Text="@L["ActionArchived"]" BadgeStyle="BadgeStyle.Warning" Style="margin-top:.5rem" />
                     }
                 </RadzenCard>
             }

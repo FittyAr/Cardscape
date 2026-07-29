@@ -1,28 +1,31 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Components.Authorization
+@using Cardscape.Web.Resources
 @using Cardscape.Web.Services
+@using Microsoft.Extensions.Localization
 @inject IWorkspacesApiClient Workspaces
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthState
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Home — Cardscape</PageTitle>
+<PageTitle>@L["HomeTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <div class="home-shell">
-    <h1>Welcome to Cardscape</h1>
-    <p>Your self-hostable Trello-compatible kanban, built on .NET 11.</p>
+    <h1>@L["HomeTitle"]</h1>
+    <p>@L["AppTagline"]</p>
 
     <div class="home-grid">
         <RadzenCard>
-            <h3>Workspaces</h3>
-            <p>Pick a workspace to see its boards.</p>
-            <RadzenButton Text="Open workspaces" ButtonStyle="ButtonStyle.Primary"
+            <h3>@L["HomeWorkspacesHeading"]</h3>
+            <p>@L["HomeWorkspacesBlurb"]</p>
+            <RadzenButton Text="@L["HomeOpenWorkspaces"]" ButtonStyle="ButtonStyle.Primary"
                           Click="@(() => Nav.NavigateTo("workspaces"))" />
         </RadzenCard>
 
         <RadzenCard>
-            <h3>Starred boards</h3>
-            <p>Quickly jump to the boards you star.</p>
-            <RadzenButton Text="See starred" ButtonStyle="ButtonStyle.Secondary"
+            <h3>@L["HomeStarredHeading"]</h3>
+            <p>@L["HomeStarredBlurb"]</p>
+            <RadzenButton Text="@L["HomeSeeStarred"]" ButtonStyle="ButtonStyle.Secondary"
                           Click="@(() => Nav.NavigateTo("starred"))" />
         </RadzenCard>
     </div>
