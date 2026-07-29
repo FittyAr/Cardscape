@@ -1,7 +1,8 @@
-using Cardscape.Application.Abstractions.Security;
+﻿using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Voting;
 using Cardscape.Domain.Common;
 using ModelContextProtocol.Server;
+using Cardscape.Mcp.Observability;
 using Wolverine;
 
 namespace Cardscape.Mcp.Tools;
@@ -12,6 +13,7 @@ public sealed class VotingTools(IMessageBus bus, ICurrentUser currentUser)
     [McpServerTool(Name = "cards_toggle_vote")]
     public async Task<CardVoteStateDto> ToggleVote(Guid cardId, CancellationToken ct = default)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_toggle_vote");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardVoteStateDto>>(
             new ToggleCardVoteCommand(cardId), ct);
@@ -21,6 +23,7 @@ public sealed class VotingTools(IMessageBus bus, ICurrentUser currentUser)
     [McpServerTool(Name = "cards_get_votes")]
     public async Task<CardVoteStateDto> GetVotes(Guid cardId, CancellationToken ct = default)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_get_votes");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardVoteStateDto>>(
             new ListCardVotesQuery(cardId), ct);
@@ -47,3 +50,4 @@ public sealed class VotingTools(IMessageBus bus, ICurrentUser currentUser)
         return result.Value!;
     }
 }
+

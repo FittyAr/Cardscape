@@ -1,10 +1,11 @@
-using Cardscape.Application.Abstractions.Security;
+﻿using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Workspaces.Commands;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Application.Workspaces.Queries;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
 using ModelContextProtocol.Server;
+using Cardscape.Mcp.Observability;
 using Wolverine;
 
 namespace Cardscape.Mcp.Tools;
@@ -24,6 +25,7 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
     public async Task<WorkspaceInvitationIssuanceDto> Invite(
         Guid workspaceId, string email, int role, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("workspaces_invite");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<WorkspaceInvitationIssuanceDto>>(
             new IssueWorkspaceInvitationCommand(
@@ -36,6 +38,7 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
     public async Task<IReadOnlyList<WorkspaceInvitationDto>> ListInvitations(
         Guid workspaceId, bool includeTerminal, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("workspaces_list_invitations");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
             new ListWorkspaceInvitationsQuery(workspaceId, includeTerminal), ct);
@@ -45,6 +48,7 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
     [McpServerTool(Name = "workspaces_revoke_invitation")]
     public async Task<string> RevokeInvitation(Guid invitationId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("workspaces_revoke_invitation");
         RequireAuth();
         var result = await bus.InvokeAsync<Result>(
             new RevokeWorkspaceInvitationCommand(invitationId), ct);
@@ -56,6 +60,7 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
     public async Task<IReadOnlyList<WorkspaceInvitationDto>> ListPendingInvitations(
         CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("invitations_list_pending");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
             new ListPendingInvitationsForUserQuery(), ct);
@@ -65,6 +70,7 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
     [McpServerTool(Name = "invitations_accept")]
     public async Task<WorkspaceDto> AcceptInvitation(string token, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("invitations_accept");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
             new AcceptWorkspaceInvitationCommand(token), ct);
@@ -101,3 +107,4 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
         }
     }
 }
+

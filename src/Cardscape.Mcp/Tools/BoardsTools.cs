@@ -1,4 +1,4 @@
-using Cardscape.Application.Abstractions.Persistence;
+﻿using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.Commands;
 using Cardscape.Application.Boards.DTOs;
@@ -22,6 +22,7 @@ using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Mcp.Realtime;
 using ModelContextProtocol.Server;
+using Cardscape.Mcp.Observability;
 using Wolverine;
 
 namespace Cardscape.Mcp.Tools;
@@ -42,21 +43,23 @@ public sealed class BoardsTools(
     IBoardPushClient push,
     ICardRepository cards)
 {
-    // ── Workspaces ─────────────────────────────────────────
+    // â”€â”€ Workspaces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [McpServerTool(Name = "workspaces_list")]
     public async Task<IReadOnlyList<WorkspaceDto>> ListWorkspaces(CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("workspaces_list");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceDto>>>(new ListWorkspacesForUserQuery(), ct);
         return Ensure(result);
     }
 
-    // ── Boards ──────────────────────────────────────────────
+    // â”€â”€ Boards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [McpServerTool(Name = "boards_list")]
     public async Task<IReadOnlyList<BoardSummaryDto>> ListBoards(Guid workspaceId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("boards_list");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(
             new ListBoardsForWorkspaceQuery(workspaceId), ct);
@@ -66,6 +69,7 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "boards_get")]
     public async Task<BoardDto> GetBoard(Guid boardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("boards_get");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<BoardDto>>(new GetBoardQuery(boardId), ct);
         return Ensure(result);
@@ -75,6 +79,7 @@ public sealed class BoardsTools(
     public async Task<BoardDto> CreateBoard(
         Guid workspaceId, string name, string? description, int visibility, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("boards_create");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<BoardDto>>(
             new CreateBoardCommand(workspaceId, name, description, (Cardscape.Domain.Boards.BoardVisibility)visibility),
@@ -85,6 +90,7 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "boards_star")]
     public async Task<BoardDto> StarBoard(Guid boardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("boards_star");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<BoardDto>>(new StarBoardCommand(boardId), ct);
         return Ensure(result);
@@ -93,17 +99,19 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "boards_unstar")]
     public async Task<BoardDto> UnstarBoard(Guid boardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("boards_unstar");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<BoardDto>>(new UnstarBoardCommand(boardId), ct);
         return Ensure(result);
     }
 
-    // ── Lists ───────────────────────────────────────────────
+    // â”€â”€ Lists â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [McpServerTool(Name = "lists_list")]
     public async Task<IReadOnlyList<BoardListDto>> ListLists(
         Guid boardId, bool includeArchived, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("lists_list");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardListDto>>>(
             new ListListsForBoardQuery(boardId, includeArchived), ct);
@@ -113,6 +121,7 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "lists_create")]
     public async Task<BoardListDto> CreateList(Guid boardId, string name, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("lists_create");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<BoardListDto>>(new CreateListCommand(boardId, name), ct);
         var dto = Ensure(result);
@@ -121,12 +130,13 @@ public sealed class BoardsTools(
         return dto;
     }
 
-    // ── Cards ───────────────────────────────────────────────
+    // â”€â”€ Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [McpServerTool(Name = "cards_list")]
     public async Task<IReadOnlyList<CardSummaryDto>> ListCards(
         Guid boardId, bool includeArchived, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_list");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
             new ListCardsForBoardQuery(boardId, includeArchived), ct);
@@ -136,6 +146,7 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "cards_get")]
     public async Task<CardDto> GetCard(Guid cardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_get");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardDto>>(new GetCardQuery(cardId), ct);
         return Ensure(result);
@@ -145,6 +156,7 @@ public sealed class BoardsTools(
     public async Task<CardDto> CreateCard(
         Guid listId, string title, string? description, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_create");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardDto>>(
             new CreateCardCommand(listId, title, description), ct);
@@ -158,6 +170,7 @@ public sealed class BoardsTools(
     public async Task<CardDto> MoveCard(
         Guid cardId, Guid newListId, double newPosition, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_move");
         RequireAuth();
         // The board-resolving server side needs the source list id
         // to compute the from-list; we look it up via the loaded
@@ -177,6 +190,7 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "cards_complete")]
     public async Task<CardDto> CompleteCard(Guid cardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_complete");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardDto>>(new CompleteCardCommand(cardId), ct);
         var dto = Ensure(result);
@@ -188,6 +202,7 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "cards_reopen")]
     public async Task<CardDto> ReopenCard(Guid cardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_reopen");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardDto>>(new ReopenCardCommand(cardId), ct);
         var dto = Ensure(result);
@@ -199,6 +214,7 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "cards_archive")]
     public async Task<CardDto> ArchiveCard(Guid cardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_archive");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardDto>>(new ArchiveCardCommand(cardId), ct);
         return Ensure(result);
@@ -207,6 +223,7 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "cards_restore")]
     public async Task<CardDto> RestoreCard(Guid cardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_restore");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardDto>>(new RestoreCardCommand(cardId), ct);
         return Ensure(result);
@@ -219,6 +236,7 @@ public sealed class BoardsTools(
         string? newDescription = null,
         CancellationToken ct = default)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_update");
         RequireAuth();
         Result<CardDto> result = Result<CardDto>.Failure(DomainError.Validation(
             "cards.nothing_to_update", "Provide at least one of newTitle or newDescription."));
@@ -238,6 +256,7 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "cards_assign")]
     public async Task<CardDto> AssignCard(Guid cardId, Guid userId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_assign");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardDto>>(new AssignCardCommand(cardId, userId), ct);
         return Ensure(result);
@@ -254,6 +273,7 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "cards_attach_label")]
     public async Task<CardDto> AttachLabel(Guid cardId, Guid labelId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("members_assign");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CardDto>>(
             new AttachLabelToCardCommand(cardId, labelId), ct);
@@ -264,17 +284,19 @@ public sealed class BoardsTools(
     public async Task<IReadOnlyList<CalendarEntryDto>> Calendar(
         DateTimeOffset from, DateTimeOffset to, Guid? boardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_calendar");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<CalendarEntryDto>>>(
             new ListCardsDueInRangeQuery(from, to, boardId), ct);
         return Ensure(result);
     }
 
-    // ── Comments ────────────────────────────────────────────
+    // â”€â”€ Comments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [McpServerTool(Name = "comments_add")]
     public async Task<CommentDto> AddComment(Guid cardId, string body, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("comments_add");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CommentDto>>(
             new AddCommentCommand(cardId, body), ct);
@@ -287,17 +309,19 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "comments_list")]
     public async Task<IReadOnlyList<CommentDto>> ListComments(Guid cardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("comments_list");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<CommentDto>>>(
             new ListCommentsForCardQuery(cardId), ct);
         return Ensure(result);
     }
 
-    // ── Labels ──────────────────────────────────────────────
+    // â”€â”€ Labels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [McpServerTool(Name = "labels_list")]
     public async Task<IReadOnlyList<LabelDto>> ListLabels(Guid boardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("labels_list");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<LabelDto>>>(
             new ListLabelsForBoardQuery(boardId), ct);
@@ -307,13 +331,14 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "labels_create")]
     public async Task<LabelDto> CreateLabel(Guid boardId, string name, string color, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("labels_create");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<LabelDto>>(
             new CreateLabelCommand(boardId, name, color), ct);
         return Ensure(result);
     }
 
-    // ── helpers ──────────────────────────────────────────────
+    // â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void RequireAuth()
     {
@@ -336,3 +361,4 @@ public sealed class BoardsTools(
         return result.Value!;
     }
 }
+

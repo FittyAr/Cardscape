@@ -1,7 +1,8 @@
-using Cardscape.Application.Abstractions.Security;
+﻿using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Extensions;
 using Cardscape.Domain.Common;
 using ModelContextProtocol.Server;
+using Cardscape.Mcp.Observability;
 using Wolverine;
 
 namespace Cardscape.Mcp.Tools;
@@ -18,6 +19,7 @@ public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUs
     [McpServerTool(Name = "boards_list_extensions")]
     public async Task<IReadOnlyList<BoardExtensionDto>> ListExtensions(Guid boardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("boards_list_extensions");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardExtensionDto>>>(
             new ListBoardExtensionsQuery(boardId), ct);
@@ -31,6 +33,7 @@ public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUs
         string? configJson,
         CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("boards_enable_extension");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<BoardExtensionDto>>(
             new EnableBoardExtensionCommand(boardId, kind, configJson), ct);
@@ -40,6 +43,7 @@ public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUs
     [McpServerTool(Name = "boards_disable_extension")]
     public async Task<string> DisableExtension(Guid boardId, int kind, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("boards_disable_extension");
         RequireAuth();
         var result = await bus.InvokeAsync<Result>(
             new DisableBoardExtensionCommand(boardId, kind), ct);
@@ -54,6 +58,7 @@ public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUs
         string? configJson,
         CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("boards_update_extension_config");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<BoardExtensionDto>>(
             new UpdateBoardExtensionConfigCommand(boardId, kind, configJson), ct);
@@ -90,3 +95,4 @@ public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUs
         }
     }
 }
+

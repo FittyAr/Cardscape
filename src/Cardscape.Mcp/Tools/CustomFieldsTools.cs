@@ -1,7 +1,8 @@
-using Cardscape.Application.Abstractions.Security;
+﻿using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.CustomFields;
 using Cardscape.Domain.Common;
 using ModelContextProtocol.Server;
+using Cardscape.Mcp.Observability;
 using Wolverine;
 
 namespace Cardscape.Mcp.Tools;
@@ -18,6 +19,7 @@ public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
     [McpServerTool(Name = "custom_fields_list_definitions")]
     public async Task<IReadOnlyList<CustomFieldDefinitionDto>> ListDefinitions(Guid boardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("custom_fields_list_definitions");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<CustomFieldDefinitionDto>>>(
             new ListCustomFieldDefinitionsQuery(boardId), ct);
@@ -33,6 +35,7 @@ public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
         int position,
         CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("custom_fields_create_definition");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CustomFieldDefinitionDto>>(
             new CreateCustomFieldDefinitionCommand(boardId, name, kind, dropdownOptions, position), ct);
@@ -45,6 +48,7 @@ public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
         string newName,
         CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("custom_fields_rename_definition");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CustomFieldDefinitionDto>>(
             new RenameCustomFieldDefinitionCommand(fieldId, newName), ct);
@@ -54,6 +58,7 @@ public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
     [McpServerTool(Name = "custom_fields_delete_definition")]
     public async Task<string> DeleteDefinition(Guid fieldId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("custom_fields_delete_definition");
         RequireAuth();
         var result = await bus.InvokeAsync<Result>(
             new DeleteCustomFieldDefinitionCommand(fieldId), ct);
@@ -64,6 +69,7 @@ public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
     [McpServerTool(Name = "custom_fields_list_values_for_card")]
     public async Task<IReadOnlyList<CustomFieldValueDto>> ListValues(Guid cardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("custom_fields_list_values_for_card");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<CustomFieldValueDto>>>(
             new ListCustomFieldValuesForCardQuery(cardId), ct);
@@ -77,6 +83,7 @@ public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
         string? valueJson,
         CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("custom_fields_set_value");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<CustomFieldValueDto>>(
             new SetCustomFieldValueCommand(cardId, fieldId, valueJson), ct);
@@ -110,3 +117,4 @@ public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
         }
     }
 }
+

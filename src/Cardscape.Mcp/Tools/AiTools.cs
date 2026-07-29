@@ -1,6 +1,7 @@
-using Cardscape.Application.Ai;
+﻿using Cardscape.Application.Ai;
 using Cardscape.Domain.Common;
 using ModelContextProtocol.Server;
+using Cardscape.Mcp.Observability;
 using Wolverine;
 
 namespace Cardscape.Mcp.Tools;
@@ -19,6 +20,7 @@ public sealed class AiTools
         string? extraContext = null,
         CancellationToken ct = default)
     {
+        using var __mcpSpan = McpToolSpan.Begin("ai_generate_card_description");
         var bus = McpToolContext.Bus;
         var result = await bus.InvokeAsync<Result<AiFeatures.AiGeneratedText>>(
             new AiFeatures.GenerateCardDescriptionCommand(cardId, extraContext), ct);
@@ -32,6 +34,7 @@ public sealed class AiTools
         Guid[] commentIds,
         CancellationToken ct = default)
     {
+        using var __mcpSpan = McpToolSpan.Begin("ai_summarize_thread");
         var bus = McpToolContext.Bus;
         var result = await bus.InvokeAsync<Result<AiFeatures.AiGeneratedText>>(
             new AiFeatures.SummarizeCommentThreadCommand(commentIds), ct);
@@ -45,6 +48,7 @@ public sealed class AiTools
         Guid cardId,
         CancellationToken ct = default)
     {
+        using var __mcpSpan = McpToolSpan.Begin("ai_make_checklist");
         var bus = McpToolContext.Bus;
         var result = await bus.InvokeAsync<Result<AiFeatures.AiGeneratedChecklist>>(
             new AiFeatures.GenerateChecklistFromDescriptionCommand(cardId), ct);
@@ -59,6 +63,7 @@ public sealed class AiTools
         int maxSuggestions = 3,
         CancellationToken ct = default)
     {
+        using var __mcpSpan = McpToolSpan.Begin("ai_suggest_owners");
         var bus = McpToolContext.Bus;
         var result = await bus.InvokeAsync<Result<AiFeatures.AiOwnerSuggestions>>(
             new AiFeatures.SuggestCardOwnersCommand(cardId, maxSuggestions), ct);
@@ -67,3 +72,4 @@ public sealed class AiTools
             : throw new InvalidOperationException(result.Error.Message);
     }
 }
+

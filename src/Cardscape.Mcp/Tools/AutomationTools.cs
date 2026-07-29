@@ -1,7 +1,8 @@
-using Cardscape.Application.Abstractions.Security;
+﻿using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Automation;
 using Cardscape.Domain.Common;
 using ModelContextProtocol.Server;
+using Cardscape.Mcp.Observability;
 using Wolverine;
 
 namespace Cardscape.Mcp.Tools;
@@ -20,6 +21,7 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
     [McpServerTool(Name = "automation_list_rules")]
     public async Task<IReadOnlyList<BoardAutomationRuleDto>> ListRules(Guid boardId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("automation_list_rules");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardAutomationRuleDto>>>(
             new ListBoardAutomationRulesQuery(boardId), ct);
@@ -37,6 +39,7 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
         int position,
         CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("automation_create_rule");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<BoardAutomationRuleDto>>(
             new CreateBoardAutomationRuleCommand(
@@ -49,6 +52,7 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
     [McpServerTool(Name = "automation_enable_rule")]
     public async Task<string> EnableRule(Guid ruleId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("automation_enable_rule");
         RequireAuth();
         var result = await bus.InvokeAsync<Result>(new EnableBoardAutomationRuleCommand(ruleId), ct);
         Ensure(result);
@@ -58,6 +62,7 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
     [McpServerTool(Name = "automation_disable_rule")]
     public async Task<string> DisableRule(Guid ruleId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("automation_disable_rule");
         RequireAuth();
         var result = await bus.InvokeAsync<Result>(new DisableBoardAutomationRuleCommand(ruleId), ct);
         Ensure(result);
@@ -67,6 +72,7 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
     [McpServerTool(Name = "automation_delete_rule")]
     public async Task<string> DeleteRule(Guid ruleId, CancellationToken ct)
     {
+        using var __mcpSpan = McpToolSpan.Begin("automation_delete_rule");
         RequireAuth();
         var result = await bus.InvokeAsync<Result>(new DeleteBoardAutomationRuleCommand(ruleId), ct);
         Ensure(result);
@@ -103,3 +109,4 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
         }
     }
 }
+

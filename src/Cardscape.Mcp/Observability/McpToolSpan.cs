@@ -1,7 +1,6 @@
 using System.Diagnostics;
-using Cardscape.Mcp.Observability;
 
-namespace Cardscape.Mcp.Tools;
+namespace Cardscape.Mcp.Observability;
 
 /// <summary>
 /// Helpers for wrapping an MCP tool call in an OpenTelemetry
@@ -12,12 +11,12 @@ namespace Cardscape.Mcp.Tools;
 public static class McpToolSpan
 {
     /// <summary>
-    /// Begins a tool span. The returned <see cref="Activity"/>
-    /// is the canonical child of the current ambient activity
-    /// (or a root span when none is active). The caller is
-    /// expected to dispose the returned object; the
-    /// <see cref="McpToolSpanScope.Dispose"/> method stops
-    /// the span and records the outcome tag.
+    /// Begins a tool span. The returned
+    /// <see cref="McpToolSpanScope"/> is the canonical child
+    /// of the current ambient activity (or a root span when
+    /// none is active). The caller is expected to dispose the
+    /// returned object; <see cref="McpToolSpanScope.Dispose"/>
+    /// stops the span.
     /// </summary>
     /// <param name="toolName">Logical name of the MCP tool,
     /// e.g. <c>boards_list</c>. Becomes the span name

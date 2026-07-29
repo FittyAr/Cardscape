@@ -1,7 +1,8 @@
-using Cardscape.Application.Abstractions.Security;
+﻿using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Activities.Queries;
 using Cardscape.Domain.Common;
 using ModelContextProtocol.Server;
+using Cardscape.Mcp.Observability;
 using Wolverine;
 
 namespace Cardscape.Mcp.Tools;
@@ -18,6 +19,7 @@ public sealed class ActivitiesTools(IMessageBus bus, ICurrentUser currentUser)
     public async Task<ActivityPage> ListForBoard(
         Guid boardId, string? cursor = null, int? limit = null, CancellationToken ct = default)
     {
+        using var __mcpSpan = McpToolSpan.Begin("boards_list_activities");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<ActivityPage>>(
             new ListBoardActivitiesQuery(boardId, cursor, limit), ct);
@@ -28,6 +30,7 @@ public sealed class ActivitiesTools(IMessageBus bus, ICurrentUser currentUser)
     public async Task<ActivityPage> ListForCard(
         Guid cardId, string? cursor = null, int? limit = null, CancellationToken ct = default)
     {
+        using var __mcpSpan = McpToolSpan.Begin("cards_list_activities");
         RequireAuth();
         var result = await bus.InvokeAsync<Result<ActivityPage>>(
             new ListCardActivitiesQuery(cardId, cursor, limit), ct);
@@ -54,3 +57,4 @@ public sealed class ActivitiesTools(IMessageBus bus, ICurrentUser currentUser)
         return result.Value!;
     }
 }
+
