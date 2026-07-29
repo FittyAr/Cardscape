@@ -5,6 +5,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Storage;
+using Microsoft.AspNetCore.DataProtection;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Domain.Authentication.Totp;
