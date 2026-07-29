@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v1.0.1] — 2026-07-29
+
+Patch release. **One bugfix** + **one regression test**
+(399/399 tests green, build clean).
+
+### Fixed
+
+- **OpenAPI document failed to build** — every endpoint
+  class in `src/Cardscape.Api/Endpoints/**` defines its body
+  type as a nested `private sealed record class` so the
+  endpoint class owns the type. Multiple endpoint classes
+  happened to use the same short names (`RenameBody` in
+  `CardEndpoints` and `ListEndpoints`, `MoveBody` in
+  `CardEndpoints` and `ListEndpoints`). Swashbuckle's default
+  schemaId generator produces a `RenameBody` schemaId for
+  both, then throws `InvalidOperationException: Can't use
+  schemaId "RenameBody" for type
+  "Cardscape.Api.Endpoints.Lists.ListEndpoints+RenameBody".
+  The same schemaId is already used for type
+  "Cardscape.Api.Endpoints.Cards.CardEndpoints+RenameBody"`.
+  The exception surfaces as a 500 on
+  `GET /swagger/v1/swagger.json` and the Swagger UI shows
+  "Failed to load API definition".
+
+  Fix: `builder.Services.AddSwaggerGen(c => c.CustomSchemaIds(
+  t => t.FullName?.Replace("+", ".")))` in
+  `src/Cardscape.Api/Program.cs`. The full type name
+  (`Cardscape.Api.Endpoints.Cards.CardEndpoints.RenameBody`
+  vs
+  `Cardscape.Api.Endpoints.Lists.ListEndpoints.RenameBody`)
+  is unique. The `+` → `.` rewrite is cosmetic — keeps the
+  generated schemaIds looking like normal dotted type names
+  in the OpenAPI document.
+
+### Added
+
+- **Regression test** `Swagger_Document_Builds_And_Is_Served_As_Valid_Json`
+  in
+  `tests/Cardscape.IntegrationTests/Endpoints/SwaggerTests.cs`.
+  Hits `GET /swagger/v1/swagger.json` against the real
+  `CardscapeWebApplicationFactory`, asserts 200, parses the
+  body as JSON, and checks the `openapi` and `paths` keys
+  are present and non-empty. Future refactors that re-introduce
+  a schemaId collision will fail this test before they reach
+  production.
+
+---
+
 ## [v1.0.0] — 2026-07-29
 
 First production release. Full Trello parity across the
