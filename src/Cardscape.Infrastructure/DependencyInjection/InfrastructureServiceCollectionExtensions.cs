@@ -7,6 +7,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Storage;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Authentication.ExternalLogins;
+using Cardscape.Domain.Authentication.Totp;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
@@ -173,6 +174,22 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRepository<ExternalLogin, ExternalLoginId>, ExternalLoginRepository>(sp => sp.GetRequiredService<ExternalLoginRepository>());
         services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>(sp => sp.GetRequiredService<ExternalLoginRepository>());
         services.AddScoped<IExternalLoginService, ExternalLoginService>();
+
+        services.AddScoped<TotpCredentialRepository>();
+        services.AddScoped<IRepository<TotpCredential, TotpCredentialId>, TotpCredentialRepository>(sp => sp.GetRequiredService<TotpCredentialRepository>());
+        services.AddScoped<ITotpCredentialRepository, TotpCredentialRepository>(sp => sp.GetRequiredService<TotpCredentialRepository>());
+        services.AddScoped<ITotpService, TotpService>();
+
+        // 2FA secret encryption: protected with the same
+        // ASP.NET Core data-protection ring the rest of the
+        // app uses (Cookie + antiforgery + now TOTP secrets).
+        services.AddDataProtection();
+        services.AddSingleton<IDataProtector>(sp =>
+        {
+            var provider = sp.GetRequiredService<IDataProtectionProvider>();
+            return provider.CreateProtector("Cardscape.Secrets.v1");
+        });
+        services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
 
         // Identity-shaped repositories (a few extra generics to satisfy the IRepository
         // contract for non-aggregate roots). The Application layer depends only on the

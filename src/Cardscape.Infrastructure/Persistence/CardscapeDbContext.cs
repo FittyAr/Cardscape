@@ -1,6 +1,7 @@
 using System.Reflection;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Authentication.ExternalLogins;
+using Cardscape.Domain.Authentication.Totp;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
@@ -50,6 +51,7 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<CardMirror> CardMirrors => Set<CardMirror>();
     public DbSet<IdempotencyKey> IdempotencyKeys => Set<IdempotencyKey>();
     public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
+    public DbSet<TotpCredential> TotpCredentials => Set<TotpCredential>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't

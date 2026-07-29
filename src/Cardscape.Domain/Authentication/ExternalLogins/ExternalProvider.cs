@@ -5,10 +5,10 @@ namespace Cardscape.Domain.Authentication.ExternalLogins;
 /// <summary>
 /// The OAuth 2.0 / OIDC providers that the REST API
 /// supports for external login. The wire name (returned by
-/// <c>ExternalProviderExtensions.WireName</c>) matches the
-/// ASP.NET Core authentication scheme key the application
-/// registers the handler under (and the segment the client
-/// sends in the URL
+/// <see cref="ExternalProviderExtensions.WireName(ExternalProvider)"/>)
+/// matches the ASP.NET Core authentication scheme key the
+/// application registers the handler under (and the segment
+/// the client sends in the URL
 /// <c>/api/auth/external/{provider}/start</c>).
 /// </summary>
 public enum ExternalProvider
