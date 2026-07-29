@@ -157,6 +157,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRepository<CardRecurrence, CardRecurrenceId>, CardRecurrenceRepository>(sp => sp.GetRequiredService<CardRecurrenceRepository>());
         services.AddScoped<ICardRecurrenceRepository, CardRecurrenceRepository>(sp => sp.GetRequiredService<CardRecurrenceRepository>());
 
+        services.AddScoped<ICardAgingSettingsRepository, CardAgingSettingsRepository>();
+        services.AddScoped<ICardSnoozeRepository, CardSnoozeRepository>();
+        services.AddScoped<ICardMirrorRepository, CardMirrorRepository>();
+
         // Identity-shaped repositories (a few extra generics to satisfy the IRepository
         // contract for non-aggregate roots). The Application layer depends only on the
         // typed interfaces above.

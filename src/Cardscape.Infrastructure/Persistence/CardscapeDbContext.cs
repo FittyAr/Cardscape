@@ -43,6 +43,9 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<Checklist> Checklists => Set<Checklist>();
     public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
     public DbSet<CardRecurrence> CardRecurrences => Set<CardRecurrence>();
+    public DbSet<CardAgingSettings> CardAgingSettings => Set<CardAgingSettings>();
+    public DbSet<CardSnooze> CardSnoozes => Set<CardSnooze>();
+    public DbSet<CardMirror> CardMirrors => Set<CardMirror>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't
