@@ -1,4 +1,5 @@
 using Cardscape.Application.Abstractions;
+using Cardscape.Infrastructure.BackgroundJobs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -19,6 +20,7 @@ public static class BackgroundJobRegistrationExtensions
         configure?.Invoke(options);
         services.AddSingleton(options);
         services.AddHostedService<BackgroundJobDispatcherService>();
+        services.AddHostedService<CardRecurrenceDispatcherService>();
         return services;
     }
 

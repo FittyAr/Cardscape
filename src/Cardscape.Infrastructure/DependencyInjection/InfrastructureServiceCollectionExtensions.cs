@@ -14,6 +14,7 @@ using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Notifications;
+using Cardscape.Domain.Recurrence;
 using Cardscape.Domain.Security;
 using Cardscape.Domain.Voting;
 using Cardscape.Domain.Workspaces;
@@ -128,6 +129,7 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddScoped<IBackgroundJobScheduler, BackgroundJobScheduler>();
         services.AddSingleton<IBackgroundJobHandlerRegistry, BackgroundJobHandlerRegistry>();
+        services.AddSingleton<IBackgroundJobHandler, CloneCardHandler>();
 
         services.AddScoped<CustomFieldDefinitionRepository>();
         services.AddScoped<IRepository<CustomFieldDefinition, CustomFieldDefinitionId>, CustomFieldDefinitionRepository>(sp => sp.GetRequiredService<CustomFieldDefinitionRepository>());
@@ -148,6 +150,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<ChecklistItemRepository>();
         services.AddScoped<IRepository<ChecklistItem, ChecklistItemId>, ChecklistItemRepository>(sp => sp.GetRequiredService<ChecklistItemRepository>());
         services.AddScoped<IChecklistItemRepository, ChecklistItemRepository>(sp => sp.GetRequiredService<ChecklistItemRepository>());
+
+        services.AddScoped<CardRecurrenceRepository>();
+        services.AddScoped<IRepository<CardRecurrence, CardRecurrenceId>, CardRecurrenceRepository>(sp => sp.GetRequiredService<CardRecurrenceRepository>());
+        services.AddScoped<ICardRecurrenceRepository, CardRecurrenceRepository>(sp => sp.GetRequiredService<CardRecurrenceRepository>());
 
         // Identity-shaped repositories (a few extra generics to satisfy the IRepository
         // contract for non-aggregate roots). The Application layer depends only on the

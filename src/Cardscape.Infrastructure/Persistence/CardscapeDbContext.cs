@@ -9,6 +9,7 @@ using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Notifications;
+using Cardscape.Domain.Recurrence;
 using Cardscape.Domain.Security;
 using Cardscape.Domain.Voting;
 using Cardscape.Domain.Workspaces;
@@ -41,6 +42,7 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<CardVote> CardVotes => Set<CardVote>();
     public DbSet<Checklist> Checklists => Set<Checklist>();
     public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
+    public DbSet<CardRecurrence> CardRecurrences => Set<CardRecurrence>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't

@@ -10,6 +10,7 @@
 @inject IActivitiesApiClient Activities
 @inject IVotingApiClient Votes
 @inject IChecklistsApiClient Checklists
+@inject IRecurrenceApiClient Recurrence
 
 <PageTitle>@(card?.Title ?? "Card") — Cardscape</PageTitle>
 
@@ -100,6 +101,25 @@
                               IsBusy="@addingComment" Style="margin-top:.5rem" />
             </RadzenTemplateForm>
 
+            <h3>Recurrence</h3>
+            @if (recurrence is { IsActive: true })
+            {
+                <p>Repeats every <strong>@recurrence.IntervalDays</strong> day(s).
+                   Next: @recurrence.NextOccurrenceAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")
+                   <RadzenButton Text="Stop" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small"
+                                 Click="@ClearRecurrenceAsync" /></p>
+            }
+            else
+            {
+                <div class="recurrence-create">
+                    <RadzenNumeric @bind-Value="recurrenceIntervalDays" Min="1" Max="365"
+                                   ShowUpDown="true" Style="width:6rem; margin-right:.5rem" />
+                    <span>day(s)</span>
+                    <RadzenButton Text="Set recurrence" ButtonStyle="ButtonStyle.Secondary"
+                                  Click="@SaveRecurrenceAsync" Style="margin-left:.5rem" />
+                </div>
+            }
+
             <h3>Checklists</h3>
             @if (checklists is null)
             {
@@ -181,6 +201,8 @@
     private IReadOnlyList<ChecklistDto>? checklists;
     private string newChecklistTitle = string.Empty;
     private string newChecklistItemText = string.Empty;
+    private CardRecurrenceDto? recurrence;
+    private int recurrenceIntervalDays = 7;
     private bool addingComment;
     private bool togglingVote;
     private readonly AddCommentModel addCommentModel = new();
@@ -206,6 +228,24 @@
 
         ApiResult<IReadOnlyList<ChecklistDto>> checklistsResult = await Checklists.ListForCardAsync(CardId);
         checklists = checklistsResult.IsSuccess ? checklistsResult.Value : [];
+
+        ApiResult<CardRecurrenceDto?> recurrenceResult = await Recurrence.GetAsync(CardId);
+        recurrence = recurrenceResult.IsSuccess ? recurrenceResult.Value : null;
+    }
+
+    private async Task SaveRecurrenceAsync()
+    {
+        if (recurrenceIntervalDays < 1) return;
+        DateTimeOffset firstOccurrence = DateTimeOffset.UtcNow.AddDays(recurrenceIntervalDays);
+        ApiResult<CardRecurrenceDto> result = await Recurrence.SetAsync(
+            CardId, recurrenceIntervalDays, firstOccurrence);
+        if (result.IsSuccess) recurrence = result.Value;
+    }
+
+    private async Task ClearRecurrenceAsync()
+    {
+        ApiResult result = await Recurrence.DeleteAsync(CardId);
+        if (result.IsSuccess) recurrence = null;
     }
 
     private async Task CreateChecklistAsync()

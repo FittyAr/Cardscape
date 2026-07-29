@@ -9,6 +9,7 @@ using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
+using Cardscape.Domain.Recurrence;
 using Cardscape.Domain.Voting;
 using Cardscape.Domain.Workspaces;
 
@@ -433,4 +434,21 @@ public sealed class InMemoryChecklistItemRepository
         Task.FromResult<IReadOnlyList<ChecklistItem>>(
             Store.Values.Where(i => i.ChecklistId.Value == checklistId)
                 .OrderBy(i => i.Position.Value).ToList());
+}
+
+
+public sealed class InMemoryCardRecurrenceRepository
+    : InMemoryRepositoryBase<CardRecurrence, CardRecurrenceId>, ICardRecurrenceRepository
+{
+    public Task<bool> ExistsForCardAsync(CardId cardId, CancellationToken ct = default) =>
+        Task.FromResult(Store.Values.Any(r => r.CardId.Value == cardId.Value));
+
+    public Task<CardRecurrence?> GetForCardAsync(CardId cardId, CancellationToken ct = default) =>
+        Task.FromResult(Store.Values.FirstOrDefault(r => r.CardId.Value == cardId.Value));
+
+    public Task<IReadOnlyList<CardRecurrence>> ListDueAsync(
+        DateTimeOffset now, int limit, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<CardRecurrence>>(
+            Store.Values.Where(r => r.IsActive && r.NextOccurrenceAt <= now)
+                .OrderBy(r => r.NextOccurrenceAt).Take(limit).ToList());
 }
