@@ -87,6 +87,22 @@ public static class BoardEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
+        // Export the board as a ZIP archive (board.json + attachments).
+        group.MapGet("/{boardId:guid}/export", async (
+            Guid boardId,
+            Cardscape.Application.Abstractions.Export.IExportService export,
+            CancellationToken ct) =>
+        {
+            var result = await export.ExportBoardAsync(boardId, ct);
+            if (result.IsFailure)
+            {
+                return MapError(result.Error);
+            }
+
+            string fileName = $"board-{boardId}.zip";
+            return Results.File(result.Value, "application/zip", fileName);
+        });
+
         return app;
     }
 
