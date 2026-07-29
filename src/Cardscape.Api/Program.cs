@@ -31,7 +31,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ── Services ─────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    // Endpoint body types are nested as `private record class RenameBody`
+    // inside each endpoint class. Multiple endpoint classes (Cards,
+    // Lists, …) define records with the same short name, so the
+    // default schemaId generator collides and the OpenAPI document
+    // fails to build. Use the full type name (with `+` replaced by
+    // `.`) as the schemaId so every body type is unique.
+    c.CustomSchemaIds(t => t.FullName?.Replace("+", "."));
+});
 builder.Services.AddValidation();
 
 builder.Services.AddCardscapeApplication();
