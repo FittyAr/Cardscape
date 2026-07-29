@@ -113,4 +113,32 @@ public sealed class BoardList : AggregateRoot<BoardListId>
         UpdatedAt = at;
         AddDomainEvent(new ListRestored(Id, at));
     }
+
+    /// <summary>
+    /// Soft WIP cap. When the list has more than
+    /// <see cref="MaxCardsSoft"/> cards, the UI turns the list
+    /// red. Both null = no limit.
+    /// </summary>
+    public int? MaxCardsSoft { get; private set; }
+    public int? MaxCardsHard { get; private set; }
+
+    public Result SetLimit(int? maxSoft, int? maxHard, DateTimeOffset at)
+    {
+        if (maxSoft is <= 0 || maxHard is <= 0)
+        {
+            return Result.Failure(DomainError.Validation(
+                "lists.invalid_limit",
+                "List limits must be greater than zero or null."));
+        }
+        if (maxSoft is not null && maxHard is not null && maxHard < maxSoft)
+        {
+            return Result.Failure(DomainError.Validation(
+                "lists.hard_limit_below_soft_limit",
+                "Hard limit must be at or above the soft limit."));
+        }
+        MaxCardsSoft = maxSoft;
+        MaxCardsHard = maxHard;
+        UpdatedAt = at;
+        return Result.Success();
+    }
 }
