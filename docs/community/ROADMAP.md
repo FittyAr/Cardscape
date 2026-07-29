@@ -7,19 +7,48 @@
 > [`docs/roadmap/01-implementation-plan.md`](docs/roadmap/01-implementation-plan.md).
 > This file is the short version for newcomers.
 
+> **Note (2026-07-29)** — this file used to describe a
+> pre-alpha project. That's stale. The project is at
+> **v1.0.0** (full Trello parity, 313 unit + 85 integration
+> tests green) and the current workstream is
+> `v1.1.0-roadmap-execution` (see
+> [`docs/roadmap/03-execution-plan-v1.1.0.md`](../roadmap/03-execution-plan-v1.1.0.md)).
+> The phase table and the per-phase sections below are
+> kept for historical reference; the **Status** column is
+> updated to reflect the actual delivery. For the live
+> state, see the [README status table](../../README.md#status)
+> and the [CHANGELOG](CHANGELOG.md).
+
 ---
 
 ## Where we are
 
-Cardscape is in **pre-alpha**. The architecture is in place,
-the documentation is in place, the project has a clean
-vendor-neutral positioning, and the public website is live.
-The product itself is not yet runnable.
+Cardscape is at **v1.0.0** — first production release with
+**full Trello parity** across kanban, calendar, planner,
+automation, and AI-integration surfaces. A single user can
+register, create a workspace, drop in boards / lists /
+cards, comment, label, star, attach files, vote, add
+checklists with progress, set up custom fields, schedule
+recurring cards, mint and revoke API tokens with per-token
+rate limits, send and accept workspace invitations, manage
+the Inbox, browse the calendar, plan in the swimlane view,
+set up board automation rules, toggle per-board extensions,
+push out per-board webhooks, and full-text search every
+card. The MCP server exposes the same surface to AI clients
+and pushes its writes back to the Web UI in real time.
 
-The first runnable build — a single user, a workspace, a
-board, lists, cards, drag-and-drop, sign in tomorrow — is
-**Phase 1**, the MVP. The target is the end of **August
-2026**.
+**313 unit tests + 86 integration tests** are green. The
+solution builds clean on the .NET 11 preview SDK. The Docker
+image boots, applies migrations, and serves the SPA on
+port 8080. Production configuration has zero hard-coded
+secrets — all required values come from environment
+variables.
+
+The current workstream is `v1.1.0-roadmap-execution`:
+closing every gap from the systematic audit of v1.0.0
+(see [`03-execution-plan-v1.1.0.md`](../roadmap/03-execution-plan-v1.1.0.md)).
+42 features are on the list, organised in 5 priority
+buckets, and the work has already started.
 
 ---
 
@@ -28,11 +57,13 @@ board, lists, cards, drag-and-drop, sign in tomorrow — is
 | Phase | Theme | Target | Status |
 |---|---|---|---|
 | 0 | Solution scaffold | — | ✅ done |
-| 1 | MVP (workspaces / boards / cards / auth) | end of August 2026 | 🔄 in progress |
-| 2 | Core + MCP server (the differentiator) | end of October 2026 | ⏳ not started |
-| 3 | Extensions & automation | end of December 2026 | ⏳ not started |
-| 4 | Enterprise & AI | end of Q1 2027 | ⏳ not started |
-| 5 | Polish & scale | ongoing | ⏳ ongoing |
+| 1 | MVP (workspaces / boards / cards / auth) | end of August 2026 | ✅ done (`v0.1.0-mvp`) |
+| 2 | Core + MCP server (the differentiator) | end of October 2026 | ✅ done (`v0.2.0-core-mcp`) |
+| 3 | API tokens (access control + first-class tokens) | end of December 2026 | ✅ done (`v0.3.0-api-tokens`) |
+| 4 | Realtime MCP + Invitations + Inbox + Calendar + Planner + Automation + Extensions | end of Q1 2027 | ✅ done (`v0.4.0` through `v0.6.4`) |
+| 5 | Polish & scale (background jobs, custom fields, voting, checklists, recurrence, webhooks, attachments, full-text search, CI, production config) | end of Q2 2027 | ✅ done (`v0.7.0` through `v0.7.10`) |
+| 6 | v1.0.0 release: full Trello parity | — | ✅ done (`v1.0.0`) |
+| 7 | Roadmap execution: close every audit gap | — | 🔄 in progress (`v1.1.0-roadmap-execution`) |
 
 Dates are **aspirational**. The project is solo-maintained.
 Each phase ends with a tagged release and a self-hostable

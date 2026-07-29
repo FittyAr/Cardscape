@@ -11,16 +11,32 @@
 > rich feature surface. We should include all the surface we
 > can reasonably build."
 
+> **Note (2026-07-29)** — this document is the *original*
+> delivery plan written at the start of Phase 0. The
+> actual delivery has since moved past the 5-phase shape
+> it describes: cardscape shipped six taglines
+> (`v0.1.0-mvp` through `v1.0.0`) before the
+> `v1.1.0-roadmap-execution` plan in
+> [`03-execution-plan-v1.1.0.md`](03-execution-plan-v1.1.0.md)
+> was written. The "Status" table below is updated to
+> reflect the current state; the per-phase task lists
+> (§2 through §5) remain the original aspirational
+> text. For the live state, see the
+> [README status table](../../../README.md#status) and
+> the [CHANGELOG](../../community/CHANGELOG.md).
+
 ## 0. Status
 
 | Phase | Status | Notes |
 |---|---|---|
 | 0 — Solution scaffold | **DONE** | Commits `c1b9800`, `72abc83`, `9683c22`, `3186a9d`, `289a370` (initial scaffold + docs + MCP project + rebrand to vendor-neutral positioning). |
-| 1 — MVP (workspaces / boards / cards / auth) | not started | Target: end of August 2026 (4–6 weeks). |
-| 2 — Core + MCP server (differentiation pillar) | not started | Target: end of October 2026. |
-| 3 — Extensions & automation | not started | Target: end of December 2026. |
-| 4 — Enterprise & AI | not started | Target: end of Q1 2027. |
-| 5 — Polish & scale | not started | ongoing, no fixed target. |
+| 1 — MVP (workspaces / boards / cards / auth) | **DONE** | `v0.1.0-mvp` — single-user vertical slice: auth (JWT + Pbkdf2), workspaces, boards, lists, cards, labels, comments, starring, archive, drag-and-drop, full Blazor WASM client, 60+ REST endpoints, Wolverine + Mapperly, multi-DB (SQLite / PostgreSQL / MariaDB), Docker. |
+| 2 — Core + MCP server (the differentiator) | **DONE** | `v0.2.0-core-mcp` — real-time SignalR `BoardHub`, MCP server end-to-end (19 tools at release; 47 today), Newtonsoft.Json pin to 13.0.3. |
+| 3 — API tokens (was "access control + API tokens") | **DONE** | `v0.3.0-api-tokens` — long-lived `ApiToken` aggregate (SHA-256 hash, scopes, expiry, rate-limit hooks), `ApiTokenAuthenticationHandler`, JWT + API-token dual scheme behind `BearerPolicy`. |
+| 4 — Realtime + invitations + Inbox + Calendar + Planner + Automation + Extensions | **DONE** | `v0.4.0-realtime-mcp` through `v0.6.4-extensions` — cross-process push from MCP to Web UI, workspace invitations, Inbox (60s poll bell), Calendar month grid, Planner swimlane, automation engine (4 triggers × 4 actions), per-board extension toggles. |
+| 5 — Polish & scale | **DONE** | `v0.7.0-jobs` through `v0.7.10-polish` — background jobs (`IBackgroundJobStore` + dispatcher), custom fields, rate limiting, activity timeline, voting, checklists, recurring cards, webhooks (HMAC-SHA256, 5-attempt backoff), attachments (25 MB cap, local disk), full-text search, CI (`.github/workflows/ci.yml`), production config (zero hard-coded secrets). |
+| 6 — v1.0.0 release | **DONE** | `v1.0.0` — first production release with full Trello parity. 313 unit + 85 integration tests green. |
+| 7 — Roadmap execution | **IN PROGRESS** | `v1.1.0-roadmap-execution` — closing every gap from the systematic audit. See [`03-execution-plan-v1.1.0.md`](03-execution-plan-v1.1.0.md). |
 
 The dates are **aspirational** and depend on contributor
 bandwidth. Each phase ends with a tagged release
