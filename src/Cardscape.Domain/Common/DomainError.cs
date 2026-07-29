@@ -10,7 +10,9 @@ public enum ErrorType
     NotFound,
     Conflict,
     Forbidden,
-    Unauthenticated
+    Unauthenticated,
+    /// <summary>An external dependency (network call, third-party API) failed.</summary>
+    External
 }
 
 /// <summary>
@@ -34,4 +36,7 @@ public sealed record DomainError(ErrorType Type, string Code, string Message)
 
     public static DomainError Unauthenticated(string code, string message) =>
         new(ErrorType.Unauthenticated, code, message);
+
+    public static DomainError External(string code, string message) =>
+        new(ErrorType.External, code, message);
 }

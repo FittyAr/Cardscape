@@ -19,6 +19,7 @@ using Cardscape.Domain.Security;
 using Cardscape.Domain.Voting;
 using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.BackgroundJobs;
+using Cardscape.Infrastructure.Ai;
 using Cardscape.Infrastructure.Email;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Persistence.Interceptors;
@@ -29,6 +30,7 @@ using Cardscape.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Cardscape.Infrastructure.DependencyInjection;
 
@@ -168,6 +170,27 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IEmailService, ConsoleEmailService>();
         services.AddSingleton<IInvitationEmailService, ConsoleInvitationEmailService>();
         services.AddSingleton<ISearchIndex, InMemorySearchIndex>();
+
+        // AI provider (Cardscape AI). The choice is configuration-driven:
+        //   Ai:Provider = RuleBased         → deterministic templates, no network (default)
+        //   Ai:Provider = OpenAiCompatible  → posts to a /v1/chat/completions endpoint
+        string aiProvider = configuration["Ai:Provider"] ?? "RuleBased";
+        services.Configure<AiProviderOptions>(configuration.GetSection("Ai"));
+        if (aiProvider.Equals("OpenAiCompatible", StringComparison.OrdinalIgnoreCase))
+        {
+            string? endpoint = configuration["Ai:Endpoint"]
+                ?? throw new InvalidOperationException(
+                    "Ai:Endpoint is required when Ai:Provider is OpenAiCompatible.");
+            services.AddHttpClient<IAiService, OpenAiCompatibleAiService>(client =>
+            {
+                client.BaseAddress = new Uri(endpoint);
+                client.Timeout = TimeSpan.FromSeconds(60);
+            });
+        }
+        else
+        {
+            services.AddSingleton<IAiService, RuleBasedAiService>();
+        }
 
         var storageRoot = configuration["Storage:LocalRoot"] ?? Path.Combine(AppContext.BaseDirectory, "storage");
         services.AddSingleton<IStorageService>(_ => new LocalFileStorageService(storageRoot));
