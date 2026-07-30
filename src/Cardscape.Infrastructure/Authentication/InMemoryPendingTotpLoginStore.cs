@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using Cardscape.Application.Authentication.Abstractions;
 using Cardscape.Domain.Members;

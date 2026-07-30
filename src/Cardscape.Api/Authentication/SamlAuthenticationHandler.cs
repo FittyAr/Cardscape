@@ -11,13 +11,13 @@ using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Saml2Options = Sustainsys.Saml2.AspNetCore2.Saml2Options;
-using SPOptions = Sustainsys.Saml2.Configuration.SPOptions;
+using Saml2CommandResult = Sustainsys.Saml2.WebSso.CommandResult;
 using Saml2ConfigurationOptions = Sustainsys.Saml2.Configuration.Options;
 using Saml2EntityId = Sustainsys.Saml2.Metadata.EntityId;
-using Saml2IdentityProvider = Sustainsys.Saml2.IdentityProvider;
 using Saml2HttpRequestData = Sustainsys.Saml2.WebSso.HttpRequestData;
-using Saml2CommandResult = Sustainsys.Saml2.WebSso.CommandResult;
+using Saml2IdentityProvider = Sustainsys.Saml2.IdentityProvider;
+using Saml2Options = Sustainsys.Saml2.AspNetCore2.Saml2Options;
+using SPOptions = Sustainsys.Saml2.Configuration.SPOptions;
 
 namespace Cardscape.Api.Authentication;
 

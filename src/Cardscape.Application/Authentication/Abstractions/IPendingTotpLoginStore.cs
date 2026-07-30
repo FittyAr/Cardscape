@@ -1,4 +1,4 @@
-﻿using Cardscape.Domain.Members;
+using Cardscape.Domain.Members;
 
 namespace Cardscape.Application.Authentication.Abstractions;
 
