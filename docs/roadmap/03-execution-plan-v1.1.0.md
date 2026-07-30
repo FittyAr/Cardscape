@@ -303,6 +303,9 @@ not yet implemented.
   default HTTP implementation posting to
   `https://slack.com/api/chat.postMessage` with the bot token
   from `Integrations:Slack:BotToken`.
+- DI registration (✅ done — G1): repositories are scoped;
+  `HttpSlackNotificationService` is wired with `AddHttpClient`
+  against `https://slack.com/api/`.
 - Webhook events: `card.created`, `card.moved`,
   `card.completed`, `comment.added`.
 - New migration `IssueSlackIntegrations`.
@@ -318,6 +321,10 @@ not yet implemented.
 - `IGoogleDrivePickerService` in Application that returns a
   file picker URL; the file content is fetched on user
   confirmation and added to the card as an Attachment.
+- DI registration (✅ done — G1):
+  `GoogleDriveConnectionRepository` is scoped;
+  `HttpGoogleDrivePickerService` is wired with `AddHttpClient`
+  against `https://www.googleapis.com/`.
 - OAuth flow under `/api/integrations/google/connect`,
   `/api/integrations/google/callback`.
 - MCP tools: `integrations_google_drive_picker_url`,
@@ -328,6 +335,10 @@ not yet implemented.
 - `GitHubRepoLink` (board + repo full name + event filter).
 - `IGitHubService` in Application: list branches, list PRs,
   list issues, create issue from card.
+- DI registration (✅ done — G1): the two repositories
+  (`GitHubRepoLinkRepository`, `GitHubPullRequestLinkRepository`)
+  are scoped; `HttpGitHubService` is wired with
+  `AddHttpClient` against `https://api.github.com`.
 - OAuth flow under `/api/integrations/github/connect`.
 - Web UI: a "GitHub" section in the card menu with a list of
   linked PRs / issues + a "Create issue" button.
@@ -344,6 +355,10 @@ not yet implemented.
   receives POSTs on `/api/integrations/email/inbound`
   (SendGrid / Mailgun / Postmark webhook formats), parses
   them, and creates a card in the target list.
+- DI registration (✅ done — G1):
+  `InboundEmailAddressRepository` is scoped;
+  `DefaultInboundEmailService` is scoped (composes the
+  address repository + the Wolverine `IMessageBus`).
 - The board owner configures a forwarding address like
   `cardscape+board-abc@in.example.com` in their Gmail.
 - New migration `IssueInboundEmailAddresses`.

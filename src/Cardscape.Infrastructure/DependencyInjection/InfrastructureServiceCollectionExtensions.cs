@@ -281,6 +281,55 @@ public static class InfrastructureServiceCollectionExtensions
         // DbContext.
         services.AddScoped<IDashboardRepository, DashboardRepository>();
 
+        // Slack integration (§3.7) — the bounded context ships
+        // the aggregates, services, endpoints, MCP tools, and
+        // migrations, but the abstractions were not wired into
+        // DI. Repositories are scoped (EF Core DbContext);
+        // HttpSlackNotificationService is registered via
+        // AddHttpClient so the typed HttpClient lifetime is
+        // managed by the factory and the bearer token
+        // configured at construction (Integrations:Slack:BotToken)
+        // lives for the lifetime of the instance.
+        services.AddScoped<ISlackWorkspaceRepository, SlackWorkspaceRepository>();
+        services.AddScoped<ISlackChannelRepository, SlackChannelRepository>();
+        services.AddHttpClient<ISlackNotificationService, HttpSlackNotificationService>(client =>
+        {
+            client.BaseAddress = new Uri("https://slack.com/api/");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
+        // Google Drive integration (§3.8) — the picker service
+        // and the per-user connection repository. The picker is
+        // a typed HttpClient because every call hits Google's
+        // OAuth + Drive REST endpoints; the connection
+        // repository is scoped (EF Core DbContext).
+        services.AddScoped<IGoogleDriveConnectionRepository, GoogleDriveConnectionRepository>();
+        services.AddHttpClient<IGoogleDrivePickerService, HttpGoogleDrivePickerService>(client =>
+        {
+            client.BaseAddress = new Uri("https://www.googleapis.com/");
+            client.Timeout = TimeSpan.FromSeconds(60);
+        });
+
+        // GitHub integration (§3.9) — the REST service, the
+        // board → repo link repository, and the card → PR link
+        // repository. GitHubService is a typed HttpClient; the
+        // two repos are scoped (EF Core DbContext).
+        services.AddScoped<IGitHubRepoLinkRepository, GitHubRepoLinkRepository>();
+        services.AddScoped<IGitHubPullRequestLinkRepository, GitHubPullRequestLinkRepository>();
+        services.AddHttpClient<IGitHubService, HttpGitHubService>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.github.com");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
+        // Email-to-board integration (§3.10) — the inbound
+        // address repository (scoped: EF Core DbContext) and
+        // the parser/handler service. The handler is scoped
+        // because it composes the address repository + the
+        // Wolverine IMessageBus to dispatch CreateCardCommand.
+        services.AddScoped<IInboundEmailAddressRepository, InboundEmailAddressRepository>();
+        services.AddScoped<IInboundEmailService, DefaultInboundEmailService>();
+
         return services;
     }
 }
