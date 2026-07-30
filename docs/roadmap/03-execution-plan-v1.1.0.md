@@ -420,14 +420,28 @@ The features from the feature inventory §14 (security) and
   authenticated user links additional providers to their
   account).
 
-### 4.2 SAML SSO
-- Add `Sustainsys.Saml2.AspNetCore` to
+### 4.2 SAML SSO ✅ DONE (protocol side; gap G2 closed)
+- Add `Sustainsys.Saml2.AspNetCore2 2.10.0` to
   `Directory.Packages.props`.
 - New bounded context `Cardscape.Domain.Authentication.Saml/`
   with `SamlConnection` (workspace → IdP metadata URL, ACS URL,
   audience).
-- New endpoints `GET /saml/{workspaceSlug}/login`,
+- New endpoints `GET /saml/{workspaceSlug}/login-init`,
   `POST /saml/{workspaceSlug}/acs`, `GET /saml/{workspaceSlug}/metadata`.
+- ✅ Custom `SamlAuthenticationHandler` in
+  `src/Cardscape.Api/Authentication/SamlAuthenticationHandler.cs`
+  drives the Sustainsys command pipeline
+  (`CommandFactory.GetCommand(...).Run(...)` on
+  `Authenticate` / `Acs` / `Metadata` / `SignIn`),
+  parameterised per-workspace from the `SamlConnection`
+  lookup. Registered via
+  `AddScheme<Saml2Options, SamlAuthenticationHandler>("Saml", _ => {})`
+  in `ServiceCollectionExtensions.cs`. IdP metadata is
+  fetched + parsed (HTTP / HTTPS / `file://`) and the
+  `EntityDescriptor` is read for SSO location + binding.
+  3 integration tests added in
+  `tests/Cardscape.IntegrationTests/Endpoints/SamlEndpointsTests.cs`
+  (metadata, challenge, unknown-slug 404) — all green.
 - The SAML subject becomes a `User` on first login; the
   workspace admin manages the IdP metadata.
 - Web UI: `/workspaces/{id}/saml` configuration page.

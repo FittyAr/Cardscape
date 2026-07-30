@@ -233,6 +233,20 @@ public static class ServiceCollectionExtensions
             ScimAuthenticationHandler.SchemeName,
             _ => { });
 
+        // ── SAML 2.0 SSO (P4.2) ───────────────────────────────
+        // The custom handler intercepts the
+        // /saml/{workspaceSlug}/{login,login-init,acs,metadata}
+        // routes via IAuthenticationRequestHandler. The
+        // Sustainsys.Saml2.AspNetCore2 package is referenced
+        // for the type surface (Saml2Options + WebSso
+        // SignInCommand / AcsCommand / MetadataCommand); the
+        // stock Sustainsys.Saml2Handler is intentionally not
+        // registered because the per-workspace IdP and ACS
+        // URL make a single static scheme insufficient.
+        authBuilder.AddScheme<Sustainsys.Saml2.AspNetCore2.Saml2Options, SamlAuthenticationHandler>(
+            SamlAuthenticationHandler.SchemeName,
+            _ => { });
+
         services.AddAuthorization();
         return services;
     }

@@ -15,7 +15,8 @@ public enum ExternalProvider
 {
     Google = 1,
     Microsoft = 2,
-    Apple = 3
+    Apple = 3,
+    Saml = 4
 }
 
 /// <summary>
@@ -32,6 +33,7 @@ public static class ExternalProviderExtensions
         ExternalProvider.Google => "google",
         ExternalProvider.Microsoft => "microsoft",
         ExternalProvider.Apple => "apple",
+        ExternalProvider.Saml => "saml",
         _ => throw new ArgumentOutOfRangeException(nameof(provider), provider, "Unknown external provider.")
     };
 
@@ -48,6 +50,7 @@ public static class ExternalProviderExtensions
             case "google": provider = ExternalProvider.Google; return true;
             case "microsoft": provider = ExternalProvider.Microsoft; return true;
             case "apple": provider = ExternalProvider.Apple; return true;
+            case "saml": provider = ExternalProvider.Saml; return true;
             default: provider = default; return false;
         }
     }
