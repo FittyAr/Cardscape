@@ -503,17 +503,42 @@ The features from the feature inventory §14 (security) and
   check lives in `Workspace.GuardRegion(region)`.
 - Web UI: a region selector at workspace creation.
 
-### 4.6 Google Calendar sync ⚠️ PARTIAL
+### 4.6 Google Calendar sync ✅ DONE (G8)
 - New bounded context `Cardscape.Domain.Integrations.GoogleCalendar/`
   with `GoogleCalendarConnection` (user → refresh token,
-  calendar id).
+  calendar id, watch channel, sync token).
 - `IGoogleCalendarSyncService` in Application: on every card
   `DueDate` change, push the event to the user's Google
-  Calendar; on calendar webhook, update the card.
-- OAuth flow under `/api/integrations/google-calendar/connect`.
-- New migration `IssueGoogleCalendarConnections`.
-- Web UI: `/settings/integrations/google-calendar` with the
-  "Connect" button + a "Last sync" timestamp.
+  Calendar; on calendar webhook, update the card. Both
+  paths are now wired — see
+  `Cardscape.Application/Cards/Events/CardDueDateChangedEventHandler.cs`
+  (push, fans out to every connected user in the
+  workspace) and
+  `HttpGoogleCalendarSyncService.PullCalendarChangesAsync`
+  (pull, walks the Google Calendar `events.list` API
+  with the per-user `syncToken` and persists the new
+  token on success).
+- OAuth flow under `/api/integrations/google-calendar/start`
+  + `/api/integrations/google-calendar/callback` (the
+  callback exchanges the code for tokens, encrypts the
+  refresh token via `ISecretProtector`, and persists
+  the `GoogleCalendarConnection` through
+  `EstablishGoogleCalendarConnectionCommand`).
+  Webhook receiver under
+  `/api/integrations/google-calendar/webhook`; watch
+  arming under
+  `/api/integrations/google-calendar/watch`.
+- Migrations: `IssueGoogleCalendarConnections` (table)
+  + `G8GoogleCalendarWatch` (the per-user
+  `WatchChannelId` / `WatchResourceId` /
+  `WatchExpiresAt` / `SyncToken` columns + the
+  `WorkspaceId` index).
+- Web UI: `/settings/integrations/google-calendar` with
+  a workspace picker, a real "Connect" button (calls
+  the new `BuildOAuthStartUrl` and `Nav.NavigateTo`
+  with `forceLoad: true`), and a "Last sync" timestamp
+  + "Last sync error" alert. The hard-coded
+  placeholder is gone.
 
 ### 4.7 IAiService abstraction ✅ DONE
 - New `Cardscape.Application/Abstractions/IAiService.cs` with:
@@ -662,17 +687,39 @@ The features from the feature inventory §14 (security) and
   member-only).
 - MCP tool: `boards_export`.
 
-### 5.8 MCP subscriptions
+### 5.8 MCP subscriptions ✅ DONE (G14)
 - The MCP SDK supports resource subscriptions
   (`Subscribe` / `Unsubscribe` notifications). Wire the
   existing SignalR `BoardHub` broadcaster into the MCP
   resource layer: when a board's `board://{boardId}` resource
   changes, the MCP server sends a `ResourceUpdated` event to
   every subscribed AI client.
-- New file `src/Cardscape.Mcp/Realtime/McpResourceBroadcaster.cs`.
+- New file `src/Cardscape.Mcp/Realtime/McpResourceBroadcaster.cs`
+  (now wired: `ConcurrentDictionary<string, List<McpServer>>`
+  per URI; `BroadcastAsync(boardId)` emits
+  `notifications/resources/updated` on each subscribed
+  session's transport).
+- New file
+  `src/Cardscape.Mcp/Endpoints/Internal/McpBoardEventEndpoints.cs`
+  (the API HTTP-calls `POST /api/internal/board-event` with
+  the same `X-Internal-Secret` shared secret the MCP uses to
+  call the API in the reverse direction).
+- New `IMcpResourceNotifier` /
+  `HttpMcpResourceNotifier` in the API
+  (`src/Cardscape.Application/Realtime/IMcpResourceNotifier.cs`,
+  `src/Cardscape.Api/Realtime/HttpMcpResourceNotifier.cs`).
+  The existing `BoardNotifier` is replaced in DI by
+  `CompositeBoardNotifier` which fans every event out to
+  SignalR first and the MCP second.
+- Subscribe / Unsubscribe handlers are registered via
+  `WithSubscribeToResourcesHandler` and
+  `WithUnsubscribeFromResourcesHandler` in
+  `src/Cardscape.Mcp/Extensions/ServiceCollectionExtensions.cs`.
 - Document the subscription flow in
   `docs/extensions/01-build-your-own-mcp-client.md` (added in
-  §2.6).
+  §2.6; updated to describe the new end-to-end flow).
+- Closes gap G14 in
+  `docs/roadmap/04-audit-gaps-2026-07-30.md`.
 
 ---
 

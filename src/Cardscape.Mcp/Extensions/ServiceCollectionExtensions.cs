@@ -3,6 +3,8 @@ using Cardscape.Application.DependencyInjection;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Mcp.Authentication;
 using Cardscape.Mcp.Realtime;
+using Microsoft.Extensions.DependencyInjection;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
 namespace Cardscape.Mcp.Extensions;
@@ -78,9 +80,53 @@ public static class ServiceCollectionExtensions
             .WithStdioServerTransport()
             .WithToolsFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
             .WithResourcesFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
-            .WithPromptsFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
+            .WithPromptsFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
+            // The .NET MCP SDK 1.4+ routes the
+            // resources/subscribe and resources/unsubscribe
+            // requests through the request handler pipeline.
+            // The handlers below delegate to
+            // McpResourceBroadcaster, which keeps a per-URI
+            // list of subscribed McpServer instances and uses
+            // them to fan out notifications/resources/updated
+            // when BroadcastAsync is called.
+            .WithSubscribeToResourcesHandler(SubscribeToResourceAsync)
+            .WithUnsubscribeFromResourcesHandler(UnsubscribeFromResourceAsync);
 
         return services;
+    }
+
+    private static ValueTask<EmptyResult> SubscribeToResourceAsync(
+        RequestContext<SubscribeRequestParams> request,
+        CancellationToken cancellationToken)
+    {
+        SubscribeRequestParams? parameters = request.Params;
+        if (parameters is null || string.IsNullOrWhiteSpace(parameters.Uri))
+        {
+            throw new ArgumentException(
+                "subscribe request is missing a uri parameter.", nameof(request));
+        }
+
+        McpResourceBroadcaster broadcaster = request.Services!
+            .GetRequiredService<McpResourceBroadcaster>();
+        broadcaster.Subscribe(parameters.Uri, request.Server);
+        return ValueTask.FromResult(new EmptyResult());
+    }
+
+    private static ValueTask<EmptyResult> UnsubscribeFromResourceAsync(
+        RequestContext<UnsubscribeRequestParams> request,
+        CancellationToken cancellationToken)
+    {
+        UnsubscribeRequestParams? parameters = request.Params;
+        if (parameters is null || string.IsNullOrWhiteSpace(parameters.Uri))
+        {
+            throw new ArgumentException(
+                "unsubscribe request is missing a uri parameter.", nameof(request));
+        }
+
+        McpResourceBroadcaster broadcaster = request.Services!
+            .GetRequiredService<McpResourceBroadcaster>();
+        broadcaster.Unsubscribe(parameters.Uri, request.Server);
+        return ValueTask.FromResult(new EmptyResult());
     }
 
     /// <summary>

@@ -30,6 +30,7 @@ using Cardscape.Api.Hubs;
 using Cardscape.Api.Middleware;
 using Cardscape.Api.Realtime;
 using Cardscape.Application.DependencyInjection;
+using Cardscape.Application.Realtime;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.AspNetCore.StaticFiles;
@@ -77,14 +78,30 @@ builder.Services.AddCardscapeApplication();
 builder.Services.AddCardscapeInfrastructure(builder.Configuration);
 builder.Services.AddApiAuthentication(builder.Configuration);
 
-// ── Real-time (SignalR) ───────────────────────────────────────
+// ── Real-time (SignalR + MCP) ──────────────────────────────────
 // Subscribed clients join board:{boardId} on demand. The
 // DomainEventBroadcaster (static Wolverine handlers in
 // Cardscape.Api.Realtime) bridges domain events from the
 // Wolverine bus to the IBoardNotifier, which fans out to every
-// connection in the matching group.
+// SignalR connection in the matching group and, in parallel,
+// pings the MCP process so AI clients that have subscribed to
+// the matching board://{id} resource receive a
+// notifications/resources/updated push. The MCP is reached
+// through a typed HttpClient; the URL and shared secret are
+// configured the same way as the reverse path
+// (Cardscape:Mcp:BaseUrl + Internal:Secret).
 builder.Services.AddSignalR();
-builder.Services.AddSingleton<IBoardNotifier, BoardNotifier>();
+builder.Services.AddSingleton<IBoardNotifier, CompositeBoardNotifier>();
+builder.Services.AddSingleton<IMcpResourceNotifier, HttpMcpResourceNotifier>();
+builder.Services.AddHttpClient("Cardscape.Mcp", client =>
+{
+    string? mcpBaseUrl = builder.Configuration["Cardscape:Mcp:BaseUrl"]
+        ?? builder.Configuration["Mcp:BaseUrl"]
+        ?? Environment.GetEnvironmentVariable("CARDS_CAPE__MCP__BASEURL")
+        ?? "http://localhost:5292/";
+    client.BaseAddress = new Uri(mcpBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
 
 // ── Background job dispatcher (v0.7) ────────────────────────────
 // Polls the background_jobs table for due work and dispatches it

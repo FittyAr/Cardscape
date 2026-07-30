@@ -123,20 +123,53 @@ and `client.ListPromptsAsync()`.
 Cardscape's MCP server supports resource subscriptions. When
 the board's `board://{boardId}` resource changes, the server
 fires a `ResourceUpdated` notification to every subscribed
-client. To subscribe:
+client. The notification is the standard MCP envelope
+`notifications/resources/updated` with a `{ "uri": "..." }`
+payload.
+
+To subscribe:
 
 ```csharp
+// Returns when the server has registered the
+// subscription; from here on, the server pushes every
+// change to the matching board to this client.
 await client.SubscribeToResourceAsync("board://<board-id>");
+
 // ... when the server pushes, the SDK raises an event:
 client.ResourceUpdated += (sender, e) =>
 {
-    Console.WriteLine($"Resource {e.Uri} changed: {e.Contents?.Text}");
+    // e.Uri is the resource URI ("board://<board-id>").
+    // Re-read the resource to get the new state:
+    var fresh = await client.ReadResourceAsync(e.Uri);
+    Console.WriteLine($"Board {e.Uri} changed: {fresh.Contents?.FirstOrDefault()?.Text}");
 };
 ```
 
-The notification is the same JSON shape as the resource
-read — you can re-render the affected UI from the new
-content.
+How it works end-to-end:
+
+- The Web client uses SignalR, but the MCP server is a
+  separate process — it does not own the SignalR hub. The
+  API's `DomainEventBroadcaster` (the static Wolverine
+  handlers under `Cardscape.Api.Realtime`) fans every
+  board-changing domain event out to the matching
+  `board:{boardId}` SignalR group **and** to the MCP through
+  the new `IMcpResourceNotifier` (a
+  `HttpMcpResourceNotifier` that POSTs to the MCP's
+  `/api/internal/board-event` with the same `X-Internal-Secret`
+  shared secret the MCP uses to call the API in the reverse
+  direction).
+- On the MCP side, the request handler is routed to
+  `McpResourceBroadcaster.Subscribe(uri, McpServer)` (a
+  dictionary keyed by resource URI), and the broadcaster's
+  `BroadcastAsync(boardId)` walks the per-URI subscriber
+  list and emits the standard `notifications/resources/updated`
+  notification on each subscribed session's transport.
+
+For idempotency, both `Subscribe` and `Unsubscribe` are safe
+to call multiple times for the same `(uri, session)` pair.
+The broadcaster drops a subscriber whose transport throws on
+send (e.g. a closed session) so a bad client cannot take
+down the fan-out.
 
 ## 5. Idempotency
 

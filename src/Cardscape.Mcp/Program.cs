@@ -1,3 +1,4 @@
+using Cardscape.Mcp.Endpoints.Internal;
 using Cardscape.Mcp.Extensions;
 using Cardscape.Mcp.Observability;
 using Cardscape.Mcp.Tools;
@@ -26,5 +27,10 @@ McpToolContext.Bus = app.Services.GetRequiredService<IMessageBus>();
 // ── Pipeline ─────────────────────────────────────────────
 app.UseCardscapeMcp();
 app.MapCardscapeHealthChecks();
+// The API HTTP-calls /api/internal/board-event after every
+// board-changing domain event so the MCP can fan the change
+// out to subscribed AI clients (see
+// McpResourceBroadcaster.BroadcastAsync).
+app.MapMcpBoardEventEndpoints();
 
 app.Run();
