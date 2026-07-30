@@ -268,6 +268,11 @@ public static class InfrastructureServiceCollectionExtensions
         // workspace has a connection configured.
         services.AddScoped<ISamlConnectionRepository, SamlConnectionRepository>();
 
+        // Dashboards (P3.5) — per-board widgets. The
+        // repository is scoped because it wraps the EF Core
+        // DbContext.
+        services.AddScoped<IDashboardRepository, DashboardRepository>();
+
         return services;
     }
 }

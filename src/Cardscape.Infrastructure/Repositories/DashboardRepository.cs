@@ -17,7 +17,7 @@ public sealed class DashboardRepository(
     public async Task<IReadOnlyList<Dashcard>> ListForBoardAsync(BoardId boardId, CancellationToken ct = default)
     {
         return await context.Set<Dashcard>()
-            .Where(d => d.BoardId == boardId)
+            .Where(d => d.BoardId == boardId && !d.IsDeleted)
             .OrderBy(d => d.Position)
             .ToListAsync(ct);
     }

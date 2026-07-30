@@ -8,6 +8,7 @@ using Cardscape.IntegrationTests.Fixtures;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Wolverine;
 
@@ -38,10 +39,20 @@ public sealed class BackgroundJobDispatcherTests
         using TestHandler handler = new("test:happy", marker);
 
         using IServiceScope scope = _factory.WithWebHostBuilder(b =>
-                b.ConfigureTestServices(s =>
                 {
-                    s.AddSingleton<IBackgroundJobHandler>(handler);
-                }))
+                    b.ConfigureTestServices(s =>
+                    {
+                        s.AddSingleton<IBackgroundJobHandler>(handler);
+                    });
+                    b.ConfigureAppConfiguration((_, config) =>
+                    {
+                        config.AddInMemoryCollection(new Dictionary<string, string?>
+                        {
+                            ["ConnectionStrings:Default"] = _factory.ConnectionString,
+                            ["Storage:LocalRoot"] = _factory.StorageRoot
+                        });
+                    });
+                })
             .Services.CreateScope();
 
         IBackgroundJobScheduler scheduler = scope.ServiceProvider
@@ -73,10 +84,20 @@ public sealed class BackgroundJobDispatcherTests
         using TestHandler handler = new(type, marker, failAlways: true);
 
         using IServiceScope scope = _factory.WithWebHostBuilder(b =>
-                b.ConfigureTestServices(s =>
                 {
-                    s.AddSingleton<IBackgroundJobHandler>(handler);
-                }))
+                    b.ConfigureTestServices(s =>
+                    {
+                        s.AddSingleton<IBackgroundJobHandler>(handler);
+                    });
+                    b.ConfigureAppConfiguration((_, config) =>
+                    {
+                        config.AddInMemoryCollection(new Dictionary<string, string?>
+                        {
+                            ["ConnectionStrings:Default"] = _factory.ConnectionString,
+                            ["Storage:LocalRoot"] = _factory.StorageRoot
+                        });
+                    });
+                })
             .Services.CreateScope();
 
         IBackgroundJobScheduler scheduler = scope.ServiceProvider

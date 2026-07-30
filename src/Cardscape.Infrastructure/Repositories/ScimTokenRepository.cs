@@ -28,11 +28,18 @@ public sealed class ScimTokenRepository(CardscapeDbContext db) : IScimTokenRepos
         return null;
     }
 
-    public async Task<IReadOnlyList<ScimToken>> ListForWorkspaceAsync(Guid workspaceId, CancellationToken ct = default) =>
-        await db.ScimTokens
+    public async Task<IReadOnlyList<ScimToken>> ListForWorkspaceAsync(Guid workspaceId, CancellationToken ct = default)
+    {
+        // SQLite does not support ORDER BY on DateTimeOffset
+        // columns (the engine's ORDER BY only handles a fixed
+        // set of primitive types). The list is small (typically
+        // 1-2 tokens per workspace) so we fetch the matching
+        // rows in any order and sort client-side.
+        IReadOnlyList<ScimToken> rows = await db.ScimTokens
             .Where(t => t.WorkspaceId == new Domain.Workspaces.WorkspaceId(workspaceId))
-            .OrderByDescending(t => t.CreatedAt)
             .ToListAsync(ct);
+        return rows.OrderByDescending(t => t.CreatedAt).ToList();
+    }
 
     public async Task AddAsync(ScimToken token, CancellationToken ct = default)
     {

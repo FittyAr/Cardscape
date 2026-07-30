@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,6 +13,14 @@ namespace Cardscape.IntegrationTests.Fixtures;
 /// <c>Program</c> but rewires configuration so each test class
 /// gets a fresh SQLite file under the system temp directory.
 /// The file is removed by <see cref="Dispose"/>.
+///
+/// <para>Env vars are set JUST BEFORE the host is built (in
+/// <see cref="CreateHost"/>) and cleared immediately after.
+/// This minimises the race window with parallel test
+/// collections that have their own factory instance
+/// (e.g. <c>RegionEndpointTests</c> uses <c>IClassFixture</c>).
+/// The constructor only allocates the per-factory file paths
+/// and storage root — it does not touch process-wide state.</para>
 /// </summary>
 public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Program>
 {
@@ -21,26 +30,75 @@ public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Progr
     /// <summary>Reusable HttpClient bound to the in-process test server.</summary>
     public HttpClient CreateApiClient() => CreateClient();
 
+    /// <summary>Override the deployment's pinned data-residency
+    /// region. Tests that exercise the cross-region write
+    /// guard set this to <see cref="Domain.Workspaces.Region.Europe"/>
+    /// (or another specific region); the default is
+    /// <see cref="Domain.Workspaces.Region.Unspecified"/>
+    /// (no gating).</summary>
+    public Domain.Workspaces.Region DeploymentRegion { get; set; } = Domain.Workspaces.Region.Unspecified;
+
+    /// <summary>SQLite file path the factory booted with. Exposed
+    /// so tests that use <c>WithWebHostBuilder</c> can re-attach
+    /// the same physical database to the auxiliary host.</summary>
+    public string ConnectionString => _connectionString;
+
+    /// <summary>Storage root the factory booted with. Same
+    /// rationale as <see cref="ConnectionString"/>.</summary>
+    public string StorageRoot => _storageRoot;
+
     public CardscapeWebApplicationFactory()
     {
         string id = Guid.NewGuid().ToString("N");
-        _connectionString = $"Data Source=file:cardscape-it-{id}?mode=memory&cache=shared";
+        // Real on-disk file (not in-memory) so that auxiliary
+        // WebApplicationFactory<Program>.WithWebHostBuilder(...) hosts
+        // — which create their own EF Core connection pool — all
+        // point at the same physical database. In-memory shared-cache
+        // databases fail to open across separate test hosts because
+        // each host's connection pool is initialised independently.
+        _connectionString = $"Data Source={Path.Combine(Path.GetTempPath(), $"cardscape-it-{id}.db")}";
         _storageRoot = Path.Combine(
             Path.GetDirectoryName(typeof(Program).Assembly.Location)!,
             "it-tmp",
             $"cardscape-it-{id}");
         Directory.CreateDirectory(_storageRoot);
+    }
 
-        // Env vars override the appsettings values BEFORE Program.cs builds
-        // the WebApplication. This is the only place the override is
-        // guaranteed to take effect, because AddDbContext captures the
-        // connection string at DI-registration time.
+    /// <summary>
+    /// Set the per-factory env vars RIGHT BEFORE the host is
+    /// built and clear them in a finally block. This is the
+    /// narrowest possible window where process-wide state is
+    /// mutated; the only thing that can race inside it is
+    /// another factory's <c>CreateHost</c> call, which is
+    /// serialised within the xUnit scheduler per test method.
+    /// </summary>
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        string? previousConnString = Environment.GetEnvironmentVariable("ConnectionStrings__Default");
+        string? previousProvider = Environment.GetEnvironmentVariable("Database__Provider");
+        string? previousJwtKey = Environment.GetEnvironmentVariable("Jwt__SigningKey");
+        string? previousStorage = Environment.GetEnvironmentVariable("Storage__LocalRoot");
+        string? previousEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
         Environment.SetEnvironmentVariable("ConnectionStrings__Default", _connectionString);
         Environment.SetEnvironmentVariable("Database__Provider", "Sqlite");
         Environment.SetEnvironmentVariable("Jwt__SigningKey",
             "integration-tests-signing-key-please-override-in-production-32+chars");
         Environment.SetEnvironmentVariable("Storage__LocalRoot", _storageRoot);
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+
+        try
+        {
+            return base.CreateHost(builder);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("ConnectionStrings__Default", previousConnString);
+            Environment.SetEnvironmentVariable("Database__Provider", previousProvider);
+            Environment.SetEnvironmentVariable("Jwt__SigningKey", previousJwtKey);
+            Environment.SetEnvironmentVariable("Storage__LocalRoot", previousStorage);
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", previousEnv);
+        }
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -48,7 +106,27 @@ public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Progr
         // The API's AddApiAuthentication already registers both
         // the JWT bearer scheme and the API-token scheme behind a
         // "BearerPolicy" wrapper. Tests just use the production
-        // setup as-is — no extra wiring needed here.
+        // setup as-is.
+        //
+        // We also replace the IDeploymentRegion singleton with a
+        // FakeDeploymentRegion bound to the test's DeploymentRegion
+        // property. The Infrastructure layer registers the
+        // configuration-backed implementation as a singleton; the
+        // env-var approach was fragile across test classes that
+        // share the host.
+        Domain.Workspaces.Region pinnedRegion = DeploymentRegion;
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton<Cardscape.Application.Abstractions.IDeploymentRegion>(
+                new FakeDeploymentRegion(pinnedRegion));
+        });
+    }
+
+    private sealed class FakeDeploymentRegion : Cardscape.Application.Abstractions.IDeploymentRegion
+    {
+        private readonly Domain.Workspaces.Region _region;
+        public FakeDeploymentRegion(Domain.Workspaces.Region region) => _region = region;
+        public Domain.Workspaces.Region Region => _region;
     }
 
     protected override void Dispose(bool disposing)
@@ -56,16 +134,10 @@ public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Progr
         base.Dispose(disposing);
         if (disposing)
         {
-            // Restore the env vars so the next test class / process gets
-            // a clean slate, and the in-memory DB is released when the
-            // last connection closes. The on-disk storage dir is best-
-            // effort to clean up.
-            Environment.SetEnvironmentVariable("ConnectionStrings__Default", null);
-            Environment.SetEnvironmentVariable("Database__Provider", null);
-            Environment.SetEnvironmentVariable("Jwt__SigningKey", null);
-            Environment.SetEnvironmentVariable("Storage__LocalRoot", null);
-            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
-
+            // No env vars to clear — they were restored in
+            // CreateHost's finally block. Just remove the on-disk
+            // DB and the storage root (best effort).
+            TryDelete(_connectionString.Replace("Data Source=", string.Empty));
             TryDeleteDir(_storageRoot);
         }
     }

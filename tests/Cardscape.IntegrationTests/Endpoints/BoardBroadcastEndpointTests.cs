@@ -126,14 +126,21 @@ public sealed class BoardBroadcastEndpointTests
     {
         // Build a one-off factory configured with the secret we
         // expect to see, so the endpoint accepts our requests.
+        // We re-inject the parent factory's connection string +
+        // storage root + deployment region into the auxiliary
+        // host's configuration so the new host's Program.cs
+        // builds the same DbContext the rest of the suite is
+        // using.
         WebApplicationFactory<Program> factory = _factory.WithWebHostBuilder(builder =>
         {
-            builder.UseEnvironment("Development");
             builder.ConfigureAppConfiguration((_, config) =>
             {
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["Internal:Secret"] = Secret
+                    ["Internal:Secret"] = Secret,
+                    ["ConnectionStrings:Default"] = _factory.ConnectionString,
+                    ["Storage:LocalRoot"] = _factory.StorageRoot,
+                    ["Database:Provider"] = "Sqlite"
                 });
             });
         });
