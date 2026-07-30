@@ -65,6 +65,7 @@ public static class McpTracing
             .WithTracing(tb =>
             {
                 tb.AddSource(ActivitySourceName)
+                  .AddAspNetCoreInstrumentation()
                   .SetSampler(new AlwaysOnSampler());
 
                 if (!string.IsNullOrWhiteSpace(endpoint))

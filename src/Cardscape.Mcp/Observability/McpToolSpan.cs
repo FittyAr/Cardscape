@@ -49,15 +49,51 @@ public readonly struct McpToolSpanScope : IDisposable
         _activity?.SetTag("mcp.tool.name", toolName);
     }
 
-    public void MarkSuccess() => _activity?.SetTag("mcp.tool.outcome", "ok");
-    public void MarkFailure(string? reason = null)
+    /// <summary>
+    /// Records per-invocation context on the span:
+    /// <c>user.id</c>, <c>board.id</c>, and/or
+    /// <c>card.id</c> when the caller has them. Null/empty
+    /// inputs are skipped so the span only carries the
+    /// attributes that apply to the current tool.
+    /// </summary>
+    public void SetContext(string? userId, Guid? boardId, Guid? cardId)
     {
-        _activity?.SetTag("mcp.tool.outcome", "error");
-        if (!string.IsNullOrWhiteSpace(reason))
+        if (!string.IsNullOrEmpty(userId))
         {
-            _activity?.SetTag("mcp.tool.error", reason);
+            _activity?.SetTag("user.id", userId);
         }
-        _activity?.SetStatus(ActivityStatusCode.Error, reason);
+        if (boardId is { } b && b != Guid.Empty)
+        {
+            _activity?.SetTag("board.id", b.ToString());
+        }
+        if (cardId is { } c && c != Guid.Empty)
+        {
+            _activity?.SetTag("card.id", c.ToString());
+        }
+    }
+
+    public void MarkSuccess() => _activity?.SetTag("mcp.tool.outcome", "success");
+
+    /// <summary>
+    /// Marks the span as a failure. Sets
+    /// <c>mcp.tool.outcome = failure</c>, plus
+    /// <c>mcp.tool.error.code</c> and
+    /// <c>mcp.tool.error.message</c> when provided, and
+    /// flips the activity status to <see cref="ActivityStatusCode.Error"/>
+    /// so the OTel backend renders the span as failed.
+    /// </summary>
+    public void MarkFailure(string? code = null, string? message = null)
+    {
+        _activity?.SetTag("mcp.tool.outcome", "failure");
+        if (!string.IsNullOrWhiteSpace(code))
+        {
+            _activity?.SetTag("mcp.tool.error.code", code);
+        }
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            _activity?.SetTag("mcp.tool.error.message", message);
+        }
+        _activity?.SetStatus(ActivityStatusCode.Error, message ?? code);
     }
 
     public void SetTag(string key, object? value) =>
