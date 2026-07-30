@@ -19,6 +19,22 @@
         SDK ships the replacement pass.
     -->
     <StaticWebAssetsFingerprintingEnabled>false</StaticWebAssetsFingerprintingEnabled>
+    <!--
+        G12 (SetDefaultCulture / AddSupportedCultures on
+        AddLocalization) caused a Blazor WASM runtime error:
+        "Blazor detected a change in the application's culture
+        that is not supported with the current project
+        configuration." The default culture list (en, es) is
+        loaded at startup and Blazor refuses to switch to a
+        culture that wasn't part of the initial load. Setting
+        this to true ships the ICU / globalization data for
+        every supported culture (≈300 KB compressed); the
+        alternative is hard-coding the default culture to
+        "en" and only shipping English data, which we don't
+        want because the Spanish .resx is the second-largest
+        string set in the project.
+    -->
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
   </PropertyGroup>
 
   <ItemGroup>
