@@ -259,4 +259,19 @@
   <data name="GoogleCalendarSelectWorkspace" xml:space="preserve"><value>Elegí un workspace</value></data>
   <data name="GoogleCalendarSelectWorkspaceFirst" xml:space="preserve"><value>Elegí un workspace antes de conectar.</value></data>
   <data name="GoogleCalendarPickWorkspace" xml:space="preserve"><value>Necesitás al menos un workspace para conectar Google Calendar.</value></data>
+  <data name="CommonCancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Loading" xml:space="preserve"><value>Cargando…</value></data>
+  <data name="MirrorToButton" xml:space="preserve"><value>Espejar a…</value></data>
+  <data name="MirrorToTitle" xml:space="preserve"><value>Espejar a…</value></data>
+  <data name="MirrorToBlurb" xml:space="preserve"><value>Elegí el tablero y la lista que van a recibir una copia de esta tarjeta.</value></data>
+  <data name="MirrorToBoard" xml:space="preserve"><value>Tablero</value></data>
+  <data name="MirrorToList" xml:space="preserve"><value>Lista</value></data>
+  <data name="MirrorToSelectBoard" xml:space="preserve"><value>Seleccioná un tablero</value></data>
+  <data name="MirrorToSelectList" xml:space="preserve"><value>Seleccioná una lista</value></data>
+  <data name="MirrorToConfirm" xml:space="preserve"><value>Espejar</value></data>
+  <data name="MirrorToSuccess" xml:space="preserve"><value>Tarjeta espejada.</value></data>
+  <data name="MirrorToFailed" xml:space="preserve"><value>No se pudo espejar la tarjeta.</value></data>
+  <data name="MirrorToLoadFailed" xml:space="preserve"><value>No se pudo cargar el diálogo de espejado.</value></data>
+  <data name="MirrorToNoBoards" xml:space="preserve"><value>Este workspace no tiene tableros disponibles para espejar.</value></data>
+  <data name="MirrorToNoOtherBoards" xml:space="preserve"><value>El único tablero de este workspace es el de la tarjeta de origen. Creá otro tablero primero.</value></data>
 </root>

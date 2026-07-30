@@ -33,7 +33,7 @@ public static class CardEndpoints
     {
         var group = app.MapGroup("/api/cards").RequireAuthorization().WithTags("Cards");
 
-        group.MapGet("/", async (Guid boardId, bool includeArchived, bool includeSnoozed, IMessageBus bus, CancellationToken ct) =>
+        group.MapGet("/", async (Guid boardId, IMessageBus bus, CancellationToken ct, bool includeArchived = false, bool includeSnoozed = false) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
                 new ListCardsForBoardQuery(boardId, includeArchived, includeSnoozed), ct);

@@ -1,0 +1,189 @@
+@* P3.3 / G6c — modal dialog for the "Mirror to..." card action.
+   The caller passes the source card id; the dialog resolves the
+   source card → list → board → workspace chain so the board
+   picker can be scoped to the same workspace as the source card.
+   Picking a board loads its lists. On confirm the dialog returns
+   the chosen target list id; on cancel it returns null. The
+   parent then calls ICardsApiClient.MirrorToAsync. *@
+
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Localization
+@using Radzen
+@using Radzen.Blazor
+@inject IBoardsApiClient BoardsApi
+@inject ICardsApiClient CardsApi
+@inject IListsApiClient ListsApi
+@inject IStringLocalizer<SharedResource> L
+@inject DialogService Dialog
+
+<div class="mirror-card-dialog">
+    <h3 class="mirror-card-title">@L["MirrorToTitle"]</h3>
+    <p class="mirror-card-blurb">@L["MirrorToBlurb"]</p>
+
+    @if (loading)
+    {
+        <p>@L["Loading"]</p>
+    }
+    else if (loadError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" ShowIcon="true">
+            @loadError
+        </RadzenAlert>
+    }
+    else
+    {
+        <RadzenLabel Text="@L["MirrorToBoard"]" Component="mirror-board" />
+        <RadzenDropDown TValue="Guid" @bind-Value="selectedBoardId"
+                        Data="@boards" TextProperty="Name" ValueProperty="Id"
+                        Name="mirror-board"
+                        Change="@OnBoardChangedAsync"
+                        Placeholder="@L["MirrorToSelectBoard"]"
+                        Style="width:100%; margin-bottom:1rem" />
+
+        <RadzenLabel Text="@L["MirrorToList"]" Component="mirror-list" />
+        <RadzenDropDown TValue="Guid" @bind-Value="selectedListId"
+                        Data="@lists" TextProperty="Name" ValueProperty="Id"
+                        Name="mirror-list"
+                        Disabled="@(selectedBoardId == Guid.Empty || loadingLists)"
+                        Placeholder="@L["MirrorToSelectList"]"
+                        Style="width:100%; margin-bottom:1rem" />
+    }
+
+    <div class="mirror-card-actions">
+        <RadzenButton Text="@L["CommonCancel"]" ButtonStyle="ButtonStyle.Light" Click="@Cancel" />
+        <RadzenButton Text="@L["MirrorToConfirm"]" ButtonStyle="ButtonStyle.Primary"
+                      Click="@Confirm"
+                      Disabled="@(selectedListId == Guid.Empty || loading)"
+                      IsBusy="@loading" />
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid SourceCardId { get; set; }
+
+    private bool loading = true;
+    private bool loadingLists;
+    private string? loadError;
+
+    private IReadOnlyList<BoardSummaryDto> boards = [];
+    private IReadOnlyList<BoardListDto> lists = [];
+    private Guid selectedBoardId;
+    private Guid selectedListId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Resolve the source card → list → board → workspace chain
+        // so the board picker can be scoped to the same workspace
+        // as the source card. Mirrors inside a different
+        // workspace would need a workspace picker too, but the
+        // plan keeps the UI focused on the same-workspace case.
+        try
+        {
+            ApiResult<CardDto> cardResult = await CardsApi.GetAsync(SourceCardId);
+            if (!cardResult.IsSuccess || cardResult.Value is null)
+            {
+                loadError = cardResult.Error ?? L["MirrorToLoadFailed"];
+                return;
+            }
+
+            Guid listId = cardResult.Value.ListId;
+            ApiResult<BoardListDto> listResult = await ListsApi.GetAsync(listId);
+            if (!listResult.IsSuccess || listResult.Value is null)
+            {
+                loadError = listResult.Error ?? L["MirrorToLoadFailed"];
+                return;
+            }
+
+            Guid boardId = listResult.Value.BoardId;
+            ApiResult<BoardDto> boardResult = await BoardsApi.GetAsync(boardId);
+            if (!boardResult.IsSuccess || boardResult.Value is null)
+            {
+                loadError = boardResult.Error ?? L["MirrorToLoadFailed"];
+                return;
+            }
+
+            Guid workspaceId = boardResult.Value.WorkspaceId;
+            ApiResult<IReadOnlyList<BoardSummaryDto>> wsBoards =
+                await BoardsApi.ListForWorkspaceAsync(workspaceId);
+            if (!wsBoards.IsSuccess || wsBoards.Value is null)
+            {
+                loadError = wsBoards.Error ?? L["MirrorToLoadFailed"];
+                return;
+            }
+
+            boards = wsBoards.Value;
+            if (boards.Count > 0)
+            {
+                // Skip the source card's own board to avoid the
+                // trivial "mirror to a list in the same board"
+                // foot-gun. A follow-up can add a checkbox to
+                // allow it.
+                if (boards.Count > 1)
+                {
+                    boards = boards.Where(b => b.Id != boardId).ToList();
+                }
+
+                if (boards.Count > 0)
+                {
+                    selectedBoardId = boards[0].Id;
+                    await LoadListsForSelectedBoardAsync();
+                }
+                else
+                {
+                    loadError = L["MirrorToNoOtherBoards"];
+                }
+            }
+            else
+            {
+                loadError = L["MirrorToNoBoards"];
+            }
+        }
+        catch (Exception ex)
+        {
+            loadError = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task OnBoardChangedAsync()
+    {
+        selectedListId = Guid.Empty;
+        lists = [];
+        await LoadListsForSelectedBoardAsync();
+    }
+
+    private async Task LoadListsForSelectedBoardAsync()
+    {
+        if (selectedBoardId == Guid.Empty)
+        {
+            return;
+        }
+
+        loadingLists = true;
+        try
+        {
+            ApiResult<IReadOnlyList<BoardListDto>> result =
+                await ListsApi.ListForBoardAsync(selectedBoardId);
+            lists = result.IsSuccess && result.Value is not null ? result.Value : [];
+            if (lists.Count > 0)
+            {
+                selectedListId = lists[0].Id;
+            }
+        }
+        finally
+        {
+            loadingLists = false;
+        }
+    }
+
+    private void Confirm() => Dialog.Close(new MirrorCardDialogResult(selectedListId));
+    private void Cancel() => Dialog.Close(null);
+
+    public sealed record MirrorCardDialogResult(Guid TargetListId);
+}
