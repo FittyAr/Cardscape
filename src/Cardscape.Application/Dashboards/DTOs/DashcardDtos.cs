@@ -8,4 +8,8 @@ public sealed record DashcardDto(
     DashcardKind Kind,
     string Title,
     string? ConfigurationJson,
-    int Position);
+    int Position,
+    DateTimeOffset CreatedAt);
+
+public sealed record CreateDashcardRequest(Guid BoardId, DashcardKind Kind, string Title, string? ConfigurationJson, int Position);
+public sealed record UpdateDashcardConfigRequest(string ConfigurationJson);

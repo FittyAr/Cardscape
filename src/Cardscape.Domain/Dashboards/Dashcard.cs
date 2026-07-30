@@ -3,6 +3,13 @@ using Cardscape.Domain.Common;
 
 namespace Cardscape.Domain.Dashboards;
 
+/// <summary>
+/// A dashcard is a board-level widget that aggregates card
+/// metrics. The kind determines the aggregation (overdue
+/// count, by member, by label, by list, due this week).
+/// The config is an opaque JSON blob that the specific
+/// widget reads at render time.
+/// </summary>
 public sealed class Dashcard : AggregateRoot<DashcardId>
 {
     public BoardId BoardId { get; private set; } = null!;

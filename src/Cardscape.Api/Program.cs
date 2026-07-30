@@ -8,8 +8,10 @@ using Cardscape.Api.Endpoints.Cards;
 using Cardscape.Api.Endpoints.Checklists;
 using Cardscape.Api.Endpoints.Comments;
 using Cardscape.Api.Endpoints.CustomFields;
+using Cardscape.Api.Endpoints.Dashboards;
 using Cardscape.Api.Endpoints.Extensions;
 using Cardscape.Api.Endpoints.Import;
+using Cardscape.Api.Endpoints.Integrations;
 using Cardscape.Api.Endpoints.Internal;
 using Cardscape.Api.Endpoints.Labels;
 using Cardscape.Api.Endpoints.Lists;
@@ -182,6 +184,12 @@ app.MapBoardExtensionEndpoints();
 app.MapBackgroundJobEndpoints();
 app.MapBoardBroadcastEndpoints();
 app.MapImportEndpoints();
+app.MapTotpEndpoints();
+app.MapDashboardsEndpoints();
+app.MapGoogleDriveEndpoints();
+app.MapGitHubEndpoints();
+app.MapInboundEmailEndpoints();
+app.MapSlackEndpoints();
 
 // Real-time board hub. Sits at /hubs/board with the same JWT
 // bearer authentication as the REST API; clients bring the

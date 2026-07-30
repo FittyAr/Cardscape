@@ -5,6 +5,7 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
@@ -90,10 +91,10 @@ public static class BoardEndpoints
         // Export the board as a ZIP archive (board.json + attachments).
         group.MapGet("/{boardId:guid}/export", async (
             Guid boardId,
-            Cardscape.Application.Abstractions.Export.IExportService export,
+            [FromServices] Cardscape.Application.Abstractions.Export.IExportService exportService,
             CancellationToken ct) =>
         {
-            var result = await export.ExportBoardAsync(boardId, ct);
+            var result = await exportService.ExportBoardAsync(boardId, ct);
             if (result.IsFailure)
             {
                 return MapError(result.Error);
@@ -109,7 +110,7 @@ public static class BoardEndpoints
         // enforces the rule.
         group.MapGet("/{boardId:guid}/ics", async (
             Guid boardId,
-            Cardscape.Application.Calendar.IIcalendarService calendar,
+            [FromServices] Cardscape.Application.Calendar.IIcalendarService calendar,
             CancellationToken ct) =>
         {
             var result = await calendar.RenderBoardAsync(boardId, ct);
