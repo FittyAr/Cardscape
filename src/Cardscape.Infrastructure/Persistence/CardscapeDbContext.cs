@@ -10,6 +10,7 @@ using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Comments;
 using Cardscape.Domain.Idempotency;
+using Cardscape.Domain.Integrations.OAuthApps;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
@@ -57,6 +58,9 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<Domain.Integrations.GoogleCalendar.GoogleCalendarConnection> GoogleCalendarConnections => Set<Domain.Integrations.GoogleCalendar.GoogleCalendarConnection>();
     public DbSet<Domain.Authentication.Scim.ScimToken> ScimTokens => Set<Domain.Authentication.Scim.ScimToken>();
     public DbSet<Domain.Authentication.Saml.SamlConnection> SamlConnections => Set<Domain.Authentication.Saml.SamlConnection>();
+    public DbSet<OAuthApp> OAuthApps => Set<OAuthApp>();
+    public DbSet<OAuthAuthorizationCode> OAuthAuthorizationCodes => Set<OAuthAuthorizationCode>();
+    public DbSet<OAuthAccessToken> OAuthAccessTokens => Set<OAuthAccessToken>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't

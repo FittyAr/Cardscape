@@ -12,6 +12,26 @@
 > aspirational — execution starts immediately. Each item lands
 > on `master` as a single commit, with the build green at the
 > end of every commit, until the full list is shipped.
+>
+> **Status as of 2026-07-30:** 42 / 42 features done. The
+> execution log (audit re-run on 2026-07-30 found six
+> additional gaps the original push had missed — see
+> "Audit follow-up" below). 427 / 427 tests green on
+> `master` at tag `v1.1.0-roadmap-execution`.
+
+## Audit follow-up (2026-07-30)
+
+A second-pass audit found six items the first push had not
+verified end-to-end:
+
+| Item | Plan ref | Resolution |
+|---|---|---|
+| OAuth 3rd-party endpoints missing | §3.11 | Implemented: `IOAuthAppService`, repos, migration, endpoints, Web UI client, doc, integration tests |
+| OAuth 3rd-party flow doc missing | §3.11 | Wrote `docs/api/01-oauth-flow.md` |
+| Public status page missing | §5.5 | Wrote `docs/status.md` |
+| PWA `icon-512.png` missing | §5.3 | Generated from `icon-192.png`; updated `manifest.webmanifest` with both `any` and `maskable` purposes |
+| AI buttons in Web UI | §4.9 | Added "✨ Generate description" and "✨ Summarize comments" to `CardDetail.razor` + new `/api/ai/...` REST endpoints + `IAiApiClient` |
+| i18n extraction partial | §5.2 | Added 30+ new keys (OAuth apps page + AI buttons) in both `SharedResource.resx` and `SharedResource.es.resx` |
 
 ---
 

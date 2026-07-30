@@ -133,9 +133,6 @@
   <data name="OAuthAppsTitle" xml:space="preserve"><value>OAuth apps</value></data>
   <data name="OAuthAppsBlurb" xml:space="preserve"><value>Register personal OAuth clients to access Cardscape from your own scripts and integrations.</value></data>
   <data name="OAuthAppsRegister" xml:space="preserve"><value>Register a new OAuth app</value></data>
-  <data name="OAuthAppsRegisterBlurb" xml:space="preserve"><value>The full OAuth 2.0 authorization-code flow is implemented at the four endpoints below.</value></data>
-  <data name="OAuthAppsScopes" xml:space="preserve"><value>Grantable scopes:</value></data>
-  <data name="OAuthAppsDocsHint" xml:space="preserve"><value>See the full handshake walkthrough in</value></data>
   <data name="SamlTitle" xml:space="preserve"><value>SAML SSO</value></data>
   <data name="SamlConfigure" xml:space="preserve"><value>Configure SAML</value></data>
   <data name="SamlSlug" xml:space="preserve"><value>URL slug</value></data>
@@ -152,5 +149,34 @@
   <data name="BoardsEmpty" xml:space="preserve"><value>No boards yet.</value></data>
   <data name="PageTitleSuffix" xml:space="preserve"><value>— Cardscape</value></data>
   <data name="NotFoundTitle" xml:space="preserve"><value>Not found</value></data>
+  <data name="CommonLoading" xml:space="preserve"><value>Loading…</value></data>
+  <data name="OAuthAppsProtocol" xml:space="preserve"><value>OAuth 2.0 protocol endpoints</value></data>
+  <data name="OAuthAppsNameLabel" xml:space="preserve"><value>Application name</value></data>
+  <data name="OAuthAppsRedirectLabel" xml:space="preserve"><value>Redirect URI</value></data>
+  <data name="OAuthAppsRedirectHint" xml:space="preserve"><value>Where the browser returns the user after consent. Must match exactly.</value></data>
+  <data name="OAuthAppsScopesLabel" xml:space="preserve"><value>Scopes (space-separated)</value></data>
+  <data name="OAuthAppsScopesHint" xml:space="preserve"><value>Pick the minimum the app needs.</value></data>
+  <data name="OAuthAppsRegisterButton" xml:space="preserve"><value>Register application</value></data>
+  <data name="OAuthAppsOneTimeTitle" xml:space="preserve"><value>Your client secret — shown once</value></data>
+  <data name="OAuthAppsOneTimeWarning" xml:space="preserve"><value>Copy both values now. The server only stores the hash; the secret is never recoverable.</value></data>
+  <data name="OAuthAppsClientId" xml:space="preserve"><value>Client ID</value></data>
+  <data name="OAuthAppsClientSecret" xml:space="preserve"><value>Client secret</value></data>
+  <data name="OAuthAppsDismissButton" xml:space="preserve"><value>I've saved it</value></data>
+  <data name="OAuthAppsYourApps" xml:space="preserve"><value>Your registered applications</value></data>
+  <data name="OAuthAppsNoneRegistered" xml:space="preserve"><value>No applications registered yet.</value></data>
+  <data name="OAuthAppsTableName" xml:space="preserve"><value>Name</value></data>
+  <data name="OAuthAppsTableClientId" xml:space="preserve"><value>Client ID</value></data>
+  <data name="OAuthAppsTableScopes" xml:space="preserve"><value>Scopes</value></data>
+  <data name="OAuthAppsTableStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="OAuthAppsStatusActive" xml:space="preserve"><value>Active</value></data>
+  <data name="OAuthAppsStatusRevoked" xml:space="preserve"><value>Revoked</value></data>
+  <data name="OAuthAppsRevokeButton" xml:space="preserve"><value>Revoke</value></data>
+  <data name="OAuthAppsDocsHint" xml:space="preserve"><value>For the full handshake walkthrough see</value></data>
+  <data name="OAuthAppsRegisterNewBlurb" xml:space="preserve"><value>Register a third-party app that will act on your behalf. You'll get a clientId and a one-time client secret.</value></data>
+  <data name="AiGenerateDescription" xml:space="preserve"><value>Generate description</value></data>
+  <data name="AiSummarizeComments" xml:space="preserve"><value>Summarize thread</value></data>
+  <data name="AiSummaryTitle" xml:space="preserve"><value>AI summary</value></data>
+  <data name="AiGenerateChecklist" xml:space="preserve"><value>Make checklist</value></data>
+  <data name="AiSuggestOwners" xml:space="preserve"><value>Smart assign</value></data>
   <data name="NotFoundBlurb" xml:space="preserve"><value>The page you were looking for does not exist.</value></data>
 </root>

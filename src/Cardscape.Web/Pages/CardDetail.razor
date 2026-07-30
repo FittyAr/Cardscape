@@ -4,6 +4,8 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject ICardsApiClient Cards
 @inject ICommentsApiClient Comments
 @inject ICustomFieldsApiClient CustomFields
@@ -11,6 +13,8 @@
 @inject IVotingApiClient Votes
 @inject IChecklistsApiClient Checklists
 @inject IRecurrenceApiClient Recurrence
+@inject IAiApiClient Ai
+@inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@(card?.Title ?? "Card") — Cardscape</PageTitle>
 
@@ -65,6 +69,17 @@
 
             <h3>Description</h3>
             <p class="card-description">@(string.IsNullOrWhiteSpace(card.Description) ? "(no description)" : card.Description)</p>
+            <div class="ai-actions">
+                <RadzenButton Text="@($"✨ {L["AiGenerateDescription"]}")" Icon="auto_awesome"
+                              ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                              Click="@GenerateDescriptionAsync" Disabled="@aiBusy" IsBusy="@aiBusy" />
+                @if (aiGeneratedDescription is not null)
+                {
+                    <span class="ai-preview">
+                        <em>@aiGeneratedDescription</em>
+                    </span>
+                }
+            </div>
 
             @if (fieldValues is not null && fieldValues.Count > 0)
             {
@@ -85,6 +100,18 @@
             }
             else
             {
+                <div class="ai-actions" style="margin-bottom:.5rem">
+                    <RadzenButton Text="@($"✨ {L["AiSummarizeComments"]}")" Icon="auto_awesome"
+                                  ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                  Click="@SummarizeCommentsAsync" Disabled="@aiBusy" IsBusy="@aiBusy" />
+                </div>
+                @if (aiSummary is not null)
+                {
+                    <RadzenCard class="ai-summary">
+                        <strong>@L["AiSummaryTitle"]</strong>
+                        <p>@aiSummary</p>
+                    </RadzenCard>
+                }
                 @foreach (CommentDto c in comments)
                 {
                     <RadzenCard class="comment-card">
@@ -205,7 +232,53 @@
     private int recurrenceIntervalDays = 7;
     private bool addingComment;
     private bool togglingVote;
+    private bool aiBusy;
+    private string? aiGeneratedDescription;
+    private string? aiSummary;
     private readonly AddCommentModel addCommentModel = new();
+
+    private async Task GenerateDescriptionAsync()
+    {
+        if (aiBusy)
+        {
+            return;
+        }
+
+        aiBusy = true;
+        try
+        {
+            ApiResult<AiGeneratedTextDto> result = await Ai.GenerateDescriptionAsync(CardId);
+            aiGeneratedDescription = result.IsSuccess && result.Value is not null
+                ? result.Value.Text
+                : null;
+        }
+        finally
+        {
+            aiBusy = false;
+        }
+    }
+
+    private async Task SummarizeCommentsAsync()
+    {
+        if (aiBusy || comments is null || comments.Count == 0)
+        {
+            return;
+        }
+
+        aiBusy = true;
+        try
+        {
+            IReadOnlyList<Guid> commentIds = comments.Select(c => c.Id).ToList();
+            ApiResult<AiGeneratedTextDto> result = await Ai.SummarizeCommentsAsync(commentIds);
+            aiSummary = result.IsSuccess && result.Value is not null
+                ? result.Value.Text
+                : null;
+        }
+        finally
+        {
+            aiBusy = false;
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {

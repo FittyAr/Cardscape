@@ -209,6 +209,14 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IRateLimiter, RateLimiter>();
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
 
+        // OAuth 2.0 / OIDC for third-party apps. The repos are
+        // scoped (they wrap the EF Core DbContext); the service
+        // is scoped because it composes the repos + a clock.
+        services.AddScoped<IOAuthAppRepository, OAuthAppRepository>();
+        services.AddScoped<IOAuthAuthorizationCodeRepository, OAuthAuthorizationCodeRepository>();
+        services.AddScoped<IOAuthAccessTokenRepository, OAuthAccessTokenRepository>();
+        services.AddScoped<IOAuthAppService, OAuthAppService>();
+
         // Import pipeline (Trello default implementation; other kanban
         // tools can plug in their own IImportService). The import is
         // fully scoped because the work touches the cardscape DB

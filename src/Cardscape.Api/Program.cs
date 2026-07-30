@@ -16,9 +16,11 @@ using Cardscape.Api.Endpoints.Internal;
 using Cardscape.Api.Endpoints.Labels;
 using Cardscape.Api.Endpoints.Lists;
 using Cardscape.Api.Endpoints.Notifications;
+using Cardscape.Api.Endpoints.OAuth;
 using Cardscape.Api.Endpoints.Recurrence;
 using Cardscape.Api.Endpoints.Saml;
 using Cardscape.Api.Endpoints.Scim;
+using Cardscape.Api.Endpoints.Ai;
 using Cardscape.Api.Endpoints.Search;
 using Cardscape.Api.Endpoints.Security;
 using Cardscape.Api.Endpoints.Voting;
@@ -196,6 +198,9 @@ app.MapGoogleCalendarEndpoints();
 app.MapScimEndpoints();
 app.MapScimAdminEndpoints();
 app.MapSamlEndpoints();
+app.MapOAuthAppEndpoints();
+app.MapOAuthFlowEndpoints();
+app.MapAiEndpoints();
 
 // Real-time board hub. Sits at /hubs/board with the same JWT
 // bearer authentication as the REST API; clients bring the

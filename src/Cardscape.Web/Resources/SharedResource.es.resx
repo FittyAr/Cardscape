@@ -153,4 +153,33 @@
   <data name="PageTitleSuffix" xml:space="preserve"><value>— Cardscape</value></data>
   <data name="NotFoundTitle" xml:space="preserve"><value>No encontrado</value></data>
   <data name="NotFoundBlurb" xml:space="preserve"><value>La página que buscás no existe.</value></data>
+  <data name="CommonLoading" xml:space="preserve"><value>Cargando…</value></data>
+  <data name="OAuthAppsProtocol" xml:space="preserve"><value>Endpoints del protocolo OAuth 2.0</value></data>
+  <data name="OAuthAppsNameLabel" xml:space="preserve"><value>Nombre de la aplicación</value></data>
+  <data name="OAuthAppsRedirectLabel" xml:space="preserve"><value>URI de redirección</value></data>
+  <data name="OAuthAppsRedirectHint" xml:space="preserve"><value>A dónde vuelve el navegador después del consentimiento. Debe coincidir exactamente.</value></data>
+  <data name="OAuthAppsScopesLabel" xml:space="preserve"><value>Scopes (separados por espacio)</value></data>
+  <data name="OAuthAppsScopesHint" xml:space="preserve"><value>Elegí el mínimo que la app necesite.</value></data>
+  <data name="OAuthAppsRegisterButton" xml:space="preserve"><value>Registrar aplicación</value></data>
+  <data name="OAuthAppsOneTimeTitle" xml:space="preserve"><value>Tu client secret — se muestra una sola vez</value></data>
+  <data name="OAuthAppsOneTimeWarning" xml:space="preserve"><value>Copiá ambos valores ahora. El servidor sólo guarda el hash; el secret no se puede recuperar.</value></data>
+  <data name="OAuthAppsClientId" xml:space="preserve"><value>Client ID</value></data>
+  <data name="OAuthAppsClientSecret" xml:space="preserve"><value>Client secret</value></data>
+  <data name="OAuthAppsDismissButton" xml:space="preserve"><value>Ya lo guardé</value></data>
+  <data name="OAuthAppsYourApps" xml:space="preserve"><value>Tus aplicaciones registradas</value></data>
+  <data name="OAuthAppsNoneRegistered" xml:space="preserve"><value>Aún no hay aplicaciones registradas.</value></data>
+  <data name="OAuthAppsTableName" xml:space="preserve"><value>Nombre</value></data>
+  <data name="OAuthAppsTableClientId" xml:space="preserve"><value>Client ID</value></data>
+  <data name="OAuthAppsTableScopes" xml:space="preserve"><value>Scopes</value></data>
+  <data name="OAuthAppsTableStatus" xml:space="preserve"><value>Estado</value></data>
+  <data name="OAuthAppsStatusActive" xml:space="preserve"><value>Activa</value></data>
+  <data name="OAuthAppsStatusRevoked" xml:space="preserve"><value>Revocada</value></data>
+  <data name="OAuthAppsRevokeButton" xml:space="preserve"><value>Revocar</value></data>
+  <data name="OAuthAppsDocsHint" xml:space="preserve"><value>Para el handshake completo mirá</value></data>
+  <data name="OAuthAppsRegisterBlurb" xml:space="preserve"><value>Registrá una app de terceros que actúe en tu nombre. Vas a recibir un clientId y un client secret de un solo uso.</value></data>
+  <data name="AiGenerateDescription" xml:space="preserve"><value>Generar descripción</value></data>
+  <data name="AiSummarizeComments" xml:space="preserve"><value>Resumir hilo</value></data>
+  <data name="AiSummaryTitle" xml:space="preserve"><value>Resumen IA</value></data>
+  <data name="AiGenerateChecklist" xml:space="preserve"><value>Hacer checklist</value></data>
+  <data name="AiSuggestOwners" xml:space="preserve"><value>Asignación inteligente</value></data>
 </root>
