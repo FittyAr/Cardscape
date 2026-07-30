@@ -188,18 +188,23 @@ story whole.
 - Register via `WithPromptsFromAssembly()` in
   `ServiceCollectionExtensions.cs`.
 
-### 2.4 IdempotencyKey
+### 2.4 IdempotencyKey ✅ DONE
 - New `Cardscape.Domain/Idempotency/IdempotencyKey.cs` aggregate
   (key, owner, createdAt, requestHash, responseJson).
 - New `IIdempotencyKeyStore` in
   `Cardscape.Application/Abstractions/Persistence/`.
 - New `IssueIdempotencyKeyCommand` + `IdempotencyKeyMiddleware`
-  in `Cardscape.Application/Idempotency/`.
+  in `Cardscape.Application/Idempotency/`. ✅ DONE
 - MCP write tools accept an optional `idempotencyKey` parameter;
   the middleware checks the store before invoking the handler
   and short-circuits with the stored response when the key is
   seen twice.
-- New migration `IssueIdempotencyKeys` adds the table.
+- New migration `IssueIdempotencyKeys` adds the table. The
+  migration landed as a no-op (its `Up()` body is empty) because
+  the table is actually created in the sibling
+  `IssueExternalLogins` migration; a class-level
+  `///<remarks>` doc on the no-op migration documents the
+  reason. ✅ DONE
 
 ### 2.5 OpenTelemetry tracing ✅ DONE
 - Add `OpenTelemetry.Extensions.Hosting`,
@@ -619,26 +624,29 @@ The features from the feature inventory §14 (security) and
 - Configure `builder.Services.AddLocalization(opts =>
   opts.SetDefaultCulture("en").AddSupportedCultures("en", "es"))`
   + `app.UseRequestLocalization(...)` in `Program.cs`. ✅ DONE
-  (with the WASM caveat — see below). On Blazor WebAssembly
-  the plan's literal shape is not directly applicable: the
+  (with the **WASM caveat** — see below). The plan's literal
+  shape is a **server-side API** that cannot be applied on
+  Blazor WebAssembly with the .NET 11 preview SDK: the
   `SetDefaultCulture` / `AddSupportedCultures` extension
-  methods live on `RequestLocalizationOptions` (the type the
-  plan's named API targets), and `app.UseRequestLocalization(...)`
-  is impossible — it is server-side middleware that reads
-  `Accept-Language` on the server, but the WASM client is
-  served as static files with no per-request server
-  pipeline. The fix in `src/Cardscape.Web/Program.cs:60-72`
-  sets the equivalent configuration on `LocalizationOptions`
-  directly (which is the type consumed by the WASM
-  `AddLocalization` callback):
-  `options.DefaultCulture = new CultureInfo("en")`,
-  `options.SupportedCultures` and `options.SupportedUICultures`
-  populated from the `string[] supportedCultures = { "en",
-  "es" }` array. The actual current culture is set via
-  `CultureInfo.DefaultThreadCurrentCulture` /
-  `DefaultThreadCurrentUICulture` (lines 74–79), driven by
-  `Culture:Default` in `wwwroot/appsettings.json` (default
-  `"en"`).
+  methods live on `RequestLocalizationOptions` (which is in
+  the `Microsoft.AspNetCore.App` shared framework; the
+  `Microsoft.NET.Sdk.BlazorWebAssembly` SDK only references
+  a subset, and `<FrameworkReference Include="Microsoft.AspNetCore.App" />`
+  fails with `NETSDK1082` because the framework has no
+  `browser-wasm` runtime pack; the standalone
+  `Microsoft.AspNetCore.Localization` NuGet tops out at 2.3.11
+  and is not compatible). The configuration the plan asked
+  for (default culture + supported culture set) is therefore
+  expressed in the WASM-friendly equivalents in
+  `src/Cardscape.Web/Program.cs:22-65`: the
+  `string[] supportedCultures = { "en", "es" }` array is the
+  documentation list of the supported set (the source a
+  future `CulturePicker` reads from); the
+  `AddLocalization(opts => opts.ResourcesPath = "Resources")`
+  call registers the `.resx` resource path; the actual current
+  culture is set via `CultureInfo.DefaultThreadCurrentCulture` /
+  `DefaultThreadCurrentUICulture`, driven by `Culture:Default`
+  in `wwwroot/appsettings.json` (default `"en"`).
 - The current culture is resolved from the `Accept-Language`
   header (no UI culture picker yet — that's a separate item).
   ⚠️ PARTIAL on Blazor WebAssembly: `Accept-Language` is a

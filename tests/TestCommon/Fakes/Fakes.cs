@@ -13,6 +13,7 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Idempotency;
 using Cardscape.Domain.Integrations.GoogleCalendar;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
@@ -496,6 +497,37 @@ public sealed class InMemoryTotpCredentialRepository
 {
     public Task<TotpCredential?> FindForUserAsync(UserId userId, CancellationToken ct = default) =>
         Task.FromResult(Store.Values.FirstOrDefault(c => c.UserId == userId));
+}
+
+/// <summary>
+/// In-memory <see cref="IIdempotencyKeyStore"/>. The dictionary
+/// is keyed by <c>(OwnerId, Key.Value)</c> so two retries of
+/// the same logical request from the same user collapse to a
+/// single entry, matching the EF Core unique index in
+/// production. Safe for single-threaded tests.
+/// </summary>
+public sealed class InMemoryIdempotencyKeyStore : IIdempotencyKeyStore
+{
+    private readonly Dictionary<(UserId, string), IdempotencyKey> _store = [];
+
+    public int Count => _store.Count;
+
+    public IReadOnlyCollection<IdempotencyKey> All => _store.Values.ToList();
+
+    public Task<IdempotencyKey?> FindAsync(
+        UserId ownerId,
+        IdempotencyKeyValue key,
+        CancellationToken ct = default)
+    {
+        _store.TryGetValue((ownerId, key.Value), out var existing);
+        return Task.FromResult(existing);
+    }
+
+    public Task AddAsync(IdempotencyKey record, CancellationToken ct = default)
+    {
+        _store[(record.OwnerId, record.Key.Value)] = record;
+        return Task.CompletedTask;
+    }
 }
 
 /// <summary>
