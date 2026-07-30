@@ -62,10 +62,35 @@
                     }
                 </dd>
                 <dt>Members</dt>
-                <dd>@card.MemberCount</dd>
+                <dd>
+                    @card.MemberCount
+                    <RadzenButton Text="@($"✨ {L["AiSuggestOwners"]}")" Icon="auto_awesome"
+                                  ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
+                                  Click="@SuggestOwnersAsync" Disabled="@aiBusy" IsBusy="@aiBusy"
+                                  Style="margin-left:.5rem" />
+                </dd>
                 <dt>Labels</dt>
                 <dd>@card.LabelCount</dd>
             </dl>
+            @if (aiSuggestedOwners is { Count: > 0 })
+            {
+                <RadzenCard class="ai-suggestions">
+                    <strong>@L["AiSuggestOwners"]</strong>
+                    <ul style="margin:.5rem 0 0 0; padding-left:1rem">
+                        @foreach (AiOwnerSuggestionDto suggestion in aiSuggestedOwners)
+                        {
+                            <li style="margin-bottom:.25rem">
+                                <strong>@suggestion.DisplayName</strong>
+                                <small> — @suggestion.Reason</small>
+                                <RadzenButton Text="Add" Size="ButtonSize.ExtraSmall"
+                                              ButtonStyle="ButtonStyle.Success"
+                                              Click="@(() => AssignSuggestedOwnerAsync(suggestion))"
+                                              Disabled="@aiBusy" Style="margin-left:.5rem" />
+                            </li>
+                        }
+                    </ul>
+                </RadzenCard>
+            }
 
             <h3>Description</h3>
             <p class="card-description">@(string.IsNullOrWhiteSpace(card.Description) ? "(no description)" : card.Description)</p>
@@ -188,6 +213,10 @@
                                    Style="flex:1; margin-right:.5rem" />
                     <RadzenButton Text="Create checklist" Icon="add" ButtonStyle="ButtonStyle.Secondary"
                                   Click="@CreateChecklistAsync" />
+                    <RadzenButton Text="@($"✨ {L["AiGenerateChecklist"]}")" Icon="auto_awesome"
+                                  ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                  Click="@MakeChecklistAsync" Disabled="@aiBusy" IsBusy="@aiBusy"
+                                  Style="margin-left:.5rem" />
                 </div>
             }
 
@@ -235,6 +264,7 @@
     private bool aiBusy;
     private string? aiGeneratedDescription;
     private string? aiSummary;
+    private IReadOnlyList<AiOwnerSuggestionDto>? aiSuggestedOwners;
     private readonly AddCommentModel addCommentModel = new();
 
     private async Task GenerateDescriptionAsync()
@@ -278,6 +308,100 @@
         {
             aiBusy = false;
         }
+    }
+
+    private async Task MakeChecklistAsync()
+    {
+        if (aiBusy)
+        {
+            return;
+        }
+
+        aiBusy = true;
+        try
+        {
+            ApiResult<AiGeneratedChecklistDto> result = await Ai.GenerateChecklistAsync(CardId);
+            if (!result.IsSuccess || result.Value is null || result.Value.Items.Count == 0)
+            {
+                return;
+            }
+
+            ApiResult<ChecklistDto> created = await Checklists.CreateAsync(CardId, "AI suggestions");
+            if (!created.IsSuccess || created.Value is null)
+            {
+                return;
+            }
+
+            Guid newChecklistId = created.Value.Id;
+            foreach (string item in result.Value.Items)
+            {
+                await Checklists.AddItemAsync(newChecklistId, item);
+            }
+
+            await ReloadChecklistsAsync();
+        }
+        finally
+        {
+            aiBusy = false;
+        }
+    }
+
+    private async Task SuggestOwnersAsync()
+    {
+        if (aiBusy)
+        {
+            return;
+        }
+
+        aiBusy = true;
+        try
+        {
+            ApiResult<AiOwnerSuggestionsDto> result = await Ai.SuggestOwnersAsync(CardId);
+            aiSuggestedOwners = result.IsSuccess && result.Value is not null
+                ? result.Value.Suggestions
+                : null;
+        }
+        finally
+        {
+            aiBusy = false;
+        }
+    }
+
+    private async Task AssignSuggestedOwnerAsync(AiOwnerSuggestionDto suggestion)
+    {
+        if (aiBusy || card is null)
+        {
+            return;
+        }
+
+        aiBusy = true;
+        try
+        {
+            ApiResult<CardDto> result = await Cards.AssignAsync(CardId, suggestion.UserId);
+            if (result.IsSuccess && result.Value is not null)
+            {
+                card = result.Value;
+            }
+
+            if (aiSuggestedOwners is not null)
+            {
+                aiSuggestedOwners = aiSuggestedOwners
+                    .Where(s => s.UserId != suggestion.UserId)
+                    .ToList();
+            }
+        }
+        finally
+        {
+            aiBusy = false;
+        }
+    }
+
+    private async Task ReloadChecklistsAsync()
+    {
+        ApiResult<IReadOnlyList<ChecklistDto>> checklistsResult =
+            await Checklists.ListForCardAsync(CardId);
+        checklists = checklistsResult.IsSuccess ? checklistsResult.Value : [];
+        await Task.CompletedTask;
     }
 
     protected override async Task OnParametersSetAsync()
