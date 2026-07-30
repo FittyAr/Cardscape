@@ -618,9 +618,41 @@ The features from the feature inventory §14 (security) and
   (Spanish).
 - Configure `builder.Services.AddLocalization(opts =>
   opts.SetDefaultCulture("en").AddSupportedCultures("en", "es"))`
-  + `app.UseRequestLocalization(...)` in `Program.cs`.
+  + `app.UseRequestLocalization(...)` in `Program.cs`. ✅ DONE
+  (with the WASM caveat — see below). On Blazor WebAssembly
+  the plan's literal shape is not directly applicable: the
+  `SetDefaultCulture` / `AddSupportedCultures` extension
+  methods live on `RequestLocalizationOptions` (the type the
+  plan's named API targets), and `app.UseRequestLocalization(...)`
+  is impossible — it is server-side middleware that reads
+  `Accept-Language` on the server, but the WASM client is
+  served as static files with no per-request server
+  pipeline. The fix in `src/Cardscape.Web/Program.cs:60-72`
+  sets the equivalent configuration on `LocalizationOptions`
+  directly (which is the type consumed by the WASM
+  `AddLocalization` callback):
+  `options.DefaultCulture = new CultureInfo("en")`,
+  `options.SupportedCultures` and `options.SupportedUICultures`
+  populated from the `string[] supportedCultures = { "en",
+  "es" }` array. The actual current culture is set via
+  `CultureInfo.DefaultThreadCurrentCulture` /
+  `DefaultThreadCurrentUICulture` (lines 74–79), driven by
+  `Culture:Default` in `wwwroot/appsettings.json` (default
+  `"en"`).
 - The current culture is resolved from the `Accept-Language`
   header (no UI culture picker yet — that's a separate item).
+  ⚠️ PARTIAL on Blazor WebAssembly: `Accept-Language` is a
+  fetch-time header that is not visible to the running WASM
+  code; the practical equivalent is `navigator.language` (or
+  a `localStorage` override once a `CulturePicker` lands).
+  The current implementation hard-codes the default culture
+  to `"en"` at startup, so localization works for the
+  default-culture case (137 EN + 140 ES keys ship) but the
+  runtime culture never changes. The follow-up is
+  documented in
+  [`../i18n/02-translation-workflow.md`](../i18n/02-translation-workflow.md)
+  §12 with two concrete shapes for a future PR. Closes gap
+  G12.
 
 ### 5.2 i18n: English + Spanish
 - Extract every user-visible string from the 25 Blazor pages
@@ -678,9 +710,9 @@ The features from the feature inventory §14 (security) and
   `?workspaceId=…`).
 - New migration not needed (no schema change).
 - Web UI: `/workspaces/{id}/import` page with a file picker
-  and a live preview of the parsed import.
+  and a live preview of the parsed import. ✅ DONE (G13)
 - MCP tool: `imports_trello_preview`,
-  `imports_trello_apply`.
+  `imports_trello_apply`. ✅ DONE (G13)
 
 ### 5.7 Export per-board archive
 - New bounded context `Cardscape.Domain.Export/`.

@@ -14,35 +14,98 @@
     <p>@L["ImportBlurb"]</p>
 
     <RadzenCard>
-        <RadzenTemplateForm TItem="ImportForm" Data="@form" Submit="@HandleSubmit">
-            <RadzenLabel Text="@L["ImportTrelloFile"]" Component="file" />
-            <InputFile OnChange="@OnFileSelected" accept="application/json,.json" />
+        <RadzenLabel Text="@L["ImportTrelloFile"]" Component="file" />
+        <InputFile OnChange="@OnFileSelected" accept="application/json,.json" />
 
-            <div class="form-actions">
-                <RadzenButton Text="@L["ImportRun"]"
-                              ButtonType="ButtonType.Submit"
-                              ButtonStyle="ButtonStyle.Primary"
-                              IsBusy="@busy"
-                              Disabled="@(form.File is null)" />
-            </div>
+        @if (previewing)
+        {
+            <p class="import-status">@L["ImportPreviewing"]</p>
+        }
+        @if (applying)
+        {
+            <p class="import-status">@L["ImportApplying"]</p>
+        }
 
-            @if (error is not null)
-            {
-                <div class="auth-error" role="alert">@error</div>
-            }
-            @if (result is not null)
-            {
-                <div class="import-summary" role="status">
+        @if (error is not null)
+        {
+            <div class="auth-error" role="alert">@error</div>
+        }
+
+        @* Dry-run preview panel — rendered as soon as the
+            user picks a valid file. No DB writes happened. *@
+        @if (preview is not null && preview.Preview is { WasApplied: false })
+        {
+            <RadzenPanel Text="@L["ImportPreviewTitle"]" class="import-preview-panel">
+                <RadzenCard>
+                    <p>@L["ImportPreviewBlurb"]</p>
+                    <ul>
+                        <li>@L["ImportPreviewBoards"]: @preview.Preview.BoardCount</li>
+                        <li>@L["ImportPreviewLists"]: @preview.Preview.ListCount</li>
+                        <li>@L["ImportPreviewCards"]: @preview.Preview.CardCount</li>
+                        <li>@L["ImportPreviewLabels"]: @preview.Preview.LabelCount</li>
+                        <li>@L["ImportPreviewMembers"]: @preview.Preview.MemberCount</li>
+                    </ul>
+
+                    @if (preview.Preview.SampleBoardNames.Count > 0)
+                    {
+                        <p><strong>@L["ImportPreviewSampleBoards"]</strong></p>
+                        <ul>
+                            @foreach (var name in preview.Preview.SampleBoardNames)
+                            {
+                                <li>@name</li>
+                            }
+                        </ul>
+                    }
+                    @if (preview.Preview.SampleListNames.Count > 0)
+                    {
+                        <p><strong>@L["ImportPreviewSampleLists"]</strong></p>
+                        <ul>
+                            @foreach (var name in preview.Preview.SampleListNames)
+                            {
+                                <li>@name</li>
+                            }
+                        </ul>
+                    }
+                    @if (preview.Preview.SampleCardNames.Count > 0)
+                    {
+                        <p><strong>@L["ImportPreviewSampleCards"]</strong></p>
+                        <ul>
+                            @foreach (var name in preview.Preview.SampleCardNames)
+                            {
+                                <li>@name</li>
+                            }
+                        </ul>
+                    }
+
+                    <div class="form-actions">
+                        <RadzenButton Text="@L["ImportApply"]"
+                                      ButtonStyle="ButtonStyle.Primary"
+                                      IsBusy="@applying"
+                                      Disabled="@applying"
+                                      Click="@ApplyImport" />
+                        <RadzenButton Text="@L["ImportCancel"]"
+                                      ButtonStyle="ButtonStyle.Light"
+                                      Click="@CancelPreview" />
+                    </div>
+                </RadzenCard>
+            </RadzenPanel>
+        }
+
+        @* Apply result — rendered after a real import. *@
+        @if (applied is not null)
+        {
+            <RadzenPanel Text="@L["ImportResultTitle"]" class="import-result-panel">
+                <RadzenCard>
                     <p>@L["ImportResultSummary"]</p>
                     <ul>
-                        <li>Boards: @result.ImportedBoardIds.Count</li>
-                        <li>Lists: @result.ImportedListIds.Count</li>
-                        <li>Cards: @result.ImportedCardIds.Count</li>
-                        <li>Labels: @result.ImportedLabelIds.Count</li>
+                        <li>Boards: @applied.ImportedBoardIds.Count</li>
+                        <li>Lists: @applied.ImportedListIds.Count</li>
+                        <li>Cards: @applied.ImportedCardIds.Count</li>
+                        <li>Labels: @applied.ImportedLabelIds.Count</li>
                     </ul>
-                </div>
-            }
-        </RadzenTemplateForm>
+                </RadzenCard>
+            </RadzenPanel>
+        }
     </RadzenCard>
 </div>
 
@@ -50,16 +113,63 @@
     [Parameter] public Guid Id { get; set; }
 
     private readonly ImportForm form = new();
-    private bool busy;
+    private bool previewing;
+    private bool applying;
     private string? error;
-    private ImportResultDto? result;
+    private ImportResultDto? preview;
+    private ImportResultDto? applied;
+    // Incremented on every file pick so a slow in-flight
+    // preview can detect that the user moved on and bail out
+    // without overwriting the current preview / error.
+    private int selectionVersion;
 
-    private void OnFileSelected(InputFileChangeEventArgs e)
+    private async void OnFileSelected(InputFileChangeEventArgs e)
     {
         form.File = e.File;
+        preview = null;
+        applied = null;
+        error = null;
+        await LoadPreviewAsync();
     }
 
-    private async Task HandleSubmit()
+    private async Task LoadPreviewAsync()
+    {
+        if (form.File is null)
+        {
+            return;
+        }
+
+        int myVersion = ++selectionVersion;
+        previewing = true;
+        error = null;
+        try
+        {
+            var result = await PostImportAsync(previewOnly: true);
+            if (myVersion != selectionVersion)
+            {
+                // A newer file was picked while we were
+                // waiting; let the newer preview win.
+                return;
+            }
+            preview = result;
+        }
+        catch (Exception ex)
+        {
+            if (myVersion == selectionVersion)
+            {
+                error = $"{L["ImportPreviewFailed"]}: {ex.Message}";
+            }
+        }
+        finally
+        {
+            if (myVersion == selectionVersion)
+            {
+                previewing = false;
+            }
+        }
+    }
+
+    private async Task ApplyImport()
     {
         if (form.File is null)
         {
@@ -67,26 +177,11 @@
             return;
         }
 
-        busy = true;
+        applying = true;
         error = null;
         try
         {
-            using MultipartFormDataContent content = new();
-            using StreamContent fileContent = new(form.File.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024));
-            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-            content.Add(fileContent, "file", form.File.Name);
-            content.Add(new StringContent(Id.ToString()), "targetWorkspaceId");
-
-            HttpResponseMessage response = await Http.PostAsync("api/imports/trello", content);
-            if (response.IsSuccessStatusCode)
-            {
-                result = await response.Content.ReadFromJsonAsync<ImportResultDto>();
-            }
-            else
-            {
-                string body = await response.Content.ReadAsStringAsync();
-                error = $"{L["ImportFailed"]} ({(int)response.StatusCode}): {body}";
-            }
+            applied = await PostImportAsync(previewOnly: false);
         }
         catch (Exception ex)
         {
@@ -94,8 +189,37 @@
         }
         finally
         {
-            busy = false;
+            applying = false;
         }
+    }
+
+    private void CancelPreview()
+    {
+        preview = null;
+        applied = null;
+        error = null;
+        form.File = null;
+    }
+
+    private async Task<ImportResultDto> PostImportAsync(bool previewOnly)
+    {
+        using MultipartFormDataContent content = new();
+        using StreamContent fileContent = new(form.File!.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024));
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+        content.Add(fileContent, "file", form.File.Name);
+        content.Add(new StringContent(Id.ToString()), "targetWorkspaceId");
+        content.Add(new StringContent(previewOnly ? "true" : "false"), "previewOnly");
+
+        HttpResponseMessage response = await Http.PostAsync("api/imports/trello", content);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<ImportResultDto>()
+                   ?? new ImportResultDto();
+        }
+
+        string body = await response.Content.ReadAsStringAsync();
+        throw new InvalidOperationException(
+            $"{(int)response.StatusCode}: {body}");
     }
 
     private sealed class ImportForm
@@ -109,5 +233,19 @@
         public IReadOnlyList<Guid> ImportedListIds { get; set; } = [];
         public IReadOnlyList<Guid> ImportedCardIds { get; set; } = [];
         public IReadOnlyList<Guid> ImportedLabelIds { get; set; } = [];
+        public ImportPreviewDto? Preview { get; set; }
+    }
+
+    private sealed class ImportPreviewDto
+    {
+        public int BoardCount { get; set; }
+        public int ListCount { get; set; }
+        public int CardCount { get; set; }
+        public int LabelCount { get; set; }
+        public int MemberCount { get; set; }
+        public IReadOnlyList<string> SampleBoardNames { get; set; } = [];
+        public IReadOnlyList<string> SampleListNames { get; set; } = [];
+        public IReadOnlyList<string> SampleCardNames { get; set; } = [];
+        public bool WasApplied { get; set; }
     }
 }

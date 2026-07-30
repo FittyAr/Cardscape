@@ -19,9 +19,45 @@ namespace Cardscape.Domain.Import;
 /// <param name="ImportedListIds">IDs of the lists created.</param>
 /// <param name="ImportedCardIds">IDs of the cards created.</param>
 /// <param name="ImportedLabelIds">IDs of the labels created.</param>
+/// <param name="Preview">
+/// Human-readable summary of the parsed import (counts + sample
+/// names). Always populated — the apply path uses it to render
+/// a "what got created" summary in the UI, and the dry-run
+/// preview path uses it as the only output. Null only on
+/// catastrophic parser failure before the structure is
+/// understood.</param>
 public sealed record ImportResult(
     IReadOnlyList<Guid> ImportedWorkspaceIds,
     IReadOnlyList<Guid> ImportedBoardIds,
     IReadOnlyList<Guid> ImportedListIds,
     IReadOnlyList<Guid> ImportedCardIds,
-    IReadOnlyList<Guid> ImportedLabelIds);
+    IReadOnlyList<Guid> ImportedLabelIds,
+    ImportPreview? Preview = null);
+
+/// <summary>
+/// Counts and sample names of an import (real or dry-run).
+/// Returned by every successful <c>IImportService.ImportTrelloJsonAsync</c>
+/// call so the caller (REST endpoint, MCP tool, or Web UI) can
+/// show the user what was — or would have been — created.
+/// </summary>
+/// <param name="BoardCount">Total boards in the parsed file.</param>
+/// <param name="ListCount">Total lists across all boards.</param>
+/// <param name="CardCount">Total cards across all lists.</param>
+/// <param name="LabelCount">Total labels across all boards.</param>
+/// <param name="MemberCount">Total members across all boards.</param>
+/// <param name="SampleBoardNames">First few board names for display.</param>
+/// <param name="SampleListNames">First few list names for display.</param>
+/// <param name="SampleCardNames">First few card names for display.</param>
+/// <param name="WasApplied">
+/// True when the import was actually written to the database.
+/// False when the import was a dry-run preview.</param>
+public sealed record ImportPreview(
+    int BoardCount,
+    int ListCount,
+    int CardCount,
+    int LabelCount,
+    int MemberCount,
+    IReadOnlyList<string> SampleBoardNames,
+    IReadOnlyList<string> SampleListNames,
+    IReadOnlyList<string> SampleCardNames,
+    bool WasApplied);

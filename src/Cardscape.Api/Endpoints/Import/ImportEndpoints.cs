@@ -20,7 +20,12 @@ public static class ImportEndpoints
         // Multipart upload of a Trello boards.json archive.
         // The endpoint reads the file part, pipes it through the
         // IImportService, and returns the IDs of the imported
-        // boards / lists / cards / labels.
+        // boards / lists / cards / labels. The optional
+        // 'previewOnly' form field (defaults to 'false') turns
+        // the call into a dry-run: the service parses the file
+        // and returns the same shape with empty id lists and a
+        // populated ImportPreview summary, without writing
+        // anything to the database.
         group.MapPost("/trello", async (
             HttpRequest request,
             IImportService import,
@@ -46,6 +51,11 @@ public static class ImportEndpoints
                 });
             }
 
+            bool previewOnly = string.Equals(
+                form["previewOnly"].ToString(),
+                "true",
+                StringComparison.OrdinalIgnoreCase);
+
             IFormFile? file = form.Files.GetFile("file");
             if (file is null || file.Length == 0)
             {
@@ -57,7 +67,7 @@ public static class ImportEndpoints
             }
 
             await using Stream stream = file.OpenReadStream();
-            Result<Domain.Import.ImportResult> result = await import.ImportTrelloJsonAsync(stream, workspaceId, ct);
+            Result<Domain.Import.ImportResult> result = await import.ImportTrelloJsonAsync(stream, workspaceId, previewOnly, ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : MapError(result.Error);

@@ -14,15 +14,29 @@ namespace Cardscape.Application.Abstractions.Import;
 public interface IImportService
 {
     /// <summary>
-    /// Parses the JSON stream and writes the matching
-    /// workspaces/boards/lists/cards/labels/members into
-    /// <paramref name="targetWorkspaceId"/>. The caller (the
-    /// REST endpoint or the MCP tool) provides the user's
+    /// Parses the JSON stream and (optionally) writes the
+    /// matching workspaces/boards/lists/cards/labels/members
+    /// into <paramref name="targetWorkspaceId"/>. The caller
+    /// (the REST endpoint or the MCP tool) provides the user's
     /// identity so the importer can author-attribute the
     /// imported rows.
     /// </summary>
+    /// <param name="json">Trello <c>boards.json</c> payload.</param>
+    /// <param name="targetWorkspaceId">Destination workspace id.</param>
+    /// <param name="previewOnly">
+    /// When <c>true</c>, parses the payload, builds the
+    /// in-memory structure, and returns a summary
+    /// (board / list / card / label / member counts + sample
+    /// names) without persisting anything. When
+    /// <c>false</c>, performs the full import and writes
+    /// the rows. Defaults to <c>false</c> so existing
+    /// callers (the <c>imports_trello_apply</c> MCP tool,
+    /// the REST endpoint) keep their behavior.
+    /// </param>
+    /// <param name="ct">Cancellation token.</param>
     Task<Result<ImportResult>> ImportTrelloJsonAsync(
         Stream json,
         Guid targetWorkspaceId,
+        bool previewOnly = false,
         CancellationToken ct = default);
 }

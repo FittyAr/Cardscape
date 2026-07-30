@@ -108,18 +108,17 @@ public sealed class MissingTools
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes(boardsJson);
         using var stream = new MemoryStream(bytes);
-        // The v1.1.0 IImportService has one method
-        // (ImportTrelloJsonAsync) that both previews and
-        // applies. A future PR adds a dry-run flag so the
-        // preview tool can read the parsed shape without
-        // writing to the DB; for now, the same handler
-        // serves both call sites and the result includes
-        // the imported row ids.
-        return await import.ImportTrelloJsonAsync(stream, targetWorkspaceId, ct);
+        // Dry-run: parse + summarize, no DB writes.
+        return await import.ImportTrelloJsonAsync(stream, targetWorkspaceId, previewOnly: true, ct);
     }
 
     [McpServerTool(Name = "imports_trello_apply")]
-    public Task<Result<ImportResult>> TrelloApply(
-        string boardsJson, Guid targetWorkspaceId, IImportService import, CancellationToken ct) =>
-        TrelloPreview(boardsJson, targetWorkspaceId, import, ct);
+    public async Task<Result<ImportResult>> TrelloApply(
+        string boardsJson, Guid targetWorkspaceId, IImportService import, CancellationToken ct)
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(boardsJson);
+        using var stream = new MemoryStream(bytes);
+        // Real import: persist + return ids + preview summary.
+        return await import.ImportTrelloJsonAsync(stream, targetWorkspaceId, previewOnly: false, ct);
+    }
 }

@@ -21,6 +21,13 @@ namespace Cardscape.Infrastructure.Import;
 /// <c>cards</c>, <c>labels</c>, and <c>members</c>. We map
 /// the structure to a Cardscape board (one Trello board per
 /// Cardscape board) inside the supplied target workspace.
+///
+/// Supports a dry-run mode via <c>previewOnly</c>: the
+/// service still parses the file, builds the in-memory
+/// aggregate tree, and returns an <see cref="ImportPreview"/>
+/// summary — it just skips every <c>AddAsync</c> call and
+/// the final <c>SaveChangesAsync</c>, so the database is
+/// untouched.
 /// </summary>
 public sealed class TrelloImportService(
     IRepository<Workspace, WorkspaceId> workspaces,
@@ -32,9 +39,17 @@ public sealed class TrelloImportService(
     IClock clock,
     ICurrentUser currentUser) : IImportService
 {
+    // Sample size caps for the preview summary. Trello exports
+    // can be huge; we don't want to push a 5,000-name list
+    // through the REST/MCP/UI surface.
+    private const int MaxSampleBoardNames = 5;
+    private const int MaxSampleListNames = 10;
+    private const int MaxSampleCardNames = 20;
+
     public async Task<Result<ImportResult>> ImportTrelloJsonAsync(
         Stream json,
         Guid targetWorkspaceId,
+        bool previewOnly = false,
         CancellationToken ct = default)
     {
         if (currentUser.Id is null)
@@ -81,9 +96,24 @@ public sealed class TrelloImportService(
         var importedCardIds = new List<Guid>();
         var importedLabelIds = new List<Guid>();
 
+        // Preview summary accumulators. Always populated — the
+        // apply path also surfaces a preview so the UI can
+        // show "what was created" without a second round-trip.
+        int boardCount = 0;
+        int listCount = 0;
+        int cardCount = 0;
+        int labelCount = 0;
+        int memberCount = 0;
+        var sampleBoardNames = new List<string>(MaxSampleBoardNames);
+        var sampleListNames = new List<string>(MaxSampleListNames);
+        var sampleCardNames = new List<string>(MaxSampleCardNames);
+
         foreach (var tb in trelloBoards)
         {
-            var nameResult = BoardName.Create(string.IsNullOrWhiteSpace(tb.Name) ? "Imported board" : tb.Name);
+            ct.ThrowIfCancellationRequested();
+
+            var boardName = string.IsNullOrWhiteSpace(tb.Name) ? "Imported board" : tb.Name;
+            var nameResult = BoardName.Create(boardName);
             if (nameResult.IsFailure)
             {
                 continue;
@@ -109,8 +139,30 @@ public sealed class TrelloImportService(
                 continue;
             }
 
-            await boards.AddAsync(boardResult.Value, ct);
-            importedBoardIds.Add(boardResult.Value.Id.Value);
+            boardCount++;
+            if (sampleBoardNames.Count < MaxSampleBoardNames)
+            {
+                sampleBoardNames.Add(boardName);
+            }
+
+            // Members: counted for the preview only — Trello
+            // member accounts don't map 1:1 to Cardscape users
+            // (they may not exist yet), so we don't persist them.
+            int boardMemberCount = 0;
+            if (tb.Members is not null)
+            {
+                foreach (var _ in tb.Members)
+                {
+                    boardMemberCount++;
+                }
+            }
+            memberCount += boardMemberCount;
+
+            if (!previewOnly)
+            {
+                await boards.AddAsync(boardResult.Value, ct);
+                importedBoardIds.Add(boardResult.Value.Id.Value);
+            }
 
             // Labels first (cards reference them by id).
             var labelMap = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
@@ -147,9 +199,13 @@ public sealed class TrelloImportService(
                     continue;
                 }
 
-                await labels.AddAsync(labelResult.Value, ct);
-                labelMap[tl.Id] = labelResult.Value.Id.Value;
-                importedLabelIds.Add(labelResult.Value.Id.Value);
+                labelCount++;
+                if (!previewOnly)
+                {
+                    await labels.AddAsync(labelResult.Value, ct);
+                    labelMap[tl.Id] = labelResult.Value.Id.Value;
+                    importedLabelIds.Add(labelResult.Value.Id.Value);
+                }
             }
 
             // Lists.
@@ -157,9 +213,11 @@ public sealed class TrelloImportService(
             int listIndex = 0;
             foreach (var tl in tb.Lists ?? [])
             {
-                var listNameResult = ListName.Create(string.IsNullOrWhiteSpace(tl.Name) ? "Imported" : tl.Name);
+                var listName = string.IsNullOrWhiteSpace(tl.Name) ? "Imported" : tl.Name;
+                var listNameResult = ListName.Create(listName);
                 if (listNameResult.IsFailure)
                 {
+                    listIndex++;
                     continue;
                 }
 
@@ -178,9 +236,19 @@ public sealed class TrelloImportService(
                     continue;
                 }
 
-                await lists.AddAsync(listResult.Value, ct);
-                listMap[tl.Id] = listResult.Value.Id.Value;
-                importedListIds.Add(listResult.Value.Id.Value);
+                listCount++;
+                if (sampleListNames.Count < MaxSampleListNames)
+                {
+                    sampleListNames.Add(listName);
+                }
+
+                if (!previewOnly)
+                {
+                    await lists.AddAsync(listResult.Value, ct);
+                    listMap[tl.Id] = listResult.Value.Id.Value;
+                    importedListIds.Add(listResult.Value.Id.Value);
+                }
+
                 listIndex++;
             }
 
@@ -194,7 +262,8 @@ public sealed class TrelloImportService(
                     continue;
                 }
 
-                var titleResult = CardTitle.Create(string.IsNullOrWhiteSpace(tc.Name) ? "Imported card" : tc.Name);
+                var cardName = string.IsNullOrWhiteSpace(tc.Name) ? "Imported card" : tc.Name;
+                var titleResult = CardTitle.Create(cardName);
                 if (titleResult.IsFailure)
                 {
                     cardIndex++;
@@ -235,20 +304,45 @@ public sealed class TrelloImportService(
                     cardResult.Value.SetDueDate(dd, clock.UtcNow);
                 }
 
-                await cards.AddAsync(cardResult.Value, ct);
-                importedCardIds.Add(cardResult.Value.Id.Value);
+                cardCount++;
+                if (sampleCardNames.Count < MaxSampleCardNames)
+                {
+                    sampleCardNames.Add(cardName);
+                }
+
+                if (!previewOnly)
+                {
+                    await cards.AddAsync(cardResult.Value, ct);
+                    importedCardIds.Add(cardResult.Value.Id.Value);
+                }
+
                 cardIndex++;
             }
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        if (!previewOnly)
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+
+        var preview = new ImportPreview(
+            BoardCount: boardCount,
+            ListCount: listCount,
+            CardCount: cardCount,
+            LabelCount: labelCount,
+            MemberCount: memberCount,
+            SampleBoardNames: sampleBoardNames,
+            SampleListNames: sampleListNames,
+            SampleCardNames: sampleCardNames,
+            WasApplied: !previewOnly);
 
         return Result.Success(new ImportResult(
             ImportedWorkspaceIds: [],
             ImportedBoardIds: importedBoardIds,
             ImportedListIds: importedListIds,
             ImportedCardIds: importedCardIds,
-            ImportedLabelIds: importedLabelIds));
+            ImportedLabelIds: importedLabelIds,
+            Preview: preview));
     }
 
     private static string NormalizeTrelloColor(string? trelloColor)
