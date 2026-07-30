@@ -175,13 +175,10 @@ language.
 The exception is **user-facing strings inside the code**
 (e.g. a `nameof(Workspace)` for display, an error message
 template, a button label). Those strings are extracted
-into resource files in a future i18n pass and translated
-per language.
-
-The extraction is added in Phase 1 (or later, when the UI
-has enough strings to make the extraction worth the
-tooling). Until then, the strings are in the code, in
-English, and the language is fixed.
+into `.resx` resource files in `src/Cardscape.Web/Resources/`
+and translated per language. The practical extraction
+workflow — how to add a key, how to add a language, the
+placeholder convention — is in §11.
 
 ---
 
@@ -244,7 +241,321 @@ They are quality-of-life improvements.
 
 ---
 
-## 11. When to revisit
+## 11. Practical .resx extraction guide (Blazor UI strings)
+
+Sections 1–10 describe the file-sibling convention used for
+**docs** (Markdown) and the **website** (HTML). The Blazor UI
+strings follow a different workflow: they live in **`.resx`**
+resource files under
+`src/Cardscape.Web/Resources/`, consumed by
+`IStringLocalizer<SharedResource>`.
+
+This section is the **practical extraction guide** the
+execution plan §5.2 asked for: how to add a key, how to add a
+language, how to keep the keys in sync.
+
+### 11.1 The layout
+
+```
+src/Cardscape.Web/
+├── Resources/
+│   ├── SharedResource.cs           # marker class (empty)
+│   ├── SharedResource.resx         # English (source of truth)
+│   ├── SharedResource.es.resx      # Spanish
+│   ├── SharedResource.<lang>.resx  # one file per language
+│   └── test.txt                    # placeholder so the folder
+│                                   # ships in the .csproj
+```
+
+`SharedResource.cs` is a **marker class**. It has no members.
+The localization system uses the class name to locate the
+matching `SharedResource.<culture>.resx` files. The class
+itself contains no strings.
+
+The `.resx` files are auto-discovered: the
+`AddLocalization(options => { options.ResourcesPath = "Resources"; })`
+call in `src/Cardscape.Web/Program.cs` configures the path,
+and the framework reads `SharedResource.<culture>.resx` for
+every culture for which a `.resx` file is shipped under
+`Resources/`. The supported-culture set is therefore
+**implicit in the `.resx` file set** — there is no separate
+"supported cultures" configuration in DI on the WASM
+client (see §12 for why).
+
+### 11.2 Adding a new key (the English source)
+
+1. Open `src/Cardscape.Web/Resources/SharedResource.resx`.
+2. Add a `<data>` entry. The convention is **`<Scope>_<CamelCase>`**,
+   e.g. `Boards_CreateNew`, `Login_EmailLabel`,
+   `Settings_GoogleCalendar_Title`. The scope is the page or
+   area; the rest is a camel-case description of the string.
+3. The `<value>` is the English text. The `<comment>` is
+   optional context for the translator (e.g. "button on the
+   board card", "tooltip on the trash icon").
+4. Use the key in a Razor component via
+   `@inject IStringLocalizer<SharedResource> L` and
+   `@L["Boards_CreateNew"]`.
+
+A PR that adds a new key to `SharedResource.resx` (the
+English source) **must** also add the key to every
+`SharedResource.<lang>.resx` file that exists, even if the
+translation is a placeholder. A missing key falls back to
+the English value, but that breaks the "the translation file
+is complete" invariant the reviewer relies on. See §11.4 for
+the placeholder convention.
+
+### 11.3 Adding a new language
+
+1. Pick a **BCP 47** subtag (see `01-policy.md` §1 and §4
+   for the supported-language and per-language-not-per-region
+   rules).
+2. Copy `src/Cardscape.Web/Resources/SharedResource.es.resx`
+   to `src/Cardscape.Web/Resources/SharedResource.<lang>.resx`.
+3. Translate every `<value>`. Keys missing from the new file
+   fall back to the English source automatically.
+4. In `src/Cardscape.Web/Program.cs`:
+   - Add the language code to the
+     `string[] supportedCultures = { ... }` array. This is
+     the documentation list of the supported set (see §12
+     for why the plan's named API cannot be applied on
+     WASM) and the source a future `CulturePicker` reads
+     from.
+5. Update `01-policy.md` §1 (the supported-languages table) and
+   §6 (the glossary) if the language has terminology
+   differences from English.
+6. Add the language code to the relevant `.csproj` `<ItemGroup>`
+   so the `.resx` file is **embedded as a resource** (see
+   `SharedResource.es.resx` in `Cardscape.Web.csproj` for the
+   pattern; the default Blazor `.csproj` includes `**\*.resx`
+   in the project, which auto-embeds the file).
+
+The review follows the same rules as a Markdown translation
+(§2 and §3): the diff is **only** the new `.resx` file plus
+the one-line `Program.cs` update (the
+`string[] supportedCultures` array); the English source is
+not touched.
+
+### 11.4 Placeholder convention (when the translation lags)
+
+A key in `SharedResource.<lang>.resx` whose translation is
+not yet done uses the **placeholder**:
+
+```xml
+<value>__TODO_es__ Boards_CreateNew</value>
+```
+
+The `__TODO_<lang>__` prefix makes the lag **visible** in the
+UI (a Spanish user sees "__TODO_es__ Boards_CreateNew" until
+the translator lands the PR) instead of silently falling back
+to the English value. The reviewer rejects a PR that leaves a
+non-prefixed English value in a non-English `.resx` file —
+the placeholder is the explicit signal that the translation
+is in progress.
+
+The drift detector (added in Phase 5, per §9) flags every
+`__TODO_<lang>__` placeholder as a pinging-the-translator
+item, not as a bug.
+
+### 11.5 The key naming rules
+
+- **Scope first.** `Boards_CreateNew`, not `CreateNewBoard`.
+  The scope is the page or feature area; it groups related
+  keys in the `.resx` editor and in the search.
+- **Camel case, not snake case.** `_` is the scope separator;
+  the rest is camel case. `Login_EmailLabel`, not
+  `Login_Email_Label` or `login.emaillabel`.
+- **No `Page_` prefix.** The scope is the page name
+  (`Boards`, `Login`, `Settings`), not the file name.
+- **No duplicates.** A key exists in exactly one place. The
+  build warns on duplicate keys; a duplicate is rejected in
+  review.
+- **The terminology glossary is the source of truth.** A key
+  that contains a glossary term (`Card`, `List`, `Board`,
+  `Workspace`, `Member`, `Label`, `Comment`, `Attachment`,
+  `Due date`, `Checkbox`, `MCP server`) uses the term in the
+  **English source**; the translator uses the
+  glossary-mandated translation. See `01-policy.md` §6
+  (Glossary) and the `## 6. The terminology glossary` table
+  in this file for the canonical mappings.
+
+### 11.6 Verifying the extraction
+
+After adding a key, the build must stay green and the
+resource must be reachable:
+
+1. `dotnet build src/Cardscape.Web/Cardscape.Web.csproj` —
+   0 errors, 0 warnings. The `.resx` compiler emits a
+   duplicate-key warning if a key is added twice; that is the
+   first-line check.
+2. The Razor component uses
+   `@inject IStringLocalizer<SharedResource> L` and renders
+   `@L["Boards_CreateNew"]` — the value comes from the
+   `.resx` for the current `CultureInfo`.
+3. To verify a translation, temporarily set
+   `Culture:Default` in `wwwroot/appsettings.json` to the
+   target language code, run the app, and confirm the UI
+   renders the translated value (no `__TODO_<lang>__`
+   prefix).
+
+### 11.7 What is NOT in the `.resx`
+
+- **Log messages.** Logs are for the operator, not the user;
+  the operator speaks English. See `01-policy.md` §2.
+- **Code identifiers.** Class names, method names, variable
+  names, NuGet package names, project names. See
+  `01-policy.md` §2 and the `## 7. The code identifiers are
+  not translated` section above.
+- **API error messages.** `ProblemDetails.Detail` and the MCP
+  tool `content` are not yet translated. They are a future
+  i18n pass; see `01-policy.md` §2.
+- **ADRs, license, brand names.** See `01-policy.md` §2.
+
+---
+
+## 12. Blazor WebAssembly culture-resolution caveat
+
+The plan called for `app.UseRequestLocalization(...)` to read
+the current culture from the `Accept-Language` request header
+on the server. That **cannot work on Blazor WebAssembly**:
+
+- `UseRequestLocalization` is **server-side middleware** that
+  runs in the ASP.NET Core request pipeline. It reads the
+  `Accept-Language` header on the **server** and sets
+  `CultureInfo.CurrentCulture` for that request.
+- Blazor WebAssembly is a **client-side single-page app**:
+  the server serves `index.html`, the `.wasm` payload, and
+  the `.dll` assemblies as static files. There is no per-
+  request server pipeline, so `UseRequestLocalization` has
+  nothing to run on.
+- The `Accept-Language` header the browser sends to fetch
+  the static assets is a **fetch-time** header; it is not
+  visible to the running WASM code. The browser's preferred
+  language is exposed to JavaScript and .NET-on-WASM as
+  `navigator.language` (and `navigator.languages` for the
+  full preference list), not as the `Accept-Language`
+  request header.
+
+The configuration in `src/Cardscape.Web/Program.cs` reflects
+this:
+
+```csharp
+// Program.cs: (the localization block)
+const string defaultCulture = "en";
+string[] supportedCultures = { "en", "es" };
+
+builder.Services.AddLocalization(options =>
+{
+    options.ResourcesPath = "Resources";
+});
+
+string? configuredDefault = builder.Configuration["Culture:Default"];
+CultureInfo defaultCultureInfo = string.IsNullOrWhiteSpace(configuredDefault)
+    ? new CultureInfo(defaultCulture)
+    : new CultureInfo(configuredDefault);
+CultureInfo.DefaultThreadCurrentCulture = defaultCultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = defaultCultureInfo;
+```
+
+- The `AddLocalization` call registers the `.resx` resource
+  path so `IStringLocalizer<SharedResource>` resolves
+  `SharedResource.<culture>.resx` for the current culture.
+- The supported-culture set is **implicit in the set of
+  `SharedResource.<culture>.resx` files** shipped under
+  `Resources/` — today `en` (default) + `es`. The
+  `string[] supportedCultures = { "en", "es" }` array is
+  the **documentation** list of the supported set; a future
+  `CulturePicker` reads from it. There is no DI-registered
+  "supported cultures" object on the WASM client (see the
+  note below on why the plan's literal named API does not
+  apply).
+- The plan's literal `AddLocalization(opts => opts.SetDefaultCulture
+  ("en").AddSupportedCultures("en", "es"))` shape is a
+  **server-side API**: the `SetDefaultCulture` /
+  `AddSupportedCultures` extension methods live on
+  `RequestLocalizationOptions` (the type the
+  `UseRequestLocalization` middleware reads), not on
+  `LocalizationOptions` (the `AddLocalization` callback's
+  options type). On the server, the type is in the
+  `Microsoft.AspNetCore.App` shared framework. On Blazor
+  WebAssembly the `Microsoft.NET.Sdk.BlazorWebAssembly` SDK
+  only references a subset of the framework, and adding
+  `<FrameworkReference Include="Microsoft.AspNetCore.App" />`
+  fails with `NETSDK1082` (no `browser-wasm` runtime pack).
+  The standalone `Microsoft.AspNetCore.Localization` NuGet
+  package tops out at 2.3.11 (ASP.NET Core 2.x era) and is
+  not compatible with the .NET 11 preview SDK. There is no
+  clean way to surface the plan's named API on the WASM
+  client in this SDK. The configuration the plan asked for
+  (default culture + supported culture set) is preserved
+  via the constants and the implicit `.resx` set.
+- The current culture is set via
+  `CultureInfo.DefaultThreadCurrentCulture` /
+  `DefaultThreadCurrentUICulture` (with the default taken
+  from `Culture:Default` in `wwwroot/appsettings.json`, or
+  `"en"` if the setting is missing).
+
+### 12.1 There is no `CulturePicker` (yet)
+
+A previous version of the localization comment in
+`Program.cs` mentioned a `CulturePicker` that stores the
+choice in `localStorage`. **That class does not exist in the
+codebase today** (verified by `grep` on
+`src/Cardscape.Web/`). The localization works because
+`IStringLocalizer<SharedResource>` resolves the right
+`.resx` for whatever culture is current — but the culture
+never changes after startup.
+
+A future PR can add a real `CulturePicker` in one of two
+shapes:
+
+1. **`navigator.language` on startup.** A small piece of
+   startup code in `Program.cs` reads
+   `navigator.language`, falls back to the closest supported
+   culture in the `string[] supportedCultures` array
+   (or to `defaultCulture` if none match), and sets
+   `CultureInfo.DefaultThreadCurrentCulture` accordingly.
+   No persistence — the user gets the browser's preferred
+   language on every load.
+2. **A `CulturePicker` component + `localStorage` override.**
+   A `<CulturePicker>` dropdown in the user menu writes the
+   chosen culture to `localStorage`; the startup code reads
+   `localStorage` first, falls back to `navigator.language`,
+   falls back to `defaultCulture`. This is the more
+   user-friendly option and is the one the original comment
+   described.
+
+The configuration in `Program.cs` is shaped to support both:
+the supported-culture array is the single source of truth
+that the picker reads from and that the startup fallback
+matches against.
+
+### 12.2 The "current culture" today
+
+Until the `CulturePicker` lands, the practical effect is:
+
+- A user who has not changed any setting gets the
+  `defaultCulture` (`"en"`, or the value of
+  `Culture:Default` in `wwwroot/appsettings.json`).
+- The `IStringLocalizer<SharedResource>` resolves the
+  English `.resx` (or the configured default), so the UI is
+  in English.
+- Changing the culture at runtime (e.g. by setting
+  `CultureInfo.DefaultThreadCurrentCulture` from the
+  browser dev tools) **does** swap the UI to the new
+  culture — the localizer re-resolves on the next render.
+  The change does not persist across reloads.
+
+The localization pipeline is **correct** for the
+default-culture case (137 EN + 140 ES keys ship; see
+`01-policy.md` §1 and the audit at
+[`../audits/2026-07-30/07-polish.md`](../audits/2026-07-30/07-polish.md)
+§5.1). The missing piece is the runtime culture switch, which
+is a separate, follow-up item — not a blocker for the
+default-culture experience.
+
+---
+
+## 13. When to revisit
 
 This document is revisited when:
 
@@ -253,6 +564,10 @@ This document is revisited when:
 3. A new language is added.
 4. A new artifact type is translated (e.g. the MCP
    server's prompts).
+5. The Blazor WebAssembly `CulturePicker` lands (see §12.1)
+   and the runtime culture-switch workflow is documented.
+6. The `.resx` placeholder convention (§11.4) needs to
+   change (e.g. if a non-todo workflow is introduced).
 
 Until then, this document is the source of truth for the
 translation workflow in Cardscape.

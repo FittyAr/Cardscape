@@ -638,15 +638,17 @@ The features from the feature inventory §14 (security) and
   and is not compatible). The configuration the plan asked
   for (default culture + supported culture set) is therefore
   expressed in the WASM-friendly equivalents in
-  `src/Cardscape.Web/Program.cs:22-65`: the
-  `string[] supportedCultures = { "en", "es" }` array is the
-  documentation list of the supported set (the source a
+  `src/Cardscape.Web/Program.cs:22-82`: the
+  `string[] supportedCultures = { "en", "es" }` array (`Program.cs:83-92`)
+  is the documentation list of the supported set (the source a
   future `CulturePicker` reads from); the
   `AddLocalization(opts => opts.ResourcesPath = "Resources")`
-  call registers the `.resx` resource path; the actual current
-  culture is set via `CultureInfo.DefaultThreadCurrentCulture` /
-  `DefaultThreadCurrentUICulture`, driven by `Culture:Default`
-  in `wwwroot/appsettings.json` (default `"en"`).
+  call (`Program.cs:94-97`) registers the `.resx` resource
+  path; the actual current culture is set via
+  `CultureInfo.DefaultThreadCurrentCulture` /
+  `DefaultThreadCurrentUICulture` (`Program.cs:99-104`),
+  driven by `Culture:Default` in `wwwroot/appsettings.json`
+  (default `"en"`).
 - The current culture is resolved from the `Accept-Language`
   header (no UI culture picker yet — that's a separate item).
   ⚠️ PARTIAL on Blazor WebAssembly: `Accept-Language` is a
