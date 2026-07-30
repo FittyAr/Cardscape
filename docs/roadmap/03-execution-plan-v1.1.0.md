@@ -201,7 +201,7 @@ story whole.
   seen twice.
 - New migration `IssueIdempotencyKeys` adds the table.
 
-### 2.5 OpenTelemetry tracing
+### 2.5 OpenTelemetry tracing ✅ DONE
 - Add `OpenTelemetry.Extensions.Hosting`,
   `OpenTelemetry.Instrumentation.AspNetCore`, and
   `OpenTelemetry.Exporter.OpenTelemetryProtocol` to
@@ -210,8 +210,11 @@ story whole.
   .AddSource("Cardscape.Mcp").AddAspNetCoreInstrumentation()
   .AddOtlpExporter())` in `src/Cardscape.Mcp/Program.cs`.
 - Every tool call emits a span `mcp.tool.<name>` with
-  attributes for userId, boardId, cardId (when applicable),
-  and result (`success` / `failure`).
+  attributes for `user.id`, `board.id`, `card.id` (when
+  applicable, set via `McpToolSpanScope.SetContext`), and
+  result (`mcp.tool.outcome = success | failure` +
+  `mcp.tool.error.code` / `mcp.tool.error.message` on
+  failure, set via `MarkSuccess` / `MarkFailure`).
 - OTLP endpoint read from `Otel__EndpointUrl` configuration
   (no-op when empty — dev-friendly default).
 
