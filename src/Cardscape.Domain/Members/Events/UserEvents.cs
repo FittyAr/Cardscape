@@ -27,3 +27,10 @@ public sealed record UserPasswordChanged(
 public sealed record UserDeactivated(
     UserId UserId,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
+/// <summary>Raised when a previously deactivated user is reactivated.
+/// Mirrors <see cref="UserDeactivated"/>; emitted by the SCIM
+/// flow when an IdP restores an off-boarded user.</summary>
+public sealed record UserReactivated(
+    UserId UserId,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);

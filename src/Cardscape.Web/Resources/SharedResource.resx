@@ -100,6 +100,18 @@
   <data name="GoogleCalendarConnectedAs" xml:space="preserve"><value>Connected as</value></data>
   <data name="GoogleCalendarCalendarId" xml:space="preserve"><value>Calendar</value></data>
   <data name="GoogleCalendarLastSync" xml:space="preserve"><value>Last sync</value></data>
+  <data name="ScimTitle" xml:space="preserve"><value>SCIM provisioning</value></data>
+  <data name="ScimBlurb" xml:space="preserve"><value>Provision users from your IdP (Okta, Azure AD, Google Workspace) via the SCIM v2 protocol. The endpoint URL is shown above; create a bearer token below and paste it into the IdP.</value></data>
+  <data name="ScimIssueToken" xml:space="preserve"><value>Issue a new token</value></data>
+  <data name="ScimTokenName" xml:space="preserve"><value>Token name (for your own reference)</value></data>
+  <data name="ScimTokenShownOnce" xml:space="preserve"><value>This token is shown only once. Save it now.</value></data>
+  <data name="ScimExistingTokens" xml:space="preserve"><value>Existing tokens</value></data>
+  <data name="ScimNoTokens" xml:space="preserve"><value>No tokens yet. Issue one above.</value></data>
+  <data name="ScimPrefix" xml:space="preserve"><value>Prefix</value></data>
+  <data name="ScimLastUsed" xml:space="preserve"><value>Last used</value></data>
+  <data name="ScimRevoked" xml:space="preserve"><value>Revoked</value></data>
+  <data name="ScimRevoke" xml:space="preserve"><value>Revoke</value></data>
+  <data name="ScimNever" xml:space="preserve"><value>Never</value></data>
   <data name="BoardsTitle" xml:space="preserve"><value>Boards</value></data>
   <data name="BoardsNew" xml:space="preserve"><value>New board</value></data>
   <data name="BoardsEmpty" xml:space="preserve"><value>No boards yet.</value></data>

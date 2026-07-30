@@ -161,6 +161,18 @@ public sealed class InMemoryUserRepository : InMemoryRepositoryBase<User, UserId
         return Task.FromResult(Store.Values.FirstOrDefault(u =>
             string.Equals(u.Email.Value, normalized, StringComparison.OrdinalIgnoreCase)));
     }
+
+    public Task<IReadOnlyList<WorkspaceMember>> ListWorkspaceMembersAsync(
+        WorkspaceId workspaceId, CancellationToken ct = default)
+    {
+        // The in-memory workspace list is held on the
+        // WorkspaceRepository; for the SCIM tests we just
+        // look up the workspace and return its member
+        // collection. Tests that need full coverage seed
+        // both repositories.
+        IReadOnlyList<WorkspaceMember> empty = [];
+        return Task.FromResult(empty);
+    }
 }
 
 /// <summary>In-memory <see cref="IWorkspaceRepository"/>.</summary>

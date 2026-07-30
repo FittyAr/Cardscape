@@ -46,6 +46,16 @@ public sealed record GoogleCalendarConnectionDto(
     string? LastSyncError,
     bool IsActive);
 
+// ── SCIM ─────────────────────────────────────────────────
+public sealed record ScimTokenDto(
+    Guid Id,
+    Guid WorkspaceId,
+    string Name,
+    string TokenPrefix,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? LastUsedAt,
+    bool IsRevoked);
+
 // ── Boards ──────────────────────────────────────────────
 public sealed record BoardDto(
     Guid Id,

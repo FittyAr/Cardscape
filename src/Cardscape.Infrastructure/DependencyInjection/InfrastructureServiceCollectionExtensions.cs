@@ -31,6 +31,7 @@ using Cardscape.Infrastructure.Authentication;
 using Cardscape.Infrastructure.Configuration;
 using Cardscape.Infrastructure.Email;
 using Cardscape.Infrastructure.Integrations;
+using Cardscape.Infrastructure.Scim;
 using Cardscape.Infrastructure.Import;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Persistence.Interceptors;
@@ -253,6 +254,12 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IGoogleCalendarConnectionRepository, GoogleCalendarConnectionRepository>();
         services.AddTransient<IGoogleCalendarSyncService, HttpGoogleCalendarSyncService>();
         services.AddHttpClient("google-oauth");
+
+        // SCIM v2 provisioning — the per-workspace token
+        // repository, the user-provisioning service, and the
+        // IScimTokenRepository used by ScimAuthenticationHandler.
+        services.AddScoped<IScimTokenRepository, ScimTokenRepository>();
+        services.AddScoped<IScimService, ScimService>();
 
         return services;
     }

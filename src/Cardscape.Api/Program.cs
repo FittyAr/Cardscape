@@ -17,6 +17,7 @@ using Cardscape.Api.Endpoints.Labels;
 using Cardscape.Api.Endpoints.Lists;
 using Cardscape.Api.Endpoints.Notifications;
 using Cardscape.Api.Endpoints.Recurrence;
+using Cardscape.Api.Endpoints.Scim;
 using Cardscape.Api.Endpoints.Search;
 using Cardscape.Api.Endpoints.Security;
 using Cardscape.Api.Endpoints.Voting;
@@ -191,6 +192,8 @@ app.MapGitHubEndpoints();
 app.MapInboundEmailEndpoints();
 app.MapSlackEndpoints();
 app.MapGoogleCalendarEndpoints();
+app.MapScimEndpoints();
+app.MapScimAdminEndpoints();
 
 // Real-time board hub. Sits at /hubs/board with the same JWT
 // bearer authentication as the REST API; clients bring the

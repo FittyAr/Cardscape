@@ -1,7 +1,9 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Members;
+using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Cardscape.Infrastructure.Repositories;
 
@@ -30,5 +32,23 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
         }
 
         return null;
+    }
+
+    public async Task<IReadOnlyList<WorkspaceMember>> ListWorkspaceMembersAsync(
+        WorkspaceId workspaceId, CancellationToken ct = default)
+    {
+        // The Workspace aggregate owns the member collection
+        // through the `workspace_members` owned-entity table.
+        // We reach it through a raw query on the DbContext —
+        // the relationship is configured in WorkspaceConfiguration.
+        // The query is intentionally a server-side projection
+        // (we hit the DB once, not N+1).
+        Workspace? workspace = await Db.Set<Workspace>()
+            .FirstOrDefaultAsync(w => w.Id == workspaceId, ct);
+        if (workspace is null)
+        {
+            return [];
+        }
+        return workspace.Members.ToList();
     }
 }

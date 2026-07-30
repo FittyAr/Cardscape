@@ -1,0 +1,126 @@
+@page "/workspaces/{WorkspaceId:guid}/scim"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services.Api
+@using Microsoft.Extensions.Localization
+@inject IScimApiClient ScimApi
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["ScimTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>@L["ScimTitle"]</h1>
+        <p class="muted">@L["ScimBlurb"]</p>
+        <code class="muted">@EndpointUrl</code>
+    </div>
+
+    <RadzenCard>
+        <h3>@L["ScimIssueToken"]</h3>
+        <RadzenTemplateForm TItem="IssueModel" Data="@issueModel" Submit="@IssueToken">
+            <RadzenLabel Text="@L["ScimTokenName"]" Component="scim-name" />
+            <RadzenTextBox @bind-Value="issueModel.Name" Name="scim-name" Style="width:100%" />
+            <div class="create-actions">
+                <RadzenButton Text="@L["ScimIssueToken"]" ButtonType="ButtonType.Submit"
+                              ButtonStyle="ButtonStyle.Primary" IsBusy="@issuing" />
+            </div>
+        </RadzenTemplateForm>
+    </RadzenCard>
+
+    @if (newTokenPlaintext is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat">
+            <strong>@L["ScimTokenShownOnce"]</strong>
+            <code>@newTokenPlaintext</code>
+        </RadzenAlert>
+    }
+
+    <h3>@L["ScimExistingTokens"]</h3>
+    @if (tokens is null)
+    {
+        <p>@L["ActionLoading"]</p>
+    }
+    else if (tokens.Count == 0)
+    {
+        <p>@L["ScimNoTokens"]</p>
+    }
+    else
+    {
+        @foreach (var t in tokens)
+        {
+            <RadzenCard class="scim-token-card">
+                <h4>@t.Name</h4>
+                <p class="muted">@L["ScimPrefix"]: <code>@t.TokenPrefix</code></p>
+                <p class="muted">@L["ScimLastUsed"]: @(t.LastUsedAt?.LocalDateTime.ToString("yyyy-MM-dd HH:mm") ?? L["ScimNever"])</p>
+                @if (t.IsRevoked)
+                {
+                    <RadzenBadge Text="@L["ScimRevoked"]" BadgeStyle="BadgeStyle.Danger" />
+                }
+                @if (!t.IsRevoked)
+                {
+                    <RadzenButton Text="@L["ScimRevoke"]" ButtonStyle="ButtonStyle.Danger"
+                                  Click="@(() => Revoke(t.Id))" />
+                }
+            </RadzenCard>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public Guid WorkspaceId { get; set; }
+
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private IReadOnlyList<ScimTokenDto>? tokens;
+    private string? newTokenPlaintext;
+    private bool issuing;
+    private readonly IssueModel issueModel = new();
+
+    private string EndpointUrl => $"{Nav.BaseUri}scim/v2/";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await ScimApi.ListTokensAsync(WorkspaceId);
+        tokens = result.IsSuccess ? result.Value : [];
+    }
+
+    private async Task IssueToken()
+    {
+        if (string.IsNullOrWhiteSpace(issueModel.Name))
+        {
+            return;
+        }
+
+        issuing = true;
+        try
+        {
+            var result = await ScimApi.IssueTokenAsync(WorkspaceId, issueModel.Name);
+            if (result.IsSuccess)
+            {
+                newTokenPlaintext = result.Value!.PlaintextToken;
+                issueModel.Name = string.Empty;
+                var listResult = await ScimApi.ListTokensAsync(WorkspaceId);
+                tokens = listResult.IsSuccess ? listResult.Value : tokens;
+            }
+        }
+        finally
+        {
+            issuing = false;
+        }
+    }
+
+    private async Task Revoke(Guid tokenId)
+    {
+        var result = await ScimApi.RevokeTokenAsync(WorkspaceId, tokenId);
+        if (result.IsSuccess)
+        {
+            var listResult = await ScimApi.ListTokensAsync(WorkspaceId);
+            tokens = listResult.IsSuccess ? listResult.Value : tokens;
+        }
+    }
+
+    private sealed class IssueModel
+    {
+        public string Name { get; set; } = string.Empty;
+    }
+}

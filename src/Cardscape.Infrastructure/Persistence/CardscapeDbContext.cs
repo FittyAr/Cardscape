@@ -1,6 +1,7 @@
 using System.Reflection;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Authentication.ExternalLogins;
+using Cardscape.Domain.Authentication.Scim;
 using Cardscape.Domain.Authentication.Totp;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Boards;
@@ -53,6 +54,7 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
     public DbSet<TotpCredential> TotpCredentials => Set<TotpCredential>();
     public DbSet<Domain.Integrations.GoogleCalendar.GoogleCalendarConnection> GoogleCalendarConnections => Set<Domain.Integrations.GoogleCalendar.GoogleCalendarConnection>();
+    public DbSet<Domain.Authentication.Scim.ScimToken> ScimTokens => Set<Domain.Authentication.Scim.ScimToken>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't

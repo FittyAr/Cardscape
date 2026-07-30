@@ -157,4 +157,19 @@ public sealed class User : AggregateRoot<UserId>
         UpdatedAt = at;
         AddDomainEvent(new UserDeactivated(Id, at));
     }
+
+    /// <summary>Reactivates a previously deactivated account. Used by
+    /// SCIM when an IdP sends <c>{ "op": "replace", "path": "active", "value": true }</c>
+    /// for an off-boarded user.</summary>
+    public void Reactivate(DateTimeOffset at)
+    {
+        if (IsActive)
+        {
+            return;
+        }
+
+        IsActive = true;
+        UpdatedAt = at;
+        AddDomainEvent(new UserReactivated(Id, at));
+    }
 }

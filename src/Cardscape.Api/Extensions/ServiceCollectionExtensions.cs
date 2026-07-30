@@ -156,6 +156,16 @@ public static class ServiceCollectionExtensions
             });
         }
 
+        // ── SCIM v2 bearer auth (P4.4) ──────────────────────
+        // Distinct scheme from JWT / API token / OAuth so the
+        // ForwardDefaultSelector above doesn't intercept SCIM
+        // requests — SCIM tokens are random 256-bit secrets
+        // (no dots) that would otherwise land on the API
+        // token scheme, where they wouldn't verify.
+        authBuilder.AddScheme<ScimAuthenticationOptions, ScimAuthenticationHandler>(
+            ScimAuthenticationHandler.SchemeName,
+            _ => { });
+
         services.AddAuthorization();
         return services;
     }
