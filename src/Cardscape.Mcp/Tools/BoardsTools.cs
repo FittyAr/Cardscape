@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Idempotency;
 using Cardscape.Application.Abstractions.Persistence;
@@ -25,9 +25,9 @@ using Cardscape.Application.Workspaces.Queries;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Mcp.Idempotency;
+using Cardscape.Mcp.Observability;
 using Cardscape.Mcp.Realtime;
 using ModelContextProtocol.Server;
-using Cardscape.Mcp.Observability;
 using Wolverine;
 
 namespace Cardscape.Mcp.Tools;

@@ -1,9 +1,9 @@
+using System.Linq;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace Cardscape.Infrastructure.Repositories;
 

@@ -1,8 +1,8 @@
-﻿using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Activities.Queries;
 using Cardscape.Domain.Common;
-using ModelContextProtocol.Server;
 using Cardscape.Mcp.Observability;
+using ModelContextProtocol.Server;
 using Wolverine;
 
 namespace Cardscape.Mcp.Tools;

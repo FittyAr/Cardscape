@@ -1,5 +1,6 @@
 using Cardscape.Api.BackgroundJobs;
 using Cardscape.Api.Endpoints.Activities;
+using Cardscape.Api.Endpoints.Ai;
 using Cardscape.Api.Endpoints.Auth;
 using Cardscape.Api.Endpoints.Automation;
 using Cardscape.Api.Endpoints.BackgroundJobs;
@@ -20,7 +21,6 @@ using Cardscape.Api.Endpoints.OAuth;
 using Cardscape.Api.Endpoints.Recurrence;
 using Cardscape.Api.Endpoints.Saml;
 using Cardscape.Api.Endpoints.Scim;
-using Cardscape.Api.Endpoints.Ai;
 using Cardscape.Api.Endpoints.Search;
 using Cardscape.Api.Endpoints.Security;
 using Cardscape.Api.Endpoints.Voting;

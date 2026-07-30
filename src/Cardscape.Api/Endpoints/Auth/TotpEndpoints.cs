@@ -4,8 +4,8 @@ using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 
 namespace Cardscape.Api.Endpoints.Auth;
 
