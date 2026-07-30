@@ -89,7 +89,7 @@ These are the items the audit flagged as **CRITICAL** because the
 release claims contradict the codebase. They land first because
 the v1.1.0 release notes have to be honest from day one.
 
-### 1.1 Real CI workflow
+### 1.1 Real CI workflow ✅ DONE
 - Create `.github/workflows/ci.yml` that runs on push and PR:
   - `dotnet format --verify-no-changes`
   - `dotnet build` (Release, all 11 projects)
@@ -100,7 +100,7 @@ the v1.1.0 release notes have to be honest from day one.
 - Update CHANGELOG to remove the claim that the workflow exists
   (it now does — replace with a link to the file).
 
-### 1.2 Empty test projects
+### 1.2 Empty test projects ✅ DONE
 Two of the five test projects are scaffolded but empty:
 - `tests/Cardscape.FunctionalTests/` — add a smoke test that
   boots the API + Web on the in-memory SQLite and walks the
@@ -114,7 +114,7 @@ Two of the five test projects are scaffolded but empty:
   abstraction has a corresponding Infrastructure implementation
   (the "no orphan interfaces" rule).
 
-### 1.3 Plan status sync
+### 1.3 Plan status sync ✅ DONE
 - `docs/roadmap/01-implementation-plan.md` §0 — update the
   status table from "Phase 1: not started" to a six-phase
   table that matches the README: 0 (DONE), 1 (DONE v0.1.0-mvp),
@@ -124,7 +124,7 @@ Two of the five test projects are scaffolded but empty:
 - `docs/community/ROADMAP.md` — same treatment, in the
   community-readable tone.
 
-### 1.4 ADRs
+### 1.4 ADRs ✅ DONE
 Add append-only ADRs for the decisions the project has taken
 that are not yet recorded:
 - `0003-wolverine-over-mediatr.md` — why we chose Wolverine 6.
@@ -454,7 +454,7 @@ The features from the feature inventory §14 (security) and
   check lives in `Workspace.GuardRegion(region)`.
 - Web UI: a region selector at workspace creation.
 
-### 4.6 Google Calendar sync
+### 4.6 Google Calendar sync ⚠️ PARTIAL
 - New bounded context `Cardscape.Domain.Integrations.GoogleCalendar/`
   with `GoogleCalendarConnection` (user → refresh token,
   calendar id).
@@ -466,7 +466,7 @@ The features from the feature inventory §14 (security) and
 - Web UI: `/settings/integrations/google-calendar` with the
   "Connect" button + a "Last sync" timestamp.
 
-### 4.7 IAiService abstraction
+### 4.7 IAiService abstraction ✅ DONE
 - New `Cardscape.Application/Abstractions/IAiService.cs` with:
   - `Task<Result<AiTextCompletion>> CompleteAsync(AiPrompt, AiOptions, ct)`
   - `Task<Result<AiChatCompletion>> ChatAsync(IReadOnlyList<AiMessage>, AiOptions, ct)`
@@ -476,7 +476,7 @@ The features from the feature inventory §14 (security) and
   `Cardscape.Application/Abstractions/Ai/`.
 - DI registration: `services.AddSingleton<IAiService, …>(provider)`.
 
-### 4.8 AI providers
+### 4.8 AI providers ✅ DONE
 - `RuleBasedAiService` in
   `Cardscape.Infrastructure/Ai/RuleBasedAiService.cs` — uses
   no external API, returns a canned description template,
@@ -491,7 +491,7 @@ The features from the feature inventory §14 (security) and
 - The OpenAI-compatible client is `HttpClient` + JSON
   serialization; no extra NuGet dep.
 
-### 4.9 AI features
+### 4.9 AI features ⚠️ PARTIAL
 - `GenerateCardDescriptionCommand` — given a card title and
   optional context, calls `IAiService.CompleteAsync` with a
   prompt like "Write a 2-sentence description for a card
@@ -511,7 +511,7 @@ The features from the feature inventory §14 (security) and
   checklist" button in the card editor; "✨ Smart assign" in
   the card menu.
 
-### 4.10 MCP AI tools
+### 4.10 MCP AI tools ✅ DONE
 - `ai_generate_card_description(cardId)` — wraps
   `GenerateCardDescriptionCommand`.
 - `ai_summarize_thread(commentIds)` — wraps
