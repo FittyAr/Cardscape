@@ -76,9 +76,18 @@ public sealed class ScimToken : AggregateRoot<ScimTokenId>
             return false;
         }
 
-        byte[] presented = System.Text.Encoding.UTF8.GetBytes(plaintext);
+        // Re-derive the SHA-256 of the presented plaintext
+        // and compare against the stored base64-decoded hash.
+        // (The original implementation compared the UTF-8
+        // bytes of the plaintext against the hash bytes,
+        // which can never match — the SCIM v2 endpoints
+        // were therefore never authenticated. Fixed under
+        // G3 because the Groups tests need a working
+        // SCIM auth flow to assert the round-trip.)
+        byte[] presentedHash = System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(plaintext));
         byte[] expected = Convert.FromBase64String(TokenHash);
-        return CryptographicOperations.FixedTimeEquals(presented, expected);
+        return CryptographicOperations.FixedTimeEquals(presentedHash, expected);
     }
 
     public void RecordUse(DateTimeOffset at)

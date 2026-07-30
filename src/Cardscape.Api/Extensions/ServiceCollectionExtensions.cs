@@ -83,6 +83,21 @@ public static class ServiceCollectionExtensions
             {
                 options.ForwardDefaultSelector = context =>
                 {
+                    // SCIM v2 endpoints use their own bearer
+                    // token scheme (the ScimToken is a
+                    // random 256-bit secret, not a JWT and
+                    // not an API token). Route the request
+                    // to the SCIM handler when the path is
+                    // under /scim/v2/; the handler itself
+                    // returns NoResult on a missing header,
+                    // so the per-endpoint workspace-id check
+                    // is what produces the 401.
+                    if (context.Request.Path.StartsWithSegments(
+                        "/scim/v2", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ScimAuthenticationHandler.SchemeName;
+                    }
+
                     if (!context.Request.Headers.TryGetValue("Authorization", out var authHeader))
                     {
                         return JwtBearerDefaults.AuthenticationScheme;

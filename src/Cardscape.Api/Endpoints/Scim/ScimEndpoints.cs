@@ -134,7 +134,7 @@ public static class ScimEndpoints
                 .Select(o => new ScimPatchOperation(o.Op, o.Path, o.Value))
                 .ToList();
             var result = await scim.PatchUserAsync(workspaceId, userId,
-                new ScimUserPatchRequest(ops), ct);
+                new ScimPatchRequest(ops), ct);
             return result.IsSuccess ? Results.Json(result.Value) : MapError(result.Error);
         });
 
@@ -150,6 +150,124 @@ public static class ScimEndpoints
             }
 
             var result = await scim.DeleteUserAsync(workspaceId, userId, ct);
+            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+        });
+
+        // ── /scim/v2/Groups ────────────────────────────────────
+        // 1:1 mapping: SCIM Group == Workspace, SCIM Group
+        // member == WorkspaceMember. See IScimService for
+        // the rationale.
+
+        group.MapGet("/Groups", async (
+            HttpContext http,
+            IScimService scim,
+            [FromQuery] int? startIndex,
+            [FromQuery] int? count,
+            CancellationToken ct) =>
+        {
+            if (!TryGetWorkspaceId(http, out Guid workspaceId, out IResult? error))
+            {
+                return error!;
+            }
+
+            ScimListResponse<ScimGroup> response = await scim.ListGroupsAsync(
+                workspaceId,
+                startIndex ?? 1,
+                count ?? 50,
+                ct);
+            return Results.Json(response);
+        });
+
+        group.MapPost("/Groups", async (
+            HttpContext http,
+            IScimService scim,
+            [FromBody] ScimGroupBody body,
+            CancellationToken ct) =>
+        {
+            if (!TryGetWorkspaceId(http, out Guid workspaceId, out IResult? error))
+            {
+                return error!;
+            }
+
+            ScimGroup input = new(
+                Id: body.Id ?? string.Empty,
+                Schemas: body.Schemas ?? [],
+                DisplayName: body.DisplayName ?? string.Empty,
+                Members: MapMembers(body.Members));
+            var result = await scim.CreateGroupAsync(workspaceId, input, ct);
+            return result.IsSuccess
+                ? Results.Created($"/scim/v2/Groups/{result.Value.Id}", result.Value)
+                : MapError(result.Error);
+        });
+
+        group.MapGet("/Groups/{groupId}", async (
+            HttpContext http,
+            IScimService scim,
+            string groupId,
+            CancellationToken ct) =>
+        {
+            if (!TryGetWorkspaceId(http, out Guid workspaceId, out IResult? error))
+            {
+                return error!;
+            }
+
+            var result = await scim.GetGroupAsync(workspaceId, groupId, ct);
+            return result.IsSuccess ? Results.Json(result.Value) : MapError(result.Error);
+        });
+
+        group.MapPut("/Groups/{groupId}", async (
+            HttpContext http,
+            IScimService scim,
+            string groupId,
+            [FromBody] ScimGroupBody body,
+            CancellationToken ct) =>
+        {
+            if (!TryGetWorkspaceId(http, out Guid workspaceId, out IResult? error))
+            {
+                return error!;
+            }
+
+            ScimGroup input = new(
+                Id: body.Id ?? groupId,
+                Schemas: body.Schemas ?? [],
+                DisplayName: body.DisplayName ?? string.Empty,
+                Members: MapMembers(body.Members));
+            var result = await scim.UpdateGroupAsync(workspaceId, groupId, input, ct);
+            return result.IsSuccess ? Results.Json(result.Value) : MapError(result.Error);
+        });
+
+        group.MapPatch("/Groups/{groupId}", async (
+            HttpContext http,
+            IScimService scim,
+            string groupId,
+            [FromBody] ScimPatchBody body,
+            CancellationToken ct) =>
+        {
+            if (!TryGetWorkspaceId(http, out Guid workspaceId, out IResult? error))
+            {
+                return error!;
+            }
+
+            IReadOnlyList<ScimPatchOperation> ops = (body.Operations ?? [])
+                .Select(o => new ScimPatchOperation(o.Op, o.Path, o.Value))
+                .ToList();
+            var result = await scim.PatchGroupAsync(workspaceId, groupId,
+                new ScimPatchRequest(ops), ct);
+            return result.IsSuccess ? Results.Json(result.Value) : MapError(result.Error);
+        });
+
+        group.MapDelete("/Groups/{groupId}", async (
+            HttpContext http,
+            IScimService scim,
+            string groupId,
+            CancellationToken ct) =>
+        {
+            if (!TryGetWorkspaceId(http, out Guid workspaceId, out IResult? error))
+            {
+                return error!;
+            }
+
+            var result = await scim.DeleteGroupAsync(workspaceId, groupId, ct);
             return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
         });
 
@@ -211,4 +329,25 @@ public static class ScimEndpoints
     private sealed record ScimPatchBody(IReadOnlyList<ScimPatchOperationWire>? Operations);
 
     private sealed record ScimPatchOperationWire(string Op, string? Path, object? Value);
+
+    // The SCIM v2 wire shape for a Group. `Schemas` and
+    // `Id` are informational on input — the service
+    // generates a fresh `workspace-{guid}` id on POST and
+    // overwrites the `Schemas` field on the way out.
+    private sealed record ScimGroupBody(
+        string? Id,
+        IReadOnlyList<string>? Schemas,
+        string? DisplayName,
+        IReadOnlyList<ScimGroupMemberBody>? Members);
+
+    private sealed record ScimGroupMemberBody(string? Value, string? Display);
+
+    private static List<ScimGroupMember> MapMembers(
+        IReadOnlyList<ScimGroupMemberBody>? source) =>
+        source is null
+            ? []
+            : source
+                .Where(m => !string.IsNullOrWhiteSpace(m.Value))
+                .Select(m => new ScimGroupMember(m.Value!, m.Display))
+                .ToList();
 }

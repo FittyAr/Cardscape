@@ -25,6 +25,9 @@ public sealed class ScimService(
     IClock clock) : IScimService
 {
     private const string ScimUserSchema = "urn:ietf:params:scim:schemas:core:2.0:User";
+    private const string ScimGroupSchema = "urn:ietf:params:scim:schemas:core:2.0:Group";
+    private const string ScimListResponseSchema = "urn:ietf:params:scim:api:messages:2.0:ListResponse";
+    private const string ScimGroupIdPrefix = "workspace-";
 
     public async Task<Result<ScimUserResponse>> CreateUserAsync(
         Guid workspaceId, ScimUserCreateRequest request, CancellationToken ct = default)
@@ -150,7 +153,7 @@ public sealed class ScimService(
     }
 
     public async Task<Result<ScimUserResponse>> PatchUserAsync(
-        Guid workspaceId, Guid userId, ScimUserPatchRequest request, CancellationToken ct = default)
+        Guid workspaceId, Guid userId, ScimPatchRequest request, CancellationToken ct = default)
     {
         var user = await users.GetByIdAsync(new UserId(userId), ct);
         if (user is null)
@@ -207,6 +210,453 @@ public sealed class ScimService(
         user.Deactivate(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
+    }
+
+    public async Task<ScimListResponse<ScimGroup>> ListGroupsAsync(
+        Guid workspaceId, int startIndex, int count, CancellationToken ct = default)
+    {
+        // The SCIM token scopes the IdP to a single
+        // workspace, so this list is always either 0 or 1
+        // group. If the workspace was deleted between token
+        // issuance and this call we return an empty
+        // list — the IdP will reconcile.
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        if (workspace is null)
+        {
+            return new ScimListResponse<ScimGroup>(
+                [ScimListResponseSchema], 0, 0, Math.Max(1, startIndex), []);
+        }
+
+        IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(workspace, ct);
+        ScimGroup group = new(
+            BuildGroupId(workspace.Id.Value),
+            [ScimGroupSchema],
+            workspace.Name.Value,
+            members);
+
+        int pageSize = count <= 0 ? 50 : count;
+        IReadOnlyList<ScimGroup> page = [group];
+
+        return new ScimListResponse<ScimGroup>(
+            [ScimListResponseSchema],
+            page.Count,
+            pageSize,
+            Math.Max(1, startIndex),
+            page);
+    }
+
+    public async Task<Result<ScimGroup>> CreateGroupAsync(
+        Guid workspaceId, ScimGroup group, CancellationToken ct = default)
+    {
+        // SCIM `POST /Groups` provisions a new workspace
+        // owned by the same user that owns the token's
+        // workspace — this is the simplest 1:1 mapping and
+        // matches the "one organisation, one admin" mental
+        // model IdPs have. The input `id` is server-assigned
+        // and any value the IdP sent is ignored.
+        var parent = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        if (parent is null)
+        {
+            return Result.Failure<ScimGroup>(DomainError.NotFound(
+                "scim.workspace_not_found",
+                $"Workspace {workspaceId} was not found."));
+        }
+
+        var nameResult = WorkspaceName.Create(group.DisplayName);
+        if (nameResult.IsFailure)
+        {
+            return Result.Failure<ScimGroup>(nameResult.Error);
+        }
+
+        var createdResult = Workspace.Create(
+            WorkspaceId.New(),
+            nameResult.Value,
+            parent.OwnerId,
+            parent.Region,
+            clock.UtcNow);
+        if (createdResult.IsFailure)
+        {
+            return Result.Failure<ScimGroup>(createdResult.Error);
+        }
+
+        var newWorkspace = createdResult.Value;
+        await workspaces.AddAsync(newWorkspace, ct);
+
+        // Best-effort member sync. We log-and-continue on a
+        // missing user so a single bad id from the IdP does
+        // not abort the whole create; the SCIM spec says
+        // the IdP may keep stale references for users that
+        // were just off-boarded.
+        foreach (var member in group.Members)
+        {
+            if (!Guid.TryParse(member.Value, out Guid userGuid))
+            {
+                continue;
+            }
+
+            var user = await users.GetByIdAsync(new UserId(userGuid), ct);
+            if (user is null)
+            {
+                continue;
+            }
+
+            newWorkspace.AddMember(user.Id.Value, WorkspaceRole.Member, clock.UtcNow);
+        }
+
+        await unitOfWork.SaveChangesAsync(ct);
+
+        IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(newWorkspace, ct);
+        return Result.Success(new ScimGroup(
+            BuildGroupId(newWorkspace.Id.Value),
+            [ScimGroupSchema],
+            newWorkspace.Name.Value,
+            members));
+    }
+
+    public async Task<Result<ScimGroup>> GetGroupAsync(
+        Guid workspaceId, string groupId, CancellationToken ct = default)
+    {
+        if (!TryParseGroupId(groupId, out Guid groupGuid)
+            || groupGuid != workspaceId)
+        {
+            return Result.Failure<ScimGroup>(DomainError.NotFound(
+                "scim.group_not_found", $"Group {groupId} was not found."));
+        }
+
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        if (workspace is null)
+        {
+            return Result.Failure<ScimGroup>(DomainError.NotFound(
+                "scim.group_not_found", $"Group {groupId} was not found."));
+        }
+
+        IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(workspace, ct);
+        return Result.Success(new ScimGroup(
+            BuildGroupId(workspace.Id.Value),
+            [ScimGroupSchema],
+            workspace.Name.Value,
+            members));
+    }
+
+    public async Task<Result<ScimGroup>> UpdateGroupAsync(
+        Guid workspaceId, string groupId, ScimGroup group, CancellationToken ct = default)
+    {
+        if (!TryParseGroupId(groupId, out Guid groupGuid)
+            || groupGuid != workspaceId)
+        {
+            return Result.Failure<ScimGroup>(DomainError.NotFound(
+                "scim.group_not_found", $"Group {groupId} was not found."));
+        }
+
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        if (workspace is null)
+        {
+            return Result.Failure<ScimGroup>(DomainError.NotFound(
+                "scim.group_not_found", $"Group {groupId} was not found."));
+        }
+
+        var nameResult = WorkspaceName.Create(group.DisplayName);
+        if (nameResult.IsFailure)
+        {
+            return Result.Failure<ScimGroup>(nameResult.Error);
+        }
+
+        var renameResult = workspace.Rename(nameResult.Value, clock.UtcNow);
+        if (renameResult.IsFailure)
+        {
+            return Result.Failure<ScimGroup>(renameResult.Error);
+        }
+
+        await ReplaceMembersAsync(workspace, group.Members, ct);
+
+        await unitOfWork.SaveChangesAsync(ct);
+
+        IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(workspace, ct);
+        return Result.Success(new ScimGroup(
+            BuildGroupId(workspace.Id.Value),
+            [ScimGroupSchema],
+            workspace.Name.Value,
+            members));
+    }
+
+    public async Task<Result<ScimGroup>> PatchGroupAsync(
+        Guid workspaceId, string groupId, ScimPatchRequest patch, CancellationToken ct = default)
+    {
+        if (!TryParseGroupId(groupId, out Guid groupGuid)
+            || groupGuid != workspaceId)
+        {
+            return Result.Failure<ScimGroup>(DomainError.NotFound(
+                "scim.group_not_found", $"Group {groupId} was not found."));
+        }
+
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        if (workspace is null)
+        {
+            return Result.Failure<ScimGroup>(DomainError.NotFound(
+                "scim.group_not_found", $"Group {groupId} was not found."));
+        }
+
+        // The minimal SCIM v2 patch surface for Groups:
+        // - `replace displayName` (rename)
+        // - `add` / `remove` on members
+        // IdPs (Okta, Entra ID, Google Workspace) only send
+        // these three shapes today; the spec is rich but
+        // unused in practice.
+        foreach (var op in patch.Operations)
+        {
+            string opName = (op.Op ?? string.Empty).ToLowerInvariant();
+            if (opName != "add" && opName != "remove" && opName != "replace")
+            {
+                continue;
+            }
+
+            if (string.Equals(op.Path, "displayName", StringComparison.OrdinalIgnoreCase))
+            {
+                string? newName = op.Value as string
+                    ?? (op.Value is System.Text.Json.JsonElement je
+                        && je.ValueKind == System.Text.Json.JsonValueKind.String
+                        ? je.GetString()
+                        : null);
+                if (string.IsNullOrWhiteSpace(newName))
+                {
+                    continue;
+                }
+
+                var nameResult = WorkspaceName.Create(newName);
+                if (nameResult.IsFailure)
+                {
+                    return Result.Failure<ScimGroup>(nameResult.Error);
+                }
+
+                var renameResult = workspace.Rename(nameResult.Value, clock.UtcNow);
+                if (renameResult.IsFailure)
+                {
+                    return Result.Failure<ScimGroup>(renameResult.Error);
+                }
+                continue;
+            }
+
+            if (opName == "replace"
+                && (op.Path is null
+                    || string.Equals(op.Path, "members", StringComparison.OrdinalIgnoreCase)))
+            {
+                // `replace members` with a new list is
+                // treated as a full member-list replace.
+                IReadOnlyList<ScimGroupMember> desired = ExtractMembers(op.Value);
+                await ReplaceMembersAsync(workspace, desired, ct);
+                continue;
+            }
+
+            if (opName == "add" && (op.Path is null
+                || op.Path.StartsWith("members", StringComparison.OrdinalIgnoreCase)))
+            {
+                IReadOnlyList<ScimGroupMember> incoming = ExtractMembers(op.Value);
+                foreach (var member in incoming)
+                {
+                    if (!Guid.TryParse(member.Value, out Guid userGuid))
+                    {
+                        continue;
+                    }
+
+                    var user = await users.GetByIdAsync(new UserId(userGuid), ct);
+                    if (user is null)
+                    {
+                        continue;
+                    }
+
+                    workspace.AddMember(user.Id.Value, WorkspaceRole.Member, clock.UtcNow);
+                }
+                continue;
+            }
+
+            if (opName == "remove" && op.Path is not null
+                && op.Path.StartsWith("members", StringComparison.OrdinalIgnoreCase))
+            {
+                // RFC 7644 paths look like
+                // `members[value eq "user-guid"]` or just
+                // `members`. For the bare `members` form we
+                // can't infer which entry to drop, so we
+                // no-op (the IdP should always send the
+                // filtered form).
+                int eqIdx = op.Path.IndexOf(" eq ", StringComparison.OrdinalIgnoreCase);
+                if (eqIdx < 0)
+                {
+                    continue;
+                }
+
+                string tail = op.Path[(eqIdx + " eq ".Length)..].Trim();
+                if (tail.Length >= 2 && tail[0] == '"' && tail[^1] == '"')
+                {
+                    tail = tail[1..^1];
+                }
+
+                if (Guid.TryParse(tail, out Guid userGuid))
+                {
+                    workspace.RemoveMember(userGuid, clock.UtcNow);
+                }
+            }
+        }
+
+        await unitOfWork.SaveChangesAsync(ct);
+
+        IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(workspace, ct);
+        return Result.Success(new ScimGroup(
+            BuildGroupId(workspace.Id.Value),
+            [ScimGroupSchema],
+            workspace.Name.Value,
+            members));
+    }
+
+    public async Task<Result> DeleteGroupAsync(
+        Guid workspaceId, string groupId, CancellationToken ct = default)
+    {
+        if (!TryParseGroupId(groupId, out Guid groupGuid)
+            || groupGuid != workspaceId)
+        {
+            return Result.Failure(DomainError.NotFound(
+                "scim.group_not_found", $"Group {groupId} was not found."));
+        }
+
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        if (workspace is null)
+        {
+            return Result.Failure(DomainError.NotFound(
+                "scim.group_not_found", $"Group {groupId} was not found."));
+        }
+
+        // Off-boarding via SCIM is a soft delete (archive),
+        // not a hard delete — the audit trail matters and a
+        // hard delete would cascade through the workspace's
+        // boards / cards / comments / votes.
+        workspace.Archive(clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    private static string BuildGroupId(Guid workspaceGuid) => ScimGroupIdPrefix + workspaceGuid.ToString("D");
+
+    private static bool TryParseGroupId(string groupId, out Guid workspaceId)
+    {
+        workspaceId = Guid.Empty;
+        if (string.IsNullOrWhiteSpace(groupId)
+            || !groupId.StartsWith(ScimGroupIdPrefix, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return Guid.TryParse(groupId[ScimGroupIdPrefix.Length..], out workspaceId);
+    }
+
+    private async Task<IReadOnlyList<ScimGroupMember>> BuildMembersAsync(
+        Workspace workspace, CancellationToken ct)
+    {
+        List<ScimGroupMember> rows = new(workspace.Members.Count);
+        foreach (var m in workspace.Members)
+        {
+            var user = await users.GetByIdAsync(new UserId(m.UserId), ct);
+            rows.Add(new ScimGroupMember(
+                m.UserId.ToString("D"),
+                user?.DisplayName.Value));
+        }
+        return rows;
+    }
+
+    private async Task ReplaceMembersAsync(
+        Workspace workspace, IReadOnlyList<ScimGroupMember> desired, CancellationToken ct)
+    {
+        HashSet<Guid> desiredIds = new();
+        foreach (var member in desired)
+        {
+            if (Guid.TryParse(member.Value, out Guid userGuid))
+            {
+                desiredIds.Add(userGuid);
+            }
+        }
+
+        // Remove anyone not in the desired set, except the
+        // owner (the aggregate forbids removing them — that
+        // would also break every card in the workspace).
+        List<Guid> toRemove = new();
+        foreach (var m in workspace.Members)
+        {
+            if (!desiredIds.Contains(m.UserId) && m.UserId != workspace.OwnerId)
+            {
+                toRemove.Add(m.UserId);
+            }
+        }
+
+        foreach (var userGuid in toRemove)
+        {
+            workspace.RemoveMember(userGuid, clock.UtcNow);
+        }
+
+        // Add the rest. `AddMember` is a no-op on conflict
+        // (it returns `AlreadyMember`), which is exactly
+        // the idempotent behaviour PUT wants.
+        foreach (var userGuid in desiredIds)
+        {
+            if (workspace.HasMember(userGuid))
+            {
+                continue;
+            }
+
+            var user = await users.GetByIdAsync(new UserId(userGuid), ct);
+            if (user is null)
+            {
+                continue;
+            }
+
+            workspace.AddMember(user.Id.Value, WorkspaceRole.Member, clock.UtcNow);
+        }
+    }
+
+    private static IReadOnlyList<ScimGroupMember> ExtractMembers(object? value)
+    {
+        if (value is null)
+        {
+            return [];
+        }
+
+        // The IdP usually sends either a
+        // `IReadOnlyList<ScimGroupMember>` (System.Text.Json
+        // pre-binds it) or a JsonElement array. Handle
+        // both.
+        if (value is IReadOnlyList<ScimGroupMember> alreadyTyped)
+        {
+            return alreadyTyped;
+        }
+
+        if (value is System.Text.Json.JsonElement element
+            && element.ValueKind == System.Text.Json.JsonValueKind.Array)
+        {
+            List<ScimGroupMember> rows = new();
+            foreach (var item in element.EnumerateArray())
+            {
+                string? memberValue = null;
+                string? memberDisplay = null;
+                if (item.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    if (item.TryGetProperty("value", out var v))
+                    {
+                        memberValue = v.ValueKind == System.Text.Json.JsonValueKind.String
+                            ? v.GetString()
+                            : v.GetRawText().Trim('"');
+                    }
+                    if (item.TryGetProperty("display", out var d)
+                        && d.ValueKind == System.Text.Json.JsonValueKind.String)
+                    {
+                        memberDisplay = d.GetString();
+                    }
+                }
+                if (!string.IsNullOrWhiteSpace(memberValue))
+                {
+                    rows.Add(new ScimGroupMember(memberValue!, memberDisplay));
+                }
+            }
+            return rows;
+        }
+
+        return [];
     }
 
     private static DisplayName BuildDisplayName(ScimUserCreateRequest request) =>
