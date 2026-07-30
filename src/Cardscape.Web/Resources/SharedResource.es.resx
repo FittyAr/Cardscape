@@ -182,4 +182,7 @@
   <data name="AiSummaryTitle" xml:space="preserve"><value>Resumen IA</value></data>
   <data name="AiGenerateChecklist" xml:space="preserve"><value>Hacer checklist</value></data>
   <data name="AiSuggestOwners" xml:space="preserve"><value>Asignación inteligente</value></data>
+  <data name="Login_TotpCode_Label" xml:space="preserve"><value>Código de dos factores</value></data>
+  <data name="Login_TotpCode_Required" xml:space="preserve"><value>Ingresá el código de 6 dígitos de tu app autenticadora</value></data>
+  <data name="Login_TotpCode_Invalid" xml:space="preserve"><value>El código es inválido o expiró</value></data>
 </root>

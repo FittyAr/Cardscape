@@ -35,25 +35,51 @@
 
         <div class="auth-divider"><span>or</span></div>
 
-        <RadzenTemplateForm TItem="LoginModel" Data="@model" Submit="@HandleSubmit">
-            <RadzenLabel Text="@L["AuthEmail"]" Component="email" />
-            <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%" autocomplete="email" />
+        @if (challenge is null)
+        {
+            <RadzenTemplateForm TItem="LoginModel" Data="@model" Submit="@HandleSubmit">
+                <RadzenLabel Text="@L["AuthEmail"]" Component="email" />
+                <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%" autocomplete="email" />
 
-            <RadzenLabel Text="@L["AuthPassword"]" Component="password" Style="margin-top:1rem" />
-            <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%" autocomplete="current-password" />
+                <RadzenLabel Text="@L["AuthPassword"]" Component="password" Style="margin-top:1rem" />
+                <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%" autocomplete="current-password" />
 
-            @if (error is not null)
-            {
-                <div class="auth-error" role="alert">@error</div>
-            }
+                @if (error is not null)
+                {
+                    <div class="auth-error" role="alert">@error</div>
+                }
 
-            <RadzenButton ButtonType="ButtonType.Submit"
-                          Text="@L["AuthSignIn"]"
-                          ButtonStyle="ButtonStyle.Primary"
-                          IsBusy="@busy"
-                          BusyText="@L["AuthSigningIn"]"
-                          Style="width:100%; margin-top:1.5rem" />
-        </RadzenTemplateForm>
+                <RadzenButton ButtonType="ButtonType.Submit"
+                              Text="@L["AuthSignIn"]"
+                              ButtonStyle="ButtonStyle.Primary"
+                              IsBusy="@busy"
+                              BusyText="@L["AuthSigningIn"]"
+                              Style="width:100%; margin-top:1.5rem" />
+            </RadzenTemplateForm>
+        }
+        else
+        {
+            <p class="auth-totp-prompt">@L["Login_TotpCode_Required"]</p>
+
+            <RadzenTemplateForm TItem="TotpModel" Data="@totpModel" Submit="@HandleTotpSubmit">
+                <RadzenLabel Text="@L["Login_TotpCode_Label"]" Component="totp" />
+                <RadzenTextBox @bind-Value="totpModel.Code" Name="totp"
+                               Style="width:100%" autocomplete="one-time-code"
+                               inputmode="numeric" maxlength="6" />
+
+                @if (error is not null)
+                {
+                    <div class="auth-error" role="alert">@error</div>
+                }
+
+                <RadzenButton ButtonType="ButtonType.Submit"
+                              Text="@L["AuthSignIn"]"
+                              ButtonStyle="ButtonStyle.Primary"
+                              IsBusy="@busy"
+                              BusyText="@L["AuthSigningIn"]"
+                              Style="width:100%; margin-top:1.5rem" />
+            </RadzenTemplateForm>
+        }
 
         <p class="auth-footer">
             @L["AuthNoAccount"] <a href="register">@L["AuthCreateOne"]</a>.
@@ -63,8 +89,10 @@
 
 @code {
     private readonly LoginModel model = new();
+    private readonly TotpModel totpModel = new();
     private bool busy;
     private string? error;
+    private LoginChallenge? challenge;
 
     [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
 
@@ -74,14 +102,20 @@
         error = null;
         try
         {
-            ApiResult<Shared.UserSummaryDto> result = await Auth.LoginAsync(model.Email, model.Password);
+            ApiResult<UserSummaryDto> result = await Auth.LoginAsync(model.Email, model.Password);
+            if (result.Challenge is { } c)
+            {
+                challenge = c;
+                return;
+            }
+
             if (!result.IsSuccess)
             {
                 error = result.Error;
                 return;
             }
 
-            Nav.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : HttpUtility.UrlDecode(ReturnUrl), forceLoad: true);
+            NavigateHome();
         }
         finally
         {
@@ -89,9 +123,59 @@
         }
     }
 
+    private async Task HandleTotpSubmit()
+    {
+        if (challenge is null)
+        {
+            return;
+        }
+
+        busy = true;
+        error = null;
+        try
+        {
+            ApiResult<UserSummaryDto> result = await Auth.LoginWithTotpAsync(
+                challenge.Value.PendingTotpToken, totpModel.Code);
+
+            if (result.Challenge is not null)
+            {
+                // Server re-issued a challenge? The token was
+                // one-shot; treat the roundtrip as failed and
+                // reset to the password screen so the user can
+                // start over.
+                error = L["Login_TotpCode_Invalid"];
+                challenge = null;
+                totpModel.Code = string.Empty;
+                return;
+            }
+
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+                return;
+            }
+
+            NavigateHome();
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void NavigateHome()
+    {
+        Nav.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : HttpUtility.UrlDecode(ReturnUrl), forceLoad: true);
+    }
+
     private sealed class LoginModel
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+    }
+
+    private sealed class TotpModel
+    {
+        public string Code { get; set; } = string.Empty;
     }
 }

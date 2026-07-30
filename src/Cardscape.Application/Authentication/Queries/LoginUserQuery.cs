@@ -1,7 +1,10 @@
 using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Authentication.Abstractions;
 using Cardscape.Application.Authentication.DTOs;
+using Cardscape.Domain.Authentication.Totp;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Wolverine;
@@ -9,10 +12,28 @@ using static Cardscape.Domain.Members.Errors.UserErrors;
 
 namespace Cardscape.Application.Authentication.Queries;
 
-/// <summary>Authenticates a user by email + password.</summary>
+/// <summary>
+/// Authenticates a user by email + password. When the user has
+/// enrolled in 2FA, the result is a two-step flow:
+/// <list type="bullet">
+///   <item>If <see cref="TotpCode"/> is omitted, the query mints a
+///         one-shot <c>PendingTotpToken</c> via
+///         <see cref="IPendingTotpLoginStore"/> and returns a
+///         <see cref="AuthResponse"/> with
+///         <c>RequiresTotp = true</c> and a <c>null</c> access
+///         token. The browser then POSTs the token + the 6-digit
+///         code to <c>POST /api/auth/login/totp</c>
+///         (see <see cref="ConsumePendingTotpLoginQuery"/>).</item>
+///   <item>If <see cref="TotpCode"/> is supplied, the query verifies
+///         it against the user's <see cref="TotpCredential"/> and
+///         (on success) issues the JWT inline. An invalid code
+///         short-circuits with <c>auth.totp.invalid_code</c>.</item>
+/// </list>
+/// </summary>
 public sealed record LoginUserQuery(
     string Email,
-    string Password) : IMessage;
+    string Password,
+    string? TotpCode = null) : IMessage;
 
 public static class LoginUserQueryHandler
 {
@@ -23,6 +44,9 @@ public static class LoginUserQueryHandler
         IUnitOfWork unitOfWork,
         ITokenService tokens,
         IClock clock,
+        ITotpCredentialRepository totpCredentials,
+        ITotpService totpService,
+        IPendingTotpLoginStore pendingLogins,
         CancellationToken cancellationToken)
     {
         var email = query.Email?.Trim().ToLowerInvariant() ?? string.Empty;
@@ -47,17 +71,57 @@ public static class LoginUserQueryHandler
         user.RecordLogin(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Check the 2FA status. The credential row can be soft-deleted
+        // (IsDeleted == true) when the user disabled 2FA; treat that
+        // as "no 2FA" so the user can log in with email+password alone.
+        var credential = await totpCredentials.FindForUserAsync(user.Id, cancellationToken);
+        bool hasActiveTotp = credential is not null && !credential.IsDeleted;
+
+        if (hasActiveTotp)
+        {
+            if (string.IsNullOrWhiteSpace(query.TotpCode))
+            {
+                // Step 1: hand the browser a one-shot challenge token
+                // and stop. The JWT is NOT issued here; the browser
+                // has to come back to /api/auth/login/totp with the
+                // token + the 6-digit code.
+                string pending = pendingLogins.Mint(user.Id);
+                return Result.Success(BuildChallenge(user, pending));
+            }
+
+            // Step 1b: the caller submitted the code inline with
+            // email+password. Verify it before issuing the JWT.
+            // VerifyAsync updates LastUsedCounter and persists; that
+            // second SaveChangesAsync is intentional.
+            var verifyResult = await totpService.VerifyAsync(user.Id, query.TotpCode.Trim(), cancellationToken);
+            if (verifyResult.IsFailure)
+            {
+                return Result.Failure<AuthResponse>(verifyResult.Error);
+            }
+        }
+
+        return Result.Success(BuildTokens(user, tokens, clock));
+    }
+
+    private static AuthResponse BuildTokens(User user, ITokenService tokens, IClock clock)
+    {
         var refresh = tokens.IssueRefreshToken();
         var access = tokens.IssueAccessToken(user, ["user"]);
-
-        return Result.Success(new AuthResponse(
-            access,
-            refresh.Token,
-            clock.UtcNow.AddHours(1),
-            refresh.ExpiresAt,
-            new UserSummary(
-                user.Id.Value,
-                user.Email.Value,
-                user.DisplayName.Value)));
+        return new AuthResponse(
+            AccessToken: access,
+            RefreshToken: refresh.Token,
+            AccessTokenExpiresAt: clock.UtcNow.AddHours(1),
+            RefreshTokenExpiresAt: refresh.ExpiresAt,
+            User: new UserSummary(user.Id.Value, user.Email.Value, user.DisplayName.Value));
     }
+
+    private static AuthResponse BuildChallenge(User user, string pendingToken) =>
+        new(
+            AccessToken: null,
+            RefreshToken: null,
+            AccessTokenExpiresAt: null,
+            RefreshTokenExpiresAt: null,
+            User: new UserSummary(user.Id.Value, user.Email.Value, user.DisplayName.Value),
+            RequiresTotp: true,
+            PendingTotpToken: pendingToken);
 }

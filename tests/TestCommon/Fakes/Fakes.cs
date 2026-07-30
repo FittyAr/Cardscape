@@ -1,7 +1,13 @@
+using System.Security.Cryptography;
+using System.Text;
 using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Authentication.Abstractions;
 using Cardscape.Domain.Activities;
+using Cardscape.Domain.Authentication.Totp;
+using Cardscape.Domain.Authentication.Totp.Errors;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
@@ -12,6 +18,7 @@ using Cardscape.Domain.Members;
 using Cardscape.Domain.Recurrence;
 using Cardscape.Domain.Voting;
 using Cardscape.Domain.Workspaces;
+using OtpNet;
 
 namespace Cardscape.Tests.Common.Fakes;
 
@@ -472,4 +479,223 @@ public sealed class InMemoryCardRecurrenceRepository
         Task.FromResult<IReadOnlyList<CardRecurrence>>(
             Store.Values.Where(r => r.IsActive && r.NextOccurrenceAt <= now)
                 .OrderBy(r => r.NextOccurrenceAt).Take(limit).ToList());
+}
+
+/// <summary>
+/// In-memory <see cref="ITotpCredentialRepository"/>. The
+/// <c>EncryptedSecret</c> column is treated as the cleartext
+/// base32 secret because the <see cref="IdentitySecretProtector"/>
+/// test double below is the identity function. The default
+/// <see cref="ITotpService"/> test double (FakeTotpService)
+/// uses the same convention.
+/// </summary>
+public sealed class InMemoryTotpCredentialRepository
+    : InMemoryRepositoryBase<TotpCredential, TotpCredentialId>, ITotpCredentialRepository
+{
+    public Task<TotpCredential?> FindForUserAsync(UserId userId, CancellationToken ct = default) =>
+        Task.FromResult(Store.Values.FirstOrDefault(c => c.UserId == userId));
+}
+
+/// <summary>
+/// Identity-function <see cref="ISecretProtector"/>. The TOTP
+/// secret in the fake repository is stored as the cleartext
+/// base32 string; the service unprotects it back to the same
+/// string. Production wires <c>DataProtectionSecretProtector</c>.
+/// </summary>
+public sealed class IdentitySecretProtector : ISecretProtector
+{
+    public string Protect(string plaintext) => plaintext;
+    public string Unprotect(string protectedValue) => protectedValue;
+}
+
+/// <summary>
+/// Test double for <see cref="ITotpService"/>. The "secret" used
+/// for verification is the cleartext stored in the credential's
+/// <c>EncryptedSecret</c> column (the fake protector is the
+/// identity). Verifying advances the credential's
+/// <see cref="TotpCredential.LastUsedCounter"/> exactly the way
+/// the production service does.
+/// </summary>
+public sealed class FakeTotpService(
+    ITotpCredentialRepository credentials,
+    ISecretProtector protector,
+    IClock clock,
+    IUnitOfWork unitOfWork) : ITotpService
+{
+    public async Task<Result<TotpEnrollment>> EnrollAsync(UserId userId, CancellationToken ct)
+    {
+        var existing = await credentials.FindForUserAsync(userId, ct);
+        if (existing is not null && !existing.IsDeleted)
+        {
+            return Result.Failure<TotpEnrollment>(TotpErrors.AlreadyEnrolled);
+        }
+
+        byte[] secretBytes = KeyGeneration.GenerateRandomKey(20);
+        string base32Secret = Base32Encoding.ToString(secretBytes);
+
+        var recoveryCodes = new List<string>(TotpCredential.RecoveryCodeCount);
+        var hashedLines = new List<string>(TotpCredential.RecoveryCodeCount);
+        for (int i = 0; i < TotpCredential.RecoveryCodeCount; i++)
+        {
+            byte[] codeBytes = RandomNumberGenerator.GetBytes(TotpCredential.RecoveryCodeLength);
+            recoveryCodes.Add(Convert.ToBase64String(codeBytes)
+                .TrimEnd('=')
+                .Replace('+', '-')
+                .Replace('/', '_')
+                [..TotpCredential.RecoveryCodeLength]);
+            hashedLines.Add(Convert.ToHexString(
+                SHA256.HashData(Encoding.UTF8.GetBytes(recoveryCodes[^1]))).ToLowerInvariant());
+        }
+
+        var enrollResult = TotpCredential.Enroll(
+            userId, protector.Protect(base32Secret),
+            string.Join('\n', hashedLines), clock.UtcNow);
+        if (enrollResult.IsFailure)
+        {
+            return Result.Failure<TotpEnrollment>(enrollResult.Error);
+        }
+
+        await credentials.AddAsync(enrollResult.Value, ct);
+        await unitOfWork.SaveChangesAsync(ct);
+
+        string accountLabel = Uri.EscapeDataString(userId.Value.ToString());
+        string otpauth = $"otpauth://totp/Cardscape:{accountLabel}?secret={base32Secret}&issuer=Cardscape";
+        return Result.Success(new TotpEnrollment(
+            enrollResult.Value.Id, base32Secret, otpauth, recoveryCodes));
+    }
+
+    public async Task<Result<long>> VerifyAsync(UserId userId, string code, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(code) || code.Length is < 6 or > 10)
+        {
+            return Result.Failure<long>(TotpErrors.InvalidCode);
+        }
+
+        var credential = await credentials.FindForUserAsync(userId, ct);
+        if (credential is null || credential.IsDeleted)
+        {
+            return Result.Failure<long>(TotpErrors.NotEnrolled);
+        }
+
+        string cleartextSecret = protector.Unprotect(credential.EncryptedSecret);
+        var totp = new Totp(Base32Encoding.ToBytes(cleartextSecret));
+
+        if (!totp.VerifyTotp(code.Trim(), out long matchedStep, VerificationWindow.RfcSpecifiedNetworkDelay))
+        {
+            return Result.Failure<long>(TotpErrors.InvalidCode);
+        }
+
+        if (matchedStep <= credential.LastUsedCounter)
+        {
+            return Result.Failure<long>(TotpErrors.InvalidCode);
+        }
+
+        credential.RecordVerification(matchedStep, clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success(matchedStep);
+    }
+
+    public async Task<Result> ConsumeRecoveryCodeAsync(UserId userId, string code, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return Result.Failure(TotpErrors.InvalidRecoveryCode);
+        }
+
+        var credential = await credentials.FindForUserAsync(userId, ct);
+        if (credential is null || credential.IsDeleted)
+        {
+            return Result.Failure(TotpErrors.NotEnrolled);
+        }
+
+        string submittedHash = Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(code.Trim()))).ToLowerInvariant();
+        var lines = credential.RecoveryCodesHash
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
+        int matchIndex = lines.FindIndex(l => string.Equals(l, submittedHash, StringComparison.Ordinal));
+        if (matchIndex < 0)
+        {
+            return Result.Failure(TotpErrors.InvalidRecoveryCode);
+        }
+
+        lines[matchIndex] = $"used:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+        credential.RecordRecoveryCodeUsed(string.Join('\n', lines), clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    public async Task<Result> DisableAsync(UserId userId, string code, CancellationToken ct)
+    {
+        var totpResult = await VerifyAsync(userId, code, ct);
+        if (totpResult.IsSuccess)
+        {
+            var cred = await credentials.FindForUserAsync(userId, ct);
+            cred?.Disable(clock.UtcNow);
+            await unitOfWork.SaveChangesAsync(ct);
+            return Result.Success();
+        }
+
+        var recoveryResult = await ConsumeRecoveryCodeAsync(userId, code, ct);
+        if (recoveryResult.IsSuccess)
+        {
+            var cred = await credentials.FindForUserAsync(userId, ct);
+            cred?.Disable(clock.UtcNow);
+            await unitOfWork.SaveChangesAsync(ct);
+            return Result.Success();
+        }
+
+        return Result.Failure(TotpErrors.InvalidCode);
+    }
+
+    public async Task<TotpStatus> GetStatusAsync(UserId userId, CancellationToken ct)
+    {
+        var credential = await credentials.FindForUserAsync(userId, ct);
+        if (credential is null || credential.IsDeleted)
+        {
+            return new TotpStatus(IsEnrolled: false, EnrolledAt: null, RemainingRecoveryCodes: 0);
+        }
+
+        int remaining = credential.RecoveryCodesHash
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Count(l => !l.StartsWith("used:", StringComparison.Ordinal));
+        return new TotpStatus(IsEnrolled: true, EnrolledAt: credential.CreatedAt, RemainingRecoveryCodes: remaining);
+    }
+}
+
+/// <summary>
+/// In-memory <see cref="IPendingTotpLoginStore"/>. Mirrors the
+/// production behaviour: <c>Mint</c> produces a 32-byte
+/// base64 token bound to a <see cref="UserId"/> with a 5-minute
+/// TTL; <c>Consume</c> is one-shot (TryRemove) and returns
+/// <c>null</c> for unknown / expired / already-consumed tokens.
+/// </summary>
+public sealed class InMemoryPendingTotpLoginStore : IPendingTotpLoginStore
+{
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, (UserId UserId, DateTimeOffset ExpiresAt)> _entries = new(System.StringComparer.Ordinal);
+
+    public string Mint(UserId userId)
+    {
+        byte[] bytes = RandomNumberGenerator.GetBytes(32);
+        string token = Convert.ToBase64String(bytes);
+        _entries[token] = (userId, DateTimeOffset.UtcNow.AddMinutes(5));
+        return token;
+    }
+
+    public UserId? Consume(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return null;
+        }
+        if (!_entries.TryRemove(token, out var entry))
+        {
+            return null;
+        }
+        if (entry.ExpiresAt <= DateTimeOffset.UtcNow)
+        {
+            return null;
+        }
+        return entry.UserId;
+    }
 }

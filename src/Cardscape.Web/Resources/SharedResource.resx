@@ -179,4 +179,7 @@
   <data name="AiGenerateChecklist" xml:space="preserve"><value>Make checklist</value></data>
   <data name="AiSuggestOwners" xml:space="preserve"><value>Smart assign</value></data>
   <data name="NotFoundBlurb" xml:space="preserve"><value>The page you were looking for does not exist.</value></data>
+  <data name="Login_TotpCode_Label" xml:space="preserve"><value>Two-factor code</value></data>
+  <data name="Login_TotpCode_Required" xml:space="preserve"><value>Enter the 6-digit code from your authenticator app</value></data>
+  <data name="Login_TotpCode_Invalid" xml:space="preserve"><value>The code is invalid or expired</value></data>
 </root>

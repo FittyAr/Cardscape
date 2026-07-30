@@ -433,7 +433,7 @@ The features from the feature inventory §14 (security) and
 - Web UI: `/workspaces/{id}/saml` configuration page.
 - Off by default per workspace; opt-in.
 
-### 4.3 2FA / TOTP
+### 4.3 2FA / TOTP ✅ DONE
 - New bounded context `Cardscape.Domain.Authentication.Totp/`
   with `TotpCredential` (user → encrypted secret, recovery
   codes hash, last-used counter).
@@ -441,14 +441,17 @@ The features from the feature inventory §14 (security) and
   URL), `POST /api/auth/2fa/verify` (accepts the first 6-digit
   code, marks the credential active), `POST /api/auth/2fa/disable`.
 - The login flow gains a "TOTP code" step when the user has an
-  active credential.
+  active credential. ✅ DONE (gated behind
+  `LoginUserQuery.HasActiveTotpCredential` branching; a
+  `PendingTotpToken` round-trips the user through
+  `POST /api/auth/login/totp`).
 - Use `OtpNet` (the maintained fork) from
   `Directory.Packages.props` for the TOTP math.
 - New migration `IssueTotpCredentials`.
 - Web UI: `Settings → Two-factor authentication` page with the
   QR code + recovery codes.
 
-### 4.4 SCIM provisioning
+### 4.4 SCIM provisioning ✅ DONE
 - New bounded context `Cardscape.Domain.Authentication.Scim/`
   with the SCIM v2 endpoints
   (`/scim/v2/Users`, `/scim/v2/Groups`).

@@ -187,6 +187,12 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<ITotpCredentialRepository, TotpCredentialRepository>(sp => sp.GetRequiredService<TotpCredentialRepository>());
         services.AddScoped<ITotpService, TotpService>();
 
+        // Two-step 2FA login: the password check mints a one-shot
+        // PendingTotpToken; the /api/auth/login/totp endpoint consumes
+        // it. Singleton because the store is in-memory and shared by
+        // every request.
+        services.AddSingleton<Cardscape.Application.Authentication.Abstractions.IPendingTotpLoginStore, InMemoryPendingTotpLoginStore>();
+
         // 2FA secret encryption: protected with the same
         // ASP.NET Core data-protection ring the rest of the
         // app uses (Cookie + antiforgery + now TOTP secrets).
