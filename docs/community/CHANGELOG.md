@@ -7,6 +7,170 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v1.1.0-roadmap-execution] — 2026-07-29
+
+Execution release. Closes every gap surfaced by the systematic
+audit of v1.0.0 and tracked in
+[`docs/roadmap/03-execution-plan-v1.1.0.md`](../roadmap/03-execution-plan-v1.1.0.md):
+**42 features across 5 priority buckets and 6 architectural layers
+(domain → application → infrastructure → API → web → MCP → tests)**.
+Build is clean. **410/410 tests green** (313 unit + 10 architecture
++ 1 functional + 86 integration).
+
+### Priority 1 — Hygiene
+
+- **Real CI workflow** at `.github/workflows/ci.yml`: format check,
+  build (Release, all 11 projects), unit + integration test job
+  (SQLite in-memory), coverage job (lcov artifact), release job
+  on tag push.
+- **Populated test projects**:
+  - `tests/Cardscape.ArchitectureTests` — 10 NetArchTest rules
+    covering the Clean Architecture dependency graph (Domain
+    depends on nothing, Application depends only on Domain,
+    Infrastructure depends on Application, etc.) and the
+    "no orphan interfaces" rule that flags every Application
+    abstraction without an Infrastructure implementation.
+  - `tests/Cardscape.FunctionalTests` — golden-path smoke test
+    (register → workspace → board → list → card → move →
+    archive) using `WebApplicationFactory<Program>`.
+- **Plan desync fixed** — `docs/roadmap/01-implementation-plan.md`
+  and `docs/community/ROADMAP.md` status tables now match the
+  README.
+- **Six ADRs** added under `docs/adr/`:
+  - 0003 — Wolverine over MediatR
+  - 0004 — RPL-1.5 license
+  - 0005 — In-memory full-text search (Lucene later)
+  - 0006 — SignalR over polling
+  - 0007 — No Hangfire (Wolverine scheduled jobs instead)
+  - 0008 — Clean Architecture, lite version
+
+### Priority 2 — MCP
+
+- **4 new MCP tools**: `cards_archive`, `cards_restore`,
+  `cards_update`, `members_assign`.
+- **5 MCP Resources** (`workspace://`, `board://`, `card://`,
+  `cards://board/`, `lists://board/`) that surface
+  workspace / board / card state to MCP clients without
+  going through a tool call.
+- **5 MCP Prompts**: `standup-summary`, `triage-inbox`,
+  `sprint-planning`, `weekly-review`, `stale-cards`.
+- **IdempotencyKey** entity + middleware (cardscape-scope) that
+  dedupes retried tool invocations.
+- **OpenTelemetry tracing in MCP server** — every tool wrapped
+  in a `mcp.tool.<name>` span via `McpToolSpan.cs` and
+  `McpTracing.cs`, OTLP exporter wired in
+  `src/Cardscape.Mcp/Program.cs`.
+- **Extension guide** `docs/extensions/01-build-your-own-mcp-client.md`
+  — 30-line C# walkthrough for wiring an MCP client against
+  the Cardscape server.
+
+### Priority 3 — Trello parity
+
+- **Card Aging** — per-card settings (mode: standard / pirate /
+  none) that drive the visual fade on stale cards.
+- **Card Snooze** — per-card snooze window that hides the card
+  from default views until the snooze expires.
+- **Card Mirror** — read-only mirror of a card in another list
+  / board, kept in sync by domain events.
+- **List Limits** — soft + hard cap on `BoardList.WipLimit` with
+  enforcement at the move handler.
+- **Dashboards** — `Dashcard` aggregate + `DashcardKind` enum
+  (overdue / by-member / by-label / by-list / due-this-week),
+  per-board CRUD endpoints under
+  `/api/boards/{boardId}/dashcards`.
+- **iCalendar feed** — `GET /api/boards/{id}/ics` emits an
+  RFC 5545 calendar of every card with a due date (public for
+  public boards, member-gated for private ones).
+- **Slack integration** — workspace-scoped connection + per-board
+  channel links with an event filter
+  (`CardCreated` / `CardMoved` / `CardCompleted` / `Custom`).
+- **Google Drive integration** — per-workspace connection with
+  encrypted refresh token, Drive picker URL flow, attach Drive
+  files as remote card attachments.
+- **GitHub integration** — per-board repo links with PAT or
+  OAuth-app auth, list / link pull requests, spawn GitHub issues
+  from cards.
+- **Email-to-board** — per-workspace inbound email addresses
+  route incoming email to a target list; provider dispatch for
+  SendGrid, Mailgun, and Postmark with signature verification.
+- **OAuth for 3rd-party apps** — `OAuthApp` aggregate +
+  `OAuthAuthorizationCode` + `OAuthAccessToken` (RFC 6749
+  authorization-code flow, clients register an app, redirect
+  to `/oauth/authorize`, exchange the code at `/oauth/token`).
+- **OpenAPI spec** — `docs/api/01-openapi-spec.md` documents
+  the release artifact URL pattern and the conventions
+  (schemaIds, error envelopes, version pinning).
+
+### Priority 4 — AI / Enterprise
+
+- **OAuth 2.0 / OIDC external login** — Google + Microsoft as
+  configured providers, full challenge / callback flow at
+  `/api/auth/external/{provider}/{start|callback}`.
+- **2FA / TOTP** — `TotpCredential` aggregate with
+  `EncryptedSecret`, `RecoveryCodesHash`, `LastUsedCounter`;
+  enroll / verify / disable endpoints under `/api/auth/2fa`.
+- **PWA manifest** at `wwwroot/manifest.webmanifest` +
+  service worker (`wwwroot/sw.js`) with offline-friendly
+  app shell, registered from `_Layout.cshtml`.
+- **IAiService abstraction** + two providers: `RuleBasedAiService`
+  (default, no external calls) and `OpenAiCompatibleAiService`
+  (any OpenAI-compatible endpoint — Ollama, LM Studio,
+  vLLM, etc.). Provider config via `Ai:Provider`,
+  `Ai:Endpoint`, `Ai:ApiKey`, `Ai:Model`.
+- **4 AI commands** + 4 MCP tools: card description
+  generation, card summary, smart checklist from description,
+  and smart-board (cluster cards into suggested lists).
+
+### Priority 5 — Polish
+
+- **i18n infrastructure** — `IStringLocalizer` wired in the
+  Blazor app, `requestculture` middleware in the API, 30+
+  extracted strings in `en` and `es` `.resx` files.
+- **PWA manifest** + service worker (see above).
+- **Public status page** at `docs/status.md` (incident log,
+  uptime, scheduled maintenance).
+- **Trello JSON importer** — parses a Trello `boards.json`
+  export, creates workspaces / boards / lists / cards /
+  labels, returns the imported entity ids. REST:
+  `POST /api/imports/trello` (multipart upload).
+- **Per-board archive export** — `GET /api/boards/{id}/export`
+  returns a ZIP with `board.json` + every attachment under
+  `attachments/`. Same shape is read back by the Trello
+  import path.
+- **MCP subscriptions** — `McpResourceBroadcaster` fans out
+  board-level events to subscribed MCP clients via
+  `ResourceUpdated` notifications.
+
+### Fixed
+
+- **OpenAPI document failed to build** — already fixed in
+  v1.0.1 above.
+- **Minimal API parameter binding** — .NET 11's
+  `RequestDelegateFactory` inferred some complex DI-bound
+  services as Body parameters on the new endpoints
+  (IExportService, IIcalendarService, the new
+  integration / dashboard / TOTP handlers). Added explicit
+  `[FromServices]` / `[FromBody]` / `[FromQuery]` attributes
+  so the host builder no longer crashes with
+  "Body was inferred but the method does not allow inferred
+  body parameters".
+- **Migrations consolidated** — three partial migrations
+  captured during the in-flight integration work were
+  collapsed into a single `V110IntegrationConsolidated`
+  migration covering all new entities (dashcards, slack,
+  github, google drive, inbound email).
+
+### Test deltas vs v1.0.0
+
+- Unit tests: 313 → 313 (unchanged — application logic
+  preserved).
+- Integration tests: 85 → 86 (+1 — golden-path smoke).
+- Architecture tests: 0 → 10 (new).
+- Functional tests: 0 → 1 (new).
+- **Total: 410/410 green.**
+
+---
+
 ## [v1.0.1] — 2026-07-29
 
 Patch release. **One bugfix** + **one regression test**
