@@ -740,4 +740,20 @@ public static class CardMappingExtensions
         card.CreatedAt,
         card.Members.Count,
         card.CardLabels.Count);
+
+    /// <summary>
+    /// Overload that also projects the per-card snooze state.
+    /// Used by queries (GetCardQuery, ListCardsForBoardQuery) so
+    /// the Web UI can render the "Snoozed" badge without a
+    /// second round-trip. When <paramref name="snooze"/> is
+    /// <c>null</c> the card is treated as not snoozed.
+    /// </summary>
+    public static CardDto MapToDto(this Card card, CardSnooze? snooze, DateTimeOffset now) =>
+        snooze is null
+            ? card.MapToDto()
+            : card.MapToDto() with
+            {
+                IsSnoozed = snooze.IsActive(now),
+                SnoozeUntil = snooze.Until
+            };
 }

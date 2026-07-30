@@ -133,6 +133,14 @@
     private Guid? openAddCardFor;
     private string newCardTitle = string.Empty;
 
+    // P3.2 / G6b — "show snoozed" toggle. Default off so the
+    // board view matches the API default (snoozed cards are
+    // hidden unless the caller asks for them via
+    // ?includeSnoozed=true). Flipping the button re-fetches
+    // the board cards with the new flag.
+    private bool showSnoozed;
+    private bool togglingSnoozed;
+
     // Card aging: the board-scoped CardAging extension stores the
     // chosen mode in its ConfigJson. We fetch it once with the rest
     // of the board data and apply the opacity in the card template.
@@ -227,7 +235,13 @@
         lists = listsResult.IsSuccess ? listsResult.Value : [];
 
         cardsByList.Clear();
-        ApiResult<IReadOnlyList<CardSummaryDto>> cardsResult = await CardsApi.ListForBoardAsync(BoardId);
+        // P3.2 / G6b — pass `includeSnoozed` through to the API so
+        // the server-side filter in `ListCardsForBoardQueryHandler`
+        // can decide which cards belong in the projection. The
+        // badge + reduced opacity below are driven entirely by the
+        // returned `IsSnoozed` flag on each `CardSummaryDto`.
+        ApiResult<IReadOnlyList<CardSummaryDto>> cardsResult = await CardsApi.ListForBoardAsync(
+            BoardId, includeArchived: false, includeSnoozed: showSnoozed);
         if (cardsResult.IsSuccess)
         {
             foreach (CardSummaryDto card in cardsResult.Value!)
@@ -240,6 +254,21 @@
 
                 cardsByList[card.ListId] = [.. bucket, card];
             }
+        }
+    }
+
+    private async Task ToggleSnoozedAsync()
+    {
+        if (togglingSnoozed) return;
+        togglingSnoozed = true;
+        try
+        {
+            showSnoozed = !showSnoozed;
+            await ReloadListsAndCardsAsync();
+        }
+        finally
+        {
+            togglingSnoozed = false;
         }
     }
 

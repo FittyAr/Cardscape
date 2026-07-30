@@ -6,7 +6,7 @@ namespace Cardscape.Web.Services.Api;
 public interface ICardsApiClient
 {
     Task<ApiResult<IReadOnlyList<CardSummaryDto>>> ListForBoardAsync(
-        Guid boardId, bool includeArchived = false, CancellationToken ct = default);
+        Guid boardId, bool includeArchived = false, bool includeSnoozed = false, CancellationToken ct = default);
     Task<ApiResult<CardDto>> GetAsync(Guid cardId, CancellationToken ct = default);
     Task<ApiResult<CardDto>> CreateAsync(
         Guid listId, string title, string? description, CancellationToken ct = default);
@@ -27,6 +27,23 @@ public interface ICardsApiClient
     Task<ApiResult<CardDto>> AttachLabelAsync(Guid cardId, Guid labelId, CancellationToken ct = default);
     Task<ApiResult<CardDto>> DetachLabelAsync(Guid cardId, Guid labelId, CancellationToken ct = default);
 
+    // G6b — Card Snooze (P3.2). Wraps the REST endpoints at
+    // `/api/cards/{id}/snooze` and the board-scoped
+    // `/api/cards/snoozed?boardId=...` list. The Web UI
+    // toggles the snooze in `CardDetail.razor` and the
+    // "show snoozed" filter in `BoardDetail.razor`.
+    Task<ApiResult<DateTimeOffset>> SnoozeAsync(
+        Guid cardId, DateTimeOffset until, CancellationToken ct = default);
+    Task<ApiResult> UnsnoozeAsync(Guid cardId, CancellationToken ct = default);
+    Task<ApiResult<IReadOnlyList<Guid>>> ListSnoozedAsync(
+        Guid boardId, CancellationToken ct = default);
+
+    // G6c — "Mirror to..." button. Wraps `POST /api/cards/{id}/mirror`
+    // which dispatches the canonical `MirrorCardCommand` and returns
+    // the new (mirrored) card id wrapped in `MirrorCardResultDto`.
+    Task<ApiResult<MirrorCardResultDto>> MirrorToAsync(
+        Guid cardId, Guid targetListId, CancellationToken ct = default);
+
     Task<ApiResult<IReadOnlyList<CalendarEntryDto>>> CalendarAsync(
         DateTimeOffset from, DateTimeOffset to, Guid? boardId = null, CancellationToken ct = default);
 }
@@ -34,10 +51,10 @@ public interface ICardsApiClient
 public sealed class CardsApiClient(IHttpClientFactory http) : ApiClientBase(http), ICardsApiClient
 {
     public async Task<ApiResult<IReadOnlyList<CardSummaryDto>>> ListForBoardAsync(
-        Guid boardId, bool includeArchived = false, CancellationToken ct = default)
+        Guid boardId, bool includeArchived = false, bool includeSnoozed = false, CancellationToken ct = default)
     {
         HttpResponseMessage response = await CreateClient().GetAsync(
-            $"api/cards/?boardId={boardId}&includeArchived={includeArchived}", ct);
+            $"api/cards/?boardId={boardId}&includeArchived={includeArchived}&includeSnoozed={includeSnoozed}", ct);
         return await ReadAsync<IReadOnlyList<CardSummaryDto>>(response, ct);
     }
 
@@ -148,6 +165,41 @@ public sealed class CardsApiClient(IHttpClientFactory http) : ApiClientBase(http
     {
         HttpResponseMessage response = await CreateClient().DeleteAsync($"api/cards/{cardId}/labels/{labelId}", ct);
         return await ReadAsync<CardDto>(response, ct);
+    }
+
+    public async Task<ApiResult<DateTimeOffset>> SnoozeAsync(
+        Guid cardId, DateTimeOffset until, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
+            $"api/cards/{cardId}/snooze",
+            new SnoozeCardRequestDto(until),
+            ct);
+        return await ReadAsync<DateTimeOffset>(response, ct);
+    }
+
+    public async Task<ApiResult> UnsnoozeAsync(Guid cardId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().DeleteAsync(
+            $"api/cards/{cardId}/snooze", ct);
+        return await ReadAsync(response, ct);
+    }
+
+    public async Task<ApiResult<IReadOnlyList<Guid>>> ListSnoozedAsync(
+        Guid boardId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().GetAsync(
+            $"api/cards/snoozed?boardId={boardId}", ct);
+        return await ReadAsync<IReadOnlyList<Guid>>(response, ct);
+    }
+
+    public async Task<ApiResult<MirrorCardResultDto>> MirrorToAsync(
+        Guid cardId, Guid targetListId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
+            $"api/cards/{cardId}/mirror",
+            new { TargetListId = targetListId },
+            ct);
+        return await ReadAsync<MirrorCardResultDto>(response, ct);
     }
 
     public async Task<ApiResult<IReadOnlyList<CalendarEntryDto>>> CalendarAsync(

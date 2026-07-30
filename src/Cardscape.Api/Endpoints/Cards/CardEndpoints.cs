@@ -1,3 +1,4 @@
+using Cardscape.Application.Cards;
 using Cardscape.Application.Cards.Commands;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Cards.Queries;
@@ -6,6 +7,23 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Wolverine;
+// G6c — disambiguate the two `MirrorCardCommand` records that live
+// in the `Cardscape.Application.Cards` namespace (the real one in
+// `CardscapeExtensions` that provisions a new `Card` row + a
+// `CardMirror` pointer, and the stub in `AdditionalCardCommands`
+// that the MCP tool also happens to compile against). We bind the
+// canonical one explicitly so the HTTP endpoint and the MCP tool
+// agree on the same shape. The matching `MirrorCardResult` is
+// nested inside the same static class.
+using MirrorCmd = Cardscape.Application.Cards.CardscapeExtensions.MirrorCardCommand;
+using MirrorResult = Cardscape.Application.Cards.CardscapeExtensions.MirrorCardResult;
+// G6b — disambiguate the snooze commands that live inside the
+// `CardscapeExtensions` static class (consolidated command
+// bucket). The aliases also make it clear that the endpoint is
+// binding the canonical (Wolverine-handler-backed) command and
+// not a stray test stub.
+using SnoozeCmd = Cardscape.Application.Cards.CardscapeExtensions.SnoozeCardCommand;
+using UnsnoozeCmd = Cardscape.Application.Cards.CardscapeExtensions.UnsnoozeCardCommand;
 
 namespace Cardscape.Api.Endpoints.Cards;
 
@@ -15,9 +33,10 @@ public static class CardEndpoints
     {
         var group = app.MapGroup("/api/cards").RequireAuthorization().WithTags("Cards");
 
-        group.MapGet("/", async (Guid boardId, bool includeArchived, IMessageBus bus, CancellationToken ct) =>
+        group.MapGet("/", async (Guid boardId, bool includeArchived, bool includeSnoozed, IMessageBus bus, CancellationToken ct) =>
         {
-            var result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(new ListCardsForBoardQuery(boardId, includeArchived), ct);
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
+                new ListCardsForBoardQuery(boardId, includeArchived, includeSnoozed), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
@@ -33,6 +52,17 @@ public static class CardEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CalendarEntryDto>>>(
                 new ListCardsDueInRangeQuery(from, to, boardId), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+        });
+
+        // Snoozed-cards list for a single board. The Web UI uses
+        // this to render the "Show snoozed" toggle; the MCP
+        // `cards_list_snoozed` tool calls into the same query
+        // (ListSnoozedCardIdsQuery) directly via the bus.
+        group.MapGet("/snoozed", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<Guid>>>(
+                new ListSnoozedCardIdsQuery(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
@@ -126,6 +156,41 @@ public static class CardEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
+        // P3.3 / G6c — mirror the card to a different list. The
+        // backing `MirrorCardCommand` (CardscapeExtensions) creates a
+        // new `Card` row in the target list and records a
+        // `CardMirror` pointer. Returns the new (mirrored) card id
+        // so the Web UI can show a success notification and link
+        // to the mirrored card.
+        group.MapPost("/{cardId:guid}/mirror", async (Guid cardId, MirrorBody body, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<MirrorResult>>(
+                new MirrorCmd(cardId, body.TargetListId), ct);
+            return result.IsSuccess
+                ? Results.Created($"/api/cards/{result.Value.MirrorCardId}", result.Value)
+                : MapError(result.Error);
+        });
+
+        // Card Snooze (G6b / §3.2). The backing command lives
+        // inside CardscapeExtensions (the consolidated command
+        // bucket shipped with the G6 vertical slice). The endpoint
+        // returns the chosen "until" timestamp so the Web UI can
+        // refresh the badge without an extra GET round-trip.
+        group.MapPost("/{cardId:guid}/snooze", async (Guid cardId, SnoozeBody body, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<DateTimeOffset>>(
+                new SnoozeCmd(cardId, body.Until), ct);
+            return result.IsSuccess
+                ? Results.Ok(new { until = result.Value })
+                : MapError(result.Error);
+        });
+
+        group.MapDelete("/{cardId:guid}/snooze", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result>(new UnsnoozeCmd(cardId), ct);
+            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+        });
+
         return app;
     }
 
@@ -134,6 +199,8 @@ public static class CardEndpoints
     public sealed record DescriptionBody(string NewDescription);
     public sealed record MoveBody(Guid NewListId, double NewPosition);
     public sealed record DueDateBody(DateTimeOffset DueDate);
+    public sealed record MirrorBody(Guid TargetListId);
+    public sealed record SnoozeBody(DateTimeOffset Until);
 
     private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
     {

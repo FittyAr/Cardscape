@@ -6,6 +6,7 @@
 @using Cardscape.Web.Shared
 @using Cardscape.Web.Resources
 @using Microsoft.Extensions.Localization
+@using Radzen
 @inject ICardsApiClient Cards
 @inject ICommentsApiClient Comments
 @inject ICustomFieldsApiClient CustomFields
@@ -15,6 +16,8 @@
 @inject IRecurrenceApiClient Recurrence
 @inject IAiApiClient Ai
 @inject IStringLocalizer<SharedResource> L
+@inject DialogService DialogService
+@inject NotificationService Notify
 
 <PageTitle>@(card?.Title ?? "Card") — Cardscape</PageTitle>
 
@@ -28,6 +31,19 @@
         <RadzenCard>
             <div class="card-detail-header">
                 <h1>@card.Title</h1>
+                @* P3.2 / G6b — "Snoozed" badge. Rendered below the
+                   title only when the card carries an active snooze
+                   (Until > now). The unsnooze affordance is a small
+                   link so the user can flip the toggle in one click. *@
+                @if (card.IsSnoozed && card.SnoozeUntil is { } snoozeUntil)
+                {
+                    <div class="card-snoozed-badge">
+                        <RadzenBadge BadgeStyle="BadgeStyle.Warning"
+                                     Text="@($"Snoozed until {snoozeUntil.LocalDateTime:yyyy-MM-dd HH:mm}")" />
+                        <RadzenButton Text="Unsnooze" ButtonStyle="ButtonStyle.Light"
+                                      Size="ButtonSize.ExtraSmall" Click="@UnsnoozeAsync" />
+                    </div>
+                }
                 <div class="card-detail-actions">
                     @if (card.IsCompleted)
                     {
@@ -39,6 +55,17 @@
                     }
                     <RadzenButton Text="@(card.IsArchived ? "Restore" : "Archive")"
                                   ButtonStyle="ButtonStyle.Warning" Click="@ToggleArchive" />
+                    @* P3.3 / G6c — "Mirror to..." entry. Opens a RadzenDialog
+                       with a board picker + a list picker. On confirm the
+                       dialog returns the target list id and the parent
+                       calls ICardsApiClient.MirrorToAsync. *@
+                    <RadzenButton Text="@L["MirrorToButton"]"
+                                  Icon="content_copy"
+                                  ButtonStyle="ButtonStyle.Light"
+                                  Click="@OpenMirrorDialogAsync"
+                                  Disabled="@mirroring"
+                                  IsBusy="@mirroring"
+                                  title="@L["MirrorToTitle"]" />
                     <RadzenButton Text="@(voteState is { CurrentUserHasVoted: true } ? "♥ " : "♡ ")"
                                   ButtonStyle="@(voteState is { CurrentUserHasVoted: true } ? ButtonStyle.Danger : ButtonStyle.Light)"
                                   Click="@ToggleVoteAsync"
@@ -72,6 +99,30 @@
                 <dt>Labels</dt>
                 <dd>@card.LabelCount</dd>
             </dl>
+
+            @* P3.2 / G6b — snooze section. Hidden when the card is
+               already snoozed because the badge in the header
+               already surfaces the controls (and double-bookkeeping
+               would let the user stash the card twice). The
+               datetime picker defaults to "tomorrow 9am" so the
+               common case is one click. *@
+            @if (!card.IsSnoozed)
+            {
+                <div class="card-snooze-section">
+                    <h3>Snooze</h3>
+                    <RadzenDatePicker @bind-Value="snoozeUntilLocal"
+                                      ShowTime="true"
+                                      DateFormat="yyyy-MM-dd HH:mm"
+                                      Style="margin-right:.5rem" />
+                    <RadzenButton Text="Snooze until…"
+                                  Icon="schedule"
+                                  ButtonStyle="ButtonStyle.Secondary"
+                                  Click="@SnoozeAsync"
+                                  Disabled="@snoozing"
+                                  IsBusy="@snoozing" />
+                </div>
+            }
+
             @if (aiSuggestedOwners is { Count: > 0 })
             {
                 <RadzenCard class="ai-suggestions">
@@ -262,10 +313,22 @@
     private bool addingComment;
     private bool togglingVote;
     private bool aiBusy;
+    private bool snoozing;
     private string? aiGeneratedDescription;
     private string? aiSummary;
     private IReadOnlyList<AiOwnerSuggestionDto>? aiSuggestedOwners;
     private readonly AddCommentModel addCommentModel = new();
+
+    // P3.2 / G6b — default the snooze picker to "tomorrow 9am"
+    // so the common case is one click. The backend rejects
+    // values that are not strictly in the future, so the date
+    // is computed off the local clock each time the user opens
+    // the page (kept in @code so the same default persists
+    // across re-renders within the same session). Named
+    // `snoozeUntilLocal` to avoid clashing with the
+    // `CardDto.SnoozeUntil` property in the markup.
+    private DateTimeOffset snoozeUntilLocal = DateTimeOffset.Now.AddDays(1)
+        .Date.AddHours(9);
 
     private async Task GenerateDescriptionAsync()
     {
@@ -535,6 +598,63 @@
         if (result.IsSuccess) card = result.Value;
     }
 
+    private async Task SnoozeAsync()
+    {
+        if (snoozing || card is null) return;
+        if (snoozeUntilLocal <= DateTimeOffset.Now)
+        {
+            // The backend enforces this too, but failing fast
+            // here keeps the user from clicking through a 400.
+            return;
+        }
+
+        snoozing = true;
+        try
+        {
+            ApiResult<DateTimeOffset> result = await Cards.SnoozeAsync(CardId, snoozeUntilLocal);
+            if (result.IsSuccess)
+            {
+                // Refresh the card so the badge in the header
+                // picks up the new snooze without a hard reload.
+                await ReloadCardAsync();
+            }
+        }
+        finally
+        {
+            snoozing = false;
+        }
+    }
+
+    private async Task UnsnoozeAsync()
+    {
+        if (snoozing || card is null) return;
+        snoozing = true;
+        try
+        {
+            ApiResult result = await Cards.UnsnoozeAsync(CardId);
+            if (result.IsSuccess)
+            {
+                await ReloadCardAsync();
+            }
+        }
+        finally
+        {
+            snoozing = false;
+        }
+    }
+
+    // Shared reload for snooze/unsnooze. Keeps the rest of the
+    // page (comments, checklists, etc.) intact and only re-pulls
+    // the card itself.
+    private async Task ReloadCardAsync()
+    {
+        ApiResult<CardDto> refreshed = await Cards.GetAsync(CardId);
+        if (refreshed.IsSuccess && refreshed.Value is not null)
+        {
+            card = refreshed.Value;
+        }
+    }
+
     private async Task AddComment()
     {
         if (string.IsNullOrWhiteSpace(addCommentModel.Body)) return;
@@ -551,6 +671,47 @@
         finally
         {
             addingComment = false;
+        }
+    }
+
+    // P3.3 / G6c — open the "Mirror to..." dialog and, on
+    // confirm, call the mirror endpoint. The dialog returns the
+    // target list id; the card id is the page's [Parameter].
+    private bool mirroring;
+
+    private async Task OpenMirrorDialogAsync()
+    {
+        if (mirroring) return;
+
+        object? result = await DialogService.OpenAsync<MirrorCardDialog>(
+            L["MirrorToTitle"],
+            new Dictionary<string, object?> { { "SourceCardId", CardId } },
+            new DialogOptions { Width = "460px", Height = "auto", CloseDialogOnOverlayClick = true });
+
+        if (result is not MirrorCardDialog.MirrorCardDialogResult payload)
+        {
+            return;
+        }
+
+        mirroring = true;
+        try
+        {
+            ApiResult<MirrorCardResultDto> mirrorResult =
+                await Cards.MirrorToAsync(CardId, payload.TargetListId);
+            if (mirrorResult.IsSuccess)
+            {
+                Notify.Notify(NotificationSeverity.Success, L["MirrorToTitle"],
+                    L["MirrorToSuccess"]);
+            }
+            else
+            {
+                Notify.Notify(NotificationSeverity.Error, L["MirrorToTitle"],
+                    mirrorResult.Error ?? L["MirrorToFailed"]);
+            }
+        }
+        finally
+        {
+            mirroring = false;
         }
     }
 

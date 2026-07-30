@@ -244,16 +244,18 @@ not yet implemented.
 ### 3.2 Card Snooze
 - New `Cardscape.Domain/Cards/Snooze/` aggregate
   (`CardSnooze` + `CardSnoozeId` + value object
-  `SnoozeUntil(DateTimeOffset)`).
+  `SnoozeUntil(DateTimeOffset)`). ✅ DONE
 - `Card.Snooze(SnoozeUntil until)` and `Card.Unsnooze()`
-  methods; `Card.IsSnoozed(now)` query.
+  methods; `Card.IsSnoozed(now)` query. ✅ DONE
 - Snoozed cards are excluded from `CardQueries.List` by default;
-  a `?includeSnoozed=true` flag includes them.
-- New migration `IssueCardSnoozes` adds the table.
-- Web UI: section in `CardDetail.razor` with a datetime picker
-  and a "Snooze" button; "Snoozed" badge in card header.
+  a `?includeSnoozed=true` flag includes them. ✅ DONE
+- New migration `IssueCardSnoozes` adds the table. ✅ DONE
+- Web UI + `?includeSnoozed` flag: section in `CardDetail.razor`
+  with a datetime picker and a "Snooze" button; "Snoozed" badge
+  in card header; "Show snoozed" toggle on the board header.
+  ✅ DONE (this commit)
 - MCP tools: `cards_snooze`, `cards_unsnooze`,
-  `cards_list_snoozed`.
+  `cards_list_snoozed`. ✅ DONE
 
 ### 3.3 Card Mirror
 - New `Cardscape.Domain/Cards/MirroredCard.cs` aggregate
@@ -266,7 +268,11 @@ not yet implemented.
   handler).
 - New migration `IssueMirroredCards` adds the table.
 - Web UI: a "Mirror to..." button in the card menu that opens
-  a dialog with a board + list picker.
+  a dialog with a board + list picker. ✅ DONE (G6c, see
+  `src/Cardscape.Web/Pages/CardDetail.razor:41-49` and
+  `src/Cardscape.Web/Pages/MirrorCardDialog.razor`; calls
+  `ICardsApiClient.MirrorToAsync` which wraps
+  `POST /api/cards/{id}/mirror`).
 - MCP tool: `cards_mirror_to`.
 
 ### 3.4 List Limits (WIP cap)
