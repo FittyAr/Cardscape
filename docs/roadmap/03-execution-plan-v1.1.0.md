@@ -310,7 +310,9 @@ not yet implemented.
   `card.completed`, `comment.added`.
 - New migration `IssueSlackIntegrations`.
 - Web UI: `/workspaces/{id}/integrations/slack` with the
-  OAuth connect button.
+  OAuth connect button. ✅ **DONE on the UI side — G10**
+  (`src/Cardscape.Web/Pages/WorkspaceSlack.razor` +
+  `ISlackApiClient`).
 - MCP tools: `integrations_slack_connect`,
   `integrations_slack_list_channels`,
   `integrations_slack_unlink_channel`.
@@ -327,6 +329,10 @@ not yet implemented.
   against `https://www.googleapis.com/`.
 - OAuth flow under `/api/integrations/google/connect`,
   `/api/integrations/google/callback`.
+- Web UI: `/settings/integrations/google-drive` with the
+  connect / picker buttons. ✅ **DONE on the UI side —
+  G10** (`src/Cardscape.Web/Pages/SettingsGoogleDrive.razor`
+  + `IGoogleDriveApiClient`).
 - MCP tools: `integrations_google_drive_picker_url`,
   `integrations_google_drive_attach`.
 
@@ -341,7 +347,12 @@ not yet implemented.
   `AddHttpClient` against `https://api.github.com`.
 - OAuth flow under `/api/integrations/github/connect`.
 - Web UI: a "GitHub" section in the card menu with a list of
-  linked PRs / issues + a "Create issue" button.
+  linked PRs / issues + a "Create issue" button. ✅
+  **DONE on the UI side — G10**
+  (`src/Cardscape.Web/Pages/WorkspaceGitHub.razor` +
+  `IGitHubApiClient`): a per-workspace page with "Link a
+  repository", "List pull requests", and "Create issue from
+  card" cards.
 - MCP tools: `integrations_github_list_prs`,
   `integrations_github_list_issues`,
   `integrations_github_link_pr`,
@@ -363,7 +374,10 @@ not yet implemented.
   `cardscape+board-abc@in.example.com` in their Gmail.
 - New migration `IssueInboundEmailAddresses`.
 - Web UI: `/workspaces/{id}/integrations/email` with the
-  forwarding address + webhook secret.
+  forwarding address + webhook secret. ✅ **DONE on the UI
+  side — G10** (`src/Cardscape.Web/Pages/WorkspaceEmail.razor`
+  + `IEmailIntegrationApiClient`): webhook URL + a table
+  of registered email addresses with per-row remove.
 - MCP tool: `integrations_email_list_addresses`.
 
 ### 3.11 OAuth for third-party apps

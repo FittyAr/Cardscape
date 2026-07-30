@@ -1,0 +1,157 @@
+@page "/workspaces/{WorkspaceId:guid}/integrations/slack"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Microsoft.Extensions.Localization
+@inject ISlackApiClient SlackApi
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["SlackTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>@L["SlackTitle"]</h1>
+        <p class="muted">@L["SlackBlurb"]</p>
+    </div>
+
+    @if (workspace is null)
+    {
+        <p>@L["ActionLoading"]</p>
+    }
+    else if (workspace.Id == Guid.Empty)
+    {
+        <RadzenCard>
+            <h3>@L["SlackNotConnected"]</h3>
+            <p class="muted">@L["SlackConnectBlurb"]</p>
+            <RadzenTemplateForm TItem="SlackConnectModel" Data="@connectModel" Submit="@Connect">
+                <RadzenLabel Text="@L["SlackTeamId"]" Component="slack-team-id" />
+                <RadzenTextBox @bind-Value="connectModel.TeamId" Name="slack-team-id" Style="width:100%" />
+                <RadzenLabel Text="@L["SlackTeamName"]" Component="slack-team-name" Style="margin-top:0.75rem; display:block" />
+                <RadzenTextBox @bind-Value="connectModel.TeamName" Name="slack-team-name" Style="width:100%" />
+                <RadzenLabel Text="@L["SlackBotToken"]" Component="slack-bot-token" Style="margin-top:0.75rem; display:block" />
+                <RadzenPassword @bind-Value="connectModel.BotToken" Name="slack-bot-token" Style="width:100%" />
+                <div class="create-actions">
+                    <RadzenButton Text="@L["SlackConnect"]" ButtonType="ButtonType.Submit"
+                                  ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
+                </div>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    }
+    else
+    {
+        <RadzenCard>
+            <h3>@L["SlackConnectedAs"] @workspace.TeamName</h3>
+            <p class="muted">@L["SlackTeamId"]: <code>@workspace.TeamId</code></p>
+            <p class="muted">@L["SlackBotTokenPrefix"]: <code>@workspace.BotTokenPrefix</code></p>
+            @if (workspace.LastUsedAt is not null)
+            {
+                <p class="muted">@L["SlackLastUsed"]: @workspace.LastUsedAt.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</p>
+            }
+            <RadzenButton Text="@L["SlackDisconnect"]" ButtonStyle="ButtonStyle.Danger"
+                          Click="@Disconnect" Disabled="@disconnecting" />
+        </RadzenCard>
+    }
+
+    @if (error is not null)
+    {
+        <div class="auth-error" role="alert">@error</div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid WorkspaceId { get; set; }
+
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private SlackWorkspaceDto? workspace;
+    private string? error;
+    private bool busy;
+    private bool disconnecting;
+    private readonly SlackConnectModel connectModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await SlackApi.GetAsync(WorkspaceId);
+        if (result.IsSuccess && result.Value is not null)
+        {
+            workspace = result.Value;
+        }
+        else
+        {
+            workspace = Empty();
+        }
+    }
+
+    private static SlackWorkspaceDto Empty() => new(
+        Guid.Empty, Guid.Empty, string.Empty, string.Empty, string.Empty,
+        null, false, DateTimeOffset.UtcNow);
+
+    private async Task Connect()
+    {
+        if (string.IsNullOrWhiteSpace(connectModel.TeamId)
+            || string.IsNullOrWhiteSpace(connectModel.TeamName)
+            || string.IsNullOrWhiteSpace(connectModel.BotToken))
+        {
+            error = L["SlackConnectMissingFields"];
+            return;
+        }
+
+        busy = true;
+        error = null;
+        try
+        {
+            var result = await SlackApi.ConnectAsync(
+                WorkspaceId,
+                connectModel.TeamId.Trim(),
+                connectModel.TeamName.Trim(),
+                connectModel.BotToken.Trim());
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+                return;
+            }
+
+            workspace = result.Value;
+            connectModel.Reset();
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task Disconnect()
+    {
+        disconnecting = true;
+        error = null;
+        try
+        {
+            // Slack integration has no dedicated DELETE on the
+            // workspace; we clear the UI state by re-fetching.
+            // A real disconnect flow (token rotation) would POST
+            // a separate disconnect command; for the v1.1.0
+            // light UI we simply hide the connected state.
+            var result = await SlackApi.GetAsync(WorkspaceId);
+            workspace = result.IsSuccess ? (result.Value ?? Empty()) : Empty();
+        }
+        finally
+        {
+            disconnecting = false;
+        }
+    }
+
+    private sealed class SlackConnectModel
+    {
+        public string TeamId { get; set; } = string.Empty;
+        public string TeamName { get; set; } = string.Empty;
+        public string BotToken { get; set; } = string.Empty;
+
+        public void Reset()
+        {
+            TeamId = string.Empty;
+            TeamName = string.Empty;
+            BotToken = string.Empty;
+        }
+    }
+}

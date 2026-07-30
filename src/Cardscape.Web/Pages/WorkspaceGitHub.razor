@@ -1,0 +1,272 @@
+@page "/workspaces/{WorkspaceId:guid}/integrations/github"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Microsoft.Extensions.Localization
+@inject IGitHubApiClient GitHubApi
+@inject IBoardsApiClient BoardsApi
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["GitHubTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>@L["GitHubTitle"]</h1>
+        <p class="muted">@L["GitHubBlurb"]</p>
+    </div>
+
+    <RadzenCard>
+        <h3>@L["GitHubLinkRepo"]</h3>
+        <RadzenTemplateForm TItem="LinkRepoModel" Data="@linkModel" Submit="@LinkRepo">
+            <RadzenLabel Text="@L["GitHubBoard"]" Component="gh-board" />
+            <RadzenDropDown @bind-Value="linkModel.BoardId" Name="gh-board" Style="width:100%"
+                            Data="@boards" TextProperty="Name" ValueProperty="Id"
+                            AllowClear="true" Placeholder="@L["GitHubSelectBoard"]" />
+            <RadzenLabel Text="@L["GitHubRepoFullName"]" Component="gh-repo" Style="margin-top:0.75rem; display:block" />
+            <RadzenTextBox @bind-Value="linkModel.RepoFullName" Name="gh-repo"
+                           Placeholder="owner/name" Style="width:100%" />
+            <RadzenLabel Text="@L["GitHubEvents"]" Component="gh-events" Style="margin-top:0.75rem; display:block" />
+            <RadzenTextBox @bind-Value="linkModel.Events" Name="gh-events"
+                           Placeholder="pull_request,issues" Style="width:100%" />
+            <div class="create-actions">
+                <RadzenButton Text="@L["GitHubLinkRepo"]" ButtonType="ButtonType.Submit"
+                              ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
+            </div>
+        </RadzenTemplateForm>
+    </RadzenCard>
+
+    <RadzenCard>
+        <h3>@L["GitHubListPulls"]</h3>
+        <div class="form-row">
+            <RadzenLabel Text="@L["GitHubRepoFullName"]" Component="gh-list-repo" />
+            <RadzenTextBox @bind-Value="listModel.RepoFullName" Name="gh-list-repo"
+                           Placeholder="owner/name" Style="width:100%" />
+        </div>
+        <div class="create-actions">
+            <RadzenButton Text="@L["GitHubListPulls"]" ButtonStyle="ButtonStyle.Primary"
+                          Click="@ListPulls" IsBusy="@listingPulls" />
+        </div>
+
+        @if (pullsError is not null)
+        {
+            <div class="auth-error" role="alert">@pullsError</div>
+        }
+        @if (pulls is null)
+        {
+            <p class="muted">@L["GitHubPullsHint"]</p>
+        }
+        else if (pulls.Count == 0)
+        {
+            <p class="muted">@L["GitHubNoPulls"]</p>
+        }
+        else
+        {
+            <table class="cards-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>@L["GitHubPullTitle"]</th>
+                        <th>@L["GitHubPullState"]</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (GitHubPullRequestDto pr in pulls)
+                    {
+                        <tr>
+                            <td><code>#@pr.Number</code></td>
+                            <td>@pr.Title</td>
+                            <td>@pr.State</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(pr.Url))
+                                {
+                                    <a href="@pr.Url" target="_blank" rel="noreferrer">@L["GitHubOpen"]</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </RadzenCard>
+
+    <RadzenCard>
+        <h3>@L["GitHubCreateIssue"]</h3>
+        <RadzenTemplateForm TItem="CreateIssueModel" Data="@issueModel" Submit="@CreateIssue">
+            <RadzenLabel Text="@L["GitHubCardId"]" Component="gh-issue-card" />
+            <RadzenTextBox @bind-Value="issueModel.CardIdText" Name="gh-issue-card" Style="width:100%" />
+            <RadzenLabel Text="@L["GitHubRepoFullName"]" Component="gh-issue-repo" Style="margin-top:0.75rem; display:block" />
+            <RadzenTextBox @bind-Value="issueModel.RepoFullName" Name="gh-issue-repo" Style="width:100%" />
+            <RadzenLabel Text="@L["GitHubIssueTitle"]" Component="gh-issue-title" Style="margin-top:0.75rem; display:block" />
+            <RadzenTextBox @bind-Value="issueModel.Title" Name="gh-issue-title" Style="width:100%" />
+            <RadzenLabel Text="@L["GitHubIssueBody"]" Component="gh-issue-body" Style="margin-top:0.75rem; display:block" />
+            <RadzenTextArea @bind-Value="issueModel.Body" Name="gh-issue-body" Rows="4" Style="width:100%" />
+            <div class="create-actions">
+                <RadzenButton Text="@L["GitHubCreateIssue"]" ButtonType="ButtonType.Submit"
+                              ButtonStyle="ButtonStyle.Primary" IsBusy="@creatingIssue" />
+            </div>
+        </RadzenTemplateForm>
+        @if (createdIssue is not null)
+        {
+            <div class="success-banner">
+                @L["GitHubIssueCreated"] <code>#@createdIssue.Number</code> —
+                @if (!string.IsNullOrEmpty(createdIssue.Url))
+                {
+                    <a href="@createdIssue.Url" target="_blank" rel="noreferrer">@createdIssue.Title</a>
+                }
+                else
+                {
+                    @createdIssue.Title
+                }
+            </div>
+        }
+    </RadzenCard>
+
+    @if (error is not null)
+    {
+        <div class="auth-error" role="alert">@error</div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid WorkspaceId { get; set; }
+
+    private IReadOnlyList<BoardSummaryDto>? boards;
+    private IReadOnlyList<GitHubPullRequestDto>? pulls;
+    private GitHubIssueDto? createdIssue;
+    private string? error;
+    private string? pullsError;
+    private bool busy;
+    private bool listingPulls;
+    private bool creatingIssue;
+    private readonly LinkRepoModel linkModel = new();
+    private readonly ListPullsModel listModel = new();
+    private readonly CreateIssueModel issueModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await BoardsApi.ListForWorkspaceAsync(WorkspaceId);
+        boards = result.IsSuccess ? result.Value : [];
+    }
+
+    private async Task LinkRepo()
+    {
+        if (linkModel.BoardId is null || string.IsNullOrWhiteSpace(linkModel.RepoFullName))
+        {
+            error = L["GitHubLinkRepoMissing"];
+            return;
+        }
+
+        busy = true;
+        error = null;
+        try
+        {
+            List<string> events = ParseEvents(linkModel.Events);
+            var result = await GitHubApi.LinkRepoAsync(linkModel.BoardId.Value, linkModel.RepoFullName.Trim(), events);
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+            }
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task ListPulls()
+    {
+        if (string.IsNullOrWhiteSpace(listModel.RepoFullName))
+        {
+            pullsError = L["GitHubRepoRequired"];
+            return;
+        }
+
+        listingPulls = true;
+        pullsError = null;
+        try
+        {
+            var result = await GitHubApi.ListPullsAsync(listModel.RepoFullName.Trim(), "open");
+            if (result.IsSuccess)
+            {
+                pulls = result.Value;
+            }
+            else
+            {
+                pullsError = result.Error;
+            }
+        }
+        finally
+        {
+            listingPulls = false;
+        }
+    }
+
+    private async Task CreateIssue()
+    {
+        if (!Guid.TryParse(issueModel.CardIdText, out Guid cardId)
+            || string.IsNullOrWhiteSpace(issueModel.RepoFullName))
+        {
+            error = L["GitHubCreateIssueMissing"];
+            return;
+        }
+
+        creatingIssue = true;
+        error = null;
+        try
+        {
+            var result = await GitHubApi.CreateIssueAsync(
+                cardId,
+                issueModel.RepoFullName.Trim(),
+                string.IsNullOrWhiteSpace(issueModel.Title) ? null : issueModel.Title.Trim(),
+                string.IsNullOrWhiteSpace(issueModel.Body) ? null : issueModel.Body.Trim());
+            if (result.IsSuccess)
+            {
+                createdIssue = result.Value;
+                issueModel.Title = string.Empty;
+                issueModel.Body = string.Empty;
+            }
+            else
+            {
+                error = result.Error;
+            }
+        }
+        finally
+        {
+            creatingIssue = false;
+        }
+    }
+
+    private static List<string> ParseEvents(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return new List<string> { "pull_request", "issues" };
+        }
+
+        return raw
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+    }
+
+    private sealed class LinkRepoModel
+    {
+        public Guid? BoardId { get; set; }
+        public string RepoFullName { get; set; } = string.Empty;
+        public string Events { get; set; } = string.Empty;
+    }
+
+    private sealed class ListPullsModel
+    {
+        public string RepoFullName { get; set; } = string.Empty;
+    }
+
+    private sealed class CreateIssueModel
+    {
+        public string CardIdText { get; set; } = string.Empty;
+        public string RepoFullName { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Body { get; set; } = string.Empty;
+    }
+}

@@ -1,0 +1,170 @@
+@page "/workspaces/{WorkspaceId:guid}/integrations/email"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Microsoft.Extensions.Localization
+@inject IEmailIntegrationApiClient EmailApi
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["EmailTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>@L["EmailTitle"]</h1>
+        <p class="muted">@L["EmailBlurb"]</p>
+    </div>
+
+    <RadzenCard>
+        <h3>@L["EmailWebhook"]</h3>
+        <p class="muted">@L["EmailWebhookBlurb"]</p>
+        <p><code>@WebhookUrl</code></p>
+        <p class="muted">@L["EmailWebhookSecretHint"]</p>
+    </RadzenCard>
+
+    <RadzenCard>
+        <h3>@L["EmailAddAddress"]</h3>
+        <RadzenTemplateForm TItem="AddModel" Data="@addModel" Submit="@Add">
+            <RadzenLabel Text="@L["EmailAddressLabel"]" Component="email-address" />
+            <RadzenTextBox @bind-Value="addModel.EmailAddress" Name="email-address"
+                           Placeholder="board-123@cardscape.example.com" Style="width:100%" />
+            <RadzenLabel Text="@L["EmailLabelLabel"]" Component="email-label" Style="margin-top:0.75rem; display:block" />
+            <RadzenTextBox @bind-Value="addModel.Label" Name="email-label" Style="width:100%" />
+            <RadzenLabel Text="@L["EmailTargetListId"]" Component="email-list" Style="margin-top:0.75rem; display:block" />
+            <RadzenTextBox @bind-Value="addModel.TargetListIdText" Name="email-list" Style="width:100%" />
+            <div class="create-actions">
+                <RadzenButton Text="@L["EmailAddAddress"]" ButtonType="ButtonType.Submit"
+                              ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
+            </div>
+        </RadzenTemplateForm>
+    </RadzenCard>
+
+    <h3>@L["EmailAddresses"]</h3>
+    @if (addresses is null)
+    {
+        <p>@L["ActionLoading"]</p>
+    }
+    else if (addresses.Count == 0)
+    {
+        <p class="muted">@L["EmailNoAddresses"]</p>
+    }
+    else
+    {
+        <table class="cards-table">
+            <thead>
+                <tr>
+                    <th>@L["EmailAddressLabel"]</th>
+                    <th>@L["EmailLabelLabel"]</th>
+                    <th>@L["EmailTargetListId"]</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (InboundEmailAddressDto address in addresses)
+                {
+                    <tr>
+                        <td><code>@address.EmailAddress</code></td>
+                        <td>@address.Label</td>
+                        <td><code>@address.TargetListId</code></td>
+                        <td>
+                            <RadzenButton Text="@L["EmailRemove"]" ButtonStyle="ButtonStyle.Danger"
+                                          Size="ButtonSize.Small"
+                                          Click="@(() => Remove(address.Id))" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @if (error is not null)
+    {
+        <div class="auth-error" role="alert">@error</div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid WorkspaceId { get; set; }
+
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private IReadOnlyList<InboundEmailAddressDto>? addresses;
+    private string? error;
+    private bool busy;
+    private readonly AddModel addModel = new();
+
+    private string WebhookUrl => $"{Nav.BaseUri}api/integrations/email/inbound?provider=sendgrid";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Reload();
+    }
+
+    private async Task Reload()
+    {
+        var result = await EmailApi.ListAddressesAsync(WorkspaceId);
+        addresses = result.IsSuccess ? result.Value : [];
+    }
+
+    private async Task Add()
+    {
+        if (string.IsNullOrWhiteSpace(addModel.EmailAddress)
+            || !Guid.TryParse(addModel.TargetListIdText, out Guid listId))
+        {
+            error = L["EmailAddMissing"];
+            return;
+        }
+
+        busy = true;
+        error = null;
+        try
+        {
+            var result = await EmailApi.RegisterAddressAsync(
+                WorkspaceId,
+                addModel.EmailAddress.Trim(),
+                listId,
+                string.IsNullOrWhiteSpace(addModel.Label) ? addModel.EmailAddress.Trim() : addModel.Label.Trim());
+            if (result.IsSuccess)
+            {
+                addModel.Reset();
+                await Reload();
+            }
+            else
+            {
+                error = result.Error;
+            }
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task Remove(Guid addressId)
+    {
+        error = null;
+        var result = await EmailApi.UnregisterAddressAsync(WorkspaceId, addressId);
+        if (result.IsSuccess)
+        {
+            await Reload();
+        }
+        else
+        {
+            error = result.Error;
+        }
+    }
+
+    private sealed class AddModel
+    {
+        public string EmailAddress { get; set; } = string.Empty;
+        public string Label { get; set; } = string.Empty;
+        public string TargetListIdText { get; set; } = string.Empty;
+
+        public void Reset()
+        {
+            EmailAddress = string.Empty;
+            Label = string.Empty;
+            TargetListIdText = string.Empty;
+        }
+    }
+}

@@ -182,4 +182,60 @@
   <data name="Login_TotpCode_Label" xml:space="preserve"><value>Two-factor code</value></data>
   <data name="Login_TotpCode_Required" xml:space="preserve"><value>Enter the 6-digit code from your authenticator app</value></data>
   <data name="Login_TotpCode_Invalid" xml:space="preserve"><value>The code is invalid or expired</value></data>
+  <data name="SlackTitle" xml:space="preserve"><value>Slack integration</value></data>
+  <data name="SlackConnectBlurb" xml:space="preserve"><value>Connect your Slack workspace so Cardscape can post card events. Paste the Slack team id, team name, and a bot token (xoxb-…) below.</value></data>
+  <data name="SlackConnect" xml:space="preserve"><value>Connect Slack</value></data>
+  <data name="SlackConnectMissingFields" xml:space="preserve"><value>Team id, team name, and bot token are all required.</value></data>
+  <data name="SlackNotConnected" xml:space="preserve"><value>Slack is not connected to this workspace yet.</value></data>
+  <data name="SlackTeamId" xml:space="preserve"><value>Team id</value></data>
+  <data name="SlackTeamName" xml:space="preserve"><value>Team name</value></data>
+  <data name="SlackBotToken" xml:space="preserve"><value>Bot token (xoxb-…)</value></data>
+  <data name="SlackBotTokenPrefix" xml:space="preserve"><value>Token prefix</value></data>
+  <data name="SlackLastUsed" xml:space="preserve"><value>Last used</value></data>
+  <data name="SlackConnectedAs" xml:space="preserve"><value>Connected as</value></data>
+  <data name="SlackDisconnect" xml:space="preserve"><value>Refresh</value></data>
+  <data name="GoogleDriveTitle" xml:space="preserve"><value>Google Drive</value></data>
+  <data name="GoogleDriveConnectBlurb" xml:space="preserve"><value>Authorise Cardscape to read files from your Google Drive so you can attach them to cards. The OAuth handshake is wired as a placeholder until the redirect handler lands.</value></data>
+  <data name="GoogleDriveConnect" xml:space="preserve"><value>Connect Google Drive</value></data>
+  <data name="GoogleDrivePicker" xml:space="preserve"><value>File picker</value></data>
+  <data name="GoogleDrivePickerBlurb" xml:space="preserve"><value>Open the Google Drive picker in a new tab. The picker URL is built server-side; the browser is redirected to the Google consent screen.</value></data>
+  <data name="GoogleDrivePickerOpen" xml:space="preserve"><value>Open picker</value></data>
+  <data name="GoogleDriveWorkspace" xml:space="preserve"><value>Workspace</value></data>
+  <data name="GoogleDriveWorkspaceLabel" xml:space="preserve"><value>Workspace for the picker</value></data>
+  <data name="GoogleDriveSelectWorkspace" xml:space="preserve"><value>Select a workspace</value></data>
+  <data name="GoogleDriveSelectWorkspaceFirst" xml:space="preserve"><value>Pick a workspace first.</value></data>
+  <data name="GoogleDrivePickerEmpty" xml:space="preserve"><value>Server returned an empty picker URL.</value></data>
+  <data name="GitHubTitle" xml:space="preserve"><value>GitHub integration</value></data>
+  <data name="GitHubLinkRepo" xml:space="preserve"><value>Link a repository</value></data>
+  <data name="GitHubLinkRepoMissing" xml:space="preserve"><value>Pick a board and enter a repo full name (owner/name).</value></data>
+  <data name="GitHubBoard" xml:space="preserve"><value>Board</value></data>
+  <data name="GitHubSelectBoard" xml:space="preserve"><value>Select a board</value></data>
+  <data name="GitHubRepoFullName" xml:space="preserve"><value>Repo (owner/name)</value></data>
+  <data name="GitHubEvents" xml:space="preserve"><value>Events (comma-separated)</value></data>
+  <data name="GitHubListPulls" xml:space="preserve"><value>List pull requests</value></data>
+  <data name="GitHubPullsHint" xml:space="preserve"><value>Click "List pull requests" to query GitHub for the repo's open PRs.</value></data>
+  <data name="GitHubNoPulls" xml:space="preserve"><value>No open pull requests for that repo.</value></data>
+  <data name="GitHubPullTitle" xml:space="preserve"><value>Title</value></data>
+  <data name="GitHubPullState" xml:space="preserve"><value>State</value></data>
+  <data name="GitHubOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="GitHubRepoRequired" xml:space="preserve"><value>Repo full name is required.</value></data>
+  <data name="GitHubCreateIssue" xml:space="preserve"><value>Create issue from card</value></data>
+  <data name="GitHubCardId" xml:space="preserve"><value>Card id</value></data>
+  <data name="GitHubIssueTitle" xml:space="preserve"><value>Title override (optional)</value></data>
+  <data name="GitHubIssueBody" xml:space="preserve"><value>Body override (optional)</value></data>
+  <data name="GitHubCreateIssueMissing" xml:space="preserve"><value>Card id and repo full name are required.</value></data>
+  <data name="GitHubIssueCreated" xml:space="preserve"><value>Issue created:</value></data>
+  <data name="EmailTitle" xml:space="preserve"><value>Email-to-board</value></data>
+  <data name="EmailBlurb" xml:space="preserve"><value>Register an email address below. Incoming emails to that address become cards on the target list. Configure your mail provider to POST the webhook URL when a message is received.</value></data>
+  <data name="EmailWebhook" xml:space="preserve"><value>Webhook URL</value></data>
+  <data name="EmailWebhookBlurb" xml:space="preserve"><value>Point SendGrid, Mailgun, or Postmark Inbound Parse at this URL. The body is parsed and a card is created in the matching list.</value></data>
+  <data name="EmailWebhookSecretHint" xml:space="preserve"><value>Add a signing secret in the provider dashboard so the inbound handler can verify the request signature.</value></data>
+  <data name="EmailAddAddress" xml:space="preserve"><value>Add email address</value></data>
+  <data name="EmailAddMissing" xml:space="preserve"><value>Email address and target list id are required.</value></data>
+  <data name="EmailAddressLabel" xml:space="preserve"><value>Email address</value></data>
+  <data name="EmailLabelLabel" xml:space="preserve"><value>Label</value></data>
+  <data name="EmailTargetListId" xml:space="preserve"><value>Target list id</value></data>
+  <data name="EmailAddresses" xml:space="preserve"><value>Registered email addresses</value></data>
+  <data name="EmailNoAddresses" xml:space="preserve"><value>No email addresses registered for this workspace yet.</value></data>
+  <data name="EmailRemove" xml:space="preserve"><value>Remove</value></data>
 </root>

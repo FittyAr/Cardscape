@@ -1,0 +1,124 @@
+@page "/settings/integrations/google-drive"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Microsoft.Extensions.Localization
+@inject IGoogleDriveApiClient GoogleDriveApi
+@inject IWorkspacesApiClient WorkspacesApi
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["GoogleDriveTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>@L["GoogleDriveTitle"]</h1>
+        <p class="muted">@L["GoogleDriveBlurb"]</p>
+    </div>
+
+    <RadzenCard>
+        <h3>@L["GoogleDriveWorkspace"]</h3>
+        <RadzenLabel Text="@L["GoogleDriveWorkspaceLabel"]" Component="gd-workspace" />
+        <RadzenDropDown @bind-Value="selectedWorkspaceId" Name="gd-workspace" Style="width:100%"
+                        Data="@workspaces" TextProperty="Name" ValueProperty="Id"
+                        AllowClear="true" Placeholder="@L["GoogleDriveSelectWorkspace"]" />
+    </RadzenCard>
+
+    <RadzenCard>
+        <h3>@L["GoogleDriveConnect"]</h3>
+        <p class="muted">@L["GoogleDriveConnectBlurb"]</p>
+        <RadzenButton Text="@L["GoogleDriveConnect"]" ButtonStyle="ButtonStyle.Primary"
+                      Click="@Connect" Disabled="@(selectedWorkspaceId is null || busy)" IsBusy="@busy" />
+    </RadzenCard>
+
+    <RadzenCard>
+        <h3>@L["GoogleDrivePicker"]</h3>
+        <p class="muted">@L["GoogleDrivePickerBlurb"]</p>
+        <RadzenButton Text="@L["GoogleDrivePickerOpen"]" ButtonStyle="ButtonStyle.Light"
+                      Click="@OpenPicker" Disabled="@(selectedWorkspaceId is null || loadingPicker)" IsBusy="@loadingPicker" />
+    </RadzenCard>
+
+    @if (error is not null)
+    {
+        <div class="auth-error" role="alert">@error</div>
+    }
+</div>
+
+@code {
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private IReadOnlyList<WorkspaceDto>? workspaces;
+    private Guid? selectedWorkspaceId;
+    private string? error;
+    private bool busy;
+    private bool loadingPicker;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await WorkspacesApi.ListAsync();
+        workspaces = result.IsSuccess ? result.Value : [];
+        if (workspaces is { Count: > 0 })
+        {
+            selectedWorkspaceId = workspaces[0].Id;
+        }
+    }
+
+    private async Task Connect()
+    {
+        if (selectedWorkspaceId is null)
+        {
+            error = L["GoogleDriveSelectWorkspaceFirst"];
+            return;
+        }
+
+        busy = true;
+        error = null;
+        try
+        {
+            // The connect endpoint requires a (server-side) OAuth
+            // refresh-token exchange. Until the real OAuth redirect
+            // handler lands, we post a placeholder that the server
+            // accepts as a UI smoke test. See G8 in the v1.1.0
+            // audit for the OAuth follow-up.
+            var result = await GoogleDriveApi.ConnectAsync(
+                selectedWorkspaceId.Value,
+                "ui-placeholder@local",
+                "ui-placeholder");
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+            }
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task OpenPicker()
+    {
+        if (selectedWorkspaceId is null)
+        {
+            error = L["GoogleDriveSelectWorkspaceFirst"];
+            return;
+        }
+
+        loadingPicker = true;
+        error = null;
+        try
+        {
+            var result = await GoogleDriveApi.GetPickerUrlAsync(selectedWorkspaceId.Value);
+            if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.Value))
+            {
+                error = result.Error ?? L["GoogleDrivePickerEmpty"];
+                return;
+            }
+
+            Nav.NavigateTo(result.Value, forceLoad: true);
+        }
+        finally
+        {
+            loadingPicker = false;
+        }
+    }
+}

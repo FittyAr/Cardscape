@@ -374,3 +374,72 @@ public sealed record CardRecurrenceDto(
     int IntervalDays,
     DateTimeOffset NextOccurrenceAt,
     bool IsActive);
+
+// ── Slack integration (v1.1.0 §3.7) ──────────────────────────
+// Mirrors of the Application-layer DTOs. The bot token is never
+// included in the projection — only its first 8 hex chars as a
+// stable identifier the UI can display.
+public sealed record SlackWorkspaceDto(
+    Guid Id,
+    Guid WorkspaceId,
+    string TeamId,
+    string TeamName,
+    string BotTokenPrefix,
+    DateTimeOffset? LastUsedAt,
+    bool Active,
+    DateTimeOffset CreatedAt);
+
+public sealed record SlackChannelDto(
+    Guid Id,
+    Guid SlackWorkspaceId,
+    Guid BoardId,
+    string ChannelId,
+    string ChannelName,
+    IReadOnlyList<string> Events,
+    bool Active,
+    DateTimeOffset CreatedAt);
+
+// ── Google Drive integration (v1.1.0 §3.8) ─────────────────
+public sealed record GoogleDriveConnectionDto(
+    Guid Id,
+    Guid UserId,
+    string GoogleEmail,
+    DateTimeOffset? LastUsedAt,
+    bool Active,
+    DateTimeOffset CreatedAt);
+
+// ── GitHub integration (v1.1.0 §3.9) ───────────────────────
+public sealed record GitHubPullRequestDto(
+    int Number,
+    string Title,
+    string State,
+    string? Url,
+    string? HeadRef,
+    string? BaseRef,
+    DateTimeOffset? CreatedAt);
+
+public sealed record GitHubIssueDto(
+    int Number,
+    string Title,
+    string State,
+    string? Url,
+    IReadOnlyList<string> Labels,
+    DateTimeOffset? CreatedAt);
+
+public sealed record GitHubPullRequestLinkDto(
+    Guid Id,
+    Guid CardId,
+    string RepoFullName,
+    int PullRequestNumber,
+    string? PullRequestUrl,
+    DateTimeOffset CreatedAt);
+
+// ── Email-to-board (v1.1.0 §3.10) ──────────────────────────
+public sealed record InboundEmailAddressDto(
+    Guid Id,
+    Guid WorkspaceId,
+    string EmailAddress,
+    Guid TargetListId,
+    string Label,
+    bool Active,
+    DateTimeOffset CreatedAt);

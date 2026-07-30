@@ -82,6 +82,10 @@ builder.Services.AddScoped<IChecklistsApiClient, ChecklistsApiClient>();
 builder.Services.AddScoped<IRecurrenceApiClient, RecurrenceApiClient>();
 builder.Services.AddScoped<IOAuthAppsApiClient, OAuthAppsApiClient>();
 builder.Services.AddScoped<IAiApiClient, AiApiClient>();
+builder.Services.AddScoped<ISlackApiClient, SlackApiClient>();
+builder.Services.AddScoped<IGoogleDriveApiClient, GoogleDriveApiClient>();
+builder.Services.AddScoped<IGitHubApiClient, GitHubApiClient>();
+builder.Services.AddScoped<IEmailIntegrationApiClient, EmailIntegrationApiClient>();
 
 // ── Real-time (SignalR client) ──────────────────────────────
 builder.Services.AddScoped<BoardHubClient>();
