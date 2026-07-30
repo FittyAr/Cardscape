@@ -1,3 +1,4 @@
+using Cardscape.Api.Filters;
 using Cardscape.Application.Workspaces.Commands;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Application.Workspaces.Queries;
@@ -14,7 +15,14 @@ public static class WorkspaceEndpoints
 {
     public static IEndpointRouteBuilder MapWorkspaceEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/workspaces").RequireAuthorization().WithTags("Workspaces");
+        // The filter is a no-op for endpoints that don't carry a
+        // workspaceId route value (the GET / and POST / workspace
+        // creation endpoints) so it's safe to apply at the group
+        // level; the other endpoints all do.
+        var group = app.MapGroup("/api/workspaces")
+            .RequireAuthorization()
+            .RequireRegionGuard()
+            .WithTags("Workspaces");
 
         group.MapGet("/", async (IMessageBus bus, CancellationToken ct) =>
         {

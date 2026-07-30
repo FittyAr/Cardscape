@@ -1,3 +1,4 @@
+using Cardscape.Api.Filters;
 using Cardscape.Application.Scim;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Builder;
@@ -18,6 +19,7 @@ public static class ScimAdminEndpoints
     {
         var group = app.MapGroup("/api/workspaces/{workspaceId:guid}/scim")
             .RequireAuthorization()
+            .RequireRegionGuard()
             .WithTags("SCIM.Admin");
 
         group.MapGet("/tokens", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>

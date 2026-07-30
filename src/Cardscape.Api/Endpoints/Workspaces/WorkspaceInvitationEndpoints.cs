@@ -1,3 +1,4 @@
+using Cardscape.Api.Filters;
 using Cardscape.Application.Workspaces.Commands;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Application.Workspaces.Queries;
@@ -25,6 +26,7 @@ public static class WorkspaceInvitationEndpoints
     {
         var wsGroup = app.MapGroup("/api/workspaces/{workspaceId:guid}/invitations")
             .RequireAuthorization()
+            .RequireRegionGuard()
             .WithTags("Workspace invitations");
 
         wsGroup.MapGet("/", async (

@@ -1,3 +1,4 @@
+using Cardscape.Api.Filters;
 using Cardscape.Application.Integrations.Slack.Commands;
 using Cardscape.Application.Integrations.Slack.DTOs;
 using Cardscape.Application.Integrations.Slack.Queries;
@@ -22,6 +23,7 @@ public static class SlackEndpoints
         var group = app
             .MapGroup("/api/workspaces/{workspaceId:guid}/integrations/slack")
             .RequireAuthorization()
+            .RequireRegionGuard()
             .WithTags("Integrations.Slack");
 
         group.MapGet("/", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>

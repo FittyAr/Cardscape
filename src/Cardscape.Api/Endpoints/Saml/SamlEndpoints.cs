@@ -1,3 +1,4 @@
+using Cardscape.Api.Filters;
 using Cardscape.Application.Saml;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Builder;
@@ -98,6 +99,7 @@ public static class SamlEndpoints
         // Admin (authenticated).
         var admin = app.MapGroup("/api/workspaces/{workspaceId:guid}/saml")
             .RequireAuthorization()
+            .RequireRegionGuard()
             .WithTags("SAML.Admin");
 
         admin.MapGet("/", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
