@@ -1,6 +1,9 @@
 using System.Text;
 using Cardscape.Api.Authentication;
+using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Domain.Authentication.ExternalLogins;
+using Cardscape.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -153,6 +156,55 @@ public static class ServiceCollectionExtensions
                 options.ClientSecret = microsoftClientSecret;
                 options.Scope.Add("email");
                 options.Scope.Add("profile");
+            });
+        }
+
+        // Apple "Sign in with Apple" uses the OIDC handler with
+        // a JWT client_secret that's regenerated per token
+        // request (Apple's spec, see IAppleClientSecretGenerator).
+        // The handler is only registered when the full
+        // Apple block is configured (TeamId + ClientId + KeyId
+        // + PrivateKeyPem); otherwise the IsImplemented
+        // check on ExternalProvider.Apple keeps the
+        // /api/auth/external/apple/start endpoint out of
+        // the menu.
+        string? appleClientId = configuration["Authentication:Apple:ClientId"];
+        string? appleTeamId = configuration["Authentication:Apple:TeamId"];
+        string? appleKeyId = configuration["Authentication:Apple:KeyId"];
+        string? applePrivateKeyPem = configuration["Authentication:Apple:PrivateKeyPem"];
+        if (!string.IsNullOrWhiteSpace(appleClientId)
+            && !string.IsNullOrWhiteSpace(appleTeamId)
+            && !string.IsNullOrWhiteSpace(appleKeyId)
+            && !string.IsNullOrWhiteSpace(applePrivateKeyPem))
+        {
+            services.AddSingleton<IAppleClientSecretGenerator, AppleClientSecretGenerator>();
+            authBuilder.AddOpenIdConnect(ExternalProvider.Apple.WireName(), options =>
+            {
+                options.Authority = "https://appleid.apple.com";
+                options.ClientId = appleClientId;
+                // The client_secret is generated per request
+                // by the AppleClientSecretGenerator, but the
+                // OIDC handler insists on a static value at
+                // registration time. We register a sentinel
+                // here and replace it on every challenge via
+                // OnRedirectToIdentityProvider.
+                options.ClientSecret = "placeholder-replaced-on-redirect";
+                options.CallbackPath = "/api/auth/external/apple/callback";
+                options.Scope.Add("openid");
+                options.Scope.Add("email");
+                options.Scope.Add("name");
+                options.ResponseType = "code";
+                options.UsePkce = true;
+                options.SaveTokens = true;
+
+                options.Events.OnRedirectToIdentityProvider = ctx =>
+                {
+                    var generator = ctx.HttpContext.RequestServices
+                        .GetRequiredService<IAppleClientSecretGenerator>();
+                    ctx.ProtocolMessage.ClientSecret = generator.GenerateClientSecret(
+                        TimeSpan.FromDays(180));
+                    return Task.CompletedTask;
+                };
             });
         }
 

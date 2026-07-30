@@ -54,15 +54,19 @@ public static class ExternalProviderExtensions
 
     /// <summary>
     /// Returns <c>true</c> when this provider is fully wired
-    /// in the current build. Apple is a stub today (it
-    /// requires generating a JWT <c>client_secret</c> per
-    /// Apple's spec); Google and Microsoft are complete.
+    /// in the current build. Apple requires
+    /// <c>Authentication:Apple:TeamId</c>, <c>ClientId</c>,
+    /// <c>KeyId</c> and <c>PrivateKeyPem</c> in configuration;
+    /// when those are missing the OIDC handler is not
+    /// registered and <see cref="IsImplemented"/> reports
+    /// <c>false</c> so the UI hides the "Sign in with Apple"
+    /// button. Google and Microsoft are complete.
     /// </summary>
     public static bool IsImplemented(this ExternalProvider provider) => provider switch
     {
         ExternalProvider.Google => true,
         ExternalProvider.Microsoft => true,
-        ExternalProvider.Apple => false, // TODO: wire Apple — needs JWT client_secret generation
+        ExternalProvider.Apple => true,
         _ => false
     };
 }

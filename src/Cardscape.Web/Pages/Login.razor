@@ -26,11 +26,11 @@
                 <span class="provider-glyph" aria-hidden="true">M</span>
                 <span>@L["AuthSignInWithMicrosoft"]</span>
             </a>
-            @* TODO: wire Apple once the JWT client_secret story is sorted *@
-            <button class="provider-button provider-apple" disabled title="Apple sign-in is on the roadmap">
+            <a class="provider-button provider-apple"
+               href="/api/auth/external/apple/start?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">
                 <span class="provider-glyph" aria-hidden="true">A</span>
                 <span>@L["AuthSignInWithApple"]</span>
-            </button>
+            </a>
         </div>
 
         <div class="auth-divider"><span>or</span></div>
