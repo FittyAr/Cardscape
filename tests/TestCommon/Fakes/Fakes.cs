@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
+using Cardscape.Application.Abstractions.Integrations;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Authentication.Abstractions;
@@ -12,6 +13,7 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Integrations.GoogleCalendar;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
@@ -698,4 +700,71 @@ public sealed class InMemoryPendingTotpLoginStore : IPendingTotpLoginStore
         }
         return entry.UserId;
     }
+}
+
+/// <summary>In-memory <see cref="IGoogleCalendarConnectionRepository"/>.</summary>
+public sealed class InMemoryGoogleCalendarConnectionRepository : IGoogleCalendarConnectionRepository
+{
+    private readonly Dictionary<GoogleCalendarConnectionId, GoogleCalendarConnection> byId = [];
+    private readonly Dictionary<Guid, GoogleCalendarConnection> byUser = [];
+
+    public IReadOnlyCollection<GoogleCalendarConnection> All => byId.Values.ToList();
+
+    public Task<GoogleCalendarConnection?> FindByUserAsync(Guid userId, CancellationToken ct = default) =>
+        Task.FromResult(byUser.GetValueOrDefault(userId));
+
+    public Task<GoogleCalendarConnection?> FindByIdAsync(GoogleCalendarConnectionId id, CancellationToken ct = default) =>
+        Task.FromResult(byId.GetValueOrDefault(id));
+
+    public Task AddAsync(GoogleCalendarConnection connection, CancellationToken ct = default)
+    {
+        byId[connection.Id] = connection;
+        byUser[connection.UserId] = connection;
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<GoogleCalendarConnection>> ListActiveForWorkspaceAsync(
+        WorkspaceId workspaceId, CancellationToken ct = default)
+    {
+        IReadOnlyList<GoogleCalendarConnection> rows = byId.Values
+            .Where(c => c.WorkspaceId == workspaceId && c.IsActive)
+            .ToList();
+        return Task.FromResult(rows);
+    }
+
+    public Task UpdateAsync(GoogleCalendarConnection connection, CancellationToken ct = default)
+    {
+        byId[connection.Id] = connection;
+        byUser[connection.UserId] = connection;
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>Stub <see cref="IGoogleCalendarSyncService"/>.</summary>
+public sealed class FakeGoogleCalendarSyncService : IGoogleCalendarSyncService
+{
+    public List<(Guid UserId, Guid CardId, string CardTitle, string? CardDescription, DateTimeOffset? DueDate)> PushCalls { get; } = [];
+    public List<Guid> PullCalls { get; } = [];
+    public Result<string>? NextPushResult { get; set; }
+
+    public Task<Result<string>> PushCardDueDateAsync(
+        Guid userId, Guid cardId, string cardTitle, string? cardDescription,
+        DateTimeOffset? dueDate, CancellationToken ct = default)
+    {
+        PushCalls.Add((userId, cardId, cardTitle, cardDescription, dueDate));
+        return Task.FromResult(NextPushResult ?? Result.Success(string.Empty));
+    }
+
+    public Task<Result<int>> PullCalendarChangesAsync(Guid userId, CancellationToken ct = default)
+    {
+        PullCalls.Add(userId);
+        return Task.FromResult(Result.Success(0));
+    }
+
+    public Task<Result<GoogleCalendarWatchInfo>> WatchCalendarAsync(
+        Guid userId, string webhookUrl, CancellationToken ct = default) =>
+        Task.FromResult(Result.Success(new GoogleCalendarWatchInfo(
+            "channel-" + Guid.NewGuid().ToString("N"),
+            "resource-" + Guid.NewGuid().ToString("N"),
+            DateTimeOffset.UtcNow.AddHours(24))));
 }

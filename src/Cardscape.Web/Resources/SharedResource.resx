@@ -252,4 +252,8 @@
   <data name="ExtensionCardAgingDescription" xml:space="preserve"><value>Fade stale cards so the active ones stand out.</value></data>
   <data name="CardAgingModeDisabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="CardAgingModeByActivity" xml:space="preserve"><value>By activity</value></data>
+  <data name="GoogleCalendarWorkspace" xml:space="preserve"><value>Workspace</value></data>
+  <data name="GoogleCalendarSelectWorkspace" xml:space="preserve"><value>Pick a workspace</value></data>
+  <data name="GoogleCalendarSelectWorkspaceFirst" xml:space="preserve"><value>Pick a workspace before connecting.</value></data>
+  <data name="GoogleCalendarPickWorkspace" xml:space="preserve"><value>You need at least one workspace to connect Google Calendar.</value></data>
 </root>

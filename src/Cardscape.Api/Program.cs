@@ -212,6 +212,7 @@ app.MapGitHubEndpoints();
 app.MapInboundEmailEndpoints();
 app.MapSlackEndpoints();
 app.MapGoogleCalendarEndpoints();
+app.MapGoogleCalendarOAuthEndpoints();
 app.MapScimEndpoints();
 app.MapScimAdminEndpoints();
 app.MapSamlEndpoints();

@@ -5,6 +5,8 @@
 @using Cardscape.Web.Services.Api
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> L
+@inject NavigationManager Nav
+@inject IWorkspacesApiClient WorkspacesApi
 
 <PageTitle>@L["GoogleCalendarTitle"] @L["PageTitleSuffix"]</PageTitle>
 
@@ -22,9 +24,27 @@
     {
         <RadzenCard>
             <p>@L["GoogleCalendarNotConnected"]</p>
-            <RadzenButton Text="@L["GoogleCalendarConnect"]"
-                          ButtonStyle="ButtonStyle.Primary"
-                          Click="@Connect" />
+            @if (workspaces.Count == 0)
+            {
+                <p class="muted">@L["GoogleCalendarPickWorkspace"]</p>
+            }
+            else
+            {
+                <RadzenLabel Text="@L["GoogleCalendarWorkspace"]" Component="gcal-workspace" />
+                <RadzenDropDown Data="@workspaces"
+                                TextProperty="Name"
+                                ValueProperty="Id"
+                                @bind-Value="selectedWorkspaceId"
+                                Name="gcal-workspace"
+                                AllowClear="true"
+                                Placeholder="@L["GoogleCalendarSelectWorkspace"]"
+                                Style="width: 100%; max-width: 360px;" />
+                <RadzenButton Text="@L["GoogleCalendarConnect"]"
+                              ButtonStyle="ButtonStyle.Primary"
+                              Disabled="@(selectedWorkspaceId is null)"
+                              Click="@Connect"
+                              Style="margin-top: 0.75rem;" />
+            }
         </RadzenCard>
     }
     else
@@ -58,28 +78,35 @@
     [Inject] private IGoogleCalendarApiClient Api { get; set; } = default!;
 
     private GoogleCalendarConnectionDto? connection;
+    private IReadOnlyList<WorkspaceDto> workspaces = [];
+    private Guid? selectedWorkspaceId;
     private string? error;
 
     protected override async Task OnInitializedAsync()
     {
         var result = await Api.GetAsync();
         connection = result.IsSuccess ? result.Value : Empty();
+
+        var wsResult = await WorkspacesApi.ListAsync();
+        workspaces = wsResult.IsSuccess && wsResult.Value is not null
+            ? wsResult.Value
+            : [];
     }
 
     private static GoogleCalendarConnectionDto Empty() => new(
         Guid.Empty, Guid.Empty, Guid.Empty, string.Empty, string.Empty,
         null, null, null, false);
 
-    private async Task Connect()
+    private void Connect()
     {
-        error = null;
-        var result = await Api.ConnectAsync();
-        if (!result.IsSuccess)
+        if (selectedWorkspaceId is null)
         {
-            error = result.Error;
+            error = L["GoogleCalendarSelectWorkspaceFirst"];
             return;
         }
-        connection = result.Value;
+
+        string url = Api.BuildOAuthStartUrl(selectedWorkspaceId.Value);
+        Nav.NavigateTo(url, forceLoad: true);
     }
 
     private async Task Revoke()

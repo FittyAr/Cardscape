@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Integrations.GoogleCalendar;
+using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,5 +20,20 @@ public sealed class GoogleCalendarConnectionRepository(
     public async Task AddAsync(GoogleCalendarConnection connection, CancellationToken ct = default)
     {
         await db.GoogleCalendarConnections.AddAsync(connection, ct);
+    }
+
+    public async Task<IReadOnlyList<GoogleCalendarConnection>> ListActiveForWorkspaceAsync(
+        WorkspaceId workspaceId, CancellationToken ct = default)
+    {
+        List<GoogleCalendarConnection> rows = await db.GoogleCalendarConnections
+            .Where(c => c.WorkspaceId == workspaceId && c.IsActive)
+            .ToListAsync(ct);
+        return rows;
+    }
+
+    public Task UpdateAsync(GoogleCalendarConnection connection, CancellationToken ct = default)
+    {
+        db.GoogleCalendarConnections.Update(connection);
+        return Task.CompletedTask;
     }
 }

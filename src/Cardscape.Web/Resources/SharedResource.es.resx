@@ -255,4 +255,8 @@
   <data name="ExtensionCardAgingDescription" xml:space="preserve"><value>Atenúa las tarjetas inactivas para que se destaquen las activas.</value></data>
   <data name="CardAgingModeDisabled" xml:space="preserve"><value>Desactivado</value></data>
   <data name="CardAgingModeByActivity" xml:space="preserve"><value>Por actividad</value></data>
+  <data name="GoogleCalendarWorkspace" xml:space="preserve"><value>Workspace</value></data>
+  <data name="GoogleCalendarSelectWorkspace" xml:space="preserve"><value>Elegí un workspace</value></data>
+  <data name="GoogleCalendarSelectWorkspaceFirst" xml:space="preserve"><value>Elegí un workspace antes de conectar.</value></data>
+  <data name="GoogleCalendarPickWorkspace" xml:space="preserve"><value>Necesitás al menos un workspace para conectar Google Calendar.</value></data>
 </root>

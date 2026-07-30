@@ -29,6 +29,11 @@ public sealed class GoogleCalendarConnection : AggregateRoot<GoogleCalendarConne
     public string? LastSyncError { get; private set; }
     public bool IsActive { get; private set; } = true;
 
+    public string? WatchChannelId { get; private set; }
+    public string? WatchResourceId { get; private set; }
+    public DateTimeOffset? WatchExpiresAt { get; private set; }
+    public string? SyncToken { get; private set; }
+
     private GoogleCalendarConnection() { }
 
     private GoogleCalendarConnection(
@@ -102,6 +107,29 @@ public sealed class GoogleCalendarConnection : AggregateRoot<GoogleCalendarConne
     {
         LastSyncErrorAt = at;
         LastSyncError = string.IsNullOrWhiteSpace(error) ? "Unknown error" : error;
+        UpdatedAt = at;
+    }
+
+    /// <summary>Persist the new sync token returned by Google
+    /// after a successful <c>events.list</c> pull.</summary>
+    public void SetSyncToken(string? syncToken, DateTimeOffset at)
+    {
+        SyncToken = string.IsNullOrWhiteSpace(syncToken) ? null : syncToken;
+        UpdatedAt = at;
+    }
+
+    /// <summary>Persist the watch channel + resource id +
+    /// expiration returned by Google after a successful
+    /// <c>events.watch</c> call.</summary>
+    public void SetWatch(
+        string channelId,
+        string resourceId,
+        DateTimeOffset expiresAt,
+        DateTimeOffset at)
+    {
+        WatchChannelId = string.IsNullOrWhiteSpace(channelId) ? null : channelId;
+        WatchResourceId = string.IsNullOrWhiteSpace(resourceId) ? null : resourceId;
+        WatchExpiresAt = expiresAt;
         UpdatedAt = at;
     }
 

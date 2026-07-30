@@ -41,6 +41,8 @@ public sealed class HandlersTestContext
     public InMemoryBoardListRepository Lists { get; } = new();
     public InMemoryLabelRepository Labels { get; } = new();
     public InMemoryTotpCredentialRepository TotpCredentials { get; } = new();
+    public InMemoryGoogleCalendarConnectionRepository GoogleCalendarConnections { get; } = new();
+    public FakeGoogleCalendarSyncService GoogleCalendarSync { get; } = new();
 
     /// <summary>
     /// Lazily-built <see cref="FakeTotpService"/>. The first

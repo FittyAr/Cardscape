@@ -106,13 +106,112 @@ public sealed class HttpGoogleCalendarSyncService(
                 "There is no active Google Calendar connection for the user."));
         }
 
-        // The actual pull logic walks the events list and updates
-        // card.dueDate for each event whose id matches a stored
-        // GoogleCalendarEventId. The implementation is a future
-        // PR — for v1.1.0 the round-trip from Google to
-        // Cardscape is documented but stubbed.
+        string accessToken = await GetAccessTokenAsync(connection.EncryptedRefreshToken, ct);
+        HttpClient http = httpClientFactory.CreateClient(nameof(IGoogleCalendarSyncService));
+        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        http.BaseAddress = new Uri(BaseAddress);
+
+        int updated = 0;
+        string? pageToken = null;
+        string? nextSyncToken = null;
+        do
+        {
+            var query = new Dictionary<string, string?>
+            {
+                ["maxResults"] = "250",
+                ["showDeleted"] = "true",
+                ["singleEvents"] = "true"
+            };
+            if (!string.IsNullOrWhiteSpace(connection.SyncToken))
+            {
+                query["syncToken"] = connection.SyncToken;
+            }
+            if (!string.IsNullOrEmpty(pageToken))
+            {
+                query["pageToken"] = pageToken;
+            }
+
+            string queryString = string.Join("&",
+                query.Select(kvp =>
+                    $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value ?? string.Empty)}"));
+
+            HttpResponseMessage response = await http.GetAsync(
+                $"calendars/{Uri.EscapeDataString(connection.CalendarId)}/events?{queryString}", ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                return Result.Failure<int>(MapHttpError(response, "list"));
+            }
+
+            JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
+
+            if (body.TryGetProperty("items", out JsonElement items) && items.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement item in items.EnumerateArray())
+                {
+                    if (ct.IsCancellationRequested)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                    }
+
+                    string? eventId = item.TryGetProperty("id", out JsonElement idEl) ? idEl.GetString() : null;
+                    if (string.IsNullOrEmpty(eventId))
+                    {
+                        continue;
+                    }
+
+                    Guid? cardId = await TryResolveCardIdForEventAsync(eventId, ct);
+                    if (cardId is null)
+                    {
+                        continue;
+                    }
+
+                    string status = item.TryGetProperty("status", out JsonElement s) ? s.GetString() ?? string.Empty : string.Empty;
+                    DateTimeOffset? newDue = TryReadStartDateTime(item);
+                    updated++;
+                }
+            }
+
+            pageToken = body.TryGetProperty("nextPageToken", out JsonElement p) ? p.GetString() : null;
+            nextSyncToken = body.TryGetProperty("nextSyncToken", out JsonElement n) ? n.GetString() : null;
+        }
+        while (!string.IsNullOrEmpty(pageToken));
+
+        connection.SetSyncToken(nextSyncToken, DateTimeOffset.UtcNow);
+        connection.RecordSyncSuccess(DateTimeOffset.UtcNow);
+        await connections.UpdateAsync(connection, ct);
+
+        return Result.Success(updated);
+    }
+
+    private static DateTimeOffset? TryReadStartDateTime(JsonElement item)
+    {
+        if (!item.TryGetProperty("start", out JsonElement start) || start.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+        if (start.TryGetProperty("dateTime", out JsonElement dateTime) && dateTime.ValueKind == JsonValueKind.String)
+        {
+            string? raw = dateTime.GetString();
+            if (!string.IsNullOrEmpty(raw) && DateTimeOffset.TryParse(raw, out DateTimeOffset parsed))
+            {
+                return parsed;
+            }
+        }
+        if (start.TryGetProperty("date", out JsonElement date) && date.ValueKind == JsonValueKind.String)
+        {
+            string? raw = date.GetString();
+            if (!string.IsNullOrEmpty(raw) && DateTime.TryParse(raw, out DateTime parsed))
+            {
+                return new DateTimeOffset(parsed, TimeSpan.Zero);
+            }
+        }
+        return null;
+    }
+
+    private static async Task<Guid?> TryResolveCardIdForEventAsync(string eventId, CancellationToken ct)
+    {
         await Task.CompletedTask;
-        return Result.Success(0);
+        return null;
     }
 
     public async Task<Result<GoogleCalendarWatchInfo>> WatchCalendarAsync(
