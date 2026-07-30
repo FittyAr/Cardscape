@@ -156,7 +156,8 @@ public sealed record CardSummaryDto(
     string Title,
     double Position,
     DateTimeOffset? DueDate,
-    bool IsCompleted);
+    bool IsCompleted,
+    DateTimeOffset UpdatedAt);
 
 public sealed record CreateCardRequestDto(Guid ListId, string Title, string? Description);
 

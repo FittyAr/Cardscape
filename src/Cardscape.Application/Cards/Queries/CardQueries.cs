@@ -82,7 +82,12 @@ public static class ListCardsForBoardQueryHandler
                 c.Title.Value,
                 c.Position.Value,
                 c.DueDate,
-                c.IsCompleted))
+                c.IsCompleted,
+                // Falls back to CreatedAt so a brand-new card
+                // (UpdatedAt is null until the first mutation) still
+                // has a usable "last activity" timestamp for the
+                // visual fade on the board.
+                c.UpdatedAt ?? c.CreatedAt))
             .ToList();
 
         return Result.Success<IReadOnlyList<CardSummaryDto>>(rows);

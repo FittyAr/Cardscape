@@ -20,4 +20,5 @@ public sealed record CardSummaryDto(
     string Title,
     double Position,
     DateTimeOffset? DueDate,
-    bool IsCompleted);
+    bool IsCompleted,
+    DateTimeOffset UpdatedAt);

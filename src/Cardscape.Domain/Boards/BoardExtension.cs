@@ -18,7 +18,13 @@ public enum ExtensionKind
     Voting = 1,
 
     /// <summary>Repeat a card on completion (cron-like schedule).</summary>
-    CardRepeater = 2
+    CardRepeater = 2,
+
+    /// <summary>Visual fade for stale cards on the board. The
+    /// <c>ConfigJson</c> carries the aging mode
+    /// (<c>Disabled</c> or <c>ByActivity</c>); absence means
+    /// <c>Disabled</c>.</summary>
+    CardAging = 3
 }
 
 /// <summary>

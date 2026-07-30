@@ -1,11 +1,13 @@
 @page "/boards/{BoardId:guid}"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Text.Json
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
 @inject IBoardsApiClient BoardsApi
 @inject IListsApiClient ListsApi
 @inject ICardsApiClient CardsApi
+@inject IBoardExtensionsApiClient ExtensionsApi
 @inject BoardHubClient HubClient
 @implements IAsyncDisposable
 
@@ -80,7 +82,9 @@
                             }
                             @foreach (CardSummaryDto card in inList)
                             {
-                                <RadzenCard class="card-mini" @onclick="@(() => Nav.NavigateTo($"cards/{card.Id}"))">
+                                double opacity = ComputeCardOpacity(card, agingMode, now);
+                                <RadzenCard class="card-mini" Style="@($"opacity: {opacity:0.00}")"
+                                            @onclick="@(() => Nav.NavigateTo($"cards/{card.Id}"))">
                                     <div class="card-mini-title @(card.IsCompleted ? "completed" : "")">@card.Title</div>
                                     @if (card.DueDate is not null)
                                     {
@@ -129,12 +133,20 @@
     private Guid? openAddCardFor;
     private string newCardTitle = string.Empty;
 
+    // Card aging: the board-scoped CardAging extension stores the
+    // chosen mode in its ConfigJson. We fetch it once with the rest
+    // of the board data and apply the opacity in the card template.
+    private const int CardAgingKind = 3;
+    private CardAgingMode agingMode = CardAgingMode.Disabled;
+    private DateTimeOffset now = DateTimeOffset.UtcNow;
+
     protected override async Task OnParametersSetAsync()
     {
         ApiResult<BoardDto> boardResult = await BoardsApi.GetAsync(BoardId);
         board = boardResult.IsSuccess ? boardResult.Value : null;
 
         await ReloadListsAndCardsAsync();
+        await ReloadAgingModeAsync();
         await SubscribeToHubAsync();
     }
 
@@ -275,8 +287,86 @@
         }
     }
 
+    // Pulls the board's CardAging extension and parses the
+    // configured mode out of the JSON config. Failures and missing
+    // extensions are both treated as Disabled (no fade) so the
+    // page never breaks for an unrelated API error.
+    private async Task ReloadAgingModeAsync()
+    {
+        now = DateTimeOffset.UtcNow;
+        ApiResult<IReadOnlyList<BoardExtensionDto>> result = await ExtensionsApi.ListAsync(BoardId);
+        if (!result.IsSuccess)
+        {
+            agingMode = CardAgingMode.Disabled;
+            return;
+        }
+
+        BoardExtensionDto? match = result.Value?.FirstOrDefault(r => r.Kind == CardAgingKind);
+        agingMode = match is { IsEnabled: true }
+            ? ParseAgingMode(match.ConfigJson)
+            : CardAgingMode.Disabled;
+    }
+
+    private static CardAgingMode ParseAgingMode(string? configJson)
+    {
+        if (string.IsNullOrWhiteSpace(configJson))
+        {
+            return CardAgingMode.Disabled;
+        }
+
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(configJson);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object
+                && doc.RootElement.TryGetProperty("mode", out JsonElement modeEl)
+                && modeEl.ValueKind == JsonValueKind.String)
+            {
+                string? raw = modeEl.GetString();
+                if (Enum.TryParse<CardAgingMode>(raw, ignoreCase: true, out CardAgingMode parsed)
+                    && Enum.IsDefined(parsed))
+                {
+                    return parsed;
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // Fall through to the default below.
+        }
+
+        return CardAgingMode.Disabled;
+    }
+
+    // Linear opacity: cards stay at full opacity until the mode's
+    // staleness window, then fade toward 0.4 (the "stale but still
+    // legible" floor) over the same window.
+    //  ByActivity: window = 14 days since the last update.
+    private static double ComputeCardOpacity(
+        CardSummaryDto card, CardAgingMode mode, DateTimeOffset now)
+    {
+        if (mode == CardAgingMode.Disabled)
+        {
+            return 1.0;
+        }
+
+        const double fadeFloor = 0.4;
+        const double windowDays = 14.0;
+        double daysSince = Math.Max(0, (now - card.UpdatedAt).TotalDays);
+        double fade = Math.Min(1.0, daysSince / windowDays);
+        return fadeFloor + (1.0 - fadeFloor) * (1.0 - fade);
+    }
+
     private sealed class AddListModel
     {
         public string Name { get; set; } = string.Empty;
+    }
+
+    // Mirrors Cardscape.Domain.Cards.CardAgingMode. Kept local so
+    // the Web project doesn't need a domain reference just to drive
+    // the opacity math.
+    private enum CardAgingMode
+    {
+        Disabled = 0,
+        ByActivity = 1
     }
 }

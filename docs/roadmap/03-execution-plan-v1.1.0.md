@@ -238,7 +238,7 @@ not yet implemented.
 - New migration `IssueCardAging` adds the column.
 - Web UI: per-board toggle in `/boards/{id}/extensions`; visual
   fade in `BoardDetail.razor` based on the card's `LastActivityAt`
-  delta.
+  delta. ✅ DONE
 - MCP tool: `cards_set_aging_mode`.
 
 ### 3.2 Card Snooze

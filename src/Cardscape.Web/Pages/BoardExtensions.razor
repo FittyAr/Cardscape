@@ -1,26 +1,28 @@
 @page "/boards/{BoardId:guid}/extensions"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Text.Json
+@using Cardscape.Web.Resources
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Microsoft.Extensions.Localization
 @inject IBoardExtensionsApiClient ExtensionsClient
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Extensions — Cardscape</PageTitle>
+<PageTitle>@L["ExtensionsTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <div class="page-shell">
     <div class="page-header">
-        <h1>Board extensions</h1>
+        <h1>@L["ExtensionsTitle"]</h1>
     </div>
 
     <p class="page-hint">
-        Extensions are per-board toggles. Enabling one stores its
-        configuration here; the actual feature (custom fields,
-        voting, card repeater) reads the JSON at runtime.
+        @L["ExtensionsBlurb"]
     </p>
 
     @if (rows is null)
     {
-        <p>Loading…</p>
+        <p>@L["ActionLoading"]</p>
     }
     else
     {
@@ -32,24 +34,40 @@
                 <RadzenCard class="@(isEnabled ? "extension-card" : "extension-card extension-card--off")">
                     <div class="extension-row">
                         <div class="extension-meta">
-                            <strong>@option.Name</strong>
-                            <small>@option.Description</small>
+                            <strong>@L[option.NameKey]</strong>
+                            <small>@L[option.DescriptionKey]</small>
                         </div>
                         <div class="extension-actions">
                             @if (isEnabled)
                             {
-                                <RadzenButton Text="Disable" ButtonStyle="ButtonStyle.Light"
+                                <RadzenButton Text="@L["ExtensionDisable"]" ButtonStyle="ButtonStyle.Light"
                                               Size="ButtonSize.Small"
                                               Click="@(() => DisableAsync(option.Kind))" />
                             }
                             else
                             {
-                                <RadzenButton Text="Enable" ButtonStyle="ButtonStyle.Success"
+                                <RadzenButton Text="@L["ExtensionEnable"]" ButtonStyle="ButtonStyle.Success"
                                               Size="ButtonSize.Small"
                                               Click="@(() => EnableAsync(option.Kind))" />
                             }
                         </div>
                     </div>
+                    @* Card aging gets a mode selector once enabled, because the
+                       effect (fade vs no-fade) is data-driven by the ConfigJson. *@
+                    @if (isEnabled && option.Kind == CardAgingKind)
+                    {
+                        <div class="extension-config">
+                            <RadzenSelectBar TValue="string"
+                                             Value="@agingMode.ToString()"
+                                             Change="@OnAgingModeChanged"
+                                             Size="ButtonSize.Small">
+                                <Items>
+                                    <RadzenSelectBarItem Text="@L["CardAgingModeDisabled"]" Value="@nameof(CardAgingMode.Disabled)" />
+                                    <RadzenSelectBarItem Text="@L["CardAgingModeByActivity"]" Value="@nameof(CardAgingMode.ByActivity)" />
+                                </Items>
+                            </RadzenSelectBar>
+                        </div>
+                    }
                 </RadzenCard>
             }
         </div>
@@ -64,14 +82,21 @@
 @code {
     [Parameter] public Guid BoardId { get; set; }
 
+    // Must match ExtensionKind.CardAging in
+    // src/Cardscape.Domain/Boards/BoardExtension.cs.
+    private const int CardAgingKind = 3;
+
     private IReadOnlyList<BoardExtensionDto>? rows;
     private string? error;
 
+    private CardAgingMode agingMode = CardAgingMode.Disabled;
+
     private readonly List<ExtensionOption> allOptions = new()
     {
-        new(0, "Custom fields", "Per-card structured fields (Priority, Estimate, etc.)."),
-        new(1, "Voting", "Up/down votes on cards with tally summaries."),
-        new(2, "Card repeater", "Automatically recreate a card on completion.")
+        new(0, "ExtensionCustomFieldsName", "ExtensionCustomFieldsDescription"),
+        new(1, "ExtensionVotingName", "ExtensionVotingDescription"),
+        new(2, "ExtensionCardRepeaterName", "ExtensionCardRepeaterDescription"),
+        new(CardAgingKind, "ExtensionCardAgingName", "ExtensionCardAgingDescription")
     };
 
     protected override async Task OnParametersSetAsync() => await ReloadAsync();
@@ -83,6 +108,7 @@
         {
             rows = result.Value;
             error = null;
+            LoadAgingMode();
         }
         else
         {
@@ -90,6 +116,47 @@
             error = result.Error;
         }
     }
+
+    private void LoadAgingMode()
+    {
+        BoardExtensionDto? match = rows?.FirstOrDefault(r => r.Kind == CardAgingKind);
+        agingMode = match is null
+            ? CardAgingMode.Disabled
+            : ParseAgingMode(match.ConfigJson);
+    }
+
+    private static CardAgingMode ParseAgingMode(string? configJson)
+    {
+        if (string.IsNullOrWhiteSpace(configJson))
+        {
+            return CardAgingMode.Disabled;
+        }
+
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(configJson);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object
+                && doc.RootElement.TryGetProperty("mode", out JsonElement modeEl)
+                && modeEl.ValueKind == JsonValueKind.String)
+            {
+                string? raw = modeEl.GetString();
+                if (Enum.TryParse<CardAgingMode>(raw, ignoreCase: true, out CardAgingMode parsed)
+                    && Enum.IsDefined(parsed))
+                {
+                    return parsed;
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // Fall through to the default below.
+        }
+
+        return CardAgingMode.Disabled;
+    }
+
+    private static string SerializeAgingMode(CardAgingMode mode) =>
+        $$"""{"mode":"{{mode}}"}""";
 
     private async Task EnableAsync(int kind)
     {
@@ -118,5 +185,39 @@
         }
     }
 
-    private sealed record ExtensionOption(int Kind, string Name, string Description);
+    private async Task OnAgingModeChanged(object value)
+    {
+        if (value is null
+            || !Enum.TryParse<CardAgingMode>(value.ToString(), ignoreCase: false, out CardAgingMode parsed)
+            || !Enum.IsDefined(parsed))
+        {
+            return;
+        }
+
+        agingMode = parsed;
+        error = null;
+        ApiResult<BoardExtensionDto> result = await ExtensionsClient.UpdateConfigAsync(
+            BoardId, CardAgingKind, new UpdateExtensionConfigRequestDto(SerializeAgingMode(parsed)));
+        if (result.IsSuccess)
+        {
+            // Keep the local mode in sync with what the server stored.
+            await ReloadAsync();
+        }
+        else
+        {
+            error = result.Error;
+        }
+    }
+
+    private sealed record ExtensionOption(int Kind, string NameKey, string DescriptionKey);
+
+    // Mirrors Cardscape.Domain.Cards.CardAgingMode. Kept local so
+    // the Web project doesn't need a domain reference just to drive
+    // the SelectBar; the values round-trip through the
+    // ExtensionKind.CardAging config JSON.
+    private enum CardAgingMode
+    {
+        Disabled = 0,
+        ByActivity = 1
+    }
 }

@@ -241,4 +241,18 @@
   <data name="EmailAddresses" xml:space="preserve"><value>Direcciones de email registradas</value></data>
   <data name="EmailNoAddresses" xml:space="preserve"><value>Aún no hay direcciones de email registradas para este workspace.</value></data>
   <data name="EmailRemove" xml:space="preserve"><value>Quitar</value></data>
+  <data name="ExtensionsTitle" xml:space="preserve"><value>Extensiones del tablero</value></data>
+  <data name="ExtensionsBlurb" xml:space="preserve"><value>Las extensiones son toggles por tablero. Al activar una se guarda su configuración acá; la feature real (campos personalizados, votación, repetidor de tarjetas, envejecimiento) lee el JSON en tiempo de ejecución.</value></data>
+  <data name="ExtensionEnable" xml:space="preserve"><value>Activar</value></data>
+  <data name="ExtensionDisable" xml:space="preserve"><value>Desactivar</value></data>
+  <data name="ExtensionCustomFieldsName" xml:space="preserve"><value>Campos personalizados</value></data>
+  <data name="ExtensionCustomFieldsDescription" xml:space="preserve"><value>Campos estructurados por tarjeta (Prioridad, Estimación, etc.).</value></data>
+  <data name="ExtensionVotingName" xml:space="preserve"><value>Votación</value></data>
+  <data name="ExtensionVotingDescription" xml:space="preserve"><value>Votos a favor / en contra en las tarjetas con resúmenes.</value></data>
+  <data name="ExtensionCardRepeaterName" xml:space="preserve"><value>Repetidor de tarjetas</value></data>
+  <data name="ExtensionCardRepeaterDescription" xml:space="preserve"><value>Recrea automáticamente una tarjeta al completarla.</value></data>
+  <data name="ExtensionCardAgingName" xml:space="preserve"><value>Envejecimiento de tarjetas</value></data>
+  <data name="ExtensionCardAgingDescription" xml:space="preserve"><value>Atenúa las tarjetas inactivas para que se destaquen las activas.</value></data>
+  <data name="CardAgingModeDisabled" xml:space="preserve"><value>Desactivado</value></data>
+  <data name="CardAgingModeByActivity" xml:space="preserve"><value>Por actividad</value></data>
 </root>

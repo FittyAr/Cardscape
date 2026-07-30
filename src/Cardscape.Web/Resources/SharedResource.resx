@@ -238,4 +238,18 @@
   <data name="EmailAddresses" xml:space="preserve"><value>Registered email addresses</value></data>
   <data name="EmailNoAddresses" xml:space="preserve"><value>No email addresses registered for this workspace yet.</value></data>
   <data name="EmailRemove" xml:space="preserve"><value>Remove</value></data>
+  <data name="ExtensionsTitle" xml:space="preserve"><value>Board extensions</value></data>
+  <data name="ExtensionsBlurb" xml:space="preserve"><value>Extensions are per-board toggles. Enabling one stores its configuration here; the actual feature (custom fields, voting, card repeater, card aging) reads the JSON at runtime.</value></data>
+  <data name="ExtensionEnable" xml:space="preserve"><value>Enable</value></data>
+  <data name="ExtensionDisable" xml:space="preserve"><value>Disable</value></data>
+  <data name="ExtensionCustomFieldsName" xml:space="preserve"><value>Custom fields</value></data>
+  <data name="ExtensionCustomFieldsDescription" xml:space="preserve"><value>Per-card structured fields (Priority, Estimate, etc.).</value></data>
+  <data name="ExtensionVotingName" xml:space="preserve"><value>Voting</value></data>
+  <data name="ExtensionVotingDescription" xml:space="preserve"><value>Up/down votes on cards with tally summaries.</value></data>
+  <data name="ExtensionCardRepeaterName" xml:space="preserve"><value>Card repeater</value></data>
+  <data name="ExtensionCardRepeaterDescription" xml:space="preserve"><value>Automatically recreate a card on completion.</value></data>
+  <data name="ExtensionCardAgingName" xml:space="preserve"><value>Card aging</value></data>
+  <data name="ExtensionCardAgingDescription" xml:space="preserve"><value>Fade stale cards so the active ones stand out.</value></data>
+  <data name="CardAgingModeDisabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="CardAgingModeByActivity" xml:space="preserve"><value>By activity</value></data>
 </root>
