@@ -89,6 +89,13 @@
     <PackageVersion Include="AutoFixture.Xunit2" Version="4.18.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0-preview.6.26359.118" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+
+    <!-- SDK (Cardscape.Sdk) — published as a NuGet package targeting
+         netstandard2.0 + net8.0. System.Text.Json is in the BCL for
+         net8.0 but must be an explicit reference on netstandard2.0,
+         so it's listed here for central management. -->
+    <PackageVersion Include="System.Text.Json" Version="9.0.0" />
+    <PackageVersion Include="System.Net.Http.Json" Version="9.0.0" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,136 @@
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace Cardscape.Sdk;
+
+/// <summary>
+/// Configuration for <see cref="CardscapeClient"/>. <see cref="AccessToken"/>
+/// is a function (not a value) so the caller can rotate the token
+/// without rebuilding the client. <see cref="JsonOptions"/> lets
+/// callers plug in their own converters (custom date formats,
+/// snake_case ↔ camelCase policy, etc.) — defaults to
+/// <see cref="JsonSerializerDefaults.Web"/>.
+/// </summary>
+public sealed class CardscapeClientOptions
+{
+    public Uri BaseAddress { get; set; } = null!;
+    public Func<Task<string?>>? AccessToken { get; set; }
+    public JsonSerializerOptions JsonOptions { get; set; } = DefaultJsonOptions;
+    public TimeSpan HttpTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
+    public static readonly JsonSerializerOptions DefaultJsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        PropertyNameCaseInsensitive = true
+    };
+}
+
+/// <summary>
+/// Typed surface over the Cardscape REST API. Sub-clients
+/// (<see cref="Workspaces"/>, <see cref="Boards"/>, <see cref="Lists"/>,
+/// <see cref="Cards"/>, <see cref="Labels"/>, <see cref="Comments"/>,
+/// <see cref="Activities"/>) cover the 30 most-used endpoints. The
+/// rest of the surface stays reachable through
+/// <see cref="SendAsync"/> and <see cref="SendAsync{TResult}"/>.
+/// </summary>
+public sealed class CardscapeClient : IAsyncDisposable
+{
+    private readonly HttpClient _http;
+    private readonly CardscapeClientOptions _options;
+    private readonly bool _ownsHttp;
+
+    public CardscapeClient(CardscapeClientOptions options) : this(new HttpClient(), options, ownsHttp: true)
+    {
+    }
+
+    public CardscapeClient(HttpClient http, CardscapeClientOptions options, bool ownsHttp = false)
+    {
+        _http = http;
+        _options = options;
+        _ownsHttp = ownsHttp;
+
+        _http.BaseAddress ??= options.BaseAddress;
+
+        _http.Timeout = options.HttpTimeout;
+    }
+
+    public WorkspacesClient Workspaces { get; private set; } = null!;
+    public BoardsClient Boards { get; private set; } = null!;
+    public ListsClient Lists { get; private set; } = null!;
+    public CardsClient Cards { get; private set; } = null!;
+    public LabelsClient Labels { get; private set; } = null!;
+    public CommentsClient Comments { get; private set; } = null!;
+    public ActivitiesClient Activities { get; private set; } = null!;
+
+    /// <summary>Lower-level: send a request and return the raw
+    /// <see cref="HttpResponseMessage"/>. Use for endpoints the
+    /// typed sub-clients don't cover.</summary>
+    public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct = default)
+        => SendCoreAsync(request, ct);
+
+    /// <summary>Lower-level: send a request and deserialize the
+    /// JSON body to <typeparamref name="TResult"/>. Throws
+    /// <see cref="CardscapeApiException"/> on non-2xx.</summary>
+    public async Task<TResult> SendAsync<TResult>(HttpRequestMessage request, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await SendCoreAsync(request, ct);
+        try
+        {
+            response.EnsureSuccessStatusCode();
+            TResult? body = await response.Content.ReadFromJsonAsync<TResult>(_options.JsonOptions, ct);
+            return body ?? throw new CardscapeApiException(
+                "cardscape.empty_response",
+                "The server returned a 2xx with an empty body.",
+                (int)response.StatusCode);
+        }
+        finally
+        {
+            response.Dispose();
+        }
+    }
+
+    private async Task<HttpResponseMessage> SendCoreAsync(HttpRequestMessage request, CancellationToken ct)
+    {
+        if (_options.AccessToken is { } tokenProvider)
+        {
+            string? token = await tokenProvider();
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                request.Headers.Authorization = new("Bearer", token);
+            }
+        }
+
+        return await _http.SendAsync(request, ct);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        if (_ownsHttp)
+        {
+            _http.Dispose();
+        }
+#if NETSTANDARD2_0
+        return new ValueTask(Task.CompletedTask);
+#else
+        return ValueTask.CompletedTask;
+#endif
+    }
+}
+
+/// <summary>Raised when the Cardscape API returns a non-2xx status
+/// code. The body, when present, is exposed as <see cref="ResponseBody"/>.</summary>
+public sealed class CardscapeApiException : Exception
+{
+    public string Code { get; }
+    public int StatusCode { get; }
+    public string? ResponseBody { get; }
+
+    public CardscapeApiException(string code, string message, int statusCode, string? responseBody = null)
+        : base(message)
+    {
+        Code = code;
+        StatusCode = statusCode;
+        ResponseBody = responseBody;
+    }
+}
