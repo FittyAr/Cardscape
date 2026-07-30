@@ -1,0 +1,96 @@
+@page "/settings/integrations/google-calendar"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["GoogleCalendarTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>@L["GoogleCalendarTitle"]</h1>
+        <p class="muted">@L["GoogleCalendarBlurb"]</p>
+    </div>
+
+    @if (connection is null)
+    {
+        <p>@L["ActionLoading"]</p>
+    }
+    else if (connection.Id == Guid.Empty)
+    {
+        <RadzenCard>
+            <p>@L["GoogleCalendarNotConnected"]</p>
+            <RadzenButton Text="@L["GoogleCalendarConnect"]"
+                          ButtonStyle="ButtonStyle.Primary"
+                          Click="@Connect" />
+        </RadzenCard>
+    }
+    else
+    {
+        <RadzenCard>
+            <h3>@L["GoogleCalendarConnectedAs"] @connection.GoogleEmail</h3>
+            <p class="muted">@L["GoogleCalendarCalendarId"]: <code>@connection.CalendarId</code></p>
+            @if (connection.LastSyncedAt is not null)
+            {
+                <p class="muted">@L["GoogleCalendarLastSync"]: @connection.LastSyncedAt.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</p>
+            }
+            @if (connection.LastSyncError is not null)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat">
+                    @connection.LastSyncError
+                </RadzenAlert>
+            }
+            <RadzenButton Text="@L["GoogleCalendarRevoke"]"
+                          ButtonStyle="ButtonStyle.Danger"
+                          Click="@Revoke" />
+        </RadzenCard>
+    }
+
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <div class="auth-error" role="alert">@error</div>
+    }
+</div>
+
+@code {
+    [Inject] private IGoogleCalendarApiClient Api { get; set; } = default!;
+
+    private GoogleCalendarConnectionDto? connection;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await Api.GetAsync();
+        connection = result.IsSuccess ? result.Value : Empty();
+    }
+
+    private static GoogleCalendarConnectionDto Empty() => new(
+        Guid.Empty, Guid.Empty, Guid.Empty, string.Empty, string.Empty,
+        null, null, null, false);
+
+    private async Task Connect()
+    {
+        error = null;
+        var result = await Api.ConnectAsync();
+        if (!result.IsSuccess)
+        {
+            error = result.Error;
+            return;
+        }
+        connection = result.Value;
+    }
+
+    private async Task Revoke()
+    {
+        error = null;
+        var result = await Api.RevokeAsync();
+        if (!result.IsSuccess)
+        {
+            error = result.Error;
+            return;
+        }
+        connection = Empty();
+    }
+}

@@ -34,6 +34,18 @@ public sealed record WorkspaceMemberDto(
 public sealed record CreateWorkspaceRequestDto(string Name, int? Region = null);
 public sealed record SetWorkspaceRegionRequestDto(int Region);
 
+// ── Google Calendar ──────────────────────────────────────
+public sealed record GoogleCalendarConnectionDto(
+    Guid Id,
+    Guid UserId,
+    Guid WorkspaceId,
+    string GoogleEmail,
+    string CalendarId,
+    DateTimeOffset? LastSyncedAt,
+    DateTimeOffset? LastSyncErrorAt,
+    string? LastSyncError,
+    bool IsActive);
+
 // ── Boards ──────────────────────────────────────────────
 public sealed record BoardDto(
     Guid Id,

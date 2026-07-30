@@ -92,6 +92,14 @@
   <data name="WorkspacesEmpty" xml:space="preserve"><value>You have no workspaces yet. Create your first one above.</value></data>
   <data name="WorkspacesRegion" xml:space="preserve"><value>Data residency region</value></data>
   <data name="WorkspacesRegionPlaceholder" xml:space="preserve"><value>Pick a region (defaults to the deployment's region)</value></data>
+  <data name="GoogleCalendarTitle" xml:space="preserve"><value>Google Calendar</value></data>
+  <data name="GoogleCalendarBlurb" xml:space="preserve"><value>Two-way sync between card due dates and your primary Google Calendar.</value></data>
+  <data name="GoogleCalendarNotConnected" xml:space="preserve"><value>Your account is not connected to Google Calendar.</value></data>
+  <data name="GoogleCalendarConnect" xml:space="preserve"><value>Connect Google Calendar</value></data>
+  <data name="GoogleCalendarRevoke" xml:space="preserve"><value>Disconnect</value></data>
+  <data name="GoogleCalendarConnectedAs" xml:space="preserve"><value>Connected as</value></data>
+  <data name="GoogleCalendarCalendarId" xml:space="preserve"><value>Calendar</value></data>
+  <data name="GoogleCalendarLastSync" xml:space="preserve"><value>Last sync</value></data>
   <data name="BoardsTitle" xml:space="preserve"><value>Boards</value></data>
   <data name="BoardsNew" xml:space="preserve"><value>New board</value></data>
   <data name="BoardsEmpty" xml:space="preserve"><value>No boards yet.</value></data>

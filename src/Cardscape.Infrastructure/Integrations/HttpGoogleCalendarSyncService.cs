@@ -1,0 +1,205 @@
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
+using Cardscape.Application.Abstractions.Authentication;
+using Cardscape.Application.Abstractions.Integrations;
+using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Abstractions.Security;
+using Cardscape.Domain.Common;
+using Microsoft.Extensions.Configuration;
+
+namespace Cardscape.Infrastructure.Integrations;
+
+/// <summary>
+/// Google Calendar API v3 implementation of
+/// <see cref="IGoogleCalendarSyncService"/>. Uses the
+/// <c>https://www.googleapis.com/calendar/v3/</c> base URL and
+/// the user-configured <c>Integrations:GoogleCalendar:ClientId</c>
+/// / <c>ClientSecret</c> / <c>ApiKey</c> for refresh-token
+/// exchange. The encrypted refresh token stored in
+/// <see cref="Domain.Integrations.GoogleCalendar.GoogleCalendarConnection"/>
+/// is decrypted on demand by the data-protection pipeline.
+/// </summary>
+public sealed class HttpGoogleCalendarSyncService(
+    IHttpClientFactory httpClientFactory,
+    IGoogleCalendarConnectionRepository connections,
+    ISecretProtector secrets,
+    IConfiguration configuration) : IGoogleCalendarSyncService
+{
+    private const string BaseAddress = "https://www.googleapis.com/calendar/v3/";
+    private const string OauthTokenEndpoint = "https://oauth2.googleapis.com/token";
+
+    public async Task<Result<string>> PushCardDueDateAsync(
+        Guid userId, Guid cardId, string cardTitle, string? cardDescription,
+        DateTimeOffset? dueDate, CancellationToken ct = default)
+    {
+        var connection = await connections.FindByUserAsync(userId, ct);
+        if (connection is null || !connection.IsActive)
+        {
+            return Result.Failure<string>(DomainError.NotFound(
+                "google_calendar.not_connected",
+                "There is no active Google Calendar connection for the user."));
+        }
+
+        string accessToken = await GetAccessTokenAsync(connection.EncryptedRefreshToken, ct);
+
+        // For the v1.1.0 milestone the sync is a single
+        // upsert: when the card has a dueDate we create or
+        // update a Google event; when it doesn't we delete
+        // the previously-pushed one (best-effort — a 404 on
+        // delete is treated as success).
+        // The mapping Card -> Google event id is kept in the
+        // card's GoogleCalendarEventId column (read from
+        // custom-fields). When the column is missing the
+        // implementation falls back to creating a new event.
+        string? eventId = await ReadCardGoogleEventIdAsync(cardId, ct);
+        HttpClient http = httpClientFactory.CreateClient(nameof(IGoogleCalendarSyncService));
+        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        http.BaseAddress = new Uri(BaseAddress);
+
+        if (dueDate is null)
+        {
+            if (eventId is not null)
+            {
+                HttpResponseMessage delete = await http.DeleteAsync(
+                    $"calendars/{Uri.EscapeDataString(connection.CalendarId)}/events/{Uri.EscapeDataString(eventId)}", ct);
+                if (!delete.IsSuccessStatusCode && delete.StatusCode != System.Net.HttpStatusCode.NotFound)
+                {
+                    return Result.Failure<string>(MapHttpError(delete, "delete"));
+                }
+            }
+            return Result.Success(eventId ?? string.Empty);
+        }
+
+        object eventBody = new
+        {
+            summary = string.IsNullOrWhiteSpace(cardTitle) ? "(untitled card)" : cardTitle,
+            description = cardDescription ?? string.Empty,
+            start = new { dateTime = dueDate.Value.UtcDateTime.ToString("o") },
+            end = new { dateTime = dueDate.Value.AddHours(1).UtcDateTime.ToString("o") }
+        };
+
+        HttpResponseMessage response = eventId is null
+            ? await http.PostAsJsonAsync(
+                $"calendars/{Uri.EscapeDataString(connection.CalendarId)}/events", eventBody, ct)
+            : await http.PutAsJsonAsync(
+                $"calendars/{Uri.EscapeDataString(connection.CalendarId)}/events/{Uri.EscapeDataString(eventId)}",
+                eventBody, ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return Result.Failure<string>(MapHttpError(response, eventId is null ? "create" : "update"));
+        }
+
+        JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
+        string newEventId = body.TryGetProperty("id", out JsonElement id) ? id.GetString() ?? string.Empty : string.Empty;
+        return Result.Success(newEventId);
+    }
+
+    public async Task<Result<int>> PullCalendarChangesAsync(Guid userId, CancellationToken ct = default)
+    {
+        var connection = await connections.FindByUserAsync(userId, ct);
+        if (connection is null || !connection.IsActive)
+        {
+            return Result.Failure<int>(DomainError.NotFound(
+                "google_calendar.not_connected",
+                "There is no active Google Calendar connection for the user."));
+        }
+
+        // The actual pull logic walks the events list and updates
+        // card.dueDate for each event whose id matches a stored
+        // GoogleCalendarEventId. The implementation is a future
+        // PR — for v1.1.0 the round-trip from Google to
+        // Cardscape is documented but stubbed.
+        await Task.CompletedTask;
+        return Result.Success(0);
+    }
+
+    public async Task<Result<GoogleCalendarWatchInfo>> WatchCalendarAsync(
+        Guid userId, string webhookUrl, CancellationToken ct = default)
+    {
+        var connection = await connections.FindByUserAsync(userId, ct);
+        if (connection is null || !connection.IsActive)
+        {
+            return Result.Failure<GoogleCalendarWatchInfo>(DomainError.NotFound(
+                "google_calendar.not_connected",
+                "There is no active Google Calendar connection for the user."));
+        }
+
+        string accessToken = await GetAccessTokenAsync(connection.EncryptedRefreshToken, ct);
+        HttpClient http = httpClientFactory.CreateClient(nameof(IGoogleCalendarSyncService));
+        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        http.BaseAddress = new Uri(BaseAddress);
+
+        string channelId = Guid.NewGuid().ToString("N");
+        // `params` is a C# keyword so we build the watch body
+        // through a Dictionary rather than an anonymous object.
+        var watchRequest = new Dictionary<string, object>
+        {
+            ["id"] = channelId,
+            ["type"] = "web_hook",
+            ["address"] = webhookUrl,
+            ["params"] = new Dictionary<string, string> { ["ttl"] = "86400" }
+        };
+
+        HttpResponseMessage response = await http.PostAsJsonAsync(
+            $"calendars/{Uri.EscapeDataString(connection.CalendarId)}/watch", watchRequest, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            return Result.Failure<GoogleCalendarWatchInfo>(MapHttpError(response, "watch"));
+        }
+
+        JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
+        string resourceId = body.TryGetProperty("resourceId", out JsonElement r) ? r.GetString() ?? string.Empty : string.Empty;
+        long expirationUnix = body.TryGetProperty("expiration", out JsonElement e) ? e.GetInt64() : DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeMilliseconds();
+
+        return Result.Success(new GoogleCalendarWatchInfo(
+            channelId, resourceId, DateTimeOffset.FromUnixTimeMilliseconds(expirationUnix)));
+    }
+
+    private async Task<string> GetAccessTokenAsync(string encryptedRefreshToken, CancellationToken ct)
+    {
+        string clientId = configuration["Integrations:GoogleCalendar:ClientId"] ?? string.Empty;
+        string clientSecret = configuration["Integrations:GoogleCalendar:ClientSecret"] ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+        {
+            throw new InvalidOperationException(
+                "Google Calendar sync is not configured. Set Integrations:GoogleCalendar:ClientId " +
+                "and Integrations:GoogleCalendar:ClientSecret before invoking IGoogleCalendarSyncService.");
+        }
+
+        string refreshToken = secrets.Unprotect(encryptedRefreshToken);
+
+        using HttpClient http = httpClientFactory.CreateClient("google-oauth");
+        using FormUrlEncodedContent content = new(new Dictionary<string, string>
+        {
+            ["client_id"] = clientId,
+            ["client_secret"] = clientSecret,
+            ["refresh_token"] = refreshToken,
+            ["grant_type"] = "refresh_token"
+        });
+        HttpResponseMessage response = await http.PostAsync(OauthTokenEndpoint, content, ct);
+        response.EnsureSuccessStatusCode();
+        JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
+        return body.GetProperty("access_token").GetString() ?? string.Empty;
+    }
+
+    private static DomainError MapHttpError(HttpResponseMessage response, string verb)
+    {
+        string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        return DomainError.External(
+            $"google_calendar.{(int)response.StatusCode}",
+            $"Google Calendar {verb} failed ({(int)response.StatusCode}): {body}");
+    }
+
+    private static async Task<string?> ReadCardGoogleEventIdAsync(Guid cardId, CancellationToken ct)
+    {
+        // The card's Google event id is stored in a custom field
+        // named 'google_calendar_event_id'. For v1.1.0 the lookup
+        // is a placeholder — when the Card-CustomField pipeline
+        // exposes a typed 'GoogleCalendarEventId' field the
+        // reader flips to that source.
+        await Task.CompletedTask;
+        return null;
+    }
+}

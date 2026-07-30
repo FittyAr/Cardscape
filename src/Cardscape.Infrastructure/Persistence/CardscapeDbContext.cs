@@ -52,6 +52,7 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<IdempotencyKey> IdempotencyKeys => Set<IdempotencyKey>();
     public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
     public DbSet<TotpCredential> TotpCredentials => Set<TotpCredential>();
+    public DbSet<Domain.Integrations.GoogleCalendar.GoogleCalendarConnection> GoogleCalendarConnections => Set<Domain.Integrations.GoogleCalendar.GoogleCalendarConnection>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't

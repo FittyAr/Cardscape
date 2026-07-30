@@ -70,6 +70,7 @@ builder.Services.AddScoped<ISecurityApiClient, SecurityApiClient>();
 builder.Services.AddScoped<IInvitationsApiClient, InvitationsApiClient>();
 builder.Services.AddScoped<INotificationsApiClient, NotificationsApiClient>();
 builder.Services.AddScoped<IAutomationApiClient, AutomationApiClient>();
+builder.Services.AddScoped<IGoogleCalendarApiClient, GoogleCalendarApiClient>();
 builder.Services.AddScoped<IBoardExtensionsApiClient, BoardExtensionsApiClient>();
 builder.Services.AddScoped<ICustomFieldsApiClient, CustomFieldsApiClient>();
 builder.Services.AddScoped<IActivitiesApiClient, ActivitiesApiClient>();

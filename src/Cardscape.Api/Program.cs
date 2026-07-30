@@ -190,6 +190,7 @@ app.MapGoogleDriveEndpoints();
 app.MapGitHubEndpoints();
 app.MapInboundEmailEndpoints();
 app.MapSlackEndpoints();
+app.MapGoogleCalendarEndpoints();
 
 // Real-time board hub. Sits at /hubs/board with the same JWT
 // bearer authentication as the REST API; clients bring the

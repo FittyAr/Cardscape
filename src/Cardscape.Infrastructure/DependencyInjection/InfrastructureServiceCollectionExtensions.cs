@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Email;
+using Cardscape.Application.Abstractions.Integrations;
 using Cardscape.Application.Abstractions.Import;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Search;
@@ -29,6 +30,7 @@ using Cardscape.Infrastructure.Ai;
 using Cardscape.Infrastructure.Authentication;
 using Cardscape.Infrastructure.Configuration;
 using Cardscape.Infrastructure.Email;
+using Cardscape.Infrastructure.Integrations;
 using Cardscape.Infrastructure.Import;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Persistence.Interceptors;
@@ -242,6 +244,15 @@ public static class InfrastructureServiceCollectionExtensions
         // Deployment region — read from Cardscape:Deployment:Region.
         // Unspecified (the default) disables cross-region gating.
         services.AddSingleton<IDeploymentRegion, ConfigurationDeploymentRegion>();
+
+        // Google Calendar sync — uses the Google Calendar API v3
+        // + the oauth2.googleapis.com token endpoint. The
+        // IGoogleCalendarConnectionRepository is scoped because it
+        // wraps the EF Core DbContext; the sync service itself is
+        // transient (cheap to instantiate per call).
+        services.AddScoped<IGoogleCalendarConnectionRepository, GoogleCalendarConnectionRepository>();
+        services.AddTransient<IGoogleCalendarSyncService, HttpGoogleCalendarSyncService>();
+        services.AddHttpClient("google-oauth");
 
         return services;
     }
