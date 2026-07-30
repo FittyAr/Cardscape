@@ -72,6 +72,8 @@ builder.Services.AddScoped<INotificationsApiClient, NotificationsApiClient>();
 builder.Services.AddScoped<IAutomationApiClient, AutomationApiClient>();
 builder.Services.AddScoped<IGoogleCalendarApiClient, GoogleCalendarApiClient>();
 builder.Services.AddScoped<IScimApiClient, ScimApiClient>();
+builder.Services.AddScoped<IDashboardsApiClient, DashboardsApiClient>();
+builder.Services.AddScoped<ISamlApiClient, SamlApiClient>();
 builder.Services.AddScoped<IBoardExtensionsApiClient, BoardExtensionsApiClient>();
 builder.Services.AddScoped<ICustomFieldsApiClient, CustomFieldsApiClient>();
 builder.Services.AddScoped<IActivitiesApiClient, ActivitiesApiClient>();

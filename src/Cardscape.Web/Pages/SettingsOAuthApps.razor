@@ -1,0 +1,31 @@
+@page "/settings/oauth-apps"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["OAuthAppsTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>@L["OAuthAppsTitle"]</h1>
+        <p class="muted">@L["OAuthAppsBlurb"]</p>
+    </div>
+
+    <RadzenCard>
+        <h3>@L["OAuthAppsRegister"]</h3>
+        <p class="muted">@L["OAuthAppsRegisterBlurb"]</p>
+        <p class="muted">
+            <code>POST /oauth/authorize</code> · <code>POST /oauth/token</code> ·
+            <code>POST /oauth/revoke</code> · <code>GET /oauth/userinfo</code>
+        </p>
+        <p class="muted">@L["OAuthAppsScopes"]</p>
+        <ul>
+            <li><code>cards.read</code> · <code>cards.write</code></li>
+            <li><code>boards.read</code> · <code>boards.write</code></li>
+            <li><code>comments.write</code> · <code>webhooks.read</code> · <code>webhooks.write</code></li>
+            <li><code>admin</code></li>
+        </ul>
+        <p class="muted">@L["OAuthAppsDocsHint"] <code>docs/api/01-oauth-flow.md</code></p>
+    </RadzenCard>
+</div>

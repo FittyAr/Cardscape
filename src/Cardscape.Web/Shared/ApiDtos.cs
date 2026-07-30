@@ -56,6 +56,36 @@ public sealed record ScimTokenDto(
     DateTimeOffset? LastUsedAt,
     bool IsRevoked);
 
+// ── Dashboards (P3.5) ───────────────────────────────────
+public sealed record DashcardDto(
+    Guid Id,
+    Guid BoardId,
+    int Kind,
+    string Title,
+    string ConfigurationJson,
+    int Position);
+
+public sealed record CreateDashcardRequest(
+    Guid BoardId,
+    string Kind,
+    string Title,
+    string ConfigurationJson,
+    int Position);
+
+// ── SAML ─────────────────────────────────────────────────
+public sealed record SamlConnectionDto(
+    Guid Id,
+    Guid WorkspaceId,
+    string Slug,
+    string DisplayName,
+    string IdpEntityId,
+    string IdpMetadataUrl,
+    string? IdpMetadataXml,
+    string SpEntityId,
+    bool IsActive,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? UpdatedAt);
+
 // ── Boards ──────────────────────────────────────────────
 public sealed record BoardDto(
     Guid Id,

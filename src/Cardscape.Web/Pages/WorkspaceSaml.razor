@@ -1,0 +1,131 @@
+@page "/workspaces/{WorkspaceId:guid}/saml"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services.Api
+@using Microsoft.Extensions.Localization
+@inject ISamlApiClient SamlApi
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["SamlTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>@L["SamlTitle"]</h1>
+        <p class="muted">@L["SamlBlurb"]</p>
+    </div>
+
+    @if (connection is null)
+    {
+        <p>@L["ActionLoading"]</p>
+    }
+    else if (connection.Id == Guid.Empty)
+    {
+        <RadzenCard>
+            <h3>@L["SamlConfigure"]</h3>
+            <RadzenTemplateForm TItem="SamlModel" Data="@model" Submit="@Configure">
+                <RadzenLabel Text="@L["SamlSlug"]" Component="s-slug" />
+                <RadzenTextBox @bind-Value="model.Slug" Name="s-slug" Style="width:100%" />
+                <RadzenLabel Text="@L["SamlDisplayName"]" Component="s-name" Style="margin-top:1rem; display:block" />
+                <RadzenTextBox @bind-Value="model.DisplayName" Name="s-name" Style="width:100%" />
+                <RadzenLabel Text="@L["SamlIdpEntityId"]" Component="s-idp" Style="margin-top:1rem; display:block" />
+                <RadzenTextBox @bind-Value="model.IdpEntityId" Name="s-idp" Style="width:100%" />
+                <RadzenLabel Text="@L["SamlIdpMetadataUrl"]" Component="s-meta" Style="margin-top:1rem; display:block" />
+                <RadzenTextBox @bind-Value="model.IdpMetadataUrl" Name="s-meta" Style="width:100%" />
+                <RadzenLabel Text="@L["SamlSpEntityId"]" Component="s-sp" Style="margin-top:1rem; display:block" />
+                <RadzenTextBox @bind-Value="model.SpEntityId" Name="s-sp" Style="width:100%" />
+                <div class="create-actions">
+                    <RadzenButton Text="@L["SamlConfigure"]" ButtonType="ButtonType.Submit"
+                                  ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
+                </div>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    }
+    else
+    {
+        <RadzenCard>
+            <h3>@L["SamlConnectedAs"] @connection.DisplayName</h3>
+            <p class="muted">@L["SamlSlug"]: <code>@connection.Slug</code></p>
+            <p class="muted">@L["SamlIdpEntityId"]: <code>@connection.IdpEntityId</code></p>
+            @if (connection.IsActive)
+            {
+                <RadzenBadge Text="@L["SamlActive"]" BadgeStyle="BadgeStyle.Success" />
+            }
+            else
+            {
+                <RadzenBadge Text="@L["SamlInactive"]" BadgeStyle="BadgeStyle.Warning" />
+            }
+            <RadzenButton Text="@L["SamlDisable"]" ButtonStyle="ButtonStyle.Danger"
+                          Click="@Disable" />
+        </RadzenCard>
+    }
+
+    @if (error is not null)
+    {
+        <div class="auth-error" role="alert">@error</div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid WorkspaceId { get; set; }
+
+    private SamlConnectionDto? connection;
+    private string? error;
+    private bool busy;
+    private readonly SamlModel model = new()
+    {
+        SpEntityId = "https://cardscape.local/saml"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await SamlApi.GetAsync(WorkspaceId);
+        connection = result.IsSuccess && result.Value is not null
+            ? result.Value
+            : Empty();
+    }
+
+    private static SamlConnectionDto Empty() => new(
+        Guid.Empty, Guid.Empty, string.Empty, string.Empty, string.Empty, string.Empty,
+        null, string.Empty, false, DateTimeOffset.UtcNow, null);
+
+    private async Task Configure()
+    {
+        busy = true;
+        error = null;
+        try
+        {
+            var result = await SamlApi.ConfigureAsync(WorkspaceId, new SamlConfigDto(
+                model.Slug, model.DisplayName, model.IdpEntityId, model.IdpMetadataUrl, model.SpEntityId));
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+                return;
+            }
+            connection = result.Value;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task Disable()
+    {
+        var result = await SamlApi.DisableAsync(WorkspaceId);
+        if (!result.IsSuccess)
+        {
+            error = result.Error;
+            return;
+        }
+        connection = Empty();
+    }
+
+    private sealed class SamlModel
+    {
+        public string Slug { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public string IdpEntityId { get; set; } = string.Empty;
+        public string IdpMetadataUrl { get; set; } = string.Empty;
+        public string SpEntityId { get; set; } = string.Empty;
+    }
+}

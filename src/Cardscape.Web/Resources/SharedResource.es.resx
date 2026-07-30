@@ -112,6 +112,41 @@
   <data name="ScimRevoked" xml:space="preserve"><value>Revocado</value></data>
   <data name="ScimRevoke" xml:space="preserve"><value>Revocar</value></data>
   <data name="ScimNever" xml:space="preserve"><value>Nunca</value></data>
+  <data name="DashboardTitle" xml:space="preserve"><value>Tablero de control</value></data>
+  <data name="DashboardAddCard" xml:space="preserve"><value>Agregar dashcard</value></data>
+  <data name="DashboardKind" xml:space="preserve"><value>Tipo</value></data>
+  <data name="DashboardTitle_Label" xml:space="preserve"><value>Título</value></data>
+  <data name="DashboardConfig" xml:space="preserve"><value>Configuración (JSON)</value></data>
+  <data name="DashboardEmpty" xml:space="preserve"><value>Este tablero no tiene dashcards todavía.</value></data>
+  <data name="IntegrationsTitle" xml:space="preserve"><value>Integraciones</value></data>
+  <data name="IntegrationsBlurb" xml:space="preserve"><value>Conectá Cardscape con las herramientas de tu equipo.</value></data>
+  <data name="SlackBlurb" xml:space="preserve"><value>Mandá eventos de tarjetas a canales de Slack.</value></data>
+  <data name="GoogleDriveBlurb" xml:space="preserve"><value>Adjuntá archivos de Google Drive a tarjetas.</value></data>
+  <data name="GitHubBlurb" xml:space="preserve"><value>Vinculá pull requests y creá issues desde tarjetas.</value></data>
+  <data name="EmailToBoardBlurb" xml:space="preserve"><value>Reenviá emails a una lista como tarjetas nuevas.</value></data>
+  <data name="SamlBlurb" xml:space="preserve"><value>Single sign-on vía tu IdP SAML 2.0.</value></data>
+  <data name="ActionConfigure" xml:space="preserve"><value>Configurar</value></data>
+  <data name="ExternalLoginsTitle" xml:space="preserve"><value>Inicios de sesión externos</value></data>
+  <data name="ExternalLoginsBlurb" xml:space="preserve"><value>Los inicios de sesión externos se vinculan a tu cuenta la primera vez que iniciás sesión con un proveedor.</value></data>
+  <data name="ExternalLoginsLinkAnother" xml:space="preserve"><value>Vincular otro proveedor</value></data>
+  <data name="ExternalLoginsLinkAnotherBlurb" xml:space="preserve"><value>Elegí un proveedor para vincular a esta cuenta. Vas a poder iniciar sesión con cualquiera de ellos la próxima vez.</value></data>
+  <data name="OAuthAppsTitle" xml:space="preserve"><value>Apps OAuth</value></data>
+  <data name="OAuthAppsBlurb" xml:space="preserve"><value>Registrá clientes OAuth personales para acceder a Cardscape desde tus propios scripts e integraciones.</value></data>
+  <data name="OAuthAppsRegister" xml:space="preserve"><value>Registrar una nueva app OAuth</value></data>
+  <data name="OAuthAppsRegisterBlurb" xml:space="preserve"><value>El flujo completo de OAuth 2.0 authorization-code está implementado en los cuatro endpoints de abajo.</value></data>
+  <data name="OAuthAppsScopes" xml:space="preserve"><value>Scopes que se pueden otorgar:</value></data>
+  <data name="OAuthAppsDocsHint" xml:space="preserve"><value>Mirá el handshake completo en</value></data>
+  <data name="SamlTitle" xml:space="preserve"><value>SAML SSO</value></data>
+  <data name="SamlConfigure" xml:space="preserve"><value>Configurar SAML</value></data>
+  <data name="SamlSlug" xml:space="preserve"><value>Slug de URL</value></data>
+  <data name="SamlDisplayName" xml:space="preserve"><value>Nombre visible</value></data>
+  <data name="SamlIdpEntityId" xml:space="preserve"><value>Entity id del IdP</value></data>
+  <data name="SamlIdpMetadataUrl" xml:space="preserve"><value>URL de metadata del IdP</value></data>
+  <data name="SamlSpEntityId" xml:space="preserve"><value>Entity id del SP</value></data>
+  <data name="SamlConnectedAs" xml:space="preserve"><value>Conectado como</value></data>
+  <data name="SamlActive" xml:space="preserve"><value>Activo</value></data>
+  <data name="SamlInactive" xml:space="preserve"><value>Inactivo</value></data>
+  <data name="SamlDisable" xml:space="preserve"><value>Desactivar</value></data>
   <data name="BoardsTitle" xml:space="preserve"><value>Tableros</value></data>
   <data name="BoardsNew" xml:space="preserve"><value>Nuevo tablero</value></data>
   <data name="BoardsEmpty" xml:space="preserve"><value>Aún no hay tableros.</value></data>

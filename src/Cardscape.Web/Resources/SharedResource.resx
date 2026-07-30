@@ -112,6 +112,41 @@
   <data name="ScimRevoked" xml:space="preserve"><value>Revoked</value></data>
   <data name="ScimRevoke" xml:space="preserve"><value>Revoke</value></data>
   <data name="ScimNever" xml:space="preserve"><value>Never</value></data>
+  <data name="DashboardTitle" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="DashboardAddCard" xml:space="preserve"><value>Add dashcard</value></data>
+  <data name="DashboardKind" xml:space="preserve"><value>Kind</value></data>
+  <data name="DashboardTitle_Label" xml:space="preserve"><value>Title</value></data>
+  <data name="DashboardConfig" xml:space="preserve"><value>Configuration (JSON)</value></data>
+  <data name="DashboardEmpty" xml:space="preserve"><value>This board has no dashcards yet.</value></data>
+  <data name="IntegrationsTitle" xml:space="preserve"><value>Integrations</value></data>
+  <data name="IntegrationsBlurb" xml:space="preserve"><value>Connect Cardscape to your team's tools.</value></data>
+  <data name="SlackBlurb" xml:space="preserve"><value>Push card events to Slack channels.</value></data>
+  <data name="GoogleDriveBlurb" xml:space="preserve"><value>Attach Google Drive files to cards.</value></data>
+  <data name="GitHubBlurb" xml:space="preserve"><value>Link pull requests and create issues from cards.</value></data>
+  <data name="EmailToBoardBlurb" xml:space="preserve"><value>Forward emails to a list as new cards.</value></data>
+  <data name="SamlBlurb" xml:space="preserve"><value>Single sign-on via your SAML 2.0 IdP.</value></data>
+  <data name="ActionConfigure" xml:space="preserve"><value>Configure</value></data>
+  <data name="ExternalLoginsTitle" xml:space="preserve"><value>External logins</value></data>
+  <data name="ExternalLoginsBlurb" xml:space="preserve"><value>External logins are linked to your account the first time you sign in with a provider.</value></data>
+  <data name="ExternalLoginsLinkAnother" xml:space="preserve"><value>Link another provider</value></data>
+  <data name="ExternalLoginsLinkAnotherBlurb" xml:space="preserve"><value>Pick a provider to link to this account. You can sign in with any of them next time.</value></data>
+  <data name="OAuthAppsTitle" xml:space="preserve"><value>OAuth apps</value></data>
+  <data name="OAuthAppsBlurb" xml:space="preserve"><value>Register personal OAuth clients to access Cardscape from your own scripts and integrations.</value></data>
+  <data name="OAuthAppsRegister" xml:space="preserve"><value>Register a new OAuth app</value></data>
+  <data name="OAuthAppsRegisterBlurb" xml:space="preserve"><value>The full OAuth 2.0 authorization-code flow is implemented at the four endpoints below.</value></data>
+  <data name="OAuthAppsScopes" xml:space="preserve"><value>Grantable scopes:</value></data>
+  <data name="OAuthAppsDocsHint" xml:space="preserve"><value>See the full handshake walkthrough in</value></data>
+  <data name="SamlTitle" xml:space="preserve"><value>SAML SSO</value></data>
+  <data name="SamlConfigure" xml:space="preserve"><value>Configure SAML</value></data>
+  <data name="SamlSlug" xml:space="preserve"><value>URL slug</value></data>
+  <data name="SamlDisplayName" xml:space="preserve"><value>Display name</value></data>
+  <data name="SamlIdpEntityId" xml:space="preserve"><value>IdP entity id</value></data>
+  <data name="SamlIdpMetadataUrl" xml:space="preserve"><value>IdP metadata URL</value></data>
+  <data name="SamlSpEntityId" xml:space="preserve"><value>SP entity id</value></data>
+  <data name="SamlConnectedAs" xml:space="preserve"><value>Connected as</value></data>
+  <data name="SamlActive" xml:space="preserve"><value>Active</value></data>
+  <data name="SamlInactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="SamlDisable" xml:space="preserve"><value>Disable</value></data>
   <data name="BoardsTitle" xml:space="preserve"><value>Boards</value></data>
   <data name="BoardsNew" xml:space="preserve"><value>New board</value></data>
   <data name="BoardsEmpty" xml:space="preserve"><value>No boards yet.</value></data>

@@ -1,0 +1,70 @@
+@page "/workspaces/{WorkspaceId:guid}/integrations"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["IntegrationsTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<div class="page-shell">
+    <div class="page-header">
+        <h1>@L["IntegrationsTitle"]</h1>
+        <p class="muted">@L["IntegrationsBlurb"]</p>
+    </div>
+
+    <div class="integration-grid">
+        <RadzenCard class="integration-card">
+            <h3>Slack</h3>
+            <p class="muted">@L["SlackBlurb"]</p>
+            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                          Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/integrations/slack"))" />
+        </RadzenCard>
+
+        <RadzenCard class="integration-card">
+            <h3>Google Drive</h3>
+            <p class="muted">@L["GoogleDriveBlurb"]</p>
+            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                          Click="@(() => Nav.NavigateTo("/settings/integrations/google-calendar"))" />
+        </RadzenCard>
+
+        <RadzenCard class="integration-card">
+            <h3>GitHub</h3>
+            <p class="muted">@L["GitHubBlurb"]</p>
+            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                          Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/integrations/github"))" />
+        </RadzenCard>
+
+        <RadzenCard class="integration-card">
+            <h3>Email-to-board</h3>
+            <p class="muted">@L["EmailToBoardBlurb"]</p>
+            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                          Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/integrations/email"))" />
+        </RadzenCard>
+
+        <RadzenCard class="integration-card">
+            <h3>Google Calendar</h3>
+            <p class="muted">@L["GoogleCalendarBlurb"]</p>
+            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                          Click="@(() => Nav.NavigateTo("/settings/integrations/google-calendar"))" />
+        </RadzenCard>
+
+        <RadzenCard class="integration-card">
+            <h3>SCIM provisioning</h3>
+            <p class="muted">@L["ScimBlurb"]</p>
+            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                          Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/scim"))" />
+        </RadzenCard>
+
+        <RadzenCard class="integration-card">
+            <h3>SAML SSO</h3>
+            <p class="muted">@L["SamlBlurb"]</p>
+            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                          Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/saml"))" />
+        </RadzenCard>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid WorkspaceId { get; set; }
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+}
