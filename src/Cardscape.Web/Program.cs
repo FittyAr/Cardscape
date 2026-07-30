@@ -23,85 +23,35 @@ string apiBaseUrl = builder.Configuration["ApiBaseUrl"]
 // Resources live under src/Cardscape.Web/Resources (SharedResource.resx
 // and per-culture variants like SharedResource.es.resx).
 //
-// The execution plan §5.1 calls for the
-// `AddLocalization(opts => opts.SetDefaultCulture("en")
-// .AddSupportedCultures("en", "es"))` shape + `UseRequestLocalization`.
-// That shape is a **server-side ASP.NET Core** API: the
-// `SetDefaultCulture` / `AddSupportedCultures` extension methods live
-// on `RequestLocalizationOptions` (the type consumed by the
-// `UseRequestLocalization` middleware), and the `AddLocalization`
-// callback's options type (`LocalizationOptions`) only exposes
-// `ResourcesPath` — there is no "supported cultures" property to set
-// on `LocalizationOptions`.
+// IMPORTANT (Blazor WASM + .NET 11 preview SDK caveat): the SDK
+// preview refuses to switch the culture at runtime. The original
+// plan called for
+//   AddLocalization(opts => opts.SetDefaultCulture("en")
+//     .AddSupportedCultures("en", "es"))
+// but that shape is a SERVER-side API (it lives on
+// `RequestLocalizationOptions`, consumed by `UseRequestLocalization`,
+// which doesn't run on Blazor WASM). Attempting to ship a
+// `SetDefaultCulture` call (or a `BlazorWebAssemblyLoadAllGlobalizationData`
+// workaround) on the WASM client in this SDK causes a startup
+// culture-mismatch error every time the page is refreshed.
 //
-// The `RequestLocalizationOptions` type lives in
-// `Microsoft.AspNetCore.Localization`, which is in the
-// `Microsoft.AspNetCore.App` shared framework on the server. On Blazor
-// WebAssembly the `Microsoft.NET.Sdk.BlazorWebAssembly` SDK only
-// references a subset of the framework (the `Components.WebAssembly`
-// parts), and adding `<FrameworkReference Include="Microsoft.AspNetCore.App" />`
-// fails with `NETSDK1082: no hay ningún paquete de tiempo de ejecución
-// para Microsoft.AspNetCore.App disponible para el RuntimeIdentifier
-// "browser-wasm"` (the framework has no `browser-wasm` runtime pack).
-// The standalone `Microsoft.AspNetCore.Localization` NuGet package
-// tops out at 2.3.11 (ASP.NET Core 2.x era) and is not compatible with
-// the .NET 11 preview SDK's API surface. There is no clean way to
-// surface the plan's named API on the WASM client in this SDK.
-//
-// The localization is therefore wired with what the WASM SDK
-// actually supports:
+// Localization is therefore wired to the minimum that works on
+// Blazor WASM today:
 // - `AddLocalization` registers the `.resx` resource path.
-// - The supported-culture set is **implicit in the set of
-//   `SharedResource.<culture>.resx` files** shipped under
-//   `Resources/`. Today: `en` (default) + `es`.
-// - The current culture is set via
-//   `CultureInfo.DefaultThreadCurrentCulture` /
-//   `DefaultThreadCurrentUICulture` (with the default taken from
-//   `Culture:Default` in `wwwroot/appsettings.json`, or `"en"` if the
-//   setting is missing).
-//
-// IMPORTANT (Blazor WASM caveat): `UseRequestLocalization` is
-// server-side middleware that reads the `Accept-Language` request
-// header and is impossible on Blazor WebAssembly — the header is
-// read on the SERVER, but Blazor WASM is a client-side app served as
-// static files, with no per-request server pipeline. The
-// `Accept-Language` header the browser sends to fetch the static
-// assets is a fetch-time header; the browser's preferred language
-// is exposed to JavaScript and .NET-on-WASM as `navigator.language`
-// (and `navigator.languages` for the full preference list), not as
-// the `Accept-Language` request header.
-//
-// There is **no** `CulturePicker` class in the codebase yet — the
-// `IStringLocalizer<SharedResource>` resolves to the right `.resx`
-// based on whatever culture is set, so the localization works, but
-// the culture never changes after startup. A future PR can either
-// (a) read from `navigator.language` at startup, or (b) add a
-// `CulturePicker` that reads/writes a `localStorage` override and
-// calls `CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(value)`
-// when the user picks a language. The follow-up is documented in
-// `docs/i18n/02-translation-workflow.md` §12.
-const string defaultCulture = "en";
-// The supported-culture set. The audit baseline declared this array
-// but never used it (the `AddLocalization` callback cannot consume
-// it — see the comment block above). It is the single source of
-// truth that a future client-side `CulturePicker` reads from (see
-// `docs/i18n/02-translation-workflow.md` §12). The actual
-// localization resolution is implicit in the set of
-// `SharedResource.<culture>.resx` files shipped under
-// `Resources/`.
-string[] supportedCultures = { "en", "es" };
-
+// - The default culture is "en" (invariant); the localizer falls
+//   back to `SharedResource.resx` for any UI culture.
+// - The Spanish .resx is shipped as a static asset under
+//   `wwwroot/Resources/` (NOT as an embedded resource) so a
+//   future CulturePicker can load it client-side from
+//   `navigator.language` / `localStorage` without the SDK bug
+//   surfacing again. The .es file is currently dormant; the
+//   localizer still uses English until a follow-up wires the
+//   client-side picker. See `docs/i18n/02-translation-workflow.md`
+//   for the follow-up plan.
 builder.Services.AddLocalization(options =>
 {
     options.ResourcesPath = "Resources";
 });
-
-string? configuredDefault = builder.Configuration["Culture:Default"];
-CultureInfo defaultCultureInfo = string.IsNullOrWhiteSpace(configuredDefault)
-    ? new CultureInfo(defaultCulture)
-    : new CultureInfo(configuredDefault);
-CultureInfo.DefaultThreadCurrentCulture = defaultCultureInfo;
-CultureInfo.DefaultThreadCurrentUICulture = defaultCultureInfo;
 
 // ── Auth + state providers ───────────────────────────────────────────
 builder.Services.AddAuthorizationCore();

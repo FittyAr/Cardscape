@@ -19,22 +19,6 @@
         SDK ships the replacement pass.
     -->
     <StaticWebAssetsFingerprintingEnabled>false</StaticWebAssetsFingerprintingEnabled>
-    <!--
-        G12 (SetDefaultCulture / AddSupportedCultures on
-        AddLocalization) caused a Blazor WASM runtime error:
-        "Blazor detected a change in the application's culture
-        that is not supported with the current project
-        configuration." The default culture list (en, es) is
-        loaded at startup and Blazor refuses to switch to a
-        culture that wasn't part of the initial load. Setting
-        this to true ships the ICU / globalization data for
-        every supported culture (≈300 KB compressed); the
-        alternative is hard-coding the default culture to
-        "en" and only shipping English data, which we don't
-        want because the Spanish .resx is the second-largest
-        string set in the project.
-    -->
-    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
   </PropertyGroup>
 
   <ItemGroup>
@@ -50,6 +34,20 @@
   <ItemGroup>
     <Using Include="System.Net.Http" />
     <Using Include="System.Net.Http.Json" />
+  </ItemGroup>
+
+  <!--
+    The Spanish .resx is shipped as a static web asset so a future
+    client-side CulturePicker can fetch it via HttpClient and
+    switch cultures without going through the (broken on this
+    preview SDK) `CultureInfo.DefaultThreadCurrentCulture`
+    path. Until that picker is wired, the localizer still uses
+    the embedded `SharedResource.resx` (English).
+  -->
+  <ItemGroup>
+    <None Include="Resources\SharedResource.es.resx"
+          Pack="true"
+          PackagePath="wwwroot\Resources\SharedResource.es.resx" />
   </ItemGroup>
 
 </Project>
