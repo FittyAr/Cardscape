@@ -20,10 +20,21 @@ public sealed class ActivitiesTools(IMessageBus bus, ICurrentUser currentUser)
         Guid boardId, string? cursor = null, int? limit = null, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_list_activities");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<ActivityPage>>(
-            new ListBoardActivitiesQuery(boardId, cursor, limit), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<ActivityPage>>(
+                new ListBoardActivitiesQuery(boardId, cursor, limit), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_list_activities")]
@@ -31,10 +42,21 @@ public sealed class ActivitiesTools(IMessageBus bus, ICurrentUser currentUser)
         Guid cardId, string? cursor = null, int? limit = null, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_list_activities");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<ActivityPage>>(
-            new ListCardActivitiesQuery(cardId, cursor, limit), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<ActivityPage>>(
+                new ListCardActivitiesQuery(cardId, cursor, limit), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     private void RequireAuth()
@@ -57,4 +79,3 @@ public sealed class ActivitiesTools(IMessageBus bus, ICurrentUser currentUser)
         return result.Value!;
     }
 }
-

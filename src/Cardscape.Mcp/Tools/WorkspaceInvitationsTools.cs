@@ -26,12 +26,23 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
         Guid workspaceId, string email, int role, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("workspaces_invite");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<WorkspaceInvitationIssuanceDto>>(
-            new IssueWorkspaceInvitationCommand(
-                workspaceId, email, (WorkspaceRole)role, Lifetime: null),
-            ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<WorkspaceInvitationIssuanceDto>>(
+                new IssueWorkspaceInvitationCommand(
+                    workspaceId, email, (WorkspaceRole)role, Lifetime: null),
+                ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "workspaces_list_invitations")]
@@ -39,21 +50,42 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
         Guid workspaceId, bool includeTerminal, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("workspaces_list_invitations");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
-            new ListWorkspaceInvitationsQuery(workspaceId, includeTerminal), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
+                new ListWorkspaceInvitationsQuery(workspaceId, includeTerminal), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "workspaces_revoke_invitation")]
     public async Task<string> RevokeInvitation(Guid invitationId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("workspaces_revoke_invitation");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result>(
-            new RevokeWorkspaceInvitationCommand(invitationId), ct);
-        Ensure(result);
-        return "revoked";
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result>(
+                new RevokeWorkspaceInvitationCommand(invitationId), ct);
+            Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return "revoked";
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "invitations_list_pending")]
@@ -61,20 +93,42 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
         CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("invitations_list_pending");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
-            new ListPendingInvitationsForUserQuery(), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
+                new ListPendingInvitationsForUserQuery(), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "invitations_accept")]
     public async Task<WorkspaceDto> AcceptInvitation(string token, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("invitations_accept");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
-            new AcceptWorkspaceInvitationCommand(token), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
+                new AcceptWorkspaceInvitationCommand(token), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     private void RequireAuth()
@@ -107,4 +161,3 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
         }
     }
 }
-

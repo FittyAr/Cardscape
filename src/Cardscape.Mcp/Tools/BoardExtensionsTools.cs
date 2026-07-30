@@ -20,10 +20,21 @@ public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUs
     public async Task<IReadOnlyList<BoardExtensionDto>> ListExtensions(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_list_extensions");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardExtensionDto>>>(
-            new ListBoardExtensionsQuery(boardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardExtensionDto>>>(
+                new ListBoardExtensionsQuery(boardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "boards_enable_extension")]
@@ -34,21 +45,42 @@ public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUs
         CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_enable_extension");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<BoardExtensionDto>>(
-            new EnableBoardExtensionCommand(boardId, kind, configJson), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<BoardExtensionDto>>(
+                new EnableBoardExtensionCommand(boardId, kind, configJson), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "boards_disable_extension")]
     public async Task<string> DisableExtension(Guid boardId, int kind, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_disable_extension");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result>(
-            new DisableBoardExtensionCommand(boardId, kind), ct);
-        Ensure(result);
-        return "disabled";
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result>(
+                new DisableBoardExtensionCommand(boardId, kind), ct);
+            Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return "disabled";
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "boards_update_extension_config")]
@@ -59,10 +91,21 @@ public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUs
         CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_update_extension_config");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<BoardExtensionDto>>(
-            new UpdateBoardExtensionConfigCommand(boardId, kind, configJson), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<BoardExtensionDto>>(
+                new UpdateBoardExtensionConfigCommand(boardId, kind, configJson), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     private void RequireAuth()
@@ -95,4 +138,3 @@ public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUs
         }
     }
 }
-

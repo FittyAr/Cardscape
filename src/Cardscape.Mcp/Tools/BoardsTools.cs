@@ -62,9 +62,20 @@ public sealed class BoardsTools(
     public async Task<IReadOnlyList<WorkspaceDto>> ListWorkspaces(CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("workspaces_list");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceDto>>>(new ListWorkspacesForUserQuery(), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceDto>>>(new ListWorkspacesForUserQuery(), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     // â”€â”€ Boards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -73,19 +84,41 @@ public sealed class BoardsTools(
     public async Task<IReadOnlyList<BoardSummaryDto>> ListBoards(Guid workspaceId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_list");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(
-            new ListBoardsForWorkspaceQuery(workspaceId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(
+                new ListBoardsForWorkspaceQuery(workspaceId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "boards_get")]
     public async Task<BoardDto> GetBoard(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_get");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<BoardDto>>(new GetBoardQuery(boardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<BoardDto>>(new GetBoardQuery(boardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "boards_create")]
@@ -93,29 +126,62 @@ public sealed class BoardsTools(
         Guid workspaceId, string name, string? description, int visibility, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_create");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<BoardDto>>(
-            new CreateBoardCommand(workspaceId, name, description, (Cardscape.Domain.Boards.BoardVisibility)visibility),
-            ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<BoardDto>>(
+                new CreateBoardCommand(workspaceId, name, description, (Cardscape.Domain.Boards.BoardVisibility)visibility),
+                ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "boards_star")]
     public async Task<BoardDto> StarBoard(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_star");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<BoardDto>>(new StarBoardCommand(boardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<BoardDto>>(new StarBoardCommand(boardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "boards_unstar")]
     public async Task<BoardDto> UnstarBoard(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_unstar");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<BoardDto>>(new UnstarBoardCommand(boardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<BoardDto>>(new UnstarBoardCommand(boardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     // â”€â”€ Lists â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -125,10 +191,21 @@ public sealed class BoardsTools(
         Guid boardId, bool includeArchived, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("lists_list");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardListDto>>>(
-            new ListListsForBoardQuery(boardId, includeArchived), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardListDto>>>(
+                new ListListsForBoardQuery(boardId, includeArchived), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "lists_create")]
@@ -139,24 +216,35 @@ public sealed class BoardsTools(
         CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("lists_create");
-        RequireAuth();
-        var payload = JsonSerializer.Serialize(new { boardId, name });
-        return await IdempotentToolRunner.RunAsync(
-            idempotencyKey: idempotencyKey,
-            requestJson: payload,
-            currentUser: currentUser,
-            store: idempotencyStore,
-            clock: clock,
-            handler: async () =>
-            {
-                var result = await bus.InvokeAsync<Result<BoardListDto>>(
-                    new CreateListCommand(boardId, name), ct);
-                var dto = Ensure(result);
-                await push.PushListCreatedAsync(new ListEventPayload(
-                    dto.Id, dto.BoardId, dto.Name, DateTimeOffset.UtcNow), ct);
-                return dto;
-            },
-            ct: ct);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var payload = JsonSerializer.Serialize(new { boardId, name });
+            var value = await IdempotentToolRunner.RunAsync(
+                idempotencyKey: idempotencyKey,
+                requestJson: payload,
+                currentUser: currentUser,
+                store: idempotencyStore,
+                clock: clock,
+                handler: async () =>
+                {
+                    var result = await bus.InvokeAsync<Result<BoardListDto>>(
+                        new CreateListCommand(boardId, name), ct);
+                    var dto = Ensure(result);
+                    await push.PushListCreatedAsync(new ListEventPayload(
+                        dto.Id, dto.BoardId, dto.Name, DateTimeOffset.UtcNow), ct);
+                    return dto;
+                },
+                ct: ct);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     // â”€â”€ Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -166,19 +254,41 @@ public sealed class BoardsTools(
         Guid boardId, bool includeArchived, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_list");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
-            new ListCardsForBoardQuery(boardId, includeArchived), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
+                new ListCardsForBoardQuery(boardId, includeArchived), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_get")]
     public async Task<CardDto> GetCard(Guid cardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_get");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<CardDto>>(new GetCardQuery(cardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<CardDto>>(new GetCardQuery(cardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_create")]
@@ -190,24 +300,35 @@ public sealed class BoardsTools(
         CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_create");
-        RequireAuth();
-        var payload = JsonSerializer.Serialize(new { listId, title, description });
-        return await IdempotentToolRunner.RunAsync(
-            idempotencyKey: idempotencyKey,
-            requestJson: payload,
-            currentUser: currentUser,
-            store: idempotencyStore,
-            clock: clock,
-            handler: async () =>
-            {
-                var result = await bus.InvokeAsync<Result<CardDto>>(
-                    new CreateCardCommand(listId, title, description), ct);
-                var dto = Ensure(result);
-                await push.PushCardCreatedAsync(new CardEventPayload(
-                    dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
-                return dto;
-            },
-            ct: ct);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var payload = JsonSerializer.Serialize(new { listId, title, description });
+            var value = await IdempotentToolRunner.RunAsync(
+                idempotencyKey: idempotencyKey,
+                requestJson: payload,
+                currentUser: currentUser,
+                store: idempotencyStore,
+                clock: clock,
+                handler: async () =>
+                {
+                    var result = await bus.InvokeAsync<Result<CardDto>>(
+                        new CreateCardCommand(listId, title, description), ct);
+                    var dto = Ensure(result);
+                    await push.PushCardCreatedAsync(new CardEventPayload(
+                        dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
+                    return dto;
+                },
+                ct: ct);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_move")]
@@ -215,62 +336,114 @@ public sealed class BoardsTools(
         Guid cardId, Guid newListId, double newPosition, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_move");
-        RequireAuth();
-        // The board-resolving server side needs the source list id
-        // to compute the from-list; we look it up via the loaded
-        // card before invoking the command. This is one cheap
-        // repository call on the move hot path.
-        var existing = await cards.GetByIdAsync(new CardId(cardId), ct);
-        var fromListId = existing?.ListId.Value;
-        var result = await bus.InvokeAsync<Result<CardDto>>(
-            new MoveCardCommand(cardId, newListId, newPosition), ct);
-        var dto = Ensure(result);
-        await push.PushCardMovedAsync(new CardMovedPayload(
-            dto.Id, Guid.Empty, fromListId ?? dto.ListId, newListId, newPosition,
-            DateTimeOffset.UtcNow), ct);
-        return dto;
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            // The board-resolving server side needs the source list id
+            // to compute the from-list; we look it up via the loaded
+            // card before invoking the command. This is one cheap
+            // repository call on the move hot path.
+            var existing = await cards.GetByIdAsync(new CardId(cardId), ct);
+            var fromListId = existing?.ListId.Value;
+            var result = await bus.InvokeAsync<Result<CardDto>>(
+                new MoveCardCommand(cardId, newListId, newPosition), ct);
+            var dto = Ensure(result);
+            await push.PushCardMovedAsync(new CardMovedPayload(
+                dto.Id, Guid.Empty, fromListId ?? dto.ListId, newListId, newPosition,
+                DateTimeOffset.UtcNow), ct);
+            __mcpSpan.MarkSuccess();
+            return dto;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_complete")]
     public async Task<CardDto> CompleteCard(Guid cardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_complete");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<CardDto>>(new CompleteCardCommand(cardId), ct);
-        var dto = Ensure(result);
-        await push.PushCardCompletedAsync(new CardEventPayload(
-            dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
-        return dto;
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<CardDto>>(new CompleteCardCommand(cardId), ct);
+            var dto = Ensure(result);
+            await push.PushCardCompletedAsync(new CardEventPayload(
+                dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
+            __mcpSpan.MarkSuccess();
+            return dto;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_reopen")]
     public async Task<CardDto> ReopenCard(Guid cardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_reopen");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<CardDto>>(new ReopenCardCommand(cardId), ct);
-        var dto = Ensure(result);
-        await push.PushCardReopenedAsync(new CardEventPayload(
-            dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
-        return dto;
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<CardDto>>(new ReopenCardCommand(cardId), ct);
+            var dto = Ensure(result);
+            await push.PushCardReopenedAsync(new CardEventPayload(
+                dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
+            __mcpSpan.MarkSuccess();
+            return dto;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_archive")]
     public async Task<CardDto> ArchiveCard(Guid cardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_archive");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<CardDto>>(new ArchiveCardCommand(cardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<CardDto>>(new ArchiveCardCommand(cardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_restore")]
     public async Task<CardDto> RestoreCard(Guid cardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_restore");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<CardDto>>(new RestoreCardCommand(cardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<CardDto>>(new RestoreCardCommand(cardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_update")]
@@ -281,29 +454,51 @@ public sealed class BoardsTools(
         CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_update");
-        RequireAuth();
-        Result<CardDto> result = Result<CardDto>.Failure(DomainError.Validation(
-            "cards.nothing_to_update", "Provide at least one of newTitle or newDescription."));
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            Result<CardDto> result = Result<CardDto>.Failure(DomainError.Validation(
+                "cards.nothing_to_update", "Provide at least one of newTitle or newDescription."));
 
-        if (!string.IsNullOrWhiteSpace(newTitle))
-        {
-            result = await bus.InvokeAsync<Result<CardDto>>(new RenameCardCommand(cardId, newTitle), ct);
+            if (!string.IsNullOrWhiteSpace(newTitle))
+            {
+                result = await bus.InvokeAsync<Result<CardDto>>(new RenameCardCommand(cardId, newTitle), ct);
+            }
+            if (result.IsSuccess && !string.IsNullOrWhiteSpace(newDescription))
+            {
+                result = await bus.InvokeAsync<Result<CardDto>>(
+                    new ChangeCardDescriptionCommand(cardId, newDescription), ct);
+            }
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
         }
-        if (result.IsSuccess && !string.IsNullOrWhiteSpace(newDescription))
+        catch (Exception ex)
         {
-            result = await bus.InvokeAsync<Result<CardDto>>(
-                new ChangeCardDescriptionCommand(cardId, newDescription), ct);
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
         }
-        return Ensure(result);
     }
 
     [McpServerTool(Name = "cards_assign")]
     public async Task<CardDto> AssignCard(Guid cardId, Guid userId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_assign");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<CardDto>>(new AssignCardCommand(cardId, userId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<CardDto>>(new AssignCardCommand(cardId, userId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     /// <summary>
@@ -317,11 +512,22 @@ public sealed class BoardsTools(
     [McpServerTool(Name = "cards_attach_label")]
     public async Task<CardDto> AttachLabel(Guid cardId, Guid labelId, CancellationToken ct)
     {
-        using var __mcpSpan = McpToolSpan.Begin("members_assign");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<CardDto>>(
-            new AttachLabelToCardCommand(cardId, labelId), ct);
-        return Ensure(result);
+        using var __mcpSpan = McpToolSpan.Begin("cards_attach_label");
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<CardDto>>(
+                new AttachLabelToCardCommand(cardId, labelId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_calendar")]
@@ -329,10 +535,21 @@ public sealed class BoardsTools(
         DateTimeOffset from, DateTimeOffset to, Guid? boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_calendar");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<CalendarEntryDto>>>(
-            new ListCardsDueInRangeQuery(from, to, boardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<CalendarEntryDto>>>(
+                new ListCardsDueInRangeQuery(from, to, boardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     // â”€â”€ Comments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -341,23 +558,44 @@ public sealed class BoardsTools(
     public async Task<CommentDto> AddComment(Guid cardId, string body, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("comments_add");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<CommentDto>>(
-            new AddCommentCommand(cardId, body), ct);
-        var dto = Ensure(result);
-        await push.PushCommentAddedAsync(new CommentEventPayload(
-            dto.Id, dto.CardId, Guid.Empty, dto.AuthorId, DateTimeOffset.UtcNow), ct);
-        return dto;
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<CommentDto>>(
+                new AddCommentCommand(cardId, body), ct);
+            var dto = Ensure(result);
+            await push.PushCommentAddedAsync(new CommentEventPayload(
+                dto.Id, dto.CardId, Guid.Empty, dto.AuthorId, DateTimeOffset.UtcNow), ct);
+            __mcpSpan.MarkSuccess();
+            return dto;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "comments_list")]
     public async Task<IReadOnlyList<CommentDto>> ListComments(Guid cardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("comments_list");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<CommentDto>>>(
-            new ListCommentsForCardQuery(cardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<CommentDto>>>(
+                new ListCommentsForCardQuery(cardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     // â”€â”€ Labels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -366,20 +604,42 @@ public sealed class BoardsTools(
     public async Task<IReadOnlyList<LabelDto>> ListLabels(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("labels_list");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<LabelDto>>>(
-            new ListLabelsForBoardQuery(boardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<LabelDto>>>(
+                new ListLabelsForBoardQuery(boardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "labels_create")]
     public async Task<LabelDto> CreateLabel(Guid boardId, string name, string color, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("labels_create");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<LabelDto>>(
-            new CreateLabelCommand(boardId, name, color), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<LabelDto>>(
+                new CreateLabelCommand(boardId, name, color), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     // â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -398,31 +658,55 @@ public sealed class BoardsTools(
     public async Task<string> GetBoardICalendar(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_get_icalendar");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<Stream>>(
-            new RenderBoardCalendarQuery(boardId), ct);
-        if (result.IsFailure)
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
         {
-            throw new InvalidOperationException($"{result.Error.Code}: {result.Error.Message}");
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<Stream>>(
+                new RenderBoardCalendarQuery(boardId), ct);
+            if (result.IsFailure)
+            {
+                __mcpSpan.MarkFailure(result.Error.Code, result.Error.Message);
+                throw new InvalidOperationException($"{result.Error.Code}: {result.Error.Message}");
+            }
+            using var reader = new StreamReader(result.Value);
+            var value = await reader.ReadToEndAsync(ct);
+            __mcpSpan.MarkSuccess();
+            return value;
         }
-        using var reader = new StreamReader(result.Value);
-        return await reader.ReadToEndAsync(ct);
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "boards_export")]
     public async Task<byte[]> ExportBoard(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_export");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<Stream>>(
-            new ExportBoardQuery(boardId), ct);
-        if (result.IsFailure)
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
         {
-            throw new InvalidOperationException($"{result.Error.Code}: {result.Error.Message}");
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<Stream>>(
+                new ExportBoardQuery(boardId), ct);
+            if (result.IsFailure)
+            {
+                __mcpSpan.MarkFailure(result.Error.Code, result.Error.Message);
+                throw new InvalidOperationException($"{result.Error.Code}: {result.Error.Message}");
+            }
+            using var ms = new MemoryStream();
+            await result.Value.CopyToAsync(ms, ct);
+            var value = ms.ToArray();
+            __mcpSpan.MarkSuccess();
+            return value;
         }
-        using var ms = new MemoryStream();
-        await result.Value.CopyToAsync(ms, ct);
-        return ms.ToArray();
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     private static T Ensure<T>(Result<T> result)
@@ -436,4 +720,3 @@ public sealed class BoardsTools(
         return result.Value!;
     }
 }
-

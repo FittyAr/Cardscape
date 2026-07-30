@@ -14,20 +14,42 @@ public sealed class VotingTools(IMessageBus bus, ICurrentUser currentUser)
     public async Task<CardVoteStateDto> ToggleVote(Guid cardId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_toggle_vote");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<CardVoteStateDto>>(
-            new ToggleCardVoteCommand(cardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<CardVoteStateDto>>(
+                new ToggleCardVoteCommand(cardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_get_votes")]
     public async Task<CardVoteStateDto> GetVotes(Guid cardId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_get_votes");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<CardVoteStateDto>>(
-            new ListCardVotesQuery(cardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<CardVoteStateDto>>(
+                new ListCardVotesQuery(cardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     private void RequireAuth()
@@ -50,4 +72,3 @@ public sealed class VotingTools(IMessageBus bus, ICurrentUser currentUser)
         return result.Value!;
     }
 }
-

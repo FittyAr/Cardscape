@@ -11,7 +11,7 @@ namespace Cardscape.Mcp.Tools;
 
 /// <summary>
 /// MCP tool surface for the in-app inbox. AI assistants can list
-/// the user's notifications, read them, and mark them as read â€”
+/// the user's notifications, read them, and mark them as read —
 /// useful for "what's on my plate today?" workflows driven by the
 /// model.
 /// </summary>
@@ -23,40 +23,82 @@ public sealed class InboxTools(IMessageBus bus, ICurrentUser currentUser)
         bool unreadOnly, int skip, int take, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("inbox_list");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<NotificationDto>>>(
-            new ListNotificationsQuery(unreadOnly, skip, take == 0 ? 50 : take), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<NotificationDto>>>(
+                new ListNotificationsQuery(unreadOnly, skip, take == 0 ? 50 : take), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "inbox_unread_count")]
     public async Task<int> UnreadCount(CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("inbox_unread_count");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<int>>(new UnreadNotificationsCountQuery(), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<int>>(new UnreadNotificationsCountQuery(), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "inbox_mark_read")]
     public async Task<string> MarkRead(Guid notificationId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("inbox_mark_read");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result>(
-            new MarkNotificationReadCommand(notificationId), ct);
-        Ensure(result);
-        return "read";
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result>(
+                new MarkNotificationReadCommand(notificationId), ct);
+            Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return "read";
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "inbox_mark_all_read")]
     public async Task<string> MarkAllRead(CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("inbox_mark_all_read");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result>(new MarkAllNotificationsReadCommand(), ct);
-        Ensure(result);
-        return "all read";
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result>(new MarkAllNotificationsReadCommand(), ct);
+            Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return "all read";
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     private void RequireAuth()
@@ -89,4 +131,3 @@ public sealed class InboxTools(IMessageBus bus, ICurrentUser currentUser)
         }
     }
 }
-

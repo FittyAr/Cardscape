@@ -31,10 +31,21 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         Guid workspaceId, string teamId, string teamName, string botToken, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_slack_connect");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<SlackWorkspaceDto>>(
-            new ConnectSlackWorkspaceCommand(workspaceId, teamId, teamName, botToken), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<SlackWorkspaceDto>>(
+                new ConnectSlackWorkspaceCommand(workspaceId, teamId, teamName, botToken), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "integrations_slack_list_channels")]
@@ -42,20 +53,41 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_slack_list_channels");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<SlackChannelDto>>>(
-            new ListSlackChannelsForBoardQuery(boardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<SlackChannelDto>>>(
+                new ListSlackChannelsForBoardQuery(boardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "integrations_slack_unlink_channel")]
     public async Task<string> SlackUnlinkChannel(Guid channelId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_slack_unlink_channel");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result>(new UnlinkSlackChannelCommand(channelId), ct);
-        EnsureUnit(result);
-        return "OK";
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result>(new UnlinkSlackChannelCommand(channelId), ct);
+            EnsureUnit(result);
+            __mcpSpan.MarkSuccess();
+            return "OK";
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     // ── Google Drive ────────────────────────────────────────
@@ -64,10 +96,21 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
     public async Task<string> GoogleDrivePickerUrl(Guid workspaceId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_google_drive_picker_url");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<string>>(
-            new GetGoogleDrivePickerUrlQuery(workspaceId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<string>>(
+                new GetGoogleDrivePickerUrlQuery(workspaceId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "integrations_google_drive_attach")]
@@ -75,10 +118,21 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         Guid cardId, string fileId, string? fileName, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_google_drive_attach");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<Guid>>(
-            new AttachGoogleDriveFileCommand(cardId, fileId, fileName), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<Guid>>(
+                new AttachGoogleDriveFileCommand(cardId, fileId, fileName), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     // ── GitHub ──────────────────────────────────────────────
@@ -88,10 +142,21 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         Guid boardId, string repoFullName, string state, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_github_list_prs");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<GitHubPullRequestDto>>>(
-            new ListGitHubPullRequestsQuery(boardId, repoFullName, state), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<GitHubPullRequestDto>>>(
+                new ListGitHubPullRequestsQuery(boardId, repoFullName, state), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "integrations_github_list_issues")]
@@ -99,10 +164,21 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         Guid boardId, string repoFullName, string state, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_github_list_issues");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<GitHubIssueDto>>>(
-            new ListGitHubIssuesQuery(boardId, repoFullName, state), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<GitHubIssueDto>>>(
+                new ListGitHubIssuesQuery(boardId, repoFullName, state), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "integrations_github_link_pr")]
@@ -110,10 +186,21 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         Guid cardId, string repoFullName, int pullRequestNumber, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_github_link_pr");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<GitHubPullRequestLinkDto>>(
-            new LinkGitHubPullRequestCommand(cardId, repoFullName, pullRequestNumber), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<GitHubPullRequestLinkDto>>(
+                new LinkGitHubPullRequestCommand(cardId, repoFullName, pullRequestNumber), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "integrations_github_create_issue")]
@@ -121,10 +208,21 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         Guid cardId, string repoFullName, string? title, string? body, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_github_create_issue");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<GitHubIssueDto>>(
-            new CreateGitHubIssueFromCardCommand(cardId, repoFullName, title, body), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<GitHubIssueDto>>(
+                new CreateGitHubIssueFromCardCommand(cardId, repoFullName, title, body), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     // ── Inbound email ───────────────────────────────────────
@@ -134,10 +232,21 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         Guid workspaceId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_email_list_addresses");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<InboundEmailAddressDto>>>(
-            new ListInboundEmailAddressesQuery(workspaceId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<InboundEmailAddressDto>>>(
+                new ListInboundEmailAddressesQuery(workspaceId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     // ── helpers ──────────────────────────────────────────────

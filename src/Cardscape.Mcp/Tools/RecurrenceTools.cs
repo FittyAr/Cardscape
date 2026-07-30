@@ -14,10 +14,21 @@ public sealed class RecurrenceTools(IMessageBus bus, ICurrentUser currentUser)
     public async Task<CardRecurrenceDto?> Get(Guid cardId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_get_recurrence");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<CardRecurrenceDto?>>(
-            new GetCardRecurrenceQuery(cardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<CardRecurrenceDto?>>(
+                new GetCardRecurrenceQuery(cardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_set_recurrence")]
@@ -26,25 +37,46 @@ public sealed class RecurrenceTools(IMessageBus bus, ICurrentUser currentUser)
         CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_set_recurrence");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<CardRecurrenceDto>>(
-            new SetCardRecurrenceCommand(cardId, intervalDays, firstOccurrenceAt), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<CardRecurrenceDto>>(
+                new SetCardRecurrenceCommand(cardId, intervalDays, firstOccurrenceAt), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_delete_recurrence")]
     public async Task<string> Delete(Guid cardId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_delete_recurrence");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result>(
-            new DeleteCardRecurrenceCommand(cardId), ct);
-        if (result.IsFailure)
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
         {
-            throw new InvalidOperationException(result.Error.Message);
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result>(
+                new DeleteCardRecurrenceCommand(cardId), ct);
+            if (result.IsFailure)
+            {
+                __mcpSpan.MarkFailure(result.Error.Code, result.Error.Message);
+                throw new InvalidOperationException(result.Error.Message);
+            }
+            __mcpSpan.MarkSuccess();
+            return "deleted";
         }
-
-        return "deleted";
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     private void RequireAuth()
@@ -67,4 +99,3 @@ public sealed class RecurrenceTools(IMessageBus bus, ICurrentUser currentUser)
         return result.Value!;
     }
 }
-

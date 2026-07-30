@@ -14,55 +14,109 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
     public async Task<IReadOnlyList<ChecklistDto>> ListForCard(Guid cardId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_list_checklists");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<ChecklistDto>>>(
-            new ListCardChecklistsQuery(cardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<ChecklistDto>>>(
+                new ListCardChecklistsQuery(cardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_create_checklist")]
     public async Task<ChecklistDto> Create(Guid cardId, string title, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_create_checklist");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<ChecklistDto>>(
-            new CreateChecklistCommand(cardId, title), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<ChecklistDto>>(
+                new CreateChecklistCommand(cardId, title), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_rename_checklist")]
     public async Task<ChecklistDto> Rename(Guid checklistId, string title, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_rename_checklist");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<ChecklistDto>>(
-            new RenameChecklistCommand(checklistId, title), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<ChecklistDto>>(
+                new RenameChecklistCommand(checklistId, title), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_delete_checklist")]
     public async Task<string> Delete(Guid checklistId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_delete_checklist");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result>(
-            new DeleteChecklistCommand(checklistId), ct);
-        if (result.IsFailure)
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
         {
-            throw new InvalidOperationException(result.Error.Message);
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result>(
+                new DeleteChecklistCommand(checklistId), ct);
+            if (result.IsFailure)
+            {
+                __mcpSpan.MarkFailure(result.Error.Code, result.Error.Message);
+                throw new InvalidOperationException(result.Error.Message);
+            }
+            __mcpSpan.MarkSuccess();
+            return "deleted";
         }
-
-        return "deleted";
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_add_checklist_item")]
     public async Task<ChecklistDto> AddItem(Guid checklistId, string text, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_add_checklist_item");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<ChecklistDto>>(
-            new AddChecklistItemCommand(checklistId, text), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<ChecklistDto>>(
+                new AddChecklistItemCommand(checklistId, text), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_rename_checklist_item")]
@@ -70,10 +124,21 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
         Guid checklistId, Guid itemId, string text, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_rename_checklist_item");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<ChecklistDto>>(
-            new RenameChecklistItemCommand(checklistId, itemId, text), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<ChecklistDto>>(
+                new RenameChecklistItemCommand(checklistId, itemId, text), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_toggle_checklist_item")]
@@ -81,10 +146,21 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
         Guid checklistId, Guid itemId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_toggle_checklist_item");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<ChecklistDto>>(
-            new ToggleChecklistItemCommand(checklistId, itemId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<ChecklistDto>>(
+                new ToggleChecklistItemCommand(checklistId, itemId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "cards_delete_checklist_item")]
@@ -92,10 +168,21 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
         Guid checklistId, Guid itemId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_delete_checklist_item");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<ChecklistDto>>(
-            new DeleteChecklistItemCommand(checklistId, itemId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<ChecklistDto>>(
+                new DeleteChecklistItemCommand(checklistId, itemId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     private void RequireAuth()
@@ -118,4 +205,3 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
         return result.Value!;
     }
 }
-

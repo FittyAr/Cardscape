@@ -22,10 +22,21 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
     public async Task<IReadOnlyList<BoardAutomationRuleDto>> ListRules(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("automation_list_rules");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardAutomationRuleDto>>>(
-            new ListBoardAutomationRulesQuery(boardId), ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardAutomationRuleDto>>>(
+                new ListBoardAutomationRulesQuery(boardId), ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "automation_create_rule")]
@@ -40,43 +51,84 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
         CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("automation_create_rule");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result<BoardAutomationRuleDto>>(
-            new CreateBoardAutomationRuleCommand(
-                boardId, name, (Domain.Boards.AutomationTrigger)trigger, triggerListId,
-                (Domain.Boards.AutomationAction)action, actionArgument, position),
-            ct);
-        return Ensure(result);
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result<BoardAutomationRuleDto>>(
+                new CreateBoardAutomationRuleCommand(
+                    boardId, name, (Domain.Boards.AutomationTrigger)trigger, triggerListId,
+                    (Domain.Boards.AutomationAction)action, actionArgument, position),
+                ct);
+            var value = Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "automation_enable_rule")]
     public async Task<string> EnableRule(Guid ruleId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("automation_enable_rule");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result>(new EnableBoardAutomationRuleCommand(ruleId), ct);
-        Ensure(result);
-        return "enabled";
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result>(new EnableBoardAutomationRuleCommand(ruleId), ct);
+            Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return "enabled";
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "automation_disable_rule")]
     public async Task<string> DisableRule(Guid ruleId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("automation_disable_rule");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result>(new DisableBoardAutomationRuleCommand(ruleId), ct);
-        Ensure(result);
-        return "disabled";
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result>(new DisableBoardAutomationRuleCommand(ruleId), ct);
+            Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return "disabled";
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "automation_delete_rule")]
     public async Task<string> DeleteRule(Guid ruleId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("automation_delete_rule");
-        RequireAuth();
-        var result = await bus.InvokeAsync<Result>(new DeleteBoardAutomationRuleCommand(ruleId), ct);
-        Ensure(result);
-        return "deleted";
+        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
+        try
+        {
+            RequireAuth();
+            var result = await bus.InvokeAsync<Result>(new DeleteBoardAutomationRuleCommand(ruleId), ct);
+            Ensure(result);
+            __mcpSpan.MarkSuccess();
+            return "deleted";
+        }
+        catch (Exception ex)
+        {
+            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     private void RequireAuth()
@@ -109,4 +161,3 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
         }
     }
 }
-
