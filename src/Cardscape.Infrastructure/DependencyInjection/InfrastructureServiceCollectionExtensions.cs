@@ -261,6 +261,13 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IScimTokenRepository, ScimTokenRepository>();
         services.AddScoped<IScimService, ScimService>();
 
+        // SAML 2.0 SSO — per-workspace connection
+        // configuration. The Sustainsys.Saml2 handler is
+        // registered in the API layer
+        // (SamlAuthenticationHandler) when at least one
+        // workspace has a connection configured.
+        services.AddScoped<ISamlConnectionRepository, SamlConnectionRepository>();
+
         return services;
     }
 }

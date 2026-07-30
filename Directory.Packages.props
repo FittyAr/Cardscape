@@ -78,6 +78,9 @@
     <PackageVersion Include="Otp.NET" Version="1.4.1" />
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="10.0.10" />
 
+    <!-- SAML 2.0 SSO (Sustainsys.Saml2 — formerly Kentor.AuthServices). -->
+    <PackageVersion Include="Sustainsys.Saml2.AspNetCore" Version="2.10.0" />
+
     <!-- Tests. -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageVersion Include="xunit" Version="2.9.2" />
