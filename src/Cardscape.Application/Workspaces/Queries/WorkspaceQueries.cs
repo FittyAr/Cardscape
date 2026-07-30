@@ -39,6 +39,7 @@ public static class GetWorkspaceQueryHandler
             workspace.Id.Value,
             workspace.Name.Value,
             workspace.OwnerId,
+            workspace.Region,
             workspace.IsArchived,
             workspace.CreatedAt,
             workspace.Members.Count));
@@ -67,6 +68,7 @@ public static class ListWorkspacesForUserQueryHandler
                 w.Id.Value,
                 w.Name.Value,
                 w.OwnerId,
+                w.Region,
                 w.IsArchived,
                 w.CreatedAt,
                 w.Members.Count))

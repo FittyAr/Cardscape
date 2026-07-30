@@ -27,6 +27,7 @@ using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.BackgroundJobs;
 using Cardscape.Infrastructure.Ai;
 using Cardscape.Infrastructure.Authentication;
+using Cardscape.Infrastructure.Configuration;
 using Cardscape.Infrastructure.Email;
 using Cardscape.Infrastructure.Import;
 using Cardscape.Infrastructure.Persistence;
@@ -237,6 +238,10 @@ public static class InfrastructureServiceCollectionExtensions
 
         var storageRoot = configuration["Storage:LocalRoot"] ?? Path.Combine(AppContext.BaseDirectory, "storage");
         services.AddSingleton<IStorageService>(_ => new LocalFileStorageService(storageRoot));
+
+        // Deployment region — read from Cardscape:Deployment:Region.
+        // Unspecified (the default) disables cross-region gating.
+        services.AddSingleton<IDeploymentRegion, ConfigurationDeploymentRegion>();
 
         return services;
     }

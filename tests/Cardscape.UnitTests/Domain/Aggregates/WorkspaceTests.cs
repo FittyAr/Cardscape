@@ -14,6 +14,7 @@ public class WorkspaceTests
             WorkspaceId.New(),
             WorkspaceName.Create("Acme").Value,
             ownerId ?? Guid.NewGuid(),
+            Region.Unspecified,
             At).Value;
 
     [Fact]
@@ -36,6 +37,7 @@ public class WorkspaceTests
             WorkspaceId.New(),
             WorkspaceName.Create("Acme").Value,
             Guid.Empty,
+            Region.Unspecified,
             At);
 
         result.IsFailure.Should().BeTrue();
@@ -221,5 +223,95 @@ public class WorkspaceTests
         var result = workspace.ChangeMemberRole(ownerId, WorkspaceRole.Member, At);
 
         result.IsFailure.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Create_WithRegion_StoresItOnTheAggregate()
+    {
+        var workspace = Workspace.Create(
+            WorkspaceId.New(),
+            WorkspaceName.Create("Acme").Value,
+            Guid.NewGuid(),
+            Region.Europe,
+            At).Value;
+
+        workspace.Region.Should().Be(Region.Europe);
+    }
+
+    [Fact]
+    public void SetRegion_ByOwner_UpdatesAndRaisesEvent()
+    {
+        var ownerId = Guid.NewGuid();
+        var workspace = NewWorkspace(ownerId);
+        workspace.ClearDomainEvents();
+
+        var result = workspace.SetRegion(Region.Europe, ownerId, At);
+
+        result.IsSuccess.Should().BeTrue();
+        workspace.Region.Should().Be(Region.Europe);
+        workspace.DomainEvents.Should().ContainSingle()
+            .Which.Should().BeOfType<WorkspaceRegionChanged>();
+    }
+
+    [Fact]
+    public void SetRegion_ByNonOwner_ReturnsForbiddenFailure()
+    {
+        var ownerId = Guid.NewGuid();
+        var otherUser = Guid.NewGuid();
+        var workspace = NewWorkspace(ownerId);
+
+        var result = workspace.SetRegion(Region.Europe, otherUser, At);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be(WorkspaceErrors.CannotChangeRegion.Code);
+    }
+
+    [Fact]
+    public void GuardRegion_WithUnspecifiedDeployment_AllowsAnyRegion()
+    {
+        var workspace = NewWorkspace();
+        workspace.SetRegion(Region.Europe, workspace.OwnerId, At);
+
+        var result = workspace.GuardRegion(Region.Unspecified);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public void GuardRegion_WithMatchingRegions_Allows()
+    {
+        var workspace = NewWorkspace();
+        workspace.SetRegion(Region.Europe, workspace.OwnerId, At);
+
+        var result = workspace.GuardRegion(Region.Europe);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public void GuardRegion_WithMismatchedRegions_Fails()
+    {
+        var ownerId = Guid.NewGuid();
+        var workspace = Workspace.Create(
+            WorkspaceId.New(),
+            WorkspaceName.Create("Acme").Value,
+            ownerId,
+            Region.Europe,
+            At).Value;
+
+        var result = workspace.GuardRegion(Region.NorthAmerica);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be(WorkspaceErrors.RegionMismatch.Code);
+    }
+
+    [Fact]
+    public void GuardRegion_WithUnspecifiedWorkspaceRegion_Allows()
+    {
+        var workspace = NewWorkspace();
+
+        var result = workspace.GuardRegion(Region.Europe);
+
+        result.IsSuccess.Should().BeTrue();
     }
 }

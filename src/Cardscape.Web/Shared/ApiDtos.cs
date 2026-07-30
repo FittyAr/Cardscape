@@ -19,6 +19,7 @@ public sealed record WorkspaceDto(
     Guid Id,
     string Name,
     Guid OwnerId,
+    int Region,
     bool IsArchived,
     DateTimeOffset CreatedAt,
     int MemberCount);
@@ -30,7 +31,8 @@ public sealed record WorkspaceMemberDto(
     int Role,
     DateTimeOffset JoinedAt);
 
-public sealed record CreateWorkspaceRequestDto(string Name);
+public sealed record CreateWorkspaceRequestDto(string Name, int? Region = null);
+public sealed record SetWorkspaceRegionRequestDto(int Region);
 
 // ── Boards ──────────────────────────────────────────────
 public sealed record BoardDto(

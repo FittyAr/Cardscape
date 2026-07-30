@@ -23,6 +23,12 @@
             <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateWorkspace">
                 <RadzenLabel Text="@L["WorkspacesName"]" Component="ws-name" />
                 <RadzenTextBox @bind-Value="createModel.Name" Name="ws-name" Style="width:100%" />
+
+                <RadzenLabel Text="@L["WorkspacesRegion"]" Component="ws-region" Style="margin-top:1rem; display:block" />
+                <RadzenDropDown @bind-Value="createModel.Region" Data="@availableRegions"
+                                TextProperty="Label" ValueProperty="Value" Name="ws-region"
+                                Placeholder="@L["WorkspacesRegionPlaceholder"]" Style="width:100%" />
+
                 @if (error is not null)
                 {
                     <div class="auth-error" role="alert">@error</div>
@@ -52,6 +58,10 @@
                 <RadzenCard class="workspace-card" @onclick="@(() => Nav.NavigateTo($"workspaces/{ws.Id}"))">
                     <h3>@ws.Name</h3>
                     <small>@ws.MemberCount members · created @ws.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")</small>
+                    @if (ws.Region != 0)
+                    {
+                        <RadzenBadge Text="@RegionLabel(ws.Region)" BadgeStyle="BadgeStyle.Info" Style="margin-top:.5rem" />
+                    }
                     @if (ws.IsArchived)
                     {
                         <RadzenBadge Text="@L["ActionArchived"]" BadgeStyle="BadgeStyle.Warning" Style="margin-top:.5rem" />
@@ -71,6 +81,17 @@
     private string? error;
     private readonly CreateModel createModel = new();
 
+    private record RegionOption(int Value, string Label);
+
+    private IReadOnlyList<RegionOption> availableRegions = new[]
+    {
+        new RegionOption(0, "Unspecified (auto)"),
+        new RegionOption(1, "Europe"),
+        new RegionOption(2, "North America"),
+        new RegionOption(3, "Asia Pacific"),
+        new RegionOption(4, "South America"),
+    };
+
     protected override async Task OnInitializedAsync()
     {
         ApiResult<IReadOnlyList<WorkspaceDto>> result = await WorkspacesApi.ListAsync();
@@ -87,7 +108,8 @@
         error = null;
         try
         {
-            ApiResult<WorkspaceDto> result = await WorkspacesApi.CreateAsync(createModel.Name);
+            int? region = createModel.Region == 0 ? null : createModel.Region;
+            ApiResult<WorkspaceDto> result = await WorkspacesApi.CreateAsync(createModel.Name, region);
             if (!result.IsSuccess)
             {
                 error = result.Error;
@@ -96,6 +118,7 @@
 
             workspaces = [.. (workspaces ?? Array.Empty<WorkspaceDto>()), result.Value!];
             createModel.Name = string.Empty;
+            createModel.Region = 0;
             showCreate = false;
         }
         finally
@@ -104,8 +127,18 @@
         }
     }
 
+    private string RegionLabel(int region) => region switch
+    {
+        1 => "Europe",
+        2 => "North America",
+        3 => "Asia Pacific",
+        4 => "South America",
+        _ => "Unspecified"
+    };
+
     private sealed class CreateModel
     {
         public string Name { get; set; } = string.Empty;
+        public int Region { get; set; }
     }
 }

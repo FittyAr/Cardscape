@@ -187,6 +187,7 @@ public class CustomFieldCommandHandlerTests
                 WorkspaceId.New(),
                 WorkspaceName.Create("WS").Value,
                 ownerId,
+                Region.Unspecified,
                 clock.UtcNow).Value;
             var created = Board.Create(
                 BoardId.New(),
@@ -229,6 +230,7 @@ public class CustomFieldCommandHandlerTests
                 WorkspaceId.New(),
                 WorkspaceName.Create("WS2").Value,
                 ownerId,
+                Region.Unspecified,
                 clock.UtcNow).Value;
             var created = Board.Create(
                 BoardId.New(),

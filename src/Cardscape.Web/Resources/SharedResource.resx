@@ -90,6 +90,8 @@
   <data name="WorkspacesNew" xml:space="preserve"><value>New workspace</value></data>
   <data name="WorkspacesName" xml:space="preserve"><value>Name</value></data>
   <data name="WorkspacesEmpty" xml:space="preserve"><value>You have no workspaces yet. Create your first one above.</value></data>
+  <data name="WorkspacesRegion" xml:space="preserve"><value>Data residency region</value></data>
+  <data name="WorkspacesRegionPlaceholder" xml:space="preserve"><value>Pick a region (defaults to the deployment's region)</value></data>
   <data name="BoardsTitle" xml:space="preserve"><value>Boards</value></data>
   <data name="BoardsNew" xml:space="preserve"><value>New board</value></data>
   <data name="BoardsEmpty" xml:space="preserve"><value>No boards yet.</value></data>

@@ -4,6 +4,7 @@ using Cardscape.Application.Workspaces.Queries;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
@@ -27,12 +28,20 @@ public static class WorkspaceEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
-        group.MapPost("/", async (CreateWorkspaceRequest body, IMessageBus bus, CancellationToken ct) =>
+        group.MapPost("/", async ([FromBody] CreateWorkspaceRequest body, IMessageBus bus, CancellationToken ct) =>
         {
-            var result = await bus.InvokeAsync<Result<WorkspaceDto>>(new CreateWorkspaceCommand(body.Name), ct);
+            var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
+                new CreateWorkspaceCommand(body.Name, body.Region), ct);
             return result.IsSuccess
                 ? Results.Created($"/api/workspaces/{result.Value.Id}", result.Value)
                 : MapError(result.Error);
+        });
+
+        group.MapPost("/{workspaceId:guid}/region", async (Guid workspaceId, [FromBody] SetWorkspaceRegionRequest body, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
+                new SetWorkspaceRegionCommand(workspaceId, body.Region), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
         group.MapPost("/{workspaceId:guid}/rename", async (Guid workspaceId, RenameWorkspaceRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -74,6 +83,7 @@ public static class WorkspaceEndpoints
         Cardscape.Domain.Common.ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
         Cardscape.Domain.Common.ErrorType.Forbidden => Results.Forbid(),
         Cardscape.Domain.Common.ErrorType.Unauthenticated => Results.Unauthorized(),
+        Cardscape.Domain.Common.ErrorType.Validation => Results.UnprocessableEntity(new { error.Code, error.Message }),
         _ => Results.BadRequest(new { error.Code, error.Message })
     };
 }

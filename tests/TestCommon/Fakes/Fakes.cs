@@ -38,6 +38,15 @@ public sealed class FakeUnitOfWork : IUnitOfWork
     }
 }
 
+/// <summary>Test double for <see cref="IDeploymentRegion"/>. Default
+/// region is <see cref="Region.Unspecified"/> (no gating); tests
+/// can set <see cref="Region"/> directly to assert the cross-region
+/// write guard.</summary>
+public sealed class FakeDeploymentRegion : IDeploymentRegion
+{
+    public Region Region { get; set; } = Region.Unspecified;
+}
+
 /// <summary>Deterministic password hasher. The hash is <c>v1.{plaintext}</c>
 /// so tests can both create and verify.</summary>
 public sealed class FakePasswordHasher : IPasswordHasher

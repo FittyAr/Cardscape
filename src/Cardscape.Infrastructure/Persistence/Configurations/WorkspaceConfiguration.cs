@@ -17,6 +17,8 @@ public sealed class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
             .IsRequired();
         b.Property(x => x.OwnerId).IsRequired();
         b.Property(x => x.IsArchived).IsRequired();
+        b.Property(x => x.Region).HasConversion<int>().IsRequired();
+        b.HasIndex(x => x.Region);
         b.Property(x => x.CreatedAt).IsRequired();
         b.Property(x => x.UpdatedAt);
         b.Property(x => x.CreatedBy);

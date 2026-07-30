@@ -25,6 +25,7 @@ public sealed class HandlersTestContext
     public FakeTokenService Tokens { get; } = new();
     public FakeCurrentUser CurrentUser { get; set; } = FakeCurrentUser.Anonymous();
     public FakeDomainEventDispatcher EventDispatcher { get; } = new();
+    public FakeDeploymentRegion DeploymentRegion { get; } = new();
 
     public InMemoryUserRepository Users { get; } = new();
     public InMemoryWorkspaceRepository Workspaces { get; } = new();
@@ -58,7 +59,9 @@ public sealed class HandlersTestContext
     {
         var ws = Workspace.Create(WorkspaceId.New(),
                                   WorkspaceName.Create(name).Value,
-                                  ownerId, Clock.UtcNow).Value;
+                                  ownerId,
+                                  Region.Unspecified,
+                                  Clock.UtcNow).Value;
         await Workspaces.AddAsync(ws);
         return ws;
     }

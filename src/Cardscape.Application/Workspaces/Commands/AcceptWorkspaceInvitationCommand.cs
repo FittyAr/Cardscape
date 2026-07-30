@@ -110,6 +110,7 @@ public static class AcceptWorkspaceInvitationCommandHandler
         workspace.Id.Value,
         workspace.Name.Value,
         workspace.OwnerId,
+        workspace.Region,
         workspace.IsArchived,
         workspace.CreatedAt,
         workspace.Members.Count);

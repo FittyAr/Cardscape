@@ -39,3 +39,11 @@ public sealed record WorkspaceMemberRoleChanged(
     Guid UserId,
     WorkspaceRole NewRole,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
+/// <summary>Raised when a workspace's data-residency region is changed
+/// by its owner. Useful for audit trails (compliance teams usually
+/// track every region change).</summary>
+public sealed record WorkspaceRegionChanged(
+    WorkspaceId WorkspaceId,
+    Region NewRegion,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
