@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cardscape — The self-hostable kanban your AI can drive</title>
+<meta name="description" content="Cardscape is an open-source, self-hostable kanban and project-management tool with a first-class Model Context Protocol (MCP) server. Let your AI drive the boards. Keep full ownership of your data." />
+<meta name="theme-color" content="#0d1117" />
+<meta name="color-scheme" content="dark" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Cardscape — The self-hostable kanban your AI can drive" />
+<meta property="og:description" content="Open-source, self-hostable, with a first-class Model Context Protocol server. .NET 11. SQLite / PostgreSQL / MariaDB. RPL-1.5." />
+<meta property="og:image" content="https://cardscape.fitty.ar/og-image.png" />
+<meta property="og:url" content="https://cardscape.fitty.ar/" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cardscape — The self-hostable kanban your AI can drive" />
+<meta name="twitter:description" content="Open-source, self-hostable, with a first-class Model Context Protocol server. .NET 11. RPL-1.5." />
+
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">◆</span>
+      <span class="brand-name">Cardscape</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="#why">Why</a>
+      <a href="#mcp">MCP</a>
+      <a href="#status">Status</a>
+      <a href="#start">Get started</a>
+      <a href="#community">Community</a>
+      <a class="nav-cta" href="https://github.com/cardscape/cardscape">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <p class="eyebrow">Open-source · Self-hostable · .NET 11 · RPL-1.5</p>
+      <h1 class="hero-title">The self-hostable kanban<br />your AI can drive.</h1>
+      <p class="hero-sub">
+        Drive your boards conversationally from any AI client.
+        Keep full ownership of your data.
+      </p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="https://github.com/cardscape/cardscape">View on GitHub →</a>
+        <a class="btn btn-ghost" href="docs/">Read the docs</a>
+      </div>
+      <p class="hero-note">
+        It is the only self-hostable kanban with a first-class Model Context Protocol server.
+      </p>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section id="why" class="section">
+    <div class="container">
+      <h2 class="section-title">Why Cardscape</h2>
+      <p class="section-lede">
+        Five reasons a team picks a self-hostable kanban over a hosted one,
+        and the one reason to pick Cardscape over every other self-hostable kanban.
+      </p>
+
+      <div class="grid grid-3">
+
+        <article class="card pillar pillar-1">
+          <h3>1 · Self-hostable, you own the data</h3>
+          <p>
+            One <code>docker compose up</code> and the whole thing is on your hardware.
+            No vendor can read your boards, change the rules, or sunset the product.
+          </p>
+        </article>
+
+        <article class="card pillar pillar-2">
+          <h3>2 · AI integration that is not bolted on</h3>
+          <p>
+            A first-party MCP server is a peer to the REST API. The same domain model,
+            the same authorization, the same idempotency. An AI client drives the
+            boards through the same <code>Application</code> layer a human does
+            through the web UI.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>3 · Multi-database without lock-in</h3>
+          <p>
+            SQLite for solo and dev, PostgreSQL or MariaDB for production.
+            The provider is configuration, not code.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>4 · A complete feature surface</h3>
+          <p>
+            Workspaces, boards, lists, cards, members, comments, checklists,
+            attachments, calendar, automation, extensions, Inbox, Planner, API
+            tokens, audit logs. Designed for the long run, not a demo.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>5 · Modern .NET, end to end</h3>
+          <p>
+            ASP.NET Core 11, Blazor WebAssembly, Entity Framework Core 10 LTS,
+            Radzen.Blazor. Type-safe, fast, long-term support.
+          </p>
+        </article>
+
+        <article class="card card-accent">
+          <h3>The differentiator</h3>
+          <p>
+            The MCP server is the headline. Every other self-hostable kanban
+            makes you write a glue layer between your AI client and your boards.
+            Cardscape ships the glue.
+          </p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- MCP -->
+  <section id="mcp" class="section section-alt">
+    <div class="container">
+      <h2 class="section-title">The MCP server</h2>
+      <p class="section-lede">
+        The Model Context Protocol (MCP) is the open standard for
+        "AI agent ↔ external tool" in 2025–2026. Cardscape ships a
+        first-party MCP server in <code>src/Cardscape.Mcp/</code>.
+      </p>
+
+      <div class="two-col">
+        <div>
+          <h3>What it does</h3>
+          <ul class="check-list">
+            <li>Lets an AI client read boards, lists, cards, comments, members.</li>
+            <li>Lets an AI client create, update, move, and archive cards.</li>
+            <li>Lets an AI client add comments, assign members, set due dates, add labels.</li>
+            <li>Lets an AI client search across all boards.</li>
+            <li>Subscribes to board and card resources for live updates.</li>
+          </ul>
+          <h3>How it does it</h3>
+          <ul class="check-list">
+            <li>Same <code>Application</code> layer the REST API uses.</li>
+            <li>Same MediatR pipeline. Same FluentValidation. Same <code>Result&lt;T&gt;</code>.</li>
+            <li>Bearer-token authentication via the same <code>Members</code> context.</li>
+            <li>Idempotency key on every write — safe retries for AI agents.</li>
+            <li>OpenTelemetry traces end-to-end: MCP call → handler → repository → DB.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Example tool calls</h3>
+<pre class="code-block"><code>// 1. Show every card assigned to me that is due this week
+cards_due_this_week({ assignee: "me" })
+
+// 2. Create a card on the Q3 Roadmap board, in Doing, assigned to me
+cards_create({
+  board_id: "q3-roadmap",
+  list_id: "doing",
+  title: "Investigate the flaky integration test",
+  assignee_ids: ["me"]
+})
+
+// 3. Move every card with the "urgent" label to Done
+cards_move_by_label({
+  label: "urgent",
+  to_list_id: "done"
+})
+
+// 4. Run the Monday triage prompt against the Inbox
+prompts_run({
+  name: "triage-inbox"
+})</code></pre>
+          <p class="muted">
+            See <a href="docs/adr/0002-mcp-server.md">ADR 0002</a> and
+            <a href="docs/architecture/03-mcp-server.md">architecture/03-mcp-server.md</a>
+            for the full design.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATUS -->
+  <section id="status" class="section">
+    <div class="container">
+      <h2 class="section-title">Status</h2>
+      <p class="section-lede">
+        Cardscape is in <strong>pre-alpha, design and Phase 0 scaffold complete</strong>.
+        Phase 0 ships the .NET 11 Clean Architecture skeleton, the multi-DB
+        scaffolding, the MCP project, the documentation set, and the
+        vendor-neutral positioning. The first runnable build lands with
+        <code>v0.1.0-mvp</code> at the end of Phase 1.
+      </p>
+
+      <ol class="timeline">
+        <li class="timeline-done">
+          <span class="timeline-dot"></span>
+          <div class="timeline-body">
+            <h3>Phase 0 — Solution scaffold</h3>
+            <p>Scaffold, multi-DB plumbing, RPL-1.5, AGENTS contract, MCP project skeleton, full docs.</p>
+            <p class="muted small">DONE</p>
+          </div>
+        </li>
+        <li class="timeline-current">
+          <span class="timeline-dot"></span>
+          <div class="timeline-body">
+            <h3>Phase 1 — MVP</h3>
+            <p>Single user, sign-up, workspace, board, list, card, drag and drop, sign in tomorrow.</p>
+            <p class="muted small">in progress · target end of August 2026</p>
+          </div>
+        </li>
+        <li>
+          <span class="timeline-dot"></span>
+          <div class="timeline-body">
+            <h3>Phase 2 — Core + MCP server</h3>
+            <p>Collaboration, real-time, and the MCP server that ships the differentiator end-to-end.</p>
+            <p class="muted small">not started · target end of October 2026</p>
+          </div>
+        </li>
+        <li>
+          <span class="timeline-dot"></span>
+          <div class="timeline-body">
+            <h3>Phase 3 — Extensions &amp; automation</h3>
+            <p>Extension framework, first-party extensions (Calendar, Table, Timeline, Dashboard, …), automation engine.</p>
+            <p class="muted small">not started · target end of December 2026</p>
+          </div>
+        </li>
+        <li>
+          <span class="timeline-dot"></span>
+          <div class="timeline-body">
+            <h3>Phase 4 — Enterprise &amp; AI</h3>
+            <p>OAuth/SSO, audit logs, SCIM, Inbox, Planner, Cardscape AI features.</p>
+            <p class="muted small">not started · target end of Q1 2027</p>
+          </div>
+        </li>
+        <li>
+          <span class="timeline-dot"></span>
+          <div class="timeline-body">
+            <h3>Phase 5 — Polish &amp; scale</h3>
+            <p>i18n, theming, performance, background jobs, MCP subscriptions, import/export, security audit.</p>
+            <p class="muted small">ongoing</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- GET STARTED -->
+  <section id="start" class="section section-alt">
+    <div class="container">
+      <h2 class="section-title">Get started</h2>
+      <p class="section-lede">
+        Today, the application is a scaffold — there is no runnable product
+        yet. The honest quickstart is the developer one:
+      </p>
+
+<pre class="code-block"><code>git clone https://github.com/cardscape/cardscape.git
+cd cardscape
+dotnet build                       # 11/11 projects, 0 errors, 0 warnings
+dotnet test                        # green by default (no domain yet)</code></pre>
+
+      <p>
+        The first runnable self-hostable build, with a demo workspace,
+        seeded data, and <code>docker compose up</code> to go, ships with
+        the <code>v0.1.0-mvp</code> tag at the end of Phase 1.
+      </p>
+      <p>
+        To follow along: watch the
+        <a href="https://github.com/cardscape/cardscape/releases">GitHub releases</a>
+        and read the
+        <a href="docs/roadmap/01-implementation-plan.md">implementation plan</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section id="community" class="section">
+    <div class="container">
+      <h2 class="section-title">Community</h2>
+      <p class="section-lede">
+        Cardscape is a <strong>solo-maintained</strong>, public, open-source project.
+        The bar is "think big and professional". Contributions are welcome.
+      </p>
+
+      <div class="grid grid-3">
+        <article class="card">
+          <h3>Contribute</h3>
+          <p>
+            Read <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> for the formal
+            contribution flow — issues, PRs, review, release process.
+          </p>
+          <p>
+            The working contract every contributor reads first is
+            <a href="docs/AGENTS.md">docs/AGENTS.md</a>.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Discussions &amp; issues</h3>
+          <p>
+            Ask questions, propose ideas, show what you built.
+            GitHub Discussions is the public, async channel.
+          </p>
+          <p>
+            File bugs and feature requests as
+            <a href="https://github.com/cardscape/cardscape/issues">GitHub issues</a>.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Code of Conduct</h3>
+          <p>
+            By participating, you agree to the
+            <a href="CODE_OF_CONDUCT.md">Contributor Covenant v2.1</a>.
+            Be kind. Be technical. Disagree on the merits, not the person.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Security</h3>
+          <p>
+            Found a vulnerability? Read
+            <a href="SECURITY.md">SECURITY.md</a> for the private
+            reporting channel.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Support</h3>
+          <p>
+            <a href="SUPPORT.md">SUPPORT.md</a> lists where to ask questions
+            (Discussions) and where <em>not</em> to ask (issues are for bugs
+            and feature requests only).
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Changelog</h3>
+          <p>
+            Every release is documented in
+            <a href="CHANGELOG.md">CHANGELOG.md</a> following the
+            <em>Keep a Changelog</em> format.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- LICENSE -->
+  <section class="section section-alt">
+    <div class="container">
+      <h2 class="section-title">License</h2>
+      <p>
+        Cardscape is licensed under the
+        <strong>Reciprocal Public License 1.5 (RPL-1.5)</strong>.
+        You can use it, fork it, deploy it, read it. If you distribute a
+        modified version, your modifications must also be RPL-1.5. This is
+        deliberate — Cardscape is built in the open, and improvements must
+        stay in the open.
+      </p>
+      <p class="muted small">
+        RPL-1.5 is OSI-approved and is the right license for a project that
+        wants to stay open while preventing proprietary fork-and-close moves.
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>
+      <span class="brand-mark" aria-hidden="true">◆</span>
+      <strong>Cardscape</strong> · open-source · self-hostable · RPL-1.5
+    </p>
+    <p class="muted small">
+      The site, the design, and the code are all under development.
+      Vendor-neutral product positioning is the source of truth for how
+      Cardscape presents itself.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
