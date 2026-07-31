@@ -2,51 +2,74 @@
 @layout EmptyLayout
 @using Cardscape.Web.Resources
 @using Cardscape.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.Extensions.Localization
 @inject AuthService Auth
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
 @inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@L["AuthCreateAccount"] @L["PageTitleSuffix"]</PageTitle>
 
 <div class="auth-shell">
-    <RadzenCard class="auth-card">
-        <h1 class="auth-title">@L["AuthCreateAccountTitle"]</h1>
+    <div class="auth-card">
+        <header class="auth-header">
+            <h1 class="auth-title">@L["AuthCreateAccountTitle"]</h1>
+            <p class="auth-subtitle">@L["AuthCreateAccountSubtitle"]</p>
+        </header>
 
-        <RadzenTemplateForm TItem="RegisterModel" Data="@model" Submit="@HandleSubmit">
-            <RadzenLabel Text="@L["AuthDisplayName"]" Component="displayName" />
-            <RadzenTextBox @bind-Value="model.DisplayName" Name="displayName" Style="width:100%" autocomplete="name" />
+        <RadzenTemplateForm TItem="RegisterModel" Data="@model" Submit="@HandleSubmit" class="auth-form">
+            <div class="auth-field">
+                <RadzenLabel Text="@L["AuthDisplayName"]" Component="displayName" />
+                <RadzenTextBox @bind-Value="model.DisplayName" Name="displayName" Style="width:100%"
+                               autocomplete="name" Placeholder="@L["AuthDisplayNamePlaceholder"]" />
+            </div>
 
-            <RadzenLabel Text="@L["AuthEmail"]" Component="email" Style="margin-top:1rem" />
-            <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%" autocomplete="email" />
+            <div class="auth-field">
+                <RadzenLabel Text="@L["AuthEmail"]" Component="email" />
+                <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%"
+                               autocomplete="email" Placeholder="you@company.com" />
+            </div>
 
-            <RadzenLabel Text="@L["AuthPassword"]" Component="password" Style="margin-top:1rem" />
-            <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%" autocomplete="new-password" />
-            <small class="auth-hint">@L["AuthPasswordHint"]</small>
+            <div class="auth-field">
+                <RadzenLabel Text="@L["AuthPassword"]" Component="password" />
+                <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%"
+                                autocomplete="new-password" />
+                <small class="auth-hint">@L["AuthPasswordHint"]</small>
+            </div>
 
             @if (error is not null)
             {
                 <div class="auth-error" role="alert">@error</div>
             }
 
-            <RadzenButton ButtonType="ButtonType.Submit"
+            <RadzenButton ButtonType="@ButtonType.Submit"
                           Text="@L["AuthCreateAccount"]"
-                          ButtonStyle="ButtonStyle.Primary"
+                          ButtonStyle="@ButtonStyle.Primary"
                           IsBusy="@busy"
                           BusyText="@L["AuthCreating"]"
-                          Style="width:100%; margin-top:1.5rem" />
+                          class="auth-submit" />
         </RadzenTemplateForm>
 
         <p class="auth-footer">
-            @L["AuthAlreadyAccount"] <a href="login">@L["AuthSignIn"]</a>.
+            @L["AuthAlreadyAccount"] <a href="login">@L["AuthSignIn"]</a>
         </p>
-    </RadzenCard>
+    </div>
 </div>
 
 @code {
     private readonly RegisterModel model = new();
     private bool busy;
     private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState state = await AuthState.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true)
+        {
+            Nav.NavigateTo("/", forceLoad: true);
+        }
+    }
 
     private async Task HandleSubmit()
     {

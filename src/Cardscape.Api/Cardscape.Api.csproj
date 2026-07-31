@@ -36,12 +36,20 @@
   </ItemGroup>
 
   <!--
-    Workaround for the .NET 11 preview SDK (11.0.100-preview.6.26359.118)
-    not running the static-web-assets merge for referenced Blazor WASM
-    projects. Until the SDK ships the pass, publish Cardscape.Web and
-    copy the result (with the static-web-asset fingerprints stripped)
-    into the API's output wwwroot. The script lives in scripts/ to keep
-    the csproj clean.
+    Historical workaround for the .NET 11 preview SDK
+    (11.0.100-preview.6.26359.118): it did not run the
+    static-web-assets merge for referenced Blazor WASM projects.
+    Until the SDK shipped the pass, we published Cardscape.Web and
+    copied the result (with the static-web-asset fingerprints
+    stripped) into the API's output wwwroot. The script lives in
+    scripts/ to keep the csproj clean.
+
+    On net10.0 (current target) the SDK is stable and the merge runs
+    correctly, so this workaround is no longer required. The target
+    is kept for now as a safety net; remove the entire
+    CopyBlazorClientWwwroot block and the matching comment once a
+    `dotnet build` confirms the API hosts the Blazor client without
+    help. Tracked as a follow-up.
   -->
   <Target Name="CopyBlazorClientWwwroot" AfterTargets="Build">
     <Exec Command="pwsh -NoProfile -NonInteractive &quot;$(MSBuildThisFileDirectory)..\..\scripts\copy-blazor-client.ps1&quot; -ApiOutDir &quot;$(OutDir.TrimEnd('\\'))&quot; -WebProject &quot;$(MSBuildThisFileDirectory)..\Cardscape.Web\Cardscape.Web.csproj&quot; -Configuration &quot;$(Configuration)&quot;" />

@@ -6,7 +6,7 @@ working on this repository.
 
 ## What an agent should know about Cardscape
 
-- **Stack**: .NET 11 (`net11.0`), Blazor WebAssembly, ASP.NET Core, EF Core 10 LTS.
+- **Stack**: .NET 10 (`net10.0`), Blazor WebAssembly, ASP.NET Core, EF Core 10 LTS.
 - **Architecture**: Clean Architecture with vertical slices by bounded context.
   See [`docs/architecture/`](docs/architecture) (TODO) and the directory
   layout in `src/`.
@@ -67,12 +67,12 @@ test matrix today runs **only on SQLite**.
 
 ### Why
 
-The project targets `net11.0` (SDK 11.0.100-preview.6, July 2026). The
-third-party EF Core providers for PostgreSQL (`Npgsql`) and MariaDB
-(`MySql.EntityFrameworkCore` from Oracle; or `Pomelo`) have not yet
-shipped versions that target EF Core 11. Pulling them in would either
-force us to stay on EF Core 10 for those tests, or to ship two EF Core
-versions side by side. Neither is acceptable.
+The project targets `net10.0` (SDK 10.0.302, LTS). The third-party
+EF Core providers for PostgreSQL (`Npgsql`) and MariaDB
+(`MySql.EntityFrameworkCore` from Oracle; or `Pomelo`) target EF Core 10
+on the 10.0.x line. When Microsoft ships EF Core 11 GA, the whole
+stack can move up; until then we stay on the 10.0.x feature band to
+keep all three database engines in the same support window.
 
 The full rationale is in
 [`docs/adr/0001-multi-provider-strategy.md`](../docs/adr/0001-multi-provider-strategy.md).

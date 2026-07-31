@@ -4,11 +4,26 @@
 
 .top-row {
     min-height: 3.5rem;
-    background-color: rgba(0,0,0,0.4);
+    background-color: transparent;
 }
 
 .navbar-brand {
-    font-size: 1.1rem;
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.brand-lanes--nav {
+    height: 1rem;
+}
+
+.brand-lanes--nav span {
+    width: 0.28rem;
+    background: #7fd4cb;
 }
 
 .bi {

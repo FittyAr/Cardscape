@@ -5,18 +5,22 @@
     <RootNamespace>Cardscape.Web</RootNamespace>
     <Description>Cardscape SPA client. Blazor WebAssembly + Radzen components. Talks to the API via HTTP.</Description>
     <!--
-        The .NET 11 preview SDK (11.0.100-preview.6.26359.118) does not
-        run the token-replacement pass over wwwroot/index.html. The
+        Historical workaround for the .NET 11 preview SDK
+        (11.0.100-preview.6.26359.118): it did not run the
+        token-replacement pass over wwwroot/index.html, so the
         default template's <link id="webassembly" /> and
         <script src="_framework/blazor.webassembly#[.{fingerprint}].js">
-        ship to the output with the literal placeholders, and the
-        Blazor WASM dev server (`dotnet run`) silently leaves the
-        build pipeline half-done (no per-assembly .wasm files in
-        bin/Debug). Disable static-web-asset fingerprinting so the
-        generated paths are stable: dotnet.js, blazor.webassembly.js,
-        Cardscape.Web.wasm, and the dependency .wasm files are all
-        served at their non-fingerprinted names. Re-enable when the
-        SDK ships the replacement pass.
+        shipped with the literal placeholders and the Blazor WASM
+        dev server left the build pipeline half-done (no per-assembly
+        .wasm files in bin/Debug). Disabling static-web-asset
+        fingerprinting was the mitigation.
+
+        Now that the project targets net10.0 (10.0.10 SDK), this
+        workaround is no longer required. The property is kept
+        `false` as a safety net; flip it back to `true` (or remove
+        the line) once a `dotnet run` + browser smoke test confirms
+        fingerprinted assets still serve correctly on the stable
+        SDK. Tracked as a follow-up; see project history.
     -->
     <StaticWebAssetsFingerprintingEnabled>false</StaticWebAssetsFingerprintingEnabled>
   </PropertyGroup>

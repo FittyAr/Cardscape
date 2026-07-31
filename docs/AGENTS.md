@@ -33,9 +33,9 @@ MCP server decision.
 
 | Layer | Choice | Version (Jul 2026) |
 |---|---|---|
-| Runtime | .NET | 11.0 (SDK 11.0.100-preview.6) |
-| Web framework | ASP.NET Core minimal APIs | 11.0.0-preview.6 |
-| Client | Blazor WebAssembly | 11.0.0-preview.6 |
+| Runtime | .NET | 10.0 (LTS, SDK 10.0.302) |
+| Web framework | ASP.NET Core minimal APIs | 10.0.10 |
+| Client | Blazor WebAssembly | 10.0.10 |
 | UI components | Radzen.Blazor | 11.1.8 |
 | ORM | Entity Framework Core | 10.0.10 LTS |
 | DB providers (runtime) | Sqlite, Npgsql, MySql.EntityFrameworkCore | 10.0.10 / 10.0.3 / 10.0.7 |
@@ -132,10 +132,10 @@ three database engines — SQLite, PostgreSQL, and MariaDB. But
 the automated test matrix today runs **only on SQLite**.
 
 **Why**: the third-party EF Core providers for PostgreSQL and
-MariaDB have not yet shipped versions that target EF Core 11.
-We use EF Core 10 LTS for the data layer. See
-[ADR 0001](adr/0001-multi-provider-strategy.md) for the full
-rationale.
+MariaDB target EF Core 10 on the 10.0.x line, and the whole
+solution lives on the same LTS feature band for support
+uniformity. See [ADR 0001](adr/0001-multi-provider-strategy.md)
+for the full rationale.
 
 **What this means in code**:
 

@@ -6,7 +6,12 @@
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">@L["AppName"]</a>
+        <a class="navbar-brand" href="">
+            <span class="brand-lanes brand-lanes--nav" aria-hidden="true">
+                <span></span><span></span><span></span>
+            </span>
+            @L["AppName"]
+        </a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>

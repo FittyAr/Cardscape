@@ -3,20 +3,26 @@
 #
 # Why this exists
 # ---------------
-# `dotnet run --project src/Cardscape.Web` uses the Blazor WASM dev server
-# from the .NET 11 preview SDK (11.0.100-preview.6.26359.118). That dev
-# server does not run the token-replacement pass over
-# wwwroot/index.html, so the browser cannot resolve the fingerprinted
-# script path and the app hangs on the initial loading spinner. The
-# preview SDK also leaves the dev bin/ folder missing the per-assembly
-# .wasm files, so even after patching index.html the runtime cannot
-# download its dependencies.
+# Historical workaround for the .NET 11 preview SDK
+# (11.0.100-preview.6.26359.118): `dotnet run --project
+# src/Cardscape.Web` uses the Blazor WASM dev server from that preview
+# SDK, which did not run the token-replacement pass over
+# wwwroot/index.html. The browser could not resolve the fingerprinted
+# script path and the app hung on the initial loading spinner. The
+# preview SDK also left the dev bin/ folder missing the per-assembly
+# .wasm files, so even after patching index.html the runtime could
+# not download its dependencies.
 #
 # Workaround: publish the Web project, run a post-publish step that
 # copies every fingerprinted asset to its plain name (so the runtime
 # can find them without a boot manifest), then serve the publish
 # output as static files. This is what `dotnet run` would do in a
 # stable release.
+#
+# Now that the project targets net10.0 (LTS) the SDK is stable and
+# `dotnet run` works as expected. This script is kept for debugging
+# the publish output without the dev server in the loop; you can
+# usually use `dotnet run --project src/Cardscape.Web` directly.
 #
 # Usage
 # -----
@@ -41,7 +47,7 @@ $ErrorActionPreference = 'Stop'
 
 $RepoRoot   = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $WebProject = Join-Path $RepoRoot 'src/Cardscape.Web/Cardscape.Web.csproj'
-$PublishDir = Join-Path $RepoRoot "src/Cardscape.Web/bin/$Configuration/net11.0/publish/wwwroot"
+$PublishDir = Join-Path $RepoRoot "src/Cardscape.Web/bin/$Configuration/net10.0/publish/wwwroot"
 $PostPublish = Join-Path $PSScriptRoot 'post-publish-web.ps1'
 
 # --- 1. Publish ---------------------------------------------------------------

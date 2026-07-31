@@ -37,4 +37,4 @@ body:
     attributes:
       label: Environment
       description: Cardscape version, .NET SDK, OS. One line is fine.
-      placeholder: "Cardscape @ 8f2ac78, .NET 11.0.100-preview.6, macOS 14.5"
+      placeholder: "Cardscape @ 8f2ac78, .NET 10.0.302, macOS 14.5"

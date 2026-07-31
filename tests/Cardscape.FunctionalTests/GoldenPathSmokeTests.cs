@@ -90,7 +90,7 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
         secondList.Should().NotBeNull();
 
         // ── 6. Card ───────────────────────────────────────────
-        var cardRequest = new { ListId = list!.Id, Title = "Investigate the flaky integration test", Description = "Reproduces locally on net11.0 preview." };
+        var cardRequest = new { ListId = list!.Id, Title = "Investigate the flaky integration test", Description = "Reproduces locally on the .NET 10 LTS SDK." };
         HttpResponseMessage cardResponse = await client.PostAsJsonAsync("api/cards/", cardRequest);
         cardResponse.IsSuccessStatusCode.Should().BeTrue(
             $"card create must succeed. Body: {await cardResponse.Content.ReadAsStringAsync()}");

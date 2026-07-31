@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- This project overrides the repository-wide <TargetFramework>
-       (net11.0) imposed by Directory.Build.props because the SDK
+       (net10.0) imposed by Directory.Build.props because the SDK
        is published to NuGet as a multi-target package that
        consumers can pull into netstandard2.0 and net8.0 hosts.
        The override is a one-line opt-out from
        Directory.Build.props; everything else (analyzers, nullable,
        etc.) is inherited. -->
   <PropertyGroup>
-    <!-- Override the repository-wide <TargetFramework>net11.0</TargetFramework>
+    <!-- Override the repository-wide <TargetFramework>net10.0</TargetFramework>
          imposed by Directory.Build.props. The SDK is a multi-target
          package (netstandard2.0 + net8.0). Unsetting TargetFramework
          here is what makes TargetFrameworks (plural) win. -->

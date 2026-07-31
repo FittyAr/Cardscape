@@ -3,7 +3,7 @@
   <!-- Common MSBuild properties applied to every project in the solution. -->
   <PropertyGroup>
     <!-- Target framework pinned across the whole solution. -->
-    <TargetFramework>net11.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
 
     <!-- C# language & nullability. -->
     <LangVersion>latest</LangVersion>

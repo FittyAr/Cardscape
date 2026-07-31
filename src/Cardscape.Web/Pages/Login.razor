@@ -3,88 +3,111 @@
 @using System.Web
 @using Cardscape.Web.Resources
 @using Cardscape.Web.Services
+@using Cardscape.Web.Shared
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.Extensions.Localization
 @inject AuthService Auth
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
 @inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@L["AuthSignIn"] @L["PageTitleSuffix"]</PageTitle>
 
 <div class="auth-shell">
-    <RadzenCard class="auth-card">
-        <h1 class="auth-title">@L["AuthSignInTitle"]</h1>
-
-        <div class="auth-providers">
-            <a class="provider-button provider-google"
-               href="/api/auth/external/google/start?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">
-                <span class="provider-glyph" aria-hidden="true">G</span>
-                <span>@L["AuthSignInWithGoogle"]</span>
-            </a>
-            <a class="provider-button provider-microsoft"
-               href="/api/auth/external/microsoft/start?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">
-                <span class="provider-glyph" aria-hidden="true">M</span>
-                <span>@L["AuthSignInWithMicrosoft"]</span>
-            </a>
-            <a class="provider-button provider-apple"
-               href="/api/auth/external/apple/start?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">
-                <span class="provider-glyph" aria-hidden="true">A</span>
-                <span>@L["AuthSignInWithApple"]</span>
-            </a>
-        </div>
-
-        <div class="auth-divider"><span>or</span></div>
-
+    <div class="auth-card">
         @if (challenge is null)
         {
-            <RadzenTemplateForm TItem="LoginModel" Data="@model" Submit="@HandleSubmit">
-                <RadzenLabel Text="@L["AuthEmail"]" Component="email" />
-                <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%" autocomplete="email" />
+            <header class="auth-header">
+                <h1 class="auth-title">@L["AuthSignInTitle"]</h1>
+                <p class="auth-subtitle">@L["AuthSignInSubtitle"]</p>
+            </header>
 
-                <RadzenLabel Text="@L["AuthPassword"]" Component="password" Style="margin-top:1rem" />
-                <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%" autocomplete="current-password" />
+            <div class="auth-providers">
+                <a class="provider-button provider-google"
+                   href="/api/auth/external/google/start?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">
+                    <span class="provider-glyph" aria-hidden="true">G</span>
+                    <span>@L["AuthSignInWithGoogle"]</span>
+                </a>
+                <a class="provider-button provider-microsoft"
+                   href="/api/auth/external/microsoft/start?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">
+                    <span class="provider-glyph" aria-hidden="true">M</span>
+                    <span>@L["AuthSignInWithMicrosoft"]</span>
+                </a>
+                <a class="provider-button provider-apple"
+                   href="/api/auth/external/apple/start?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">
+                    <span class="provider-glyph" aria-hidden="true">A</span>
+                    <span>@L["AuthSignInWithApple"]</span>
+                </a>
+            </div>
+
+            <div class="auth-divider"><span>@L["AuthOr"]</span></div>
+
+            <RadzenTemplateForm TItem="LoginModel" Data="@model" Submit="@HandleSubmit" class="auth-form">
+                <div class="auth-field">
+                    <RadzenLabel Text="@L["AuthEmail"]" Component="email" />
+                    <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%"
+                                   autocomplete="email" Placeholder="you@company.com" />
+                </div>
+
+                <div class="auth-field">
+                    <RadzenLabel Text="@L["AuthPassword"]" Component="password" />
+                    <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%"
+                                    autocomplete="current-password" />
+                </div>
 
                 @if (error is not null)
                 {
                     <div class="auth-error" role="alert">@error</div>
                 }
 
-                <RadzenButton ButtonType="ButtonType.Submit"
+                <RadzenButton ButtonType="@ButtonType.Submit"
                               Text="@L["AuthSignIn"]"
-                              ButtonStyle="ButtonStyle.Primary"
+                              ButtonStyle="@ButtonStyle.Primary"
                               IsBusy="@busy"
                               BusyText="@L["AuthSigningIn"]"
-                              Style="width:100%; margin-top:1.5rem" />
+                              class="auth-submit" />
             </RadzenTemplateForm>
         }
         else
         {
-            <p class="auth-totp-prompt">@L["Login_TotpCode_Required"]</p>
+            <header class="auth-header">
+                <h1 class="auth-title">@L["Login_TotpCode_Label"]</h1>
+                <p class="auth-subtitle">@L["Login_TotpCode_Required"]</p>
+            </header>
 
-            <RadzenTemplateForm TItem="TotpModel" Data="@totpModel" Submit="@HandleTotpSubmit">
-                <RadzenLabel Text="@L["Login_TotpCode_Label"]" Component="totp" />
-                <RadzenTextBox @bind-Value="totpModel.Code" Name="totp"
-                               Style="width:100%" autocomplete="one-time-code"
-                               inputmode="numeric" maxlength="6" />
+            <RadzenTemplateForm TItem="TotpModel" Data="@totpModel" Submit="@HandleTotpSubmit" class="auth-form">
+                <div class="auth-field">
+                    <RadzenLabel Text="@L["Login_TotpCode_Label"]" Component="totp" />
+                    <RadzenTextBox @bind-Value="totpModel.Code" Name="totp"
+                                   Style="width:100%; letter-spacing: 0.35em; font-variant-numeric: tabular-nums;"
+                                   autocomplete="one-time-code"
+                                   inputmode="numeric" maxlength="6"
+                                   Placeholder="••••••" />
+                </div>
 
                 @if (error is not null)
                 {
                     <div class="auth-error" role="alert">@error</div>
                 }
 
-                <RadzenButton ButtonType="ButtonType.Submit"
+                <RadzenButton ButtonType="@ButtonType.Submit"
                               Text="@L["AuthSignIn"]"
-                              ButtonStyle="ButtonStyle.Primary"
+                              ButtonStyle="@ButtonStyle.Primary"
                               IsBusy="@busy"
                               BusyText="@L["AuthSigningIn"]"
-                              Style="width:100%; margin-top:1.5rem" />
+                              class="auth-submit" />
+
+                <button type="button" class="auth-back-link" @onclick="ResetTotp">
+                    @L["AuthBackToSignIn"]
+                </button>
             </RadzenTemplateForm>
         }
 
         <p class="auth-footer">
-            @L["AuthNoAccount"] <a href="register">@L["AuthCreateOne"]</a>.
+            @L["AuthNoAccount"] <a href="register">@L["AuthCreateOne"]</a>
         </p>
-    </RadzenCard>
+    </div>
 </div>
 
 @code {
@@ -95,6 +118,15 @@
     private LoginChallenge? challenge;
 
     [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState state = await AuthState.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true)
+        {
+            NavigateHome();
+        }
+    }
 
     private async Task HandleSubmit()
     {
@@ -139,10 +171,6 @@
 
             if (result.Challenge is not null)
             {
-                // Server re-issued a challenge? The token was
-                // one-shot; treat the roundtrip as failed and
-                // reset to the password screen so the user can
-                // start over.
                 error = L["Login_TotpCode_Invalid"];
                 challenge = null;
                 totpModel.Code = string.Empty;
@@ -161,6 +189,13 @@
         {
             busy = false;
         }
+    }
+
+    private void ResetTotp()
+    {
+        challenge = null;
+        totpModel.Code = string.Empty;
+        error = null;
     }
 
     private void NavigateHome()

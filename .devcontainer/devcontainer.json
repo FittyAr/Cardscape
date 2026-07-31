@@ -1,6 +1,6 @@
 {
   "name": "Cardscape",
-  "image": "mcr.microsoft.com/dotnet/sdk:11.0.100-preview.6-noble",
+  "image": "mcr.microsoft.com/dotnet/sdk:10.0-noble",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -15,7 +15,7 @@
   "customizations": {
     "vscode": {
       "settings": {
-        "dotnet.sdk.version": "11.0.100-preview.6",
+        "dotnet.sdk.version": "10.0.302",
         "csharp.format.enable": true,
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "ms-dotnettools.csharp",

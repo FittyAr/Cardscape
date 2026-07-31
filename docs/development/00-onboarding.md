@@ -6,7 +6,7 @@
 
 | Tool | Version | Notes |
 |---|---|---|
-| .NET SDK | 11.0.100-preview.6 (or newer in the 11.0.x feature band) | `global.json` pins the patch. `rollForward: latestFeature` lets a newer SDK satisfy the constraint. |
+| .NET SDK | 10.0.302 (or newer in the 10.0.x feature band) | `global.json` pins the patch. `rollForward: latestFeature` lets a newer SDK satisfy the constraint. |
 | Git | any recent | The `core.autocrlf=false` recommendation applies; the repo ships LF line endings. |
 | An editor | Rider / VS 2022 17.x+ / VS Code + C# Dev Kit | Any of them. The project includes an `.editorconfig` so your editor will pick up the style rules. |
 | SQLite browser (optional) | DB Browser for SQLite or `sqlite3` CLI | Helpful when debugging migrations. |
@@ -17,7 +17,7 @@
 ```bash
 git clone https://github.com/cardscape/cardscape.git
 cd cardscape
-dotnet --version          # must report 11.0.100-preview.6 (or later in the band)
+dotnet --version          # must report 10.0.302 (or later in the band)
 dotnet restore
 dotnet build
 ```
@@ -179,7 +179,7 @@ tests with `[Trait("Database", "PostgreSQL")]` or
 
 ### `dotnet --version` reports an older SDK
 
-Install .NET 11 SDK 11.0.100-preview.6 or newer in the 11.0.x band.
+Install .NET 10 SDK 10.0.302 or newer in the 10.0.x band.
 On Windows, the SDK lives at `C:\Program Files\dotnet\sdk\`.
 On macOS/Linux, install via your package manager or `dotnet-install.sh`.
 
@@ -204,8 +204,8 @@ or remove the `using`.
 dotnet tool install -g dotnet-ef
 ```
 
-If you already have it, update it to a version that targets .NET 11
-(currently a 10.x release works fine with the 11 SDK).
+If you already have it, update it to a version that targets .NET 10
+(any 10.x release works fine with the 10 SDK).
 
 ## 10. Next steps
 

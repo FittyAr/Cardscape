@@ -5,11 +5,12 @@
     wwwroot verbatim into the API's output wwwroot.
 
 .DESCRIPTION
-    The .NET 11 preview SDK (11.0.100-preview.6.26359.118) does not run
-    the static-web-assets merge for a server (API) project that
+    Historical workaround for the .NET 11 preview SDK
+    (11.0.100-preview.6.26359.118): it did not run the
+    static-web-assets merge for a server (API) project that
     references a Blazor WASM project, so UseBlazorFrameworkFiles() +
-    UseStaticFiles() + MapFallbackToFile() can't auto-discover the
-    client. As a stopgap, this script:
+    UseStaticFiles() + MapFallbackToFile() could not auto-discover
+    the client. As a stopgap, this script:
 
       1. Publishes the Web project to a known temp folder.
       2. Copies the entire published wwwroot on top of the API's
@@ -18,12 +19,18 @@
     The published output must NOT be modified after `dotnet publish`.
     The framework .wasm / .js files keep their static-web-asset
     fingerprints (e.g. Microsoft.Extensions.Hosting.Abstractions
-    .o74pq60xl6.wasm) because the boot manifest in .NET 11 is
-    embedded inline in _framework/dotnet.js, not in a separate
-    blazor.boot.json file. The browser fetches the fingerprinted
-    URLs and checks SRI against the hashes baked into the same
-    embedded manifest, so renaming the files or rewriting the
-    JSON (as older SDKs required) only makes things worse.
+    .o74pq60xl6.wasm) because the boot manifest is embedded inline
+    in _framework/dotnet.js, not in a separate blazor.boot.json file.
+    The browser fetches the fingerprinted URLs and checks SRI against
+    the hashes baked into the same embedded manifest, so renaming the
+    files or rewriting the JSON only makes things worse.
+
+    Now that the project targets net10.0 (LTS) the static-web-assets
+    merge is expected to run correctly, so this script is no longer
+    required. It is kept for safety and can be removed along with the
+    CopyBlazorClientWwwroot target in Cardscape.Api.csproj once a
+    `dotnet build` confirms the API hosts the Blazor client without
+    help.
 
     Invoked from src/Cardscape.Api/Cardscape.Api.csproj as the
     AfterTargets="Build" target `CopyBlazorClientWwwroot`.

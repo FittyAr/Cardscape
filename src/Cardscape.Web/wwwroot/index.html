@@ -4,16 +4,20 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cardscape.Web</title>
+    <title>Cardscape</title>
     <base href="/" />
-    <link rel="modulepreload" href="_framework/dotnet.js" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="manifest" href="manifest.webmanifest" />
-    <meta name="theme-color" content="#1d4ed8" />
+    <meta name="theme-color" content="#0f3d3e" />
     <link href="Cardscape.Web.styles.css" rel="stylesheet" />
     <script type="importmap"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
 </head>
 
 <body>
@@ -31,19 +35,22 @@
         <span class="dismiss">🗙</span>
     </div>
     <!--
-        .NET 11 preview SDK (11.0.100-preview.6.26359.118) does not run
-        the token-replacement pass on the <link id="webassembly" /> /
+        Historical context: the .NET 11 preview SDK
+        (11.0.100-preview.6.26359.118) did not run the
+        token-replacement pass on the <link id="webassembly" /> /
         <script src="_framework/blazor.webassembly#[.{fingerprint}].js">
-        placeholders. They were originally hardcoded to non-fingerprinted
-        names, which worked while the build step was stripping the
-        fingerprints from the framework files. Once we stopped stripping
-        the fingerprints (the boot manifest in dotnet.js expects the
-        fingerprinted names), the non-fingerprinted preload became a
-        404. The runtime does not depend on the preload — it reads the
-        boot manifest from _framework/dotnet.js and fetches the
-        fingerprinted names itself. So we drop the preload entirely
-        (the runtime already preloads what it needs) and keep the
+        placeholders, so a hardcoded <link rel="modulepreload" href=
+        "_framework/dotnet.js" /> caused a 404 once the build stopped
+        stripping the per-assembly fingerprints. The runtime does not
+        depend on the preload — it reads the boot manifest from
+        _framework/dotnet.js and fetches the fingerprinted names
+        itself — so we drop the preload entirely and keep the
         fingerprinted files served as-is by the API.
+
+        Now that the project targets net10.0 (LTS), this is no longer
+        required but is kept as a safe default. Re-introducing a
+        fingerprinted modulepreload is a follow-up; verify in a browser
+        smoke test before flipping the bit.
     -->
     <script src="_framework/blazor.webassembly.js"></script>
     <script>

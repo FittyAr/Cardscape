@@ -43,14 +43,27 @@
   </resheader>
 
   <data name="AppName" xml:space="preserve"><value>Cardscape</value></data>
-  <data name="AppTagline" xml:space="preserve"><value>Your self-hostable Trello-compatible kanban, built on .NET 11.</value></data>
+  <data name="AppTagline" xml:space="preserve"><value>Self-hostable kanban for teams that want their boards back — boards, lists, cards, and an MCP server for AI clients.</value></data>
   <data name="HomeTitle" xml:space="preserve"><value>Welcome to Cardscape</value></data>
-  <data name="HomeWorkspacesHeading" xml:space="preserve"><value>Workspaces</value></data>
+  <data name="HomeGreeting" xml:space="preserve"><value>Welcome back, {0}</value></data>
+  <data name="HomeLandingEyebrow" xml:space="preserve"><value>Open-source kanban</value></data>
+  <data name="HomeLeadAuthorized" xml:space="preserve"><value>Jump into a starred board or open a workspace to keep moving.</value></data>
+  <data name="HomeWorkspacesHeading" xml:space="preserve"><value>Your workspaces</value></data>
   <data name="HomeWorkspacesBlurb" xml:space="preserve"><value>Pick a workspace to see its boards.</value></data>
+  <data name="HomeWorkspacesEmpty" xml:space="preserve"><value>No workspaces yet. Create one to start organizing boards.</value></data>
+  <data name="HomeWorkspaceMembers" xml:space="preserve"><value>{0} members</value></data>
   <data name="HomeStarredHeading" xml:space="preserve"><value>Starred boards</value></data>
   <data name="HomeStarredBlurb" xml:space="preserve"><value>Quickly jump to the boards you star.</value></data>
+  <data name="HomeStarredEmpty" xml:space="preserve"><value>Star a board from its header to pin it here.</value></data>
   <data name="HomeOpenWorkspaces" xml:space="preserve"><value>Open workspaces</value></data>
   <data name="HomeSeeStarred" xml:space="preserve"><value>See starred</value></data>
+  <data name="HomeShortcuts" xml:space="preserve"><value>Shortcuts</value></data>
+  <data name="HomePointBoardsTitle" xml:space="preserve"><value>Boards that feel like work</value></data>
+  <data name="HomePointBoardsBody" xml:space="preserve"><value>Workspaces, lists, cards, calendar, and planner — the surface you already know, without the hosted lock-in.</value></data>
+  <data name="HomePointSelfHostTitle" xml:space="preserve"><value>Yours to run</value></data>
+  <data name="HomePointSelfHostBody" xml:space="preserve"><value>SQLite, PostgreSQL, or MariaDB. One build, your infrastructure, your data.</value></data>
+  <data name="HomePointMcpTitle" xml:space="preserve"><value>AI that can drive the board</value></data>
+  <data name="HomePointMcpBody" xml:space="preserve"><value>A first-class MCP server lets Cursor, Claude, and other agents read and write cards safely.</value></data>
   <data name="NavHome" xml:space="preserve"><value>Home</value></data>
   <data name="NavWorkspaces" xml:space="preserve"><value>Workspaces</value></data>
   <data name="NavInvitations" xml:space="preserve"><value>Invitations</value></data>
@@ -60,18 +73,23 @@
   <data name="NavApiTokens" xml:space="preserve"><value>API tokens</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Create account</value></data>
-  <data name="AuthSignInTitle" xml:space="preserve"><value>Sign in to Cardscape</value></data>
+  <data name="AuthSignInTitle" xml:space="preserve"><value>Sign in</value></data>
+  <data name="AuthSignInSubtitle" xml:space="preserve"><value>Continue with a provider or use your email.</value></data>
   <data name="AuthSignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="AuthSigningIn" xml:space="preserve"><value>Signing in...</value></data>
+  <data name="AuthLogOut" xml:space="preserve"><value>Log out</value></data>
+  <data name="AuthBackToSignIn" xml:space="preserve"><value>Back to sign in</value></data>
   <data name="AuthNoAccount" xml:space="preserve"><value>No account?</value></data>
   <data name="AuthCreateOne" xml:space="preserve"><value>Create one</value></data>
   <data name="AuthAlreadyAccount" xml:space="preserve"><value>Already have an account?</value></data>
-  <data name="AuthCreateAccountTitle" xml:space="preserve"><value>Create your Cardscape account</value></data>
+  <data name="AuthCreateAccountTitle" xml:space="preserve"><value>Create your account</value></data>
+  <data name="AuthCreateAccountSubtitle" xml:space="preserve"><value>A few details and you are ready to open your first board.</value></data>
   <data name="AuthCreateAccount" xml:space="preserve"><value>Create account</value></data>
   <data name="AuthCreating" xml:space="preserve"><value>Creating...</value></data>
   <data name="AuthEmail" xml:space="preserve"><value>Email</value></data>
   <data name="AuthPassword" xml:space="preserve"><value>Password</value></data>
   <data name="AuthDisplayName" xml:space="preserve"><value>Display name</value></data>
+  <data name="AuthDisplayNamePlaceholder" xml:space="preserve"><value>How should we call you?</value></data>
   <data name="AuthPasswordHint" xml:space="preserve"><value>At least 8 characters.</value></data>
   <data name="AuthSignInWithGoogle" xml:space="preserve"><value>Sign in with Google</value></data>
   <data name="AuthSignInWithMicrosoft" xml:space="preserve"><value>Sign in with Microsoft</value></data>
@@ -79,6 +97,13 @@
   <data name="AuthSignInWithAppleSoon" xml:space="preserve"><value>Sign in with Apple (soon)</value></data>
   <data name="AuthAppleSoon" xml:space="preserve"><value>Apple sign-in is on the roadmap</value></data>
   <data name="AuthOr" xml:space="preserve"><value>or</value></data>
+  <data name="AuthOauthTitle" xml:space="preserve"><value>Signing in</value></data>
+  <data name="AuthOauthWorking" xml:space="preserve"><value>Signing you in…</value></data>
+  <data name="AuthOauthFailed" xml:space="preserve"><value>Sign-in failed</value></data>
+  <data name="AuthOauthHoldOn" xml:space="preserve"><value>Hold on while we finish your sign-in.</value></data>
+  <data name="AuthOauthMissingFragment" xml:space="preserve"><value>The sign-in callback did not include a token fragment.</value></data>
+  <data name="AuthOauthMissingToken" xml:space="preserve"><value>The sign-in callback is missing an access or refresh token.</value></data>
+  <data name="AuthOauthError" xml:space="preserve"><value>Could not finish signing in: {0}</value></data>
   <data name="ActionSave" xml:space="preserve"><value>Save</value></data>
   <data name="ActionCancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="ActionCreate" xml:space="preserve"><value>Create</value></data>

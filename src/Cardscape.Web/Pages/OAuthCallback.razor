@@ -1,29 +1,36 @@
 @page "/oauth/callback"
 @layout EmptyLayout
 @using System.Web
+@using Cardscape.Web.Resources
 @using Cardscape.Web.Services
 @using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Localization
 @using Microsoft.JSInterop
 @inject IJSRuntime JS
 @inject TokenStore Tokens
 @inject AuthStateProvider Auth
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Signing you in… — Cardscape</PageTitle>
+<PageTitle>@L["AuthOauthTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <div class="auth-shell">
-    <RadzenCard class="auth-card">
-        <h1 class="auth-title">@(error is null ? "Signing you in…" : "Sign-in failed")</h1>
-        <p style="color: #6b7280; font-size: 0.875rem;">
-            @(error ?? "Hold on while we finish your sign-in.")
-        </p>
+    <div class="auth-card auth-card--status">
+        <header class="auth-header">
+            <h1 class="auth-title">@(error is null ? L["AuthOauthWorking"] : L["AuthOauthFailed"])</h1>
+            <p class="auth-subtitle">@(error ?? L["AuthOauthHoldOn"].Value)</p>
+        </header>
         @if (error is not null)
         {
-            <a class="provider-button" href="/login" style="justify-content: center;">
-                <span>Back to sign in</span>
+            <a class="provider-button" href="login" style="justify-content: center;">
+                <span>@L["AuthBackToSignIn"]</span>
             </a>
         }
-    </RadzenCard>
+        else
+        {
+            <div class="auth-spinner" aria-hidden="true"></div>
+        }
+    </div>
 </div>
 
 @code {
@@ -38,19 +45,13 @@
 
         try
         {
-            // The API redirects the browser back here with a
-            // #access_token=...&refresh_token=... fragment.
-            // We can't read the fragment from a Blazor page
-            // directly (the server only sees the path), so
-            // we ask the browser via JS for the current URL
-            // and parse the fragment ourselves.
             string currentUrl = await JS.InvokeAsync<string>("eval",
                 "window.location.href");
             var uri = new Uri(currentUrl);
             string fragment = uri.Fragment.TrimStart('#');
             if (string.IsNullOrWhiteSpace(fragment))
             {
-                error = "The sign-in callback did not include a token fragment.";
+                error = L["AuthOauthMissingFragment"];
                 StateHasChanged();
                 return;
             }
@@ -60,7 +61,7 @@
             string? refresh = query["refresh_token"];
             if (string.IsNullOrWhiteSpace(access) || string.IsNullOrWhiteSpace(refresh))
             {
-                error = "The sign-in callback is missing an access or refresh token.";
+                error = L["AuthOauthMissingToken"];
                 StateHasChanged();
                 return;
             }
@@ -77,7 +78,7 @@
         }
         catch (Exception ex)
         {
-            error = $"Could not finish signing in: {ex.Message}";
+            error = string.Format(L["AuthOauthError"].Value, ex.Message);
             StateHasChanged();
         }
     }

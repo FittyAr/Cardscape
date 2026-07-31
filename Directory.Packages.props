@@ -8,8 +8,9 @@
 
   <ItemGroup>
     <!--
-      NOTE: We target net11.0, but EF Core 11 preview providers for MariaDB
-      have not shipped yet. We use EF Core 10.0.10 (current LTS) for all
+      NOTE: We target net10.0 (LTS), so the whole Microsoft.* / ASP.NET Core
+      stack is on the 10.0.x line. EF Core 11 preview providers for MariaDB
+      have not shipped yet, so we use EF Core 10.0.10 (current LTS) for all
       three database engines: SQLite, PostgreSQL, and MariaDB (via Oracle's
       MySql.EntityFrameworkCore, which is wire-compatible with MariaDB).
       This decision will be revisited once Pomelo / Oracle ship EF Core 11
@@ -22,14 +23,14 @@
     <PackageVersion Include="FluentValidation" Version="11.11.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
     <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0-preview.6.26359.118" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="11.0.0-preview.6.26359.118" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
 
     <!-- Override transitive SQLitePCLRaw (vulnerability GHSA-2m69-gcr7-jv3q, fixed in 2.1.12+). -->
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="11.0.0-preview.6.26359.118" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.10" />
 
-    <!-- Override transitive Newtonsoft.Json (transitive from SignalR.Client 1.2.0; 11.0.2 has a known high-severity advisory GHSA-5crp-9r3c-p9vr). -->
+    <!-- Override transitive Newtonsoft.Json (transitive from SignalR.Client 1.2.0). -->
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
 
     <!-- EF Core 10 LTS + Identity. -->
@@ -44,25 +45,33 @@
     <PackageVersion Include="MySql.EntityFrameworkCore" Version="10.0.7" />
 
     <!-- API surface. -->
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0-preview.6.26359.118" />
-    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
+    <!--
+      System.IdentityModel.Tokens.Jwt: previously pinned to 8.2.1 to dodge the
+      GHSA-5crp-9r3c-p9vr advisory that hit 11.0.2. The advisory is fixed in
+      7.1.2 / 8.2.1+, and the JwtBearer 10.0.10 transitive tree now requires
+      >= 8.19.2 via Microsoft.IdentityModel.Protocols.OpenIdConnect 8.19.2.
+      Bumping to the latest 8.x release (still on the 8.x line to keep the
+      LTS-friendly surface area).
+    -->
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.19.2" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.3" />
 
     <!-- Localization (Blazor WASM). -->
-    <PackageVersion Include="Microsoft.Extensions.Localization" Version="11.0.0-preview.6.26359.118" />
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="10.0.10" />
 
     <!-- OAuth 2.0 / OIDC external login providers. -->
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.Google" Version="11.0.0-preview.6.26359.118" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="11.0.0-preview.6.26359.118" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="11.0.0-preview.6.26359.118" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.10" />
 
     <!-- Blazor WASM + Radzen. -->
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="11.0.0-preview.6.26359.118" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="11.0.0-preview.6.26359.118" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="11.0.0-preview.6.26359.118" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="11.0.0-preview.6.26359.118" />
-    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="11.0.0-preview.6.26359.118" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="11.0.0-preview.6.26359.118" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.10" />
     <PackageVersion Include="Radzen.Blazor" Version="11.1.8" />
 
     <!-- Model Context Protocol (AI integration server). -->
@@ -90,7 +99,7 @@
     <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
     <PackageVersion Include="AutoFixture" Version="4.18.1" />
     <PackageVersion Include="AutoFixture.Xunit2" Version="4.18.1" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0-preview.6.26359.118" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.10" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
 
     <!-- SDK (Cardscape.Sdk) — published as a NuGet package targeting

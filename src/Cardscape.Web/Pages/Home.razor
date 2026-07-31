@@ -1,32 +1,253 @@
 ﻿@page "/"
+@using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using Cardscape.Web.Resources
 @using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
 @using Microsoft.Extensions.Localization
-@inject IWorkspacesApiClient Workspaces
-@inject NavigationManager Nav
+@inject IWorkspacesApiClient WorkspacesApi
+@inject IBoardsApiClient BoardsApi
+@inject INotificationsApiClient NotificationsApi
 @inject AuthenticationStateProvider AuthState
+@inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@L["HomeTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="home-shell">
-    <h1>@L["HomeTitle"]</h1>
-    <p>@L["AppTagline"]</p>
+<AuthorizeView>
+    <Authorized>
+        <div class="home-shell home-shell--app">
+            <header class="home-hero home-hero--app">
+                <div>
+                    <p class="home-eyebrow">@L["AppName"]</p>
+                    <h1>@Greeting(context.User)</h1>
+                    <p class="home-lead">@L["HomeLeadAuthorized"]</p>
+                </div>
+                <div class="home-hero-actions">
+                    <RadzenButton Text="@L["HomeOpenWorkspaces"]"
+                                  Icon="grid_view"
+                                  ButtonStyle="@ButtonStyle.Primary"
+                                  Click="@(() => Nav.NavigateTo("workspaces"))" />
+                    <RadzenButton Text="@L["NavInbox"]"
+                                  Icon="inbox"
+                                  ButtonStyle="@ButtonStyle.Light"
+                                  Click="@(() => Nav.NavigateTo("inbox"))" />
+                </div>
+            </header>
 
-    <div class="home-grid">
-        <RadzenCard>
-            <h3>@L["HomeWorkspacesHeading"]</h3>
-            <p>@L["HomeWorkspacesBlurb"]</p>
-            <RadzenButton Text="@L["HomeOpenWorkspaces"]" ButtonStyle="ButtonStyle.Primary"
-                          Click="@(() => Nav.NavigateTo("workspaces"))" />
-        </RadzenCard>
+            @if (loading)
+            {
+                <p class="home-muted">@L["ActionLoading"]</p>
+            }
+            else
+            {
+                <section class="home-section" aria-labelledby="starred-heading">
+                    <div class="home-section-header">
+                        <h2 id="starred-heading">@L["HomeStarredHeading"]</h2>
+                        @if (starred is { Count: > 0 })
+                        {
+                            <span class="home-count">@starred.Count</span>
+                        }
+                    </div>
 
-        <RadzenCard>
-            <h3>@L["HomeStarredHeading"]</h3>
-            <p>@L["HomeStarredBlurb"]</p>
-            <RadzenButton Text="@L["HomeSeeStarred"]" ButtonStyle="ButtonStyle.Secondary"
-                          Click="@(() => Nav.NavigateTo("starred"))" />
-        </RadzenCard>
-    </div>
-</div>
+                    @if (starred is null || starred.Count == 0)
+                    {
+                        <div class="home-empty">
+                            <p>@L["HomeStarredEmpty"]</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="home-board-rail">
+                            @foreach (BoardSummaryDto board in starred.Take(8))
+                            {
+                                <button type="button" class="home-board-tile"
+                                        @onclick="@(() => Nav.NavigateTo($"boards/{board.Id}"))">
+                                    <span class="home-board-star" aria-hidden="true">★</span>
+                                    <span class="home-board-name">@board.Name</span>
+                                </button>
+                            }
+                        </div>
+                    }
+                </section>
+
+                <section class="home-section" aria-labelledby="workspaces-heading">
+                    <div class="home-section-header">
+                        <h2 id="workspaces-heading">@L["HomeWorkspacesHeading"]</h2>
+                        <RadzenButton Text="@L["WorkspacesNew"]"
+                                      Icon="add"
+                                      Size="@ButtonSize.Small"
+                                      ButtonStyle="@ButtonStyle.Light"
+                                      Click="@(() => Nav.NavigateTo("workspaces"))" />
+                    </div>
+
+                    @if (workspaces is null || workspaces.Count == 0)
+                    {
+                        <div class="home-empty">
+                            <p>@L["HomeWorkspacesEmpty"]</p>
+                            <RadzenButton Text="@L["WorkspacesNew"]"
+                                          Icon="add"
+                                          ButtonStyle="@ButtonStyle.Primary"
+                                          Click="@(() => Nav.NavigateTo("workspaces"))" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="home-workspace-grid">
+                            @foreach (WorkspaceDto ws in workspaces.Where(w => !w.IsArchived).Take(6))
+                            {
+                                <button type="button" class="home-workspace-tile"
+                                        @onclick="@(() => Nav.NavigateTo($"workspaces/{ws.Id}"))">
+                                    <span class="home-workspace-name">@ws.Name</span>
+                                    <span class="home-workspace-meta">
+                                        @string.Format(L["HomeWorkspaceMembers"].Value, ws.MemberCount)
+                                    </span>
+                                </button>
+                            }
+                        </div>
+                    }
+                </section>
+
+                <section class="home-shortcuts" aria-label="@L["HomeShortcuts"]">
+                    <a class="home-shortcut" href="inbox">
+                        <span class="home-shortcut-label">@L["NavInbox"]</span>
+                        @if (unreadCount > 0)
+                        {
+                            <span class="home-shortcut-badge">@unreadCount</span>
+                        }
+                    </a>
+                    <a class="home-shortcut" href="calendar">
+                        <span class="home-shortcut-label">@L["NavCalendar"]</span>
+                    </a>
+                    <a class="home-shortcut" href="planner">
+                        <span class="home-shortcut-label">@L["NavPlanner"]</span>
+                    </a>
+                    <a class="home-shortcut" href="invitations">
+                        <span class="home-shortcut-label">@L["NavInvitations"]</span>
+                    </a>
+                </section>
+            }
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="home-shell home-shell--landing">
+            <section class="landing-hero">
+                <div class="landing-copy">
+                    <p class="home-eyebrow">@L["HomeLandingEyebrow"]</p>
+                    <h1 class="landing-brand">@L["AppName"]</h1>
+                    <p class="landing-lead">@L["AppTagline"]</p>
+                    <div class="landing-cta">
+                        <RadzenButton Text="@L["AuthSignIn"]"
+                                      ButtonStyle="@ButtonStyle.Primary"
+                                      Size="@ButtonSize.Large"
+                                      Click="@(() => Nav.NavigateTo("login"))" />
+                        <RadzenButton Text="@L["AuthCreateAccount"]"
+                                      ButtonStyle="@ButtonStyle.Light"
+                                      Size="@ButtonSize.Large"
+                                      Click="@(() => Nav.NavigateTo("register"))" />
+                    </div>
+                </div>
+                <div class="landing-visual" aria-hidden="true">
+                    <div class="landing-board">
+                        <div class="landing-lane">
+                            <span class="landing-lane-title"></span>
+                            <span class="landing-card"></span>
+                            <span class="landing-card landing-card--short"></span>
+                        </div>
+                        <div class="landing-lane">
+                            <span class="landing-lane-title"></span>
+                            <span class="landing-card landing-card--accent"></span>
+                            <span class="landing-card"></span>
+                            <span class="landing-card landing-card--short"></span>
+                        </div>
+                        <div class="landing-lane">
+                            <span class="landing-lane-title"></span>
+                            <span class="landing-card landing-card--short"></span>
+                            <span class="landing-card"></span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="landing-points">
+                <div class="landing-point">
+                    <h2>@L["HomePointBoardsTitle"]</h2>
+                    <p>@L["HomePointBoardsBody"]</p>
+                </div>
+                <div class="landing-point">
+                    <h2>@L["HomePointSelfHostTitle"]</h2>
+                    <p>@L["HomePointSelfHostBody"]</p>
+                </div>
+                <div class="landing-point">
+                    <h2>@L["HomePointMcpTitle"]</h2>
+                    <p>@L["HomePointMcpBody"]</p>
+                </div>
+            </section>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private IReadOnlyList<WorkspaceDto>? workspaces;
+    private IReadOnlyList<BoardSummaryDto>? starred;
+    private int unreadCount;
+    private bool loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState state = await AuthState.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        loading = true;
+
+        try
+        {
+            Task<ApiResult<IReadOnlyList<WorkspaceDto>>> wsTask = WorkspacesApi.ListAsync();
+            Task<ApiResult<IReadOnlyList<BoardSummaryDto>>> starredTask = BoardsApi.ListStarredAsync();
+            Task<ApiResult<int>> unreadTask = NotificationsApi.GetUnreadCountAsync();
+
+            await Task.WhenAll(wsTask, starredTask, unreadTask);
+
+            ApiResult<IReadOnlyList<WorkspaceDto>> ws = await wsTask;
+            ApiResult<IReadOnlyList<BoardSummaryDto>> st = await starredTask;
+            ApiResult<int> unread = await unreadTask;
+
+            if (ws.IsSuccess)
+            {
+                workspaces = ws.Value;
+            }
+
+            if (st.IsSuccess)
+            {
+                starred = st.Value;
+            }
+
+            if (unread.IsSuccess)
+            {
+                unreadCount = unread.Value;
+            }
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private string Greeting(ClaimsPrincipal user)
+    {
+        string? name = user.Identity?.Name
+            ?? user.FindFirst(ClaimTypes.GivenName)?.Value
+            ?? user.FindFirst("name")?.Value;
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return L["HomeTitle"];
+        }
+
+        return string.Format(L["HomeGreeting"].Value, name);
+    }
+}

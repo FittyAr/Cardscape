@@ -43,14 +43,27 @@
   </resheader>
 
   <data name="AppName" xml:space="preserve"><value>Cardscape</value></data>
-  <data name="AppTagline" xml:space="preserve"><value>Tu kanban compatible con Trello autoalojable, construido en .NET 11.</value></data>
+  <data name="AppTagline" xml:space="preserve"><value>Kanban autoalojable para equipos que quieren recuperar sus tableros — boards, listas, tarjetas y un servidor MCP para clientes de IA.</value></data>
   <data name="HomeTitle" xml:space="preserve"><value>Bienvenido a Cardscape</value></data>
-  <data name="HomeWorkspacesHeading" xml:space="preserve"><value>Espacios de trabajo</value></data>
+  <data name="HomeGreeting" xml:space="preserve"><value>Bienvenido de nuevo, {0}</value></data>
+  <data name="HomeLandingEyebrow" xml:space="preserve"><value>Kanban de código abierto</value></data>
+  <data name="HomeLeadAuthorized" xml:space="preserve"><value>Entrá a un tablero destacado o abrí un espacio de trabajo para seguir.</value></data>
+  <data name="HomeWorkspacesHeading" xml:space="preserve"><value>Tus espacios de trabajo</value></data>
   <data name="HomeWorkspacesBlurb" xml:space="preserve"><value>Elegí un espacio de trabajo para ver sus tableros.</value></data>
+  <data name="HomeWorkspacesEmpty" xml:space="preserve"><value>Todavía no hay espacios. Creá uno para empezar a organizar tableros.</value></data>
+  <data name="HomeWorkspaceMembers" xml:space="preserve"><value>{0} miembros</value></data>
   <data name="HomeStarredHeading" xml:space="preserve"><value>Tableros destacados</value></data>
   <data name="HomeStarredBlurb" xml:space="preserve"><value>Saltá rápidamente a los tableros que destacaste.</value></data>
+  <data name="HomeStarredEmpty" xml:space="preserve"><value>Destacá un tablero desde su encabezado para fijarlo acá.</value></data>
   <data name="HomeOpenWorkspaces" xml:space="preserve"><value>Abrir espacios de trabajo</value></data>
   <data name="HomeSeeStarred" xml:space="preserve"><value>Ver destacados</value></data>
+  <data name="HomeShortcuts" xml:space="preserve"><value>Accesos rápidos</value></data>
+  <data name="HomePointBoardsTitle" xml:space="preserve"><value>Tableros hechos para trabajar</value></data>
+  <data name="HomePointBoardsBody" xml:space="preserve"><value>Espacios, listas, tarjetas, calendario y planificador — la superficie que ya conocés, sin el candado del hosting.</value></data>
+  <data name="HomePointSelfHostTitle" xml:space="preserve"><value>Tuyo para correr</value></data>
+  <data name="HomePointSelfHostBody" xml:space="preserve"><value>SQLite, PostgreSQL o MariaDB. Un build, tu infraestructura, tus datos.</value></data>
+  <data name="HomePointMcpTitle" xml:space="preserve"><value>IA que puede manejar el tablero</value></data>
+  <data name="HomePointMcpBody" xml:space="preserve"><value>Un servidor MCP de primera clase deja que Cursor, Claude y otros agentes lean y escriban tarjetas con seguridad.</value></data>
   <data name="NavHome" xml:space="preserve"><value>Inicio</value></data>
   <data name="NavWorkspaces" xml:space="preserve"><value>Espacios</value></data>
   <data name="NavInvitations" xml:space="preserve"><value>Invitaciones</value></data>
@@ -60,18 +73,23 @@
   <data name="NavApiTokens" xml:space="preserve"><value>Tokens de API</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>
-  <data name="AuthSignInTitle" xml:space="preserve"><value>Iniciar sesión en Cardscape</value></data>
+  <data name="AuthSignInTitle" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="AuthSignInSubtitle" xml:space="preserve"><value>Continuá con un proveedor o usá tu email.</value></data>
   <data name="AuthSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="AuthSigningIn" xml:space="preserve"><value>Ingresando...</value></data>
+  <data name="AuthLogOut" xml:space="preserve"><value>Cerrar sesión</value></data>
+  <data name="AuthBackToSignIn" xml:space="preserve"><value>Volver al inicio de sesión</value></data>
   <data name="AuthNoAccount" xml:space="preserve"><value>¿No tenés cuenta?</value></data>
   <data name="AuthCreateOne" xml:space="preserve"><value>Crear una</value></data>
   <data name="AuthAlreadyAccount" xml:space="preserve"><value>¿Ya tenés una cuenta?</value></data>
-  <data name="AuthCreateAccountTitle" xml:space="preserve"><value>Creá tu cuenta de Cardscape</value></data>
+  <data name="AuthCreateAccountTitle" xml:space="preserve"><value>Creá tu cuenta</value></data>
+  <data name="AuthCreateAccountSubtitle" xml:space="preserve"><value>Unos pocos datos y ya podés abrir tu primer tablero.</value></data>
   <data name="AuthCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>
   <data name="AuthCreating" xml:space="preserve"><value>Creando...</value></data>
   <data name="AuthEmail" xml:space="preserve"><value>Email</value></data>
   <data name="AuthPassword" xml:space="preserve"><value>Contraseña</value></data>
   <data name="AuthDisplayName" xml:space="preserve"><value>Nombre</value></data>
+  <data name="AuthDisplayNamePlaceholder" xml:space="preserve"><value>¿Cómo te llamamos?</value></data>
   <data name="AuthPasswordHint" xml:space="preserve"><value>Al menos 8 caracteres.</value></data>
   <data name="AuthSignInWithGoogle" xml:space="preserve"><value>Iniciar sesión con Google</value></data>
   <data name="AuthSignInWithMicrosoft" xml:space="preserve"><value>Iniciar sesión con Microsoft</value></data>
@@ -79,6 +97,13 @@
   <data name="AuthSignInWithAppleSoon" xml:space="preserve"><value>Iniciar sesión con Apple (próximamente)</value></data>
   <data name="AuthAppleSoon" xml:space="preserve"><value>El inicio de sesión con Apple está en la hoja de ruta</value></data>
   <data name="AuthOr" xml:space="preserve"><value>o</value></data>
+  <data name="AuthOauthTitle" xml:space="preserve"><value>Iniciando sesión</value></data>
+  <data name="AuthOauthWorking" xml:space="preserve"><value>Te estamos ingresando…</value></data>
+  <data name="AuthOauthFailed" xml:space="preserve"><value>Falló el inicio de sesión</value></data>
+  <data name="AuthOauthHoldOn" xml:space="preserve"><value>Aguantá un momento mientras terminamos el ingreso.</value></data>
+  <data name="AuthOauthMissingFragment" xml:space="preserve"><value>El callback de ingreso no incluyó un fragmento de token.</value></data>
+  <data name="AuthOauthMissingToken" xml:space="preserve"><value>Al callback le falta un access o refresh token.</value></data>
+  <data name="AuthOauthError" xml:space="preserve"><value>No se pudo terminar el ingreso: {0}</value></data>
   <data name="ActionSave" xml:space="preserve"><value>Guardar</value></data>
   <data name="ActionCancel" xml:space="preserve"><value>Cancelar</value></data>
   <data name="ActionCreate" xml:space="preserve"><value>Crear</value></data>

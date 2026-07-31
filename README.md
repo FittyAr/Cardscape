@@ -9,7 +9,7 @@ Cardscape is an open-source, self-hostable project-management tool
 with a complete feature surface — kanban boards, calendar,
 automation engine, extensions, Inbox, Planner, and AI — and a
 Model Context Protocol server that lets AI assistants read,
-create, and move cards on your behalf. It runs on **.NET 11**,
+create, and move cards on your behalf. It runs on **.NET 10**,
 persists to **SQLite**, **PostgreSQL**, or **MariaDB**, and ships
 under the **Reciprocal Public License 1.5**.
 
@@ -35,7 +35,7 @@ It is the only self-hostable kanban with a first-class MCP server.
   automation rules, scheduled commands, Inbox, Planner,
   extensions, API tokens, audit logs. Designed for the long run,
   not a demo.
-- **Modern .NET, end to end.** ASP.NET Core 11, Blazor WebAssembly,
+- **Modern .NET, end to end.** ASP.NET Core 10, Blazor WebAssembly,
   Entity Framework Core 10 LTS, Radzen.Blazor. Type-safe,
   fast, long-term support.
 - **Open development.** Public roadmap, public ADRs, public
@@ -551,8 +551,8 @@ Full layout and dependency rules:
 
 | Layer | Choice | Notes |
 |---|---|---|
-| Runtime | .NET 11 | SDK `11.0.100-preview.6` |
-| Web framework | ASP.NET Core minimal APIs | 11.0 preview 6 |
+| Runtime | .NET 10 (LTS) | SDK `10.0.302` (latest 10.0.x feature band) |
+| Web framework | ASP.NET Core minimal APIs | 10.0.10 |
 | Client | Blazor WebAssembly | 11.0 preview 6, Radzen components |
 | UI components | Radzen.Blazor | 11.1.8 |
 | ORM | Entity Framework Core | 10.0.10 LTS (third-party providers trail .NET) |

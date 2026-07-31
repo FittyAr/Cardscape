@@ -1,10 +1,12 @@
 ﻿@inherits LayoutComponentBase
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
+@using Cardscape.Web.Resources
 @using Cardscape.Web.Services
-@inject AuthenticationStateProvider AuthState
+@using Microsoft.Extensions.Localization
 @inject AuthService Auth
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 
 <div class="page">
     <AuthorizeView>
@@ -15,30 +17,40 @@
         </Authorized>
     </AuthorizeView>
 
-    <main>
-        <div class="top-row px-4">
-            <AuthorizeView>
-                <Authorized>
+    <div class="page-body">
+        <AuthorizeView>
+            <Authorized>
+                <div class="top-row px-4">
                     <span class="user-info">
                         <span class="user-name">@context.User.Identity?.Name</span>
                         <span class="user-email">@context.User.FindFirst(ClaimTypes.Email)?.Value</span>
                     </span>
-                    <RadzenButton Text="Log out"
-                                  ButtonStyle="ButtonStyle.Light"
-                                  Size="ButtonSize.Small"
+                    <RadzenButton Text="@L["AuthLogOut"]"
+                                  ButtonStyle="@ButtonStyle.Light"
+                                  Size="@ButtonSize.Small"
                                   Click="@HandleLogout" />
-                </Authorized>
-                <NotAuthorized>
-                    <a href="login" class="top-link">Sign in</a>
-                    <a href="register" class="top-link">Create account</a>
-                </NotAuthorized>
-            </AuthorizeView>
-        </div>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <header class="guest-bar">
+                    <a class="guest-brand" href="/">
+                        <span class="brand-lanes brand-lanes--sm" aria-hidden="true">
+                            <span></span><span></span><span></span>
+                        </span>
+                        <span class="brand-wordmark">@L["AppName"]</span>
+                    </a>
+                    <nav class="guest-actions">
+                        <a href="login" class="guest-link">@L["AuthSignIn"]</a>
+                        <a href="register" class="guest-link guest-link--solid">@L["AuthCreateAccount"]</a>
+                    </nav>
+                </header>
+            </NotAuthorized>
+        </AuthorizeView>
 
         <article class="content px-4">
             @Body
         </article>
-    </main>
+    </div>
 </div>
 
 @code {

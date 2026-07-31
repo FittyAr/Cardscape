@@ -1,7 +1,42 @@
 @inherits LayoutComponentBase
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+
 @*
-    Minimal layout used by the auth pages (login / register).
-    Skips the sidebar/top-row chrome from MainLayout. *@
+    Auth / marketing chrome — brand panel + form stage.
+    Used by login, register, and OAuth callback.
+*@
 <div class="auth-page">
-    @Body
+    <div class="auth-stage">
+        <aside class="auth-brand" aria-label="@L["AppName"]">
+            <a class="auth-brand-mark" href="/">
+                <span class="brand-lanes" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </span>
+                <span class="brand-wordmark">@L["AppName"]</span>
+            </a>
+            <p class="auth-brand-tagline">@L["AppTagline"]</p>
+            <div class="auth-brand-board" aria-hidden="true">
+                <div class="auth-lane">
+                    <span class="auth-lane-title"></span>
+                    <span class="auth-lane-card"></span>
+                    <span class="auth-lane-card auth-lane-card--short"></span>
+                </div>
+                <div class="auth-lane">
+                    <span class="auth-lane-title"></span>
+                    <span class="auth-lane-card auth-lane-card--accent"></span>
+                    <span class="auth-lane-card"></span>
+                    <span class="auth-lane-card auth-lane-card--short"></span>
+                </div>
+                <div class="auth-lane">
+                    <span class="auth-lane-title"></span>
+                    <span class="auth-lane-card auth-lane-card--short"></span>
+                </div>
+            </div>
+        </aside>
+        <main class="auth-main">
+            @Body
+        </main>
+    </div>
 </div>
