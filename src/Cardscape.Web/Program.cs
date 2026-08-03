@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net.Http.Headers;
 using Cardscape.Web;
+using Cardscape.Web.Logging;
 using Cardscape.Web.Resources;
 using Cardscape.Web.Services;
 using Cardscape.Web.Services.Api;
@@ -14,6 +15,14 @@ using Radzen;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
+
+// ── Logging ────────────────────────────────────────────────
+// Serilog routes every ILogger<T> in the client through
+// BrowserHttp (POSTs CLEF events to /api/internal/client-log
+// on the API), the browser console, and the dev tools
+// "Debug" sink. The API re-emits the received events so the
+// file / OTel / (future) DB sinks all see browser-side logs.
+builder.UseCardscapeBrowserSerilog();
 
 // ── Configuration (reads from wwwroot/appsettings.json) ─────────────
 string apiBaseUrl = builder.Configuration["ApiBaseUrl"]

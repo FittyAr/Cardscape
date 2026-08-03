@@ -32,12 +32,22 @@ using Cardscape.Api.Realtime;
 using Cardscape.Application.DependencyInjection;
 using Cardscape.Application.Realtime;
 using Cardscape.Infrastructure.DependencyInjection;
+using Cardscape.Infrastructure.Logging;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Logging ────────────────────────────────────────────────
+// Serilog is wired before every other service so config
+// providers, EF Core, the hosted background dispatcher, and
+// the rest of the request pipeline all see the structured
+// logger. The browser side POSTs to /api/internal/client-log
+// (mapped below) and the file / OTel / (future) DB sinks
+// receive those events through the standard pipeline.
+builder.UseCardscapeSerilog(ServiceType.Api);
 
 // ── Services ─────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -219,6 +229,13 @@ app.MapSamlEndpoints();
 app.MapOAuthAppEndpoints();
 app.MapOAuthFlowEndpoints();
 app.MapAiEndpoints();
+
+// Companion endpoint for Serilog.Sinks.BrowserHttp on the
+// Blazor WASM client. Browser-side log events (e.g. uncaught
+// exceptions, navigation failures) are POSTed here in CLEF
+// JSON; the endpoint re-emits them through the standard
+// pipeline so the file / OTel sinks see them.
+app.MapClientLogEndpoint();
 
 // Real-time board hub. Sits at /hubs/board with the same JWT
 // bearer authentication as the REST API; clients bring the

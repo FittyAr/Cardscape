@@ -39,6 +39,15 @@
     <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="Microsoft.Extensions.Localization" />
     <PackageReference Include="Radzen.Blazor" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Enrichers.Environment" />
+    <PackageReference Include="Serilog.Enrichers.Thread" />
+    <PackageReference Include="Serilog.Exceptions" />
+    <PackageReference Include="Serilog.Extensions.Logging" />
+    <PackageReference Include="Serilog.Settings.Configuration" />
+    <PackageReference Include="Serilog.Sinks.BrowserHttp" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.Debug" />
   </ItemGroup>
 
   <ItemGroup>
@@ -55,9 +64,7 @@
     `SharedResource.resx` (English) at runtime.
   -->
   <ItemGroup>
-    <None Include="Resources\SharedResource.es.resx"
-          Pack="true"
-          PackagePath="wwwroot\Resources\SharedResource.es.resx" />
+    <None Include="Resources\SharedResource.es.resx" Pack="true" PackagePath="wwwroot\Resources\SharedResource.es.resx" />
   </ItemGroup>
 
 </Project>

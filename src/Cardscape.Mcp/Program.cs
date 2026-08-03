@@ -2,9 +2,19 @@ using Cardscape.Mcp.Endpoints.Internal;
 using Cardscape.Mcp.Extensions;
 using Cardscape.Mcp.Observability;
 using Cardscape.Mcp.Tools;
+using Cardscape.Infrastructure.Logging;
 using Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Logging ────────────────────────────────────────────────
+// Serilog wires the same shared infrastructure the API uses:
+// structured console, rolling daily file under
+// logs/mcp/{yyyyMMdd}/mcp-app.log, a Warning+ error stream,
+// and (when enabled) the OTel / DB sinks. Runs before the
+// OTel / MCP service registration so every component that
+// resolves ILogger<T> gets the same logger.
+builder.UseCardscapeSerilog(ServiceType.Mcp);
 
 // ── Composition root ──────────────────────────────────────────
 //
