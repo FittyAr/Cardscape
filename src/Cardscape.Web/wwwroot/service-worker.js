@@ -1,10 +1,12 @@
 // Cardscape service worker — PWA shell caching with a
 // network-first policy for /api/* (so the client always
-// gets fresh data when online) and a cache-first policy
-// for the static app shell (HTML, CSS, JS, images). Falls
-// back to a cached shell when the network is unreachable
-// so the app can be launched from the home-screen icon
-// while offline.
+// gets fresh data when online) and a network-first policy
+// for the static app shell (HTML, CSS, JS, images) so a
+// new build is picked up on the next visit instead of being
+// masked by a cached pre-rebuild copy. The cache is only
+// used as the offline fallback, so the app can still be
+// launched from the home-screen icon when the network is
+// unreachable.
 
 const CACHE_VERSION = 'cardscape-v1';
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
@@ -141,14 +143,19 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // ── Other GETs (CSS/JS/images/icons/manifest): try
-    // cache first, then network. The runtime cache holds
-    // anything we have seen.
+    // ── Static subresources (css/, lib/, _content/, icons/,
+    // manifest, favicon, scoped-css bundles, …): network-first,
+    // fall back to the cache when offline. The previous version
+    // of this handler was cache-first, which served stale
+    // css/app.css (and any other static asset) from a previous
+    // build until the user did a Ctrl+Shift+R. That broke the
+    // layout every time the UI was refreshed (the old CSS
+    // predated the grid/flex rules added in the UI refresh) and
+    // made the page look unstyled. Network-first here means the
+    // user always gets the current styles; the cache is only used
+    // when the network is unreachable (so offline launch from
+    // the home-screen icon still works).
     event.respondWith((async () => {
-        const cached = await caches.match(request);
-        if (cached) {
-            return cached;
-        }
         try {
             const fresh = await fetch(request);
             if (fresh && fresh.status === 200 && fresh.type === 'basic') {
@@ -157,6 +164,10 @@ self.addEventListener('fetch', (event) => {
             }
             return fresh;
         } catch (err) {
+            const cached = await caches.match(request);
+            if (cached) {
+                return cached;
+            }
             return new Response('', { status: 504, statusText: 'Gateway Timeout (offline)' });
         }
     })());
