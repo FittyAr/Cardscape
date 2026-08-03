@@ -8,16 +8,14 @@
     <base href="/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/default.css" />
     <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
-    <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0f3d3e" />
-    <link href="Cardscape.Web.styles.css" rel="stylesheet" />
     <script type="importmap"></script>
-    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
 </head>
 
 <body>
@@ -34,29 +32,12 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
-    <!--
-        Historical context: the .NET 11 preview SDK
-        (11.0.100-preview.6.26359.118) did not run the
-        token-replacement pass on the <link id="webassembly" /> /
-        <script src="_framework/blazor.webassembly#[.{fingerprint}].js">
-        placeholders, so a hardcoded <link rel="modulepreload" href=
-        "_framework/dotnet.js" /> caused a 404 once the build stopped
-        stripping the per-assembly fingerprints. The runtime does not
-        depend on the preload — it reads the boot manifest from
-        _framework/dotnet.js and fetches the fingerprinted names
-        itself — so we drop the preload entirely and keep the
-        fingerprinted files served as-is by the API.
 
-        Now that the project targets net10.0 (LTS), this is no longer
-        required but is kept as a safe default. Re-introducing a
-        fingerprinted modulepreload is a follow-up; verify in a browser
-        smoke test before flipping the bit.
-    -->
     <script src="_framework/blazor.webassembly.js"></script>
     <script>
-        // Register the PWA service worker. Done as the
-        // last script so the Blazor boot is not blocked
-        // by the registration handshake.
+        // Register the PWA service worker. Done as the last
+        // script so the Blazor boot is not blocked by the
+        // registration handshake.
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker

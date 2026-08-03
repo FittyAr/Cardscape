@@ -8,53 +8,112 @@
 @inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
 
-<div class="page">
-    <AuthorizeView>
-        <Authorized>
-            <div class="sidebar">
-                <NavMenu />
-            </div>
-        </Authorized>
-    </AuthorizeView>
+<RadzenComponents />
 
-    <div class="page-body">
-        <AuthorizeView>
-            <Authorized>
-                <div class="top-row px-4">
-                    <span class="user-info">
-                        <span class="user-name">@context.User.Identity?.Name</span>
-                        <span class="user-email">@context.User.FindFirst(ClaimTypes.Email)?.Value</span>
-                    </span>
-                    <RadzenButton Text="@L["AuthLogOut"]"
-                                  ButtonStyle="@ButtonStyle.Light"
-                                  Size="@ButtonSize.Small"
-                                  Click="@HandleLogout" />
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <header class="guest-bar">
-                    <a class="guest-brand" href="/">
-                        <span class="brand-lanes brand-lanes--sm" aria-hidden="true">
-                            <span></span><span></span><span></span>
-                        </span>
-                        <span class="brand-wordmark">@L["AppName"]</span>
+<AuthorizeView>
+    <Authorized>
+        <RadzenLayout>
+            <RadzenHeader>
+                <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+                    <RadzenColumn Size="3">
+                        <RadzenSidebarToggle Click="@ToggleSidebar" />
+                    </RadzenColumn>
+                    <RadzenColumn Size="9">
+                        <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                            <InboxBell />
+                            <RadzenProfileMenu Click="@ProfileMenuClick">
+                                <ChildContent>
+                                    <RadzenProfileMenuItem Path="account/api-tokens" Icon="key" Text="@L["NavApiTokens"]" />
+                                    <RadzenProfileMenuItem Path="settings/two-factor" Icon="security" Text="@L["SettingsTwoFactor"]" />
+                                    <RadzenProfileMenuItem Text="@L["AuthLogOut"]" Value="logout" Icon="power_settings_new" />
+                                </ChildContent>
+                                <Template>
+                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" JustifyContent="JustifyContent.End" class="rz-overflow-hidden">
+                                        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.End" Gap="0">
+                                            <RadzenText TextStyle="TextStyle.Body2" Style="color: inherit;">
+                                                @context.User.Identity?.Name
+                                            </RadzenText>
+                                            <RadzenText Text="@context.User.FindFirst(ClaimTypes.Email)?.Value" TextStyle="TextStyle.Caption" Style="color: inherit;" />
+                                        </RadzenStack>
+                                    </RadzenStack>
+                                </Template>
+                            </RadzenProfileMenu>
+                        </RadzenStack>
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenHeader>
+
+            <RadzenSidebar Expanded="@sidebarExpanded">
+                <RadzenStack AlignItems="AlignItems.Center" class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding); border-bottom: var(--rz-panel-menu-item-border);">
+                    <a class="rz-link" href="" style="text-decoration: none; color: inherit;">
+                        <RadzenText Text="@L["AppName"]" TextStyle="TextStyle.Subtitle1" />
                     </a>
-                    <nav class="guest-actions">
-                        <a href="login" class="guest-link">@L["AuthSignIn"]</a>
-                        <a href="register" class="guest-link guest-link--solid">@L["AuthCreateAccount"]</a>
-                    </nav>
-                </header>
-            </NotAuthorized>
-        </AuthorizeView>
+                </RadzenStack>
+                <RadzenPanelMenu>
+                    <RadzenPanelMenuItem Text="@L["NavHome"]" Path="" Icon="home" />
+                    <RadzenPanelMenuItem Text="@L["NavWorkspaces"]" Path="workspaces" Icon="workspaces" />
+                    <RadzenPanelMenuItem Text="@L["NavInbox"]" Path="inbox" Icon="inbox" />
+                    <RadzenPanelMenuItem Text="@L["NavCalendar"]" Path="calendar" Icon="event" />
+                    <RadzenPanelMenuItem Text="@L["NavPlanner"]" Path="planner" Icon="view_timeline" />
+                    <RadzenPanelMenuItem Text="@L["NavInvitations"]" Path="invitations" Icon="mail" />
+                </RadzenPanelMenu>
+                <RadzenStack AlignItems="AlignItems.Center" Gap="0" class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding);">
+                    <RadzenText Text="Cardscape v1.0.0" TextStyle="TextStyle.Caption" style="color: var(--rz-text-disabled-color);" TagName="TagName.P" TextAlign="TextAlign.Center" />
+                    <RadzenText Text="Copyright Ⓒ 2026" TextStyle="TextStyle.Caption" class="rz-mb-0" style="color: var(--rz-text-disabled-color);" TagName="TagName.P" TextAlign="TextAlign.Center" />
+                </RadzenStack>
+            </RadzenSidebar>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </div>
-</div>
+            <RadzenBody Expanded="@sidebarExpanded">
+                <RadzenRow class="rz-mx-auto rz-px-4 rz-pt-2 rz-pt-md-4 rz-pt-lg-6 rz-pt-xl-12 rz-pb-2 rz-pb-lg-12" Style="max-width: 1440px;">
+                    <RadzenColumn Size="12">
+                        @Body
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenBody>
+        </RadzenLayout>
+    </Authorized>
+    <NotAuthorized>
+        <RadzenLayout>
+            <RadzenHeader>
+                <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+                    <RadzenColumn Size="6">
+                        <a class="rz-link" href="" style="text-decoration: none; color: inherit;">
+                            <RadzenText Text="@L["AppName"]" TextStyle="TextStyle.Subtitle1" />
+                        </a>
+                    </RadzenColumn>
+                    <RadzenColumn Size="6">
+                        <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                            <RadzenButton Text="@L["AuthSignIn"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Nav.NavigateTo("login"))" />
+                            <RadzenButton Text="@L["AuthCreateAccount"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" Click="@(() => Nav.NavigateTo("register"))" />
+                        </RadzenStack>
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenHeader>
+            <RadzenBody Expanded="true">
+                <RadzenRow class="rz-mx-auto rz-px-4 rz-pt-2 rz-pt-md-4 rz-pt-lg-6 rz-pt-xl-12 rz-pb-2 rz-pb-lg-12" Style="max-width: 1440px;">
+                    <RadzenColumn Size="12">
+                        @Body
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenBody>
+        </RadzenLayout>
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
-    private async Task HandleLogout()
+    private bool sidebarExpanded = true;
+
+    void ToggleSidebar() => sidebarExpanded = !sidebarExpanded;
+
+    async Task ProfileMenuClick(RadzenProfileMenuItem args)
+    {
+        if (args.Value == "logout")
+        {
+            await LogoutAsync();
+        }
+    }
+
+    private async Task LogoutAsync()
     {
         await Auth.LogoutAsync();
         Nav.NavigateTo("login", forceLoad: true);

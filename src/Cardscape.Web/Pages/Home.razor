@@ -17,174 +17,116 @@
 
 <AuthorizeView>
     <Authorized>
-        <div class="home-shell home-shell--app">
-            <header class="home-hero home-hero--app">
-                <div>
-                    <p class="home-eyebrow">@L["AppName"]</p>
-                    <h1>@Greeting(context.User)</h1>
-                    <p class="home-lead">@L["HomeLeadAuthorized"]</p>
-                </div>
-                <div class="home-hero-actions">
-                    <RadzenButton Text="@L["HomeOpenWorkspaces"]"
-                                  Icon="grid_view"
-                                  ButtonStyle="@ButtonStyle.Primary"
-                                  Click="@(() => Nav.NavigateTo("workspaces"))" />
-                    <RadzenButton Text="@L["NavInbox"]"
-                                  Icon="inbox"
-                                  ButtonStyle="@ButtonStyle.Light"
-                                  Click="@(() => Nav.NavigateTo("inbox"))" />
-                </div>
-            </header>
-
-            @if (loading)
-            {
-                <p class="home-muted">@L["ActionLoading"]</p>
-            }
-            else
-            {
-                <section class="home-section" aria-labelledby="starred-heading">
-                    <div class="home-section-header">
-                        <h2 id="starred-heading">@L["HomeStarredHeading"]</h2>
-                        @if (starred is { Count: > 0 })
-                        {
-                            <span class="home-count">@starred.Count</span>
-                        }
-                    </div>
-
-                    @if (starred is null || starred.Count == 0)
-                    {
-                        <div class="home-empty">
-                            <p>@L["HomeStarredEmpty"]</p>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="home-board-rail">
-                            @foreach (BoardSummaryDto board in starred.Take(8))
-                            {
-                                <button type="button" class="home-board-tile"
-                                        @onclick="@(() => Nav.NavigateTo($"boards/{board.Id}"))">
-                                    <span class="home-board-star" aria-hidden="true">★</span>
-                                    <span class="home-board-name">@board.Name</span>
-                                </button>
-                            }
-                        </div>
-                    }
-                </section>
-
-                <section class="home-section" aria-labelledby="workspaces-heading">
-                    <div class="home-section-header">
-                        <h2 id="workspaces-heading">@L["HomeWorkspacesHeading"]</h2>
-                        <RadzenButton Text="@L["WorkspacesNew"]"
-                                      Icon="add"
-                                      Size="@ButtonSize.Small"
-                                      ButtonStyle="@ButtonStyle.Light"
-                                      Click="@(() => Nav.NavigateTo("workspaces"))" />
-                    </div>
-
-                    @if (workspaces is null || workspaces.Count == 0)
-                    {
-                        <div class="home-empty">
-                            <p>@L["HomeWorkspacesEmpty"]</p>
-                            <RadzenButton Text="@L["WorkspacesNew"]"
-                                          Icon="add"
-                                          ButtonStyle="@ButtonStyle.Primary"
-                                          Click="@(() => Nav.NavigateTo("workspaces"))" />
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="home-workspace-grid">
-                            @foreach (WorkspaceDto ws in workspaces.Where(w => !w.IsArchived).Take(6))
-                            {
-                                <button type="button" class="home-workspace-tile"
-                                        @onclick="@(() => Nav.NavigateTo($"workspaces/{ws.Id}"))">
-                                    <span class="home-workspace-name">@ws.Name</span>
-                                    <span class="home-workspace-meta">
-                                        @string.Format(L["HomeWorkspaceMembers"].Value, ws.MemberCount)
-                                    </span>
-                                </button>
-                            }
-                        </div>
-                    }
-                </section>
-
-                <section class="home-shortcuts" aria-label="@L["HomeShortcuts"]">
-                    <a class="home-shortcut" href="inbox">
-                        <span class="home-shortcut-label">@L["NavInbox"]</span>
-                        @if (unreadCount > 0)
-                        {
-                            <span class="home-shortcut-badge">@unreadCount</span>
-                        }
-                    </a>
-                    <a class="home-shortcut" href="calendar">
-                        <span class="home-shortcut-label">@L["NavCalendar"]</span>
-                    </a>
-                    <a class="home-shortcut" href="planner">
-                        <span class="home-shortcut-label">@L["NavPlanner"]</span>
-                    </a>
-                    <a class="home-shortcut" href="invitations">
-                        <span class="home-shortcut-label">@L["NavInvitations"]</span>
-                    </a>
-                </section>
-            }
-        </div>
+        <RadzenStack Gap="1rem">
+            <RadzenRow AlignItems="AlignItems.Center">
+                <RadzenColumn Size="12">
+                    <RadzenText Text="@Greeting(context.User)" TextStyle="TextStyle.H3" TagName="TagName.H1" style="margin: 0" />
+                    <RadzenText Text="@L["HomeLeadAuthorized"]" TextStyle="TextStyle.Body1" />
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow>
+                <RadzenColumn Size="12">
+                    <RadzenCard Variant="Variant.Outlined">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Start">
+                            <RadzenIcon Icon="grid_view" class="rz-background-color-primary-light rz-color-on-primary-light rz-border-radius-2" Style="font-size: 32px; min-width: 64px; min-height: 64px" />
+                            <RadzenStack Gap="0">
+                                <RadzenText Text="@L["HomeWorkspacesHeading"]" TextStyle="TextStyle.Subtitle1" TagName="TagName.H4" />
+                                <RadzenText Text="@L["HomeWorkspacesBlurb"]" />
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow>
+                <RadzenColumn Size="12">
+                    <RadzenCard Variant="Variant.Outlined">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Start">
+                            <RadzenIcon Icon="star" class="rz-background-color-warning-light rz-color-on-warning-light rz-border-radius-2" Style="font-size: 32px; min-width: 64px; min-height: 64px" />
+                            <RadzenStack Gap="0">
+                                <RadzenText Text="@L["HomeStarredHeading"]" TextStyle="TextStyle.Subtitle1" TagName="TagName.H4" />
+                                <RadzenText Text="@L["HomeStarredBlurb"]" />
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenStack>
     </Authorized>
     <NotAuthorized>
-        <div class="home-shell home-shell--landing">
-            <section class="landing-hero">
-                <div class="landing-copy">
-                    <p class="home-eyebrow">@L["HomeLandingEyebrow"]</p>
-                    <h1 class="landing-brand">@L["AppName"]</h1>
-                    <p class="landing-lead">@L["AppTagline"]</p>
-                    <div class="landing-cta">
-                        <RadzenButton Text="@L["AuthSignIn"]"
-                                      ButtonStyle="@ButtonStyle.Primary"
-                                      Size="@ButtonSize.Large"
-                                      Click="@(() => Nav.NavigateTo("login"))" />
-                        <RadzenButton Text="@L["AuthCreateAccount"]"
-                                      ButtonStyle="@ButtonStyle.Light"
-                                      Size="@ButtonSize.Large"
-                                      Click="@(() => Nav.NavigateTo("register"))" />
-                    </div>
-                </div>
-                <div class="landing-visual" aria-hidden="true">
-                    <div class="landing-board">
-                        <div class="landing-lane">
-                            <span class="landing-lane-title"></span>
-                            <span class="landing-card"></span>
-                            <span class="landing-card landing-card--short"></span>
-                        </div>
-                        <div class="landing-lane">
-                            <span class="landing-lane-title"></span>
-                            <span class="landing-card landing-card--accent"></span>
-                            <span class="landing-card"></span>
-                            <span class="landing-card landing-card--short"></span>
-                        </div>
-                        <div class="landing-lane">
-                            <span class="landing-lane-title"></span>
-                            <span class="landing-card landing-card--short"></span>
-                            <span class="landing-card"></span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="landing-points">
-                <div class="landing-point">
-                    <h2>@L["HomePointBoardsTitle"]</h2>
-                    <p>@L["HomePointBoardsBody"]</p>
-                </div>
-                <div class="landing-point">
-                    <h2>@L["HomePointSelfHostTitle"]</h2>
-                    <p>@L["HomePointSelfHostBody"]</p>
-                </div>
-                <div class="landing-point">
-                    <h2>@L["HomePointMcpTitle"]</h2>
-                    <p>@L["HomePointMcpBody"]</p>
-                </div>
-            </section>
-        </div>
+        <RadzenStack Gap="2rem">
+            <RadzenRow AlignItems="AlignItems.Center" Gap="2rem">
+                <RadzenColumn Size="12" SizeMD="6">
+                    <RadzenStack Gap="1rem">
+                        <RadzenText Text="@L["HomeLandingEyebrow"]" TextStyle="TextStyle.Overline" Style="color: var(--rz-primary); letter-spacing: 0.15em;" />
+                        <RadzenText Text="@L["AppName"]" TextStyle="TextStyle.H1" TagName="TagName.H1" />
+                        <RadzenText Text="@L["AppTagline"]" TextStyle="TextStyle.Body1" />
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.75rem" class="rz-mt-4">
+                            <RadzenButton Text="@L["AuthSignIn"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" Click="@(() => Nav.NavigateTo("login"))" />
+                            <RadzenButton Text="@L["AuthCreateAccount"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Large" Click="@(() => Nav.NavigateTo("register"))" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="6">
+                    <RadzenCard Variant="Variant.Filled" class="rz-p-6" Style="min-height: 360px; background: linear-gradient(135deg, var(--rz-primary-dark) 0%, var(--rz-primary-darker) 100%);">
+                        <RadzenStack Gap="1rem">
+                            <RadzenRow Gap="0.5rem">
+                                <RadzenColumn Size="4">
+                                    <RadzenStack Gap="0.5rem">
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="1" />
+                                        <RadzenCard Style="min-height: 60px;" />
+                                        <RadzenCard Style="min-height: 40px;" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenStack Gap="0.5rem">
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="2" />
+                                        <RadzenCard class="rz-background-color-primary-light" Style="min-height: 60px;" />
+                                        <RadzenCard Style="min-height: 40px;" />
+                                        <RadzenCard Style="min-height: 40px;" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenStack Gap="0.5rem">
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="3" />
+                                        <RadzenCard Style="min-height: 40px;" />
+                                        <RadzenCard Style="min-height: 60px;" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                            </RadzenRow>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow Gap="1rem">
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenCard>
+                        <RadzenStack Gap="0.5rem">
+                            <RadzenIcon Icon="view_kanban" Style="font-size: 28px; color: var(--rz-primary);" />
+                            <RadzenText Text="@L["HomePointBoardsTitle"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                            <RadzenText Text="@L["HomePointBoardsBody"]" />
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenCard>
+                        <RadzenStack Gap="0.5rem">
+                            <RadzenIcon Icon="lock" Style="font-size: 28px; color: var(--rz-primary);" />
+                            <RadzenText Text="@L["HomePointSelfHostTitle"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                            <RadzenText Text="@L["HomePointSelfHostBody"]" />
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenCard>
+                        <RadzenStack Gap="0.5rem">
+                            <RadzenIcon Icon="android" Style="font-size: 28px; color: var(--rz-primary);" />
+                            <RadzenText Text="@L["HomePointMcpTitle"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                            <RadzenText Text="@L["HomePointMcpBody"]" />
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenStack>
     </NotAuthorized>
 </AuthorizeView>
 
@@ -192,7 +134,6 @@
     private IReadOnlyList<WorkspaceDto>? workspaces;
     private IReadOnlyList<BoardSummaryDto>? starred;
     private int unreadCount;
-    private bool loading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -201,8 +142,6 @@
         {
             return;
         }
-
-        loading = true;
 
         try
         {
@@ -231,9 +170,9 @@
                 unreadCount = unread.Value;
             }
         }
-        finally
+        catch
         {
-            loading = false;
+            // Non-fatal: render the home shell even if the data load fails.
         }
     }
 

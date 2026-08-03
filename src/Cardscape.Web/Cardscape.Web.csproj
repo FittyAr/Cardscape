@@ -9,32 +9,27 @@
         .NET runtime can change the current culture during initialization
         without throwing "Blazor detected a change in the application's
         culture that is not supported with the current project configuration".
-        On .NET 10 LTS this is the official fix; on the .NET 11 preview SDK
-        the same flag caused a different startup race and was disabled, but
-        on net10.0 it is required for any non-default culture (e.g. when the
-        browser sends "es" in Accept-Language) to boot without crashing.
+        Required for any non-default culture (e.g. when the browser sends
+        "es" in Accept-Language) to boot without crashing.
     -->
     <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
     <!--
-        Historical workaround for the .NET 11 preview SDK
-        (11.0.100-preview.6.26359.118): it did not run the
-        token-replacement pass over wwwroot/index.html, so the
-        default template's <link id="webassembly" /> and
-        <script src="_framework/blazor.webassembly#[.{fingerprint}].js">
-        shipped with the literal placeholders and the Blazor WASM
-        dev server left the build pipeline half-done (no per-assembly
-        .wasm files in bin/Debug). Disabling static-web-asset
-        fingerprinting was the mitigation.
-
-        Now that the project targets net10.0 (10.0.10 SDK), this
-        workaround is no longer required. The property is kept
-        `false` as a safety net; flip it back to `true` (or remove
-        the line) once a `dotnet run` + browser smoke test confirms
-        fingerprinted assets still serve correctly on the stable
-        SDK. Tracked as a follow-up; see project history.
+        Generate the service-worker-assets.js manifest so the SW can
+        pre-cache every published asset with integrity hashes. The SW
+        in wwwroot/service-worker.js reads the manifest and uses
+        `assetsManifest.version` (the build content hash) as part of
+        the cache name, so every deploy automatically invalidates
+        client-side caches without a hard reload. The `<ServiceWorker>`
+        item below is what tells the SDK which file to process — the
+        `ServiceWorkerAssetsManifest` property alone doesn't generate
+        anything.
     -->
-    <StaticWebAssetsFingerprintingEnabled>false</StaticWebAssetsFingerprintingEnabled>
+    <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ServiceWorker Include="wwwroot/service-worker.js" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
@@ -54,10 +49,10 @@
   <!--
     The Spanish .resx is shipped as a static web asset so a future
     client-side CulturePicker can fetch it via HttpClient and
-    switch cultures without going through the (broken on this
-    preview SDK) `CultureInfo.DefaultThreadCurrentCulture`
-    path. Until that picker is wired, the localizer still uses
-    the embedded `SharedResource.resx` (English).
+    switch cultures without going through the
+    `CultureInfo.DefaultThreadCurrentCulture` path. Until that
+    picker is wired, the localizer uses the embedded
+    `SharedResource.resx` (English) at runtime.
   -->
   <ItemGroup>
     <None Include="Resources\SharedResource.es.resx"

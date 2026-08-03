@@ -19,6 +19,19 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 string apiBaseUrl = builder.Configuration["ApiBaseUrl"]
     ?? throw new InvalidOperationException("ApiBaseUrl is required (set in wwwroot/appsettings.json).");
 
+// ── Radzen component services + theme service ───────────────────────
+// The cookie theme service persists the user's theme choice (default
+// / dark / humanistic / material) in a cookie so it survives reloads
+// and is available before the first render. It also feeds the
+// `<RadzenTheme>` tag in index.html via `ThemeService.SetTheme` from
+// the cookie if one is present.
+builder.Services.AddRadzenComponents();
+builder.Services.AddRadzenCookieThemeService(options =>
+{
+    options.Name = "CardscapeTheme";
+    options.Duration = TimeSpan.FromDays(365);
+});
+
 // ── Localization (i18n) ──────────────────────────────────────────────
 // Resources live under src/Cardscape.Web/Resources (SharedResource.resx
 // and per-culture variants like SharedResource.es.resx).
@@ -94,8 +107,5 @@ builder.Services.AddScoped<IEmailIntegrationApiClient, EmailIntegrationApiClient
 
 // ── Real-time (SignalR client) ──────────────────────────────
 builder.Services.AddScoped<BoardHubClient>();
-
-// Radzen component services.
-builder.Services.AddRadzenComponents();
 
 await builder.Build().RunAsync();
