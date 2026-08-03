@@ -1,11 +1,9 @@
 <Project>
-
   <PropertyGroup>
     <!-- Central Package Management. -->
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
-
   <ItemGroup>
     <!--
       NOTE: We target net10.0 (LTS), so the whole Microsoft.* / ASP.NET Core
@@ -16,34 +14,28 @@
       This decision will be revisited once Pomelo / Oracle ship EF Core 11
       providers for MariaDB.
     -->
-
     <!-- Application layer. -->
-    <PackageVersion Include="WolverineFx" Version="6.23.1" />
-    <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.23.1" />
-    <PackageVersion Include="FluentValidation" Version="11.11.0" />
-    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <PackageVersion Include="WolverineFx" Version="6.24.5" />
+    <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.24.5" />
+    <PackageVersion Include="FluentValidation" Version="12.1.1" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
-
     <!-- Override transitive SQLitePCLRaw (vulnerability GHSA-2m69-gcr7-jv3q, fixed in 2.1.12+). -->
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.10" />
-
     <!-- Override transitive Newtonsoft.Json (transitive from SignalR.Client 1.2.0). -->
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-
     <!-- EF Core 10 LTS + Identity. -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.10" />
-
     <!-- Database providers (one per engine, all EF Core 10-compatible). -->
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <PackageVersion Include="MySql.EntityFrameworkCore" Version="10.0.7" />
-
+    <PackageVersion Include="MySql.EntityFrameworkCore" Version="10.0.9" />
     <!-- API surface. -->
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
     <!--
@@ -54,17 +46,14 @@
       Bumping to the latest 8.x release (still on the 8.x line to keep the
       LTS-friendly surface area).
     -->
-    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.19.2" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.3" />
-
     <!-- Localization (Blazor WASM). -->
     <PackageVersion Include="Microsoft.Extensions.Localization" Version="10.0.10" />
-
     <!-- OAuth 2.0 / OIDC external login providers. -->
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.10" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="10.0.10" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.10" />
-
     <!-- Blazor WASM + Radzen. -->
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.10" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.10" />
@@ -72,42 +61,36 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.10" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.10" />
-    <PackageVersion Include="Radzen.Blazor" Version="11.1.8" />
-
+    <PackageVersion Include="Radzen.Blazor" Version="11.2.1" />
     <!-- Model Context Protocol (AI integration server). -->
-    <PackageVersion Include="ModelContextProtocol" Version="1.4.1" />
-
+    <PackageVersion Include="ModelContextProtocol" Version="2.0.0" />
     <!-- OpenTelemetry (tracing for the MCP server). -->
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.12.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.17.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.17.0" />
-
     <!-- 2FA / TOTP (OtpNet RFC 6238 + ASP.NET Core Data Protection for at-rest secret encryption). -->
     <PackageVersion Include="Otp.NET" Version="1.4.1" />
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="10.0.10" />
-
     <!-- SAML 2.0 SSO (Sustainsys.Saml2 — formerly Kentor.AuthServices). -->
-    <PackageVersion Include="Sustainsys.Saml2.AspNetCore2" Version="2.10.0" />
-
+    <PackageVersion Include="Sustainsys.Saml2.AspNetCore2" Version="2.11.0" />
     <!-- Tests. -->
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageVersion Include="xunit" Version="2.9.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
-    <PackageVersion Include="FluentAssertions" Version="6.12.2" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="FluentAssertions" Version="8.10.0" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
     <PackageVersion Include="AutoFixture" Version="4.18.1" />
     <PackageVersion Include="AutoFixture.Xunit2" Version="4.18.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.10" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
-
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <!-- SDK (Cardscape.Sdk) — published as a NuGet package targeting
          netstandard2.0 + net8.0. System.Text.Json is in the BCL for
          net8.0 but must be an explicit reference on netstandard2.0,
          so it's listed here for central management. -->
-    <PackageVersion Include="System.Text.Json" Version="9.0.0" />
-    <PackageVersion Include="System.Net.Http.Json" Version="9.0.0" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.10" />
+    <PackageVersion Include="System.Net.Http.Json" Version="10.0.10" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
   </ItemGroup>
-
 </Project>
