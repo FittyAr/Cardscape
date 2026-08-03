@@ -10,124 +10,130 @@
 
 <PageTitle>@L["GitHubTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["GitHubTitle"]</h1>
-        <p class="muted">@L["GitHubBlurb"]</p>
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["GitHubTitle"]" Subtitle="@L["GitHubBlurb"]" />
 
     <RadzenCard>
-        <h3>@L["GitHubLinkRepo"]</h3>
-        <RadzenTemplateForm TItem="LinkRepoModel" Data="@linkModel" Submit="@LinkRepo">
-            <RadzenLabel Text="@L["GitHubBoard"]" Component="gh-board" />
-            <RadzenDropDown @bind-Value="linkModel.BoardId" Name="gh-board" Style="width:100%"
-                            Data="@boards" TextProperty="Name" ValueProperty="Id"
-                            AllowClear="true" Placeholder="@L["GitHubSelectBoard"]" />
-            <RadzenLabel Text="@L["GitHubRepoFullName"]" Component="gh-repo" Style="margin-top:0.75rem; display:block" />
-            <RadzenTextBox @bind-Value="linkModel.RepoFullName" Name="gh-repo"
-                           Placeholder="owner/name" Style="width:100%" />
-            <RadzenLabel Text="@L["GitHubEvents"]" Component="gh-events" Style="margin-top:0.75rem; display:block" />
-            <RadzenTextBox @bind-Value="linkModel.Events" Name="gh-events"
-                           Placeholder="pull_request,issues" Style="width:100%" />
-            <div class="create-actions">
-                <RadzenButton Text="@L["GitHubLinkRepo"]" ButtonType="ButtonType.Submit"
-                              ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
-            </div>
-        </RadzenTemplateForm>
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["GitHubLinkRepo"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <RadzenTemplateForm TItem="LinkRepoModel" Data="@linkModel" Submit="@LinkRepo">
+                <LabeledField Text="@L["GitHubBoard"]" Component="gh-board">
+                    <RadzenDropDown @bind-Value="linkModel.BoardId" Name="gh-board" Style="width:100%"
+                                    Data="@boards" TextProperty="Name" ValueProperty="Id"
+                                    AllowClear="true" Placeholder="@L["GitHubSelectBoard"]" />
+                </LabeledField>
+                <LabeledField Text="@L["GitHubRepoFullName"]" Component="gh-repo">
+                    <RadzenTextBox @bind-Value="linkModel.RepoFullName" Name="gh-repo"
+                                   Placeholder="owner/name" Style="width:100%" />
+                </LabeledField>
+                <LabeledField Text="@L["GitHubEvents"]" Component="gh-events">
+                    <RadzenTextBox @bind-Value="linkModel.Events" Name="gh-events"
+                                   Placeholder="pull_request,issues" Style="width:100%" />
+                </LabeledField>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
+                    <RadzenButton Text="@L["GitHubLinkRepo"]" ButtonType="ButtonType.Submit"
+                                  ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenStack>
     </RadzenCard>
 
     <RadzenCard>
-        <h3>@L["GitHubListPulls"]</h3>
-        <div class="form-row">
-            <RadzenLabel Text="@L["GitHubRepoFullName"]" Component="gh-list-repo" />
-            <RadzenTextBox @bind-Value="listModel.RepoFullName" Name="gh-list-repo"
-                           Placeholder="owner/name" Style="width:100%" />
-        </div>
-        <div class="create-actions">
-            <RadzenButton Text="@L["GitHubListPulls"]" ButtonStyle="ButtonStyle.Primary"
-                          Click="@ListPulls" IsBusy="@listingPulls" />
-        </div>
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["GitHubListPulls"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <LabeledField Text="@L["GitHubRepoFullName"]" Component="gh-list-repo">
+                <RadzenTextBox @bind-Value="listModel.RepoFullName" Name="gh-list-repo"
+                               Placeholder="owner/name" Style="width:100%" />
+            </LabeledField>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                <RadzenButton Text="@L["GitHubListPulls"]" ButtonStyle="ButtonStyle.Primary"
+                              Click="@ListPulls" IsBusy="@listingPulls" />
+            </RadzenStack>
 
-        @if (pullsError is not null)
-        {
-            <div class="auth-error" role="alert">@pullsError</div>
-        }
-        @if (pulls is null)
-        {
-            <p class="muted">@L["GitHubPullsHint"]</p>
-        }
-        else if (pulls.Count == 0)
-        {
-            <p class="muted">@L["GitHubNoPulls"]</p>
-        }
-        else
-        {
-            <table class="cards-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>@L["GitHubPullTitle"]</th>
-                        <th>@L["GitHubPullState"]</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (GitHubPullRequestDto pr in pulls)
-                    {
-                        <tr>
-                            <td><code>#@pr.Number</code></td>
-                            <td>@pr.Title</td>
-                            <td>@pr.State</td>
-                            <td>
+            @if (pullsError is not null)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
+                    @pullsError
+                </RadzenAlert>
+            }
+            @if (pulls is null)
+            {
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["GitHubPullsHint"]</RadzenText>
+            }
+            else if (pulls.Count == 0)
+            {
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["GitHubNoPulls"]</RadzenText>
+            }
+            else
+            {
+                <RadzenDataGrid TItem="GitHubPullRequestDto" Data="@pulls" AllowSorting="true" AllowPaging="true" PageSize="20">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="GitHubPullRequestDto" Property="Number" Title="#" Width="60px">
+                            <Template Context="pr">
+                                <code>#@pr.Number</code>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="GitHubPullRequestDto" Property="Title" Title="@L["GitHubPullTitle"]" />
+                        <RadzenDataGridColumn TItem="GitHubPullRequestDto" Property="State" Title="@L["GitHubPullState"]" />
+                        <RadzenDataGridColumn TItem="GitHubPullRequestDto" Title="" Sortable="false" Filterable="false" Width="100px">
+                            <Template Context="pr">
                                 @if (!string.IsNullOrEmpty(pr.Url))
                                 {
-                                    <a href="@pr.Url" target="_blank" rel="noreferrer">@L["GitHubOpen"]</a>
+                                    <RadzenLink Path="@pr.Url" Target="_blank" Text="@L["GitHubOpen"]" />
                                 }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            }
+        </RadzenStack>
     </RadzenCard>
 
     <RadzenCard>
-        <h3>@L["GitHubCreateIssue"]</h3>
-        <RadzenTemplateForm TItem="CreateIssueModel" Data="@issueModel" Submit="@CreateIssue">
-            <RadzenLabel Text="@L["GitHubCardId"]" Component="gh-issue-card" />
-            <RadzenTextBox @bind-Value="issueModel.CardIdText" Name="gh-issue-card" Style="width:100%" />
-            <RadzenLabel Text="@L["GitHubRepoFullName"]" Component="gh-issue-repo" Style="margin-top:0.75rem; display:block" />
-            <RadzenTextBox @bind-Value="issueModel.RepoFullName" Name="gh-issue-repo" Style="width:100%" />
-            <RadzenLabel Text="@L["GitHubIssueTitle"]" Component="gh-issue-title" Style="margin-top:0.75rem; display:block" />
-            <RadzenTextBox @bind-Value="issueModel.Title" Name="gh-issue-title" Style="width:100%" />
-            <RadzenLabel Text="@L["GitHubIssueBody"]" Component="gh-issue-body" Style="margin-top:0.75rem; display:block" />
-            <RadzenTextArea @bind-Value="issueModel.Body" Name="gh-issue-body" Rows="4" Style="width:100%" />
-            <div class="create-actions">
-                <RadzenButton Text="@L["GitHubCreateIssue"]" ButtonType="ButtonType.Submit"
-                              ButtonStyle="ButtonStyle.Primary" IsBusy="@creatingIssue" />
-            </div>
-        </RadzenTemplateForm>
-        @if (createdIssue is not null)
-        {
-            <div class="success-banner">
-                @L["GitHubIssueCreated"] <code>#@createdIssue.Number</code> —
-                @if (!string.IsNullOrEmpty(createdIssue.Url))
-                {
-                    <a href="@createdIssue.Url" target="_blank" rel="noreferrer">@createdIssue.Title</a>
-                }
-                else
-                {
-                    @createdIssue.Title
-                }
-            </div>
-        }
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["GitHubCreateIssue"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <RadzenTemplateForm TItem="CreateIssueModel" Data="@issueModel" Submit="@CreateIssue">
+                <LabeledField Text="@L["GitHubCardId"]" Component="gh-issue-card">
+                    <RadzenTextBox @bind-Value="issueModel.CardIdText" Name="gh-issue-card" Style="width:100%" />
+                </LabeledField>
+                <LabeledField Text="@L["GitHubRepoFullName"]" Component="gh-issue-repo">
+                    <RadzenTextBox @bind-Value="issueModel.RepoFullName" Name="gh-issue-repo" Style="width:100%" />
+                </LabeledField>
+                <LabeledField Text="@L["GitHubIssueTitle"]" Component="gh-issue-title">
+                    <RadzenTextBox @bind-Value="issueModel.Title" Name="gh-issue-title" Style="width:100%" />
+                </LabeledField>
+                <LabeledField Text="@L["GitHubIssueBody"]" Component="gh-issue-body">
+                    <RadzenTextArea @bind-Value="issueModel.Body" Name="gh-issue-body" Rows="4" Style="width:100%" />
+                </LabeledField>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
+                    <RadzenButton Text="@L["GitHubCreateIssue"]" ButtonType="ButtonType.Submit"
+                                  ButtonStyle="ButtonStyle.Primary" IsBusy="@creatingIssue" />
+                </RadzenStack>
+            </RadzenTemplateForm>
+            @if (createdIssue is not null)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Success" Variant="Variant.Flat" AllowClose="false" Class="rz-mt-2">
+                    @L["GitHubIssueCreated"] <code>#@createdIssue.Number</code> —
+                    @if (!string.IsNullOrEmpty(createdIssue.Url))
+                    {
+                        <RadzenLink Path="@createdIssue.Url" Target="_blank" Text="@createdIssue.Title" />
+                    }
+                    else
+                    {
+                        @createdIssue.Title
+                    }
+                </RadzenAlert>
+            }
+        </RadzenStack>
     </RadzenCard>
 
     @if (error is not null)
     {
-        <div class="auth-error" role="alert">@error</div>
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
+            @error
+        </RadzenAlert>
     }
-</div>
+</RadzenStack>
 
 @code {
     [Parameter] public Guid WorkspaceId { get; set; }

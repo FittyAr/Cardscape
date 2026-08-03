@@ -6,63 +6,88 @@
 
 <PageTitle>@L["IntegrationsTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["IntegrationsTitle"]</h1>
-        <p class="muted">@L["IntegrationsBlurb"]</p>
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["IntegrationsTitle"]" Subtitle="@L["IntegrationsBlurb"]" />
 
-    <div class="integration-grid">
-        <RadzenCard class="integration-card">
-            <h3>Slack</h3>
-            <p class="muted">@L["SlackBlurb"]</p>
-            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
-                          Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/integrations/slack"))" />
-        </RadzenCard>
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText Text="Slack" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["SlackBlurb"]</RadzenText>
+                    <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                                  Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/integrations/slack"))" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
 
-        <RadzenCard class="integration-card">
-            <h3>Google Drive</h3>
-            <p class="muted">@L["GoogleDriveBlurb"]</p>
-            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
-                          Click="@(() => Nav.NavigateTo("/settings/integrations/google-drive"))" />
-        </RadzenCard>
+        <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText Text="Google Drive" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["GoogleDriveBlurb"]</RadzenText>
+                    <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                                  Click="@(() => Nav.NavigateTo("/settings/integrations/google-drive"))" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
 
-        <RadzenCard class="integration-card">
-            <h3>GitHub</h3>
-            <p class="muted">@L["GitHubBlurb"]</p>
-            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
-                          Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/integrations/github"))" />
-        </RadzenCard>
+        <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText Text="GitHub" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["GitHubBlurb"]</RadzenText>
+                    <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                                  Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/integrations/github"))" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
 
-        <RadzenCard class="integration-card">
-            <h3>Email-to-board</h3>
-            <p class="muted">@L["EmailToBoardBlurb"]</p>
-            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
-                          Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/integrations/email"))" />
-        </RadzenCard>
+        <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText Text="Email-to-board" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["EmailToBoardBlurb"]</RadzenText>
+                    <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                                  Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/integrations/email"))" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
 
-        <RadzenCard class="integration-card">
-            <h3>Google Calendar</h3>
-            <p class="muted">@L["GoogleCalendarBlurb"]</p>
-            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
-                          Click="@(() => Nav.NavigateTo("/settings/integrations/google-calendar"))" />
-        </RadzenCard>
+        <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText Text="Google Calendar" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["GoogleCalendarBlurb"]</RadzenText>
+                    <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                                  Click="@(() => Nav.NavigateTo("/settings/integrations/google-calendar"))" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
 
-        <RadzenCard class="integration-card">
-            <h3>SCIM provisioning</h3>
-            <p class="muted">@L["ScimBlurb"]</p>
-            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
-                          Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/scim"))" />
-        </RadzenCard>
+        <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText Text="SCIM provisioning" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["ScimBlurb"]</RadzenText>
+                    <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                                  Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/scim"))" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
 
-        <RadzenCard class="integration-card">
-            <h3>SAML SSO</h3>
-            <p class="muted">@L["SamlBlurb"]</p>
-            <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
-                          Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/saml"))" />
-        </RadzenCard>
-    </div>
-</div>
+        <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText Text="SAML SSO" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["SamlBlurb"]</RadzenText>
+                    <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
+                                  Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/saml"))" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenStack>
 
 @code {
     [Parameter] public Guid WorkspaceId { get; set; }

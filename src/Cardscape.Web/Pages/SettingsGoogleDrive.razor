@@ -10,39 +10,45 @@
 
 <PageTitle>@L["GoogleDriveTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["GoogleDriveTitle"]</h1>
-        <p class="muted">@L["GoogleDriveBlurb"]</p>
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["GoogleDriveTitle"]" Subtitle="@L["GoogleDriveBlurb"]" />
 
     <RadzenCard>
-        <h3>@L["GoogleDriveWorkspace"]</h3>
-        <RadzenLabel Text="@L["GoogleDriveWorkspaceLabel"]" Component="gd-workspace" />
-        <RadzenDropDown @bind-Value="selectedWorkspaceId" Name="gd-workspace" Style="width:100%"
-                        Data="@workspaces" TextProperty="Name" ValueProperty="Id"
-                        AllowClear="true" Placeholder="@L["GoogleDriveSelectWorkspace"]" />
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["GoogleDriveWorkspace"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <LabeledField Text="@L["GoogleDriveWorkspaceLabel"]" Component="gd-workspace">
+                <RadzenDropDown @bind-Value="selectedWorkspaceId" Name="gd-workspace" Style="width:100%"
+                                Data="@workspaces" TextProperty="Name" ValueProperty="Id"
+                                AllowClear="true" Placeholder="@L["GoogleDriveSelectWorkspace"]" />
+            </LabeledField>
+        </RadzenStack>
     </RadzenCard>
 
     <RadzenCard>
-        <h3>@L["GoogleDriveConnect"]</h3>
-        <p class="muted">@L["GoogleDriveConnectBlurb"]</p>
-        <RadzenButton Text="@L["GoogleDriveConnect"]" ButtonStyle="ButtonStyle.Primary"
-                      Click="@Connect" Disabled="@(selectedWorkspaceId is null || busy)" IsBusy="@busy" />
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["GoogleDriveConnect"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["GoogleDriveConnectBlurb"]</RadzenText>
+            <RadzenButton Text="@L["GoogleDriveConnect"]" ButtonStyle="ButtonStyle.Primary"
+                          Click="@Connect" Disabled="@(selectedWorkspaceId is null || busy)" IsBusy="@busy" />
+        </RadzenStack>
     </RadzenCard>
 
     <RadzenCard>
-        <h3>@L["GoogleDrivePicker"]</h3>
-        <p class="muted">@L["GoogleDrivePickerBlurb"]</p>
-        <RadzenButton Text="@L["GoogleDrivePickerOpen"]" ButtonStyle="ButtonStyle.Light"
-                      Click="@OpenPicker" Disabled="@(selectedWorkspaceId is null || loadingPicker)" IsBusy="@loadingPicker" />
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["GoogleDrivePicker"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["GoogleDrivePickerBlurb"]</RadzenText>
+            <RadzenButton Text="@L["GoogleDrivePickerOpen"]" ButtonStyle="ButtonStyle.Light"
+                          Click="@OpenPicker" Disabled="@(selectedWorkspaceId is null || loadingPicker)" IsBusy="@loadingPicker" />
+        </RadzenStack>
     </RadzenCard>
 
     @if (error is not null)
     {
-        <div class="auth-error" role="alert">@error</div>
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
+            @error
+        </RadzenAlert>
     }
-</div>
+</RadzenStack>
 
 @code {
     [Inject] private NavigationManager Nav { get; set; } = default!;

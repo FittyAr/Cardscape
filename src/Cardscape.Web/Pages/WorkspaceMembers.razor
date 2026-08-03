@@ -9,111 +9,116 @@
 
 <PageTitle>Members — Cardscape</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>Members</h1>
-        @if (workspace is not null)
-        {
-            <small class="muted">@workspace.Name</small>
-        }
-        <div class="page-header-actions">
-            <RadzenButton Text="Invite" Icon="person_add" ButtonStyle="ButtonStyle.Primary"
-                          Click="@(() => showInvite = !showInvite)" />
-        </div>
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="Members"
+                Subtitle="@(workspace?.Name ?? string.Empty)"
+                Actions="@(ShowInviteButton())" />
 
     @if (showInvite)
     {
-        <RadzenCard class="create-form">
+        <RadzenCard>
             <RadzenTemplateForm TItem="InviteModel" Data="@inviteModel" Submit="@SendInvite">
-                <RadzenLabel Text="Email" Component="invite-email" />
-                <RadzenTextBox @bind-Value="inviteModel.Email" Name="invite-email" Style="width:100%" />
+                <LabeledField Text="Email" Component="invite-email">
+                    <RadzenTextBox @bind-Value="inviteModel.Email" Name="invite-email" Style="width:100%" />
+                </LabeledField>
 
-                <RadzenLabel Text="Role" Component="invite-role" Style="margin-top:.5rem;display:block" />
-                <RadzenDropDown @bind-Value="inviteModel.Role" Data="@roles"
-                                TextProperty="Label" ValueProperty="Value"
-                                Name="invite-role" Style="width:100%" />
+                <LabeledField Text="Role" Component="invite-role">
+                    <RadzenDropDown @bind-Value="inviteModel.Role" Data="@roles"
+                                    TextProperty="Label" ValueProperty="Value"
+                                    Name="invite-role" Style="width:100%" />
+                </LabeledField>
 
                 @if (issuedToken is not null)
                 {
-                    <div class="issued-secret">
-                        <h3>Invitation created</h3>
-                        <p>
-                            Send this link to <strong>@inviteModel.Email</strong>.
-                            It will also appear in the API log.
-                        </p>
-                        <pre class="secret-box">@issuedToken</pre>
-                        <RadzenButton Text="I've sent it" ButtonStyle="ButtonStyle.Primary"
-                                      Click="@DismissIssuedToken" />
-                    </div>
+                    <RadzenCard Variant="Variant.Outlined" Class="rz-mt-3">
+                        <RadzenStack Gap="0.5rem">
+                            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H3" Text="Invitation created" />
+                            <RadzenText TextStyle="TextStyle.Body2">
+                                Send this link to <RadzenText Text="@inviteModel.Email" TextStyle="TextStyle.Body1" TagName="TagName.Span" />.
+                                It will also appear in the API log.
+                            </RadzenText>
+                            <SecretBox Secret="@issuedToken" />
+                            <RadzenButton Text="I've sent it" ButtonStyle="ButtonStyle.Primary"
+                                          Click="@DismissIssuedToken" />
+                        </RadzenStack>
+                    </RadzenCard>
                 }
                 @if (error is not null)
                 {
-                    <div class="auth-error" role="alert">@error</div>
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" Class="rz-mt-2">
+                        @error
+                    </RadzenAlert>
                 }
-                <div class="create-actions">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
                     <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelInvite" />
                     <RadzenButton Text="Send" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
                                   IsBusy="@busy" />
-                </div>
+                </RadzenStack>
             </RadzenTemplateForm>
         </RadzenCard>
     }
 
-    <h2>Current members</h2>
+    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" Text="Current members" />
+
     @if (members is null)
     {
-        <p>Loading…</p>
+        <RadzenText Text="Loading…" />
     }
     else if (members.Count == 0)
     {
-        <p>No members yet — invite someone to get started.</p>
+        <RadzenText Text="No members yet — invite someone to get started." />
     }
     else
     {
-        <div class="member-list">
-            @foreach (WorkspaceMemberDto m in members)
-            {
-                <RadzenCard class="member-card">
-                    <div class="member-row">
-                        <div>
-                            <strong>@m.DisplayName</strong>
-                            <small> · @m.Email · @RoleName(m.Role)</small>
-                        </div>
-                    </div>
-                </RadzenCard>
-            }
-        </div>
+        <RadzenDataGrid TItem="WorkspaceMemberDto" Data="@members" AllowSorting="true" AllowPaging="true" PageSize="20">
+            <Columns>
+                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="DisplayName" Title="Name" />
+                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="Email" Title="Email" />
+                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="Role" Title="Role">
+                    <Template Context="m">
+                        @RoleName(m.Role)
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
     }
 
-    <h2>Pending invitations</h2>
+    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" Text="Pending invitations" />
+
     @if (invitations is null)
     {
-        <p>Loading…</p>
+        <RadzenText Text="Loading…" />
     }
     else if (invitations.Count == 0)
     {
-        <p>No pending invitations.</p>
+        <RadzenText Text="No pending invitations." />
     }
     else
     {
-        <div class="invitation-list">
-            @foreach (WorkspaceInvitationDto inv in invitations)
-            {
-                <RadzenCard class="invitation-card">
-                    <div class="invitation-row">
-                        <div class="invitation-meta">
-                            <strong>@inv.Email</strong>
-                            <small> · @RoleName(inv.Role) · expires @inv.ExpiresAt.LocalDateTime.ToString("yyyy-MM-dd")</small>
-                        </div>
+        <RadzenDataGrid TItem="WorkspaceInvitationDto" Data="@invitations" AllowSorting="true" AllowPaging="true" PageSize="20">
+            <Columns>
+                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="Email" Title="Email" />
+                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="Role" Title="Role">
+                    <Template Context="inv">
+                        @RoleName(inv.Role)
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="ExpiresAt" Title="Expires">
+                    <Template Context="inv">
+                        @inv.ExpiresAt.LocalDateTime.ToString("yyyy-MM-dd")
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="TokenPrefix" Title="Prefix" />
+                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Title="" Sortable="false" Filterable="false" Width="120px">
+                    <Template Context="inv">
                         <RadzenButton Text="Revoke" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
                                       Click="@(() => RevokeAsync(inv))" />
-                    </div>
-                </RadzenCard>
-            }
-        </div>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
     }
-</div>
+</RadzenStack>
 
 @code {
     [Parameter] public Guid WorkspaceId { get; set; }
@@ -132,6 +137,12 @@
         new(0, "Admin"),
         new(1, "Member"),
         new(2, "Observer")
+    };
+
+    private RenderFragment ShowInviteButton() => __builder =>
+    {
+        <RadzenButton Text="Invite" Icon="person_add" ButtonStyle="ButtonStyle.Primary"
+                      Click="@(() => showInvite = !showInvite)" />
     };
 
     protected override async Task OnParametersSetAsync()

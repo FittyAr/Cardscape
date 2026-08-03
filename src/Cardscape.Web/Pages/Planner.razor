@@ -8,59 +8,45 @@
 
 <PageTitle>Planner — Cardscape</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>Planner</h1>
-        <div class="page-header-actions">
-            <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth" />
-            <strong class="month-label">@monthLabel</strong>
-            <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth" />
-        </div>
-    </div>
+<PageHeader Title="@monthLabel"
+            Subtitle="@($"Cards with a due date in {monthLabel}, grouped by list (one swimlane per list). Click a card to open it.")">
+    <Actions>
+        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth" />
+        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth" />
+    </Actions>
+</PageHeader>
 
-    <p class="page-hint">
-        Cards with a due date in @monthLabel, grouped by list (one swimlane per list).
-        Click a card to open it.
-    </p>
-
-    @if (swimlanes.Count == 0)
-    {
-        <p>No due dates in this range.</p>
-    }
-    else
-    {
-        <div class="planner-board">
-            @foreach (Swimlane lane in swimlanes)
-            {
-                <div class="planner-row">
-                    <div class="planner-row-header">
-                        <strong>@lane.Title</strong>
-                        <small class="muted">@lane.BoardName</small>
-                    </div>
-                    <div class="planner-row-track">
-                        <div class="planner-row-grid">
-                            @for (int i = 0; i < weeksInMonth; i++)
-                            {
-                                <div class="planner-week-marker">@WeekLabel(firstOfMonth, i)</div>
-                            }
-                        </div>
+@if (swimlanes.Count == 0)
+{
+    <RadzenText Text="No due dates in this range." TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        @foreach (Swimlane lane in swimlanes)
+        {
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText Text="@lane.Title" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                        <RadzenText Text="@lane.BoardName" TextStyle="TextStyle.Caption"
+                                    class="rz-color-text-secondary" />
+                    </RadzenStack>
+                    <RadzenStack Gap="0.25rem">
                         @foreach (CalendarEntryDto entry in lane.Entries)
                         {
-                            int dayOfMonth = entry.DueDate.UtcDateTime.Day;
-                            double leftPct = (double)(dayOfMonth - 1) / (double)daysInMonth * 100.0;
-                            <button class="planner-card @(entry.IsCompleted ? "planner-card--done" : null)"
-                                    style="left:@(leftPct.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%"
-                                    @onclick="@(() => Nav.NavigateTo($"cards/{entry.CardId}"))"
-                                    title="@entry.Title — @entry.DueDate.LocalDateTime.ToString("yyyy-MM-dd")">
-                                @entry.Title
-                            </button>
+                            <RadzenBadge BadgeStyle="BadgeStyle.Info"
+                                         Text="@entry.Title"
+                                         title="@($"{entry.Title} — {entry.DueDate.LocalDateTime:yyyy-MM-dd}")"
+                                         IsClickable="true"
+                                         Click="@(() => Nav.NavigateTo($"cards/{entry.CardId}"))" />
                         }
-                    </div>
-                </div>
-            }
-        </div>
-    }
-</div>
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        }
+    </RadzenStack>
+}
 
 @code {
     private DateTimeOffset firstOfMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);

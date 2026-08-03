@@ -3,6 +3,7 @@
 @using Cardscape.Web.Resources
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> L
 @inject NavigationManager Nav
@@ -10,69 +11,75 @@
 
 <PageTitle>@L["GoogleCalendarTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["GoogleCalendarTitle"]</h1>
-        <p class="muted">@L["GoogleCalendarBlurb"]</p>
-    </div>
+<RadzenStack Gap="1rem">
+    <PageHeader Title="@L["GoogleCalendarTitle"]" Subtitle="@L["GoogleCalendarBlurb"]" />
 
     @if (connection is null)
     {
-        <p>@L["ActionLoading"]</p>
+        <RadzenText Text="@L["ActionLoading"]" />
     }
     else if (connection.Id == Guid.Empty)
     {
         <RadzenCard>
-            <p>@L["GoogleCalendarNotConnected"]</p>
-            @if (workspaces.Count == 0)
-            {
-                <p class="muted">@L["GoogleCalendarPickWorkspace"]</p>
-            }
-            else
-            {
-                <RadzenLabel Text="@L["GoogleCalendarWorkspace"]" Component="gcal-workspace" />
-                <RadzenDropDown Data="@workspaces"
-                                TextProperty="Name"
-                                ValueProperty="Id"
-                                @bind-Value="selectedWorkspaceId"
-                                Name="gcal-workspace"
-                                AllowClear="true"
-                                Placeholder="@L["GoogleCalendarSelectWorkspace"]"
-                                Style="width: 100%; max-width: 360px;" />
-                <RadzenButton Text="@L["GoogleCalendarConnect"]"
-                              ButtonStyle="ButtonStyle.Primary"
-                              Disabled="@(selectedWorkspaceId is null)"
-                              Click="@Connect"
-                              Style="margin-top: 0.75rem;" />
-            }
+            <RadzenStack Gap="0.75rem">
+                <RadzenText Text="@L["GoogleCalendarNotConnected"]" />
+                @if (workspaces.Count == 0)
+                {
+                    <RadzenText Text="@L["GoogleCalendarPickWorkspace"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+                }
+                else
+                {
+                    <RadzenFormField Text="@L["GoogleCalendarWorkspace"]" Component="gcal-workspace">
+                        <RadzenDropDown Data="@workspaces"
+                                        TextProperty="Name"
+                                        ValueProperty="Id"
+                                        @bind-Value="selectedWorkspaceId"
+                                        Name="gcal-workspace"
+                                        AllowClear="true"
+                                        Placeholder="@L["GoogleCalendarSelectWorkspace"]"
+                                        Style="width: 100%; max-width: 360px;" />
+                    </RadzenFormField>
+                    <RadzenButton Text="@L["GoogleCalendarConnect"]"
+                                  ButtonStyle="ButtonStyle.Primary"
+                                  Disabled="@(selectedWorkspaceId is null)"
+                                  Click="@Connect" />
+                }
+            </RadzenStack>
         </RadzenCard>
     }
     else
     {
         <RadzenCard>
-            <h3>@L["GoogleCalendarConnectedAs"] @connection.GoogleEmail</h3>
-            <p class="muted">@L["GoogleCalendarCalendarId"]: <code>@connection.CalendarId</code></p>
-            @if (connection.LastSyncedAt is not null)
-            {
-                <p class="muted">@L["GoogleCalendarLastSync"]: @connection.LastSyncedAt.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</p>
-            }
-            @if (connection.LastSyncError is not null)
-            {
-                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat">
-                    @connection.LastSyncError
-                </RadzenAlert>
-            }
-            <RadzenButton Text="@L["GoogleCalendarRevoke"]"
-                          ButtonStyle="ButtonStyle.Danger"
-                          Click="@Revoke" />
+            <RadzenStack Gap="0.75rem">
+                <RadzenText Text="@($"{L["GoogleCalendarConnectedAs"]} {connection.GoogleEmail}")" TextStyle="TextStyle.H5" TagName="TagName.H2" />
+                <RadzenText Text="@L["GoogleCalendarCalendarId"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+                    <code>@connection.CalendarId</code>
+                </RadzenText>
+                @if (connection.LastSyncedAt is not null)
+                {
+                    <RadzenText Text="@($"{L["GoogleCalendarLastSync"]}: {connection.LastSyncedAt.Value.LocalDateTime:yyyy-MM-dd HH:mm}")"
+                                TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+                }
+                @if (connection.LastSyncError is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat">
+                        @connection.LastSyncError
+                    </RadzenAlert>
+                }
+                <RadzenButton Text="@L["GoogleCalendarRevoke"]"
+                              ButtonStyle="ButtonStyle.Danger"
+                              Click="@Revoke" />
+            </RadzenStack>
         </RadzenCard>
     }
 
     @if (!string.IsNullOrEmpty(error))
     {
-        <div class="auth-error" role="alert">@error</div>
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
+            @error
+        </RadzenAlert>
     }
-</div>
+</RadzenStack>
 
 @code {
     [Inject] private IGoogleCalendarApiClient Api { get; set; } = default!;

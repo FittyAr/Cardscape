@@ -1,0 +1,8 @@
+/* HorizontalRule — flex-friendly <hr> replacement.
+   Set flex: 1 on the parent to make it grow with the row. */
+
+.cs-hr {
+    flex: 1;
+    height: 1px;
+    align-self: center;
+}

@@ -6,20 +6,24 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Nav
 @implements IDisposable
 
-<a class="inbox-bell" href="inbox" title="@(count > 0 ? $"{count} unread" : "Inbox")">
-    <span class="inbox-bell-icon">@BellGlyph</span>
-    @if (count > 0)
-    {
-        <span class="inbox-bell-badge">@Display(count)</span>
-    }
-</a>
+<RadzenButton Variant="Variant.Text"
+              ButtonStyle="ButtonStyle.Light"
+              Click="@(() => Nav.NavigateTo("inbox"))"
+              title="@(count > 0 ? $"{count} unread" : "Inbox")"
+              class="rz-border-radius-50">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+        <RadzenIcon Icon="notifications" />
+        @if (count > 0)
+        {
+            <RadzenBadge Text="@Display(count)" BadgeStyle="BadgeStyle.Danger" />
+        }
+    </RadzenStack>
+</RadzenButton>
 
 @code {
     private int count;
     private Timer? refreshTimer;
     private Microsoft.AspNetCore.Components.Authorization.AuthenticationState? authState;
-
-    private const string BellGlyph = "\u2407"; // ␇ — bell-like glyph that works in any font
 
     protected override async Task OnInitializedAsync()
     {

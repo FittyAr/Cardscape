@@ -8,51 +8,45 @@
 
 <PageTitle>Invitations — Cardscape</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>Invitations</h1>
-        <small class="muted">Pending invites to your email address</small>
-    </div>
+<PageHeader Title="Invitations"
+            Subtitle="Pending invites to your email address" />
 
-    @if (invitations is null)
-    {
-        <p>Loading…</p>
-    }
-    else if (invitations.Count == 0)
-    {
-        <p>You have no pending invitations. Workspace owners will email you a link when one is waiting.</p>
-    }
-    else
-    {
-        <div class="invitation-list">
-            @foreach (WorkspaceInvitationDto inv in invitations)
-            {
-                <RadzenCard class="invitation-card">
-                    <div class="invitation-row">
-                        <div class="invitation-meta">
-                            <h3>@inv.WorkspaceName</h3>
-                            <small>
-                                Role: @RoleName(inv.Role) ·
-                                Invited by @(inv.InvitedBy == Guid.Empty ? "system" : inv.InvitedBy.ToString()) ·
-                                Expires @inv.ExpiresAt.LocalDateTime.ToString("yyyy-MM-dd")
-                            </small>
-                        </div>
-                    </div>
-                </RadzenCard>
-            }
-        </div>
-        <p class="muted">
-            To accept an invitation, follow the link the owner emailed you
-            (it points to <code>/invitations/accept?token=...</code>). The
-            link is single-use and bound to your account's email.
-        </p>
-    }
+@if (invitations is null)
+{
+    <RadzenText Text="Loading…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else if (invitations.Count == 0)
+{
+    <RadzenText Text="You have no pending invitations. Workspace owners will email you a link when one is waiting." TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else
+{
+    <RadzenStack Gap="0.75rem">
+        @foreach (WorkspaceInvitationDto inv in invitations)
+        {
+            <RadzenCard>
+                <RadzenText Text="@inv.WorkspaceName" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                    Role: @RoleName(inv.Role) ·
+                    Invited by @(inv.InvitedBy == Guid.Empty ? "system" : inv.InvitedBy.ToString()) ·
+                    Expires @inv.ExpiresAt.LocalDateTime.ToString("yyyy-MM-dd")
+                </RadzenText>
+            </RadzenCard>
+        }
+    </RadzenStack>
+    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary rz-mt-3">
+        To accept an invitation, follow the link the owner emailed you
+        (it points to <code>/invitations/accept?token=...</code>). The
+        link is single-use and bound to your account's email.
+    </RadzenText>
+}
 
-    @if (error is not null)
-    {
-        <div class="auth-error" role="alert">@error</div>
-    }
-</div>
+@if (error is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" class="rz-mt-3">
+        @error
+    </RadzenAlert>
+}
 
 @code {
     private IReadOnlyList<WorkspaceInvitationDto>? invitations;

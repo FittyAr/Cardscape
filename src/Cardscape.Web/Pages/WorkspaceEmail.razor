@@ -9,79 +9,75 @@
 
 <PageTitle>@L["EmailTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["EmailTitle"]</h1>
-        <p class="muted">@L["EmailBlurb"]</p>
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["EmailTitle"]" Subtitle="@L["EmailBlurb"]" />
 
     <RadzenCard>
-        <h3>@L["EmailWebhook"]</h3>
-        <p class="muted">@L["EmailWebhookBlurb"]</p>
-        <p><code>@WebhookUrl</code></p>
-        <p class="muted">@L["EmailWebhookSecretHint"]</p>
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["EmailWebhook"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["EmailWebhookBlurb"]</RadzenText>
+            <RadzenText><code>@WebhookUrl</code></RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["EmailWebhookSecretHint"]</RadzenText>
+        </RadzenStack>
     </RadzenCard>
 
     <RadzenCard>
-        <h3>@L["EmailAddAddress"]</h3>
-        <RadzenTemplateForm TItem="AddModel" Data="@addModel" Submit="@Add">
-            <RadzenLabel Text="@L["EmailAddressLabel"]" Component="email-address" />
-            <RadzenTextBox @bind-Value="addModel.EmailAddress" Name="email-address"
-                           Placeholder="board-123@cardscape.example.com" Style="width:100%" />
-            <RadzenLabel Text="@L["EmailLabelLabel"]" Component="email-label" Style="margin-top:0.75rem; display:block" />
-            <RadzenTextBox @bind-Value="addModel.Label" Name="email-label" Style="width:100%" />
-            <RadzenLabel Text="@L["EmailTargetListId"]" Component="email-list" Style="margin-top:0.75rem; display:block" />
-            <RadzenTextBox @bind-Value="addModel.TargetListIdText" Name="email-list" Style="width:100%" />
-            <div class="create-actions">
-                <RadzenButton Text="@L["EmailAddAddress"]" ButtonType="ButtonType.Submit"
-                              ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
-            </div>
-        </RadzenTemplateForm>
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["EmailAddAddress"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <RadzenTemplateForm TItem="AddModel" Data="@addModel" Submit="@Add">
+                <LabeledField Text="@L["EmailAddressLabel"]" Component="email-address">
+                    <RadzenTextBox @bind-Value="addModel.EmailAddress" Name="email-address"
+                                   Placeholder="board-123@cardscape.example.com" Style="width:100%" />
+                </LabeledField>
+                <LabeledField Text="@L["EmailLabelLabel"]" Component="email-label">
+                    <RadzenTextBox @bind-Value="addModel.Label" Name="email-label" Style="width:100%" />
+                </LabeledField>
+                <LabeledField Text="@L["EmailTargetListId"]" Component="email-list">
+                    <RadzenTextBox @bind-Value="addModel.TargetListIdText" Name="email-list" Style="width:100%" />
+                </LabeledField>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
+                    <RadzenButton Text="@L["EmailAddAddress"]" ButtonType="ButtonType.Submit"
+                                  ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenStack>
     </RadzenCard>
 
-    <h3>@L["EmailAddresses"]</h3>
+    <RadzenText Text="@L["EmailAddresses"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+
     @if (addresses is null)
     {
-        <p>@L["ActionLoading"]</p>
+        <RadzenText Text="@L["ActionLoading"]" />
     }
     else if (addresses.Count == 0)
     {
-        <p class="muted">@L["EmailNoAddresses"]</p>
+        <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["EmailNoAddresses"]</RadzenText>
     }
     else
     {
-        <table class="cards-table">
-            <thead>
-                <tr>
-                    <th>@L["EmailAddressLabel"]</th>
-                    <th>@L["EmailLabelLabel"]</th>
-                    <th>@L["EmailTargetListId"]</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (InboundEmailAddressDto address in addresses)
-                {
-                    <tr>
-                        <td><code>@address.EmailAddress</code></td>
-                        <td>@address.Label</td>
-                        <td><code>@address.TargetListId</code></td>
-                        <td>
-                            <RadzenButton Text="@L["EmailRemove"]" ButtonStyle="ButtonStyle.Danger"
-                                          Size="ButtonSize.Small"
-                                          Click="@(() => Remove(address.Id))" />
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <RadzenDataGrid TItem="InboundEmailAddressDto" Data="@addresses" AllowSorting="true" AllowPaging="true" PageSize="20">
+            <Columns>
+                <RadzenDataGridColumn TItem="InboundEmailAddressDto" Property="EmailAddress" Title="@L["EmailAddressLabel"]" />
+                <RadzenDataGridColumn TItem="InboundEmailAddressDto" Property="Label" Title="@L["EmailLabelLabel"]" />
+                <RadzenDataGridColumn TItem="InboundEmailAddressDto" Property="TargetListId" Title="@L["EmailTargetListId"]" />
+                <RadzenDataGridColumn TItem="InboundEmailAddressDto" Title="" Sortable="false" Filterable="false" Width="120px">
+                    <Template Context="address">
+                        <RadzenButton Text="@L["EmailRemove"]" ButtonStyle="ButtonStyle.Danger"
+                                      Size="ButtonSize.Small"
+                                      Click="@(() => Remove(address.Id))" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
     }
 
     @if (error is not null)
     {
-        <div class="auth-error" role="alert">@error</div>
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
+            @error
+        </RadzenAlert>
     }
-</div>
+</RadzenStack>
 
 @code {
     [Parameter] public Guid WorkspaceId { get; set; }

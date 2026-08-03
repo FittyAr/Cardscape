@@ -1,0 +1,34 @@
+@* PageHeader — consistent header for non-auth pages.
+   Replaces the `<div class="page-shell"><div class="page-header"><h1>...`
+   pattern that was repeated on every page. *@
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public RenderFragment? Actions { get; set; }
+    [Parameter] public string? Hint { get; set; }
+}
+
+<RadzenStack Orientation="Orientation.Horizontal"
+             AlignItems="AlignItems.Center"
+             JustifyContent="JustifyContent.SpaceBetween"
+             Gap="1rem"
+             Class="rz-mb-4">
+    <RadzenStack Gap="0.25rem">
+        <RadzenText Text="@Title" TextStyle="TextStyle.H4" TagName="TagName.H1" />
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <RadzenText Text="@Subtitle" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+        }
+        @if (!string.IsNullOrEmpty(Hint))
+        {
+            <RadzenText Text="@Hint" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
+        }
+    </RadzenStack>
+    @if (Actions is not null)
+    {
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+            @Actions
+        </RadzenStack>
+    }
+</RadzenStack>

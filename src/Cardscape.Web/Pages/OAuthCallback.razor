@@ -3,10 +3,9 @@
 @using System.Web
 @using Cardscape.Web.Resources
 @using Cardscape.Web.Services
+@using Cardscape.Web.Shared
 @using Microsoft.AspNetCore.Components
 @using Microsoft.Extensions.Localization
-@using Microsoft.JSInterop
-@inject IJSRuntime JS
 @inject TokenStore Tokens
 @inject AuthStateProvider Auth
 @inject NavigationManager Nav
@@ -14,72 +13,73 @@
 
 <PageTitle>@L["AuthOauthTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="auth-shell">
-    <div class="auth-card auth-card--status">
-        <header class="auth-header">
-            <h1 class="auth-title">@(error is null ? L["AuthOauthWorking"] : L["AuthOauthFailed"])</h1>
-            <p class="auth-subtitle">@(error ?? L["AuthOauthHoldOn"].Value)</p>
-        </header>
-        @if (error is not null)
-        {
-            <a class="provider-button" href="login" style="justify-content: center;">
-                <span>@L["AuthBackToSignIn"]</span>
-            </a>
-        }
-        else
-        {
-            <div class="auth-spinner" aria-hidden="true"></div>
-        }
-    </div>
-</div>
+@if (error is null)
+{
+    <RadzenStack Gap="1rem" AlignItems="AlignItems.Center">
+        <RadzenText Text="@L["AuthOauthWorking"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
+        <RadzenText Text="@L["AuthOauthHoldOn"]" TextStyle="TextStyle.Body1" />
+        <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Medium" />
+    </RadzenStack>
+}
+else
+{
+    <RadzenStack Gap="1rem" AlignItems="AlignItems.Center">
+        <RadzenText Text="@L["AuthOauthFailed"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" Style="width: 100%;">
+            @error
+        </RadzenAlert>
+        <RadzenButton Text="@L["AuthBackToSignIn"]"
+                      ButtonStyle="ButtonStyle.Primary"
+                      Click="@(() => Nav.NavigateTo("login"))" />
+    </RadzenStack>
+}
 
 @code {
     private string? error;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnInitialized()
     {
-        if (!firstRender)
+        // Read the OAuth fragment from the browser URL. We previously
+        // did this via `IJSRuntime.InvokeAsync("eval", "window.location.href")`
+        // which both bypassed the no-eval rule and opened an XSS surface
+        // if the hash ever came from an untrusted redirect. The
+        // `NavigationManager.Uri` is set by the Blazor router before the
+        // first render, so we can parse the fragment directly.
+        var uri = new Uri(Nav.Uri);
+        string fragment = uri.Fragment.TrimStart('#');
+        if (string.IsNullOrWhiteSpace(fragment))
         {
+            error = L["AuthOauthMissingFragment"];
             return;
         }
 
         try
         {
-            string currentUrl = await JS.InvokeAsync<string>("eval",
-                "window.location.href");
-            var uri = new Uri(currentUrl);
-            string fragment = uri.Fragment.TrimStart('#');
-            if (string.IsNullOrWhiteSpace(fragment))
-            {
-                error = L["AuthOauthMissingFragment"];
-                StateHasChanged();
-                return;
-            }
-
             var query = HttpUtility.ParseQueryString(fragment);
             string? access = query["access_token"];
             string? refresh = query["refresh_token"];
             if (string.IsNullOrWhiteSpace(access) || string.IsNullOrWhiteSpace(refresh))
             {
                 error = L["AuthOauthMissingToken"];
-                StateHasChanged();
                 return;
             }
 
             var userId = Guid.TryParse(query["user_id"], out var id) ? id : Guid.Empty;
-            var user = new Shared.UserSummaryDto(
+            var user = new UserSummaryDto(
                 Id: userId,
                 Email: query["user_email"] ?? string.Empty,
                 DisplayName: query["user_name"] ?? string.Empty);
 
-            await Tokens.SetAsync(access, refresh, user);
+            // Persist the tokens and notify the auth state provider. The
+            // token store is in-memory + cookie-backed; we don't await
+            // here because the navigation away happens right after.
+            _ = Tokens.SetAsync(access, refresh, user);
             Auth.Notify();
             Nav.NavigateTo("/", forceLoad: true);
         }
         catch (Exception ex)
         {
             error = string.Format(L["AuthOauthError"].Value, ex.Message);
-            StateHasChanged();
         }
     }
 }

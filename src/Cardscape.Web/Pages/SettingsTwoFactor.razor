@@ -1,75 +1,85 @@
 @page "/settings/two-factor"
 @using Cardscape.Web.Services
+@using Cardscape.Web.Shared
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using Radzen
 @inject HttpClient Http
 @inject TokenStore Tokens
 @inject AuthStateProvider Auth
 @inject NavigationManager Nav
+@inject DialogService DialogService
 
 <PageTitle>Two-factor authentication — Cardscape</PageTitle>
 
-<div class="page-shell">
-    <h1>Two-factor authentication</h1>
+<RadzenStack Class="rz-mx-auto" Style="max-width: 48rem;" Gap="1rem">
+    <RadzenText Text="Two-factor authentication" TextStyle="TextStyle.H4" TagName="TagName.H1" />
 
     @if (loading)
     {
-        <p>Loading…</p>
+        <RadzenText Text="Loading…" TextStyle="TextStyle.Body1" />
     }
     else if (status is null || !status.IsEnrolled)
     {
         <RadzenCard>
-            <h2>Protect your account with 2FA</h2>
-            <p>
-                Scan a QR code with your authenticator app
-                (Authy, 1Password, Google Authenticator, …)
-                and confirm a code to enable two-factor
-                authentication.
-            </p>
-            <RadzenButton Text="Enrol" Click="@OnEnroll"
-                          ButtonStyle="ButtonStyle.Primary" />
+            <RadzenStack Gap="0.75rem">
+                <RadzenText Text="Protect your account with 2FA" TextStyle="TextStyle.H5" TagName="TagName.H2" />
+                <RadzenText Text="Scan a QR code with your authenticator app (Authy, 1Password, Google Authenticator, …) and confirm a code to enable two-factor authentication." />
+                <RadzenButton Text="Enrol"
+                              Click="@OnEnroll"
+                              ButtonStyle="ButtonStyle.Primary" />
+            </RadzenStack>
         </RadzenCard>
 
         @if (enrollment is not null)
         {
-            <RadzenCard Style="margin-top:1rem">
-                <h3>1. Scan this QR code with your authenticator</h3>
-                <p>
-                    <a href="@enrollment.QrCodeUrl" target="_blank"
-                       rel="noopener">Open the otpauth:// URI</a>
-                    or copy the secret below and enter it manually:
-                </p>
-                <code>@enrollment.Secret</code>
+            <RadzenCard>
+                <RadzenStack Gap="0.75rem">
+                    <RadzenText Text="1. Scan this QR code with your authenticator"
+                                TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                    <RadzenText>
+                        <RadzenLink Path="@enrollment.QrCodeUrl" Target="_blank" Text="Open the otpauth:// URI" />
+                        or copy the secret below and enter it manually:
+                    </RadzenText>
+                    <code>@enrollment.Secret</code>
 
-                <h3 style="margin-top:1.5rem">2. Save your recovery codes</h3>
-                <p>
-                    Each code can be used <strong>once</strong> if you lose
-                    access to your authenticator. They are not shown again.
-                </p>
-                <ul>
-                    @foreach (var recoveryCode in enrollment.RecoveryCodes)
-                    {
-                        <li><code>@recoveryCode</code></li>
-                    }
-                </ul>
+                    <RadzenText Text="2. Save your recovery codes"
+                                TextStyle="TextStyle.H6" TagName="TagName.H3" Class="rz-mt-4" />
+                    <RadzenText>
+                        Each code can be used <RadzenText Text="once" TextStyle="TextStyle.Body1" TagName="TagName.Span" /> if you lose access
+                        to your authenticator. They are not shown again.
+                    </RadzenText>
+                    <ul>
+                        @foreach (var recoveryCode in enrollment.RecoveryCodes)
+                        {
+                            <li><code>@recoveryCode</code></li>
+                        }
+                    </ul>
+                </RadzenStack>
             </RadzenCard>
         }
     }
     else
     {
         <RadzenCard>
-            <h2>2FA is on</h2>
-            <p>Enrolled @status.EnrolledAt?.ToString("u").</p>
-            <p>@status.RemainingRecoveryCodes recovery codes remaining.</p>
-            <RadzenButton Text="Disable 2FA" Click="@OnDisable"
-                          ButtonStyle="ButtonStyle.Danger" />
+            <RadzenStack Gap="0.75rem">
+                <RadzenText Text="2FA is on" TextStyle="TextStyle.H5" TagName="TagName.H2" />
+                <RadzenText Text="@($"Enrolled {status.EnrolledAt?.ToString("u")}.")" />
+                <RadzenText Text="@($"{status.RemainingRecoveryCodes} recovery codes remaining.")" />
+                <RadzenButton Text="Disable 2FA"
+                              Click="@OnDisable"
+                              ButtonStyle="ButtonStyle.Danger" />
+            </RadzenStack>
         </RadzenCard>
     }
 
     @if (!string.IsNullOrEmpty(message))
     {
-        <div class="auth-error" role="alert" style="margin-top:1rem">@message</div>
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
+            @message
+        </RadzenAlert>
     }
-</div>
+</RadzenStack>
 
 @code {
     private TotpStatusDto? status;
@@ -77,11 +87,7 @@
     private bool loading = true;
     private string? message;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
-        await LoadStatusAsync();
-    }
+    protected override async Task OnInitializedAsync() => await LoadStatusAsync();
 
     private async Task LoadStatusAsync()
     {
@@ -127,9 +133,29 @@
         message = null;
         try
         {
+            // Open a RadzenDialog instead of the browser-native
+            // `window.prompt(...)` (which is not accessible, not
+            // styleable, and breaks the Blazor layout).
+            var result = await DialogService.OpenAsync<ConfirmCodeDialog>(
+                "Confirm 2FA code",
+                new Dictionary<string, object?>
+                {
+                    ["Label"] = "Current 2FA code",
+                    ["Message"] = "Enter your current 2FA code to disable 2FA:"
+                },
+                new DialogOptions
+                {
+                    Width = "420px",
+                    CloseDialogOnOverlayClick = false,
+                    ShowClose = true
+                });
+
+            if (result is not string code || string.IsNullOrWhiteSpace(code))
+            {
+                return;
+            }
+
             var http = await AuthedClientAsync();
-            var code = await JS.InvokeAsync<string>("prompt", "Enter your current 2FA code to disable 2FA:");
-            if (string.IsNullOrWhiteSpace(code)) return;
             var response = await http.PostAsJsonAsync("api/auth/2fa/disable", new { code });
             if (!response.IsSuccessStatusCode)
             {
@@ -143,8 +169,6 @@
             message = $"Could not disable 2FA: {ex.Message}";
         }
     }
-
-    [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private async Task<HttpClient> AuthedClientAsync()
     {

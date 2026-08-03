@@ -11,73 +11,68 @@
 
 <PageTitle>@L["ExtensionsTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["ExtensionsTitle"]</h1>
-    </div>
+<PageHeader Title="@L["ExtensionsTitle"]" Subtitle="@L["ExtensionsBlurb"]" />
 
-    <p class="page-hint">
-        @L["ExtensionsBlurb"]
-    </p>
-
-    @if (rows is null)
-    {
-        <p>@L["ActionLoading"]</p>
-    }
-    else
-    {
-        <div class="extension-list">
-            @foreach (ExtensionOption option in allOptions)
-            {
-                BoardExtensionDto? match = rows.FirstOrDefault(r => r.Kind == option.Kind);
-                bool isEnabled = match is { IsEnabled: true };
-                <RadzenCard class="@(isEnabled ? "extension-card" : "extension-card extension-card--off")">
-                    <div class="extension-row">
-                        <div class="extension-meta">
-                            <strong>@L[option.NameKey]</strong>
-                            <small>@L[option.DescriptionKey]</small>
-                        </div>
-                        <div class="extension-actions">
-                            @if (isEnabled)
-                            {
-                                <RadzenButton Text="@L["ExtensionDisable"]" ButtonStyle="ButtonStyle.Light"
-                                              Size="ButtonSize.Small"
-                                              Click="@(() => DisableAsync(option.Kind))" />
-                            }
-                            else
-                            {
-                                <RadzenButton Text="@L["ExtensionEnable"]" ButtonStyle="ButtonStyle.Success"
-                                              Size="ButtonSize.Small"
-                                              Click="@(() => EnableAsync(option.Kind))" />
-                            }
-                        </div>
-                    </div>
-                    @* Card aging gets a mode selector once enabled, because the
-                       effect (fade vs no-fade) is data-driven by the ConfigJson. *@
-                    @if (isEnabled && option.Kind == CardAgingKind)
-                    {
-                        <div class="extension-config">
-                            <RadzenSelectBar TValue="string"
-                                             Value="@agingMode.ToString()"
-                                             Change="@OnAgingModeChanged"
-                                             Size="ButtonSize.Small">
-                                <Items>
-                                    <RadzenSelectBarItem Text="@L["CardAgingModeDisabled"]" Value="@nameof(CardAgingMode.Disabled)" />
-                                    <RadzenSelectBarItem Text="@L["CardAgingModeByActivity"]" Value="@nameof(CardAgingMode.ByActivity)" />
-                                </Items>
-                            </RadzenSelectBar>
-                        </div>
-                    }
-                </RadzenCard>
-            }
-        </div>
-
-        @if (error is not null)
+@if (rows is null)
+{
+    <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        @foreach (ExtensionOption option in allOptions)
         {
-            <div class="auth-error" role="alert">@error</div>
+            BoardExtensionDto? match = rows.FirstOrDefault(r => r.Kind == option.Kind);
+            bool isEnabled = match is { IsEnabled: true };
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                             JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText Text="@L[option.NameKey]" TextStyle="TextStyle.Subtitle1"
+                                    TagName="TagName.Span" />
+                        <RadzenText Text="@L[option.DescriptionKey]" TextStyle="TextStyle.Body2"
+                                    class="rz-color-text-secondary" />
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                                 Gap="0.5rem">
+                        @if (isEnabled)
+                        {
+                            <RadzenButton Text="@L["ExtensionDisable"]" ButtonStyle="ButtonStyle.Light"
+                                          Size="ButtonSize.Small"
+                                          Click="@(() => DisableAsync(option.Kind))" />
+                        }
+                        else
+                        {
+                            <RadzenButton Text="@L["ExtensionEnable"]" ButtonStyle="ButtonStyle.Success"
+                                          Size="ButtonSize.Small"
+                                          Click="@(() => EnableAsync(option.Kind))" />
+                        }
+                    </RadzenStack>
+                </RadzenStack>
+                @* Card aging gets a mode selector once enabled, because the
+                   effect (fade vs no-fade) is data-driven by the ConfigJson. *@
+                @if (isEnabled && option.Kind == CardAgingKind)
+                {
+                    <RadzenSelectBar TValue="string"
+                                     Value="@agingMode.ToString()"
+                                     Change="@OnAgingModeChanged"
+                                     Size="ButtonSize.Small"
+                                     Class="rz-mt-3">
+                        <Items>
+                            <RadzenSelectBarItem Text="@L["CardAgingModeDisabled"]" Value="@nameof(CardAgingMode.Disabled)" />
+                            <RadzenSelectBarItem Text="@L["CardAgingModeByActivity"]" Value="@nameof(CardAgingMode.ByActivity)" />
+                        </Items>
+                    </RadzenSelectBar>
+                }
+            </RadzenCard>
         }
+    </RadzenStack>
+
+    @if (error is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@error</RadzenAlert>
     }
-</div>
+}
 
 @code {
     [Parameter] public Guid BoardId { get; set; }

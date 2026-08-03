@@ -20,7 +20,7 @@
         <RadzenStack Gap="1rem">
             <RadzenRow AlignItems="AlignItems.Center">
                 <RadzenColumn Size="12">
-                    <RadzenText Text="@Greeting(context.User)" TextStyle="TextStyle.H3" TagName="TagName.H1" style="margin: 0" />
+                    <RadzenText Text="@Greeting(context.User)" TextStyle="TextStyle.H3" TagName="TagName.H1" class="rz-m-0" />
                     <RadzenText Text="@L["HomeLeadAuthorized"]" TextStyle="TextStyle.Body1" />
                 </RadzenColumn>
             </RadzenRow>
@@ -28,7 +28,7 @@
                 <RadzenColumn Size="12">
                     <RadzenCard Variant="Variant.Outlined">
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Start">
-                            <RadzenIcon Icon="grid_view" class="rz-background-color-primary-light rz-color-on-primary-light rz-border-radius-2" Style="font-size: 32px; min-width: 64px; min-height: 64px" />
+                            <RadzenIcon Icon="grid_view" Class="rz-background-color-primary-light rz-color-on-primary-light rz-border-radius-2" Style="font-size: 32px; min-width: 64px; min-height: 64px" />
                             <RadzenStack Gap="0">
                                 <RadzenText Text="@L["HomeWorkspacesHeading"]" TextStyle="TextStyle.Subtitle1" TagName="TagName.H4" />
                                 <RadzenText Text="@L["HomeWorkspacesBlurb"]" />
@@ -41,7 +41,7 @@
                 <RadzenColumn Size="12">
                     <RadzenCard Variant="Variant.Outlined">
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Start">
-                            <RadzenIcon Icon="star" class="rz-background-color-warning-light rz-color-on-warning-light rz-border-radius-2" Style="font-size: 32px; min-width: 64px; min-height: 64px" />
+                            <RadzenIcon Icon="star" Class="rz-background-color-warning-light rz-color-on-warning-light rz-border-radius-2" Style="font-size: 32px; min-width: 64px; min-height: 64px" />
                             <RadzenStack Gap="0">
                                 <RadzenText Text="@L["HomeStarredHeading"]" TextStyle="TextStyle.Subtitle1" TagName="TagName.H4" />
                                 <RadzenText Text="@L["HomeStarredBlurb"]" />
@@ -60,14 +60,14 @@
                         <RadzenText Text="@L["HomeLandingEyebrow"]" TextStyle="TextStyle.Overline" Style="color: var(--rz-primary); letter-spacing: 0.15em;" />
                         <RadzenText Text="@L["AppName"]" TextStyle="TextStyle.H1" TagName="TagName.H1" />
                         <RadzenText Text="@L["AppTagline"]" TextStyle="TextStyle.Body1" />
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.75rem" class="rz-mt-4">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.75rem" Class="rz-mt-4">
                             <RadzenButton Text="@L["AuthSignIn"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" Click="@(() => Nav.NavigateTo("login"))" />
                             <RadzenButton Text="@L["AuthCreateAccount"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Large" Click="@(() => Nav.NavigateTo("register"))" />
                         </RadzenStack>
                     </RadzenStack>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="6">
-                    <RadzenCard Variant="Variant.Filled" class="rz-p-6" Style="min-height: 360px; background: linear-gradient(135deg, var(--rz-primary-dark) 0%, var(--rz-primary-darker) 100%);">
+                    <RadzenCard Variant="Variant.Filled" Class="rz-p-6" Style="min-height: 360px; background: linear-gradient(135deg, var(--rz-primary-dark) 0%, var(--rz-primary-darker) 100%);">
                         <RadzenStack Gap="1rem">
                             <RadzenRow Gap="0.5rem">
                                 <RadzenColumn Size="4">

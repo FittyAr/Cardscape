@@ -1,0 +1,23 @@
+@* MetadataList — replaces the `<dl class="card-meta"><dt>...<dd>...` pattern
+   used in CardDetail and any other page that needs a key/value list.
+   Each item is rendered as a RadzenRow with a fixed-width label and
+   a flexible value. *@
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<MetadataListItem> Items { get; set; } = Array.Empty<MetadataListItem>();
+}
+
+@foreach (MetadataListItem item in Items)
+{
+    <RadzenRow AlignItems="AlignItems.Start" Gap="1rem" Class="rz-mt-1">
+        <RadzenColumn Size="12" SizeSM="3">
+            <RadzenText Text="@item.Label"
+                        TextStyle="TextStyle.Body2"
+                        class="rz-color-text-secondary" />
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeSM="9">
+            @item.Value
+        </RadzenColumn>
+    </RadzenRow>
+}

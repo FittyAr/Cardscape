@@ -1,0 +1,12 @@
+@* HorizontalRule — a flex-friendly replacement for `<hr>`.
+   Radzen ships no `<hr>` component; the closest thing is
+   `<RadzenStack Class="rz-border-top" />` but that doesn't
+   flex-grow the way the legacy `<hr style="flex: 1">` did.
+   Use inside a horizontal RadzenStack to draw a vertical
+   separator that flexes with the parent. *@
+
+@code {
+    [Parameter] public string Color { get; set; } = "var(--rz-border-color)";
+}
+
+<div class="cs-hr" style="background: @Color"></div>

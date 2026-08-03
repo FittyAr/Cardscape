@@ -1,0 +1,70 @@
+/* KanbanBoard — Trello-style horizontal scroll columns.
+   Equivalent to the old .lists-row / .list-column / .card-mini
+   block that lived in app.css:1015-1072. Moved to scoped CSS
+   so it stays close to the component that owns the markup. */
+
+.cs-kanban {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    align-items: flex-start;
+}
+
+.cs-kanban-column {
+    background: #ebecf0;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    min-width: 18rem;
+    max-width: 18rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.cs-kanban-column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+}
+
+.cs-kanban-column-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 1rem;
+}
+
+/* Cards inside the column: the consumer is expected to render
+   a RadzenCard for each TItem, optionally with the .card-mini
+   class for the legacy look. The styles below are still
+   available as a default. */
+.cs-kanban-column-cards ::deep .card-mini {
+    background: #ffffff;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    box-shadow: 0 1px 1px rgba(9, 30, 66, 0.25);
+    transition: background 0.1s ease;
+}
+
+.cs-kanban-column-cards ::deep .card-mini:hover {
+    background: #f4f5f7;
+}
+
+.cs-kanban-column-cards ::deep .card-mini-title {
+    font-size: 0.875rem;
+    word-break: break-word;
+}
+
+.cs-kanban-column-cards ::deep .card-mini-title.completed {
+    text-decoration: line-through;
+    color: #6b7280;
+}
+
+/* Honor the user's reduced-motion preference. */
+@media (prefers-reduced-motion: reduce) {
+    .cs-kanban-column-cards ::deep .card-mini {
+        transition: none;
+    }
+}

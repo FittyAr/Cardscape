@@ -1,0 +1,23 @@
+@* LabeledField — wrapper that pairs a label with a form control and
+   an optional help caption, with consistent vertical spacing.
+   Replaces the `<RadzenLabel Component="..." Style="margin-top:1rem; display:block" />` +
+   `<RadzenTextBox Name="..." />` pattern that appears in 12+ pages. *@
+
+@code {
+    [Parameter, EditorRequired] public string Text { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Component { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Help { get; set; }
+}
+
+<RadzenStack Gap="0.35rem" Class="rz-mt-2">
+    <RadzenLabel Text="@Text" Component="@Component" />
+    @if (ChildContent is not null)
+    {
+        @ChildContent
+    }
+    @if (!string.IsNullOrEmpty(Help))
+    {
+        <RadzenText Text="@Help" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
+    }
+</RadzenStack>

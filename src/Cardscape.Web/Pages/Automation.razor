@@ -7,82 +7,82 @@
 
 <PageTitle>Automation — Cardscape</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>Automation</h1>
-        <div class="page-header-actions">
-            <RadzenButton Text="New rule" Icon="add" ButtonStyle="ButtonStyle.Primary"
-                          Click="@(() => showCreate = !showCreate)" />
-        </div>
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="Automation"
+                Actions="@(NewRuleButton())" />
 
-    <p class="page-hint">
+    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
         Rules run server-side the moment a matching card event fires.
         They're best-effort: a failed rule never blocks the user that
         caused the event.
-    </p>
+    </RadzenText>
 
     @if (showCreate)
     {
-        <RadzenCard class="create-form">
+        <RadzenCard>
             <RadzenTemplateForm TItem="NewRuleModel" Data="@newRule" Submit="@CreateRule">
-                <RadzenLabel Text="Name" Component="rule-name" />
-                <RadzenTextBox @bind-Value="newRule.Name" Name="rule-name" Style="width:100%" />
+                <LabeledField Text="Name" Component="rule-name">
+                    <RadzenTextBox @bind-Value="newRule.Name" Name="rule-name" Style="width:100%" />
+                </LabeledField>
 
-                <RadzenLabel Text="When…" Component="rule-trigger" Style="margin-top:.5rem;display:block" />
-                <RadzenDropDown @bind-Value="newRule.Trigger" Data="@triggerOptions"
-                                TextProperty="Label" ValueProperty="Value"
-                                Name="rule-trigger" Style="width:100%" Change="@OnTriggerChanged" />
+                <LabeledField Text="When…" Component="rule-trigger">
+                    <RadzenDropDown @bind-Value="newRule.Trigger" Data="@triggerOptions"
+                                    TextProperty="Label" ValueProperty="Value"
+                                    Name="rule-trigger" Style="width:100%" Change="@OnTriggerChanged" />
+                </LabeledField>
 
                 @if (newRule.Trigger == 3)
                 {
-                    <RadzenLabel Text="In list (id)" Component="rule-trigger-list"
-                                 Style="margin-top:.5rem;display:block" />
-                    <RadzenTextBox @bind-Value="newRule.TriggerListIdText" Name="rule-trigger-list"
-                                   Style="width:100%" />
+                    <LabeledField Text="In list (id)" Component="rule-trigger-list">
+                        <RadzenTextBox @bind-Value="newRule.TriggerListIdText" Name="rule-trigger-list"
+                                       Style="width:100%" />
+                    </LabeledField>
                 }
 
-                <RadzenLabel Text="Then…" Component="rule-action" Style="margin-top:.5rem;display:block" />
-                <RadzenDropDown @bind-Value="newRule.Action" Data="@actionOptions"
-                                TextProperty="Label" ValueProperty="Value"
-                                Name="rule-action" Style="width:100%" />
+                <LabeledField Text="Then…" Component="rule-action">
+                    <RadzenDropDown @bind-Value="newRule.Action" Data="@actionOptions"
+                                    TextProperty="Label" ValueProperty="Value"
+                                    Name="rule-action" Style="width:100%" />
+                </LabeledField>
 
-                <RadzenLabel Text="Argument (list id / user id / ISO date)"
-                             Component="rule-arg" Style="margin-top:.5rem;display:block" />
-                <RadzenTextBox @bind-Value="newRule.ActionArgument" Name="rule-arg"
-                               Style="width:100%" />
+                <LabeledField Text="Argument (list id / user id / ISO date)" Component="rule-arg">
+                    <RadzenTextBox @bind-Value="newRule.ActionArgument" Name="rule-arg"
+                                   Style="width:100%" />
+                </LabeledField>
 
                 @if (error is not null)
                 {
-                    <div class="auth-error" role="alert">@error</div>
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" Class="rz-mt-2">
+                        @error
+                    </RadzenAlert>
                 }
-                <div class="create-actions">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
                     <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
                     <RadzenButton Text="Create" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
                                   IsBusy="@busy" />
-                </div>
+                </RadzenStack>
             </RadzenTemplateForm>
         </RadzenCard>
     }
 
     @if (rules is null)
     {
-        <p>Loading…</p>
+        <RadzenText Text="Loading…" />
     }
     else if (rules.Count == 0)
     {
-        <p>No automation rules yet. Create one above to get started.</p>
+        <RadzenText Text="No automation rules yet. Create one above to get started." />
     }
     else
     {
-        <div class="rule-list">
+        <RadzenStack Gap="0.5rem">
             @foreach (BoardAutomationRuleDto rule in rules)
             {
-                <RadzenCard class="@(rule.IsEnabled ? "rule-card" : "rule-card rule-card--disabled")">
-                    <div class="rule-row">
-                        <div class="rule-meta">
-                            <strong>@rule.Name</strong>
-                            <small>
+                <RadzenCard Variant="@(rule.IsEnabled ? Variant.Filled : Variant.Outlined)">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" AlignItems="AlignItems.Center">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="@rule.Name" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
                                 When: <em>@TriggerName(rule.Trigger)</em>
                                 @if (rule.Trigger == 3)
                                 {
@@ -93,9 +93,9 @@
                                 {
                                     <text> → @rule.ActionArgument</text>
                                 }
-                            </small>
-                        </div>
-                        <div class="rule-actions">
+                            </RadzenText>
+                        </RadzenStack>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
                             @if (rule.IsEnabled)
                             {
                                 <RadzenButton Text="Disable" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
@@ -108,13 +108,13 @@
                             }
                             <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
                                           Click="@(() => DeleteAsync(rule))" />
-                        </div>
-                    </div>
+                        </RadzenStack>
+                    </RadzenStack>
                 </RadzenCard>
             }
-        </div>
+        </RadzenStack>
     }
-</div>
+</RadzenStack>
 
 @code {
     [Parameter] public Guid BoardId { get; set; }
@@ -139,6 +139,12 @@
         new(1, "Assign user (arg = user id)"),
         new(2, "Set due date (arg = ISO date)"),
         new(3, "Mark complete")
+    };
+
+    private RenderFragment NewRuleButton() => __builder =>
+    {
+        <RadzenButton Text="New rule" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                      Click="@(() => showCreate = !showCreate)" />
     };
 
     protected override async Task OnParametersSetAsync() => await ReloadAsync();

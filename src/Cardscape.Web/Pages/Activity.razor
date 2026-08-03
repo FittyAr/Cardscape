@@ -9,64 +9,65 @@
 
 <PageTitle>Activity — Cardscape</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>Activity</h1>
-        <div class="page-header-actions">
-            <RadzenButton Text="Back to board" Icon="arrow_back" ButtonStyle="ButtonStyle.Light"
-                          Click="@(() => Nav.NavigateTo($"boards/{BoardId}"))" />
-        </div>
-    </div>
+<PageHeader Title="Activity">
+    <Actions>
+        <RadzenButton Text="Back to board" Icon="arrow_back" ButtonStyle="ButtonStyle.Light"
+                      Click="@(() => Nav.NavigateTo($"boards/{BoardId}"))" />
+    </Actions>
+</PageHeader>
 
-    @if (loading && items is null)
-    {
-        <p>Loading activity…</p>
-    }
-    else if (items is null || items.Count == 0)
-    {
-        <p>No activity recorded on this board yet.</p>
-    }
-    else
-    {
-        <div class="activity-list">
-            @foreach (ActivityDto a in items)
-            {
-                <RadzenCard class="activity-card">
-                    <div class="activity-row">
-                        <RadzenBadge Text="@KindLabel(a.KindName)" BadgeStyle="@KindBadgeStyle(a.KindName)" />
-                        <strong>@a.KindName</strong>
-                        <small> · @a.OccurredAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</small>
-                    </div>
-                    <div class="activity-meta">
-                        @if (a.CardId is Guid cardId)
-                        {
-                            <small>card: </small>
-                            <a href="@($"cards/{cardId}")">@cardId.ToString()[..8]</a>
-                        }
-                        <small> · actor: @a.ActorId.ToString()[..8]</small>
-                    </div>
-                    @if (!string.IsNullOrEmpty(FormatPayload(a)))
-                    {
-                        <p class="activity-payload">@FormatPayload(a)</p>
-                    }
-                </RadzenCard>
-            }
-        </div>
-
-        @if (!string.IsNullOrEmpty(nextCursor))
+@if (loading && items is null)
+{
+    <RadzenText Text="Loading activity…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else if (items is null || items.Count == 0)
+{
+    <RadzenText Text="No activity recorded on this board yet." TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else
+{
+    <RadzenStack Gap="0.75rem">
+        @foreach (ActivityDto a in items)
         {
-            <div class="activity-loadmore">
-                <RadzenButton Text="Load more" ButtonStyle="ButtonStyle.Light" Disabled="@loading"
-                              Click="@LoadMoreAsync" IsBusy="@loading" />
-            </div>
+            <RadzenCard>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    <RadzenBadge Text="@KindLabel(a.KindName)" BadgeStyle="@KindBadgeStyle(a.KindName)" />
+                    <RadzenText Text="@a.KindName" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
+                    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                        · @a.OccurredAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")
+                    </RadzenText>
+                </RadzenStack>
+                <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-mt-1">
+                    @if (a.CardId is Guid cardId)
+                    {
+                        <span>card: </span>
+                        <RadzenLink Path="@($"cards/{cardId}")" Text="@cardId.ToString()[..8]" />
+                    }
+                    <span> · actor: @a.ActorId.ToString()[..8]</span>
+                </RadzenText>
+                @if (!string.IsNullOrEmpty(FormatPayload(a)))
+                {
+                    <RadzenText Text="@FormatPayload(a)" TextStyle="TextStyle.Body2" class="rz-mt-2" />
+                }
+            </RadzenCard>
         }
-    }
+    </RadzenStack>
 
-    @if (error is not null)
+    @if (!string.IsNullOrEmpty(nextCursor))
     {
-        <div class="auth-error" role="alert">@error</div>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" class="rz-mt-3">
+            <RadzenButton Text="Load more" ButtonStyle="ButtonStyle.Light" Disabled="@loading"
+                          Click="@LoadMoreAsync" IsBusy="@loading" />
+        </RadzenStack>
     }
-</div>
+}
+
+@if (error is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" class="rz-mt-3">
+        @error
+    </RadzenAlert>
+}
 
 @code {
     [Parameter] public Guid BoardId { get; set; }

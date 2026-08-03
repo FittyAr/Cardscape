@@ -8,62 +8,74 @@
 
 <PageTitle>@L["SamlTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["SamlTitle"]</h1>
-        <p class="muted">@L["SamlBlurb"]</p>
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["SamlTitle"]" Subtitle="@L["SamlBlurb"]" />
 
     @if (connection is null)
     {
-        <p>@L["ActionLoading"]</p>
+        <RadzenText Text="@L["ActionLoading"]" />
     }
     else if (connection.Id == Guid.Empty)
     {
         <RadzenCard>
-            <h3>@L["SamlConfigure"]</h3>
-            <RadzenTemplateForm TItem="SamlModel" Data="@model" Submit="@Configure">
-                <RadzenLabel Text="@L["SamlSlug"]" Component="s-slug" />
-                <RadzenTextBox @bind-Value="model.Slug" Name="s-slug" Style="width:100%" />
-                <RadzenLabel Text="@L["SamlDisplayName"]" Component="s-name" Style="margin-top:1rem; display:block" />
-                <RadzenTextBox @bind-Value="model.DisplayName" Name="s-name" Style="width:100%" />
-                <RadzenLabel Text="@L["SamlIdpEntityId"]" Component="s-idp" Style="margin-top:1rem; display:block" />
-                <RadzenTextBox @bind-Value="model.IdpEntityId" Name="s-idp" Style="width:100%" />
-                <RadzenLabel Text="@L["SamlIdpMetadataUrl"]" Component="s-meta" Style="margin-top:1rem; display:block" />
-                <RadzenTextBox @bind-Value="model.IdpMetadataUrl" Name="s-meta" Style="width:100%" />
-                <RadzenLabel Text="@L["SamlSpEntityId"]" Component="s-sp" Style="margin-top:1rem; display:block" />
-                <RadzenTextBox @bind-Value="model.SpEntityId" Name="s-sp" Style="width:100%" />
-                <div class="create-actions">
-                    <RadzenButton Text="@L["SamlConfigure"]" ButtonType="ButtonType.Submit"
-                                  ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
-                </div>
-            </RadzenTemplateForm>
+            <RadzenStack Gap="0.5rem">
+                <RadzenText Text="@L["SamlConfigure"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                <RadzenTemplateForm TItem="SamlModel" Data="@model" Submit="@Configure">
+                    <LabeledField Text="@L["SamlSlug"]" Component="s-slug">
+                        <RadzenTextBox @bind-Value="model.Slug" Name="s-slug" Style="width:100%" />
+                    </LabeledField>
+                    <LabeledField Text="@L["SamlDisplayName"]" Component="s-name">
+                        <RadzenTextBox @bind-Value="model.DisplayName" Name="s-name" Style="width:100%" />
+                    </LabeledField>
+                    <LabeledField Text="@L["SamlIdpEntityId"]" Component="s-idp">
+                        <RadzenTextBox @bind-Value="model.IdpEntityId" Name="s-idp" Style="width:100%" />
+                    </LabeledField>
+                    <LabeledField Text="@L["SamlIdpMetadataUrl"]" Component="s-meta">
+                        <RadzenTextBox @bind-Value="model.IdpMetadataUrl" Name="s-meta" Style="width:100%" />
+                    </LabeledField>
+                    <LabeledField Text="@L["SamlSpEntityId"]" Component="s-sp">
+                        <RadzenTextBox @bind-Value="model.SpEntityId" Name="s-sp" Style="width:100%" />
+                    </LabeledField>
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
+                        <RadzenButton Text="@L["SamlConfigure"]" ButtonType="ButtonType.Submit"
+                                      ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
+                    </RadzenStack>
+                </RadzenTemplateForm>
+            </RadzenStack>
         </RadzenCard>
     }
     else
     {
         <RadzenCard>
-            <h3>@L["SamlConnectedAs"] @connection.DisplayName</h3>
-            <p class="muted">@L["SamlSlug"]: <code>@connection.Slug</code></p>
-            <p class="muted">@L["SamlIdpEntityId"]: <code>@connection.IdpEntityId</code></p>
-            @if (connection.IsActive)
-            {
-                <RadzenBadge Text="@L["SamlActive"]" BadgeStyle="BadgeStyle.Success" />
-            }
-            else
-            {
-                <RadzenBadge Text="@L["SamlInactive"]" BadgeStyle="BadgeStyle.Warning" />
-            }
-            <RadzenButton Text="@L["SamlDisable"]" ButtonStyle="ButtonStyle.Danger"
-                          Click="@Disable" />
+            <RadzenStack Gap="0.5rem">
+                <RadzenText Text="@($"{L["SamlConnectedAs"]} {connection.DisplayName}")" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+                    @L["SamlSlug"]: <code>@connection.Slug</code>
+                </RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+                    @L["SamlIdpEntityId"]: <code>@connection.IdpEntityId</code>
+                </RadzenText>
+                @if (connection.IsActive)
+                {
+                    <RadzenBadge Text="@L["SamlActive"]" BadgeStyle="BadgeStyle.Success" />
+                }
+                else
+                {
+                    <RadzenBadge Text="@L["SamlInactive"]" BadgeStyle="BadgeStyle.Warning" />
+                }
+                <RadzenButton Text="@L["SamlDisable"]" ButtonStyle="ButtonStyle.Danger"
+                              Click="@Disable" />
+            </RadzenStack>
         </RadzenCard>
     }
 
     @if (error is not null)
     {
-        <div class="auth-error" role="alert">@error</div>
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
+            @error
+        </RadzenAlert>
     }
-</div>
+</RadzenStack>
 
 @code {
     [Parameter] public Guid WorkspaceId { get; set; }

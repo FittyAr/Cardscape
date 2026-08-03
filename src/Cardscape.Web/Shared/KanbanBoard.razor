@@ -1,0 +1,51 @@
+@* KanbanBoard — Trello-style horizontal scroll kanban with
+   columns of cards. Replaces the `.lists-row` / `.list-column` /
+   `.card-mini` CSS that lived in `app.css:1015-1072`. The look
+   stays the same; the markup moves here so consumers (BoardDetail)
+   can pass a `TItem` + render fragments and stop reimplementing
+   the column/card layout.
+
+   The visual styling is in `KanbanBoard.razor.css` (Blazor scoped
+   CSS) so it can be tweaked per-deployment without polluting
+   the global `app.css`. *@
+
+@typeparam TItem
+
+@if (Columns is null)
+{
+    <RadzenText Text="Loading…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else
+{
+    <div class="cs-kanban">
+        @foreach (KanbanColumn<TItem> column in Columns)
+        {
+            <div class="cs-kanban-column">
+                <RadzenStack Orientation="Orientation.Horizontal"
+                             AlignItems="AlignItems.Center"
+                             JustifyContent="JustifyContent.SpaceBetween">
+                    <RadzenText Text="@column.Title" TextStyle="TextStyle.Subtitle1" TagName="TagName.Span" />
+                    <RadzenText Text="@column.Cards.Count.ToString()"
+                                TextStyle="TextStyle.Caption"
+                                class="rz-color-text-secondary" />
+                </RadzenStack>
+                <div class="cs-kanban-column-cards">
+                    @foreach (TItem card in column.Cards)
+                    {
+                        @if (CardTemplate is not null)
+                        {
+                            @CardTemplate(card)
+                        }
+                    }
+                    @ChildContent?.Invoke(column)
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<KanbanColumn<TItem>>? Columns { get; set; }
+    [Parameter] public RenderFragment<TItem>? CardTemplate { get; set; }
+    [Parameter] public RenderFragment<KanbanColumn<TItem>>? ChildContent { get; set; }
+}

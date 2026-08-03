@@ -9,55 +9,67 @@
 
 <PageTitle>@L["SlackTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["SlackTitle"]</h1>
-        <p class="muted">@L["SlackBlurb"]</p>
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["SlackTitle"]" Subtitle="@L["SlackBlurb"]" />
 
     @if (workspace is null)
     {
-        <p>@L["ActionLoading"]</p>
+        <RadzenText Text="@L["ActionLoading"]" />
     }
     else if (workspace.Id == Guid.Empty)
     {
         <RadzenCard>
-            <h3>@L["SlackNotConnected"]</h3>
-            <p class="muted">@L["SlackConnectBlurb"]</p>
-            <RadzenTemplateForm TItem="SlackConnectModel" Data="@connectModel" Submit="@Connect">
-                <RadzenLabel Text="@L["SlackTeamId"]" Component="slack-team-id" />
-                <RadzenTextBox @bind-Value="connectModel.TeamId" Name="slack-team-id" Style="width:100%" />
-                <RadzenLabel Text="@L["SlackTeamName"]" Component="slack-team-name" Style="margin-top:0.75rem; display:block" />
-                <RadzenTextBox @bind-Value="connectModel.TeamName" Name="slack-team-name" Style="width:100%" />
-                <RadzenLabel Text="@L["SlackBotToken"]" Component="slack-bot-token" Style="margin-top:0.75rem; display:block" />
-                <RadzenPassword @bind-Value="connectModel.BotToken" Name="slack-bot-token" Style="width:100%" />
-                <div class="create-actions">
-                    <RadzenButton Text="@L["SlackConnect"]" ButtonType="ButtonType.Submit"
-                                  ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
-                </div>
-            </RadzenTemplateForm>
+            <RadzenStack Gap="0.5rem">
+                <RadzenText Text="@L["SlackNotConnected"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["SlackConnectBlurb"]</RadzenText>
+                <RadzenTemplateForm TItem="SlackConnectModel" Data="@connectModel" Submit="@Connect">
+                    <LabeledField Text="@L["SlackTeamId"]" Component="slack-team-id">
+                        <RadzenTextBox @bind-Value="connectModel.TeamId" Name="slack-team-id" Style="width:100%" />
+                    </LabeledField>
+                    <LabeledField Text="@L["SlackTeamName"]" Component="slack-team-name">
+                        <RadzenTextBox @bind-Value="connectModel.TeamName" Name="slack-team-name" Style="width:100%" />
+                    </LabeledField>
+                    <LabeledField Text="@L["SlackBotToken"]" Component="slack-bot-token">
+                        <RadzenPassword @bind-Value="connectModel.BotToken" Name="slack-bot-token" Style="width:100%" />
+                    </LabeledField>
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
+                        <RadzenButton Text="@L["SlackConnect"]" ButtonType="ButtonType.Submit"
+                                      ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
+                    </RadzenStack>
+                </RadzenTemplateForm>
+            </RadzenStack>
         </RadzenCard>
     }
     else
     {
         <RadzenCard>
-            <h3>@L["SlackConnectedAs"] @workspace.TeamName</h3>
-            <p class="muted">@L["SlackTeamId"]: <code>@workspace.TeamId</code></p>
-            <p class="muted">@L["SlackBotTokenPrefix"]: <code>@workspace.BotTokenPrefix</code></p>
-            @if (workspace.LastUsedAt is not null)
-            {
-                <p class="muted">@L["SlackLastUsed"]: @workspace.LastUsedAt.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</p>
-            }
-            <RadzenButton Text="@L["SlackDisconnect"]" ButtonStyle="ButtonStyle.Danger"
-                          Click="@Disconnect" Disabled="@disconnecting" />
+            <RadzenStack Gap="0.5rem">
+                <RadzenText Text="@($"{L["SlackConnectedAs"]} {workspace.TeamName}")" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+                    @L["SlackTeamId"]: <code>@workspace.TeamId</code>
+                </RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+                    @L["SlackBotTokenPrefix"]: <code>@workspace.BotTokenPrefix</code>
+                </RadzenText>
+                @if (workspace.LastUsedAt is not null)
+                {
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+                        @L["SlackLastUsed"]: @workspace.LastUsedAt.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm")
+                    </RadzenText>
+                }
+                <RadzenButton Text="@L["SlackDisconnect"]" ButtonStyle="ButtonStyle.Danger"
+                              Click="@Disconnect" Disabled="@disconnecting" />
+            </RadzenStack>
         </RadzenCard>
     }
 
     @if (error is not null)
     {
-        <div class="auth-error" role="alert">@error</div>
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
+            @error
+        </RadzenAlert>
     }
-</div>
+</RadzenStack>
 
 @code {
     [Parameter] public Guid WorkspaceId { get; set; }

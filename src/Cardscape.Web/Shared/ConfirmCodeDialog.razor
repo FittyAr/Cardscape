@@ -1,0 +1,41 @@
+@* ConfirmCodeDialog — modal that prompts the user for a 2FA code.
+   Replaces the browser-native `window.prompt(...)` (which is not
+   accessible, not styleable, and not Blazor-aware). The dialog
+   returns the entered code on confirm, or `null` on cancel. *@
+
+@using Microsoft.AspNetCore.Components
+@using Radzen
+@using Radzen.Blazor
+@inject DialogService Dialog
+
+<RadzenStack Gap="1rem">
+    <RadzenText Text="@Message" TextStyle="TextStyle.Body1" />
+    <RadzenFormField Text="@Label" Component="confirm-code">
+        <RadzenTextBox @bind-Value="code"
+                       Name="confirm-code"
+                       Style="width: 100%; letter-spacing: 0.35em; font-variant-numeric: tabular-nums;"
+                       autocomplete="one-time-code"
+                       inputmode="numeric"
+                       maxlength="6"
+                       Placeholder="••••••" />
+    </RadzenFormField>
+
+    <RadzenStack Orientation="Orientation.Horizontal"
+                 JustifyContent="JustifyContent.End"
+                 Gap="0.5rem">
+        <RadzenButton Text="Cancel"
+                      ButtonStyle="ButtonStyle.Light"
+                      Click="@(() => Dialog.Close(null))" />
+        <RadzenButton Text="Confirm"
+                      ButtonStyle="ButtonStyle.Primary"
+                      Disabled="@(string.IsNullOrWhiteSpace(code))"
+                      Click="@(() => Dialog.Close(code))" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter] public string Label { get; set; } = "Code";
+    [Parameter] public string Message { get; set; } = string.Empty;
+
+    private string code = string.Empty;
+}

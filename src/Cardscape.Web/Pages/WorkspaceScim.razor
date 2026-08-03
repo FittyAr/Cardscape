@@ -8,63 +8,73 @@
 
 <PageTitle>@L["ScimTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["ScimTitle"]</h1>
-        <p class="muted">@L["ScimBlurb"]</p>
-        <code class="muted">@EndpointUrl</code>
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["ScimTitle"]"
+                Subtitle="@L["ScimBlurb"]"
+                Hint="@EndpointUrl" />
 
     <RadzenCard>
-        <h3>@L["ScimIssueToken"]</h3>
-        <RadzenTemplateForm TItem="IssueModel" Data="@issueModel" Submit="@IssueToken">
-            <RadzenLabel Text="@L["ScimTokenName"]" Component="scim-name" />
-            <RadzenTextBox @bind-Value="issueModel.Name" Name="scim-name" Style="width:100%" />
-            <div class="create-actions">
-                <RadzenButton Text="@L["ScimIssueToken"]" ButtonType="ButtonType.Submit"
-                              ButtonStyle="ButtonStyle.Primary" IsBusy="@issuing" />
-            </div>
-        </RadzenTemplateForm>
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["ScimIssueToken"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <RadzenTemplateForm TItem="IssueModel" Data="@issueModel" Submit="@IssueToken">
+                <LabeledField Text="@L["ScimTokenName"]" Component="scim-name">
+                    <RadzenTextBox @bind-Value="issueModel.Name" Name="scim-name" Style="width:100%" />
+                </LabeledField>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
+                    <RadzenButton Text="@L["ScimIssueToken"]" ButtonType="ButtonType.Submit"
+                                  ButtonStyle="ButtonStyle.Primary" IsBusy="@issuing" />
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenStack>
     </RadzenCard>
 
     @if (newTokenPlaintext is not null)
     {
         <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat">
-            <strong>@L["ScimTokenShownOnce"]</strong>
+            <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Span">@L["ScimTokenShownOnce"]</RadzenText>
             <code>@newTokenPlaintext</code>
         </RadzenAlert>
     }
 
-    <h3>@L["ScimExistingTokens"]</h3>
+    <RadzenText Text="@L["ScimExistingTokens"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+
     @if (tokens is null)
     {
-        <p>@L["ActionLoading"]</p>
+        <RadzenText Text="@L["ActionLoading"]" />
     }
     else if (tokens.Count == 0)
     {
-        <p>@L["ScimNoTokens"]</p>
+        <RadzenText Text="@L["ScimNoTokens"]" />
     }
     else
     {
-        @foreach (var t in tokens)
-        {
-            <RadzenCard class="scim-token-card">
-                <h4>@t.Name</h4>
-                <p class="muted">@L["ScimPrefix"]: <code>@t.TokenPrefix</code></p>
-                <p class="muted">@L["ScimLastUsed"]: @(t.LastUsedAt?.LocalDateTime.ToString("yyyy-MM-dd HH:mm") ?? L["ScimNever"])</p>
-                @if (t.IsRevoked)
-                {
-                    <RadzenBadge Text="@L["ScimRevoked"]" BadgeStyle="BadgeStyle.Danger" />
-                }
-                @if (!t.IsRevoked)
-                {
-                    <RadzenButton Text="@L["ScimRevoke"]" ButtonStyle="ButtonStyle.Danger"
-                                  Click="@(() => Revoke(t.Id))" />
-                }
-            </RadzenCard>
-        }
+        <RadzenStack Gap="0.5rem">
+            @foreach (var t in tokens)
+            {
+                <RadzenCard Variant="Variant.Outlined">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenText Text="@t.Name" TextStyle="TextStyle.H5" TagName="TagName.H4" />
+                        <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+                            @L["ScimPrefix"]: <code>@t.TokenPrefix</code>
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+                            @L["ScimLastUsed"]: @(t.LastUsedAt?.LocalDateTime.ToString("yyyy-MM-dd HH:mm") ?? L["ScimNever"])
+                        </RadzenText>
+                        @if (t.IsRevoked)
+                        {
+                            <RadzenBadge Text="@L["ScimRevoked"]" BadgeStyle="BadgeStyle.Danger" />
+                        }
+                        @if (!t.IsRevoked)
+                        {
+                            <RadzenButton Text="@L["ScimRevoke"]" ButtonStyle="ButtonStyle.Danger"
+                                          Click="@(() => Revoke(t.Id))" />
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            }
+        </RadzenStack>
     }
-</div>
+</RadzenStack>
 
 @code {
     [Parameter] public Guid WorkspaceId { get; set; }

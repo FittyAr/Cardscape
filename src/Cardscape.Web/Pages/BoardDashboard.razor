@@ -9,62 +9,73 @@
 
 <PageTitle>@L["DashboardTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["DashboardTitle"]</h1>
+<PageHeader Title="@L["DashboardTitle"]">
+    <Actions>
         <RadzenButton Text="@L["DashboardAddCard"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
                       Click="@(() => showCreate = !showCreate)" />
-    </div>
+    </Actions>
+</PageHeader>
 
-    @if (showCreate)
-    {
-        <RadzenCard class="create-form">
-            <RadzenLabel Text="@L["DashboardKind"]" Component="d-kind" />
-            <RadzenDropDown @bind-Value="createModel.KindIndex" Data="@availableKinds"
-                            TextProperty="Label" ValueProperty="Index" Name="d-kind" Style="width:100%" />
-            <RadzenLabel Text="@L["DashboardTitle_Label"]" Component="d-title" Style="margin-top:1rem; display:block" />
-            <RadzenTextBox @bind-Value="createModel.Title" Name="d-title" Style="width:100%" />
-            <RadzenLabel Text="@L["DashboardConfig"]" Component="d-cfg" Style="margin-top:1rem; display:block" />
-            <RadzenTextArea @bind-Value="createModel.ConfigurationJson" Name="d-cfg" Style="width:100%; height:6rem" />
-            <div class="create-actions">
+@if (showCreate)
+{
+    <RadzenCard>
+        <RadzenStack Gap="0.5rem">
+            <LabeledField Text="@L["DashboardKind"]" Component="d-kind">
+                <RadzenDropDown @bind-Value="createModel.KindIndex" Data="@availableKinds"
+                                TextProperty="Label" ValueProperty="Index" Name="d-kind" Style="width:100%" />
+            </LabeledField>
+            <LabeledField Text="@L["DashboardTitle_Label"]" Component="d-title">
+                <RadzenTextBox @bind-Value="createModel.Title" Name="d-title" Style="width:100%" />
+            </LabeledField>
+            <LabeledField Text="@L["DashboardConfig"]" Component="d-cfg">
+                <RadzenTextArea @bind-Value="createModel.ConfigurationJson" Name="d-cfg" Style="width:100%; height:6rem" />
+            </LabeledField>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
+                         Gap="0.5rem" Class="rz-mt-3">
                 <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light"
                               Click="@(() => { showCreate = false; error = null; })" />
                 <RadzenButton Text="@L["ActionCreate"]" ButtonType="ButtonType.Submit"
                               ButtonStyle="ButtonStyle.Primary" IsBusy="@busy"
                               Click="@CreateDashcard" />
-            </div>
-        </RadzenCard>
-    }
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+}
 
-    @if (dashcards is null)
-    {
-        <p>@L["ActionLoading"]</p>
-    }
-    else if (dashcards.Count == 0)
-    {
-        <p>@L["DashboardEmpty"]</p>
-    }
-    else
-    {
-        <div class="dashboard-grid">
-            @foreach (DashcardDto d in dashcards)
-            {
-                <RadzenCard class="dashcard">
-                    <h4>@d.Title</h4>
-                    <small class="muted">@KindLabel(d.Kind)</small>
-                    <p class="muted">@d.ConfigurationJson</p>
-                    <RadzenButton Text="@L["ActionDelete"]" ButtonStyle="ButtonStyle.Danger"
-                                  Size="ButtonSize.Small" Click="@(() => Delete(d.Id))" />
+@if (dashcards is null)
+{
+    <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else if (dashcards.Count == 0)
+{
+    <RadzenText Text="@L["DashboardEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else
+{
+    <RadzenRow Gap="1rem">
+        @foreach (DashcardDto d in dashcards)
+        {
+            <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
+                <RadzenCard Variant="Variant.Outlined">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenText Text="@d.Title" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                        <RadzenText Text="@KindLabel(d.Kind)" TextStyle="TextStyle.Caption"
+                                    class="rz-color-text-secondary" />
+                        <RadzenText Text="@d.ConfigurationJson" TextStyle="TextStyle.Body2"
+                                    class="rz-color-text-secondary" />
+                        <RadzenButton Text="@L["ActionDelete"]" ButtonStyle="ButtonStyle.Danger"
+                                      Size="ButtonSize.Small" Click="@(() => Delete(d.Id))" />
+                    </RadzenStack>
                 </RadzenCard>
-            }
-        </div>
-    }
+            </RadzenColumn>
+        }
+    </RadzenRow>
+}
 
-    @if (error is not null)
-    {
-        <div class="auth-error" role="alert">@error</div>
-    }
-</div>
+@if (error is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@error</RadzenAlert>
+}
 
 @code {
     [Parameter] public Guid BoardId { get; set; }

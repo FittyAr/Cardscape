@@ -9,35 +9,37 @@
 
 <PageTitle>@L["ImportTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <h1>@L["ImportTitle"]</h1>
-    <p>@L["ImportBlurb"]</p>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["ImportTitle"]" Subtitle="@L["ImportBlurb"]" />
 
     <RadzenCard>
-        <RadzenLabel Text="@L["ImportTrelloFile"]" Component="file" />
-        <InputFile OnChange="@OnFileSelected" accept="application/json,.json" />
+        <LabeledField Text="@L["ImportTrelloFile"]" Component="file">
+            <InputFile OnChange="@OnFileSelected" accept="application/json,.json" />
+        </LabeledField>
 
         @if (previewing)
         {
-            <p class="import-status">@L["ImportPreviewing"]</p>
+            <RadzenText Text="@L["ImportPreviewing"]" TextStyle="TextStyle.Body2" Class="rz-mt-2" />
         }
         @if (applying)
         {
-            <p class="import-status">@L["ImportApplying"]</p>
+            <RadzenText Text="@L["ImportApplying"]" TextStyle="TextStyle.Body2" Class="rz-mt-2" />
         }
 
         @if (error is not null)
         {
-            <div class="auth-error" role="alert">@error</div>
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" Class="rz-mt-2">
+                @error
+            </RadzenAlert>
         }
 
         @* Dry-run preview panel — rendered as soon as the
             user picks a valid file. No DB writes happened. *@
         @if (preview is not null && preview.Preview is { WasApplied: false })
         {
-            <RadzenPanel Text="@L["ImportPreviewTitle"]" class="import-preview-panel">
+            <RadzenPanel Text="@L["ImportPreviewTitle"]" Class="rz-mt-3">
                 <RadzenCard>
-                    <p>@L["ImportPreviewBlurb"]</p>
+                    <RadzenText Text="@L["ImportPreviewBlurb"]" />
                     <ul>
                         <li>@L["ImportPreviewBoards"]: @preview.Preview.BoardCount</li>
                         <li>@L["ImportPreviewLists"]: @preview.Preview.ListCount</li>
@@ -48,7 +50,7 @@
 
                     @if (preview.Preview.SampleBoardNames.Count > 0)
                     {
-                        <p><strong>@L["ImportPreviewSampleBoards"]</strong></p>
+                        <RadzenText Text="@L["ImportPreviewSampleBoards"]" TextStyle="TextStyle.Subtitle2" TagName="TagName.Span" />
                         <ul>
                             @foreach (var name in preview.Preview.SampleBoardNames)
                             {
@@ -58,7 +60,7 @@
                     }
                     @if (preview.Preview.SampleListNames.Count > 0)
                     {
-                        <p><strong>@L["ImportPreviewSampleLists"]</strong></p>
+                        <RadzenText Text="@L["ImportPreviewSampleLists"]" TextStyle="TextStyle.Subtitle2" TagName="TagName.Span" />
                         <ul>
                             @foreach (var name in preview.Preview.SampleListNames)
                             {
@@ -68,7 +70,7 @@
                     }
                     @if (preview.Preview.SampleCardNames.Count > 0)
                     {
-                        <p><strong>@L["ImportPreviewSampleCards"]</strong></p>
+                        <RadzenText Text="@L["ImportPreviewSampleCards"]" TextStyle="TextStyle.Subtitle2" TagName="TagName.Span" />
                         <ul>
                             @foreach (var name in preview.Preview.SampleCardNames)
                             {
@@ -77,7 +79,7 @@
                         </ul>
                     }
 
-                    <div class="form-actions">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
                         <RadzenButton Text="@L["ImportApply"]"
                                       ButtonStyle="ButtonStyle.Primary"
                                       IsBusy="@applying"
@@ -86,7 +88,7 @@
                         <RadzenButton Text="@L["ImportCancel"]"
                                       ButtonStyle="ButtonStyle.Light"
                                       Click="@CancelPreview" />
-                    </div>
+                    </RadzenStack>
                 </RadzenCard>
             </RadzenPanel>
         }
@@ -94,9 +96,9 @@
         @* Apply result — rendered after a real import. *@
         @if (applied is not null)
         {
-            <RadzenPanel Text="@L["ImportResultTitle"]" class="import-result-panel">
+            <RadzenPanel Text="@L["ImportResultTitle"]" Class="rz-mt-3">
                 <RadzenCard>
-                    <p>@L["ImportResultSummary"]</p>
+                    <RadzenText Text="@L["ImportResultSummary"]" />
                     <ul>
                         <li>Boards: @applied.ImportedBoardIds.Count</li>
                         <li>Lists: @applied.ImportedListIds.Count</li>
@@ -107,7 +109,7 @@
             </RadzenPanel>
         }
     </RadzenCard>
-</div>
+</RadzenStack>
 
 @code {
     [Parameter] public Guid Id { get; set; }

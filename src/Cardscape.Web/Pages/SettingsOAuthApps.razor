@@ -7,127 +7,122 @@
 
 <PageTitle>@L["OAuthAppsTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["OAuthAppsTitle"]</h1>
-        <p class="muted">@L["OAuthAppsBlurb"]</p>
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["OAuthAppsTitle"]" Subtitle="@L["OAuthAppsBlurb"]" />
 
     <RadzenCard>
-        <h3>@L["OAuthAppsProtocol"]</h3>
-        <p class="muted">
-            <code>POST /oauth/authorize</code> · <code>POST /oauth/token</code> ·
-            <code>POST /oauth/revoke</code> · <code>GET /oauth/userinfo</code>
-        </p>
-        <p class="muted">@L["OAuthAppsScopes"]</p>
-        <ul>
-            <li><code>cards.read</code> · <code>cards.write</code></li>
-            <li><code>boards.read</code> · <code>boards.write</code></li>
-            <li><code>comments.write</code> · <code>webhooks.read</code> · <code>webhooks.write</code></li>
-            <li><code>admin</code></li>
-        </ul>
-        <p class="muted">
-            @L["OAuthAppsDocsHint"]
-            <a href="docs/api/01-oauth-flow.md" target="_blank"><code>docs/api/01-oauth-flow.md</code></a>
-        </p>
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["OAuthAppsProtocol"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+                <code>POST /oauth/authorize</code> · <code>POST /oauth/token</code> ·
+                <code>POST /oauth/revoke</code> · <code>GET /oauth/userinfo</code>
+            </RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["OAuthAppsScopes"]</RadzenText>
+            <ul>
+                <li><code>cards.read</code> · <code>cards.write</code></li>
+                <li><code>boards.read</code> · <code>boards.write</code></li>
+                <li><code>comments.write</code> · <code>webhooks.read</code> · <code>webhooks.write</code></li>
+                <li><code>admin</code></li>
+            </ul>
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+                @L["OAuthAppsDocsHint"]
+                <RadzenLink Path="docs/api/01-oauth-flow.md" Target="_blank" Text="docs/api/01-oauth-flow.md" />
+            </RadzenText>
+        </RadzenStack>
     </RadzenCard>
 
     <RadzenCard>
-        <h3>@L["OAuthAppsRegister"]</h3>
-        <p class="muted">@L["OAuthAppsRegisterBlurb"]</p>
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["OAuthAppsRegister"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["OAuthAppsRegisterBlurb"]</RadzenText>
 
-        <RadzenTemplateForm TItem="RegisterFormModel" Data="@form" Submit="@OnSubmit">
-            <div class="form-row">
-                <RadzenLabel Text="@L["OAuthAppsNameLabel"]" Component="name" />
-                <RadzenTextBox Name="name" @bind-Value="form.Name" Style="width:100%" />
-            </div>
-            <div class="form-row">
-                <RadzenLabel Text="@L["OAuthAppsRedirectLabel"]" Component="redirect" />
-                <RadzenTextBox Name="redirect" @bind-Value="form.RedirectUri"
-                               Placeholder="https://example.com/callback" Style="width:100%" />
-                <small class="muted">@L["OAuthAppsRedirectHint"]</small>
-            </div>
-            <div class="form-row">
-                <RadzenLabel Text="@L["OAuthAppsScopesLabel"]" Component="scopes" />
-                <RadzenTextBox Name="scopes" @bind-Value="form.Scopes"
-                               Placeholder="cards.read boards.read" Style="width:100%" />
-                <small class="muted">@L["OAuthAppsScopesHint"]</small>
-            </div>
-            <RadzenButton Text="@L["OAuthAppsRegisterButton"]" ButtonType="ButtonType.Submit"
-                          ButtonStyle="ButtonStyle.Primary" Disabled="@busy" />
-        </RadzenTemplateForm>
+            <RadzenTemplateForm TItem="RegisterFormModel" Data="@form" Submit="@OnSubmit">
+                <LabeledField Text="@L["OAuthAppsNameLabel"]" Component="name">
+                    <RadzenTextBox Name="name" @bind-Value="form.Name" Style="width:100%" />
+                </LabeledField>
+                <LabeledField Text="@L["OAuthAppsRedirectLabel"]" Component="redirect" Help="@L["OAuthAppsRedirectHint"]">
+                    <RadzenTextBox Name="redirect" @bind-Value="form.RedirectUri"
+                                   Placeholder="https://example.com/callback" Style="width:100%" />
+                </LabeledField>
+                <LabeledField Text="@L["OAuthAppsScopesLabel"]" Component="scopes" Help="@L["OAuthAppsScopesHint"]">
+                    <RadzenTextBox Name="scopes" @bind-Value="form.Scopes"
+                                   Placeholder="cards.read boards.read" Style="width:100%" />
+                </LabeledField>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
+                    <RadzenButton Text="@L["OAuthAppsRegisterButton"]" ButtonType="ButtonType.Submit"
+                                  ButtonStyle="ButtonStyle.Primary" Disabled="@busy" />
+                </RadzenStack>
+            </RadzenTemplateForm>
 
-        @if (registration is not null)
-        {
-            <div class="one-time-secret">
-                <h4>@L["OAuthAppsOneTimeTitle"]</h4>
-                <p class="muted">@L["OAuthAppsOneTimeWarning"]</p>
-                <dl>
-                    <dt>@L["OAuthAppsClientId"]</dt>
-                    <dd><code>@registration.ClientId</code></dd>
-                    <dt>@L["OAuthAppsClientSecret"]</dt>
-                    <dd><code>@registration.ClientSecret</code></dd>
-                </dl>
-                <RadzenButton Text="@L["OAuthAppsDismissButton"]" Click="@(() => registration = null)"
-                              ButtonStyle="ButtonStyle.Light" />
-            </div>
-        }
+            @if (registration is not null)
+            {
+                <RadzenCard Variant="Variant.Outlined" Class="rz-mt-3">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenText Text="@L["OAuthAppsOneTimeTitle"]" TextStyle="TextStyle.H5" TagName="TagName.H4" />
+                        <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["OAuthAppsOneTimeWarning"]</RadzenText>
+                        <MetadataList Items="@OneTimeMetadataItems()" />
+                        <RadzenButton Text="@L["OAuthAppsDismissButton"]" Click="@(() => registration = null)"
+                                      ButtonStyle="ButtonStyle.Light" />
+                    </RadzenStack>
+                </RadzenCard>
+            }
+        </RadzenStack>
     </RadzenCard>
 
     <RadzenCard>
-        <h3>@L["OAuthAppsYourApps"]</h3>
-        @if (loading)
-        {
-            <p>@L["CommonLoading"]</p>
-        }
-        else if (apps.Count == 0)
-        {
-            <p class="muted">@L["OAuthAppsNoneRegistered"]</p>
-        }
-        else
-        {
-            <table class="oauth-apps-table">
-                <thead>
-                    <tr>
-                        <th>@L["OAuthAppsTableName"]</th>
-                        <th>@L["OAuthAppsTableClientId"]</th>
-                        <th>@L["OAuthAppsTableScopes"]</th>
-                        <th>@L["OAuthAppsTableStatus"]</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (OAuthAppSummaryDto app in apps)
-                    {
-                        <tr>
-                            <td>@app.Name</td>
-                            <td><code>@app.ClientId</code></td>
-                            <td>@string.Join(", ", app.AllowedScopes)</td>
-                            <td>
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["OAuthAppsYourApps"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            @if (loading)
+            {
+                <RadzenText Text="@L["CommonLoading"]" />
+            }
+            else if (apps.Count == 0)
+            {
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["OAuthAppsNoneRegistered"]</RadzenText>
+            }
+            else
+            {
+                <RadzenDataGrid TItem="OAuthAppSummaryDto" Data="@apps" AllowSorting="true" AllowPaging="true" PageSize="20">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="OAuthAppSummaryDto" Property="Name" Title="@L["OAuthAppsTableName"]" />
+                        <RadzenDataGridColumn TItem="OAuthAppSummaryDto" Property="ClientId" Title="@L["OAuthAppsTableClientId"]">
+                            <Template Context="app">
+                                <code>@app.ClientId</code>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="OAuthAppSummaryDto" Property="AllowedScopes" Title="@L["OAuthAppsTableScopes"]">
+                            <Template Context="app">
+                                @string.Join(", ", app.AllowedScopes)
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="OAuthAppSummaryDto" Property="IsRevoked" Title="@L["OAuthAppsTableStatus"]" Width="120px">
+                            <Template Context="app">
                                 @if (app.IsRevoked)
                                 {
-                                    <span class="status-pill revoked">@L["OAuthAppsStatusRevoked"]</span>
+                                    <RadzenBadge Text="@L["OAuthAppsStatusRevoked"]" BadgeStyle="BadgeStyle.Danger" />
                                 }
                                 else
                                 {
-                                    <span class="status-pill active">@L["OAuthAppsStatusActive"]</span>
+                                    <RadzenBadge Text="@L["OAuthAppsStatusActive"]" BadgeStyle="BadgeStyle.Success" />
                                 }
-                            </td>
-                            <td>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="OAuthAppSummaryDto" Title="" Sortable="false" Filterable="false" Width="120px">
+                            <Template Context="app">
                                 @if (!app.IsRevoked)
                                 {
                                     <RadzenButton Text="@L["OAuthAppsRevokeButton"]"
                                                   Click="@(() => RevokeAsync(app.Id))"
                                                   ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" />
                                 }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            }
+        </RadzenStack>
     </RadzenCard>
-</div>
+</RadzenStack>
 
 @code {
     private readonly RegisterFormModel form = new();
@@ -200,6 +195,20 @@
         {
             loading = false;
         }
+    }
+
+    private IReadOnlyList<MetadataListItem> OneTimeMetadataItems()
+    {
+        if (registration is null)
+        {
+            return [];
+        }
+
+        return new MetadataListItem[]
+        {
+            MetadataListItem.Text(L["OAuthAppsClientId"], registration.ClientId),
+            MetadataListItem.Text(L["OAuthAppsClientSecret"], registration.ClientSecret),
+        };
     }
 
     private sealed class RegisterFormModel

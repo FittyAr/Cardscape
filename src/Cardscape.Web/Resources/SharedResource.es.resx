@@ -200,8 +200,6 @@
   <data name="OAuthAppsStatusActive" xml:space="preserve"><value>Activa</value></data>
   <data name="OAuthAppsStatusRevoked" xml:space="preserve"><value>Revocada</value></data>
   <data name="OAuthAppsRevokeButton" xml:space="preserve"><value>Revocar</value></data>
-  <data name="OAuthAppsDocsHint" xml:space="preserve"><value>Para el handshake completo mirá</value></data>
-  <data name="OAuthAppsRegisterBlurb" xml:space="preserve"><value>Registrá una app de terceros que actúe en tu nombre. Vas a recibir un clientId y un client secret de un solo uso.</value></data>
   <data name="AiGenerateDescription" xml:space="preserve"><value>Generar descripción</value></data>
   <data name="AiSummarizeComments" xml:space="preserve"><value>Resumir hilo</value></data>
   <data name="AiSummaryTitle" xml:space="preserve"><value>Resumen IA</value></data>

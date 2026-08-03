@@ -19,13 +19,14 @@
 @inject IStringLocalizer<SharedResource> L
 @inject DialogService Dialog
 
-<div class="mirror-card-dialog">
-    <h3 class="mirror-card-title">@L["MirrorToTitle"]</h3>
-    <p class="mirror-card-blurb">@L["MirrorToBlurb"]</p>
+<RadzenStack Gap="1rem">
+    <RadzenText Text="@L["MirrorToTitle"]" TextStyle="TextStyle.H5" TagName="TagName.H2" />
+    <RadzenText Text="@L["MirrorToBlurb"]" TextStyle="TextStyle.Body2"
+                class="rz-color-text-secondary" />
 
     @if (loading)
     {
-        <p>@L["Loading"]</p>
+        <RadzenText Text="@L["Loading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
     }
     else if (loadError is not null)
     {
@@ -35,31 +36,33 @@
     }
     else
     {
-        <RadzenLabel Text="@L["MirrorToBoard"]" Component="mirror-board" />
-        <RadzenDropDown TValue="Guid" @bind-Value="selectedBoardId"
-                        Data="@boards" TextProperty="Name" ValueProperty="Id"
-                        Name="mirror-board"
-                        Change="@OnBoardChangedAsync"
-                        Placeholder="@L["MirrorToSelectBoard"]"
-                        Style="width:100%; margin-bottom:1rem" />
+        <LabeledField Text="@L["MirrorToBoard"]" Component="mirror-board">
+            <RadzenDropDown TValue="Guid" @bind-Value="selectedBoardId"
+                            Data="@boards" TextProperty="Name" ValueProperty="Id"
+                            Name="mirror-board"
+                            Change="@OnBoardChangedAsync"
+                            Placeholder="@L["MirrorToSelectBoard"]"
+                            Style="width:100%" />
+        </LabeledField>
 
-        <RadzenLabel Text="@L["MirrorToList"]" Component="mirror-list" />
-        <RadzenDropDown TValue="Guid" @bind-Value="selectedListId"
-                        Data="@lists" TextProperty="Name" ValueProperty="Id"
-                        Name="mirror-list"
-                        Disabled="@(selectedBoardId == Guid.Empty || loadingLists)"
-                        Placeholder="@L["MirrorToSelectList"]"
-                        Style="width:100%; margin-bottom:1rem" />
+        <LabeledField Text="@L["MirrorToList"]" Component="mirror-list">
+            <RadzenDropDown TValue="Guid" @bind-Value="selectedListId"
+                            Data="@lists" TextProperty="Name" ValueProperty="Id"
+                            Name="mirror-list"
+                            Disabled="@(selectedBoardId == Guid.Empty || loadingLists)"
+                            Placeholder="@L["MirrorToSelectList"]"
+                            Style="width:100%" />
+        </LabeledField>
     }
 
-    <div class="mirror-card-actions">
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
         <RadzenButton Text="@L["CommonCancel"]" ButtonStyle="ButtonStyle.Light" Click="@Cancel" />
         <RadzenButton Text="@L["MirrorToConfirm"]" ButtonStyle="ButtonStyle.Primary"
                       Click="@Confirm"
                       Disabled="@(selectedListId == Guid.Empty || loading)"
                       IsBusy="@loading" />
-    </div>
-</div>
+    </RadzenStack>
+</RadzenStack>
 
 @code {
     [Parameter] public Guid SourceCardId { get; set; }

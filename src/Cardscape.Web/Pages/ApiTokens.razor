@@ -7,89 +7,92 @@
 
 <PageTitle>API tokens — Cardscape</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>API tokens</h1>
-        <RadzenButton Text="New token" Icon="add" ButtonStyle="ButtonStyle.Primary"
-                      Click="@(() => showCreate = !showCreate)" Disabled="@(issuedSecret is not null)" />
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="API tokens"
+                Actions="@(NewTokenButton())" />
 
-    <p class="page-hint">
+    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
         Long-lived bearer secrets for the MCP server and any other AI client.
-        The cleartext is shown <strong>only once</strong> at creation; after that
+        The cleartext is shown <RadzenText Text="only once" TextStyle="TextStyle.Body1" TagName="TagName.Span" /> at creation; after that
         only the prefix is recoverable.
-    </p>
+    </RadzenText>
 
     @if (showCreate)
     {
-        <RadzenCard class="create-form">
+        <RadzenCard>
             <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateToken">
-                <RadzenLabel Text="Name" Component="token-name" />
-                <RadzenTextBox @bind-Value="createModel.Name" Name="token-name"
-                               Placeholder="e.g. Cursor on laptop" Style="width:100%" />
+                <LabeledField Text="Name" Component="token-name">
+                    <RadzenTextBox @bind-Value="createModel.Name" Name="token-name"
+                                   Placeholder="e.g. Cursor on laptop" Style="width:100%" />
+                </LabeledField>
 
-                <div class="scopes">
-                    <RadzenLabel Text="Scopes" />
-                    <RadzenCheckBox @bind-Value="createModel.Read" Name="scope-read" />
-                    <RadzenLabel Text="read" Component="scope-read" Style="margin-right:1rem" />
-                    <RadzenCheckBox @bind-Value="createModel.Write" Name="scope-write" />
-                    <RadzenLabel Text="write" Component="scope-write" />
-                </div>
+                <LabeledField Text="Scopes" Component="token-scopes">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
+                        <RadzenCheckBox @bind-Value="createModel.Read" Name="scope-read" />
+                        <RadzenLabel Text="read" Component="scope-read" />
+                        <RadzenCheckBox @bind-Value="createModel.Write" Name="scope-write" />
+                        <RadzenLabel Text="write" Component="scope-write" />
+                    </RadzenStack>
+                </LabeledField>
 
-                <RadzenLabel Text="Rate limit per hour" Component="token-rate" Style="margin-top:1rem" />
-                <RadzenNumeric TValue="int" @bind-Value="createModel.RateLimitPerHour" Name="token-rate"
-                               Min="0" Max="100000" Style="width:100%" />
-                <small>0 disables the limit (token is never throttled).</small>
+                <LabeledField Text="Rate limit per hour" Component="token-rate" Help="0 disables the limit (token is never throttled).">
+                    <RadzenNumeric TValue="int" @bind-Value="createModel.RateLimitPerHour" Name="token-rate"
+                                   Min="0" Max="100000" Style="width:100%" />
+                </LabeledField>
 
-                <RadzenLabel Text="Burst size" Component="token-burst" Style="margin-top:1rem" />
-                <RadzenNumeric TValue="int" @bind-Value="createModel.BurstSize" Name="token-burst"
-                               Min="1" Max="10000" Style="width:100%" />
-                <small>Maximum back-to-back requests before the per-hour refill kicks in.</small>
+                <LabeledField Text="Burst size" Component="token-burst" Help="Maximum back-to-back requests before the per-hour refill kicks in.">
+                    <RadzenNumeric TValue="int" @bind-Value="createModel.BurstSize" Name="token-burst"
+                                   Min="1" Max="10000" Style="width:100%" />
+                </LabeledField>
 
                 @if (error is not null)
                 {
-                    <div class="auth-error" role="alert">@error</div>
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" Class="rz-mt-2">
+                        @error
+                    </RadzenAlert>
                 }
-                <div class="create-actions">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
                     <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
                     <RadzenButton Text="Create" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
                                   IsBusy="@busy" />
-                </div>
+                </RadzenStack>
             </RadzenTemplateForm>
         </RadzenCard>
     }
 
     @if (issuedSecret is not null)
     {
-        <RadzenCard class="issued-secret">
-            <h3>Token created</h3>
-            <p>Copy this secret now. It will not be shown again.</p>
-            <pre class="secret-box">@issuedSecret</pre>
-            <div class="create-actions">
-                <RadzenButton Text="I've copied it" ButtonStyle="ButtonStyle.Primary"
-                              Click="@DismissIssuedSecret" />
-            </div>
+        <RadzenCard Variant="Variant.Outlined">
+            <RadzenStack Gap="0.5rem">
+                <RadzenText Text="Token created" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                <RadzenText>Copy this secret now. It will not be shown again.</RadzenText>
+                <SecretBox Secret="@issuedSecret" />
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <RadzenButton Text="I've copied it" ButtonStyle="ButtonStyle.Primary"
+                                  Click="@DismissIssuedSecret" />
+                </RadzenStack>
+            </RadzenStack>
         </RadzenCard>
     }
 
     @if (tokens is null)
     {
-        <p>Loading…</p>
+        <RadzenText Text="Loading…" />
     }
     else if (tokens.Count == 0)
     {
-        <p>You haven't minted any API tokens yet.</p>
+        <RadzenText Text="You haven't minted any API tokens yet." />
     }
     else
     {
-        <div class="token-list">
+        <RadzenStack Gap="0.5rem">
             @foreach (ApiTokenSummaryDto token in tokens)
             {
-                <RadzenCard class="token-card">
-                    <div class="token-row">
-                        <div>
-                            <h3>@token.Name</h3>
-                            <small>
+                <RadzenCard Variant="Variant.Outlined">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" AlignItems="AlignItems.Center">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="@token.Name" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
                                 <code>@token.SecretPrefix…</code>
                                 · @string.Join(", ", token.Scopes)
                                 · created @token.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")
@@ -97,28 +100,26 @@
                                 {
                                     <span> · last used @token.LastUsedAt.Value.LocalDateTime.ToString("yyyy-MM-dd")</span>
                                 }
-                            </small>
-                            <div class="rate-limit">
-                                <small>
-                                    @if (token.RateLimitPerHour == 0)
-                                    {
-                                        <span>rate limit: <strong>disabled</strong></span>
-                                    }
-                                    else
-                                    {
-                                        <span>
-                                            rate limit: <strong>@token.RateLimitPerHour/hr</strong>,
-                                            burst <strong>@token.BurstSize</strong>
-                                        </span>
-                                    }
-                                    @if (rateLimitById.TryGetValue(token.Id, out ApiTokenRateLimitStatusDto? status))
-                                    {
-                                        <span> · remaining <strong>@(Math.Floor(status.AvailableTokens))/@status.BurstSize</strong></span>
-                                    }
-                                </small>
-                            </div>
-                        </div>
-                        <div class="token-actions">
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                                @if (token.RateLimitPerHour == 0)
+                                {
+                                    <span>rate limit: <RadzenText Text="disabled" TextStyle="TextStyle.Body1" TagName="TagName.Span" /></span>
+                                }
+                                else
+                                {
+                                    <span>
+                                        rate limit: <RadzenText Text="@($"{token.RateLimitPerHour}/hr")" TextStyle="TextStyle.Body1" TagName="TagName.Span" />,
+                                        burst <RadzenText Text="@token.BurstSize.ToString()" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
+                                    </span>
+                                }
+                                @if (rateLimitById.TryGetValue(token.Id, out ApiTokenRateLimitStatusDto? status))
+                                {
+                                    <span> · remaining <RadzenText Text="@($"{Math.Floor(status.AvailableTokens)}/{status.BurstSize}")" TextStyle="TextStyle.Body1" TagName="TagName.Span" /></span>
+                                }
+                            </RadzenText>
+                        </RadzenStack>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
                             @if (token.RevokedAt is null)
                             {
                                 <RadzenBadge Text="Active" BadgeStyle="BadgeStyle.Success" />
@@ -129,13 +130,13 @@
                             {
                                 <RadzenBadge Text="Revoked" BadgeStyle="BadgeStyle.Light" />
                             }
-                        </div>
-                    </div>
+                        </RadzenStack>
+                    </RadzenStack>
                 </RadzenCard>
             }
-        </div>
+        </RadzenStack>
     }
-</div>
+</RadzenStack>
 
 @code {
     private IReadOnlyList<ApiTokenSummaryDto>? tokens;
@@ -145,6 +146,12 @@
     private string? error;
     private string? issuedSecret;
     private readonly CreateModel createModel = new();
+
+    private RenderFragment NewTokenButton() => __builder =>
+    {
+        <RadzenButton Text="New token" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                      Click="@(() => showCreate = !showCreate)" Disabled="@(issuedSecret is not null)" />
+    };
 
     protected override async Task OnInitializedAsync()
     {

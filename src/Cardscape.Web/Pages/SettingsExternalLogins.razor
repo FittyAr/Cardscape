@@ -4,31 +4,25 @@
 @using Cardscape.Web.Services.Api
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> L
+@inject NavigationManager Nav
 
 <PageTitle>@L["ExternalLoginsTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["ExternalLoginsTitle"]</h1>
-        <p class="muted">@L["ExternalLoginsBlurb"]</p>
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["ExternalLoginsTitle"]" Subtitle="@L["ExternalLoginsBlurb"]" />
 
     <RadzenCard>
-        <h3>@L["ExternalLoginsLinkAnother"]</h3>
-        <p class="muted">@L["ExternalLoginsLinkAnotherBlurb"]</p>
-        <div class="provider-buttons">
-            <a class="provider-button provider-google" href="/api/auth/external/google/start?returnUrl=/settings/external-logins">
-                <span class="provider-glyph">G</span>
-                <span>@L["AuthSignInWithGoogle"]</span>
-            </a>
-            <a class="provider-button provider-microsoft" href="/api/auth/external/microsoft/start?returnUrl=/settings/external-logins">
-                <span class="provider-glyph">M</span>
-                <span>@L["AuthSignInWithMicrosoft"]</span>
-            </a>
-            <a class="provider-button provider-apple" href="/api/auth/external/apple/start?returnUrl=/settings/external-logins">
-                <span class="provider-glyph">A</span>
-                <span>@L["AuthSignInWithApple"]</span>
-            </a>
-        </div>
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["ExternalLoginsLinkAnother"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["ExternalLoginsLinkAnotherBlurb"]</RadzenText>
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" Class="rz-mt-2">
+                <RadzenButton Text="@L["AuthSignInWithGoogle"]" ButtonStyle="ButtonStyle.Light" Icon="mail"
+                              Click="@(() => Nav.NavigateTo("/api/auth/external/google/start?returnUrl=/settings/external-logins", forceLoad: true))" />
+                <RadzenButton Text="@L["AuthSignInWithMicrosoft"]" ButtonStyle="ButtonStyle.Light" Icon="desktop_windows"
+                              Click="@(() => Nav.NavigateTo("/api/auth/external/microsoft/start?returnUrl=/settings/external-logins", forceLoad: true))" />
+                <RadzenButton Text="@L["AuthSignInWithApple"]" ButtonStyle="ButtonStyle.Light" Icon="phone_iphone"
+                              Click="@(() => Nav.NavigateTo("/api/auth/external/apple/start?returnUrl=/settings/external-logins", forceLoad: true))" />
+            </RadzenStack>
+        </RadzenStack>
     </RadzenCard>
-</div>
+</RadzenStack>

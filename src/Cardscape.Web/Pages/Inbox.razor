@@ -9,73 +9,75 @@
 
 <PageTitle>Inbox — Cardscape</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>Inbox</h1>
-        <div class="page-header-actions">
-            <RadzenSelectBar @bind-Value="filter" TValue="string" Change="@OnFilterChanged">
-                <Items>
-                    <RadzenSelectBarItem Text="All" Value="@("all")" />
-                    <RadzenSelectBarItem Text="Unread" Value="@("unread")" />
-                </Items>
-            </RadzenSelectBar>
-            <RadzenButton Text="Mark all read" Icon="done_all" ButtonStyle="ButtonStyle.Light"
-                          Disabled="@(unreadCount == 0)" Click="@MarkAllReadAsync" />
-        </div>
-    </div>
+<PageHeader Title="Inbox">
+    <Actions>
+        <RadzenSelectBar @bind-Value="filter" TValue="string" Change="@OnFilterChanged">
+            <Items>
+                <RadzenSelectBarItem Text="All" Value="@("all")" />
+                <RadzenSelectBarItem Text="Unread" Value="@("unread")" />
+            </Items>
+        </RadzenSelectBar>
+        <RadzenButton Text="Mark all read" Icon="done_all" ButtonStyle="ButtonStyle.Light"
+                      Disabled="@(unreadCount == 0)" Click="@MarkAllReadAsync" />
+    </Actions>
+</PageHeader>
 
-    @if (notifications is null)
-    {
-        <p>Loading…</p>
-    }
-    else if (notifications.Count == 0)
-    {
-        <p>
-            @if (filter == "unread")
-            {
-                <span>You have no unread notifications.</span>
-            }
-            else
-            {
-                <span>Your inbox is empty. Workspace activity will show up here.</span>
-            }
-        </p>
-    }
-    else
-    {
-        <div class="inbox-list">
-            @foreach (NotificationDto n in notifications)
-            {
-                <RadzenCard class="@(n.IsRead ? "inbox-item inbox-item--read" : "inbox-item inbox-item--unread")">
-                    <div class="inbox-row">
-                        <div class="inbox-meta">
-                            <RadzenBadge Text="@KindLabel(n.Kind)" BadgeStyle="@KindBadgeStyle(n.Kind)" />
-                            <strong>@FormatPayload(n)</strong>
-                            <small>· @n.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</small>
-                        </div>
-                        <div class="inbox-actions">
-                            @if (!n.IsRead)
-                            {
-                                <RadzenButton Text="Mark read" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                                              Click="@(() => MarkReadAsync(n))" />
-                            }
-                            @if (TryGetCardId(n, out Guid cardId))
-                            {
-                                <RadzenButton Text="Open card" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
-                                              Click="@(() => Nav.NavigateTo($"cards/{cardId}"))" />
-                            }
-                        </div>
-                    </div>
-                </RadzenCard>
-            }
-        </div>
-    }
+@if (notifications is null)
+{
+    <RadzenText Text="Loading…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else if (notifications.Count == 0)
+{
+    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+        @if (filter == "unread")
+        {
+            <span>You have no unread notifications.</span>
+        }
+        else
+        {
+            <span>Your inbox is empty. Workspace activity will show up here.</span>
+        }
+    </RadzenText>
+}
+else
+{
+    <RadzenStack Gap="0.75rem">
+        @foreach (NotificationDto n in notifications)
+        {
+            <RadzenCard Variant="Variant.Flat"
+                        Style="@(n.IsRead ? "border-left: 3px solid var(--rz-text-disabled-color);" : "border-left: 3px solid var(--rz-info);")">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                        <RadzenBadge Text="@KindLabel(n.Kind)" BadgeStyle="@KindBadgeStyle(n.Kind)" />
+                        <RadzenText Text="@FormatPayload(n)" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
+                        <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                            · @n.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")
+                        </RadzenText>
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                        @if (!n.IsRead)
+                        {
+                            <RadzenButton Text="Mark read" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                          Click="@(() => MarkReadAsync(n))" />
+                        }
+                        @if (TryGetCardId(n, out Guid cardId))
+                        {
+                            <RadzenButton Text="Open card" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                          Click="@(() => Nav.NavigateTo($"cards/{cardId}"))" />
+                        }
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        }
+    </RadzenStack>
+}
 
-    @if (error is not null)
-    {
-        <div class="auth-error" role="alert">@error</div>
-    }
-</div>
+@if (error is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" class="rz-mt-3">
+        @error
+    </RadzenAlert>
+}
 
 @code {
     private IReadOnlyList<NotificationDto>? notifications;

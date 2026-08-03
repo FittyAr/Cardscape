@@ -9,43 +9,46 @@
 
 <PageTitle>Custom fields — Cardscape</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>Custom fields</h1>
-        <RadzenButton Text="New field" Icon="add" ButtonStyle="ButtonStyle.Primary"
-                      Click="@ShowCreateForm" />
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="Custom fields"
+                Actions="@(NewFieldButton())" />
 
-    <p class="page-hint">
+    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
         Board-scoped structured fields. Each card on this board can have a value
         for every active field. Supported kinds: text, number, date, dropdown
         (with custom options), checkbox.
-    </p>
+    </RadzenText>
 
     @if (rows is null)
     {
-        <p>Loading…</p>
+        <RadzenText Text="Loading…" />
     }
     else if (rows.Count == 0 && !showCreate)
     {
-        <p class="empty-state">No custom fields yet. Click <em>New field</em> to add one.</p>
+        <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+            No custom fields yet. Click <em>New field</em> to add one.
+        </RadzenText>
     }
     else if (rows.Count > 0)
     {
-        <div class="field-list">
+        <RadzenStack Gap="0.5rem">
             @foreach (CustomFieldDefinitionDto field in rows)
             {
-                <RadzenCard class="field-card">
-                    <div class="field-row">
-                        <div class="field-meta">
-                            <strong>@field.Name</strong>
-                            <span class="field-kind-badge">@KindLabel(field.Kind)</span>
+                <RadzenCard Variant="Variant.Outlined">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" AlignItems="AlignItems.Center">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                <RadzenText Text="@field.Name" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
+                                <RadzenBadge Text="@KindLabel(field.Kind)" BadgeStyle="BadgeStyle.Info" />
+                            </RadzenStack>
                             @if (field.Kind == 3)
                             {
-                                <small>Options: @string.Join(", ", ParseOptions(field.OptionsJson))</small>
+                                <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                                    Options: @string.Join(", ", ParseOptions(field.OptionsJson))
+                                </RadzenText>
                             }
-                        </div>
-                        <div class="field-actions">
+                        </RadzenStack>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
                             @if (renamingId == field.Id)
                             {
                                 <RadzenTextBox @bind-Value="renameValue" Style="width:200px" />
@@ -61,47 +64,48 @@
                                 <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
                                               Size="ButtonSize.Small" Click="@(() => DeleteAsync(field))" />
                             }
-                        </div>
-                    </div>
+                        </RadzenStack>
+                    </RadzenStack>
                 </RadzenCard>
             }
-        </div>
+        </RadzenStack>
     }
 
     @if (showCreate)
     {
-        <RadzenCard class="create-form">
-            <h3>New custom field</h3>
-            <div class="form-row">
-                <label>Name</label>
-                <RadzenTextBox @bind-Value="createModel.Name" Placeholder="e.g. Priority" Style="width:100%" />
-            </div>
-            <div class="form-row">
-                <label>Kind</label>
-                <RadzenDropDown @bind-Value="createModel.KindValue" Data="@allKinds"
-                               TextProperty="Label" ValueProperty="Value" Style="width:100%" />
-            </div>
-            @if (createModel.KindValue == 3)
-            {
-                <div class="form-row">
-                    <label>Dropdown options (comma-separated)</label>
-                    <RadzenTextBox @bind-Value="createModel.OptionsRaw"
-                                   Placeholder="Low, Medium, High" Style="width:100%" />
-                </div>
-            }
-            <div class="form-actions">
-                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
-                <RadzenButton Text="Create" ButtonStyle="ButtonStyle.Primary"
-                              IsBusy="@creating" Click="@CreateAsync" />
-            </div>
+        <RadzenCard>
+            <RadzenStack Gap="0.5rem">
+                <RadzenText Text="New custom field" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                <LabeledField Text="Name" Component="cf-name">
+                    <RadzenTextBox @bind-Value="createModel.Name" Name="cf-name" Placeholder="e.g. Priority" Style="width:100%" />
+                </LabeledField>
+                <LabeledField Text="Kind" Component="cf-kind">
+                    <RadzenDropDown @bind-Value="createModel.KindValue" Data="@allKinds"
+                                    TextProperty="Label" ValueProperty="Value" Name="cf-kind" Style="width:100%" />
+                </LabeledField>
+                @if (createModel.KindValue == 3)
+                {
+                    <LabeledField Text="Dropdown options (comma-separated)" Component="cf-options">
+                        <RadzenTextBox @bind-Value="createModel.OptionsRaw"
+                                       Name="cf-options" Placeholder="Low, Medium, High" Style="width:100%" />
+                    </LabeledField>
+                }
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
+                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
+                    <RadzenButton Text="Create" ButtonStyle="ButtonStyle.Primary"
+                                  IsBusy="@creating" Click="@CreateAsync" />
+                </RadzenStack>
+            </RadzenStack>
         </RadzenCard>
     }
 
     @if (error is not null)
     {
-        <div class="auth-error" role="alert">@error</div>
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
+            @error
+        </RadzenAlert>
     }
-</div>
+</RadzenStack>
 
 @code {
     [Parameter] public Guid BoardId { get; set; }
@@ -121,6 +125,12 @@
         new KindOption(2, "Date"),
         new KindOption(3, "Dropdown"),
         new KindOption(4, "Checkbox"),
+    };
+
+    private RenderFragment NewFieldButton() => __builder =>
+    {
+        <RadzenButton Text="New field" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                      Click="@ShowCreateForm" />
     };
 
     protected override async Task OnParametersSetAsync() => await ReloadAsync();

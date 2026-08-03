@@ -8,50 +8,23 @@
 
 <PageTitle>Calendar — Cardscape</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>Calendar</h1>
-        <div class="page-header-actions">
-            <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth" />
-            <strong class="month-label">@monthLabel</strong>
-            <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth" />
-        </div>
-    </div>
+<PageHeader Title="@monthLabel"
+            Subtitle="@($"Cards with a due date in {monthLabel}. Click a card to open it; click an empty day to add a new card (coming soon).")">
+    <Actions>
+        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth" />
+        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth" />
+    </Actions>
+</PageHeader>
 
-    <p class="page-hint">
-        Cards with a due date in @monthLabel.
-        Click a card to open it; click an empty day to add a new card (coming soon).
-    </p>
-
-    <div class="calendar-grid">
-        @foreach (string day in DayNames)
-        {
-            <div class="calendar-day-header">@day</div>
-        }
-
-        @for (int i = 0; i < leadingBlanks; i++)
-        {
-            <div class="calendar-cell calendar-cell--blank"></div>
-        }
-
-        @for (int day = 1; day <= daysInMonth; day++)
-        {
-            DateTimeOffset cellDate = firstOfMonth.AddDays(day - 1);
-            IReadOnlyList<CalendarEntryDto> cellEntries = entriesByDay.GetValueOrDefault(day, []);
-            <div class="calendar-cell @(cellDate.Date == DateTimeOffset.UtcNow.Date ? "calendar-cell--today" : null)">
-                <div class="calendar-cell-day">@day</div>
-                @foreach (CalendarEntryDto entry in cellEntries)
-                {
-                    <button class="calendar-entry @(entry.IsCompleted ? "calendar-entry--done" : null)"
-                            @onclick="@(() => Nav.NavigateTo($"cards/{entry.CardId}"))"
-                            title="@entry.BoardName">
-                        @entry.Title
-                    </button>
-                }
-            </div>
-        }
-    </div>
-</div>
+<RadzenScheduler TItem="CalendarSchedulerItem"
+                 Data="@SchedulerItems"
+                 StartProperty="Start"
+                 EndProperty="End"
+                 TextProperty="Title"
+                 AppointmentSelect="@OnAppointmentSelect"
+                 Style="height: 700px">
+    <RadzenMonthView />
+</RadzenScheduler>
 
 @code {
     private DateTimeOffset firstOfMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
@@ -102,5 +75,40 @@
     {
         firstOfMonth = firstOfMonth.AddMonths(1);
         await ReloadAsync();
+    }
+
+    // RadzenScheduler's TItem contract requires Start/End/Text
+    // properties. The API returns CalendarEntryDto with only
+    // DueDate, so we project each entry to a thin wrapper that
+    // exposes the start (start of the due day) and the end
+    // (end of the same day) for the month view. The original
+    // DTO is kept in `Source` so the AppointmentSelect handler
+    // can navigate to the card without an extra round-trip.
+    private IReadOnlyList<CalendarSchedulerItem> SchedulerItems => entries
+        .Select(e => new CalendarSchedulerItem
+        {
+            Id = e.CardId,
+            Title = e.Title,
+            Start = e.DueDate.UtcDateTime.Date,
+            End = e.DueDate.UtcDateTime.Date.AddDays(1).AddTicks(-1),
+            Source = e
+        })
+        .ToList();
+
+    private void OnAppointmentSelect(SchedulerAppointmentSelectEventArgs<CalendarSchedulerItem> args)
+    {
+        if (args.Data is not null)
+        {
+            Nav.NavigateTo($"cards/{args.Data.Source.CardId}");
+        }
+    }
+
+    private sealed class CalendarSchedulerItem
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public DateTime Start { get; set; }
+        public DateTime End { get; set; }
+        public CalendarEntryDto Source { get; set; } = default!;
     }
 }

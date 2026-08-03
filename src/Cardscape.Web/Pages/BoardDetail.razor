@@ -13,32 +13,20 @@
 
 <PageTitle>@(board?.Name ?? "Board") — Cardscape</PageTitle>
 
-<div class="board-shell">
-    @if (board is null)
-    {
-        <p>Loading board…</p>
-    }
-    else
-    {
-        <div class="board-header">
-            <h1>@board.Name</h1>
-            <div class="board-header-right">
-                <span class="live-indicator @(hubConnected ? "live-on" : "live-off")"
-                      title="Live updates @(hubConnected ? "on" : "off — refreshes on navigation only")">
-                    <span class="dot"></span> @(hubConnected ? "Live" : "Offline")
-                </span>
-                <RadzenButton Text="@(board.IsStarred ? "★ Starred" : "☆ Star")"
-                              ButtonStyle="ButtonStyle.Secondary"
-                              Click="@ToggleStar" />
-            </div>
-        </div>
-
-        @if (!string.IsNullOrWhiteSpace(board.Description))
-        {
-            <p class="board-description">@board.Description</p>
-        }
-
-        <div class="board-actions">
+@if (board is null)
+{
+    <RadzenText Text="Loading board…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else
+{
+    <PageHeader Title="@board.Name" Subtitle="@board.Description">
+        <Actions>
+            <RadzenBadge BadgeStyle="@(hubConnected ? BadgeStyle.Success : BadgeStyle.Light)"
+                         Text="@(hubConnected ? "● Live" : "○ Offline")"
+                         title="@(hubConnected ? "Live updates on" : "Live updates off — refreshes on navigation only")" />
+            <RadzenButton Text="@(board.IsStarred ? "★ Starred" : "☆ Star")"
+                          ButtonStyle="ButtonStyle.Secondary"
+                          Click="@ToggleStar" />
             <RadzenButton Text="Add list" Icon="add" ButtonStyle="ButtonStyle.Light"
                           Click="@(() => showAddList = !showAddList)" />
             <RadzenButton Text="Custom fields" Icon="list" ButtonStyle="ButtonStyle.Light"
@@ -47,80 +35,77 @@
                           Click="@(() => Nav.NavigateTo($"boards/{BoardId}/extensions"))" />
             <RadzenButton Text="Activity" Icon="history" ButtonStyle="ButtonStyle.Light"
                           Click="@(() => Nav.NavigateTo($"boards/{BoardId}/activity"))" />
-        </div>
+        </Actions>
+    </PageHeader>
 
-        @if (showAddList)
-        {
-            <RadzenCard class="add-list-form">
-                <RadzenTemplateForm TItem="AddListModel" Data="@addListModel" Submit="@AddList">
+    @if (showAddList)
+    {
+        <RadzenCard>
+            <RadzenTemplateForm TItem="AddListModel" Data="@addListModel" Submit="@AddList">
+                <RadzenStack Gap="0.5rem">
                     <RadzenTextBox @bind-Value="addListModel.Name" Placeholder="List name…" Style="width:100%" />
-                    <div class="create-actions">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
+                                 Gap="0.5rem" Class="rz-mt-3">
                         <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => showAddList = false)" />
                         <RadzenButton Text="Add" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" IsBusy="@addingList" />
-                    </div>
-                </RadzenTemplateForm>
-            </RadzenCard>
-        }
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    }
 
-        <div class="lists-row">
-            @if (lists is null)
+    <KanbanBoard TItem="CardSummaryDto" Columns="@KanbanColumns">
+        <CardTemplate>
+            @{
+                var card = context;
+                double opacity = ComputeCardOpacity(card, agingMode, now);
+            }
+            <RadzenCard Style="@($"opacity: {opacity:0.00}; cursor: pointer;")"
+                        @onclick="@(() => Nav.NavigateTo($"cards/{card.Id}"))">
+                <RadzenText Text="@card.Title" TextStyle="TextStyle.Body2"
+                            Style="@(card.IsCompleted ? "text-decoration: line-through; color: var(--rz-text-disabled-color);" : "word-break: break-word;")" />
+                @if (card.DueDate is not null)
+                {
+                    <RadzenText Text="@($"📅 {card.DueDate.Value.LocalDateTime:yyyy-MM-dd}")"
+                                TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
+                }
+            </RadzenCard>
+        </CardTemplate>
+        <ChildContent>
+            @{
+                var list = context;
+                Guid listId = Guid.Parse(list.Id);
+            }
+            @if (openAddCardFor == listId)
             {
-                <p>Loading lists…</p>
+                <RadzenStack Gap="0.5rem">
+                    <RadzenTextBox @bind-Value="newCardTitle" Placeholder="Card title…" Style="width:100%" />
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
+                                 Gap="0.5rem">
+                        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                      Click="@(() => { openAddCardFor = null; newCardTitle = string.Empty; })" />
+                        <RadzenButton Text="Add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                      Click="@(() => ConfirmAddCard(listId))" />
+                    </RadzenStack>
+                </RadzenStack>
             }
             else
             {
-                @foreach (BoardListDto list in lists)
-                {
-                    <div class="list-column">
-                        <header class="list-header">
-                            <strong>@list.Name</strong>
-                            <small>@list.CardCount</small>
-                        </header>
-                        <div class="list-cards">
-                            @{
-                                IReadOnlyList<CardSummaryDto> inList = cardsByList.GetValueOrDefault(list.Id, []);
-                            }
-                            @foreach (CardSummaryDto card in inList)
-                            {
-                                double opacity = ComputeCardOpacity(card, agingMode, now);
-                                <RadzenCard class="card-mini" Style="@($"opacity: {opacity:0.00}")"
-                                            @onclick="@(() => Nav.NavigateTo($"cards/{card.Id}"))">
-                                    <div class="card-mini-title @(card.IsCompleted ? "completed" : "")">@card.Title</div>
-                                    @if (card.DueDate is not null)
-                                    {
-                                        <small>📅 @card.DueDate.Value.LocalDateTime.ToString("yyyy-MM-dd")</small>
-                                    }
-                                </RadzenCard>
-                            }
-                        </div>
-                        <div class="list-add-card">
-                            @if (openAddCardFor == list.Id)
-                            {
-                                <RadzenTextBox @bind-Value="newCardTitle" Placeholder="Card title…" Style="width:100%" />
-                                <div class="create-actions">
-                                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                                                  Click="@(() => { openAddCardFor = null; newCardTitle = string.Empty; })" />
-                                    <RadzenButton Text="Add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
-                                                  Click="@(() => ConfirmAddCard(list.Id))" />
-                                </div>
-                            }
-                            else
-                            {
-                                <RadzenButton Text="+ Add card" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                                              Click="@(() => openAddCardFor = list.Id)" />
-                            }
-                        </div>
-                    </div>
-                }
+                <RadzenButton Text="+ Add card" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                              Click="@(() => openAddCardFor = listId)" />
             }
-        </div>
-    }
-</div>
+        </ChildContent>
+    </KanbanBoard>
+}
 
 @code {
     [Parameter] public Guid BoardId { get; set; }
 
     [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private IReadOnlyList<KanbanColumn<CardSummaryDto>>? KanbanColumns => lists?.Select(l =>
+        new KanbanColumn<CardSummaryDto>(l.Id.ToString(), l.Name, cardsByList.GetValueOrDefault(l.Id, []))
+    ).ToList();
 
     private BoardDto? board;
     private IReadOnlyList<BoardListDto>? lists;

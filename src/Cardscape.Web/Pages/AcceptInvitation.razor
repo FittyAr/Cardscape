@@ -8,45 +8,47 @@
 
 <PageTitle>Accept invitation — Cardscape</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>Accept invitation</h1>
-    </div>
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 32rem;">
+    <PageHeader Title="Accept invitation" />
 
     @if (string.IsNullOrWhiteSpace(Token))
     {
-        <p class="auth-error" role="alert">
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
             The invitation link is missing a <code>token</code> query
             parameter. Open the link the workspace owner sent you.
-        </p>
+        </RadzenAlert>
     }
     else if (busy)
     {
-        <p>Accepting…</p>
+        <RadzenText Text="Accepting…" />
     }
     else if (accepted is not null)
     {
-        <RadzenCard class="invitation-card">
-            <h3>@accepted.Name</h3>
-            <p>You are now a member of <strong>@accepted.Name</strong>.</p>
-            <RadzenButton Text="Open workspace" Icon="open_in_new" ButtonStyle="ButtonStyle.Primary"
-                          Click="@(() => Nav.NavigateTo($"workspaces/{accepted.Id}"))" />
+        <RadzenCard>
+            <RadzenStack Gap="0.75rem">
+                <RadzenText Text="@accepted.Name" TextStyle="TextStyle.H5" TagName="TagName.H2" />
+                <RadzenText Text="@($"You are now a member of {accepted.Name}.")" />
+                <RadzenButton Text="Open workspace"
+                              Icon="open_in_new"
+                              ButtonStyle="ButtonStyle.Primary"
+                              Click="@(() => Nav.NavigateTo($"workspaces/{accepted.Id}"))" />
+            </RadzenStack>
         </RadzenCard>
     }
     else if (error is not null)
     {
-        <div class="auth-error" role="alert">
-            <strong>Could not accept the invitation.</strong>
-            <p>@error</p>
-        </div>
-        <p class="muted">
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
+            <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Span">Could not accept the invitation.</RadzenText>
+            <RadzenText>@error</RadzenText>
+        </RadzenAlert>
+        <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
             If the link came from someone other than your workspace
             owner, it may be addressed to a different email. Sign in
             with the email that received the invite, or ask the
             owner to resend.
-        </p>
+        </RadzenText>
     }
-</div>
+</RadzenStack>
 
 @code {
     [Parameter, SupplyParameterFromQuery(Name = "token")]

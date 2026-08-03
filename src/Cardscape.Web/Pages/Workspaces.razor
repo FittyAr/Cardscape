@@ -10,67 +10,78 @@
 
 <PageTitle>@L["WorkspacesTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>@L["WorkspacesTitle"]</h1>
+<PageHeader Title="@L["WorkspacesTitle"]">
+    <Actions>
         <RadzenButton Text="@L["WorkspacesNew"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
                       Click="@(() => showCreate = !showCreate)" />
-    </div>
+    </Actions>
+</PageHeader>
 
-    @if (showCreate)
-    {
-        <RadzenCard class="create-form">
-            <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateWorkspace">
-                <RadzenLabel Text="@L["WorkspacesName"]" Component="ws-name" />
+@if (showCreate)
+{
+    <RadzenCard>
+        <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateWorkspace">
+            <LabeledField Text="@L["WorkspacesName"]" Component="ws-name">
                 <RadzenTextBox @bind-Value="createModel.Name" Name="ws-name" Style="width:100%" />
+            </LabeledField>
 
-                <RadzenLabel Text="@L["WorkspacesRegion"]" Component="ws-region" Style="margin-top:1rem; display:block" />
+            <LabeledField Text="@L["WorkspacesRegion"]" Component="ws-region">
                 <RadzenDropDown @bind-Value="createModel.Region" Data="@availableRegions"
                                 TextProperty="Label" ValueProperty="Value" Name="ws-region"
                                 Placeholder="@L["WorkspacesRegionPlaceholder"]" Style="width:100%" />
+            </LabeledField>
 
-                @if (error is not null)
-                {
-                    <div class="auth-error" role="alert">@error</div>
-                }
-                <div class="create-actions">
-                    <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => { showCreate = false; error = null; })" />
-                    <RadzenButton Text="@L["ActionCreate"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
-                                  IsBusy="@busy" />
-                </div>
-            </RadzenTemplateForm>
-        </RadzenCard>
-    }
-
-    @if (workspaces is null)
-    {
-        <p>@L["ActionLoading"]</p>
-    }
-    else if (workspaces.Count == 0)
-    {
-        <p>@L["WorkspacesEmpty"]</p>
-    }
-    else
-    {
-        <div class="workspace-grid">
-            @foreach (WorkspaceDto ws in workspaces)
+            @if (error is not null)
             {
-                <RadzenCard class="workspace-card" @onclick="@(() => Nav.NavigateTo($"workspaces/{ws.Id}"))">
-                    <h3>@ws.Name</h3>
-                    <small>@ws.MemberCount members · created @ws.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")</small>
+                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" class="rz-mt-3">
+                    @error
+                </RadzenAlert>
+            }
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-mt-3">
+                <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => { showCreate = false; error = null; })" />
+                <RadzenButton Text="@L["ActionCreate"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                              IsBusy="@busy" />
+            </RadzenStack>
+        </RadzenTemplateForm>
+    </RadzenCard>
+}
+
+@if (workspaces is null)
+{
+    <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else if (workspaces.Count == 0)
+{
+    <RadzenText Text="@L["WorkspacesEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else
+{
+    <RadzenRow Gap="1rem">
+        @foreach (WorkspaceDto ws in workspaces)
+        {
+            <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
+                <RadzenCard @onclick="@(() => Nav.NavigateTo($"workspaces/{ws.Id}"))">
+                    <RadzenText Text="@ws.Name" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                        @ws.MemberCount members · created @ws.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")
+                    </RadzenText>
                     @if (ws.Region != 0)
                     {
-                        <RadzenBadge Text="@RegionLabel(ws.Region)" BadgeStyle="BadgeStyle.Info" Style="margin-top:.5rem" />
+                        <div class="rz-mt-2">
+                            <RadzenBadge Text="@RegionLabel(ws.Region)" BadgeStyle="BadgeStyle.Info" />
+                        </div>
                     }
                     @if (ws.IsArchived)
                     {
-                        <RadzenBadge Text="@L["ActionArchived"]" BadgeStyle="BadgeStyle.Warning" Style="margin-top:.5rem" />
+                        <div class="rz-mt-2">
+                            <RadzenBadge Text="@L["ActionArchived"]" BadgeStyle="BadgeStyle.Warning" />
+                        </div>
                     }
                 </RadzenCard>
-            }
-        </div>
-    }
-</div>
+            </RadzenColumn>
+        }
+    </RadzenRow>
+}
 
 @code {
     [Inject] private NavigationManager Nav { get; set; } = default!;

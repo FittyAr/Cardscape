@@ -37,10 +37,10 @@
                           Click="@(() => StartExternal("apple"))" />
         </RadzenStack>
 
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" class="rz-my-2">
-            <hr style="flex: 1; border: 0; border-top: 1px solid var(--rz-border-color);" />
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Class="rz-my-2">
+            <HorizontalRule />
             <RadzenText Text="@L["AuthOr"]" TextStyle="TextStyle.Caption" />
-            <hr style="flex: 1; border: 0; border-top: 1px solid var(--rz-border-color);" />
+            <HorizontalRule />
         </RadzenStack>
 
         <RadzenTemplateForm TItem="LoginModel" Data="@model" Submit="@HandleSubmit">
@@ -102,7 +102,7 @@
         </RadzenTemplateForm>
     }
 
-    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" class="rz-mt-2">
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" Class="rz-mt-2">
         <RadzenText Text="@L["AuthNoAccount"]" />
         <RadzenLink Path="register" Text="@L["AuthCreateOne"]" />
     </RadzenStack>

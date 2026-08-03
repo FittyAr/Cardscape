@@ -7,72 +7,84 @@
 
 <PageTitle>Boards — Cardscape</PageTitle>
 
-<div class="page-shell">
-    <div class="page-header">
-        <h1>Boards</h1>
+<PageHeader Title="Boards">
+    <Actions>
         <RadzenButton Text="New board" Icon="add" ButtonStyle="ButtonStyle.Primary"
                       Click="@(() => showCreate = !showCreate)" />
-    </div>
+    </Actions>
+</PageHeader>
 
-    @if (showCreate)
-    {
-        <RadzenCard class="create-form">
-            <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateBoard">
-                <RadzenLabel Text="Name" Component="b-name" />
+@if (showCreate)
+{
+    <RadzenCard>
+        <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateBoard">
+            <LabeledField Text="Name" Component="b-name">
                 <RadzenTextBox @bind-Value="createModel.Name" Name="b-name" Style="width:100%" />
+            </LabeledField>
 
-                <RadzenLabel Text="Description" Component="b-desc" Style="margin-top:1rem" />
+            <LabeledField Text="Description" Component="b-desc">
                 <RadzenTextArea @bind-Value="createModel.Description" Name="b-desc" Style="width:100%" Rows="2" />
+            </LabeledField>
 
-                <RadzenLabel Text="Visibility" Component="b-vis" Style="margin-top:1rem" />
+            <LabeledField Text="Visibility" Component="b-vis">
                 <RadzenDropDown @bind-Value="createModel.Visibility" Name="b-vis" Style="width:100%"
                                 Data="@(new[] { new { Value = 0, Label = "Private" },
                                                 new { Value = 1, Label = "Workspace" },
                                                 new { Value = 2, Label = "Public" } })"
                                 TextProperty="Label" ValueProperty="Value" />
+            </LabeledField>
 
-                @if (error is not null)
-                {
-                    <div class="auth-error" role="alert">@error</div>
-                }
-                <div class="create-actions">
-                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => { showCreate = false; error = null; })" />
-                    <RadzenButton Text="Create" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
-                                  IsBusy="@busy" />
-                </div>
-            </RadzenTemplateForm>
-        </RadzenCard>
-    }
-
-    @if (boards is null)
-    {
-        <p>Loading…</p>
-    }
-    else if (boards.Count == 0)
-    {
-        <p>No boards in this workspace yet. Create your first one above.</p>
-    }
-    else
-    {
-        <div class="board-grid">
-            @foreach (BoardSummaryDto b in boards)
+            @if (error is not null)
             {
-                <RadzenCard class="board-card" @onclick="@(() => Nav.NavigateTo($"boards/{b.Id}"))">
-                    <h3>@b.Name</h3>
-                    <small>created @b.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")</small>
+                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" class="rz-mt-3">
+                    @error
+                </RadzenAlert>
+            }
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-mt-3">
+                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => { showCreate = false; error = null; })" />
+                <RadzenButton Text="Create" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                              IsBusy="@busy" />
+            </RadzenStack>
+        </RadzenTemplateForm>
+    </RadzenCard>
+}
+
+@if (boards is null)
+{
+    <RadzenText Text="Loading…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else if (boards.Count == 0)
+{
+    <RadzenText Text="No boards in this workspace yet. Create your first one above." TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else
+{
+    <RadzenRow Gap="1rem">
+        @foreach (BoardSummaryDto b in boards)
+        {
+            <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
+                <RadzenCard @onclick="@(() => Nav.NavigateTo($"boards/{b.Id}"))">
+                    <RadzenText Text="@b.Name" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                        created @b.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")
+                    </RadzenText>
                     @if (b.IsStarred)
                     {
-                        <RadzenBadge Text="★ Starred" BadgeStyle="BadgeStyle.Success" Style="margin-top:.5rem" />
+                        <div class="rz-mt-2">
+                            <RadzenBadge Text="★ Starred" BadgeStyle="BadgeStyle.Success" />
+                        </div>
                     }
                     @if (b.IsArchived)
                     {
-                        <RadzenBadge Text="Archived" BadgeStyle="BadgeStyle.Warning" Style="margin-top:.5rem; margin-left:.5rem" />
+                        <div class="rz-mt-2">
+                            <RadzenBadge Text="Archived" BadgeStyle="BadgeStyle.Warning" />
+                        </div>
                     }
                 </RadzenCard>
-            }
-        </div>
-    }
-</div>
+            </RadzenColumn>
+        }
+    </RadzenRow>
+}
 
 @code {
     [Parameter] public Guid WorkspaceId { get; set; }
