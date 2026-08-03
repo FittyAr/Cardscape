@@ -23,31 +23,19 @@ string apiBaseUrl = builder.Configuration["ApiBaseUrl"]
 // Resources live under src/Cardscape.Web/Resources (SharedResource.resx
 // and per-culture variants like SharedResource.es.resx).
 //
-// IMPORTANT (Blazor WASM + .NET 11 preview SDK caveat): the SDK
-// preview refuses to switch the culture at runtime. The original
-// plan called for
-//   AddLocalization(opts => opts.SetDefaultCulture("en")
-//     .AddSupportedCultures("en", "es"))
-// but that shape is a SERVER-side API (it lives on
-// `RequestLocalizationOptions`, consumed by `UseRequestLocalization`,
-// which doesn't run on Blazor WASM). Attempting to ship a
-// `SetDefaultCulture` call (or a `BlazorWebAssemblyLoadAllGlobalizationData`
-// workaround) on the WASM client in this SDK causes a startup
-// culture-mismatch error every time the page is refreshed.
+// On net10.0 (LTS) the project sets
+// <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+// in the .csproj so the .NET runtime can switch culture during
+// startup (browser Accept-Language "es" → Spanish UI) without throwing
+// "Blazor detected a change in the application's culture that is not
+// supported with the current project configuration".
 //
-// Localization is therefore wired to the minimum that works on
-// Blazor WASM today:
-// - `AddLocalization` registers the `.resx` resource path.
-// - The default culture is "en" (invariant); the localizer falls
-//   back to `SharedResource.resx` for any UI culture.
-// - The Spanish .resx is shipped as a static asset under
-//   `wwwroot/Resources/` (NOT as an embedded resource) so a
-//   future CulturePicker can load it client-side from
-//   `navigator.language` / `localStorage` without the SDK bug
-//   surfacing again. The .es file is currently dormant; the
-//   localizer still uses English until a follow-up wires the
-//   client-side picker. See `docs/i18n/02-translation-workflow.md`
-//   for the follow-up plan.
+// On the .NET 11 preview SDK the same flag caused a different
+// startup race (a culture-mismatch error of its own) and was disabled
+// during that era. With the net10.0 SDK the flag is required for the
+// browser's language to be honored. See
+// `docs/i18n/02-translation-workflow.md` for the follow-up plan on
+// the client-side CulturePicker.
 builder.Services.AddLocalization(options =>
 {
     options.ResourcesPath = "Resources";

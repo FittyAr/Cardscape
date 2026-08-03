@@ -66,21 +66,39 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // ── Static app shell / SPA navigation: cache-first,
-    // fall back to network, fall back to /index.html so
+    // ── Static app shell / SPA navigation: network-first,
+    // fall back to the cache, fall back to /index.html so
     // the Blazor client-side router can take over.
+    //
+    // Why network-first: a previous version of this handler
+    // served cached /index.html (and the cached
+    // _framework/blazor.webassembly.js) on every visit. After
+    // any deploy that changes the framework assets, the boot
+    // manifest inside the cached JS became incompatible with
+    // the new fingerprinted .wasm files on the server, and
+    // the app failed with "An unhandled error has occurred"
+    // until the user did a Ctrl+Shift+R. The cache version
+    // (CACHE_VERSION above) is hardcoded, so the activate
+    // handler can't tell old caches from new ones, and the
+    // install event only re-fires when the SW file itself
+    // changes — neither path picks up new content otherwise.
+    // Going network-first means every visit always sees the
+    // current index.html and the current framework assets;
+    // the cache is only used when the network is unreachable,
+    // which preserves the offline launch from the home-screen
+    // icon.
     if (request.mode === 'navigate') {
         event.respondWith((async () => {
-            const cached = await caches.match(request);
-            if (cached) {
-                return cached;
-            }
             try {
                 const fresh = await fetch(request);
                 const cache = await caches.open(RUNTIME_CACHE);
                 cache.put(request, fresh.clone());
                 return fresh;
             } catch (err) {
+                const cached = await caches.match(request);
+                if (cached) {
+                    return cached;
+                }
                 const shell = await caches.match('/index.html');
                 if (shell) {
                     return shell;
@@ -89,6 +107,35 @@ self.addEventListener('fetch', (event) => {
                     status: 503,
                     statusText: 'Service Unavailable'
                 });
+            }
+        })());
+        return;
+    }
+
+    // ── Framework files under _framework/*: always network-first.
+    // These are either content-hashed (Cardscape.Web.<hash>.wasm,
+    // dotnet.runtime.<hash>.js, …) or are stable entry points
+    // (dotnet.js, blazor.webassembly.js) that change shape between
+    // SDK versions. A stale cached copy from a previous build will
+    // throw a startup error (e.g. "Blazor detected a change in the
+    // application's culture…") when the new boot manifest is
+    // loaded against the old runtime. Cache only the network result
+    // for offline use, never serve a stale one when online.
+    if (url.pathname.startsWith('/_framework/')) {
+        event.respondWith((async () => {
+            try {
+                const fresh = await fetch(request);
+                if (fresh && fresh.status === 200 && fresh.type === 'basic') {
+                    const cache = await caches.open(RUNTIME_CACHE);
+                    cache.put(request, fresh.clone());
+                }
+                return fresh;
+            } catch (err) {
+                const cached = await caches.match(request);
+                if (cached) {
+                    return cached;
+                }
+                return new Response('', { status: 504, statusText: 'Gateway Timeout (offline)' });
             }
         })());
         return;
