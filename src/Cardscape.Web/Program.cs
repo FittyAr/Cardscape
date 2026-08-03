@@ -23,22 +23,28 @@ string apiBaseUrl = builder.Configuration["ApiBaseUrl"]
 // Resources live under src/Cardscape.Web/Resources (SharedResource.resx
 // and per-culture variants like SharedResource.es.resx).
 //
-// On net10.0 (LTS) the project sets
-// <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
-// in the .csproj so the .NET runtime can switch culture during
-// startup (browser Accept-Language "es" → Spanish UI) without throwing
-// "Blazor detected a change in the application's culture that is not
-// supported with the current project configuration".
-//
-// On the .NET 11 preview SDK the same flag caused a different
-// startup race (a culture-mismatch error of its own) and was disabled
-// during that era. With the net10.0 SDK the flag is required for the
-// browser's language to be honored. See
-// `docs/i18n/02-translation-workflow.md` for the follow-up plan on
-// the client-side CulturePicker.
+// IMPORTANT: `ResourcesPath` is intentionally left as the empty string.
+// The .NET 10 `ResourceManagerStringLocalizerFactory` computes the
+// resource base name as
+//   `{RootNamespace}.{ResourcesPath}.{TypeFullName − RootNamespace}`.
+// With our setup (RootNamespace=`Cardscape.Web`, type in
+// `Cardscape.Web.Resources`, default `ResourcesPath="Resources"`) the
+// factory looks for `Cardscape.Web.Resources.Resources.SharedResource`
+// — a manifest that does not exist, because the .NET SDK embeds the
+// compiled .resx as `Cardscape.Web.Resources.SharedResource.resources`
+// (i.e. the type's full name with no `ResourcesPath` prefix). The
+// localizer swallows the `MissingManifestResourceException` and
+// returns the resource key as the value, which is why the UI showed
+// `AuthSignIn`, `AppName`, `HomePointBoardsTitle`, … instead of the
+// actual translations. Setting `ResourcesPath=""` short-circuits the
+// prefix and the localizer uses the type's full name as-is, which
+// matches the SDK's manifest name. See
+// `docs/i18n/02-translation-workflow.md` for the planned move to
+// JSON-based localization (which uses `ResourcesPath` differently
+// and will need its own configuration).
 builder.Services.AddLocalization(options =>
 {
-    options.ResourcesPath = "Resources";
+    options.ResourcesPath = string.Empty;
 });
 
 // ── Auth + state providers ───────────────────────────────────────────
