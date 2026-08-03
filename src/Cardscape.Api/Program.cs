@@ -288,6 +288,13 @@ app.MapUserDsrAdminEndpoints();
 // pipeline so the file / OTel sinks see them.
 app.MapClientLogEndpoint();
 
+// Companion endpoint for Serilog.Sinks.BrowserHttp on the
+// Blazor WASM client. Browser-side log events (e.g. uncaught
+// exceptions, navigation failures) are POSTed here in CLEF
+// JSON; the endpoint re-emits them through the standard
+// pipeline so the file / OTel sinks see them.
+app.MapClientLogEndpoint();
+
 // Real-time board hub. Sits at /hubs/board with the same JWT
 // bearer authentication as the REST API; clients bring the
 // access token in the query string (the SignalR client

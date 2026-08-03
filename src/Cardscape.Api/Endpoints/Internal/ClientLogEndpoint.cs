@@ -123,6 +123,7 @@ public static class ClientLogEndpoint
             }
 
             string body = Encoding.UTF8.GetString(buffer, 0, read);
+
             if (string.IsNullOrWhiteSpace(body))
             {
                 return Results.BadRequest(new { error = "Empty log event body." });
@@ -197,7 +198,7 @@ public static class ClientLogEndpoint
             : "{" + string.Join(", ", struc.Properties.Select(p =>
                 $"{p.Name}={CoercePropertyValue(p.Value)}")) + "}",
         DictionaryValue dict => "{" + string.Join(", ", dict.Elements.Select(kv =>
-            $"[{CoercePropertyValue(kv.Key)}]={CoercePropertyValue(kv.Value)}")) + "}",
+                $"[{CoercePropertyValue(kv.Key)}]={CoercePropertyValue(kv.Value)}")) + "}",
         _ => RenderFallback(value)
     };
 
