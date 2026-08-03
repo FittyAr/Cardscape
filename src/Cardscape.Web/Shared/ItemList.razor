@@ -1,0 +1,36 @@
+@* ItemList — semantic `<ul>/<li>` rendered via Blazor for
+   collections of strings (scope lists, recovery code lists,
+   preview sample names, …).
+
+   The markup stays a real <ul> for accessibility and SEO;
+   CSS isolation (`.cs-item-list`) replaces the old browser
+   default styles so the look matches the rest of the
+   Radzen-themed UI. The component exists so consumers
+   don't sprinkle plain `<ul>`/`<li>` across the codebase
+   — using `<ItemList Items="..." />` makes the pattern
+   consistent and lets us tweak the look in one place.
+
+   For lists that need a label per row, the overload that
+   takes `RenderFragment` items is the one to use (see the
+   items in WorkspaceImport.razor). *@
+
+@code {
+    [Parameter] public IEnumerable<string>? Items { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}
+
+@if (Items is not null)
+{
+    <ul class="cs-item-list">
+        @foreach (string item in Items)
+        {
+            <li>@item</li>
+        }
+    </ul>
+}
+else if (ChildContent is not null)
+{
+    <ul class="cs-item-list">
+        @ChildContent
+    </ul>
+}

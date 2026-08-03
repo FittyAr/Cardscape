@@ -40,43 +40,43 @@
             <RadzenPanel Text="@L["ImportPreviewTitle"]" Class="rz-mt-3">
                 <RadzenCard>
                     <RadzenText Text="@L["ImportPreviewBlurb"]" />
-                    <ul>
+                    <ItemList>
                         <li>@L["ImportPreviewBoards"]: @preview.Preview.BoardCount</li>
                         <li>@L["ImportPreviewLists"]: @preview.Preview.ListCount</li>
                         <li>@L["ImportPreviewCards"]: @preview.Preview.CardCount</li>
                         <li>@L["ImportPreviewLabels"]: @preview.Preview.LabelCount</li>
                         <li>@L["ImportPreviewMembers"]: @preview.Preview.MemberCount</li>
-                    </ul>
+                    </ItemList>
 
                     @if (preview.Preview.SampleBoardNames.Count > 0)
                     {
                         <RadzenText Text="@L["ImportPreviewSampleBoards"]" TextStyle="TextStyle.Subtitle2" TagName="TagName.Span" />
-                        <ul>
+                        <ItemList>
                             @foreach (var name in preview.Preview.SampleBoardNames)
                             {
                                 <li>@name</li>
                             }
-                        </ul>
+                        </ItemList>
                     }
                     @if (preview.Preview.SampleListNames.Count > 0)
                     {
                         <RadzenText Text="@L["ImportPreviewSampleLists"]" TextStyle="TextStyle.Subtitle2" TagName="TagName.Span" />
-                        <ul>
+                        <ItemList>
                             @foreach (var name in preview.Preview.SampleListNames)
                             {
                                 <li>@name</li>
                             }
-                        </ul>
+                        </ItemList>
                     }
                     @if (preview.Preview.SampleCardNames.Count > 0)
                     {
                         <RadzenText Text="@L["ImportPreviewSampleCards"]" TextStyle="TextStyle.Subtitle2" TagName="TagName.Span" />
-                        <ul>
+                        <ItemList>
                             @foreach (var name in preview.Preview.SampleCardNames)
                             {
                                 <li>@name</li>
                             }
-                        </ul>
+                        </ItemList>
                     }
 
                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
@@ -99,12 +99,12 @@
             <RadzenPanel Text="@L["ImportResultTitle"]" Class="rz-mt-3">
                 <RadzenCard>
                     <RadzenText Text="@L["ImportResultSummary"]" />
-                    <ul>
+                    <ItemList>
                         <li>Boards: @applied.ImportedBoardIds.Count</li>
                         <li>Lists: @applied.ImportedListIds.Count</li>
                         <li>Cards: @applied.ImportedCardIds.Count</li>
                         <li>Labels: @applied.ImportedLabelIds.Count</li>
-                    </ul>
+                    </ItemList>
                 </RadzenCard>
             </RadzenPanel>
         }

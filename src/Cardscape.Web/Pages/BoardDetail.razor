@@ -63,7 +63,8 @@ else
             <RadzenCard Style="@($"opacity: {opacity:0.00}; cursor: pointer;")"
                         @onclick="@(() => Nav.NavigateTo($"cards/{card.Id}"))">
                 <RadzenText Text="@card.Title" TextStyle="TextStyle.Body2"
-                            Style="@(card.IsCompleted ? "text-decoration: line-through; color: var(--rz-text-disabled-color);" : "word-break: break-word;")" />
+                            Class="@(card.IsCompleted ? "cs-completed-text" : null)"
+                            Style="@(card.IsCompleted ? null : "word-break: break-word;")" />
                 @if (card.DueDate is not null)
                 {
                     <RadzenText Text="@($"📅 {card.DueDate.Value.LocalDateTime:yyyy-MM-dd}")"

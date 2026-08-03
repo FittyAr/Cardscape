@@ -97,3 +97,16 @@
         scroll-behavior: auto !important;
     }
 }
+
+/* Global utility classes for the patterns that recur on multiple
+   pages but can't be expressed with Radzen's own utility classes
+   (rz-m-*, rz-px-*, …). Each rule here is opt-in — pages that
+   don't apply the class get nothing. */
+
+/* Completed item — strikethrough + theme-aware dim color for
+   cards / checklist items / tasks the user has marked done.
+   Use as `class="cs-completed-text"` on the text element. */
+.cs-completed-text {
+    text-decoration: line-through;
+    color: var(--rz-text-disabled-color);
+}

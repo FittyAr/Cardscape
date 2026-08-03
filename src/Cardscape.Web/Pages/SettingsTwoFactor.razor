@@ -49,12 +49,12 @@
                         Each code can be used <RadzenText Text="once" TextStyle="TextStyle.Body1" TagName="TagName.Span" /> if you lose access
                         to your authenticator. They are not shown again.
                     </RadzenText>
-                    <ul>
+                    <ItemList>
                         @foreach (var recoveryCode in enrollment.RecoveryCodes)
                         {
                             <li><code>@recoveryCode</code></li>
                         }
-                    </ul>
+                    </ItemList>
                 </RadzenStack>
             </RadzenCard>
         }

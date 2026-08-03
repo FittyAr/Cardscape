@@ -1,0 +1,27 @@
+/* EmptyLayout — auth/marketing split-screen chrome.
+   The brand-column radial gradient, the form-column paper
+   background, and the card's no-padding override all live
+   here so the .razor file stays markup-only. */
+
+.cs-empty-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Brand column: soft radial gradient on top of the primary
+   background, deepens to a darker shade in the bottom-right.
+   Picked to match the Cardscape brand mark without being a
+   solid color. */
+.cs-brand-column {
+    background-image: radial-gradient(circle at 4rem 4rem,
+        var(--rz-primary-light) 0%,
+        var(--rz-primary) 50%,
+        var(--rz-primary-darker) 80%);
+}
+
+/* Form column: the page background from the active Radzen
+   theme. Using the variable means the theme switcher updates
+   the form background automatically. */
+.cs-form-column {
+    background: var(--rz-body-background-color);
+}

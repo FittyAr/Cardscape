@@ -39,12 +39,10 @@ else
 
     protected override void OnInitialized()
     {
-        // Read the OAuth fragment from the browser URL. We previously
-        // did this via `IJSRuntime.InvokeAsync("eval", "window.location.href")`
-        // which both bypassed the no-eval rule and opened an XSS surface
-        // if the hash ever came from an untrusted redirect. The
-        // `NavigationManager.Uri` is set by the Blazor router before the
-        // first render, so we can parse the fragment directly.
+        // Read the OAuth fragment from the browser URL via
+        // `NavigationManager.Uri`. The Blazor router populates it before
+        // the first render, so the fragment is available synchronously
+        // here.
         var uri = new Uri(Nav.Uri);
         string fragment = uri.Fragment.TrimStart('#');
         if (string.IsNullOrWhiteSpace(fragment))

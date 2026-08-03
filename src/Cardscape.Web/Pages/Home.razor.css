@@ -1,0 +1,49 @@
+/* Home — utility classes for the landing page hero, the
+   dashboard tile icons, and the eyebrow label. These are
+   the only places in the home page that need values the
+   Radzen utility classes (rz-m-*, rz-px-*, …) can't
+   express — the gradient + the "real" icon size. */
+
+/* Tile icon (workspaces / starred) — 32 px on a 64×64 swatch
+   so the glyph sits inside the rounded color block. */
+.cs-tile-icon {
+    font-size: 32px;
+    min-width: 64px;
+    min-height: 64px;
+}
+
+/* Feature icon (boards / self-host / MCP) — 28 px, brand color.
+   Smaller than the tile icon because there's no background
+   swatch behind it. */
+.cs-feature-icon {
+    font-size: 28px;
+    color: var(--rz-primary);
+}
+
+/* Landing eyebrow ("Cardscape — open source kanban" tag-line
+   above the H1). Brand color, wide tracking for the
+   overline-style label. */
+.cs-eyebrow {
+    color: var(--rz-primary);
+    letter-spacing: 0.15em;
+}
+
+/* Hero board — the dark gradient card on the right side of
+   the landing. Replaces the inline `linear-gradient` so the
+   gradient is editable in one place. */
+.cs-hero-board {
+    min-height: 360px;
+    background: linear-gradient(135deg,
+        var(--rz-primary-dark) 0%,
+        var(--rz-primary-darker) 100%);
+}
+
+/* Mini cards inside the hero board: two heights to give the
+   visual rhythm of an actual Trello-style board. */
+.cs-hero-card-tall {
+    min-height: 60px;
+}
+
+.cs-hero-card-short {
+    min-height: 40px;
+}

@@ -1,0 +1,15 @@
+/* ItemList — semantic <ul>/<li> with the same typography as
+   the rest of the Radzen-themed UI. The browser's default
+   bullet markers and indented spacing are kept (the list is
+   semantic, not a custom widget), only the typography and
+   spacing are normalized. */
+
+.cs-item-list {
+    margin: 0.5rem 0 0 0;
+    padding-left: 1.25rem;
+    color: var(--rz-text-color);
+}
+
+    .cs-item-list li {
+        margin-bottom: 0.15rem;
+    }

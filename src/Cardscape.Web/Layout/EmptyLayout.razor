@@ -8,23 +8,27 @@
     Used by login, register, and OAuth callback. Styled as a
     Radzen split layout: brand side on the left (primary
     background), form side on the right (paper background).
+
+    The brand-column gradient, the form-column background, and
+    the no-padding card override all live in
+    `EmptyLayout.razor.css` (Blazor scoped CSS) so this file
+    stays markup-only.
 *@
 
 <RadzenComponents />
 
-<RadzenLayout Style="min-height: 100vh;">
+<RadzenLayout Class="cs-empty-layout">
     <RadzenBody Expanded="true">
         <RadzenStack JustifyContent="JustifyContent.Center" Class="rz-mx-auto rz-p-4" Style="max-width: 1440px; min-height: 100vh;">
-            <RadzenCard class="rz-shadow-5 rz-border-radius-4" Style="padding: 0; overflow: hidden;">
+            <RadzenCard Class="rz-shadow-5 rz-border-radius-4 cs-empty-card">
                 <RadzenRow Gap="0">
-                    <RadzenColumn Size="12" SizeSM="6" Class="rz-background-color-primary rz-p-12"
-                                  Style="background-image: radial-gradient(circle at 4rem 4rem, var(--rz-primary-light) 0%, var(--rz-primary) 50%, var(--rz-primary-darker) 80%);">
+                    <RadzenColumn Size="12" SizeSM="6" Class="rz-background-color-primary rz-p-12 cs-brand-column">
                         <RadzenText Text="@L["AppName"]" TextStyle="TextStyle.H2" class="rz-mt-4 rz-mt-md-12 rz-pt-0 rz-pt-md-12 rz-mb-6 rz-color-white" />
                         <RadzenText TextStyle="TextStyle.Body1" class="rz-mb-12 rz-pb-0 rz-pb-md-12 rz-color-white rz-display-none rz-display-sm-block">
                             @L["AppTagline"]
                         </RadzenText>
                     </RadzenColumn>
-                    <RadzenColumn Size="12" SizeSM="6" class="rz-p-12" Style="background: var(--rz-body-background-color);">
+                    <RadzenColumn Size="12" SizeSM="6" class="rz-p-12 cs-form-column">
                         @Body
                     </RadzenColumn>
                 </RadzenRow>
