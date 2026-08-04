@@ -73,10 +73,8 @@ for the v1.3.0 workstream.
 | D6 | RegionGuard integration-test isolation (serial collection + 4th test) | v1.1.0 audit §3 G5 | **DONE** | S |
 | D7 | i18n: rebuild the G12 push (Blazor WASM culture resolution) | v1.1.0 audit §3 G12 (PARTIAL) | **DONE** | L |
 | D8 | CI coverage diff comment (G17) | v1.1.0 audit §5 G17 | **DONE** | M |
-| D7 | i18n: rebuild the G12 push (Blazor WASM culture resolution) | v1.1.0 audit §3 G12 (PARTIAL) | **HIGH** | L |
-| D8 | CI coverage diff comment (G17) | v1.1.0 audit §5 G17 | **MEDIUM** | M |
-| D9 | i18n: 2 more key slots for the v1.2.0 strings (cards/snooze/etc.) | new work in this plan | **LOW** | S |
-| D10 | Cardscape CI status badge in the root README | discoverability | **LOW** | S |
+| D9 | i18n: 3 more key slots for the v1.2.0 strings (Language, English, Spanish) | new work in this plan | **DONE** | S |
+| D10 | Cardscape CI status badge in the root README | discoverability | **DONE** | S |
 
 **Total: 10 items, 5 categories, ~2 sessions of focused work.**
 (Of these, D1–D5 and D9–D10 are landing in this PR set

@@ -158,6 +158,8 @@
   <data name="OAuthAppsTitle" xml:space="preserve"><value>OAuth apps</value></data>
   <data name="OAuthAppsBlurb" xml:space="preserve"><value>Register personal OAuth clients to access Cardscape from your own scripts and integrations.</value></data>
   <data name="OAuthAppsRegister" xml:space="preserve"><value>Register a new OAuth app</value></data>
+  <data name="OAuthAppsRegisterBlurb" xml:space="preserve"><value>The full OAuth 2.0 authorization-code flow is implemented in the four endpoints below.</value></data>
+  <data name="OAuthAppsScopes" xml:space="preserve"><value>Scopes that can be granted:</value></data>
   <data name="SamlTitle" xml:space="preserve"><value>SAML SSO</value></data>
   <data name="SamlConfigure" xml:space="preserve"><value>Configure SAML</value></data>
   <data name="SamlSlug" xml:space="preserve"><value>URL slug</value></data>
