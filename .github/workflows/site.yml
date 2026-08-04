@@ -1,0 +1,95 @@
+name: site
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'site/**'
+      - 'docs/status.md'
+      - '.github/workflows/site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish site + status page
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout master (full history for the merge)
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+          path: master
+
+      - name: Checkout site branch into a sibling work tree
+        uses: actions/checkout@v4
+        with:
+          ref: site
+          fetch-depth: 0
+          path: site
+          # The site branch starts as an orphan; the
+          # initial clone may fail with "Repository not
+          # found" the first time the workflow runs.
+          # The next step (ensure-site-branch) handles the
+          # bootstrap case.
+
+      - name: Ensure site branch exists (bootstrap on first run)
+        shell: bash
+        run: |
+          set -e
+          if [ ! -d site/.git ]; then
+            echo "site branch does not exist yet; creating an empty orphan"
+            mkdir -p site
+            cd site
+            git init -q
+            git checkout -q --orphan site
+            git commit --allow-empty -m "chore: initial empty site branch"
+            cd ..
+            # Re-add the work tree to the parent's git so
+            # the push below can reach the remote.
+            rm -rf site/.git
+            git fetch origin site || true
+            git worktree add site origin/site || git worktree add site -B site
+            cd site
+            git config user.name  "Cardscape site bot"
+            git config user.email "site-bot@cardscape.local"
+            git commit --allow-empty -m "chore: bootstrap site branch"
+            git push -u origin site || true
+            cd ..
+          fi
+
+      - name: Sync static site assets (site/) into the work tree
+        shell: bash
+        run: |
+          set -e
+          rsync -a --delete --exclude='.git' --exclude='CNAME' master/site/ site/
+
+      - name: Sync status page (docs/status.md -> site/status/index.md)
+        shell: bash
+        run: |
+          set -e
+          mkdir -p site/status
+          cp master/docs/status.md site/status/index.md
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          set -e
+          cd site
+          git config user.name  "Cardscape site bot"
+          git config user.email "site-bot@cardscape.local"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No site changes to publish; skipping push."
+            exit 0
+          fi
+          # Include the triggering commit SHA so the
+          # site commit references the master commit.
+          TRIGGER_SHA="${{ github.event.after }}"
+          git commit -m "site: publish from ${TRIGGER_SHA:0:12}"
+          git push origin site
+          echo "Published site from ${TRIGGER_SHA:0:12}."
