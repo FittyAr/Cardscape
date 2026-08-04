@@ -105,6 +105,15 @@ public sealed class OAuthAppService(
         }
 
         app.Revoke(clock.UtcNow);
+        // Persist the soft-delete. Without this line the
+        // Revoke call mutates the in-memory aggregate but
+        // the row stays in the DB with IsRevoked=false; the
+        // next /api/oauth-apps/ list returns the app as if
+        // nothing happened. Caught by the G15 integration
+        // test pass (the OAuthAppEndpointTests.Revoke_Marks_
+        // OAuthApp_As_Revoked test now asserts the IsRevoked
+        // flag flipped).
+        await unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
 
