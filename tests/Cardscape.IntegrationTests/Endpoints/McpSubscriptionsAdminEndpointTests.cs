@@ -13,27 +13,20 @@ namespace Cardscape.IntegrationTests.Endpoints;
 /// server's resource-subscription state to the Web UI's
 /// <c>/admin/mcp-subscriptions</c> page.
 ///
-/// The endpoint proxies the MCP's
-/// <c>GET /api/internal/board-event/subscriptions</c> over
-/// the shared internal secret. In the in-process test
-/// environment the MCP is not running, so the API returns
-/// HTTP 503 (the McpSubscriptionsClient returns null when
-/// the MCP is unreachable). The tests pin the response
-/// contract:
+/// The endpoint is gated by the <c>AdminOnly</c>
+/// authorization policy (a v1.2.0 follow-up that
+/// supersedes the original <c>RequireAuthorization</c>
+/// gate). The tests pin the access contract:
 /// <list type="bullet">
 ///   <item>unauthenticated → 401</item>
-///   <item>authenticated, MCP unreachable → 503 with a
-///         structured <c>ProblemDetails</c> body</item>
-///   <item>authenticated, MCP reachable → 200 with the
-///         McpSubscriptionsSnapshot shape</item>
+///   <item>authenticated, NOT admin → 403</item>
+///   <item>authenticated, admin, MCP unreachable → 503</item>
+///   <item>authenticated, admin, MCP reachable → 200</item>
 /// </list>
 ///
 /// The "MCP reachable" path is not covered by this file —
 /// it would require a second host running the MCP server,
-/// which is out of scope for the in-process test setup. The
-/// MCP-side broadcaster is unit-tested instead
-/// (see <c>McpResourceBroadcasterTests</c> in the unit
-/// test project).
+/// which is out of scope for the in-process test setup.
 /// </summary>
 [Collection(CardscapeApi.Name)]
 public sealed class McpSubscriptionsAdminEndpointTests
@@ -51,39 +44,34 @@ public sealed class McpSubscriptionsAdminEndpointTests
     }
 
     [Fact]
-    public async Task GetSnapshot_With_Auth_But_Mcp_Unreachable_Returns_503()
+    public async Task GetSnapshot_Without_Admin_Role_Returns_403()
     {
-        // The in-process test host does not start the MCP
-        // process. The McpSubscriptionsClient logs a warning
-        // and returns null; the endpoint translates null to
-        // 503 + a structured problem body. The body shape is
-        // the standard ASP.NET Core ProblemDetails.
+        // The AdminOnly policy looks up the user's
+        // IsAdmin flag in the database. A freshly
+        // registered user has IsAdmin=false, so the
+        // policy fails and the endpoint returns 403.
         HttpClient client = await CreateAuthenticatedClientAsync();
+        HttpResponseMessage resp = await client.GetAsync(
+            "api/admin/mcp-subscriptions/", TestContext.Current.CancellationToken);
+        resp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task GetSnapshot_For_Admin_Returns_503_When_Mcp_Unreachable()
+    {
+        // The AdminOnly policy passes (the test user is
+        // promoted to admin by the helper). The
+        // McpSubscriptionsClient then returns null
+        // because the MCP process is not running in
+        // the in-process test host, and the endpoint
+        // translates that to 503 + a structured
+        // problem body.
+        HttpClient client = await CreateAdminClientAsync();
         HttpResponseMessage resp = await client.GetAsync(
             "api/admin/mcp-subscriptions/", TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
         string body = await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         body.Should().Contain("MCP subscriptions snapshot is unavailable");
-    }
-
-    [Fact]
-    public async Task GetSnapshot_With_Auth_Reaches_The_Endpoint()
-    {
-        // The 401 (no auth) and 503 (auth, no MCP) tests
-        // above pin the access gate and the failure mode.
-        // This test pins the positive path: a registered
-        // user with a valid bearer token can call the
-        // endpoint. The MCP is not running in the test
-        // environment, so we still get 503 — but the
-        // assertion is that the request is not rejected
-        // at the auth layer (a 401 here would mean the
-        // auth pipeline is broken, not that the MCP is
-        // down).
-        HttpClient client = await CreateAuthenticatedClientAsync();
-        HttpResponseMessage resp = await client.GetAsync(
-            "api/admin/mcp-subscriptions/", TestContext.Current.CancellationToken);
-        resp.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
-        resp.StatusCode.Should().NotBe(HttpStatusCode.Forbidden);
     }
 
     // ── helpers ─────────────────────────────────────────────
@@ -98,6 +86,25 @@ public sealed class McpSubscriptionsAdminEndpointTests
         AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        return client;
+    }
+
+    private async Task<HttpClient> CreateAdminClientAsync()
+    {
+        HttpClient client = await CreateAuthenticatedClientAsync();
+        // The dev-only promote-self-admin endpoint is
+        // registered in Development only. The test
+        // fixture sets ASPNETCORE_ENVIRONMENT=Development,
+        // so the endpoint is wired and the POST
+        // promotes the calling user to admin in the DB.
+        HttpResponseMessage promote = await client.PostAsync(
+            "api/dev/promote-self-admin", content: null, TestContext.Current.CancellationToken);
+        if (!promote.IsSuccessStatusCode)
+        {
+            string body = await promote.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            throw new Xunit.Sdk.XunitException(
+                $"promote-self-admin returned {(int)promote.StatusCode} {promote.StatusCode}. Body: {body}");
+        }
         return client;
     }
 }
