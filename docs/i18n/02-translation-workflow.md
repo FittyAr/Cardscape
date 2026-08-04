@@ -483,7 +483,7 @@ CultureInfo.DefaultThreadCurrentUICulture = defaultCultureInfo;
   fails with `NETSDK1082` (no `browser-wasm` runtime pack).
   The standalone `Microsoft.AspNetCore.Localization` NuGet
   package tops out at 2.3.11 (ASP.NET Core 2.x era) and is
-  not compatible with the .NET 11 preview SDK. There is no
+  not compatible with the .NET 10 SDK. There is no
   clean way to surface the plan's named API on the WASM
   client in this SDK. The configuration the plan asked for
   (default culture + supported culture set) is preserved
@@ -555,7 +555,95 @@ default-culture experience.
 
 ---
 
-## 13. When to revisit
+## 13. Client-side culture resolution in Blazor WebAssembly (D7 — v1.2.0, G12 follow-up)
+
+The v1.1.0 G12 push was the "There is no `CulturePicker`
+(yet)" item above. The v1.2.0 workstream (D7) shipped
+the picker. The implementation:
+
+- **Service**: `Cardscape.Web.Services.CultureSwitcher`
+  (singleton) owns the current culture, the per-culture
+  in-memory dictionary, and the `localStorage`
+  persistence under the key `Cardscape.Culture`.
+- **Localizer**: `HttpBackedStringLocalizer` is
+  registered as the `IStringLocalizer<SharedResource>`
+  implementation in `Program.cs`. It reads from the
+  picker when the key is present and falls back to the
+  embedded English `StringLocalizer<SharedResource>`
+  otherwise.
+- **UI**: `Shared/LanguageSwitcher.razor` is a
+  `RadzenDropDown` rendered in both the
+  `<Authorized>` and `<NotAuthorized>` branches of
+  `Layout/MainLayout.razor`. On change it calls
+  `CultureSwitcher.SetCultureAsync(culture)`; the
+  picker persists the choice, fetches the matching
+  `SharedResource.{culture}.resx` static web asset,
+  parses the `<data name=…>` entries into the
+  dictionary, and raises a `Changed` event that the
+  layout converts into a `StateHasChanged()`.
+- **Wiring**: `Program.cs` registers
+  `AddLocalization` (for the embedded fallback),
+  `CultureSwitcher` (singleton),
+  `HttpBackedStringLocalizer` (singleton, with the
+  embedded `IStringLocalizer<SharedResource>` injected
+  for the fallback path), and a named `HttpClient`
+  (`Cardscape.Resources`) for the same-origin `.resx`
+  fetches.
+
+The decision record is
+[ADR 0010](../adr/0010-client-side-culture-switcher.md).
+The runtime invariant the ADR guards is **the picker
+never touches `Thread.CurrentCulture`**. The runtime
+culture stays at `CultureInfo.InvariantCulture`; the
+Blazor culture-change detection overlay never fires.
+
+### 13.1 Adding a new language
+
+1. Drop a new `SharedResource.<lang>.resx` next to the
+   existing `SharedResource.resx` /
+   `SharedResource.es.resx`.
+2. Add the language code to
+   `CultureSwitcher.AvailableCultures` in
+   `src/Cardscape.Web/Services/CultureSwitcher.cs`.
+3. Add a `CommonLanguage<lang>` key in all the
+   existing `.resx` files (English: "Language",
+   Spanish: "Idioma", …) and a new
+   `CommonLanguage<lang>Display` key per existing
+   language that points at the new language's
+   display name.
+4. Add the corresponding label rendering in
+   `Shared/LanguageSwitcher.razor`'s `GetLabel`
+   switch.
+5. No `Program.cs` change is needed — the
+   `<None Pack="true">` directive in
+   `Cardscape.Web.csproj:67` ships any new
+   `SharedResource.<lang>.resx` as a static web asset
+   automatically.
+
+### 13.2 Verification
+
+- Switch the language in the UI from English to
+  Spanish. The page does **not** show the Blazor
+  culture-change detection overlay.
+- Refresh the page. The Spanish strings render on
+  `/login` and `/register` (the two pages that are
+  the most visible to new users). The choice
+  persists in `localStorage` (the dropdown shows
+  "Español" after a hard refresh).
+- Switch back to English. The English strings render
+  on every page.
+- Inspect `localStorage` in the browser dev tools.
+  The key `Cardscape.Culture` has the value `"es"` or
+  `"en"`.
+- Inspect the network tab. The first time the user
+  switches to Spanish, the browser fetches
+  `/Resources/SharedResource.es.resx` over HTTP.
+  Subsequent switches to the same culture are served
+  from the picker's in-memory dictionary.
+
+---
+
+## 14. When to revisit
 
 This document is revisited when:
 
@@ -564,10 +652,12 @@ This document is revisited when:
 3. A new language is added.
 4. A new artifact type is translated (e.g. the MCP
    server's prompts).
-5. The Blazor WebAssembly `CulturePicker` lands (see §12.1)
-   and the runtime culture-switch workflow is documented.
-6. The `.resx` placeholder convention (§11.4) needs to
+5. The `.resx` placeholder convention (§11.4) needs to
    change (e.g. if a non-todo workflow is introduced).
+6. The picker grows a per-page language override (a
+   page that wants to render English strings even when
+   the user prefers Spanish — the docs site, for
+   example).
 
 Until then, this document is the source of truth for the
 translation workflow in Cardscape.
