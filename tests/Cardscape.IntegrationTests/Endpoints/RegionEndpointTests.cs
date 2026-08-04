@@ -39,10 +39,10 @@ public class RegionEndpointTests : IClassFixture<CardscapeWebApplicationFactory>
 
         HttpResponseMessage response = await client.PostAsJsonAsync(
             "api/workspaces/",
-            new CreateWorkspaceRequest("Acme EU", Region: Domain.Workspaces.Region.NorthAmerica));
+            new CreateWorkspaceRequest("Acme EU", Region: Domain.Workspaces.Region.NorthAmerica), TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
-        string body = await response.Content.ReadAsStringAsync();
+        string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         body.Should().Contain("workspaces.region_mismatch");
     }
 
@@ -55,10 +55,10 @@ public class RegionEndpointTests : IClassFixture<CardscapeWebApplicationFactory>
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         HttpResponseMessage response = await client.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("Acme Default"));
+            "api/workspaces/", new CreateWorkspaceRequest("Acme Default"), TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        WorkspaceDto? workspace = await response.Content.ReadFromJsonAsync<WorkspaceDto>();
+        WorkspaceDto? workspace = await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken);
         workspace.Should().NotBeNull();
         workspace!.Region.Should().Be(Domain.Workspaces.Region.Europe);
     }

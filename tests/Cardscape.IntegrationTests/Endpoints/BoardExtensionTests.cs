@@ -29,25 +29,25 @@ public sealed class BoardExtensionTests
 
         HttpResponseMessage enable = await client.PostAsJsonAsync(
             $"api/boards/{board.Id}/extensions/",
-            new { kind = 0, configJson = (string?)null });
+            new { kind = 0, configJson = (string?)null }, TestContext.Current.CancellationToken);
         enable.IsSuccessStatusCode.Should().BeTrue();
-        BoardExtensionDto enabled = (await enable.Content.ReadFromJsonAsync<BoardExtensionDto>())!;
+        BoardExtensionDto enabled = (await enable.Content.ReadFromJsonAsync<BoardExtensionDto>(TestContext.Current.CancellationToken))!;
         enabled.IsEnabled.Should().BeTrue();
         enabled.Kind.Should().Be(0);
 
-        HttpResponseMessage list = await client.GetAsync($"api/boards/{board.Id}/extensions/");
+        HttpResponseMessage list = await client.GetAsync($"api/boards/{board.Id}/extensions/", TestContext.Current.CancellationToken);
         list.IsSuccessStatusCode.Should().BeTrue();
-        BoardExtensionDto[]? rows = await list.Content.ReadFromJsonAsync<BoardExtensionDto[]>();
+        BoardExtensionDto[]? rows = await list.Content.ReadFromJsonAsync<BoardExtensionDto[]>(TestContext.Current.CancellationToken);
         rows.Should().NotBeNull().And.HaveCount(1);
 
         HttpResponseMessage disable = await client.DeleteAsync(
-            $"api/boards/{board.Id}/extensions/0");
+            $"api/boards/{board.Id}/extensions/0", TestContext.Current.CancellationToken);
         disable.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         HttpResponseMessage listAfter = await client.GetAsync(
-            $"api/boards/{board.Id}/extensions/");
+            $"api/boards/{board.Id}/extensions/", TestContext.Current.CancellationToken);
         BoardExtensionDto[]? after =
-            await listAfter.Content.ReadFromJsonAsync<BoardExtensionDto[]>();
+            await listAfter.Content.ReadFromJsonAsync<BoardExtensionDto[]>(TestContext.Current.CancellationToken);
         after!.Should().ContainSingle()
               .Which.IsEnabled.Should().BeFalse();
     }
@@ -60,18 +60,18 @@ public sealed class BoardExtensionTests
 
         HttpResponseMessage first = await client.PostAsJsonAsync(
             $"api/boards/{board.Id}/extensions/",
-            new { kind = 1, configJson = (string?)null });
+            new { kind = 1, configJson = (string?)null }, TestContext.Current.CancellationToken);
         first.IsSuccessStatusCode.Should().BeTrue();
 
         // Second call with the same kind must not create a duplicate row.
         HttpResponseMessage second = await client.PostAsJsonAsync(
             $"api/boards/{board.Id}/extensions/",
-            new { kind = 1, configJson = (string?)null });
+            new { kind = 1, configJson = (string?)null }, TestContext.Current.CancellationToken);
         second.IsSuccessStatusCode.Should().BeTrue();
 
         HttpResponseMessage list = await client.GetAsync(
-            $"api/boards/{board.Id}/extensions/");
-        BoardExtensionDto[]? rows = await list.Content.ReadFromJsonAsync<BoardExtensionDto[]>();
+            $"api/boards/{board.Id}/extensions/", TestContext.Current.CancellationToken);
+        BoardExtensionDto[]? rows = await list.Content.ReadFromJsonAsync<BoardExtensionDto[]>(TestContext.Current.CancellationToken);
         rows.Should().NotBeNull().And.HaveCount(1);
     }
 
@@ -83,13 +83,13 @@ public sealed class BoardExtensionTests
 
         await client.PostAsJsonAsync(
             $"api/boards/{board.Id}/extensions/",
-            new { kind = 0, configJson = """{"theme":"dark"}""" });
+            new { kind = 0, configJson = """{"theme":"dark"}""" }, TestContext.Current.CancellationToken);
 
         HttpResponseMessage put = await client.PutAsJsonAsync(
             $"api/boards/{board.Id}/extensions/0/config",
-            new { configJson = """{"theme":"light"}""" });
+            new { configJson = """{"theme":"light"}""" }, TestContext.Current.CancellationToken);
         put.IsSuccessStatusCode.Should().BeTrue();
-        BoardExtensionDto updated = (await put.Content.ReadFromJsonAsync<BoardExtensionDto>())!;
+        BoardExtensionDto updated = (await put.Content.ReadFromJsonAsync<BoardExtensionDto>(TestContext.Current.CancellationToken))!;
         updated.ConfigJson.Should().Contain("light");
     }
 
@@ -100,7 +100,7 @@ public sealed class BoardExtensionTests
         BoardDto board = await CreateBoardAsync(client, "Disable missing");
 
         HttpResponseMessage resp = await client.DeleteAsync(
-            $"api/boards/{board.Id}/extensions/2");
+            $"api/boards/{board.Id}/extensions/2", TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
@@ -112,7 +112,7 @@ public sealed class BoardExtensionTests
 
         HttpClient stranger = await CreateAuthenticatedClientAsync();
         HttpResponseMessage resp = await stranger.GetAsync(
-            $"api/boards/{board.Id}/extensions/");
+            $"api/boards/{board.Id}/extensions/", TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
@@ -124,7 +124,7 @@ public sealed class BoardExtensionTests
 
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             $"api/boards/{board.Id}/extensions/",
-            new { kind = 999, configJson = (string?)null });
+            new { kind = 999, configJson = (string?)null }, TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
@@ -133,7 +133,7 @@ public sealed class BoardExtensionTests
     {
         HttpClient client = _factory.CreateApiClient();
         HttpResponseMessage resp = await client.GetAsync(
-            $"api/boards/{Guid.NewGuid()}/extensions/");
+            $"api/boards/{Guid.NewGuid()}/extensions/", TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 

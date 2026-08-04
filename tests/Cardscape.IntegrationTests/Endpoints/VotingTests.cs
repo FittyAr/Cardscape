@@ -21,10 +21,10 @@ public sealed class VotingTests
         Seed seed = await CreateSeedAsync(client, "Toggle first");
 
         HttpResponseMessage resp = await client.PostAsync(
-            $"api/cards/{seed.CardId}/votes/", content: null);
+            $"api/cards/{seed.CardId}/votes/", content: null, TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
 
-        CardVoteStateDto? state = await resp.Content.ReadFromJsonAsync<CardVoteStateDto>();
+        CardVoteStateDto? state = await resp.Content.ReadFromJsonAsync<CardVoteStateDto>(TestContext.Current.CancellationToken);
         state.Should().NotBeNull();
         state!.VoteCount.Should().Be(1);
         state.CurrentUserHasVoted.Should().BeTrue();
@@ -36,12 +36,12 @@ public sealed class VotingTests
         HttpClient client = await CreateAuthenticatedClientAsync();
         Seed seed = await CreateSeedAsync(client, "Toggle twice");
 
-        await client.PostAsync($"api/cards/{seed.CardId}/votes/", content: null);
+        await client.PostAsync($"api/cards/{seed.CardId}/votes/", content: null, TestContext.Current.CancellationToken);
         HttpResponseMessage resp = await client.PostAsync(
-            $"api/cards/{seed.CardId}/votes/", content: null);
+            $"api/cards/{seed.CardId}/votes/", content: null, TestContext.Current.CancellationToken);
 
         resp.IsSuccessStatusCode.Should().BeTrue();
-        CardVoteStateDto? state = await resp.Content.ReadFromJsonAsync<CardVoteStateDto>();
+        CardVoteStateDto? state = await resp.Content.ReadFromJsonAsync<CardVoteStateDto>(TestContext.Current.CancellationToken);
         state!.VoteCount.Should().Be(0);
         state.CurrentUserHasVoted.Should().BeFalse();
     }
@@ -52,9 +52,9 @@ public sealed class VotingTests
         HttpClient client = await CreateAuthenticatedClientAsync();
         Seed seed = await CreateSeedAsync(client, "Get state");
 
-        HttpResponseMessage resp = await client.GetAsync($"api/cards/{seed.CardId}/votes/");
+        HttpResponseMessage resp = await client.GetAsync($"api/cards/{seed.CardId}/votes/", TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
-        CardVoteStateDto? state = await resp.Content.ReadFromJsonAsync<CardVoteStateDto>();
+        CardVoteStateDto? state = await resp.Content.ReadFromJsonAsync<CardVoteStateDto>(TestContext.Current.CancellationToken);
         state!.VoteCount.Should().Be(0);
         state.CurrentUserHasVoted.Should().BeFalse();
     }
@@ -64,7 +64,7 @@ public sealed class VotingTests
     {
         HttpClient client = await CreateAuthenticatedClientAsync();
         HttpResponseMessage resp = await client.PostAsync(
-            $"api/cards/{Guid.NewGuid()}/votes/", content: null);
+            $"api/cards/{Guid.NewGuid()}/votes/", content: null, TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
@@ -73,7 +73,7 @@ public sealed class VotingTests
     {
         HttpClient client = _factory.CreateApiClient();
         HttpResponseMessage resp = await client.PostAsync(
-            $"api/cards/{Guid.NewGuid()}/votes/", content: null);
+            $"api/cards/{Guid.NewGuid()}/votes/", content: null, TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 

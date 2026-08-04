@@ -42,10 +42,10 @@ public class SamlEndpointsTests
             ownerClient, slug, spEntityId, "https://idp.test/metadata");
 
         HttpResponseMessage response = await ownerClient.GetAsync(
-            $"saml/{setup.Slug}/metadata");
+            $"saml/{setup.Slug}/metadata", TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        string xml = await response.Content.ReadAsStringAsync();
+        string xml = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         XDocument.Parse(xml);  // throws if not well-formed
 
         XDocument doc = XDocument.Parse(xml);
@@ -93,7 +93,7 @@ public class SamlEndpointsTests
         string metadataFile = Path.Combine(
             Path.GetTempPath(), $"cardscape-saml-{Guid.NewGuid():N}.xml");
         await File.WriteAllTextAsync(metadataFile,
-            BuildIdpMetadataXml(idpEntityId, ssoLocation));
+            BuildIdpMetadataXml(idpEntityId, ssoLocation), TestContext.Current.CancellationToken);
 
         try
         {
@@ -105,9 +105,9 @@ public class SamlEndpointsTests
             string workspaceSlug = $"ws-{Guid.NewGuid():N}";
             HttpResponseMessage createWorkspace = await ownerClient.PostAsJsonAsync(
                 "api/workspaces/",
-                new CreateWorkspaceRequest($"SAML Workspace {workspaceSlug}"));
+                new CreateWorkspaceRequest($"SAML Workspace {workspaceSlug}"), TestContext.Current.CancellationToken);
             createWorkspace.IsSuccessStatusCode.Should().BeTrue();
-            WorkspaceDto workspace = (await createWorkspace.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+            WorkspaceDto workspace = (await createWorkspace.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
 
             HttpResponseMessage configure = await ownerClient.PostAsJsonAsync(
                 $"api/workspaces/{workspace.Id}/saml/",
@@ -119,14 +119,14 @@ public class SamlEndpointsTests
                     idpMetadataUrl,
                     idpMetadataXml = (string?)null,
                     spEntityId
-                });
+                }, TestContext.Current.CancellationToken);
             configure.IsSuccessStatusCode.Should().BeTrue(
-                $"ConfigureSamlConnection must succeed; body was {await configure.Content.ReadAsStringAsync()}");
+                $"ConfigureSamlConnection must succeed; body was {await configure.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
             HttpResponseMessage response = await ownerClient.GetAsync(
-                $"saml/{slug}/login");
+                $"saml/{slug}/login", TestContext.Current.CancellationToken);
 
-            string body = await response.Content.ReadAsStringAsync();
+            string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
             // The handler issues a 302 redirect to the IdP's
             // SingleSignOnService URL.
@@ -152,7 +152,7 @@ public class SamlEndpointsTests
         HttpClient client = _factory.CreateApiClient();
         string slug = $"missing-{Guid.NewGuid():N}";
 
-        HttpResponseMessage response = await client.GetAsync($"saml/{slug}/login");
+        HttpResponseMessage response = await client.GetAsync($"saml/{slug}/login", TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }

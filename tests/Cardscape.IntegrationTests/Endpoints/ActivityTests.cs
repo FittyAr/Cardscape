@@ -27,11 +27,11 @@ public sealed class ActivityTests
         Seed seed = await CreateSeedAsync(client, "Empty board activity");
 
         HttpResponseMessage resp = await client.GetAsync(
-            $"api/boards/{seed.BoardId}/activities/");
+            $"api/boards/{seed.BoardId}/activities/", TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
 
         ActivityPageDto? page =
-            (await resp.Content.ReadFromJsonAsync<ActivityPageDto>())!;
+            (await resp.Content.ReadFromJsonAsync<ActivityPageDto>(TestContext.Current.CancellationToken))!;
         page.Should().NotBeNull();
         page!.Items.Should().BeEmpty();
         page.NextCursor.Should().BeNull();
@@ -49,11 +49,11 @@ public sealed class ActivityTests
         // have an empty page. We only assert the response
         // envelope is well-formed.
         HttpResponseMessage resp = await client.GetAsync(
-            $"api/cards/{seed.CardId}/activities/");
+            $"api/cards/{seed.CardId}/activities/", TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
 
         ActivityPageDto? page =
-            (await resp.Content.ReadFromJsonAsync<ActivityPageDto>())!;
+            (await resp.Content.ReadFromJsonAsync<ActivityPageDto>(TestContext.Current.CancellationToken))!;
         page.Should().NotBeNull();
         page!.Items.Should().NotBeNull();
         page.NextCursor.Should().BeNull();
@@ -64,7 +64,7 @@ public sealed class ActivityTests
     {
         HttpClient client = _factory.CreateApiClient();
         HttpResponseMessage resp = await client.GetAsync(
-            $"api/boards/{Guid.NewGuid()}/activities/");
+            $"api/boards/{Guid.NewGuid()}/activities/", TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
@@ -75,7 +75,7 @@ public sealed class ActivityTests
         Seed seed = await CreateSeedAsync(client, "Limit clamp");
 
         HttpResponseMessage resp = await client.GetAsync(
-            $"api/boards/{seed.BoardId}/activities/?limit=99999");
+            $"api/boards/{seed.BoardId}/activities/?limit=99999", TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
         // We don't need to assert items here — just that the
         // server didn't 400 on an absurdly large limit.

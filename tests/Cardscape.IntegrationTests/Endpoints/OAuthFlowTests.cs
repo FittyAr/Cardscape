@@ -50,7 +50,7 @@ public sealed class OAuthFlowTests
 
         registration.ClientId.Should().NotBeNullOrWhiteSpace();
         registration.ClientSecret.Should().NotBeNullOrWhiteSpace();
-        registration.SecretPrefix.Length.Should().BeGreaterOrEqualTo(8);
+        registration.SecretPrefix.Length.Should().BeGreaterThanOrEqualTo(8);
 
         // 2. /oauth/authorize requires an authenticated user.
         //    The factory's Web client doesn't carry the JWT
@@ -100,7 +100,7 @@ public sealed class OAuthFlowTests
             new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["token"] = token.AccessToken
-            }));
+            }), TestContext.Current.CancellationToken);
         revoke.IsSuccessStatusCode.Should().BeTrue();
 
         // 6. After revoke, userinfo returns 401.
@@ -136,7 +136,7 @@ public sealed class OAuthFlowTests
                 ["client_id"] = registration.ClientId,
                 ["client_secret"] = "this-is-not-the-real-secret",
                 ["redirect_uri"] = "https://example.com/callback"
-            }));
+            }), TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
@@ -168,10 +168,10 @@ public sealed class OAuthFlowTests
             ["redirect_uri"] = "https://example.com/callback"
         });
 
-        HttpResponseMessage first = await client.PostAsync("oauth/token", form);
+        HttpResponseMessage first = await client.PostAsync("oauth/token", form, TestContext.Current.CancellationToken);
         first.IsSuccessStatusCode.Should().BeTrue();
 
-        HttpResponseMessage second = await client.PostAsync("oauth/token", form);
+        HttpResponseMessage second = await client.PostAsync("oauth/token", form, TestContext.Current.CancellationToken);
         second.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
@@ -179,7 +179,7 @@ public sealed class OAuthFlowTests
     public async Task UserInfo_Without_Bearer_Returns_Unauthorized()
     {
         HttpClient client = _factory.CreateApiClient();
-        HttpResponseMessage response = await client.GetAsync("oauth/userinfo");
+        HttpResponseMessage response = await client.GetAsync("oauth/userinfo", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 

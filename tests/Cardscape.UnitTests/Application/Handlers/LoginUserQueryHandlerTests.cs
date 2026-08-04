@@ -126,7 +126,7 @@ public class LoginUserQueryHandlerTests
         result.Value.AccessToken.Should().NotBeNullOrWhiteSpace();
         result.Value.RefreshToken.Should().NotBeNullOrWhiteSpace();
         ctx.Tokens.AccessTokensIssued.Should().HaveCount(1);
-        var stored = await ctx.TotpCredentials.FindForUserAsync(user.Id);
+        var stored = await ctx.TotpCredentials.FindForUserAsync(user.Id, TestContext.Current.CancellationToken);
         stored!.LastUsedCounter.Should().BeGreaterThan(0);
     }
 

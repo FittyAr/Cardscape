@@ -43,7 +43,7 @@ namespace Cardscape.Api.Endpoints.Internal;
 /// </remarks>
 public static class ClientLogEndpoint
 {
-    private const string LogCategory = "Cardscape.Web.Client";
+    private const string LogCategory = "Cardscape.ClientLogs";
 
     public static IEndpointRouteBuilder MapClientLogEndpoint(this IEndpointRouteBuilder app)
     {

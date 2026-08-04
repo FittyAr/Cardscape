@@ -21,9 +21,9 @@ public sealed class ChecklistTests
         Seed seed = await CreateSeedAsync(client, "create cl");
 
         HttpResponseMessage resp = await client.PostAsJsonAsync(
-            $"api/cards/{seed.CardId}/checklists/", new { title = "Today" });
+            $"api/cards/{seed.CardId}/checklists/", new { title = "Today" }, TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
-        ChecklistDto? created = await resp.Content.ReadFromJsonAsync<ChecklistDto>();
+        ChecklistDto? created = await resp.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
         created!.Title.Should().Be("Today");
         created.CardId.Should().Be(seed.CardId);
     }
@@ -35,10 +35,10 @@ public sealed class ChecklistTests
         Seed seed = await CreateSeedAsync(client, "list empty");
 
         HttpResponseMessage resp = await client.GetAsync(
-            $"api/cards/{seed.CardId}/checklists/");
+            $"api/cards/{seed.CardId}/checklists/", TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
         ChecklistDto[]? arr =
-            (await resp.Content.ReadFromJsonAsync<ChecklistDto[]>())!;
+            (await resp.Content.ReadFromJsonAsync<ChecklistDto[]>(TestContext.Current.CancellationToken))!;
         arr.Should().BeEmpty();
     }
 
@@ -49,17 +49,17 @@ public sealed class ChecklistTests
         Seed seed = await CreateSeedAsync(client, "add+toggle");
 
         HttpResponseMessage created = await client.PostAsJsonAsync(
-            $"api/cards/{seed.CardId}/checklists/", new { title = "todos" });
-        ChecklistDto? cl = await created.Content.ReadFromJsonAsync<ChecklistDto>();
+            $"api/cards/{seed.CardId}/checklists/", new { title = "todos" }, TestContext.Current.CancellationToken);
+        ChecklistDto? cl = await created.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
 
         HttpResponseMessage withItem = await client.PostAsJsonAsync(
-            $"api/checklists/{cl!.Id}/items/", new { text = "first" });
-        ChecklistDto? updated = await withItem.Content.ReadFromJsonAsync<ChecklistDto>();
+            $"api/checklists/{cl!.Id}/items/", new { text = "first" }, TestContext.Current.CancellationToken);
+        ChecklistDto? updated = await withItem.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
         Guid itemId = updated!.Items[0].Id;
 
         HttpResponseMessage toggled = await client.PatchAsync(
-            $"api/checklists/{cl.Id}/items/{itemId}/toggle", content: null);
-        ChecklistDto? after = await toggled.Content.ReadFromJsonAsync<ChecklistDto>();
+            $"api/checklists/{cl.Id}/items/{itemId}/toggle", content: null, TestContext.Current.CancellationToken);
+        ChecklistDto? after = await toggled.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
         after!.CompletedCount.Should().Be(1);
         after.TotalCount.Should().Be(1);
         after.Items[0].IsCompleted.Should().BeTrue();
@@ -72,17 +72,17 @@ public sealed class ChecklistTests
         Seed seed = await CreateSeedAsync(client, "delete cl");
 
         HttpResponseMessage created = await client.PostAsJsonAsync(
-            $"api/cards/{seed.CardId}/checklists/", new { title = "t" });
-        ChecklistDto? cl = await created.Content.ReadFromJsonAsync<ChecklistDto>();
+            $"api/cards/{seed.CardId}/checklists/", new { title = "t" }, TestContext.Current.CancellationToken);
+        ChecklistDto? cl = await created.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
 
         HttpResponseMessage deleted = await client.DeleteAsync(
-            $"api/checklists/{cl!.Id}/");
+            $"api/checklists/{cl!.Id}/", TestContext.Current.CancellationToken);
         deleted.IsSuccessStatusCode.Should().BeTrue();
 
         HttpResponseMessage listed = await client.GetAsync(
-            $"api/cards/{seed.CardId}/checklists/");
+            $"api/cards/{seed.CardId}/checklists/", TestContext.Current.CancellationToken);
         ChecklistDto[]? arr =
-            (await listed.Content.ReadFromJsonAsync<ChecklistDto[]>())!;
+            (await listed.Content.ReadFromJsonAsync<ChecklistDto[]>(TestContext.Current.CancellationToken))!;
         arr.Should().BeEmpty();
     }
 
@@ -93,15 +93,15 @@ public sealed class ChecklistTests
         Seed seed = await CreateSeedAsync(client, "delete item");
 
         HttpResponseMessage created = await client.PostAsJsonAsync(
-            $"api/cards/{seed.CardId}/checklists/", new { title = "t" });
-        ChecklistDto? cl = await created.Content.ReadFromJsonAsync<ChecklistDto>();
+            $"api/cards/{seed.CardId}/checklists/", new { title = "t" }, TestContext.Current.CancellationToken);
+        ChecklistDto? cl = await created.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
         HttpResponseMessage withItem = await client.PostAsJsonAsync(
-            $"api/checklists/{cl!.Id}/items/", new { text = "x" });
-        ChecklistDto? with = await withItem.Content.ReadFromJsonAsync<ChecklistDto>();
+            $"api/checklists/{cl!.Id}/items/", new { text = "x" }, TestContext.Current.CancellationToken);
+        ChecklistDto? with = await withItem.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
 
         HttpResponseMessage delItem = await client.DeleteAsync(
-            $"api/checklists/{cl.Id}/items/{with!.Items[0].Id}");
-        ChecklistDto? after = await delItem.Content.ReadFromJsonAsync<ChecklistDto>();
+            $"api/checklists/{cl.Id}/items/{with!.Items[0].Id}", TestContext.Current.CancellationToken);
+        ChecklistDto? after = await delItem.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
         after!.Items.Should().BeEmpty();
         after.TotalCount.Should().Be(0);
     }
@@ -113,12 +113,12 @@ public sealed class ChecklistTests
         Seed seed = await CreateSeedAsync(client, "rename cl");
 
         HttpResponseMessage created = await client.PostAsJsonAsync(
-            $"api/cards/{seed.CardId}/checklists/", new { title = "old" });
-        ChecklistDto? cl = await created.Content.ReadFromJsonAsync<ChecklistDto>();
+            $"api/cards/{seed.CardId}/checklists/", new { title = "old" }, TestContext.Current.CancellationToken);
+        ChecklistDto? cl = await created.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
 
         HttpResponseMessage renamed = await client.PatchAsJsonAsync(
-            $"api/checklists/{cl!.Id}/", new { title = "new" });
-        ChecklistDto? after = await renamed.Content.ReadFromJsonAsync<ChecklistDto>();
+            $"api/checklists/{cl!.Id}/", new { title = "new" }, TestContext.Current.CancellationToken);
+        ChecklistDto? after = await renamed.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
         after!.Title.Should().Be("new");
     }
 

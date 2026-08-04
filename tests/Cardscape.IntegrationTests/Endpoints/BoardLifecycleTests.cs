@@ -25,31 +25,31 @@ public sealed class BoardLifecycleTests
 
         // Workspace
         HttpResponseMessage createWs = await client.PostAsJsonAsync(
-            "api/workspaces/", new { name = "Smoke WS" });
+            "api/workspaces/", new { name = "Smoke WS" }, TestContext.Current.CancellationToken);
         createWs.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto? ws = await createWs.Content.ReadFromJsonAsync<WorkspaceDto>();
+        WorkspaceDto? ws = await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken);
         ws.Should().NotBeNull();
         ws!.MemberCount.Should().BeGreaterThan(0);
 
         // Board
         HttpResponseMessage createBoard = await client.PostAsJsonAsync(
-            "api/boards/", new { workspaceId = ws.Id, name = "Smoke board", description = (string?)null, visibility = 0 });
+            "api/boards/", new { workspaceId = ws.Id, name = "Smoke board", description = (string?)null, visibility = 0 }, TestContext.Current.CancellationToken);
         createBoard.IsSuccessStatusCode.Should().BeTrue();
-        BoardDto? board = await createBoard.Content.ReadFromJsonAsync<BoardDto>();
+        BoardDto? board = await createBoard.Content.ReadFromJsonAsync<BoardDto>(TestContext.Current.CancellationToken);
         board.Should().NotBeNull();
 
         // List
         HttpResponseMessage createList = await client.PostAsJsonAsync(
-            "api/lists/", new { boardId = board!.Id, name = "Todo" });
+            "api/lists/", new { boardId = board!.Id, name = "Todo" }, TestContext.Current.CancellationToken);
         createList.IsSuccessStatusCode.Should().BeTrue();
-        BoardListDto? list = await createList.Content.ReadFromJsonAsync<BoardListDto>();
+        BoardListDto? list = await createList.Content.ReadFromJsonAsync<BoardListDto>(TestContext.Current.CancellationToken);
         list.Should().NotBeNull();
 
         // Card
         HttpResponseMessage createCard = await client.PostAsJsonAsync(
-            "api/cards/", new { listId = list!.Id, title = "Hello", description = (string?)null });
+            "api/cards/", new { listId = list!.Id, title = "Hello", description = (string?)null }, TestContext.Current.CancellationToken);
         createCard.IsSuccessStatusCode.Should().BeTrue();
-        CardDto? card = await createCard.Content.ReadFromJsonAsync<CardDto>();
+        CardDto? card = await createCard.Content.ReadFromJsonAsync<CardDto>(TestContext.Current.CancellationToken);
         card.Should().NotBeNull();
         card!.Title.Should().Be("Hello");
         card.IsCompleted.Should().BeFalse();
@@ -62,14 +62,14 @@ public sealed class BoardLifecycleTests
         (_, _, BoardListDto list) = await SeedWorkspaceBoardListAsync(client);
         CardDto card = await CreateCardAsync(client, list.Id, "Complete me");
 
-        HttpResponseMessage complete = await client.PostAsync($"api/cards/{card.Id}/complete", content: null);
+        HttpResponseMessage complete = await client.PostAsync($"api/cards/{card.Id}/complete", content: null, TestContext.Current.CancellationToken);
         complete.IsSuccessStatusCode.Should().BeTrue();
-        CardDto? completed = await complete.Content.ReadFromJsonAsync<CardDto>();
+        CardDto? completed = await complete.Content.ReadFromJsonAsync<CardDto>(TestContext.Current.CancellationToken);
         completed!.IsCompleted.Should().BeTrue();
 
-        HttpResponseMessage reopen = await client.PostAsync($"api/cards/{card.Id}/reopen", content: null);
+        HttpResponseMessage reopen = await client.PostAsync($"api/cards/{card.Id}/reopen", content: null, TestContext.Current.CancellationToken);
         reopen.IsSuccessStatusCode.Should().BeTrue();
-        CardDto? reopened = await reopen.Content.ReadFromJsonAsync<CardDto>();
+        CardDto? reopened = await reopen.Content.ReadFromJsonAsync<CardDto>(TestContext.Current.CancellationToken);
         reopened!.IsCompleted.Should().BeFalse();
     }
 
@@ -79,13 +79,13 @@ public sealed class BoardLifecycleTests
         HttpClient client = await CreateAuthenticatedClient();
         (_, BoardDto board, _) = await SeedWorkspaceBoardListAsync(client);
 
-        HttpResponseMessage star = await client.PostAsync($"api/boards/{board.Id}/star", content: null);
+        HttpResponseMessage star = await client.PostAsync($"api/boards/{board.Id}/star", content: null, TestContext.Current.CancellationToken);
         star.IsSuccessStatusCode.Should().BeTrue();
-        (await star.Content.ReadFromJsonAsync<BoardDto>())!.IsStarred.Should().BeTrue();
+        (await star.Content.ReadFromJsonAsync<BoardDto>(TestContext.Current.CancellationToken))!.IsStarred.Should().BeTrue();
 
-        HttpResponseMessage unstar = await client.DeleteAsync($"api/boards/{board.Id}/star");
+        HttpResponseMessage unstar = await client.DeleteAsync($"api/boards/{board.Id}/star", TestContext.Current.CancellationToken);
         unstar.IsSuccessStatusCode.Should().BeTrue();
-        (await unstar.Content.ReadFromJsonAsync<BoardDto>())!.IsStarred.Should().BeFalse();
+        (await unstar.Content.ReadFromJsonAsync<BoardDto>(TestContext.Current.CancellationToken))!.IsStarred.Should().BeFalse();
     }
 
     [Fact]
@@ -96,12 +96,12 @@ public sealed class BoardLifecycleTests
         CardDto card = await CreateCardAsync(client, list.Id, "Comment test");
 
         HttpResponseMessage add = await client.PostAsJsonAsync(
-            $"api/cards/{card.Id}/comments/", new { body = "First comment from integration test" });
+            $"api/cards/{card.Id}/comments/", new { body = "First comment from integration test" }, TestContext.Current.CancellationToken);
         add.IsSuccessStatusCode.Should().BeTrue();
 
-        HttpResponseMessage list1 = await client.GetAsync($"api/cards/{card.Id}/comments/");
+        HttpResponseMessage list1 = await client.GetAsync($"api/cards/{card.Id}/comments/", TestContext.Current.CancellationToken);
         list1.IsSuccessStatusCode.Should().BeTrue();
-        CommentDto[]? comments = await list1.Content.ReadFromJsonAsync<CommentDto[]>();
+        CommentDto[]? comments = await list1.Content.ReadFromJsonAsync<CommentDto[]>(TestContext.Current.CancellationToken);
         comments.Should().NotBeNull().And.HaveCount(1);
         comments![0].Body.Should().Be("First comment from integration test");
     }
@@ -114,13 +114,13 @@ public sealed class BoardLifecycleTests
         CardDto card = await CreateCardAsync(client, list.Id, "Label test");
 
         HttpResponseMessage createLabel = await client.PostAsJsonAsync(
-            $"api/boards/{board.Id}/labels/", new { name = "Bug", color = "#d73a4a" });
+            $"api/boards/{board.Id}/labels/", new { name = "Bug", color = "#d73a4a" }, TestContext.Current.CancellationToken);
         createLabel.IsSuccessStatusCode.Should().BeTrue();
-        LabelDto? label = await createLabel.Content.ReadFromJsonAsync<LabelDto>();
+        LabelDto? label = await createLabel.Content.ReadFromJsonAsync<LabelDto>(TestContext.Current.CancellationToken);
 
-        HttpResponseMessage attach = await client.PostAsync($"api/cards/{card.Id}/labels/{label!.Id}", content: null);
+        HttpResponseMessage attach = await client.PostAsync($"api/cards/{card.Id}/labels/{label!.Id}", content: null, TestContext.Current.CancellationToken);
         attach.IsSuccessStatusCode.Should().BeTrue();
-        CardDto? attached = await attach.Content.ReadFromJsonAsync<CardDto>();
+        CardDto? attached = await attach.Content.ReadFromJsonAsync<CardDto>(TestContext.Current.CancellationToken);
         attached!.LabelCount.Should().Be(1);
     }
 

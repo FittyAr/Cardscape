@@ -59,7 +59,7 @@ public sealed class BackgroundJobDispatcherTests
             .GetRequiredService<IBackgroundJobScheduler>();
 
         Result enqueue = await scheduler.EnqueueAsync(
-            "test:happy", new { hello = "world" });
+            "test:happy", new { hello = "world" }, ct: TestContext.Current.CancellationToken);
         enqueue.IsSuccess.Should().BeTrue();
 
         // Replicate the IHostedService loop body manually: claim, then
@@ -110,7 +110,7 @@ public sealed class BackgroundJobDispatcherTests
         // job correctly?" from "does the retry timing work?". The
         // exponential-backoff math is unit-tested in BackgroundJobTests.
         Result enqueue = await scheduler.EnqueueAsync(
-            type, new { who = "dis" }, maxAttempts: 1);
+            type, new { who = "dis" }, maxAttempts: 1, ct: TestContext.Current.CancellationToken);
         enqueue.IsSuccess.Should().BeTrue();
 
         await RunOneDispatchTickAsync(scope.ServiceProvider);
@@ -125,7 +125,7 @@ public sealed class BackgroundJobDispatcherTests
             return dead.Any(j => j.Type == type);
         }, TimeSpan.FromSeconds(10));
 
-        marker.AttemptCount.Should().BeGreaterOrEqualTo(1);
+        marker.AttemptCount.Should().BeGreaterThanOrEqualTo(1);
     }
 
     [Fact]
@@ -143,7 +143,7 @@ public sealed class BackgroundJobDispatcherTests
             .GetRequiredService<IBackgroundJobStore>();
 
         Result enqueue = await scheduler.EnqueueAsync(
-            "test:no-handler", new { x = 1 }, maxAttempts: 1);
+            "test:no-handler", new { x = 1 }, maxAttempts: 1, ct: TestContext.Current.CancellationToken);
         enqueue.IsSuccess.Should().BeTrue();
 
         await RunOneDispatchTickAsync(scope.ServiceProvider);

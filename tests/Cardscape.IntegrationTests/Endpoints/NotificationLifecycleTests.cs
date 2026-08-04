@@ -32,32 +32,32 @@ public sealed class NotificationLifecycleTests
             emailOverride: $"assignee-{Guid.NewGuid():N}@cardscape.local");
 
         HttpResponseMessage assign = await owner.PostAsync(
-            $"api/cards/{card.Id}/assign/{assigneeUser.Id}", content: null);
+            $"api/cards/{card.Id}/assign/{assigneeUser.Id}", content: null, TestContext.Current.CancellationToken);
         assign.IsSuccessStatusCode.Should().BeTrue();
 
         // The assignee's inbox shows one unread notification.
-        HttpResponseMessage inbox = await assignee.GetAsync("api/notifications/?unreadOnly=true&skip=0&take=10");
+        HttpResponseMessage inbox = await assignee.GetAsync("api/notifications/?unreadOnly=true&skip=0&take=10", TestContext.Current.CancellationToken);
         inbox.IsSuccessStatusCode.Should().BeTrue();
-        NotificationDto[]? rows = await inbox.Content.ReadFromJsonAsync<NotificationDto[]>();
+        NotificationDto[]? rows = await inbox.Content.ReadFromJsonAsync<NotificationDto[]>(TestContext.Current.CancellationToken);
         rows.Should().NotBeNull().And.HaveCount(1);
         rows![0].Kind.Should().Be("AssignedToCard");
         rows[0].IsRead.Should().BeFalse();
         rows[0].PayloadJson.Should().Contain(card.Id.ToString());
 
         // The unread count is 1.
-        UnreadCountDto count = (await (await assignee.GetAsync("api/notifications/unread-count"))
-            .Content.ReadFromJsonAsync<UnreadCountDto>())!;
+        UnreadCountDto count = (await (await assignee.GetAsync("api/notifications/unread-count", TestContext.Current.CancellationToken))
+            .Content.ReadFromJsonAsync<UnreadCountDto>(TestContext.Current.CancellationToken))!;
         count.Count.Should().Be(1);
 
         // Mark the notification read.
         HttpResponseMessage mark = await assignee.PostAsync(
-            $"api/notifications/{rows[0].Id}/read", content: null);
+            $"api/notifications/{rows[0].Id}/read", content: null, TestContext.Current.CancellationToken);
         mark.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         // Unread count is now 0.
         UnreadCountDto after =
-            (await (await assignee.GetAsync("api/notifications/unread-count"))
-                .Content.ReadFromJsonAsync<UnreadCountDto>())!;
+            (await (await assignee.GetAsync("api/notifications/unread-count", TestContext.Current.CancellationToken))
+                .Content.ReadFromJsonAsync<UnreadCountDto>(TestContext.Current.CancellationToken))!;
         after.Count.Should().Be(0);
     }
 
@@ -71,13 +71,13 @@ public sealed class NotificationLifecycleTests
         CardDto card = await CreateCardAsync(owner, list.Id, "Solo work");
 
         HttpResponseMessage assign = await owner.PostAsync(
-            $"api/cards/{card.Id}/assign/{me.Id}", content: null);
+            $"api/cards/{card.Id}/assign/{me.Id}", content: null, TestContext.Current.CancellationToken);
         assign.IsSuccessStatusCode.Should().BeTrue();
 
-        HttpResponseMessage inbox = await owner.GetAsync("api/notifications/?unreadOnly=true&skip=0&take=10");
+        HttpResponseMessage inbox = await owner.GetAsync("api/notifications/?unreadOnly=true&skip=0&take=10", TestContext.Current.CancellationToken);
         inbox.IsSuccessStatusCode.Should().BeTrue();
         IReadOnlyList<NotificationDto> rows = (await inbox.Content
-            .ReadFromJsonAsync<IReadOnlyList<NotificationDto>>())!;
+            .ReadFromJsonAsync<IReadOnlyList<NotificationDto>>(TestContext.Current.CancellationToken))!;
         rows.Should().BeEmpty();
     }
 
@@ -95,21 +95,21 @@ public sealed class NotificationLifecycleTests
         for (int i = 0; i < 3; i++)
         {
             CardDto c = await CreateCardAsync(owner, list.Id, $"Card {i}");
-            await owner.PostAsync($"api/cards/{c.Id}/assign/{otherUser.Id}", content: null);
+            await owner.PostAsync($"api/cards/{c.Id}/assign/{otherUser.Id}", content: null, TestContext.Current.CancellationToken);
         }
 
         UnreadCountDto before =
-            (await (await other.GetAsync("api/notifications/unread-count"))
-                .Content.ReadFromJsonAsync<UnreadCountDto>())!;
+            (await (await other.GetAsync("api/notifications/unread-count", TestContext.Current.CancellationToken))
+                .Content.ReadFromJsonAsync<UnreadCountDto>(TestContext.Current.CancellationToken))!;
         before.Count.Should().Be(3);
 
         HttpResponseMessage markAll = await other.PostAsync(
-            "api/notifications/mark-all-read", content: null);
+            "api/notifications/mark-all-read", content: null, TestContext.Current.CancellationToken);
         markAll.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         UnreadCountDto after =
-            (await (await other.GetAsync("api/notifications/unread-count"))
-                .Content.ReadFromJsonAsync<UnreadCountDto>())!;
+            (await (await other.GetAsync("api/notifications/unread-count", TestContext.Current.CancellationToken))
+                .Content.ReadFromJsonAsync<UnreadCountDto>(TestContext.Current.CancellationToken))!;
         after.Count.Should().Be(0);
     }
 
@@ -117,7 +117,7 @@ public sealed class NotificationLifecycleTests
     public async Task Anonymous_Inbox_Returns_Unauthorized()
     {
         HttpClient client = _factory.CreateApiClient();
-        HttpResponseMessage resp = await client.GetAsync("api/notifications/");
+        HttpResponseMessage resp = await client.GetAsync("api/notifications/", TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 

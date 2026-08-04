@@ -21,7 +21,7 @@ public sealed class RealtimeHubTests
     public async Task Hub_Negotiate_Without_Token_Returns_401()
     {
         HttpClient client = _factory.CreateApiClient();
-        HttpResponseMessage response = await client.GetAsync("hubs/board/negotiate?negotiateVersion=1");
+        HttpResponseMessage response = await client.GetAsync("hubs/board/negotiate?negotiateVersion=1", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -33,7 +33,7 @@ public sealed class RealtimeHubTests
         client.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
-        HttpResponseMessage response = await client.GetAsync("hubs/board/negotiate?negotiateVersion=1");
+        HttpResponseMessage response = await client.GetAsync("hubs/board/negotiate?negotiateVersion=1", TestContext.Current.CancellationToken);
         // SignalR's negotiate endpoint requires POST. 404 is acceptable
         // proof the route is mapped; 405 is also OK. The test asserts
         // "not 401" which is the real signal — anonymous requests are
@@ -61,18 +61,18 @@ public sealed class RealtimeHubTests
         Guid listId = await CreateListAsync(client, boardId, "Inbox");
 
         HttpResponseMessage create = await client.PostAsJsonAsync(
-            "api/cards/", new { listId, title = "Live card", description = (string?)null });
+            "api/cards/", new { listId, title = "Live card", description = (string?)null }, TestContext.Current.CancellationToken);
         create.IsSuccessStatusCode.Should().BeTrue();
-        CardDto card = (await create.Content.ReadFromJsonAsync<CardDto>())!;
+        CardDto card = (await create.Content.ReadFromJsonAsync<CardDto>(TestContext.Current.CancellationToken))!;
         card.Title.Should().Be("Live card");
 
         // The list shows the new card, proving the broadcast flow
         // (which would otherwise be a no-op if mis-wired and
         // throwing) didn't break the read path.
         HttpResponseMessage list = await client.GetAsync(
-            $"api/cards/?boardId={boardId}&includeArchived=false");
+            $"api/cards/?boardId={boardId}&includeArchived=false", TestContext.Current.CancellationToken);
         list.IsSuccessStatusCode.Should().BeTrue();
-        CardSummaryDto[]? cards = await list.Content.ReadFromJsonAsync<CardSummaryDto[]>();
+        CardSummaryDto[]? cards = await list.Content.ReadFromJsonAsync<CardSummaryDto[]>(TestContext.Current.CancellationToken);
         cards.Should().NotBeNull().And.Contain(c => c.Id == card.Id);
     }
 

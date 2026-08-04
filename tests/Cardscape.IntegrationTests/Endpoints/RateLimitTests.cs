@@ -29,7 +29,7 @@ public sealed class RateLimitTests
     public async Task Unauthenticated_Request_To_Health_Is_NotRateLimited()
     {
         HttpClient client = _factory.CreateApiClient();
-        HttpResponseMessage response = await client.GetAsync("health");
+        HttpResponseMessage response = await client.GetAsync("health", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
@@ -37,7 +37,7 @@ public sealed class RateLimitTests
     public async Task Jwt_Authenticated_Workspaces_Call_Is_NotRateLimited()
     {
         HttpClient client = await CreateJwtClientAsync();
-        HttpResponseMessage response = await client.GetAsync("api/workspaces/");
+        HttpResponseMessage response = await client.GetAsync("api/workspaces/", TestContext.Current.CancellationToken);
         response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Unauthorized)
             .And.NotBe(HttpStatusCode.TooManyRequests);
     }
@@ -55,7 +55,7 @@ public sealed class RateLimitTests
         // API token. The middleware consumes one token from the
         // bucket but the bucket is at burst=50 by default, so a
         // single call must succeed.
-        HttpResponseMessage response = await client.GetAsync("api/workspaces/");
+        HttpResponseMessage response = await client.GetAsync("api/workspaces/", TestContext.Current.CancellationToken);
         response.StatusCode.Should().NotBe(HttpStatusCode.TooManyRequests);
     }
 
@@ -72,19 +72,19 @@ public sealed class RateLimitTests
             new AuthenticationHeaderValue("Bearer", issued.CleartextSecret);
 
         // First two calls go through.
-        (await client.GetAsync("api/workspaces/")).StatusCode
+        (await client.GetAsync("api/workspaces/", TestContext.Current.CancellationToken)).StatusCode
             .Should().NotBe(HttpStatusCode.TooManyRequests);
-        (await client.GetAsync("api/workspaces/")).StatusCode
+        (await client.GetAsync("api/workspaces/", TestContext.Current.CancellationToken)).StatusCode
             .Should().NotBe(HttpStatusCode.TooManyRequests);
 
         // Third call hits an empty bucket.
-        HttpResponseMessage denied = await client.GetAsync("api/workspaces/");
+        HttpResponseMessage denied = await client.GetAsync("api/workspaces/", TestContext.Current.CancellationToken);
         denied.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
         denied.Headers.RetryAfter.Should().NotBeNull();
         denied.Headers.RetryAfter!.Delta.Should().NotBeNull();
         denied.Headers.RetryAfter.Delta!.Value.TotalSeconds.Should().BeGreaterThan(0);
 
-        string body = await denied.Content.ReadAsStringAsync();
+        string body = await denied.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         body.Should().Contain("rate_limited");
     }
 
@@ -99,18 +99,18 @@ public sealed class RateLimitTests
         // PATCH the limit to burst=1, rate=3600 (1/s refill).
         HttpResponseMessage patch = await jwtClient.PatchAsJsonAsync(
             $"api/security/api-tokens/{issued.Id}/rate-limit",
-            new { rateLimitPerHour = 3600, burstSize = 1 });
+            new { rateLimitPerHour = 3600, burstSize = 1 }, TestContext.Current.CancellationToken);
         if (!patch.IsSuccessStatusCode)
         {
-            string body = await patch.Content.ReadAsStringAsync();
+            string body = await patch.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             throw new Xunit.Sdk.XunitException($"PATCH failed: {(int)patch.StatusCode} {patch.StatusCode} body={body}");
         }
         patch.IsSuccessStatusCode.Should().BeTrue();
 
-        ApiTokenRateLimitDto? after = await patch.Content.ReadFromJsonAsync<ApiTokenRateLimitDto>();
+        ApiTokenRateLimitDto? after = await patch.Content.ReadFromJsonAsync<ApiTokenRateLimitDto>(TestContext.Current.CancellationToken);
         if (after is null)
         {
-            string raw = await patch.Content.ReadAsStringAsync();
+            string raw = await patch.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             throw new Xunit.Sdk.XunitException($"PATCH body deserialized null. Raw: {raw}");
         }
         after.Should().NotBeNull();
@@ -125,15 +125,15 @@ public sealed class RateLimitTests
         ApiTokenIssuanceDto issued = await IssueTokenAsync(jwtClient, rateLimitPerHour: 1000, burstSize: 7);
 
         HttpResponseMessage status = await jwtClient.GetAsync(
-            $"api/security/api-tokens/{issued.Id}/rate-limit-status");
+            $"api/security/api-tokens/{issued.Id}/rate-limit-status", TestContext.Current.CancellationToken);
         if (!status.IsSuccessStatusCode)
         {
-            string body = await status.Content.ReadAsStringAsync();
+            string body = await status.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             throw new Xunit.Sdk.XunitException($"GET rate-limit-status failed: {(int)status.StatusCode} {status.StatusCode} body={body}");
         }
         status.IsSuccessStatusCode.Should().BeTrue();
 
-        ApiTokenRateLimitStatusDto? dto = await status.Content.ReadFromJsonAsync<ApiTokenRateLimitStatusDto>();
+        ApiTokenRateLimitStatusDto? dto = await status.Content.ReadFromJsonAsync<ApiTokenRateLimitStatusDto>(TestContext.Current.CancellationToken);
         dto.Should().NotBeNull();
         dto!.TokenId.Should().Be(issued.Id);
         dto.RateLimitPerHour.Should().Be(1000);
@@ -151,7 +151,7 @@ public sealed class RateLimitTests
         // Different authenticated user tries to inspect it.
         HttpClient intruder = await CreateJwtClientAsync();
         HttpResponseMessage response = await intruder.GetAsync(
-            $"api/security/api-tokens/{ownerToken.Id}/rate-limit-status");
+            $"api/security/api-tokens/{ownerToken.Id}/rate-limit-status", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
@@ -160,7 +160,7 @@ public sealed class RateLimitTests
     {
         HttpClient client = _factory.CreateApiClient();
         HttpResponseMessage response = await client.GetAsync(
-            $"api/security/api-tokens/{Guid.NewGuid()}/rate-limit-status");
+            $"api/security/api-tokens/{Guid.NewGuid()}/rate-limit-status", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
@@ -177,10 +177,10 @@ public sealed class RateLimitTests
             new AuthenticationHeaderValue("Bearer", issued.CleartextSecret);
 
         // Drain the bucket.
-        await client.GetAsync("api/workspaces/");
+        await client.GetAsync("api/workspaces/", TestContext.Current.CancellationToken);
 
         // Health is still reachable.
-        HttpResponseMessage health = await client.GetAsync("health");
+        HttpResponseMessage health = await client.GetAsync("health", TestContext.Current.CancellationToken);
         health.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 

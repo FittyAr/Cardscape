@@ -37,11 +37,11 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
             DisplayName: "Golden Path",
             Password: "Golden-Path-Password-1!");
 
-        HttpResponseMessage registerResponse = await client.PostAsJsonAsync("api/auth/register", registerRequest);
+        HttpResponseMessage registerResponse = await client.PostAsJsonAsync("api/auth/register", registerRequest, TestContext.Current.CancellationToken);
         registerResponse.IsSuccessStatusCode.Should().BeTrue(
-            $"register must succeed. Body: {await registerResponse.Content.ReadAsStringAsync()}");
+            $"register must succeed. Body: {await registerResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
-        AuthResponse? auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>();
+        AuthResponse? auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(TestContext.Current.CancellationToken);
         auth.Should().NotBeNull();
         auth!.AccessToken.Should().NotBeNullOrWhiteSpace();
         client.DefaultRequestHeaders.Authorization =
@@ -49,11 +49,11 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
 
         // ── 2. Workspace ──────────────────────────────────────
         var workspaceRequest = new { Name = $"Golden Workspace {suffix}" };
-        HttpResponseMessage wsResponse = await client.PostAsJsonAsync("api/workspaces/", workspaceRequest);
+        HttpResponseMessage wsResponse = await client.PostAsJsonAsync("api/workspaces/", workspaceRequest, TestContext.Current.CancellationToken);
         wsResponse.IsSuccessStatusCode.Should().BeTrue(
-            $"workspace create must succeed. Body: {await wsResponse.Content.ReadAsStringAsync()}");
+            $"workspace create must succeed. Body: {await wsResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
-        WorkspaceDto? workspace = await wsResponse.Content.ReadFromJsonAsync<WorkspaceDto>();
+        WorkspaceDto? workspace = await wsResponse.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken);
         workspace.Should().NotBeNull();
         workspace!.Name.Should().Be(workspaceRequest.Name);
 
@@ -65,60 +65,60 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
             Description = "Smoke test board",
             Visibility = BoardVisibility.Private
         };
-        HttpResponseMessage boardResponse = await client.PostAsJsonAsync("api/boards/", boardRequest);
+        HttpResponseMessage boardResponse = await client.PostAsJsonAsync("api/boards/", boardRequest, TestContext.Current.CancellationToken);
         boardResponse.IsSuccessStatusCode.Should().BeTrue(
-            $"board create must succeed. Body: {await boardResponse.Content.ReadAsStringAsync()}");
+            $"board create must succeed. Body: {await boardResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
-        BoardDto? board = await boardResponse.Content.ReadFromJsonAsync<BoardDto>();
+        BoardDto? board = await boardResponse.Content.ReadFromJsonAsync<BoardDto>(TestContext.Current.CancellationToken);
         board.Should().NotBeNull();
         board!.WorkspaceId.Should().Be(workspace.Id);
 
         // ── 4. List ───────────────────────────────────────────
         var listRequest = new { BoardId = board.Id, Name = "To Do" };
-        HttpResponseMessage listResponse = await client.PostAsJsonAsync("api/lists/", listRequest);
+        HttpResponseMessage listResponse = await client.PostAsJsonAsync("api/lists/", listRequest, TestContext.Current.CancellationToken);
         listResponse.IsSuccessStatusCode.Should().BeTrue(
-            $"list create must succeed. Body: {await listResponse.Content.ReadAsStringAsync()}");
+            $"list create must succeed. Body: {await listResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
-        BoardListDto? list = await listResponse.Content.ReadFromJsonAsync<BoardListDto>();
+        BoardListDto? list = await listResponse.Content.ReadFromJsonAsync<BoardListDto>(TestContext.Current.CancellationToken);
         list.Should().NotBeNull();
 
         // ── 5. Second list (target for the move) ──────────────
         var secondListRequest = new { BoardId = board.Id, Name = "Doing" };
-        HttpResponseMessage secondListResponse = await client.PostAsJsonAsync("api/lists/", secondListRequest);
+        HttpResponseMessage secondListResponse = await client.PostAsJsonAsync("api/lists/", secondListRequest, TestContext.Current.CancellationToken);
         secondListResponse.IsSuccessStatusCode.Should().BeTrue();
-        BoardListDto? secondList = await secondListResponse.Content.ReadFromJsonAsync<BoardListDto>();
+        BoardListDto? secondList = await secondListResponse.Content.ReadFromJsonAsync<BoardListDto>(TestContext.Current.CancellationToken);
         secondList.Should().NotBeNull();
 
         // ── 6. Card ───────────────────────────────────────────
         var cardRequest = new { ListId = list!.Id, Title = "Investigate the flaky integration test", Description = "Reproduces locally on the .NET 10 LTS SDK." };
-        HttpResponseMessage cardResponse = await client.PostAsJsonAsync("api/cards/", cardRequest);
+        HttpResponseMessage cardResponse = await client.PostAsJsonAsync("api/cards/", cardRequest, TestContext.Current.CancellationToken);
         cardResponse.IsSuccessStatusCode.Should().BeTrue(
-            $"card create must succeed. Body: {await cardResponse.Content.ReadAsStringAsync()}");
+            $"card create must succeed. Body: {await cardResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
-        CardDto? card = await cardResponse.Content.ReadFromJsonAsync<CardDto>();
+        CardDto? card = await cardResponse.Content.ReadFromJsonAsync<CardDto>(TestContext.Current.CancellationToken);
         card.Should().NotBeNull();
         card!.Title.Should().Be(cardRequest.Title);
         card.ListId.Should().Be(list.Id);
 
         // ── 7. Move to the second list ────────────────────────
         var moveRequest = new { NewListId = secondList!.Id, NewPosition = 1.0 };
-        HttpResponseMessage moveResponse = await client.PostAsJsonAsync($"api/cards/{card.Id}/move", moveRequest);
+        HttpResponseMessage moveResponse = await client.PostAsJsonAsync($"api/cards/{card.Id}/move", moveRequest, TestContext.Current.CancellationToken);
         moveResponse.IsSuccessStatusCode.Should().BeTrue(
-            $"card move must succeed. Body: {await moveResponse.Content.ReadAsStringAsync()}");
+            $"card move must succeed. Body: {await moveResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
-        CardDto? movedCard = await moveResponse.Content.ReadFromJsonAsync<CardDto>();
+        CardDto? movedCard = await moveResponse.Content.ReadFromJsonAsync<CardDto>(TestContext.Current.CancellationToken);
         movedCard.Should().NotBeNull();
         movedCard!.ListId.Should().Be(secondList.Id);
 
         // ── 8. Archive the card ───────────────────────────────
-        HttpResponseMessage archiveResponse = await client.PostAsync($"api/cards/{card.Id}/archive", content: null);
+        HttpResponseMessage archiveResponse = await client.PostAsync($"api/cards/{card.Id}/archive", content: null, TestContext.Current.CancellationToken);
         archiveResponse.IsSuccessStatusCode.Should().BeTrue(
-            $"card archive must succeed. Body: {await archiveResponse.Content.ReadAsStringAsync()}");
+            $"card archive must succeed. Body: {await archiveResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
         // ── 9. Verify the card is archived ────────────────────
-        HttpResponseMessage getCardResponse = await client.GetAsync($"api/cards/{card.Id}");
+        HttpResponseMessage getCardResponse = await client.GetAsync($"api/cards/{card.Id}", TestContext.Current.CancellationToken);
         getCardResponse.IsSuccessStatusCode.Should().BeTrue();
-        CardDto? fetched = await getCardResponse.Content.ReadFromJsonAsync<CardDto>();
+        CardDto? fetched = await getCardResponse.Content.ReadFromJsonAsync<CardDto>(TestContext.Current.CancellationToken);
         fetched.Should().NotBeNull();
         fetched!.IsArchived.Should().BeTrue();
     }

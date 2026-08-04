@@ -69,11 +69,11 @@ public class ActivityTests
             Activity a = Activity.Create(
                 TestBoard, TestCard.Value, TestActor,
                 ActivityKind.CardCreated, "{}", t0.AddMinutes(i));
-            await repo.AddAsync(a);
+            await repo.AddAsync(a, TestContext.Current.CancellationToken);
         }
 
         IReadOnlyList<Activity> page = await repo.ListForBoardAsync(
-            TestBoard, limit: 3, beforeOccurredAt: null, beforeId: null);
+            TestBoard, limit: 3, beforeOccurredAt: null, beforeId: null, TestContext.Current.CancellationToken);
 
         page.Should().HaveCount(3);
         // Newest first: minutes 4, 3, 2.
@@ -94,16 +94,16 @@ public class ActivityTests
                 TestBoard, TestCard.Value, TestActor,
                 ActivityKind.CardCreated, "{}", t0.AddMinutes(i));
             all.Add(a);
-            await repo.AddAsync(a);
+            await repo.AddAsync(a, TestContext.Current.CancellationToken);
         }
 
         IReadOnlyList<Activity> first = await repo.ListForBoardAsync(
-            TestBoard, limit: 2, beforeOccurredAt: null, beforeId: null);
+            TestBoard, limit: 2, beforeOccurredAt: null, beforeId: null, TestContext.Current.CancellationToken);
         first.Should().HaveCount(2);
         Activity cursor = first[^1];
 
         IReadOnlyList<Activity> second = await repo.ListForBoardAsync(
-            TestBoard, limit: 10, beforeOccurredAt: cursor.OccurredAt, beforeId: cursor.Id.Value);
+            TestBoard, limit: 10, beforeOccurredAt: cursor.OccurredAt, beforeId: cursor.Id.Value, TestContext.Current.CancellationToken);
         second.Should().HaveCount(2);
         second[0].OccurredAt.Should().Be(t0.AddMinutes(1));
         second[1].OccurredAt.Should().Be(t0.AddMinutes(0));
@@ -114,12 +114,12 @@ public class ActivityTests
     {
         InMemoryActivityRepository repo = new();
         CardId otherCard = CardId.New();
-        await repo.AddAsync(Activity.Create(TestBoard, TestCard.Value, TestActor, ActivityKind.CardCreated, "{}", Now));
-        await repo.AddAsync(Activity.Create(TestBoard, otherCard.Value, TestActor, ActivityKind.CardCreated, "{}", Now));
-        await repo.AddAsync(Activity.Create(TestBoard, TestCard.Value, TestActor, ActivityKind.CardRenamed, "{}", Now));
+        await repo.AddAsync(Activity.Create(TestBoard, TestCard.Value, TestActor, ActivityKind.CardCreated, "{}", Now), TestContext.Current.CancellationToken);
+        await repo.AddAsync(Activity.Create(TestBoard, otherCard.Value, TestActor, ActivityKind.CardCreated, "{}", Now), TestContext.Current.CancellationToken);
+        await repo.AddAsync(Activity.Create(TestBoard, TestCard.Value, TestActor, ActivityKind.CardRenamed, "{}", Now), TestContext.Current.CancellationToken);
 
         IReadOnlyList<Activity> rows = await repo.ListForCardAsync(
-            TestCard, limit: 10, beforeOccurredAt: null, beforeId: null);
+            TestCard, limit: 10, beforeOccurredAt: null, beforeId: null, TestContext.Current.CancellationToken);
 
         rows.Should().HaveCount(2);
         rows.Should().OnlyContain(a => a.CardId == TestCard.Value);

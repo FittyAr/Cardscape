@@ -34,9 +34,9 @@ public sealed class CalendarQueryTests
         await SetDueDateAsync(owner, inRange.Id, from.AddDays(7));
 
         HttpResponseMessage resp = await owner.GetAsync(
-            $"api/cards/calendar?from={Uri.EscapeDataString(from.ToString("o"))}&to={Uri.EscapeDataString(to.ToString("o"))}");
+            $"api/cards/calendar?from={Uri.EscapeDataString(from.ToString("o"))}&to={Uri.EscapeDataString(to.ToString("o"))}", TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
-        CalendarEntryDto[]? rows = await resp.Content.ReadFromJsonAsync<CalendarEntryDto[]>();
+        CalendarEntryDto[]? rows = await resp.Content.ReadFromJsonAsync<CalendarEntryDto[]>(TestContext.Current.CancellationToken);
         rows.Should().NotBeNull();
         rows!.Should().Contain(r => r.CardId == inRange.Id);
     }
@@ -57,9 +57,9 @@ public sealed class CalendarQueryTests
         await SetDueDateAsync(owner, outsideCard.Id, outside);
 
         HttpResponseMessage resp = await owner.GetAsync(
-            $"api/cards/calendar?from={Uri.EscapeDataString(from.ToString("o"))}&to={Uri.EscapeDataString(to.ToString("o"))}");
+            $"api/cards/calendar?from={Uri.EscapeDataString(from.ToString("o"))}&to={Uri.EscapeDataString(to.ToString("o"))}", TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
-        CalendarEntryDto[]? rows = await resp.Content.ReadFromJsonAsync<CalendarEntryDto[]>();
+        CalendarEntryDto[]? rows = await resp.Content.ReadFromJsonAsync<CalendarEntryDto[]>(TestContext.Current.CancellationToken);
         rows.Should().NotBeNull();
         rows!.Should().NotContain(r => r.CardId == outsideCard.Id);
     }
@@ -72,7 +72,7 @@ public sealed class CalendarQueryTests
         DateTimeOffset to = from.AddDays(-1);
 
         HttpResponseMessage resp = await owner.GetAsync(
-            $"api/cards/calendar?from={Uri.EscapeDataString(from.ToString("o"))}&to={Uri.EscapeDataString(to.ToString("o"))}");
+            $"api/cards/calendar?from={Uri.EscapeDataString(from.ToString("o"))}&to={Uri.EscapeDataString(to.ToString("o"))}", TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
@@ -81,7 +81,7 @@ public sealed class CalendarQueryTests
     {
         HttpClient client = _factory.CreateApiClient();
         HttpResponseMessage resp = await client.GetAsync(
-            $"api/cards/calendar?from={Uri.EscapeDataString(DateTimeOffset.UtcNow.ToString("o"))}&to={Uri.EscapeDataString(DateTimeOffset.UtcNow.AddDays(7).ToString("o"))}");
+            $"api/cards/calendar?from={Uri.EscapeDataString(DateTimeOffset.UtcNow.ToString("o"))}&to={Uri.EscapeDataString(DateTimeOffset.UtcNow.AddDays(7).ToString("o"))}", TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 

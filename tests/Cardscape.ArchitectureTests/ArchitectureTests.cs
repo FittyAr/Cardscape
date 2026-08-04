@@ -1,6 +1,7 @@
 using FluentAssertions;
 using NetArchTest.Rules;
 using Xunit;
+using TestResult = NetArchTest.Rules.TestResult;
 
 namespace Cardscape.ArchitectureTests;
 

@@ -50,7 +50,7 @@ public sealed class BoardBroadcastEndpointTests
                 boardId = Guid.NewGuid(),
                 method = "CardCreated",
                 payload = new { cardId = Guid.NewGuid(), boardId = Guid.NewGuid(), listId = Guid.NewGuid(), title = "x", at = DateTimeOffset.UtcNow }
-            });
+            }, TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
     }
 

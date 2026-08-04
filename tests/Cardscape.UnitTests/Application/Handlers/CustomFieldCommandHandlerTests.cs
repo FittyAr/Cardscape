@@ -25,7 +25,7 @@ public class CustomFieldCommandHandlerTests
         var result = await CreateCustomFieldDefinitionCommandHandler.Handle(
             new CreateCustomFieldDefinitionCommand(
                 board.Id.Value, "Priority", 0, null, Position: 0),
-            state.Definitions, state.Boards, state.UnitOfWork, state.CurrentUser, state.Clock, default);
+            state.Definitions, state.Boards, state.UnitOfWork, state.CurrentUser, state.Clock, TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Name.Should().Be("Priority");
@@ -41,7 +41,7 @@ public class CustomFieldCommandHandlerTests
         var result = await CreateCustomFieldDefinitionCommandHandler.Handle(
             new CreateCustomFieldDefinitionCommand(
                 board.Id.Value, "Foo", 99, null, Position: 0),
-            state.Definitions, state.Boards, state.UnitOfWork, state.CurrentUser, state.Clock, default);
+            state.Definitions, state.Boards, state.UnitOfWork, state.CurrentUser, state.Clock, TestContext.Current.CancellationToken);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("custom_fields.kind_unknown");
@@ -59,7 +59,7 @@ public class CustomFieldCommandHandlerTests
         var result = await CreateCustomFieldDefinitionCommandHandler.Handle(
             new CreateCustomFieldDefinitionCommand(
                 board.Id.Value, "Priority", 0, null, Position: 0),
-            state.Definitions, state.Boards, state.UnitOfWork, state.CurrentUser, state.Clock, default);
+            state.Definitions, state.Boards, state.UnitOfWork, state.CurrentUser, state.Clock, TestContext.Current.CancellationToken);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Forbidden);
@@ -74,20 +74,20 @@ public class CustomFieldCommandHandlerTests
 
         CustomFieldDefinition field = CustomFieldDefinition.Create(
             board.Id, "Priority", CustomFieldKind.Text, null, 0, Now).Value;
-        await state.Definitions.AddAsync(field, default);
-        await state.UnitOfWork.SaveChangesAsync(default);
+        await state.Definitions.AddAsync(field, TestContext.Current.CancellationToken);
+        await state.UnitOfWork.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         CustomFieldValue value = CustomFieldValue.Create(
             field.Id, card.Id, "\"high\"", Now).Value;
-        await state.Values.AddAsync(value, default);
-        await state.UnitOfWork.SaveChangesAsync(default);
+        await state.Values.AddAsync(value, TestContext.Current.CancellationToken);
+        await state.UnitOfWork.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var delete = await DeleteCustomFieldDefinitionCommandHandler.Handle(
             new DeleteCustomFieldDefinitionCommand(field.Id.Value),
-            state.Definitions, state.Values, state.Boards, state.UnitOfWork, state.CurrentUser, default);
+            state.Definitions, state.Values, state.Boards, state.UnitOfWork, state.CurrentUser, TestContext.Current.CancellationToken);
 
         delete.IsSuccess.Should().BeTrue();
-        IReadOnlyList<CustomFieldValue> remaining = await state.Values.ListForCardAsync(card.Id);
+        IReadOnlyList<CustomFieldValue> remaining = await state.Values.ListForCardAsync(card.Id, TestContext.Current.CancellationToken);
         remaining.Should().BeEmpty();
     }
 
@@ -100,21 +100,21 @@ public class CustomFieldCommandHandlerTests
 
         CustomFieldDefinition field = CustomFieldDefinition.Create(
             board.Id, "Priority", CustomFieldKind.Text, null, 0, Now).Value;
-        await state.Definitions.AddAsync(field, default);
-        await state.UnitOfWork.SaveChangesAsync(default);
+        await state.Definitions.AddAsync(field, TestContext.Current.CancellationToken);
+        await state.UnitOfWork.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         await SetCustomFieldValueCommandHandler.Handle(
             new SetCustomFieldValueCommand(card.Id.Value, field.Id.Value, "\"high\""),
             state.Values, state.Definitions, state.Cards, state.Boards, state.Lists,
-            state.UnitOfWork, state.CurrentUser, state.Clock, default);
+            state.UnitOfWork, state.CurrentUser, state.Clock, TestContext.Current.CancellationToken);
 
         var clear = await SetCustomFieldValueCommandHandler.Handle(
             new SetCustomFieldValueCommand(card.Id.Value, field.Id.Value, null),
             state.Values, state.Definitions, state.Cards, state.Boards, state.Lists,
-            state.UnitOfWork, state.CurrentUser, state.Clock, default);
+            state.UnitOfWork, state.CurrentUser, state.Clock, TestContext.Current.CancellationToken);
 
         clear.IsSuccess.Should().BeTrue();
-        IReadOnlyList<CustomFieldValue> remaining = await state.Values.ListForCardAsync(card.Id);
+        IReadOnlyList<CustomFieldValue> remaining = await state.Values.ListForCardAsync(card.Id, TestContext.Current.CancellationToken);
         remaining.Should().BeEmpty();
     }
 
@@ -128,13 +128,13 @@ public class CustomFieldCommandHandlerTests
         CustomFieldDefinition field = CustomFieldDefinition.Create(
             board.Id, "Severity", CustomFieldKind.Dropdown,
             new[] { "Low", "High" }, 0, Now).Value;
-        await state.Definitions.AddAsync(field, default);
-        await state.UnitOfWork.SaveChangesAsync(default);
+        await state.Definitions.AddAsync(field, TestContext.Current.CancellationToken);
+        await state.UnitOfWork.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var result = await SetCustomFieldValueCommandHandler.Handle(
             new SetCustomFieldValueCommand(card.Id.Value, field.Id.Value, "\"Critical\""),
             state.Values, state.Definitions, state.Cards, state.Boards, state.Lists,
-            state.UnitOfWork, state.CurrentUser, state.Clock, default);
+            state.UnitOfWork, state.CurrentUser, state.Clock, TestContext.Current.CancellationToken);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("custom_fields.dropdown_value_unknown");
@@ -151,13 +151,13 @@ public class CustomFieldCommandHandlerTests
             board.Id, "Priority", CustomFieldKind.Text, null, 0, Now).Value;
         CustomFieldDefinition b = CustomFieldDefinition.Create(
             otherBoard.Id, "Severity", CustomFieldKind.Text, null, 0, Now).Value;
-        await state.Definitions.AddAsync(a, default);
-        await state.Definitions.AddAsync(b, default);
-        await state.UnitOfWork.SaveChangesAsync(default);
+        await state.Definitions.AddAsync(a, TestContext.Current.CancellationToken);
+        await state.Definitions.AddAsync(b, TestContext.Current.CancellationToken);
+        await state.UnitOfWork.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var result = await ListCustomFieldDefinitionsQueryHandler.Handle(
             new ListCustomFieldDefinitionsQuery(board.Id.Value),
-            state.Definitions, state.Boards, state.CurrentUser, default);
+            state.Definitions, state.Boards, state.CurrentUser, TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);

@@ -30,49 +30,49 @@ public class DashboardsEndpointTests
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         HttpResponseMessage wsResp = await client.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("Dashboards WS"));
+            "api/workspaces/", new CreateWorkspaceRequest("Dashboards WS"), TestContext.Current.CancellationToken);
         Cardscape.Application.Workspaces.DTOs.WorkspaceDto ws =
-            (await wsResp.Content.ReadFromJsonAsync<Cardscape.Application.Workspaces.DTOs.WorkspaceDto>())!;
+            (await wsResp.Content.ReadFromJsonAsync<Cardscape.Application.Workspaces.DTOs.WorkspaceDto>(TestContext.Current.CancellationToken))!;
 
         HttpResponseMessage bdResp = await client.PostAsJsonAsync(
-            "api/boards/", new { workspaceId = ws.Id, name = "Board", description = (string?)null, visibility = 0 });
+            "api/boards/", new { workspaceId = ws.Id, name = "Board", description = (string?)null, visibility = 0 }, TestContext.Current.CancellationToken);
         Cardscape.Application.Boards.DTOs.BoardDto board =
-            (await bdResp.Content.ReadFromJsonAsync<Cardscape.Application.Boards.DTOs.BoardDto>())!;
+            (await bdResp.Content.ReadFromJsonAsync<Cardscape.Application.Boards.DTOs.BoardDto>(TestContext.Current.CancellationToken))!;
 
         // Initial list is empty.
         HttpResponseMessage listResp = await client.GetAsync(
-            $"api/boards/{board.Id}/dashcards/");
+            $"api/boards/{board.Id}/dashcards/", TestContext.Current.CancellationToken);
         listResp.IsSuccessStatusCode.Should().BeTrue();
         List<DashcardDto> initial =
-            (await listResp.Content.ReadFromJsonAsync<List<DashcardDto>>())!;
+            (await listResp.Content.ReadFromJsonAsync<List<DashcardDto>>(TestContext.Current.CancellationToken))!;
         initial.Should().BeEmpty();
 
         // Create.
         HttpResponseMessage createResp = await client.PostAsJsonAsync(
             $"api/boards/{board.Id}/dashcards/",
-            new CreateDashcardRequest(board.Id, DashcardKind.OverdueCount, "Overdue", "{}", 0));
+            new CreateDashcardRequest(board.Id, DashcardKind.OverdueCount, "Overdue", "{}", 0), TestContext.Current.CancellationToken);
         createResp.IsSuccessStatusCode.Should().BeTrue();
-        DashcardDto created = (await createResp.Content.ReadFromJsonAsync<DashcardDto>())!;
+        DashcardDto created = (await createResp.Content.ReadFromJsonAsync<DashcardDto>(TestContext.Current.CancellationToken))!;
         created.Kind.Should().Be(DashcardKind.OverdueCount);
         created.Title.Should().Be("Overdue");
 
         // List shows it.
         HttpResponseMessage listResp2 = await client.GetAsync(
-            $"api/boards/{board.Id}/dashcards/");
+            $"api/boards/{board.Id}/dashcards/", TestContext.Current.CancellationToken);
         List<DashcardDto> afterCreate =
-            (await listResp2.Content.ReadFromJsonAsync<List<DashcardDto>>())!;
+            (await listResp2.Content.ReadFromJsonAsync<List<DashcardDto>>(TestContext.Current.CancellationToken))!;
         afterCreate.Should().ContainSingle().Which.Id.Should().Be(created.Id);
 
         // Delete.
         HttpResponseMessage deleteResp = await client.DeleteAsync(
-            $"api/boards/{board.Id}/dashcards/{created.Id}");
+            $"api/boards/{board.Id}/dashcards/{created.Id}", TestContext.Current.CancellationToken);
         deleteResp.IsSuccessStatusCode.Should().BeTrue();
 
         // List is empty again.
         HttpResponseMessage listResp3 = await client.GetAsync(
-            $"api/boards/{board.Id}/dashcards/");
+            $"api/boards/{board.Id}/dashcards/", TestContext.Current.CancellationToken);
         List<DashcardDto> afterDelete =
-            (await listResp3.Content.ReadFromJsonAsync<List<DashcardDto>>())!;
+            (await listResp3.Content.ReadFromJsonAsync<List<DashcardDto>>(TestContext.Current.CancellationToken))!;
         afterDelete.Should().BeEmpty();
     }
 

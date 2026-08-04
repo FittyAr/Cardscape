@@ -21,15 +21,15 @@ public sealed class RecurrenceTests
         Seed seed = await CreateSeedAsync(client, "fresh");
 
         HttpResponseMessage resp = await client.GetAsync(
-            $"api/cards/{seed.CardId}/recurrence/");
+            $"api/cards/{seed.CardId}/recurrence/", TestContext.Current.CancellationToken);
         if (!resp.IsSuccessStatusCode)
         {
-            string body = await resp.Content.ReadAsStringAsync();
+            string body = await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             throw new Xunit.Sdk.XunitException(
                 $"GET recurrence failed: {(int)resp.StatusCode} body={body}");
         }
 
-        string json = await resp.Content.ReadAsStringAsync();
+        string json = await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         // null body (not "null" string)
         (string.IsNullOrEmpty(json) || json == "null").Should().BeTrue();
     }
@@ -43,14 +43,14 @@ public sealed class RecurrenceTests
         DateTimeOffset firstOccurrence = DateTimeOffset.UtcNow.AddDays(7);
         HttpResponseMessage put = await client.PutAsJsonAsync(
             $"api/cards/{seed.CardId}/recurrence/",
-            new { intervalDays = 7, firstOccurrenceAt = firstOccurrence });
+            new { intervalDays = 7, firstOccurrenceAt = firstOccurrence }, TestContext.Current.CancellationToken);
         put.IsSuccessStatusCode.Should().BeTrue();
-        CardRecurrenceDto? dto = await put.Content.ReadFromJsonAsync<CardRecurrenceDto>();
+        CardRecurrenceDto? dto = await put.Content.ReadFromJsonAsync<CardRecurrenceDto>(TestContext.Current.CancellationToken);
         dto!.IntervalDays.Should().Be(7);
 
         HttpResponseMessage get = await client.GetAsync(
-            $"api/cards/{seed.CardId}/recurrence/");
-        CardRecurrenceDto? state = await get.Content.ReadFromJsonAsync<CardRecurrenceDto>();
+            $"api/cards/{seed.CardId}/recurrence/", TestContext.Current.CancellationToken);
+        CardRecurrenceDto? state = await get.Content.ReadFromJsonAsync<CardRecurrenceDto>(TestContext.Current.CancellationToken);
         state!.IntervalDays.Should().Be(7);
     }
 
@@ -62,11 +62,11 @@ public sealed class RecurrenceTests
 
         await client.PutAsJsonAsync(
             $"api/cards/{seed.CardId}/recurrence/",
-            new { intervalDays = 7, firstOccurrenceAt = DateTimeOffset.UtcNow.AddDays(7) });
+            new { intervalDays = 7, firstOccurrenceAt = DateTimeOffset.UtcNow.AddDays(7) }, TestContext.Current.CancellationToken);
         HttpResponseMessage put = await client.PutAsJsonAsync(
             $"api/cards/{seed.CardId}/recurrence/",
-            new { intervalDays = 14, firstOccurrenceAt = DateTimeOffset.UtcNow.AddDays(14) });
-        CardRecurrenceDto? dto = await put.Content.ReadFromJsonAsync<CardRecurrenceDto>();
+            new { intervalDays = 14, firstOccurrenceAt = DateTimeOffset.UtcNow.AddDays(14) }, TestContext.Current.CancellationToken);
+        CardRecurrenceDto? dto = await put.Content.ReadFromJsonAsync<CardRecurrenceDto>(TestContext.Current.CancellationToken);
         dto!.IntervalDays.Should().Be(14);
     }
 
@@ -78,9 +78,9 @@ public sealed class RecurrenceTests
 
         await client.PutAsJsonAsync(
             $"api/cards/{seed.CardId}/recurrence/",
-            new { intervalDays = 7, firstOccurrenceAt = DateTimeOffset.UtcNow.AddDays(7) });
+            new { intervalDays = 7, firstOccurrenceAt = DateTimeOffset.UtcNow.AddDays(7) }, TestContext.Current.CancellationToken);
         HttpResponseMessage del = await client.DeleteAsync(
-            $"api/cards/{seed.CardId}/recurrence/");
+            $"api/cards/{seed.CardId}/recurrence/", TestContext.Current.CancellationToken);
         del.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
@@ -92,7 +92,7 @@ public sealed class RecurrenceTests
 
         HttpResponseMessage put = await client.PutAsJsonAsync(
             $"api/cards/{seed.CardId}/recurrence/",
-            new { intervalDays = 0, firstOccurrenceAt = DateTimeOffset.UtcNow });
+            new { intervalDays = 0, firstOccurrenceAt = DateTimeOffset.UtcNow }, TestContext.Current.CancellationToken);
         put.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 

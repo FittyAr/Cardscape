@@ -28,11 +28,11 @@ public sealed class SwaggerTests
     {
         HttpClient client = _factory.CreateApiClient();
 
-        HttpResponseMessage response = await client.GetAsync("swagger/v1/swagger.json");
+        HttpResponseMessage response = await client.GetAsync("swagger/v1/swagger.json", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         response.Content.Headers.ContentType?.MediaType.Should().Be("application/json");
 
-        string body = await response.Content.ReadAsStringAsync();
+        string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         body.Should().NotBeNullOrWhiteSpace();
 
         // Must be parseable JSON. If Swashbuckle blew up while

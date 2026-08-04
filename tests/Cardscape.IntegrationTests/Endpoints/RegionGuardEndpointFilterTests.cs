@@ -65,9 +65,9 @@ public class RegionGuardEndpointFilterTests
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         HttpResponseMessage createWs = await ownerClient.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("Acme EU", Region: Domain.Workspaces.Region.Europe));
+            "api/workspaces/", new CreateWorkspaceRequest("Acme EU", Region: Domain.Workspaces.Region.Europe), TestContext.Current.CancellationToken);
         createWs.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
         workspace.Region.Should().Be(Domain.Workspaces.Region.Europe);
 
         // Arrange — build a secondary host whose deployment region
@@ -124,11 +124,11 @@ public class RegionGuardEndpointFilterTests
         // Act — a workspace-scoped read that previously passed
         // without the filter should now be rejected with 422.
         HttpResponseMessage response = await client.GetAsync(
-            $"api/workspaces/{workspace.Id}");
+            $"api/workspaces/{workspace.Id}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
-        string body = await response.Content.ReadAsStringAsync();
+        string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         body.Should().Contain("workspaces.region_mismatch");
     }
 
@@ -143,9 +143,9 @@ public class RegionGuardEndpointFilterTests
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         HttpResponseMessage createWs = await ownerClient.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("Acme EU 2", Region: Domain.Workspaces.Region.Europe));
+            "api/workspaces/", new CreateWorkspaceRequest("Acme EU 2", Region: Domain.Workspaces.Region.Europe), TestContext.Current.CancellationToken);
         createWs.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
 
         // Arrange — secondary host whose deployment region is
         // Europe (the same as the workspace). The guard should
@@ -180,12 +180,12 @@ public class RegionGuardEndpointFilterTests
 
         // Act
         HttpResponseMessage response = await client.GetAsync(
-            $"api/workspaces/{workspace.Id}");
+            $"api/workspaces/{workspace.Id}", TestContext.Current.CancellationToken);
 
         // Assert — same-region reads are not rejected by the
         // guard, so the request reaches the inner handler.
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        WorkspaceDto returned = (await response.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto returned = (await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
         returned.Id.Should().Be(workspace.Id);
     }
 
@@ -201,14 +201,14 @@ public class RegionGuardEndpointFilterTests
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         HttpResponseMessage createWs = await ownerClient.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("Acme APAC", Region: Domain.Workspaces.Region.AsiaPacific));
+            "api/workspaces/", new CreateWorkspaceRequest("Acme APAC", Region: Domain.Workspaces.Region.AsiaPacific), TestContext.Current.CancellationToken);
         createWs.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
 
         // Act — read the workspace through the original client
         // (deployment still Unspecified).
         HttpResponseMessage response = await ownerClient.GetAsync(
-            $"api/workspaces/{workspace.Id}");
+            $"api/workspaces/{workspace.Id}", TestContext.Current.CancellationToken);
 
         // Assert — Unspecified deployment means the guard is a
         // no-op, so the read reaches the inner handler regardless

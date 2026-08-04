@@ -29,16 +29,16 @@ public sealed class ApiTokenLifecycleTests
         // Issue one token.
         HttpResponseMessage issue = await client.PostAsJsonAsync(
             "api/security/api-tokens/",
-            new { name = "laptop", scopes = new[] { "read", "write" } });
+            new { name = "laptop", scopes = new[] { "read", "write" } }, TestContext.Current.CancellationToken);
         issue.IsSuccessStatusCode.Should().BeTrue();
-        ApiTokenIssuanceDto? issued = await issue.Content.ReadFromJsonAsync<ApiTokenIssuanceDto>();
+        ApiTokenIssuanceDto? issued = await issue.Content.ReadFromJsonAsync<ApiTokenIssuanceDto>(TestContext.Current.CancellationToken);
         issued.Should().NotBeNull();
         issued!.CleartextSecret.Should().NotBeNullOrWhiteSpace();
 
         // List should return one token (no cleartext in the list).
-        HttpResponseMessage list = await client.GetAsync("api/security/api-tokens/");
+        HttpResponseMessage list = await client.GetAsync("api/security/api-tokens/", TestContext.Current.CancellationToken);
         list.IsSuccessStatusCode.Should().BeTrue();
-        ApiTokenSummaryDto[]? rows = await list.Content.ReadFromJsonAsync<ApiTokenSummaryDto[]>();
+        ApiTokenSummaryDto[]? rows = await list.Content.ReadFromJsonAsync<ApiTokenSummaryDto[]>(TestContext.Current.CancellationToken);
         rows.Should().NotBeNull().And.HaveCount(1);
         rows![0].Id.Should().Be(issued.Id);
         rows[0].Name.Should().Be("laptop");
@@ -47,13 +47,13 @@ public sealed class ApiTokenLifecycleTests
         // Revoke.
         HttpResponseMessage revoke = await client.PostAsync(
             $"api/security/api-tokens/{issued.Id}/revoke",
-            content: JsonContent.Create(new { reason = "rotated to a new laptop" }));
+            content: JsonContent.Create(new { reason = "rotated to a new laptop" }), TestContext.Current.CancellationToken);
         revoke.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         // List now shows the revoked flag.
         ApiTokenSummaryDto[]? afterRevoke =
-            await (await client.GetAsync("api/security/api-tokens/"))
-                .Content.ReadFromJsonAsync<ApiTokenSummaryDto[]>();
+            await (await client.GetAsync("api/security/api-tokens/", TestContext.Current.CancellationToken))
+                .Content.ReadFromJsonAsync<ApiTokenSummaryDto[]>(TestContext.Current.CancellationToken);
         afterRevoke.Should().NotBeNull();
         afterRevoke!.Single().RevokedAt.Should().NotBeNull();
     }
@@ -64,13 +64,13 @@ public sealed class ApiTokenLifecycleTests
         HttpClient owner = await CreateAuthenticatedClientAsync();
         HttpResponseMessage issue = await owner.PostAsJsonAsync(
             "api/security/api-tokens/",
-            new { name = "laptop", scopes = new[] { "read" } });
-        ApiTokenIssuanceDto? issued = (await issue.Content.ReadFromJsonAsync<ApiTokenIssuanceDto>())!;
+            new { name = "laptop", scopes = new[] { "read" } }, TestContext.Current.CancellationToken);
+        ApiTokenIssuanceDto? issued = (await issue.Content.ReadFromJsonAsync<ApiTokenIssuanceDto>(TestContext.Current.CancellationToken))!;
 
         HttpClient intruder = await CreateAuthenticatedClientAsync();
         HttpResponseMessage revoke = await intruder.PostAsync(
             $"api/security/api-tokens/{issued.Id}/revoke",
-            content: JsonContent.Create(new { reason = "hijack" }));
+            content: JsonContent.Create(new { reason = "hijack" }), TestContext.Current.CancellationToken);
         revoke.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
@@ -80,7 +80,7 @@ public sealed class ApiTokenLifecycleTests
         HttpClient client = _factory.CreateApiClient();
         HttpResponseMessage issue = await client.PostAsJsonAsync(
             "api/security/api-tokens/",
-            new { name = "laptop", scopes = new[] { "read" } });
+            new { name = "laptop", scopes = new[] { "read" } }, TestContext.Current.CancellationToken);
         issue.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
@@ -90,7 +90,7 @@ public sealed class ApiTokenLifecycleTests
         HttpClient client = await CreateAuthenticatedClientAsync();
         HttpResponseMessage issue = await client.PostAsJsonAsync(
             "api/security/api-tokens/",
-            new { name = "", scopes = new[] { "read" } });
+            new { name = "", scopes = new[] { "read" } }, TestContext.Current.CancellationToken);
         issue.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 

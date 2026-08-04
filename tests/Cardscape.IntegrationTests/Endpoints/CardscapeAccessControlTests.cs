@@ -36,19 +36,19 @@ public sealed class CardscapeAccessControlTests
         // A different user registers and tries to read the card.
         HttpClient outsider = await CreateAuthenticatedClientAsync();
 
-        HttpResponseMessage getCard = await outsider.GetAsync($"api/cards/{card.Id}");
+        HttpResponseMessage getCard = await outsider.GetAsync($"api/cards/{card.Id}", TestContext.Current.CancellationToken);
         getCard.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
-        HttpResponseMessage getList = await outsider.GetAsync($"api/lists/{list.Id}");
+        HttpResponseMessage getList = await outsider.GetAsync($"api/lists/{list.Id}", TestContext.Current.CancellationToken);
         getList.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
-        HttpResponseMessage getBoard = await outsider.GetAsync($"api/boards/{board.Id}");
+        HttpResponseMessage getBoard = await outsider.GetAsync($"api/boards/{board.Id}", TestContext.Current.CancellationToken);
         getBoard.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
-        HttpResponseMessage listCards = await outsider.GetAsync($"api/cards/?boardId={board.Id}&includeArchived=false");
+        HttpResponseMessage listCards = await outsider.GetAsync($"api/cards/?boardId={board.Id}&includeArchived=false", TestContext.Current.CancellationToken);
         listCards.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
-        HttpResponseMessage listLists = await outsider.GetAsync($"api/lists/?boardId={board.Id}&includeArchived=false");
+        HttpResponseMessage listLists = await outsider.GetAsync($"api/lists/?boardId={board.Id}&includeArchived=false", TestContext.Current.CancellationToken);
         listLists.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
@@ -63,25 +63,25 @@ public sealed class CardscapeAccessControlTests
         HttpClient outsider = await CreateAuthenticatedClientAsync();
 
         HttpResponseMessage rename = await outsider.PostAsJsonAsync(
-            $"api/cards/{card.Id}/rename", new { newTitle = "Hacked" });
+            $"api/cards/{card.Id}/rename", new { newTitle = "Hacked" }, TestContext.Current.CancellationToken);
         rename.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
         HttpResponseMessage complete = await outsider.PostAsync(
-            $"api/cards/{card.Id}/complete", content: null);
+            $"api/cards/{card.Id}/complete", content: null, TestContext.Current.CancellationToken);
         complete.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
         HttpResponseMessage move = await outsider.PostAsJsonAsync(
-            $"api/cards/{card.Id}/move", new { newListId = list.Id, newPosition = 1024.0 });
+            $"api/cards/{card.Id}/move", new { newListId = list.Id, newPosition = 1024.0 }, TestContext.Current.CancellationToken);
         move.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
         // Outsider tries to add a new card to the owner's list.
         HttpResponseMessage createCard = await outsider.PostAsJsonAsync(
-            "api/cards/", new { listId = list.Id, title = "Sneaky", description = (string?)null });
+            "api/cards/", new { listId = list.Id, title = "Sneaky", description = (string?)null }, TestContext.Current.CancellationToken);
         createCard.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
         // Outsider tries to add a new list to the owner's board.
         HttpResponseMessage createList = await outsider.PostAsJsonAsync(
-            "api/lists/", new { boardId = list.BoardId, name = "Hostile takeover" });
+            "api/lists/", new { boardId = list.BoardId, name = "Hostile takeover" }, TestContext.Current.CancellationToken);
         createList.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
@@ -97,24 +97,24 @@ public sealed class CardscapeAccessControlTests
                 name = "Public",
                 description = (string?)null,
                 visibility = 2 // BoardVisibility.Public
-            });
+            }, TestContext.Current.CancellationToken);
         createBoard.IsSuccessStatusCode.Should().BeTrue();
-        BoardDto board = (await createBoard.Content.ReadFromJsonAsync<BoardDto>())!;
+        BoardDto board = (await createBoard.Content.ReadFromJsonAsync<BoardDto>(TestContext.Current.CancellationToken))!;
 
         HttpResponseMessage createList = await owner.PostAsJsonAsync(
-            "api/lists/", new { boardId = board.Id, name = "Public list" });
-        BoardListDto list = (await createList.Content.ReadFromJsonAsync<BoardListDto>())!;
+            "api/lists/", new { boardId = board.Id, name = "Public list" }, TestContext.Current.CancellationToken);
+        BoardListDto list = (await createList.Content.ReadFromJsonAsync<BoardListDto>(TestContext.Current.CancellationToken))!;
         CardDto card = await CreateCardAsync(owner, list.Id, "Public card");
 
         // Outsider should be able to read the public board.
         HttpClient outsider = await CreateAuthenticatedClientAsync();
-        (await outsider.GetAsync($"api/cards/{card.Id}")).StatusCode.Should().Be(HttpStatusCode.OK);
-        (await outsider.GetAsync($"api/lists/{list.Id}")).StatusCode.Should().Be(HttpStatusCode.OK);
-        (await outsider.GetAsync($"api/boards/{board.Id}")).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await outsider.GetAsync($"api/cards/{card.Id}", TestContext.Current.CancellationToken)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await outsider.GetAsync($"api/lists/{list.Id}", TestContext.Current.CancellationToken)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await outsider.GetAsync($"api/boards/{board.Id}", TestContext.Current.CancellationToken)).StatusCode.Should().Be(HttpStatusCode.OK);
 
         // But still not write — non-members can never write.
         HttpResponseMessage rename = await outsider.PostAsJsonAsync(
-            $"api/cards/{card.Id}/rename", new { newTitle = "Should fail" });
+            $"api/cards/{card.Id}/rename", new { newTitle = "Should fail" }, TestContext.Current.CancellationToken);
         rename.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 

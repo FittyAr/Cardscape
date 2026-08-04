@@ -30,7 +30,7 @@ public class CardDueDateCalendarSyncTests
             encryptedRefreshToken: "rt",
             calendarId: "primary",
             at: ctx.Clock.UtcNow);
-        await ctx.GoogleCalendarConnections.AddAsync(connResult.Value);
+        await ctx.GoogleCalendarConnections.AddAsync(connResult.Value, TestContext.Current.CancellationToken);
 
         await CardDueDateCalendarSync.Handle(
             new CardDueDateSet(card.Id, ctx.Clock.UtcNow.AddDays(7), ctx.Clock.UtcNow),
@@ -43,7 +43,7 @@ public class CardDueDateCalendarSyncTests
         ctx.GoogleCalendarSync.PushCalls[0].CardId.Should().Be(card.Id.Value);
         ctx.GoogleCalendarSync.PushCalls[0].DueDate.Should().NotBeNull();
 
-        var updated = await ctx.GoogleCalendarConnections.FindByUserAsync(owner.Id.Value);
+        var updated = await ctx.GoogleCalendarConnections.FindByUserAsync(owner.Id.Value, TestContext.Current.CancellationToken);
         updated!.LastSyncedAt.Should().NotBeNull();
         updated.LastSyncError.Should().BeNull();
     }
@@ -66,7 +66,7 @@ public class CardDueDateCalendarSyncTests
             encryptedRefreshToken: "rt",
             calendarId: "primary",
             at: ctx.Clock.UtcNow);
-        await ctx.GoogleCalendarConnections.AddAsync(connResult.Value);
+        await ctx.GoogleCalendarConnections.AddAsync(connResult.Value, TestContext.Current.CancellationToken);
 
         ctx.GoogleCalendarSync.NextPushResult = Result.Failure<string>(
             Cardscape.Domain.Common.DomainError.External(
@@ -79,7 +79,7 @@ public class CardDueDateCalendarSyncTests
             ctx.GoogleCalendarConnections, ctx.GoogleCalendarSync,
             NullLogger.Instance, CancellationToken.None);
 
-        var updated = await ctx.GoogleCalendarConnections.FindByUserAsync(owner.Id.Value);
+        var updated = await ctx.GoogleCalendarConnections.FindByUserAsync(owner.Id.Value, TestContext.Current.CancellationToken);
         updated!.LastSyncedAt.Should().BeNull();
         updated.LastSyncError.Should().NotBeNull();
     }
@@ -121,7 +121,7 @@ public class CardDueDateCalendarSyncTests
             encryptedRefreshToken: "rt",
             calendarId: "primary",
             at: ctx.Clock.UtcNow);
-        await ctx.GoogleCalendarConnections.AddAsync(connResult.Value);
+        await ctx.GoogleCalendarConnections.AddAsync(connResult.Value, TestContext.Current.CancellationToken);
 
         await CardDueDateCalendarSync.Handle(
             new CardDueDateCleared(card.Id, ctx.Clock.UtcNow),
@@ -154,7 +154,7 @@ public class CardDueDateCalendarSyncTests
                 encryptedRefreshToken: "rt",
                 calendarId: "primary",
                 at: ctx.Clock.UtcNow);
-            await ctx.GoogleCalendarConnections.AddAsync(connResult.Value);
+            await ctx.GoogleCalendarConnections.AddAsync(connResult.Value, TestContext.Current.CancellationToken);
         }
 
         await CardDueDateCalendarSync.Handle(
