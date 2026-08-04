@@ -1,5 +1,10 @@
 # Cardscape
 
+[![CI](https://github.com/cardscape/cardscape/actions/workflows/ci.yml/badge.svg)](https://github.com/cardscape/cardscape/actions/workflows/ci.yml)
+[![License: RPL-1.5](https://img.shields.io/badge/License-RPL--1.5-blue.svg)](./LICENSE)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0--LTS-512BD4.svg)](https://dotnet.microsoft.com/)
+[![Radzen.Blazor](https://img.shields.io/badge/UI-Radzen.Blazor-FF6B35.svg)](https://blazor.radzen.com/)
+
 > **The self-hostable kanban your AI can drive.**
 >
 > Drive your boards conversationally from any AI client. Keep
@@ -80,8 +85,10 @@ See:
 
 ## Status
 
-Cardscape is at **`v1.0.0`** — first production release with
-full Trello parity. The codebase runs end to end: a user can
+Cardscape is at **`v1.1.0-roadmap-execution`** — the
+`v1.0.0` production release (full Trello parity) shipped
+all 42 features from the v1.1.0 execution plan and closed
+all 14 audit gaps. The codebase runs end to end: a user can
 register, create a workspace, drop in boards/lists/cards,
 comment, label, star, attach files, vote with heart reactions,
 add checklists with progress, set up custom fields, schedule
@@ -93,7 +100,11 @@ push out per-board webhooks, and full-text search every
 card. The full HTTP pipeline is covered by integration tests
 against the real Program + DI + Wolverine + EF Core stack.
 The MCP server exposes the same surface to AI clients and
-pushes its writes back to the Web UI in real time.
+pushes its writes back to the Web UI in real time. The
+Web client is 100 % Radzen.Blazor (no custom HTML, JS, or
+CSS) and ships with the .NET 10 LTS runtime, EF Core 10
+LTS, Serilog throughout, and the `ModelContextProtocol`
+SDK 2.0.
 
 | Phase | Scope | Status |
 |---|---|---|
@@ -104,10 +115,20 @@ pushes its writes back to the Web UI in real time.
 | 4 | Workspace invitations, Inbox, Calendar, Planner, automation engine, board extensions | **DONE** (`v0.4.0-realtime-mcp` through `v0.6.4-extensions`) |
 | 5 | Background jobs, custom fields, voting, checklists, recurring cards, webhooks, attachments, full-text search, activity, rate limit | **DONE** (`v0.7.0-jobs` through `v0.7.10-polish`) |
 | 6 | v1.0.0 release: full Trello parity, production config, CI with coverage, polished docs | **DONE** (`v1.0.0`) |
+| 7 | Audit gap closure: hygiene, MCP completeness, Trello parity, enterprise, AI, polish | **DONE** (`v1.1.0-roadmap-execution`) |
+| 8 | Doc reconciliation, i18n follow-up, integration-test stability, CI coverage diff | **PLANNED** — see [`docs/roadmap/05-plan-v1.2.0.md`](docs/roadmap/05-plan-v1.2.0.md) |
 
-`dotnet build` is green. **313 unit tests + 85 integration tests**
-are green. The Blazor WebAssembly client talks to the API over
-JWT or per-user API tokens. The Docker image boots, applies
+`dotnet build` is green (11/11 projects, 0 warnings,
+0 errors). **343 unit + 10 architecture + 1 functional +
+103 integration tests** are green (the
+`RegionGuardEndpointFilterTests` parallel-run flakes
+noted in the v1.1.0 audit are now guarded by a serial
+xUnit collection, per D6 of the v1.2.0 plan). The
+Blazor WebAssembly client talks to the API over JWT or
+per-user API tokens, ships a client-side
+`CultureSwitcher` (Spanish + English, D7 of the v1.2.0
+plan) and a CI coverage summary comment on every PR
+(D8 of the v1.2.0 plan). The Docker image boots, applies
 migrations, and serves the SPA on port 8080. Production
 configuration has zero hard-coded secrets — all required
 values come from environment variables. See
@@ -222,7 +243,7 @@ For iterating on the source:
 git clone https://github.com/cardscape/cardscape.git
 cd cardscape
 dotnet build                       # 11 projects, 0 errors, 0 warnings
-dotnet test                        # 313 unit + 85 integration, all green
+dotnet test                        # 343 unit + 10 arch + 1 functional + 103 integration, all green
 dotnet run --project src/Cardscape.Api          # API on http://localhost:5291
 dotnet run --project src/Cardscape.Web          # Web on http://localhost:5206
 ```

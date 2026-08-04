@@ -265,7 +265,7 @@ preventing proprietary forks.
 
 | Axis | Cardscape | Other self-hostable kanban (typical) | Hosted kanban (typical) |
 |---|---|---|---|
-| Runtime | .NET 11 | varies (Node, Python, Go, Java, PHP) | varies |
+| Runtime | .NET 10 (LTS) | varies (Node, Python, Go, Java, PHP) | varies |
 | UI framework | Blazor WebAssembly + Radzen.Blazor | varies (React, Vue, Svelte) | varies |
 | ORM | Entity Framework Core 10 LTS | varies (Django ORM, Prisma, etc.) | varies |
 | Long-term support story | strong (.NET LTS, EF Core LTS, Radzen has a stable release cadence) | varies | n/a |
@@ -296,7 +296,7 @@ cadences.
 ## 15. The one-paragraph summary
 
 > Cardscape is a self-hostable kanban and project-management
-> tool, built on .NET 11, with a first-class Model Context
+> tool, built on .NET 10 (LTS), with a first-class Model Context
 > Protocol server. It is the only self-hostable kanban
 > that lets an AI client (Claude Desktop, Cursor, etc.)
 > drive the boards through the same `Application` layer a

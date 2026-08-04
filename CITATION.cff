@@ -21,12 +21,13 @@ keywords:
 abstract: >-
   Cardscape is an open-source, self-hostable kanban and
   project-management tool with a first-class Model Context
-  Protocol (MCP) server. Built on .NET 11, it persists to
-  SQLite, PostgreSQL, or MariaDB and is licensed under
-  RPL-1.5. The MCP server is the differentiator: it lets
-  any AI-compatible client (Claude Desktop, Cursor,
-  Windsurf, etc.) read and drive the boards through the
-  same Application layer the REST API uses.
+  Protocol (MCP) server. Built on .NET 10 (LTS), it
+  persists to SQLite, PostgreSQL, or MariaDB and is
+  licensed under RPL-1.5. The MCP server is the
+  differentiator: it lets any AI-compatible client
+  (Claude Desktop, Cursor, Windsurf, etc.) read and drive
+  the boards through the same Application layer the REST
+  API uses.
 authors:
   - family-names: "(maintainer)"
     given-names: "the Cardscape"

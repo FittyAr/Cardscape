@@ -97,7 +97,7 @@ Build is clean. **410/410 tests green** (313 unit + 10 architecture
   `OAuthAuthorizationCode` + `OAuthAccessToken` (RFC 6749
   authorization-code flow, clients register an app, redirect
   to `/oauth/authorize`, exchange the code at `/oauth/token`).
-- **OpenAPI spec** — `docs/api/01-openapi-spec.md` documents
+- **OpenAPI spec** — `docs/api/02-openapi-spec.md` documents
   the release artifact URL pattern and the conventions
   (schemaIds, error envelopes, version pinning).
 
@@ -145,7 +145,7 @@ Build is clean. **410/410 tests green** (313 unit + 10 architecture
 
 - **OpenAPI document failed to build** — already fixed in
   v1.0.1 above.
-- **Minimal API parameter binding** — .NET 11's
+- **Minimal API parameter binding** — the .NET 10
   `RequestDelegateFactory` inferred some complex DI-bound
   services as Body parameters on the new endpoints
   (IExportService, IIcalendarService, the new
@@ -1093,8 +1093,11 @@ below were present before `v0.1.0-mvp`.
 
 ### Added
 
-- Solution scaffold: 6 source projects, 5 test projects, .NET 11
-  preview 6 SDK, EF Core 10.0.10 LTS.
+- Solution scaffold: 6 source projects, 5 test projects, .NET 10
+  LTS SDK (originally targeted .NET 11 preview 6; downgraded
+  to .NET 10 in 2026-08 to align with the third-party EF Core
+  provider support timeline and the LTS release cadence), EF
+  Core 10.0.10 LTS.
 - Multi-provider persistence scaffolding (SQLite, PostgreSQL,
   MariaDB). SQLite-only test matrix for now. See
   [ADR 0001](docs/adr/0001-multi-provider-strategy.md).

@@ -23,7 +23,7 @@ feature in the project routes through it. We need:
    handler without each handler manually invoking them.
 3. **Source-generator support** — no per-dispatch IL emit,
    no allocation on the hot path.
-4. **`.NET 11` compatibility** — works on the current SDK
+4. **`.NET 10` compatibility** — works on the current LTS SDK
    without ceremony.
 5. **A mediator + a service bus in one package** — the same
    library can dispatch in-process (`IMessageBus.InvokeAsync`)

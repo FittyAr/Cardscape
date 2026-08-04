@@ -61,11 +61,11 @@ Wired in `src/Cardscape.Api/Program.cs:201-202`:
 - Trigger: any `v*` tag (job `if: startsWith(github.ref, 'refs/tags/v')` at line 191).
 
 ### Documentation
-- `docs/api/01-openapi-spec.md` exists (120 lines). The plan calls for `docs/api/02-openapi-spec.md` — **filename drift**: the file is numbered `01-` not `02-`, but it does cover the right subject: where to find the spec, schema conventions, endpoint groups (including `/api/oauth/*`, `/api/scim/v2/*`, `/saml/{slug}/*` at lines 75-77), SDK generation, versioning, local dev.
+- `docs/api/02-openapi-spec.md` exists (120 lines). The audit G18 follow-up renamed the file from `01-` to `02-` to match the plan §3.12 layout. Content matches: where to find the spec, schema conventions, endpoint groups (including `/api/oauth/*`, `/api/scim/v2/*`, `/saml/{slug}/*` at lines 75-77), SDK generation, versioning, local dev.
 - The flow doc and OpenAPI doc are both in `docs/api/`. `00-conventions.md` and `01-oauth-flow.md` are also present.
 
 ### Notes / drift
-- The plan reference §3.12 specifies `docs/api/02-openapi-spec.md`. The actual file is `docs/api/01-openapi-spec.md`. Functionally the content matches §3.12; the only discrepancy is the filename prefix. Recommend either (a) renaming the file to `02-` and renumbering `01-oauth-flow.md` to `00-` (preserve the conventions file), or (b) updating the plan to match the actual layout.
+- The plan reference §3.12 specifies `docs/api/02-openapi-spec.md`. The actual file is now `docs/api/02-openapi-spec.md` (renamed in the G18 follow-up). The neighbouring `01-oauth-flow.md` is preserved as the OAuth-specific deep dive; `00-conventions.md` keeps the conventions slot.
 - No `## 4.1+` test for the OpenAPI artifact itself; release tag is the gate. The release job's `if-no-files-found: warn` (line 238) means a missing spec only warns — could be hardened to `error`.
 
 ---
@@ -279,7 +279,7 @@ Wired in `src/Cardscape.Api/Program.cs:198-199`:
 | § | Item | Verdict | Notes |
 |---|---|---|---|
 | 3.11 | OAuth 3rd-party apps | **DONE** | Domain, app, infra, 4 flow endpoints + 3 admin endpoints, Web UI, doc, tests, migration all present. |
-| 3.12 | Public OpenAPI spec | **DONE** (drift) | CI release job publishes the spec. Doc exists as `docs/api/01-openapi-spec.md` (plan asked for `02-`). |
+| 3.12 | Public OpenAPI spec | **DONE** | CI release job publishes the spec. Doc exists as `docs/api/02-openapi-spec.md` (filename matches plan §3.12 after the G18 follow-up). |
 | 4.1 | OAuth 2.0 / OIDC login | **DONE** | Google/Microsoft/Apple handlers, ExternalLogin aggregate, admin endpoints, login + linking UI, migration. |
 | 4.2 | SAML SSO | **DRIFT** | Domain/repos/admin endpoints present, but the `/saml/{slug}/login`, `/login-init`, `/acs`, `/metadata` endpoints are 200-OK stubs. `Sustainsys.Saml2` is **not** registered in the auth pipeline; no `SamlAuthenticationHandler.cs` file exists. |
 | 4.3 | 2FA / TOTP | **PARTIAL** | Endpoints + Web UI + OtpNet usage all in. **`/api/auth/login` has no TOTP step** — the `LoginUserQuery` does not branch on a TOTP credential. |

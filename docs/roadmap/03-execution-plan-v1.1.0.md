@@ -626,7 +626,7 @@ The features from the feature inventory §14 (security) and
   + `app.UseRequestLocalization(...)` in `Program.cs`. ✅ DONE
   (with the **WASM caveat** — see below). The plan's literal
   shape is a **server-side API** that cannot be applied on
-  Blazor WebAssembly with the .NET 11 preview SDK: the
+  Blazor WebAssembly with the current .NET 10 SDK: the
   `SetDefaultCulture` / `AddSupportedCultures` extension
   methods live on `RequestLocalizationOptions` (which is in
   the `Microsoft.AspNetCore.App` shared framework; the

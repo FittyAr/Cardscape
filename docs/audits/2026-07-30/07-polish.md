@@ -77,7 +77,7 @@ the fully-DONE items; the gap is documented in the summary.
   - `<GeneratePackageOnBuild>true</GeneratePackageOnBuild>`, `<PackageId>Cardscape.Sdk</PackageId>`, `<Version>1.1.0</Version>`.
   - `dotnet pack` produces `Cardscape.Sdk.1.1.0.nupkg`.
 - **Evidence**:
-  - `sdk/Cardscape.Sdk/Cardscape.Sdk.csproj:10-27` — `<TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>`, `<GeneratePackageOnBuild>true</GeneratePackageOnBuild>`, `<PackageId>Cardscape.Sdk</PackageId>`, `<Version>1.1.0</Version>`. The csproj has a header comment explaining it overrides the repository-wide `net11.0` target with a one-line `<TargetFramework></TargetFramework>` opt-out so `TargetFrameworks` wins.
+  - `sdk/Cardscape.Sdk/Cardscape.Sdk.csproj:10-27` — `<TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>`, `<GeneratePackageOnBuild>true</GeneratePackageOnBuild>`, `<PackageId>Cardscape.Sdk</PackageId>`, `<Version>1.1.0</Version>`. The csproj has a header comment explaining it overrides the repository-wide `net10.0` target with a one-line `<TargetFramework></TargetFramework>` opt-out so `TargetFrameworks` wins.
   - `sdk/Cardscape.Sdk/CardscapeClient.cs`, `Models.cs`, `SubClients.cs`, `IsExternalInit.cs` — the four source files of the hand-written SDK. `SubClients.cs:86-89` includes the `api/boards/{boardId}/export` endpoint, fulfilling the SDK's "30 most-used" intent.
   - `sdk/Cardscape.Sdk/bin/Debug/Cardscape.Sdk.1.1.0.nupkg` (78 161 B) — the build artifact the plan asks for.
   - `sdk/Cardscape.Sdk/bin/Debug/Cardscape.Sdk.1.1.0.snupkg` — symbols package also produced.

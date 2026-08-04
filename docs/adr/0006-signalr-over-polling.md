@@ -116,7 +116,7 @@ following is true:
 2. A non-.NET client becomes important (e.g. a Go
    service that needs to consume the same events).
 3. SignalR ships a major-version break (unlikely in
-   the .NET 11 timeframe; SignalR has been API-stable
+   the .NET 10 timeframe; SignalR has been API-stable
    since .NET 5).
 
 ## References

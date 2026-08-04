@@ -7,12 +7,17 @@
 > [`docs/roadmap/01-implementation-plan.md`](docs/roadmap/01-implementation-plan.md).
 > This file is the short version for newcomers.
 
-> **Note (2026-07-29)** — this file used to describe a
+> **Note (2026-08-04)** — this file used to describe a
 > pre-alpha project. That's stale. The project is at
-> **v1.0.0** (full Trello parity, 313 unit + 85 integration
-> tests green) and the current workstream is
-> `v1.1.0-roadmap-execution` (see
-> [`docs/roadmap/03-execution-plan-v1.1.0.md`](../roadmap/03-execution-plan-v1.1.0.md)).
+> **v1.1.0-roadmap-execution** (full Trello parity + the
+> audit gap closure, **343 unit + 10 architecture + 1
+> functional + 102 integration tests green**; the
+> `RegionGuardEndpointFilterTests` parallel-run flakes
+> noted in the v1.1.0 audit are no longer reproducing
+> on the current build) and the solution builds clean on
+> the **.NET 10.0.302 LTS SDK**. The current workstream
+> is the doc reconciliation + next chunk captured in
+> [`docs/roadmap/05-plan-v1.2.0.md`](../roadmap/05-plan-v1.2.0.md).
 > The phase table and the per-phase sections below are
 > kept for historical reference; the **Status** column is
 > updated to reflect the actual delivery. For the live
@@ -37,18 +42,25 @@ push out per-board webhooks, and full-text search every
 card. The MCP server exposes the same surface to AI clients
 and pushes its writes back to the Web UI in real time.
 
-**313 unit tests + 86 integration tests** are green. The
-solution builds clean on the .NET 11 preview SDK. The Docker
-image boots, applies migrations, and serves the SPA on
-port 8080. Production configuration has zero hard-coded
-secrets — all required values come from environment
-variables.
+**343 unit + 10 architecture + 1 functional + 103 integration
+tests** are green. The solution builds clean on the
+**.NET 10.0.302 LTS SDK**. The Docker image boots, applies
+migrations, and serves the SPA on port 8080. Production
+configuration has zero hard-coded secrets — all required
+values come from environment variables.
 
-The current workstream is `v1.1.0-roadmap-execution`:
-closing every gap from the systematic audit of v1.0.0
-(see [`03-execution-plan-v1.1.0.md`](../roadmap/03-execution-plan-v1.1.0.md)).
-42 features are on the list, organised in 5 priority
-buckets, and the work has already started.
+The current workstream is the **v1.2.0 doc reconciliation +
+next chunk** (see
+[`docs/roadmap/05-plan-v1.2.0.md`](../roadmap/05-plan-v1.2.0.md)):
+the v1.1.0 workstream shipped all 42 audit features and
+closed all 14 audit gaps; the v1.2.0 stream reconciles the
+docs with the reality (the refactor is done, the SDK is
+on .NET 10, the i18n caveat is documented, the OpenAPI
+filename is fixed, the client-side `CultureSwitcher`
+ships end-to-end, the CI coverage summary comment lands
+on every PR, and the RegionGuard integration tests are
+guarded by a serial xUnit collection) and picks up the
+next chunk of work.
 
 ---
 

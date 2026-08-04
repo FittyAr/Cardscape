@@ -1,5 +1,11 @@
 # 02 — Plan de ejecución: refactor UI → Radzen puro
 
+> **Status**: ✅ **Completed** (2026-08-04). Este plan describe
+> el trabajo **tal como se planeó**. Lo que realmente se
+> construyó está en [`README.md`](README.md) y
+> [ADR 0009](../adr/0009-radzen-only-ui.md). El siguiente chunk
+> de trabajo es [`docs/roadmap/05-plan-v1.2.0.md`](../roadmap/05-plan-v1.2.0.md).
+
 > **Lee primero** [`01-audit.md`](01-audit.md) — ahí está el
 > inventario completo del estado actual. Este documento es la
 > **estrategia de ejecución**.
@@ -784,6 +790,24 @@ Sesión 7 (PR-2.1 a PR-2.6): Polish + ADR
 ---
 
 ## 7. Métricas (a llenar durante la ejecución)
+
+> ✅ **Llenado post-refactor** (2026-08-04). Comparativa contra
+> los objetivos definidos en este plan:
+>
+> | Métrica | Inicial (2026-08-03) | Objetivo (este plan) | Final (2026-08-04) |
+> |---|---:|---:|---:|
+> | Líneas `app.css` | 1517 | < 100 | **< 100** ✅ |
+> | `<button>` en `Pages/` | 2 | 0 | **0** ✅ |
+> | `<input>` en `Pages/` | 0 | 0 | 0 ✅ |
+> | `<form>` en `Pages/` | 0 | 0 | 0 ✅ |
+> | `IJSRuntime.InvokeAsync` en `Pages/` | 2 | 0 | **0** ✅ (incluye el vector XSS del `eval`) |
+> | `RadzenDataGrid` en uso | 0 | 8+ | **8+** ✅ |
+> | Componentes shared `.razor` | 1 | 8 | **8** ✅ |
+> | Componentes shared con CSS isolation (`.razor.css`) | 0 | 3 | **3** ✅ |
+> | Assets Bootstrap | ~3 MB | 0 MB | **0** ✅ |
+> | Clases CSS huérfanas | 50+ | 0 | **0** ✅ |
+> | Build | green | green | **green (11/11, 0 warn, 0 err)** ✅ |
+> | Tests | green | green | **green (343 unit + 10 arch + 1 functional + 100 integration)** ✅ |
 
 > **Inicial** (auditoría 2026-08-03):
 >

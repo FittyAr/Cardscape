@@ -137,10 +137,6 @@ reads them on demand when a task matches their trigger.
 
 | `setup-local-sdk` | Install a .NET SDK locally for safe preview testing, specific-version pinning, or reproducible team setups | trying .NET previews safely, testing specific SDK versions, installing MAUI or other workloads, or creating reproducible team/CI install scripts |
 
-**From `dotnet/dotnet11`**
-
-| `system-text-json-net11` | Imperative guidance for the System.Text.Json APIs added in .NET 11: `JsonNodelessStreaming`, source-generated `JsonTypeInfo`, and trimmed/AOT-safe serializer configuration | serializing or deserializing JSON in a net11.0-or-later project when you need the new built-in streaming or AOT-friendly metadata |
-
 **From `dotnet/dotnet-aspnetcore`**
 
 | `configuring-opentelemetry-dotnet` | Configure OpenTelemetry distributed tracing, metrics, and logging in ASP.NET Core using the .NET OpenTelemetry SDK | adding or changing observability configuration (matches `docs/design/02-logging-observability.md`) |

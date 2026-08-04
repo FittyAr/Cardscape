@@ -107,9 +107,9 @@ following is true:
    exceeds 50k.
 3. A user files a meaningful request for ranking,
    fuzzy matching, or operator syntax.
-4. Lucene.NET ships a .NET 11 compatible release (it
+4. Lucene.NET ships a .NET 10 compatible release (it
    already targets `net8.0` and `netstandard2.0`; the
-   `net11.0` TFM is current as of this writing).
+   `net10.0` TFM is the current LTS line).
 
 At that point, the next step is a new bounded context
 `Cardscape.Infrastructure.Search.Lucene` that

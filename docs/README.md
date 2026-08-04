@@ -1,8 +1,8 @@
 # Cardscape — Documentation
 
 This is the documentation index for **Cardscape**, an open-source
-kanban and project-management tool built on .NET 11 with a full
-feature surface (kanban + calendar + automation + extensions +
+kanban and project-management tool built on .NET 10 (LTS) with a
+full feature surface (kanban + calendar + automation + extensions +
 Inbox + AI) and a **Model Context Protocol (MCP) server** that
 lets any AI-compatible client drive the boards conversationally.
 
@@ -28,6 +28,8 @@ If you are a new contributor (human or AI agent), follow this order:
 4. [`roadmap/01-implementation-plan.md`](roadmap/01-implementation-plan.md)
    — the phased delivery plan. Tells you what's next and
    what's deferred. The MCP server ships in **Phase 2**.
+   The current workstream is **v1.2.0** (see
+   [`05-plan-v1.2.0.md`](roadmap/05-plan-v1.2.0.md)).
 5. [`architecture/00-overview.md`](architecture/00-overview.md) —
    the Clean Architecture layers, the directory layout (now
    including `Cardscape.Mcp/`), and the dependency rules.
@@ -57,6 +59,8 @@ one; mark it as `Superseded by ADR NNNN` instead.
 |---|---|---|
 | [0001](adr/0001-multi-provider-strategy.md) | Multi-provider persistence (SQLite, PostgreSQL, MariaDB) with SQLite-only test matrix | Accepted (2026-07-27) |
 | [0002](adr/0002-mcp-server.md) | Model Context Protocol (MCP) server | Accepted (2026-07-27) |
+| [0009](adr/0009-radzen-only-ui.md) | Radzen-only UI: kill HTML/JS/CSS custom in `Cardscape.Web` | Accepted (2026-08-03) |
+| [0010](adr/0010-client-side-culture-switcher.md) | Client-side culture switcher (Blazor WebAssembly) | Accepted (2026-08-04) |
 
 ## 3. How the docs are organized
 
@@ -105,7 +109,10 @@ docs/
 ├── roadmap/                           # where we're going (and how we present ourselves)
 │   ├── 00-feature-inventory.md        # the target feature surface
 │   ├── 01-implementation-plan.md     # the phased delivery plan
-│   └── 02-product-positioning.md     # name, tagline, pillars, vocabulary, voice
+│   ├── 02-product-positioning.md     # name, tagline, pillars, vocabulary, voice
+│   ├── 03-execution-plan-v1.1.0.md   # the closed v1.1.0 workstream (42 features + 14 audit gaps)
+│   ├── 04-audit-gaps-2026-07-30.md  # the v1.1.0 per-area audit report
+│   └── 05-plan-v1.2.0.md             # the current workstream (doc reconciliation + next chunk)
 ├── community/                         # community-facing reference docs
 │   ├── CHANGELOG.md                   # Keep a Changelog format
 │   ├── ROADMAP.md                     # community-readable version of the implementation plan

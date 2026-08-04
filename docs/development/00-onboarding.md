@@ -159,14 +159,15 @@ tests with `[Trait("Database", "PostgreSQL")]` or
 
 - Enable **Solution-wide analysis** in `Settings → Editor →
   Inspection Settings → Inspection Severity → Roslyn`.
-- Install the **.NET 11 Preview** plugin if you want full
-  Roslyn support for the preview C# features we use.
+- The .NET 10 SDK 10.0.302 ships with full Roslyn support
+  for the C# features we use; no extra plugin is required.
 - The built-in Roslyn analyzers will surface every C# style rule
   from the `.editorconfig` directly in the editor.
 
 ### Visual Studio 2022 17.x+
 
-- Install the **.NET 11 SDK** as a Visual Studio component.
+- Install the **.NET 10 SDK** (10.0.302 or any newer 10.0.x
+  feature band) as a Visual Studio component.
 - The `.editorconfig` is honored automatically.
 
 ### VS Code + C# Dev Kit
@@ -185,9 +186,10 @@ On macOS/Linux, install via your package manager or `dotnet-install.sh`.
 
 ### `dotnet restore` complains about NU1903 vulnerabilities
 
-This is a known nuisance in the .NET 11 preview. The CI build
-instructs `dotnet restore` to ignore audit warnings, so a
-vulnerable transitive dependency won't fail the build, only
+Some transitive advisories still surface under
+`nuget audit` even on the LTS SDK. The CI build instructs
+`dotnet restore` to ignore audit warnings, so a vulnerable
+transitive dependency won't fail the build, only
 `nuget audit` will. The transitive overrides in
 `Directory.Packages.props` keep the known issues at bay
 (SQLitePCLRaw 2.1.12, Swashbuckle 10.2.3, etc.).

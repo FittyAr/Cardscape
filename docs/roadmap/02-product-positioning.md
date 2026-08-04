@@ -150,7 +150,7 @@ sentence is the tagline. The third sentence is the
 |---|---|
 | The MCP server section | **"The first-class AI integration for your boards."** |
 | The self-hostable section | **"Your boards, your database, your hardware."** |
-| The architecture section | **"Clean Architecture, .NET 11, one code path for humans and AI."** |
+| The architecture section | **"Clean Architecture, .NET 10 (LTS), one code path for humans and AI."** |
 
 ---
 
@@ -246,7 +246,7 @@ every artifact that mentions Cardscape externally.
 | **bounded context** | DDD term; the architectural unit |
 | **vertical slice** | a feature end-to-end (use case → endpoint → MCP tool → UI) |
 | **design for three, test on one** | the multi-DB strategy |
-| **.NET 11** | the runtime, always with the version |
+| **.NET 10 (LTS)** | the runtime, always with the version |
 | **RPL-1.5** | the license, always with the version |
 | **ADR** (architecture decision record) | for design decisions |
 | **the differentiator** | referring to the MCP server |

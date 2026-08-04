@@ -16,9 +16,11 @@ run on three different relational database engines:
    hosts. Engine: `MySql.EntityFrameworkCore` (Oracle's official provider,
    wire-compatible with MariaDB).
 
-The application targets `net11.0` (the current .NET 11 preview 6 SDK as of
-this writing, July 2026). EF Core 11 preview is shipping in lockstep with
-the runtime, but **third-party providers are not**. As of this ADR:
+The application targets `net10.0` (the .NET 10 LTS SDK, currently
+10.0.302 as of August 2026). EF Core 11 has shipped and the first-party
+EF Core providers (`Microsoft.EntityFrameworkCore.Sqlite` /
+`Npgsql.EntityFrameworkCore.PostgreSQL`) track it, but **third-party
+providers are not** on the EF Core 11 line yet. As of this ADR:
 
 | Provider                                | EF Core 11 support |
 |-----------------------------------------|---------------------|
@@ -33,19 +35,21 @@ into the project would require us to drop MariaDB support until the
 provider catches up, or to live with two EF Core versions side by side
 — neither is acceptable.
 
-The project targets `net11.0` (so it can use all the .NET 11 runtime
-features), but for the data layer it must use **EF Core 10 LTS** until
-MariaDB has a compatible provider.
+The project targets `net10.0` (the LTS feature band) and uses
+**EF Core 10 LTS** for the data layer. We stay on the same LTS band
+across the runtime and the ORM until the third-party providers ship
+EF Core 11 binaries.
 
 ## Decision
 
-1. **Target framework**: `net11.0` for every project. We use the
-   latest .NET runtime, language features, and BCL improvements.
+1. **Target framework**: `net10.0` for every project. We use the
+   latest LTS runtime, language features, and BCL improvements.
 
 2. **EF Core version**: `10.0.10` LTS across the whole solution. We do
-   **not** use EF Core 11 preview — third-party providers don't follow
-   that train yet. EF Core 10 binaries are forward-compatible with
-   `net11.0`.
+   **not** bump to EF Core 11 yet — third-party providers don't follow
+   that train yet. The whole solution stays on the EF Core 10 LTS
+   feature band so the runtime, the ORM, and the providers all ship on
+   the same support timeline.
 
 3. **Provider selection at runtime**: the chosen engine is read from
    `appsettings.json` under `Database:Provider`, with values
@@ -112,8 +116,8 @@ MariaDB has a compatible provider.
 
 Positive:
 
-- We can ship `net11.0` + EF Core 10 LTS today without dropping
-  MariaDB or PostgreSQL support at runtime.
+- We ship `net10.0` + EF Core 10 LTS on the same LTS feature band
+  today without dropping MariaDB or PostgreSQL support at runtime.
 - New contributors can run the full test suite with `dotnet test` and
   zero external dependencies (SQLite is in-process).
 - The provider switch is configuration-driven, so the same build
@@ -159,7 +163,7 @@ to 3 (still handwritten, just larger).
 
 ## References
 
-- [.NET 11 preview release notes](https://github.com/dotnet/core/blob/main/release-notes/)
+- [.NET 10 LTS release notes](https://github.com/dotnet/core/blob/main/release-notes/)
 - [EF Core 10 LTS announcement](https://devblogs.microsoft.com/dotnet/)
 - [Pomelo.EntityFrameworkCore.MySql status](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql)
 - [MySql.EntityFrameworkCore (Oracle)](https://dev.mysql.com/doc/connector-net/en/connector-net-entityframework-core.html)

@@ -1,11 +1,17 @@
 # 01 — Auditoría del estado actual (UI custom vs Radzen)
 
-> **Fecha**: 2026-08-03
+> **Status**: ✅ **Histórico** (2026-08-04). La auditoría se
+> ejecutó el 2026-08-03; el refactor se ejecutó el mismo día
+> 2026-08-04 y está terminado. Ver
+> [`README.md`](README.md) y [ADR 0009](../adr/0009-radzen-only-ui.md)
+> para el estado final.
+>
+> **Fecha de la auditoría**: 2026-08-03
 > **Alcance**: `src/Cardscape.Web/` (Blazor WebAssembly .NET 10
 > + `Radzen.Blazor 11.1.8`)
 > **Output**: este documento es el inventario exhaustivo de
-> todo lo que NO es Radzen en la UI. Es la entrada al
-> [`02-plan.md`](02-plan.md).
+> todo lo que NO es Radzen en la UI en el momento de la
+> auditoría. Es la entrada al [`02-plan.md`](02-plan.md).
 >
 > **Cero modificaciones** realizadas durante la auditoría —
 > solo lectura.

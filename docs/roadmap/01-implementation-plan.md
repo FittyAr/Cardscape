@@ -36,7 +36,8 @@
 | 4 — Realtime + invitations + Inbox + Calendar + Planner + Automation + Extensions | **DONE** | `v0.4.0-realtime-mcp` through `v0.6.4-extensions` — cross-process push from MCP to Web UI, workspace invitations, Inbox (60s poll bell), Calendar month grid, Planner swimlane, automation engine (4 triggers × 4 actions), per-board extension toggles. |
 | 5 — Polish & scale | **DONE** | `v0.7.0-jobs` through `v0.7.10-polish` — background jobs (`IBackgroundJobStore` + dispatcher), custom fields, rate limiting, activity timeline, voting, checklists, recurring cards, webhooks (HMAC-SHA256, 5-attempt backoff), attachments (25 MB cap, local disk), full-text search, CI (`.github/workflows/ci.yml`), production config (zero hard-coded secrets). |
 | 6 — v1.0.0 release | **DONE** | `v1.0.0` — first production release with full Trello parity. 313 unit + 85 integration tests green. |
-| 7 — Roadmap execution | **IN PROGRESS** | `v1.1.0-roadmap-execution` — closing every gap from the systematic audit. See [`03-execution-plan-v1.1.0.md`](03-execution-plan-v1.1.0.md). |
+| 7 — Roadmap execution | **DONE** | `v1.1.0-roadmap-execution` — all 42 features shipped, all 14 audit gaps (G1–G14) closed. See [`03-execution-plan-v1.1.0.md`](03-execution-plan-v1.1.0.md) and [`04-audit-gaps-2026-07-30.md`](04-audit-gaps-2026-07-30.md). |
+| 8 — Doc reconciliation + next chunk | **PLANNED** | The post-v1.1.0 follow-up: doc reconciliation (this PR set), i18n follow-up (G12 partial), integration-test stability (RegionGuard flakes), CI coverage diff (G17), OpenAPI doc filename (G18), Web refactor. See [`05-plan-v1.2.0.md`](05-plan-v1.2.0.md). |
 
 The dates are **aspirational** and depend on contributor
 bandwidth. Each phase ends with a tagged release

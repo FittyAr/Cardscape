@@ -24,7 +24,7 @@ The de-facto standard for "AI agent ↔ external tool" in 2025-2026
 is the **Model Context Protocol** (MCP), an open standard published
 by Anthropic and adopted across the industry. There is a
 first-class .NET SDK (`ModelContextProtocol` on NuGet) that runs
-on `net8.0+` and therefore works on `net11.0`.
+on `net8.0+` and therefore works on `net10.0`.
 
 The decision is **where the MCP server lives** in the solution and
 **how it integrates** with the rest of the architecture.
