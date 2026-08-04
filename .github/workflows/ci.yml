@@ -185,6 +185,59 @@ jobs:
           name: coverage-lcov-${{ github.sha }}
           path: TestResults/coverage/**/coverage.cobertura.xml
           if-no-files-found: ignore
+      - name: Summarise coverage for PR comment (D8 — v1.2.0 plan, G17)
+        if: github.event_name == 'pull_request'
+        id: coverage-summary
+        run: |
+          # Extract the line-rate (%) and branch-rate (%) from every
+          # coverage.cobertura.xml under TestResults/coverage/ and
+          # average them. The exact line/branch breakdown is in
+          # the lcov artifact linked from the PR comment.
+          set -e
+          total_lines=0
+          total_branches=0
+          count=0
+          for f in TestResults/coverage/**/coverage.cobertura.xml; do
+            [ -e "$f" ] || continue
+            line_rate=$(xmllint --xpath 'string(/coverage/@line-rate)' "$f" 2>/dev/null || echo "0")
+            branch_rate=$(xmllint --xpath 'string(/coverage/@branch-rate)' "$f" 2>/dev/null || echo "0")
+            total_lines=$(echo "$total_lines + $line_rate" | bc -l)
+            total_branches=$(echo "$total_branches + $branch_rate" | bc -l)
+            count=$((count + 1))
+          done
+          if [ "$count" = "0" ]; then
+            echo "No coverage XML found; skipping summary."
+            {
+              echo "summary<<EOF"
+              echo "## Coverage summary"
+              echo ""
+              echo "_No coverage data was produced on this run._"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          avg_line=$(echo "scale=2; ($total_lines / $count) * 100" | bc -l)
+          avg_branch=$(echo "scale=2; ($total_branches / $count) * 100" | bc -l)
+          echo "avg-line=$avg_line"
+          echo "avg-branch=$avg_branch"
+          {
+            echo "summary<<EOF"
+            echo "## Coverage summary"
+            echo ""
+            echo "**Line coverage**: ${avg_line}%"
+            echo "**Branch coverage**: ${avg_branch}%"
+            echo "**Files**: $count cobertura XML report(s) merged"
+            echo ""
+            echo "Detailed line/branch breakdown is in the workflow run artifacts."
+            echo "Posted by the v1.2.0 D8 / G17 work."
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Post coverage diff comment to PR
+        if: github.event_name == 'pull_request' && steps.coverage-summary.outputs.summary != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: cardscape-coverage
+          message: ${{ steps.coverage-summary.outputs.summary }}
 
   release:
     name: Release

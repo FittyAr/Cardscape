@@ -311,3 +311,29 @@ This document is revisited when:
 
 Until then, this document is the source of truth for
 monitoring in Cardscape.
+
+---
+
+## 13. CI coverage comment (D8 — v1.2.0, G17)
+
+The CI workflow (`.github/workflows/ci.yml`, job
+`coverage`) runs every unit + integration test under
+`XPlat Code Coverage` (coverlet), extracts the line and
+branch coverage from the generated `cobertura.xml` files,
+and posts a **sticky comment** to the PR with the
+summary. The exact line/branch breakdown per project is
+in the `coverage-lcov-<sha>` artifact linked from the
+comment.
+
+The comment is non-blocking: a missing cobertura report
+(e.g. on a docs-only PR) leaves a placeholder instead of
+failing the build. The full per-file breakdown is in the
+artifact so the maintainer can drill down to a class or
+method without leaving the PR.
+
+**Why coverage in this runbook**: the coverage comment
+is the maintainer's day-to-day monitoring surface for
+"is the test suite keeping up with the code?". It
+complements the OpenTelemetry pipeline (which is the
+runtime monitoring surface) and the integration test
+suite (which is the contract monitoring surface).
