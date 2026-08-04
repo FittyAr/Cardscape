@@ -3,7 +3,6 @@ using Cardscape.Mcp.Endpoints.Internal;
 using Cardscape.Mcp.Extensions;
 using Cardscape.Mcp.Observability;
 using Cardscape.Mcp.Tools;
-using Cardscape.Infrastructure.Logging;
 using Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
