@@ -27,8 +27,10 @@ using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Ai;
 using Cardscape.Infrastructure.Authentication;
 using Cardscape.Infrastructure.BackgroundJobs;
+using Cardscape.Infrastructure.Calendar;
 using Cardscape.Infrastructure.Configuration;
 using Cardscape.Infrastructure.Email;
+using Cardscape.Infrastructure.Export;
 using Cardscape.Infrastructure.Import;
 using Cardscape.Infrastructure.Integrations;
 using Cardscape.Infrastructure.Persistence;
@@ -335,6 +337,18 @@ public static class InfrastructureServiceCollectionExtensions
         // Wolverine IMessageBus to dispatch CreateCardCommand.
         services.AddScoped<IInboundEmailAddressRepository, InboundEmailAddressRepository>();
         services.AddScoped<IInboundEmailService, DefaultInboundEmailService>();
+
+        // Per-board export (board.json + attachments) and
+        // per-board iCalendar feed (RFC 5545) — both shipped
+        // with the v1.1.0 release. The implementations live
+        // in Cardscape.Infrastructure.Export / .Calendar and
+        // are scoped because they compose the EF Core
+        // DbContext. Without these registrations the
+        // /api/boards/{id}/export and /api/boards/{id}/ics
+        // endpoints throw "No service for type" on the first
+        // call (caught by the G15 integration test pass).
+        services.AddScoped<Application.Abstractions.Export.IExportService, BoardExportService>();
+        services.AddScoped<Application.Calendar.IIcalendarService, IcsCalendarService>();
 
         return services;
     }
