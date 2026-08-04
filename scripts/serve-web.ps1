@@ -1,34 +1,20 @@
 # =============================================================================
-# serve-web.ps1 — Run the Blazor WASM web client as a static site.
+# ⚠️  DEPRECATED — do not use.
+# serve-web.ps1 — historical workaround for the .NET 11 preview SDK
+# (11.0.100-preview.6.26359.118) where `dotnet run --project
+# src/Cardscape.Web` did not run the token-replacement pass on
+# wwwroot/index.html and the dev bin/ folder was missing per-assembly
+# .wasm files.
 #
-# Why this exists
-# ---------------
-# Historical workaround for the .NET 11 preview SDK
-# (11.0.100-preview.6.26359.118): `dotnet run --project
-# src/Cardscape.Web` uses the Blazor WASM dev server from that preview
-# SDK, which did not run the token-replacement pass over
-# wwwroot/index.html. The browser could not resolve the fingerprinted
-# script path and the app hung on the initial loading spinner. The
-# preview SDK also left the dev bin/ folder missing the per-assembly
-# .wasm files, so even after patching index.html the runtime could
-# not download its dependencies.
+# The project now targets net10.0 (LTS) where the SDK is stable and
+# `dotnet run` works as expected. Use the dev menu (run.ps1 → "Run a
+# service" → "Web") or run directly:
 #
-# Workaround: publish the Web project, run a post-publish step that
-# copies every fingerprinted asset to its plain name (so the runtime
-# can find them without a boot manifest), then serve the publish
-# output as static files. This is what `dotnet run` would do in a
-# stable release.
+#   dotnet run --project src/Cardscape.Web
 #
-# Now that the project targets net10.0 (LTS) the SDK is stable and
-# `dotnet run` works as expected. This script is kept for debugging
-# the publish output without the dev server in the loop; you can
-# usually use `dotnet run --project src/Cardscape.Web` directly.
-#
-# Usage
-# -----
-#   pwsh scripts/serve-web.ps1                          # default port 5206
-#   pwsh scripts/serve-web.ps1 -Port 5206 -Configuration Release
-#   pwsh scripts/serve-web.ps1 -NoPublish               # skip the rebuild
+# This file is kept only for historical reference; running it now
+# will error out because the downstream post-publish-web.ps1 is also
+# deprecated. Safe to delete.
 # =============================================================================
 
 #Requires -Version 7.0
@@ -45,10 +31,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$RepoRoot   = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$WebProject = Join-Path $RepoRoot 'src/Cardscape.Web/Cardscape.Web.csproj'
-$PublishDir = Join-Path $RepoRoot "src/Cardscape.Web/bin/$Configuration/net10.0/publish/wwwroot"
-$PostPublish = Join-Path $PSScriptRoot 'post-publish-web.ps1'
+Write-Warning "serve-web.ps1 is deprecated. Use 'dotnet run --project src/Cardscape.Web' or the dev menu (run.ps1)."
+return
 
 # --- 1. Publish ---------------------------------------------------------------
 if (-not $NoPublish) {

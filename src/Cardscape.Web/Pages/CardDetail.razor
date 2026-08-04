@@ -254,7 +254,8 @@ else
                                         <RadzenCheckBox Value="@item.IsCompleted"
                                                         Change="@(async (bool _) => await ToggleItemAsync(cl.Id, item.Id))" />
                                         <RadzenText Text="@item.Text" TextStyle="TextStyle.Body2"
-                                                    Class="@(item.IsCompleted ? "cs-completed-text" : null)" />
+                                                    Class="@(item.IsCompleted ? "rz-color-text-disabled" : null)"
+                                                    Style="@(item.IsCompleted ? "text-decoration: line-through;" : null)" />
                                         <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
                                                       Click="@(() => DeleteItemAsync(cl.Id, item.Id))" />
                                     </RadzenStack>

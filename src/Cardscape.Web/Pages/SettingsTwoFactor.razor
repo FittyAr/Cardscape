@@ -41,7 +41,7 @@
                         <RadzenLink Path="@enrollment.QrCodeUrl" Target="_blank" Text="Open the otpauth:// URI" />
                         or copy the secret below and enter it manually:
                     </RadzenText>
-                    <code>@enrollment.Secret</code>
+                    <SecretBox Secret="@enrollment.Secret" AriaLabel="2FA enrollment secret" />
 
                     <RadzenText Text="2. Save your recovery codes"
                                 TextStyle="TextStyle.H6" TagName="TagName.H3" Class="rz-mt-4" />
@@ -52,7 +52,7 @@
                     <ItemList>
                         @foreach (var recoveryCode in enrollment.RecoveryCodes)
                         {
-                            <li><code>@recoveryCode</code></li>
+                            <li><SecretBox Secret="@recoveryCode" AriaLabel="Recovery code" /></li>
                         }
                     </ItemList>
                 </RadzenStack>

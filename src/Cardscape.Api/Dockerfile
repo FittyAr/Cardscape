@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1.7
-# Multi-stage build for the Cardscape API. Targets a .NET 11 preview SDK
+# Multi-stage build for the Cardscape API. Targets the .NET 10 LTS SDK
 # and produces a self-contained ASP.NET Core image.
 
 # ── Stage 1: restore + publish ──────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/sdk:11.0-preview AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy build configuration first so the package restore layer caches.
@@ -24,7 +24,7 @@ RUN dotnet publish src/Cardscape.Api/Cardscape.Api.csproj \
     /p:UseAppHost=false
 
 # ── Stage 2: runtime ────────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/aspnet:11.0-preview AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 # Non-root for safety; UID 1000 matches the .NET base image convention.

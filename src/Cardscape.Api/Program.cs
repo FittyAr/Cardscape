@@ -34,9 +34,7 @@ using Cardscape.Application.Realtime;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Logging;
 using Cardscape.Infrastructure.Persistence;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -144,31 +142,11 @@ app.UseRequestLocalization();
 app.UseCors();
 
 // ── Blazor WebAssembly client hosting ────────────────────────────────
-// The Cardscape.Web project is referenced above so its wwwroot (the
-// compiled WASM client + index.html) is copied into the API's output
-// by scripts/copy-blazor-client.ps1 (invoked by the API csproj's
-// AfterTargets=Build target). These middlewares serve the framework
-// files and static content; the fallback below lets Blazor's
-// client-side router handle non-API URLs.
-//
-// The .NET 11 preview SDK only registers blazor.webassembly.js in the
-// Web project's static web assets; the app's .wasm and the runtime
-// .wasm/.js files end up in $(OutDir)/wwwroot/_framework but aren't
-// auto-discovered. We add an extra UseStaticFiles with an explicit
-// file provider pointing at the copy location so UseBlazorFrameworkFiles
-// can resolve the rest of the framework files. This middleware must
-// run before UseBlazorFrameworkFiles so the framework middleware only
-// sees requests for files it doesn't already know about.
-var clientWwwroot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
-if (Directory.Exists(clientWwwroot))
-{
-    app.UseStaticFiles(new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(clientWwwroot),
-        ServeUnknownFileTypes = true,
-        ContentTypeProvider = new FileExtensionContentTypeProvider()
-    });
-}
+// The Cardscape.Web project is referenced above so the SDK runs the
+// static-web-assets merge and copies the compiled WASM client (wwwroot,
+// index.html, _framework/*) into the API's output. These middlewares
+// serve the framework files and static content; the fallback below
+// lets Blazor's client-side router handle non-API URLs.
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 
