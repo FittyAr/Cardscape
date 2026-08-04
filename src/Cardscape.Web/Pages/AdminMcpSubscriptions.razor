@@ -1,0 +1,213 @@
+@page "/admin/mcp-subscriptions"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services.Api
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@inject IMcpSubscriptionsApiClient McpSubscriptions
+@implements IAsyncDisposable
+
+<PageTitle>@L["McpSubscriptionsTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["McpSubscriptionsTitle"]" Subtitle="@L["McpSubscriptionsBlurb"]" />
+
+    @if (_loading && _snapshot is null)
+    {
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.Body1">@L["CommonLoading"]</RadzenText>
+        </RadzenCard>
+    }
+    else if (_error is not null)
+    {
+        <RadzenCard>
+            <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true">
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">@L["McpSubscriptionsLoadError"]</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2">@_error</RadzenText>
+                <RadzenButton Text="@L["CommonRetry"]" ButtonStyle="ButtonStyle.Secondary" Click="@LoadAsync" />
+            </RadzenAlert>
+        </RadzenCard>
+    }
+    else if (_snapshot is null)
+    {
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["McpSubscriptionsEmpty"]</RadzenText>
+        </RadzenCard>
+    }
+    else
+    {
+        <RadzenCard>
+            <RadzenStack Gap="0.5rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H3">@L["McpSubscriptionsCurrentHeader"]</RadzenText>
+                    <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@($"{_snapshot.Subscribers.Count} URIs")" />
+                    <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="@($"{TotalSubscriberCount()} sessions")" />
+                </RadzenStack>
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+                    @L["McpSubscriptionsCapturedAt"]: @_snapshot.CapturedAt.ToString("yyyy-MM-dd HH:mm:ss UTC")
+                </RadzenText>
+                <RadzenDataGrid Data="@_snapshot.Subscribers" TItem="KeyValuePair<string, IReadOnlyList<string>>" AllowSorting="false" AllowPaging="false">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="KeyValuePair<string, IReadOnlyList<string>>" Property="Key" Title="@L["McpSubscriptionsUriColumn"]" Width="20rem">
+                            <Template Context="row">
+                                <code>@row.Key</code>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="KeyValuePair<string, IReadOnlyList<string>>" Title="@L["McpSubscriptionsSessionsColumn"]">
+                            <Template Context="row">
+                                @if (row.Value.Count == 0)
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L["McpSubscriptionsNoSessions"]" />
+                                }
+                                else
+                                {
+                                    @foreach (string session in row.Value)
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@session" class="rz-mr-1 rz-mb-1" />
+                                    }
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenStack>
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenStack Gap="0.5rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H3">@L["McpSubscriptionsEventLogHeader"]</RadzenText>
+                    <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@($"{_snapshot.Events.Count} events")" />
+                </RadzenStack>
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
+                    @L["McpSubscriptionsEventLogHint"]
+                </RadzenText>
+                <RadzenDataGrid Data="@_snapshot.Events" TItem="McpSubscriptionEventDto" AllowSorting="true" AllowPaging="true" PageSize="20">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="McpSubscriptionEventDto" Property="Timestamp" Title="@L["McpSubscriptionsEventTimeColumn"]" Width="14rem">
+                            <Template Context="row">
+                                @row.Timestamp.ToString("HH:mm:ss")
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="McpSubscriptionEventDto" Property="EventKind" Title="@L["McpSubscriptionsEventKindColumn"]" Width="9rem">
+                            <Template Context="row">
+                                <RadzenBadge BadgeStyle="@KindStyle(row.EventKind)" Text="@row.EventKind" />
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="McpSubscriptionEventDto" Property="Uri" Title="@L["McpSubscriptionsUriColumn"]" Width="22rem">
+                            <Template Context="row">
+                                <code>@row.Uri</code>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="McpSubscriptionEventDto" Property="SessionId" Title="@L["McpSubscriptionsSessionColumn"]" Width="14rem">
+                            <Template Context="row">
+                                @if (row.SessionId is null)
+                                {
+                                    <span class="rz-color-text-secondary">—</span>
+                                }
+                                else
+                                {
+                                    <code>@row.SessionId</code>
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="McpSubscriptionEventDto" Property="Detail" Title="@L["McpSubscriptionsEventDetailColumn"]" />
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenStack>
+        </RadzenCard>
+    }
+</RadzenStack>
+
+@code {
+    private const int RefreshIntervalMs = 5000;
+
+    private McpSubscriptionsSnapshotDto? _snapshot;
+    private string? _error;
+    private bool _loading;
+    private CancellationTokenSource? _refreshCts;
+    private Task? _refreshTask;
+
+    protected override void OnInitialized()
+    {
+        // Auto-refresh loop. The token is cancelled in DisposeAsync
+        // so the loop tears down on navigation away.
+        _refreshCts = new CancellationTokenSource();
+        _refreshTask = RunAutoRefreshAsync(_refreshCts.Token);
+    }
+
+    private async Task RunAutoRefreshAsync(CancellationToken ct)
+    {
+        // Initial load.
+        await LoadAsync();
+
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(RefreshIntervalMs, ct);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try
+        {
+            ApiResult<McpSubscriptionsSnapshotDto> result = await McpSubscriptions.GetSnapshotAsync();
+            if (result.IsSuccess)
+            {
+                _snapshot = result.Value;
+                _error = null;
+            }
+            else
+            {
+                _error = result.Error;
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private int TotalSubscriberCount()
+    {
+        if (_snapshot is null) return 0;
+        return _snapshot.Subscribers.Values.Sum(list => list.Count);
+    }
+
+    private static BadgeStyle KindStyle(string kind) => kind switch
+    {
+        "Subscribed" => BadgeStyle.Success,
+        "Unsubscribed" => BadgeStyle.Warning,
+        "Broadcast" => BadgeStyle.Info,
+        _ => BadgeStyle.Light
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_refreshCts is not null)
+        {
+            _refreshCts.Cancel();
+            _refreshCts.Dispose();
+            _refreshCts = null;
+        }
+        if (_refreshTask is not null)
+        {
+            try { await _refreshTask; } catch { /* swallow on teardown */ }
+            _refreshTask = null;
+        }
+    }
+}

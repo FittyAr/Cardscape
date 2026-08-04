@@ -19,11 +19,27 @@ namespace Cardscape.Mcp.Realtime;
 /// <c>notifications/resources/updated</c> notification
 /// (see <c>NotificationMethods.ResourceUpdatedNotification</c>)
 /// to each subscribed session.
+///
+/// The broadcaster also keeps a bounded ring of the last
+/// <see cref="MaxEventLogSize"/> events (subscribe,
+/// unsubscribe, broadcast) so the Web UI's
+/// <c>/admin/mcp-subscriptions</c> page can render a
+/// human-readable feed of the MCP real-time surface.
 /// </summary>
 public sealed class McpResourceBroadcaster : IAsyncDisposable
 {
+    /// <summary>
+    /// Cap on the in-memory event log. The broadcaster
+    /// never grows unbounded: when the queue exceeds this
+    /// cap, the oldest event is dropped. The cap is the
+    /// project's default; a future PR can move the log to
+    /// the database for persistent audit.
+    /// </summary>
+    public const int MaxEventLogSize = 1000;
+
     private readonly ILogger<McpResourceBroadcaster> logger;
     private readonly ConcurrentDictionary<string, List<McpServer>> subscribers = new();
+    private readonly ConcurrentQueue<SubscriptionEvent> eventLog = new();
     private readonly System.Threading.Lock gate = new();
 
     public McpResourceBroadcaster(ILogger<McpResourceBroadcaster> logger)
@@ -54,6 +70,12 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
             if (!list.Contains(server))
             {
                 list.Add(server);
+                RecordEvent(new SubscriptionEvent(
+                    EventKind: SubscriptionEventKind.Subscribed,
+                    Uri: uri,
+                    SessionId: GetSessionId(server),
+                    Timestamp: DateTimeOffset.UtcNow,
+                    Detail: $"session subscribed (total subscribers: {list.Count})"));
             }
         }
     }
@@ -67,7 +89,16 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
         {
             if (subscribers.TryGetValue(uri, out List<McpServer>? list))
             {
-                list.Remove(server);
+                if (list.Remove(server))
+                {
+                    RecordEvent(new SubscriptionEvent(
+                        EventKind: SubscriptionEventKind.Unsubscribed,
+                        Uri: uri,
+                        SessionId: GetSessionId(server),
+                        Timestamp: DateTimeOffset.UtcNow,
+                        Detail: $"session unsubscribed (remaining subscribers: {list.Count})"));
+                }
+
                 if (list.Count == 0)
                 {
                     subscribers.TryRemove(uri, out _);
@@ -96,6 +127,12 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
         {
             if (!subscribers.TryGetValue(uri, out List<McpServer>? list) || list.Count == 0)
             {
+                RecordEvent(new SubscriptionEvent(
+                    EventKind: SubscriptionEventKind.Broadcast,
+                    Uri: uri,
+                    SessionId: null,
+                    Timestamp: DateTimeOffset.UtcNow,
+                    Detail: "broadcast attempted but no subscribers; no-op"));
                 return;
             }
             targets = [.. list];
@@ -103,6 +140,7 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
 
         var payload = new ResourceUpdatedNotificationParams { Uri = uri };
         int sent = 0;
+        List<string> deadSessions = [];
         foreach (McpServer server in targets)
         {
             if (ct.IsCancellationRequested)
@@ -127,18 +165,118 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
                     ex,
                     "MCP ResourceUpdated notification for {Uri} failed for one session; dropping that subscriber",
                     uri);
+                deadSessions.Add(GetSessionId(server));
                 Unsubscribe(uri, server);
             }
         }
+
+        RecordEvent(new SubscriptionEvent(
+            EventKind: SubscriptionEventKind.Broadcast,
+            Uri: uri,
+            SessionId: null,
+            Timestamp: DateTimeOffset.UtcNow,
+            Detail: $"broadcast sent to {sent}/{targets.Count} subscribers" +
+                (deadSessions.Count > 0 ? $" ({deadSessions.Count} dropped: {string.Join(",", deadSessions)})" : string.Empty)));
 
         logger.LogDebug(
             "MCP ResourceUpdated notification for {Uri} sent to {Sent}/{Total} subscribers",
             uri, sent, targets.Count);
     }
 
+    /// <summary>
+    /// Returns a read-only snapshot of the broadcaster state:
+    /// the per-URI subscriber list (with session ids only,
+    /// no <see cref="McpServer"/> instances — those are
+    /// process-internal) and the recent event log (most
+    /// recent first). The endpoint exposes this to the
+    /// API's admin endpoint so the Web UI's
+    /// <c>/admin/mcp-subscriptions</c> page can render
+    /// the real-time surface.
+    /// </summary>
+    public McpResourceBroadcasterSnapshot GetSnapshot()
+    {
+        Dictionary<string, IReadOnlyList<string>> snapshotSubscribers;
+        lock (gate)
+        {
+            snapshotSubscribers = subscribers.ToDictionary(
+                kvp => kvp.Key,
+                kvp => (IReadOnlyList<string>)kvp.Value.Select(GetSessionId).ToList());
+        }
+
+        IReadOnlyList<SubscriptionEvent> events = eventLog
+            .ToArray()
+            .OrderByDescending(e => e.Timestamp)
+            .ToList();
+
+        return new McpResourceBroadcasterSnapshot(
+            Subscribers: snapshotSubscribers,
+            Events: events,
+            CapturedAt: DateTimeOffset.UtcNow);
+    }
+
+    private void RecordEvent(SubscriptionEvent evt)
+    {
+        eventLog.Enqueue(evt);
+        // Trim the ring. eventLog is unbounded otherwise
+        // (a long-running MCP server would grow it forever).
+        while (eventLog.Count > MaxEventLogSize)
+        {
+            eventLog.TryDequeue(out _);
+        }
+    }
+
+    /// <summary>
+    /// Returns a stable, process-unique session id for an
+    /// <see cref="McpServer"/> instance. The MCP SDK exposes
+    /// the session id on the server; we use the
+    /// <c>ServerSession</c> identity hash code as a fallback
+    /// when the property is not available.
+    /// </summary>
+    private static string GetSessionId(McpServer server)
+    {
+        try
+        {
+            string? id = server.SessionId;
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                return id;
+            }
+        }
+        catch
+        {
+            // Some MCP SDK versions do not expose SessionId
+            // on the base McpServer type. Fall through to
+            // the identity hash code.
+        }
+        return $"session-{System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(server):x8}";
+    }
+
     public ValueTask DisposeAsync()
     {
         subscribers.Clear();
+        eventLog.Clear();
         return ValueTask.CompletedTask;
     }
+}
+
+/// <summary>Read-only snapshot of the broadcaster state.</summary>
+public sealed record McpResourceBroadcasterSnapshot(
+    IReadOnlyDictionary<string, IReadOnlyList<string>> Subscribers,
+    IReadOnlyList<SubscriptionEvent> Events,
+    DateTimeOffset CapturedAt);
+
+/// <summary>One entry in the broadcaster's event log.</summary>
+public sealed record SubscriptionEvent(
+    SubscriptionEventKind EventKind,
+    string Uri,
+    string? SessionId,
+    DateTimeOffset Timestamp,
+    string Detail);
+
+/// <summary>The kind of event the broadcaster recorded.</summary>
+public enum SubscriptionEventKind
+{
+    Subscribed = 1,
+    Unsubscribed = 2,
+    Broadcast = 3
 }

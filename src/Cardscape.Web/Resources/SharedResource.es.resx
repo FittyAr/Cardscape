@@ -180,6 +180,22 @@
   <data name="NotFoundBlurb" xml:space="preserve"><value>La página que buscás no existe.</value></data>
   <data name="CommonLoading" xml:space="preserve"><value>Cargando…</value></data>
   <data name="OAuthAppsProtocol" xml:space="preserve"><value>Endpoints del protocolo OAuth 2.0</value></data>
+  <data name="CommonRetry" xml:space="preserve"><value>Reintentar</value></data>
+  <data name="McpSubscriptionsTitle" xml:space="preserve"><value>Suscripciones MCP</value></data>
+  <data name="McpSubscriptionsBlurb" xml:space="preserve"><value>Vista en tiempo real de las suscripciones de recursos del servidor MCP: qué clientes de IA están suscriptos a qué recursos de tablero, y el log de eventos de cada subscribe, unsubscribe y broadcast.</value></data>
+  <data name="McpSubscriptionsLoadError" xml:space="preserve"><value>No se pudo cargar el snapshot de suscripciones MCP</value></data>
+  <data name="McpSubscriptionsEmpty" xml:space="preserve"><value>Aún no hay datos de suscripción. Los clientes de IA se suscriben a los recursos del tablero bajo demanda; el snapshot se completa después del primer subscribe o broadcast.</value></data>
+  <data name="McpSubscriptionsCurrentHeader" xml:space="preserve"><value>Suscriptores actuales</value></data>
+  <data name="McpSubscriptionsCapturedAt" xml:space="preserve"><value>Snapshot capturado a las</value></data>
+  <data name="McpSubscriptionsUriColumn" xml:space="preserve"><value>URI</value></data>
+  <data name="McpSubscriptionsSessionsColumn" xml:space="preserve"><value>Sesiones</value></data>
+  <data name="McpSubscriptionsNoSessions" xml:space="preserve"><value>sin sesiones</value></data>
+  <data name="McpSubscriptionsEventLogHeader" xml:space="preserve"><value>Log de eventos</value></data>
+  <data name="McpSubscriptionsEventLogHint" xml:space="preserve"><value>Los últimos eventos registrados por el broadcaster, más recientes primero. La lista está limitada a 1.000 entradas; los eventos más viejos se descartan silenciosamente. Refresca cada 5 segundos.</value></data>
+  <data name="McpSubscriptionsEventTimeColumn" xml:space="preserve"><value>Hora (UTC)</value></data>
+  <data name="McpSubscriptionsEventKindColumn" xml:space="preserve"><value>Tipo</value></data>
+  <data name="McpSubscriptionsSessionColumn" xml:space="preserve"><value>Sesión</value></data>
+  <data name="McpSubscriptionsEventDetailColumn" xml:space="preserve"><value>Detalle</value></data>
   <data name="OAuthAppsNameLabel" xml:space="preserve"><value>Nombre de la aplicación</value></data>
   <data name="OAuthAppsRedirectLabel" xml:space="preserve"><value>URI de redirección</value></data>
   <data name="OAuthAppsRedirectHint" xml:space="preserve"><value>A dónde vuelve el navegador después del consentimiento. Debe coincidir exactamente.</value></data>

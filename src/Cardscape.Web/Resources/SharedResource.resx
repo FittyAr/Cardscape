@@ -178,6 +178,22 @@
   <data name="NotFoundTitle" xml:space="preserve"><value>Not found</value></data>
   <data name="CommonLoading" xml:space="preserve"><value>Loading…</value></data>
   <data name="OAuthAppsProtocol" xml:space="preserve"><value>OAuth 2.0 protocol endpoints</value></data>
+  <data name="CommonRetry" xml:space="preserve"><value>Retry</value></data>
+  <data name="McpSubscriptionsTitle" xml:space="preserve"><value>MCP subscriptions</value></data>
+  <data name="McpSubscriptionsBlurb" xml:space="preserve"><value>Real-time view of the MCP server's resource subscriptions: which AI clients are subscribed to which board resources, and the live event log of every subscribe, unsubscribe, and broadcast.</value></data>
+  <data name="McpSubscriptionsLoadError" xml:space="preserve"><value>Could not load the MCP subscriptions snapshot</value></data>
+  <data name="McpSubscriptionsEmpty" xml:space="preserve"><value>No subscription data is available yet. AI clients subscribe to board resources on demand; the snapshot populates after the first subscribe or broadcast.</value></data>
+  <data name="McpSubscriptionsCurrentHeader" xml:space="preserve"><value>Current subscribers</value></data>
+  <data name="McpSubscriptionsCapturedAt" xml:space="preserve"><value>Snapshot captured at</value></data>
+  <data name="McpSubscriptionsUriColumn" xml:space="preserve"><value>URI</value></data>
+  <data name="McpSubscriptionsSessionsColumn" xml:space="preserve"><value>Sessions</value></data>
+  <data name="McpSubscriptionsNoSessions" xml:space="preserve"><value>no sessions</value></data>
+  <data name="McpSubscriptionsEventLogHeader" xml:space="preserve"><value>Event log</value></data>
+  <data name="McpSubscriptionsEventLogHint" xml:space="preserve"><value>The last events the broadcaster recorded, most recent first. The list is bounded to 1,000 entries; older events are dropped silently. Refreshes every 5 seconds.</value></data>
+  <data name="McpSubscriptionsEventTimeColumn" xml:space="preserve"><value>Time (UTC)</value></data>
+  <data name="McpSubscriptionsEventKindColumn" xml:space="preserve"><value>Kind</value></data>
+  <data name="McpSubscriptionsSessionColumn" xml:space="preserve"><value>Session</value></data>
+  <data name="McpSubscriptionsEventDetailColumn" xml:space="preserve"><value>Detail</value></data>
   <data name="OAuthAppsNameLabel" xml:space="preserve"><value>Application name</value></data>
   <data name="OAuthAppsRedirectLabel" xml:space="preserve"><value>Redirect URI</value></data>
   <data name="OAuthAppsRedirectHint" xml:space="preserve"><value>Where the browser returns the user after consent. Must match exactly.</value></data>

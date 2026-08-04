@@ -136,6 +136,7 @@ builder.Services.AddScoped<ISlackApiClient, SlackApiClient>();
 builder.Services.AddScoped<IGoogleDriveApiClient, GoogleDriveApiClient>();
 builder.Services.AddScoped<IGitHubApiClient, GitHubApiClient>();
 builder.Services.AddScoped<IEmailIntegrationApiClient, EmailIntegrationApiClient>();
+builder.Services.AddScoped<IMcpSubscriptionsApiClient, McpSubscriptionsApiClient>();
 
 // ── Real-time (SignalR client) ──────────────────────────────
 builder.Services.AddScoped<BoardHubClient>();

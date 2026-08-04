@@ -1,5 +1,6 @@
 using Cardscape.Api.BackgroundJobs;
 using Cardscape.Api.Endpoints.Activities;
+using Cardscape.Api.Endpoints.Admin;
 using Cardscape.Api.Endpoints.Ai;
 using Cardscape.Api.Endpoints.Auth;
 using Cardscape.Api.Endpoints.Automation;
@@ -101,6 +102,7 @@ builder.Services.AddApiAuthentication(builder.Configuration);
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IBoardNotifier, CompositeBoardNotifier>();
 builder.Services.AddSingleton<IMcpResourceNotifier, HttpMcpResourceNotifier>();
+builder.Services.AddSingleton<McpSubscriptionsClient>();
 builder.Services.AddHttpClient("Cardscape.Mcp", client =>
 {
     string? mcpBaseUrl = builder.Configuration["Cardscape:Mcp:BaseUrl"]
@@ -207,6 +209,7 @@ app.MapSamlEndpoints();
 app.MapOAuthAppEndpoints();
 app.MapOAuthFlowEndpoints();
 app.MapAiEndpoints();
+app.MapMcpSubscriptionsAdminEndpoints();
 
 // Companion endpoint for Serilog.Sinks.BrowserHttp on the
 // Blazor WASM client. Browser-side log events (e.g. uncaught
