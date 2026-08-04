@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -247,7 +248,34 @@ public static class ServiceCollectionExtensions
             SamlAuthenticationHandler.SchemeName,
             _ => { });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            // AdminOnly policy: a request passes when the
+            // authenticated principal maps to a User row
+            // whose IsAdmin flag is set. The handler does
+            // the per-request DB lookup. Used by
+            // /api/admin/* endpoints (GDPR DSR, MCP
+            // subscription snapshot, SOC 2 control
+            // evidence export, etc.).
+            options.AddPolicy(
+                AdminOnlyPolicy.Name,
+                policy => policy
+                    .RequireAuthenticatedUser()
+                    .AddRequirements(new AdminOnlyRequirement()));
+        });
+        services.AddScoped<IAuthorizationHandler, AdminOnlyAuthorizationHandler>();
         return services;
     }
+}
+
+/// <summary>
+/// Name of the AdminOnly authorisation policy. Use
+/// <c>[Authorize(Policy = AdminOnlyPolicy.Name)]</c> on a
+/// minimal-API group or controller to gate the surface
+/// behind an <c>IsAdmin = true</c> user. The corresponding
+/// handler is <see cref="AdminOnlyAuthorizationHandler"/>.
+/// </summary>
+public static class AdminOnlyPolicy
+{
+    public const string Name = "AdminOnly";
 }

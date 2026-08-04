@@ -45,6 +45,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace Cardscape.Infrastructure.DependencyInjection;
 
@@ -146,6 +147,19 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IBackgroundJobScheduler, BackgroundJobScheduler>();
         services.AddSingleton<IBackgroundJobHandlerRegistry, BackgroundJobHandlerRegistry>();
         services.AddSingleton<IBackgroundJobHandler, CloneCardHandler>();
+        services.AddScoped<IUserDataExportService, UserDataExportService>();
+
+        // GDPR retention sweeper (Art. 5(1)(e), Art. 17).
+        // The sweeper is a periodic background service
+        // that anonymises soft-deleted users past the
+        // grace period and purges the activity feed +
+        // audit log per the configured retention. The
+        // host picks it up via AddHostedService.
+        services.Configure<Cardscape.Infrastructure.Hosting.RetentionSettingsOptions>(
+            configuration.GetSection(Cardscape.Infrastructure.Hosting.RetentionSettingsOptions.SectionName));
+        services.AddSingleton<Cardscape.Infrastructure.Hosting.IRetentionSettings,
+            Cardscape.Infrastructure.Hosting.RetentionSettings>();
+        services.AddHostedService<Cardscape.Infrastructure.Hosting.RetentionSweeper>();
 
         services.AddScoped<CustomFieldDefinitionRepository>();
         services.AddScoped<IRepository<CustomFieldDefinition, CustomFieldDefinitionId>, CustomFieldDefinitionRepository>(sp => sp.GetRequiredService<CustomFieldDefinitionRepository>());

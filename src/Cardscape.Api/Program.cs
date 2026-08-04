@@ -11,6 +11,7 @@ using Cardscape.Api.Endpoints.Checklists;
 using Cardscape.Api.Endpoints.Comments;
 using Cardscape.Api.Endpoints.CustomFields;
 using Cardscape.Api.Endpoints.Dashboards;
+using Cardscape.Api.Endpoints.Dev;
 using Cardscape.Api.Endpoints.Extensions;
 using Cardscape.Api.Endpoints.Import;
 using Cardscape.Api.Endpoints.Integrations;
@@ -157,6 +158,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
     app.ApplyMigrations();
+    app.MapDevOnlyEndpoints();
 }
 
 app.UseHttpsRedirection();
@@ -210,6 +212,7 @@ app.MapOAuthAppEndpoints();
 app.MapOAuthFlowEndpoints();
 app.MapAiEndpoints();
 app.MapMcpSubscriptionsAdminEndpoints();
+app.MapUserDsrAdminEndpoints();
 
 // Companion endpoint for Serilog.Sinks.BrowserHttp on the
 // Blazor WASM client. Browser-side log events (e.g. uncaught

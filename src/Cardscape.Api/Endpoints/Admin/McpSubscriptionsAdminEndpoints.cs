@@ -1,3 +1,5 @@
+using Cardscape.Api.Authentication;
+using Cardscape.Api.Extensions;
 using Cardscape.Api.Realtime;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -14,25 +16,22 @@ namespace Cardscape.Api.Endpoints.Admin;
 /// endpoint over HTTP (using the same shared internal
 /// secret the API uses for the reverse direction).
 ///
-/// Today the endpoint is gated by the default
-/// <c>RequireAuthorization()</c> policy (any authenticated
-/// user). A future PR will introduce a dedicated
-/// <c>AdminOnly</c> policy and tighten this — the
+/// Gated by the <see cref="AdminOnlyPolicy"/>: only users
+/// whose <c>IsAdmin</c> flag is set can call it. The
 /// subscription event log discloses the per-URI session
 /// ids of every connected AI client, which is sensitive
-/// operational metadata. The current <c>RequireAuthorization</c>
-/// gate keeps the surface behind the auth wall today;
-/// the dedicated policy is the v1.3.0 follow-up.
+/// operational metadata — non-admin users (even
+/// authenticated workspace Owners) get 403.
 /// </summary>
 public static class McpSubscriptionsAdminEndpoints
 {
     public static IEndpointRouteBuilder MapMcpSubscriptionsAdminEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/admin/mcp-subscriptions")
-            .RequireAuthorization()
+            .RequireAuthorization(AdminOnlyPolicy.Name)
             .WithTags("Admin.McpSubscriptions");
 
-        group.MapGet("/", async (McpSubscriptionsClient client, CancellationToken ct) =>
+        group.MapGet("/", async Task<IResult> (McpSubscriptionsClient client, CancellationToken ct) =>
         {
             McpSubscriptionsSnapshot? snapshot = await client.GetSnapshotAsync(ct);
             if (snapshot is null)
