@@ -137,4 +137,25 @@ Cardscape is designed with the following baseline:
   provider-specific security pitfalls (e.g. PostgreSQL
   RLS, MariaDB grant model).
 
-The full threat model is in a future ADR (not yet written).
+## Full security posture
+
+The full security posture lives in
+[`docs/security/`](docs/security/):
+
+| Topic | Document |
+|---|---|
+| Threat model (STRIDE) | [`docs/security/01-threat-model.md`](docs/security/01-threat-model.md) |
+| Secure-coding checklist | [`docs/security/02-secure-coding-checklist.md`](docs/security/02-secure-coding-checklist.md) |
+| GDPR compliance (deployer-side) | [`docs/security/03-gdpr-compliance.md`](docs/security/03-gdpr-compliance.md) |
+| SOC 2 readiness (deployer-side) | [`docs/security/04-soc2-readiness.md`](docs/security/04-soc2-readiness.md) |
+| Coordinated vulnerability disclosure | [`docs/security/05-vulnerability-disclosure.md`](docs/security/05-vulnerability-disclosure.md) |
+| Hall of fame | [`docs/security/HALL_OF_FAME.md`](docs/security/HALL_OF_FAME.md) |
+| Privacy notice template (deployer fills in) | [`docs/security/templates/privacy-notice.md`](docs/security/templates/privacy-notice.md) |
+| Breach notification template | [`docs/security/templates/breach-notification.md`](docs/security/templates/breach-notification.md) |
+| DPIA template | [`docs/security/templates/dpia.md`](docs/security/templates/dpia.md) |
+| DSAR response template | [`docs/security/templates/dsar-response.md`](docs/security/templates/dsar-response.md) |
+
+The `SECURITY.md` file in this root is the
+short version that GitHub surfaces on the
+repository's Security tab. The full posture
+is in the `docs/security/` folder.
