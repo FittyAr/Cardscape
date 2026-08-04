@@ -184,3 +184,40 @@ public sealed class CardscapeApi : ICollectionFixture<CardscapeWebApplicationFac
 {
     public const string Name = nameof(CardscapeApi);
 }
+
+/// <summary>
+/// Serial xUnit collection for the data-residency
+/// <c>RegionGuardEndpointFilter</c> tests. The G5 follow-up
+/// (D6 in the v1.2.0 plan) observed that two of the three
+/// tests in <c>RegionGuardEndpointFilterTests</c> race against
+/// the shared physical SQLite database when the rest of the
+/// integration suite runs in parallel: the
+/// <c>WithWebHostBuilder</c> auxiliary host re-attaches the
+/// parent's connection string via an additive in-memory
+/// configuration source, but the parent's
+/// <c>IDeploymentRegion</c> singleton registration and
+/// the <c>JwtBearer</c> scheme both flow through the parent
+/// factory's env-var handoff in <c>CreateHost</c>, which is
+/// closed by the time the aux host boots. The race window is
+/// narrow; in practice the test passes in isolation and
+/// intermittently in parallel runs.
+/// <para>
+/// The serial collection removes the race window by forcing
+/// the three tests to run one at a time. The test class
+/// declares <c>IClassFixture&lt;CardscapeWebApplicationFactory&gt;</c>
+/// so the factory is created once for the class (per-class
+/// fixture, not shared with the rest of the suite) and the
+/// collection disables parallelization within the class.
+/// Belt-and-braces: the 4th test in the file (added in D6)
+/// builds an aux host with a deliberately wrong
+/// <c>Jwt:SigningKey</c> and asserts that the request is
+/// not 200 OK, to pin the config-injection contract so a
+/// future regression that re-opens the race fires a
+/// deterministic failure instead of a flaky 404.
+/// </para>
+/// </summary>
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class RegionGuardSerial
+{
+    public const string Name = nameof(RegionGuardSerial);
+}

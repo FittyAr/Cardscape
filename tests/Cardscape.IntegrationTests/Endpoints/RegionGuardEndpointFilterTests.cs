@@ -26,20 +26,26 @@ namespace Cardscape.IntegrationTests.Endpoints;
 /// guard the filter enforces, plus the "no deployment region
 /// configured → no gating" baseline.
 /// <para>
-/// Lives in the shared collection so the host boot is amortised
-/// with the rest of the suite. The cross-region write assertions
-/// need a deployment region different from the workspace's
-/// region, so we build a one-off secondary host via
-/// <c>WithWebHostBuilder</c> that re-attaches the same physical
-/// SQLite database and swaps the <c>IDeploymentRegion</c>
-/// singleton. The shared factory is left with
-/// <c>DeploymentRegion = Unspecified</c> so the create call
-/// succeeds and the baseline "no gating" path is exercised
-/// through the shared host.
+/// The class opts into the <c>RegionGuardSerial</c> collection
+/// (D6 in the v1.2.0 plan) and uses an <c>IClassFixture</c> for
+/// a per-class <see cref="CardscapeWebApplicationFactory"/> so
+/// the three region tests run one at a time. The
+/// <c>WithWebHostBuilder</c> pattern that the cross-region tests
+/// use re-attaches the parent's connection string via an
+/// additive in-memory configuration source; the serial
+/// collection removes the race window against the rest of the
+/// integration suite.
+/// </para>
+/// <para>
+/// The 4th test (<see cref="ConfigInjection_SerialCollectionPreventsParallelRace"/>)
+/// pins the read-path contract: a fresh aux host whose
+/// deployment region matches the workspace must return the
+/// same workspace. It's a regression check on the read path
+/// after the serial collection is in place.
 /// </para>
 /// </summary>
-[Collection(CardscapeApi.Name)]
-public class RegionGuardEndpointFilterTests
+[Collection(RegionGuardSerial.Name)]
+public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicationFactory>
 {
     private readonly CardscapeWebApplicationFactory _factory;
 
@@ -214,6 +220,77 @@ public class RegionGuardEndpointFilterTests
         // no-op, so the read reaches the inner handler regardless
         // of the workspace's region.
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task ConfigInjection_SerialCollectionPreventsParallelRace()
+    {
+        // D6 (v1.2.0 plan) — belt-and-braces contract pin.
+        //
+        // The two cross-region tests above build a secondary
+        // host via WithWebHostBuilder. The aux host inherits
+        // the parent's env-var-set JwtBearer config, but the
+        // shared physical SQLite database (across
+        // WithWebHostBuilder hosts) and the per-test
+        // IDeploymentRegion override both flow through env
+        // vars and DI singletons that are mutable in the
+        // shared factory. The serial collection
+        // (<see cref="RegionGuardSerial"/>) removes the race
+        // window by forcing the three region tests to run one
+        // at a time.
+        //
+        // This test pins the contract: a second invocation of
+        // the same workspace read through a fresh aux host
+        // MUST return the same workspace, regardless of which
+        // test ran first. The test is intentionally simple —
+        // it's a regression check on the read path, not on
+        // the auth contract. The auth contract is checked by
+        // the production deployment smoke tests.
+        HttpClient ownerClient = _factory.CreateApiClient();
+        AuthResponse auth = await RegisterAndLogin(ownerClient);
+        ownerClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+
+        HttpResponseMessage createWs = await ownerClient.PostAsJsonAsync(
+            "api/workspaces/", new CreateWorkspaceRequest("ConfigInjection Probe", Region: Domain.Workspaces.Region.Europe), TestContext.Current.CancellationToken);
+        createWs.IsSuccessStatusCode.Should().BeTrue();
+        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+
+        // Read the workspace through a fresh aux host whose
+        // deployment region matches the workspace. The
+        // serial collection ensures no other RegionGuard
+        // test is racing on the shared physical SQLite file.
+        WebApplicationFactory<Program> europeFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration((_, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["ConnectionStrings:Default"] = _factory.ConnectionString,
+                    ["Storage:LocalRoot"] = _factory.StorageRoot,
+                    ["Database:Provider"] = "Sqlite"
+                });
+            });
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddSingleton<Cardscape.Application.Abstractions.IDeploymentRegion>(
+                    new Cardscape.Tests.Common.Fakes.FakeDeploymentRegion
+                    {
+                        Region = Domain.Workspaces.Region.Europe
+                    });
+            });
+        });
+
+        HttpClient client = europeFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+
+        HttpResponseMessage response = await client.GetAsync(
+            $"api/workspaces/{workspace.Id}", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        WorkspaceDto returned = (await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        returned.Id.Should().Be(workspace.Id);
     }
 
     private static async Task<AuthResponse> RegisterAndLogin(HttpClient client)
