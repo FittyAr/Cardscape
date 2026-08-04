@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using Cardscape.Web.Resources
@@ -7,6 +8,7 @@
 @inject AuthService Auth
 @inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
+@inject CultureSwitcher Culture
 
 <RadzenComponents />
 
@@ -21,6 +23,7 @@
                     <RadzenColumn Size="9">
                         <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
                             <InboxBell />
+                            <LanguageSwitcher />
                             <RadzenProfileMenu Click="@ProfileMenuClick">
                                 <ChildContent>
                                     <RadzenProfileMenuItem Path="account/api-tokens" Icon="key" Text="@L["NavApiTokens"]" />
@@ -79,6 +82,7 @@
                     </RadzenColumn>
                     <RadzenColumn Size="6">
                         <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                            <LanguageSwitcher />
                             <RadzenButton Text="@L["AuthSignIn"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Nav.NavigateTo("login"))" />
                             <RadzenButton Text="@L["AuthCreateAccount"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" Click="@(() => Nav.NavigateTo("register"))" />
                         </RadzenStack>
@@ -98,6 +102,37 @@
 
 @code {
     private bool sidebarExpanded = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Read the saved culture from localStorage and
+            // load the matching translations. Subsequent
+            // changes are driven by LanguageSwitcher via
+            // Culture.Changed.
+            await Culture.InitializeAsync();
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        Culture.Changed += OnCultureChanged;
+    }
+
+    private void OnCultureChanged()
+    {
+        // Re-render the layout (and its children) so the
+        // HttpBackedStringLocalizer picks up the new
+        // translations. The Blazor diff renderer is
+        // efficient — only the @L["…"] expressions re-evaluate.
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Culture.Changed -= OnCultureChanged;
+    }
 
     void ToggleSidebar() => sidebarExpanded = !sidebarExpanded;
 

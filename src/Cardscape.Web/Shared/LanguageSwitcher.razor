@@ -1,0 +1,49 @@
+@* LanguageSwitcher — D7 (v1.2.0 plan, G12 follow-up).
+   Renders a Radzen dropdown that calls CultureSwitcher.SetCultureAsync
+   on change. The picker fetches the matching SharedResource.{culture}.resx
+   static web asset and the HttpBackedStringLocalizer reads the new
+   translations on the next render. The dropdown is intentionally
+   minimal — no flag icons, no auto-detect; the user picks and the
+   choice persists in localStorage. *@
+
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Microsoft.Extensions.Localization
+@inject CultureSwitcher Culture
+@inject IStringLocalizer<SharedResource> L
+
+<RadzenDropDown TValue="string"
+                Value="@Culture.CurrentCulture"
+                Change="@OnChange"
+                Data="@(Culture.AvailableCultures)"
+                Placeholder="@L["CommonLanguage"]"
+                Style="width: 7rem;">
+    <Template>
+        @GetLabel(context)
+    </Template>
+    <ValueTemplate>
+        @GetLabel(context)
+    </ValueTemplate>
+</RadzenDropDown>
+
+@code {
+    private async void OnChange()
+    {
+        // RadzenDropDown<TValue>.Change is a non-generic
+        // Action; the bound Value is already updated to
+        // the new selection. We forward that to the
+        // picker, which fetches the matching .resx and
+        // raises Culture.Changed to re-render the layout.
+        await Culture.SetCultureAsync(Culture.CurrentCulture);
+    }
+
+    private string GetLabel(object value)
+    {
+        string culture = value?.ToString() ?? "en";
+        return culture switch
+        {
+            "es" => L["CommonLanguageSpanish"],
+            _ => L["CommonLanguageEnglish"]
+        };
+    }
+}

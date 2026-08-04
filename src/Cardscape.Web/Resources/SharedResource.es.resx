@@ -283,6 +283,9 @@
   <data name="GoogleCalendarSelectWorkspaceFirst" xml:space="preserve"><value>Elegí un workspace antes de conectar.</value></data>
   <data name="GoogleCalendarPickWorkspace" xml:space="preserve"><value>Necesitás al menos un workspace para conectar Google Calendar.</value></data>
   <data name="CommonCancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="CommonLanguage" xml:space="preserve"><value>Idioma</value></data>
+  <data name="CommonLanguageEnglish" xml:space="preserve"><value>Inglés</value></data>
+  <data name="CommonLanguageSpanish" xml:space="preserve"><value>Español</value></data>
   <data name="Loading" xml:space="preserve"><value>Cargando…</value></data>
   <data name="MirrorToButton" xml:space="preserve"><value>Espejar a…</value></data>
   <data name="MirrorToTitle" xml:space="preserve"><value>Espejar a…</value></data>

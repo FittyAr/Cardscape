@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using Radzen;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -68,6 +69,28 @@ builder.Services.AddLocalization(options =>
 {
     options.ResourcesPath = string.Empty;
 });
+
+// ── Culture switcher (D7 — v1.2.0 plan, G12 follow-up) ──────────────
+// The picker fetches SharedResource.{culture}.resx static web assets
+// and populates an in-memory dictionary; the HttpBackedStringLocalizer
+// reads from that dictionary and falls back to the embedded English
+// strings for the first render. This sidesteps the Blazor WASM
+// culture-change-detection overlay (see
+// src/Cardscape.Web/Services/CultureSwitcher.cs for the full
+// rationale). The picker is a singleton; the localizer wraps the
+// standard StringLocalizer<SharedResource> for the fallback path.
+builder.Services.AddSingleton<Cardscape.Web.Services.CultureSwitcher>();
+builder.Services.AddHttpClient("Cardscape.Resources", client =>
+{
+    // Same-origin; the base address is the page origin. We
+    // explicitly set BaseAddress to a relative URL on the
+    // server so the dev server's HTTPS proxy and the
+    // production static-asset path both resolve.
+    client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+});
+builder.Services.AddSingleton<Cardscape.Web.Services.HttpBackedStringLocalizer>();
+builder.Services.AddSingleton<Microsoft.Extensions.Localization.IStringLocalizer>(sp =>
+    sp.GetRequiredService<Cardscape.Web.Services.HttpBackedStringLocalizer>());
 
 // ── Auth + state providers ───────────────────────────────────────────
 builder.Services.AddAuthorizationCore();
