@@ -5,6 +5,8 @@ using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Authentication.Abstractions;
+using Cardscape.Application.Authentication.Commands;
+using Cardscape.Application.Authentication.Validations;
 using Cardscape.Domain.Authentication.Totp;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
@@ -13,6 +15,7 @@ using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces;
+using FluentValidation;
 
 namespace Cardscape.Tests.Common.Fakes;
 
@@ -43,6 +46,19 @@ public sealed class HandlersTestContext
     public InMemoryTotpCredentialRepository TotpCredentials { get; } = new();
     public InMemoryGoogleCalendarConnectionRepository GoogleCalendarConnections { get; } = new();
     public FakeGoogleCalendarSyncService GoogleCalendarSync { get; } = new();
+
+    /// <summary>
+    /// Validator used by handlers that take an
+    /// <see cref="IValidator{T}"/> dependency (e.g. the
+    /// register command). Tests that need the real
+    /// password-policy checks (length, common-password
+    /// list) get the production validator; tests that
+    /// want a permissive validator (e.g. to exercise the
+    /// downstream handler logic without re-asserting the
+    /// policy) can replace this with a stub.
+    /// </summary>
+    public IValidator<RegisterUserCommand> RegisterUserCommandValidator { get; set; } =
+        new RegisterUserCommandValidator();
 
     /// <summary>
     /// Lazily-built <see cref="FakeTotpService"/>. The first

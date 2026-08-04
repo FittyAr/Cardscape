@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Cardscape.SecurityTests</AssemblyName>
+    <RootNamespace>Cardscape.SecurityTests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <Description>Security regression tests. Pin the OWASP Top 10 / OWASP ASVS L2 controls in code so a future refactor that re-opens a vulnerability fires a deterministic test failure instead of a pen-test finding.</Description>
+    <!-- Test naming convention: Method_Scenario_Expected. The Api project reference
+         pulls in the CA1707 analyzer (project-level naming); suppress it for the
+         test project only, production code follows PascalCase. -->
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestCommon\TestCommon.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Domain\Cardscape.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Application\Cardscape.Application.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Api\Cardscape.Api.csproj" />
+  </ItemGroup>
+
+</Project>

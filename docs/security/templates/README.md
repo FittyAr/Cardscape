@@ -37,6 +37,18 @@
   response template (Art. 15 GDPR).
   Use within 30 days of receiving a
   DSAR.
+- [`pen-test-rfp.md`](pen-test-rfp.md) —
+  the request-for-proposal template
+  for commissioning a third-party
+  penetration test. The project
+  cannot self-certify; the deployer
+  hires an accredited firm (CREST,
+  OSCP / OSCE, GIAC, or a local
+  equivalent) and uses the firm's
+  report as the auditor-facing
+  evidence for SOC 2 CC4.1, CC7.1,
+  and the equivalent ISO 27001 /
+  GDPR Art. 32 controls.
 
 ## How to use the templates
 

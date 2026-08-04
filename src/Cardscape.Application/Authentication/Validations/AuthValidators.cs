@@ -10,7 +10,18 @@ public sealed class RegisterUserCommandValidator : AbstractValidator<RegisterUse
     {
         RuleFor(x => x.Email).NotEmpty().EmailAddress();
         RuleFor(x => x.DisplayName).NotEmpty().MaximumLength(80);
-        RuleFor(x => x.Password).NotEmpty().MinimumLength(8).MaximumLength(128);
+        RuleFor(x => x.Password)
+            .NotEmpty()
+            .MinimumLength(8)
+            .MaximumLength(128)
+            // Reject the bare-word defaults (the top-100
+            // most-leaked list). The list is local so the
+            // registration path does not leak candidate
+            // passwords to a third-party breach-check
+            // service; the trade-off is documented in
+            // CommonPasswords.cs.
+            .Must(p => !CommonPasswords.Set.Contains(p ?? string.Empty))
+            .WithMessage("Password is on the breached-passwords list; pick a different one.");
     }
 }
 
