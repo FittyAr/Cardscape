@@ -27,6 +27,13 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(x => x.AvatarUrl).HasMaxLength(2_000);
         b.Property(x => x.LastLoginAt);
         b.Property(x => x.IsActive).IsRequired();
+        b.Property(x => x.IsDeleted).IsRequired();
+        b.Property(x => x.DeletedAt);
+        b.Property(x => x.IsAnonymised).IsRequired();
+        b.Property(x => x.AnonymisedAt);
+        b.Property(x => x.IsRestricted).IsRequired();
+        b.Property(x => x.RestrictedAt);
+        b.Property(x => x.IsAdmin).IsRequired();
         b.Property(x => x.CreatedAt).IsRequired();
         b.Property(x => x.UpdatedAt);
         b.Property(x => x.CreatedBy);

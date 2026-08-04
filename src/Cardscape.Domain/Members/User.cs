@@ -31,6 +31,58 @@ public sealed class User : AggregateRoot<UserId>
     /// <summary>Whether the account is active. Deactivated users cannot sign in.</summary>
     public bool IsActive { get; private set; } = true;
 
+    // ── GDPR (Art. 5, 17, 18, 21) ─────────────────────────────
+    // The aggregate carries the four flags + their timestamps
+    // that the GDPR endpoint, the retention sweeper, and the
+    // audit log all read. The flags are independent:
+    //   • IsDeleted = true  → soft-deleted (Art. 17 grace period)
+    //   • IsAnonymised = true → PII cleared (Art. 17 final state)
+    //   • IsRestricted = true → read-only (Art. 18)
+    //   • IsAdmin = true → can access /api/admin/* endpoints
+    // A user can be restricted and active at the same time
+    // (the controller decided to restrict processing, but the
+    // user is still in the workspace).
+
+    /// <summary>True after <see cref="SoftDelete"/> has been called.
+    /// The user cannot sign in and is hidden from the
+    /// directory, but the record stays for the 30-day
+    /// grace period before the retention sweeper hard-deletes
+    /// the row. The flag shadows the base
+    /// <see cref="Entity{TId}.IsDeleted"/>; the aggregate
+    /// is the authoritative writer.</summary>
+    public new bool IsDeleted { get; private set; }
+
+    /// <summary>UTC timestamp of the soft-delete, or <c>null</c>.</summary>
+    public DateTimeOffset? DeletedAt { get; private set; }
+
+    /// <summary>True after <see cref="Anonymise"/> has been called.
+    /// The PII fields (email, display name, password hash,
+    /// avatar URL) are replaced with non-personalised
+    /// placeholders; the row is kept (no longer "personal
+    /// data" under GDPR Art. 4(1)) so the audit log and the
+    /// foreign keys from cards / comments / etc. still
+    /// resolve.</summary>
+    public bool IsAnonymised { get; private set; }
+
+    /// <summary>UTC timestamp of the anonymisation, or <c>null</c>.</summary>
+    public DateTimeOffset? AnonymisedAt { get; private set; }
+
+    /// <summary>True after <see cref="SetRestricted"/> has been called.
+    /// The user can read but not write.</summary>
+    public bool IsRestricted { get; private set; }
+
+    /// <summary>UTC timestamp of the restriction, or <c>null</c>.</summary>
+    public DateTimeOffset? RestrictedAt { get; private set; }
+
+    /// <summary>True for system administrators. The AdminOnly
+    /// policy in the API consults this flag; non-admin
+    /// authenticated users get 403 on <c>/api/admin/*</c>
+    /// endpoints. The flag is set explicitly by an
+    /// existing admin (or seeded by a migration); the
+    /// regular self-service registration flow does
+    /// not set it.</summary>
+    public bool IsAdmin { get; private set; }
+
     // EF Core.
     private User() { }
 
@@ -171,5 +223,129 @@ public sealed class User : AggregateRoot<UserId>
         IsActive = true;
         UpdatedAt = at;
         AddDomainEvent(new UserReactivated(Id, at));
+    }
+
+    // ── GDPR (Art. 17, 18) ───────────────────────────────────
+
+    /// <summary>
+    /// Soft-deletes the account. The user cannot sign in
+    /// (sets <see cref="IsActive"/> to <c>false</c>),
+    /// the record is marked deleted, and the
+    /// <see cref="DeletedAt"/> timestamp is stamped.
+    /// The 30-day grace period starts here; after it
+    /// elapses, the retention sweeper hard-deletes the
+    /// row.
+    /// </summary>
+    public void SoftDelete(DateTimeOffset at)
+    {
+        if (IsDeleted)
+        {
+            return;
+        }
+
+        IsDeleted = true;
+        IsActive = false;
+        DeletedAt = at;
+        UpdatedAt = at;
+        AddDomainEvent(new UserSoftDeleted(Id, at));
+    }
+
+    /// <summary>
+    /// Reverses a soft-delete within the grace period.
+    /// Restores <see cref="IsActive"/>; the
+    /// <see cref="IsDeleted"/> flag flips back to false.
+    /// Outside the grace period the retention sweeper
+    /// has already removed the row, so the call is
+    /// a no-op on a hard-deleted user.
+    /// </summary>
+    public void Restore(DateTimeOffset at)
+    {
+        if (!IsDeleted)
+        {
+            return;
+        }
+
+        IsDeleted = false;
+        IsActive = true;
+        DeletedAt = null;
+        UpdatedAt = at;
+        AddDomainEvent(new UserRestored(Id, at));
+    }
+
+    /// <summary>
+    /// Clears every PII field on the row. The user's
+    /// email is replaced with <c>anonymised-{id}@anonymised.local</c>,
+    /// the display name with <c>Anonymised user</c>, the
+    /// password hash with a fresh random opaque value
+    /// (the user can never sign in again — by design), and
+    /// the avatar URL is cleared. The user id stays
+    /// so the audit log and the foreign keys
+    /// from cards / comments / etc. still resolve.
+    /// This is the final state after the right-to-erasure
+    /// grace period elapses.
+    /// </summary>
+    public void Anonymise(DateTimeOffset at)
+    {
+        if (IsAnonymised)
+        {
+            return;
+        }
+
+        Email = EmailAddress.Create($"anonymised-{Id.Value:N}@anonymised.local").Value;
+        DisplayName = DisplayName.Create("Anonymised user").Value;
+        PasswordHash = PasswordHash.FromHashed("ANONYMISED::" + Guid.NewGuid().ToString("N")).Value;
+        AvatarUrl = null;
+        IsAnonymised = true;
+        IsActive = false;
+        AnonymisedAt = at;
+        UpdatedAt = at;
+        AddDomainEvent(new UserAnonymised(Id, at));
+    }
+
+    /// <summary>
+    /// Sets or clears the <see cref="IsRestricted"/> flag.
+    /// The flag is the GDPR Art. 18 "right to restriction"
+    /// surface: the controller grants the request, the
+    /// user can read but cannot write. The flag is also
+    /// the GDPR Art. 21 "right to object" surface for the
+    /// notification dispatcher (a restricted user is
+    /// skipped by the notification fan-out).
+    /// </summary>
+    public void SetRestricted(bool restricted, DateTimeOffset at)
+    {
+        if (IsRestricted == restricted)
+        {
+            return;
+        }
+
+        IsRestricted = restricted;
+        RestrictedAt = restricted ? at : null;
+        UpdatedAt = at;
+        AddDomainEvent(restricted
+            ? (DomainEventBase)new UserRestricted(Id, at)
+            : new UserUnrestricted(Id, at));
+    }
+
+    // ── Admin role (system-level) ────────────────────────────
+
+    /// <summary>
+    /// Sets or clears the <see cref="IsAdmin"/> flag. Only
+    /// the existing admin (or the seed migration) can call
+    /// this; the application-layer handler enforces the
+    /// caller-is-admin rule before invoking the aggregate
+    /// method.
+    /// </summary>
+    public void SetAdmin(bool isAdmin, DateTimeOffset at)
+    {
+        if (IsAdmin == isAdmin)
+        {
+            return;
+        }
+
+        IsAdmin = isAdmin;
+        UpdatedAt = at;
+        AddDomainEvent(isAdmin
+            ? (DomainEventBase)new UserGrantedAdmin(Id, at)
+            : new UserRevokedAdmin(Id, at));
     }
 }
