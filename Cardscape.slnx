@@ -17,5 +17,6 @@
     <Project Path="tests/Cardscape.ArchitectureTests/Cardscape.ArchitectureTests.csproj" />
     <Project Path="tests/Cardscape.FunctionalTests/Cardscape.FunctionalTests.csproj" />
     <Project Path="tests/Cardscape.SecurityTests/Cardscape.SecurityTests.csproj" />
+    <Project Path="tests/Cardscape.E2ETests/Cardscape.E2ETests.csproj" />
   </Folder>
 </Solution>

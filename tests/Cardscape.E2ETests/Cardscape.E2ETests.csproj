@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Cardscape.E2ETests</AssemblyName>
+    <RootNamespace>Cardscape.E2ETests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <Description>End-to-end tests for the cross-process broadcaster contract (API mutates, broadcaster fans out, MCP receives, resource subscription delivers to AI client).</Description>
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestCommon\TestCommon.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Domain\Cardscape.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Application\Cardscape.Application.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Api\Cardscape.Api.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Mcp\Cardscape.Mcp.csproj" />
+  </ItemGroup>
+
+</Project>

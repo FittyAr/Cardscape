@@ -234,8 +234,14 @@ app.MapFallbackToFile("index.html");
 
 app.Run();
 
-// Required for WebApplicationFactory in integration tests.
-public partial class Program;
+namespace Cardscape.Api
+{
+    // Required for WebApplicationFactory<Cardscape.Api.Program>
+    // in the E2E test project (the implicit Program class
+    // that the .NET minimal-API SDK generates is internal;
+    // the test project needs the type to be reachable).
+    public partial class Program;
+}
 
 /// <summary>Local helper that applies pending migrations on startup in Development.</summary>
 internal static class MigrationExtensions
