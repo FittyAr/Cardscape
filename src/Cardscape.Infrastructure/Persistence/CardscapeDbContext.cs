@@ -61,6 +61,7 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<OAuthApp> OAuthApps => Set<OAuthApp>();
     public DbSet<OAuthAuthorizationCode> OAuthAuthorizationCodes => Set<OAuthAuthorizationCode>();
     public DbSet<OAuthAccessToken> OAuthAccessTokens => Set<OAuthAccessToken>();
+    public DbSet<Domain.Authentication.RevokedTokens.RevokedToken> RevokedTokens => Set<Domain.Authentication.RevokedTokens.RevokedToken>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't

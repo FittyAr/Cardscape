@@ -112,6 +112,10 @@ public sealed class FakeCurrentUser : ICurrentUser
     public string? Email { get; set; }
     public string? DisplayName { get; set; }
     public IReadOnlyCollection<string> Roles { get; set; } = [];
+    public Dictionary<string, string> ExtraClaims { get; } = new();
+
+    public string? FindFirst(string claimType) =>
+        ExtraClaims.TryGetValue(claimType, out string? value) ? value : null;
 
     public static FakeCurrentUser Anonymous() => new() { IsAuthenticated = false };
 

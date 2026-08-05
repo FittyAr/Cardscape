@@ -37,6 +37,9 @@ public sealed class McpCurrentUser(IHttpContextAccessor accessor) : ICurrentUser
     public IReadOnlyCollection<string> Roles =>
         Principal?.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList() ?? [];
 
+    public string? FindFirst(string claimType) =>
+        Principal?.FindFirstValue(claimType);
+
     /// <summary>Scopes granted to the current user by the API
     /// token. Empty for non-API-token principals.</summary>
     public IReadOnlyCollection<string> Scopes =>

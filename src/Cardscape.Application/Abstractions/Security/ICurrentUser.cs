@@ -23,4 +23,14 @@ public interface ICurrentUser
 
     /// <summary>Roles granted to the current user.</summary>
     IReadOnlyCollection<string> Roles { get; }
+
+    /// <summary>
+    /// First claim value whose type matches
+    /// <paramref name="claimType"/>, or <c>null</c> if
+    /// the principal is anonymous or the claim is not
+    /// present. Used by the JWT-revocation flow to
+    /// pull the <c>jti</c> and <c>exp</c> claims off
+    /// the bearer principal.
+    /// </summary>
+    string? FindFirst(string claimType);
 }

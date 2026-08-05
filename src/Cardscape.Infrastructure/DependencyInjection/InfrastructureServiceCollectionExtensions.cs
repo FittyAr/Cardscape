@@ -180,6 +180,16 @@ public static class InfrastructureServiceCollectionExtensions
             Cardscape.Infrastructure.Hosting.RetentionSettings>();
         services.AddHostedService<Cardscape.Infrastructure.Hosting.RetentionSweeper>();
 
+        // JWT revocation sweeper. Drops every
+        // revoked-token row whose TokenExpiresAt is
+        // in the past so the validation hot path
+        // (JwtRevocationValidator) stays sub-millisecond
+        // regardless of how many revocations the
+        // system has ever recorded.
+        services.Configure<Cardscape.Infrastructure.Hosting.RevocationSweeperOptions>(
+            configuration.GetSection(Cardscape.Infrastructure.Hosting.RevocationSweeperOptions.SectionName));
+        services.AddHostedService<Cardscape.Infrastructure.Hosting.RevocationSweeper>();
+
         services.AddScoped<CustomFieldDefinitionRepository>();
         services.AddScoped<IRepository<CustomFieldDefinition, CustomFieldDefinitionId>, CustomFieldDefinitionRepository>(sp => sp.GetRequiredService<CustomFieldDefinitionRepository>());
         services.AddScoped<ICustomFieldDefinitionRepository, CustomFieldDefinitionRepository>(sp => sp.GetRequiredService<CustomFieldDefinitionRepository>());
@@ -247,6 +257,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ITokenService, JwtTokenService>();
         services.AddScoped<IApiTokenService, ApiTokenService>();
         services.AddScoped<IInvitationService, InvitationService>();
+        services.AddScoped<
+            Cardscape.Application.Abstractions.Persistence.IRevokedTokenRepository,
+            Cardscape.Infrastructure.Repositories.RevokedTokenRepository>();
         services.AddSingleton<IRateLimiter, RateLimiter>();
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
 

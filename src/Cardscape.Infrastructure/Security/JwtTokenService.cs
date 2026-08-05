@@ -40,10 +40,6 @@ public sealed class JwtTokenService(
             // users table on every request. The claim reflects
             // the IsAdmin value at token-mint time; a fresh
             // login is required to pick up a status change.
-            // (Revocation tokens are out of scope for v1.2.0;
-            // a v1.3.0 workstream can add a short-lived
-            // IsAdmin-only re-issue path if a deployer needs
-            // faster revocation than the access-token TTL.)
             new("is_admin", user.IsAdmin ? "true" : "false")
         };
 

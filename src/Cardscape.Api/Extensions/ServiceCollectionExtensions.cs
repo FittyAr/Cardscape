@@ -120,13 +120,16 @@ public static class ServiceCollectionExtensions
                     // JWTs have at least one dot (three segments).
                     // API tokens are base64url-encoded random bytes
                     // with no dots.
-                    return secret.Contains('.')
+                    string selected = secret.Contains('.')
                         ? JwtBearerDefaults.AuthenticationScheme
                         : ApiTokenAuthenticationHandler.SchemeName;
+                    Console.Error.WriteLine($"[BearerPolicyScheme] selected={selected} for path={context.Request.Path}");
+                    return selected;
                 };
             });
 
         authBuilder.AddJwtBearer(options =>
+        {
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -137,7 +140,22 @@ public static class ServiceCollectionExtensions
                 ValidAudience = configuration["Jwt:Audience"] ?? "Cardscape",
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
                 ClockSkew = TimeSpan.FromMinutes(1)
-            });
+            };
+
+            // Revocation gate. Wired directly in
+            // AddJwtBearer so the events are attached to
+            // the same JwtBearerOptions instance the
+            // handler reads on the first request. The
+            // handler resolves JwtRevocationValidator
+            // through the per-request IServiceProvider.
+            options.Events ??= new JwtBearerEvents();
+            options.Events.OnTokenValidated = ctx =>
+                ctx.HttpContext.RequestServices
+                    .GetRequiredService<JwtRevocationValidator>()
+                    .OnTokenValidated(ctx);
+        });
+
+        services.AddSingleton<JwtRevocationValidator>();
 
         authBuilder.AddScheme<ApiTokenAuthenticationOptions, ApiTokenAuthenticationHandler>(
             ApiTokenAuthenticationHandler.SchemeName,

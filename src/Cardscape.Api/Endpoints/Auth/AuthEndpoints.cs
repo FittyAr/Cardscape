@@ -4,6 +4,7 @@ using Cardscape.Application.Authentication.Queries;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
@@ -49,6 +50,38 @@ public static class AuthEndpoints
                 : Results.Problem(result.Error.Message, statusCode: StatusCodes.Status401Unauthorized, title: result.Error.Code);
         });
 
+        // Revoke the JWT access token carried in the
+        // Authorization header. The next request that
+        // presents the same token is rejected by
+        // JwtRevocationValidator with 401.
+        group.MapPost("/revoke", async (
+            [FromBody] RevokeTokenRequest? request,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            string? reason = request?.Reason;
+            if (reason is { Length: > 200 })
+            {
+                return Results.Problem(
+                    title: "auth.revoke.reason_too_long",
+                    detail: "The reason must be 200 characters or fewer.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            var result = await bus.InvokeAsync<Result>(new RevokeCurrentTokenCommand(reason), ct);
+            return result.IsSuccess
+                ? Results.NoContent()
+                : Results.Problem(result.Error.Message,
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: result.Error.Code);
+        }).RequireAuthorization();
+
         return app;
     }
+
+    /// <summary>Body of the revocation request. The
+    /// <c>Reason</c> is recorded against the row so
+    /// the operator dashboard can later see why a
+    /// session ended.</summary>
+    public sealed record RevokeTokenRequest(string? Reason);
 }

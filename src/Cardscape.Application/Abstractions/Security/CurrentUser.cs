@@ -30,4 +30,7 @@ public sealed class CurrentUser(ICurrentUserAccessor accessor) : ICurrentUser
 
     public IReadOnlyCollection<string> Roles =>
         Principal?.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList() ?? [];
+
+    public string? FindFirst(string claimType) =>
+        Principal?.FindFirst(claimType)?.Value;
 }
