@@ -146,7 +146,7 @@ public static class ServiceCollectionExtensions
         // ── OAuth 2.0 / OIDC external login (P4.1) ──────────
         // Google and Microsoft are wired in full. Apple
         // requires generating a JWT client_secret per Apple's
-        // spec (see TODO in ExternalProvider.IsImplemented).
+        // spec (see IAppleClientSecretGenerator + AppleClientSecretGenerator).
         string? googleClientId = configuration["Authentication:Google:ClientId"];
         string? googleClientSecret = configuration["Authentication:Google:ClientSecret"];
         if (!string.IsNullOrWhiteSpace(googleClientId)

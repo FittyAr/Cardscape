@@ -38,9 +38,14 @@ namespace Cardscape.Api.Endpoints.Auth;
 ///         with the token in a fragment so the SPA can pick
 ///         it up.</item>
 /// </list>
-/// Apple is a stub today (its client_secret is a signed
-/// JWT per Apple's spec, and wiring that up is a larger
-/// piece of work).
+/// Apple is wired end-to-end via the
+/// <c>AppleClientSecretGenerator</c> (ES256-signed JWT
+/// regenerated per request) — the OIDC handler is only
+/// registered when the full <c>Authentication:Apple:*</c>
+/// configuration block is present; otherwise the
+/// <see cref="ExternalProviderExtensions.IsImplemented"/>
+/// check on the <c>apple</c> provider keeps the start
+/// endpoint out of the menu (returns 501).
 /// </summary>
 public static class ExternalLoginEndpoints
 {

@@ -16,8 +16,12 @@ public static class ExternalLoginErrors
         "Unknown external login provider.");
 
     /// <summary>
-    /// The provider is recognised but not implemented in
-    /// this build (e.g. Apple). The endpoint returns 501.
+    /// The provider is recognised but the OIDC handler is
+    /// not registered in this build (e.g. Apple without
+    /// the required <c>Authentication:Apple:TeamId</c> +
+    /// <c>ClientId</c> + <c>KeyId</c> + <c>PrivateKeyPem</c>
+    /// configuration, or any future provider that lands
+    /// behind a feature flag). The endpoint returns 501.
     /// </summary>
     public static readonly DomainError ProviderNotImplemented = DomainError.External(
         "auth.external.not_implemented",

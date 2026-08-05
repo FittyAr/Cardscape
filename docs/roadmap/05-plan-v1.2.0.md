@@ -534,18 +534,29 @@ These were on the v1.1.0 LOW list but are deferred
 to v1.3.0 or later because they each need a
 sustained focus rather than a single PR:
 
-- **G15** — full integration test coverage for the
+- ~~**G15** — full integration test coverage for the
   new P3/P4 paths. The current integration coverage
   is the golden path + the v1.0.0 surfaces. The
   v1.1.0 push added unit tests for the new code
   but not integration tests. Worth a dedicated
-  v1.3.0 workstream to avoid bloat.
-- **C# SDK promotion** — `sdk/Cardscape.Sdk/` is
+  v1.3.0 workstream to avoid bloat.~~ ✅ DONE
+  in commit `ab8811c test(integration): G15 —
+  coverage for Slack/GoogleCalendar/InboundEmail
+  endpoints`. The P3/P4 paths the v1.1.0 push added
+  are now covered by `IntegrationsEndpointTests.cs`
+  (4 Slack + 3 Google Calendar + 3 Inbound Email
+  integration tests).
+- ~~**C# SDK promotion** — `sdk/Cardscape.Sdk/` is
   in the main solution under a `/sdk/` folder,
   not in a separate `sdk/Cardscape.Sdk.slnx`
   (per the v1.1.0 audit §5 G12-followup note
   on §3.12). The packaging and the multi-target
-  work; the missing `slnx` is cosmetic.
+  work; the missing `slnx` is cosmetic.~~ ✅ The
+  `sdk/Cardscape.Sdk.slnx` file is in the repo;
+  the cosmetic gap from the audit closed. The SDK
+  remains a side project of v1.x — multi-target
+  packaging and NuGet publication are still
+  deferred.
 - **Public status page** — `docs/status.md` is
   written but not served. Cardscape does not run
   a hosted service today; the page is dormant
@@ -562,7 +573,7 @@ sustained focus rather than a single PR:
   SOC 2 Type II audit are explicit v3.0+ work —
   the maintainer does not self-certify. The auditor
   certifies.
-- **MCP "subscriptions" admin page polish** — the
+- ~~**MCP "subscriptions" admin page polish** — the
   v1.2.0 work landed the admin page itself
   (`/admin/mcp-subscriptions`) plus the snapshot
   endpoint. Filter + export (event-kind dropdown,
@@ -572,7 +583,12 @@ sustained focus rather than a single PR:
   `McpSubscriptionsAdminPolicy` with a cached
   `IsAdmin` claim instead of the per-request DB
   lookup the current `AdminOnlyPolicy` does —
-  deferred to v1.3.0.
+  deferred to v1.3.0.~~ ✅ DONE in commit
+  `d234571 feat(api): McpSubscriptionsAdminPolicy
+  with cached is_admin claim`. The remaining
+  v1.2.0 v1.3.0 backlog item is the cross-process
+  broadcaster chain E2E — also done in this pass
+  (commit 10bfe1c).
 
 ## 9. Tracking
 
@@ -647,9 +663,11 @@ sustained focus rather than a single PR:
     test pins the contract so the implementation
     never silently falls back to the DB lookup for
     tokens that do carry the claim.
-  - **G15 coverage** for the P3/P4 paths the v1.1.0
+  - ~~**G15 coverage** for the P3/P4 paths the v1.1.0
     push added unit tests for but not integration
-    tests.
+    tests.~~ ✅ DONE in commit `ab8811c` (4 Slack
+    + 3 Google Calendar + 3 Inbound Email integration
+    tests in `IntegrationsEndpointTests.cs`).
 
 ## 10. References
 
