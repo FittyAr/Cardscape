@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Cards.DTOs;
+using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
@@ -24,11 +25,34 @@ public static class CardscapeExtensions
     {
         public static async Task<Result<SetCardAgingResult>> Handle(
             SetCardAgingCommand command,
+            ICardRepository cards,
+            IBoardListRepository lists,
+            IBoardRepository boards,
             ICardAgingSettingsRepository repo,
             IUnitOfWork uow,
+            ICurrentUser currentUser,
             IClock clock,
             CancellationToken ct)
         {
+            if (currentUser.Id is null)
+            {
+                return Result.Failure<SetCardAgingResult>(DomainError.Unauthenticated(
+                    "auth.required", "Authentication is required."));
+            }
+
+            // The aging setting is per-card operational
+            // metadata. The previous incarnation did not
+            // check board membership — any authenticated
+            // user could mutate the aging mode of any card
+            // by guessing the card id. The mirror / snooze
+            // fixes below use the same pattern.
+            var guard = await EnsureCanMutateCardAsync(
+                boards, lists, cards, command.CardId, currentUser.Id.Value, ct);
+            if (guard.IsFailure)
+            {
+                return Result.Failure<SetCardAgingResult>(guard.Error);
+            }
+
             CardAgingSettings? settings = await repo.GetByCardIdAsync(new CardId(command.CardId), ct);
             if (settings is null)
             {
@@ -64,6 +88,9 @@ public static class CardscapeExtensions
         public static async Task<Result<DateTimeOffset>> Handle(
             SnoozeCardCommand command,
             ICardSnoozeRepository repo,
+            ICardRepository cards,
+            IBoardListRepository lists,
+            IBoardRepository boards,
             IUnitOfWork uow,
             ICurrentUser currentUser,
             IClock clock,
@@ -73,6 +100,20 @@ public static class CardscapeExtensions
             {
                 return Result.Failure<DateTimeOffset>(DomainError.Unauthenticated("auth.required", "Authentication is required."));
             }
+
+            // Snoozing hides a card from the default
+            // board view until the snooze expires. The
+            // previous incarnation accepted any CardId
+            // from any authenticated user — a clear IDOR.
+            // The v1.2.0 audit (pass 10) brings this in
+            // line with the rest of the card write paths.
+            var guard = await EnsureCanMutateCardAsync(
+                boards, lists, cards, command.CardId, currentUser.Id.Value, ct);
+            if (guard.IsFailure)
+            {
+                return Result.Failure<DateTimeOffset>(guard.Error);
+            }
+
             Result<CardSnooze> create = CardSnooze.Create(
                 new CardId(command.CardId), command.Until, currentUser.Id.Value, clock.UtcNow);
             if (create.IsFailure)
@@ -95,9 +136,29 @@ public static class CardscapeExtensions
         public static async Task<Result> Handle(
             UnsnoozeCardCommand command,
             ICardSnoozeRepository repo,
+            ICardRepository cards,
+            IBoardListRepository lists,
+            IBoardRepository boards,
             IUnitOfWork uow,
+            ICurrentUser currentUser,
             CancellationToken ct)
         {
+            if (currentUser.Id is null)
+            {
+                return Result.Failure(DomainError.Unauthenticated(
+                    "auth.required", "Authentication is required."));
+            }
+
+            // See SnoozeCardCommandHandler. Unsnooze
+            // mutates the same row so it has the same
+            // membership requirement.
+            var guard = await EnsureCanMutateCardAsync(
+                boards, lists, cards, command.CardId, currentUser.Id.Value, ct);
+            if (guard.IsFailure)
+            {
+                return Result.Failure(guard.Error);
+            }
+
             CardSnooze? existing = await repo.GetByCardIdAsync(new CardId(command.CardId), ct);
             if (existing is null)
             {
@@ -121,6 +182,7 @@ public static class CardscapeExtensions
             MirrorCardCommand command,
             ICardRepository cards,
             IBoardListRepository lists,
+            IBoardRepository boards,
             ICardMirrorRepository mirrors,
             IUnitOfWork uow,
             ICurrentUser currentUser,
@@ -144,6 +206,27 @@ public static class CardscapeExtensions
             {
                 return Result.Failure<MirrorCardResult>(DomainError.NotFound(
                     "lists.not_found", "Target list not found."));
+            }
+
+            // The previous incarnation did not check that
+            // the caller was a member of either the source
+            // card's board or the target list's board. Any
+            // authenticated user could mirror a card from
+            // workspace-A into workspace-B, cross-leaking
+            // the title + description into the target
+            // workspace. Both checks are required.
+            var sourceGuard = await EnsureCanReadCardAsync(
+                boards, lists, source, currentUser.Id.Value, ct);
+            if (sourceGuard.IsFailure)
+            {
+                return Result.Failure<MirrorCardResult>(sourceGuard.Error);
+            }
+
+            var targetGuard = await EnsureCanMutateListAsync(
+                boards, target, currentUser.Id.Value, ct);
+            if (targetGuard.IsFailure)
+            {
+                return Result.Failure<MirrorCardResult>(targetGuard.Error);
             }
 
             // Create the mirrored card as a real card row, then link them.
@@ -175,5 +258,79 @@ public static class CardscapeExtensions
             await uow.SaveChangesAsync(ct);
             return Result.Success(new MirrorCardResult(mirrorCard.Value.Id.Value));
         }
+    }
+
+    // ── shared guard helpers ──────────────────────────────────
+
+    private static async Task<Result> EnsureCanMutateCardAsync(
+        IBoardRepository boards,
+        IBoardListRepository lists,
+        ICardRepository cards,
+        Guid cardId,
+        Guid userId,
+        CancellationToken ct)
+    {
+        Card? card = await cards.GetByIdAsync(new CardId(cardId), ct);
+        if (card is null)
+        {
+            return Result.Failure(DomainError.NotFound(
+                "cards.not_found", $"Card {cardId} was not found."));
+        }
+
+        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
+        if (!map.TryGetValue(card.ListId.Value, out Guid boardId))
+        {
+            return Result.Failure(DomainError.NotFound(
+                "boards.not_found", "Board was not found."));
+        }
+
+        Board? board = await boards.GetWithMembersAsync(new BoardId(boardId), ct);
+        if (board is null || !board.IsMember(userId))
+        {
+            return Result.Failure(DomainError.Forbidden(
+                "boards.forbidden", "You are not a member of this board."));
+        }
+
+        return Result.Success();
+    }
+
+    private static async Task<Result> EnsureCanReadCardAsync(
+        IBoardRepository boards,
+        IBoardListRepository lists,
+        Card card,
+        Guid userId,
+        CancellationToken ct)
+    {
+        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
+        if (!map.TryGetValue(card.ListId.Value, out Guid boardId))
+        {
+            return Result.Failure(DomainError.NotFound(
+                "boards.not_found", "Board was not found."));
+        }
+
+        Board? board = await boards.GetWithMembersAsync(new BoardId(boardId), ct);
+        if (board is null || !board.IsMember(userId))
+        {
+            return Result.Failure(DomainError.Forbidden(
+                "boards.forbidden", "You are not a member of the source card's board."));
+        }
+
+        return Result.Success();
+    }
+
+    private static async Task<Result> EnsureCanMutateListAsync(
+        IBoardRepository boards,
+        BoardList target,
+        Guid userId,
+        CancellationToken ct)
+    {
+        Board? board = await boards.GetWithMembersAsync(target.BoardId, ct);
+        if (board is null || !board.IsMember(userId))
+        {
+            return Result.Failure(DomainError.Forbidden(
+                "boards.forbidden", "You are not a member of the target list's board."));
+        }
+
+        return Result.Success();
     }
 }
