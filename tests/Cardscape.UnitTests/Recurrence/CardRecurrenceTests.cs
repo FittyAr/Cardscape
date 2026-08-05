@@ -150,7 +150,8 @@ public class CardRecurrenceTests
 
         var del = await DeleteCardRecurrenceCommandHandler.Handle(
             new DeleteCardRecurrenceCommand(card.Id.Value),
-            recurrences, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
+            recurrences, ctx.Cards, ctx.Lists, ctx.Boards,
+            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
         del.IsSuccess.Should().BeTrue();
         recurrences.All.Should().BeEmpty();
     }

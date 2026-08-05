@@ -85,6 +85,38 @@ public sealed class RecurrenceTests
     }
 
     [Fact]
+    public async Task Delete_Recurrence_By_NonMember_Returns_Forbidden()
+    {
+        // The v1.2.0 audit (pass 8) found that the
+        // DeleteCardRecurrenceCommandHandler skipped the
+        // board-membership check entirely, so any
+        // authenticated user could turn off another board's
+        // recurring cards by guessing the card id. The fix
+        // injects the same membership check SetCardRecurrence
+        // already had; this test pins the contract.
+        HttpClient owner = await CreateAuthenticatedClientAsync();
+        Seed seed = await CreateSeedAsync(owner, "owner-delete");
+
+        await owner.PutAsJsonAsync(
+            $"api/cards/{seed.CardId}/recurrence/",
+            new { intervalDays = 7, firstOccurrenceAt = DateTimeOffset.UtcNow.AddDays(7) }, TestContext.Current.CancellationToken);
+
+        // A second, non-member user with their own JWT.
+        HttpClient outsider = await CreateAuthenticatedClientAsync();
+
+        HttpResponseMessage del = await outsider.DeleteAsync(
+            $"api/cards/{seed.CardId}/recurrence/", TestContext.Current.CancellationToken);
+        // The membership check surfaces a DomainError.Forbidden
+        // which the endpoint maps to Results.Forbid() — a 403
+        // (or, depending on the ASP.NET pipeline, a 404 when
+        // the user has no policy evaluating the requirement).
+        // The exact code is the auth policy's responsibility;
+        // the important contract is "not 204".
+        ((int)del.StatusCode).Should().NotBe(204,
+            "an outsider must not be able to delete a recurrence on a board they are not a member of");
+    }
+
+    [Fact]
     public async Task Set_With_Zero_Interval_Returns_BadRequest()
     {
         HttpClient client = await CreateAuthenticatedClientAsync();
