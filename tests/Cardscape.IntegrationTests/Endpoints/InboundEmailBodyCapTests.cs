@@ -1,41 +1,85 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.IntegrationTests.Fixtures;
 using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace Cardscape.IntegrationTests.Endpoints;
 
 /// <summary>
-/// Coverage for the body cap the v1.2.0 audit (pass 6) added
-/// to <c>POST /api/integrations/email/inbound</c>. The
-/// previous incarnation read the request body straight to a
-/// string with no upper bound; the 1 MB cap now blocks DoS
-/// via huge unauthenticated POSTs.
+/// Coverage for the body cap + signature gate the v1.2.0 audit
+/// (passes 6 + 7) added to
+/// <c>POST /api/integrations/email/inbound</c>. The previous
+/// incarnation was both unauthenticated and unbounded; this
+/// test class pins both: the endpoint refuses to process any
+/// request without a configured
+/// <c>InboundEmail:SigningSecret</c>, validates the
+/// HMAC-SHA256 signature header, and caps the body at 1 MB.
 /// </summary>
 [Collection(CardscapeApi.Name)]
 public sealed class InboundEmailBodyCapTests
 {
+    private const string TestSigningSecret = "inbound-email-test-signing-secret-please-rotate";
+
     private readonly CardscapeWebApplicationFactory _factory;
     public InboundEmailBodyCapTests(CardscapeWebApplicationFactory factory) => _factory = factory;
 
     [Fact]
+    public async Task Inbound_Without_Configured_Secret_Returns_503()
+    {
+        // The shared test factory does not set
+        // InboundEmail:SigningSecret (the same pattern the
+        // broadcast endpoint uses for Internal:Secret).
+        // Without it, the endpoint short-circuits with 503
+        // so a missing secret is loud, not silent.
+        HttpClient client = _factory.CreateApiClient();
+        using HttpRequestMessage request = new(HttpMethod.Post,
+            "api/integrations/email/inbound?provider=sendgrid")
+        {
+            Content = JsonContent.Create(new { from = "x@example.com", subject = "s", text = "t" })
+        };
+        HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        response.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+    }
+
+    [Fact]
+    public async Task Inbound_With_Wrong_Signature_Returns_401()
+    {
+        HttpClient client = CreateClientWithSecret();
+
+        using HttpRequestMessage request = new(HttpMethod.Post,
+            "api/integrations/email/inbound?provider=sendgrid")
+        {
+            Content = JsonContent.Create(new { from = "x@example.com", subject = "s", text = "t" })
+        };
+        request.Headers.Add("X-Cardscape-Inbound-Signature", "deadbeef");
+
+        HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
     public async Task Inbound_With_Oversized_Content_Length_Returns_413()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = CreateClientWithSecret();
 
-        // The cap is 1 MB; advertise 2 MB and the endpoint
-        // short-circuits before allocating the read buffer.
         byte[] oversized = new byte[2 * 1024 * 1024];
         Array.Fill(oversized, (byte)'a');
 
-        using HttpRequestMessage request = new(HttpMethod.Post, "api/integrations/email/inbound?provider=sendgrid")
+        using HttpRequestMessage request = new(HttpMethod.Post,
+            "api/integrations/email/inbound?provider=sendgrid")
         {
             Content = new ByteArrayContent(oversized)
         };
         request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        request.Headers.Add("X-Cardscape-Inbound-Signature", "anything-non-empty");
 
         HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.RequestEntityTooLarge);
@@ -54,6 +98,28 @@ public sealed class InboundEmailBodyCapTests
         HttpResponseMessage response = await client.GetAsync(
             $"api/search/?q={Uri.EscapeDataString(huge)}", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    private HttpClient CreateClientWithSecret()
+    {
+        // Build a one-shot factory that has the
+        // InboundEmail:SigningSecret configured. The
+        // shared factory cannot be reconfigured per-test
+        // (env vars were already set in CreateHost), so we
+        // spin a parallel host off the same database +
+        // storage root and inject the secret via the
+        // configuration builder.
+        WebApplicationFactory<Program> perTest = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration((_, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["InboundEmail:SigningSecret"] = TestSigningSecret
+                });
+            });
+        });
+        return perTest.CreateClient();
     }
 
     private async Task<HttpClient> CreateAuthenticatedClientAsync()

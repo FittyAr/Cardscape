@@ -139,12 +139,23 @@ public static class IntegrationsEndpoints
             return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
         });
 
-        // Public webhook surface — no authorization, but the
-        // inbound-email providers sign the request (the
-        // implementation verifies the signature when
-        // configured). The handler resolves the address to a
-        // workspace + list and dispatches a CreateCardCommand
-        // through Wolverine.
+        // Public webhook surface — no authorization at the
+        // routing layer, but the endpoint requires the same
+        // shared internal secret the broadcast and client-log
+        // endpoints use. The intent is for the operator to
+        // place a small reverse-proxy (or a provider-specific
+        // signature-verification relay) in front of the API
+        // that injects <c>X-Cardscape-Inbound-Signature</c> on
+        // every legitimate webhook delivery. Without that
+        // relay the endpoint is unavailable: the
+        // v1.2.0 audit (pass 7) found that the previous
+        // incarnation was completely anonymous and any
+        // unauthenticated POST that could guess (or scrape)
+        // a registered inbound-email address could create
+        // arbitrary cards in any workspace. The shared-secret
+        // gate is the minimum viable defence until a
+        // per-provider signature-verification layer lands
+        // (the per-provider config is already in the docs).
         //
         // SECURITY: the previous incarnation read the request
         // body straight to a string with no upper bound. The
@@ -163,9 +174,43 @@ public static class IntegrationsEndpoints
         // allocating the read buffer; chunked / unknown-
         // length requests fall through to the read-loop guard.
         const int MaxInboundEmailBodyBytes = 1 * 1024 * 1024;
-        group.MapPost("/inbound", async (HttpRequest request, IMessageBus bus, CancellationToken ct) =>
+        const string InboundSignatureHeader = "X-Cardscape-Inbound-Signature";
+        group.MapPost("/inbound", async (
+            HttpContext http,
+            IConfiguration config,
+            IMessageBus bus,
+            CancellationToken ct) =>
         {
-            if (request.ContentLength is long advertised && advertised > MaxInboundEmailBodyBytes)
+            // The shared secret is a different value from
+            // Internal:Secret (the broadcast / client-log
+            // secret) so a leak of one does not cascade to
+            // the other. The signature header carries the
+            // HMAC-SHA256 of the request body keyed with the
+            // shared secret, hex-encoded. A constant-time
+            // compare closes the timing oracle.
+            string? expected = config["InboundEmail:SigningSecret"];
+            if (string.IsNullOrWhiteSpace(expected))
+            {
+                return Results.Problem(
+                    detail: "InboundEmail:SigningSecret is not configured; the inbound email endpoint is unavailable. " +
+                            "Set it via appsettings, environment variables, or a secret store to opt in.",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+
+            string? provided = http.Request.Headers[InboundSignatureHeader];
+            if (string.IsNullOrEmpty(provided))
+            {
+                return Results.Unauthorized();
+            }
+
+            // Read the body once into a buffer so we can
+            // (1) signature-verify the exact bytes the
+            // provider sent and (2) feed them to the
+            // downstream parser. The signature must be
+            // verified BEFORE any other action on the body
+            // so a forged body that exceeds the cap still
+            // fails the auth check.
+            if (http.Request.ContentLength is long advertised && advertised > MaxInboundEmailBodyBytes)
             {
                 return Results.Problem(
                     detail: $"Inbound email body exceeds the {MaxInboundEmailBodyBytes}-byte cap.",
@@ -175,7 +220,7 @@ public static class IntegrationsEndpoints
             byte[] buffer = new byte[MaxInboundEmailBodyBytes + 1];
             int read = 0;
             int chunk;
-            while ((chunk = await request.Body.ReadAsync(buffer.AsMemory(read, buffer.Length - read), ct)) > 0)
+            while ((chunk = await http.Request.Body.ReadAsync(buffer.AsMemory(read, buffer.Length - read), ct)) > 0)
             {
                 read += chunk;
                 if (read > MaxInboundEmailBodyBytes)
@@ -186,19 +231,39 @@ public static class IntegrationsEndpoints
                 }
             }
 
-            string body = System.Text.Encoding.UTF8.GetString(buffer, 0, read);
+            byte[] signedBytes = new byte[read];
+            Buffer.BlockCopy(buffer, 0, signedBytes, 0, read);
+
+            // HMAC-SHA256 of the raw body, keyed with the
+            // shared secret, lowercase hex. The provider's
+            // signature relay (or the operator's SMTP
+            // gateway) must compute the same value. The
+            // expected value is derived from the configured
+            // secret on every request so a rotation takes
+            // effect immediately.
+            byte[] keyBytes = System.Text.Encoding.UTF8.GetBytes(expected);
+            byte[] expectedHash = System.Security.Cryptography.HMACSHA256.HashData(keyBytes, signedBytes);
+            string expectedHex = Convert.ToHexString(expectedHash).ToLowerInvariant();
+            if (!System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
+                    System.Text.Encoding.ASCII.GetBytes(provided),
+                    System.Text.Encoding.ASCII.GetBytes(expectedHex)))
+            {
+                return Results.Unauthorized();
+            }
+
+            string body = System.Text.Encoding.UTF8.GetString(signedBytes);
             if (string.IsNullOrWhiteSpace(body))
             {
                 return Results.BadRequest(new { error = "Inbound email body was empty." });
             }
 
             Dictionary<string, string> headers = new(StringComparer.OrdinalIgnoreCase);
-            foreach (KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues> header in request.Headers)
+            foreach (KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues> header in http.Request.Headers)
             {
                 headers[header.Key] = header.Value.ToString();
             }
 
-            string provider = (request.Query["provider"].ToString()
+            string provider = (http.Request.Query["provider"].ToString()
                 ?? headers.GetValueOrDefault("X-Inbound-Provider", string.Empty)
                 ?? "sendgrid").ToLowerInvariant();
 
