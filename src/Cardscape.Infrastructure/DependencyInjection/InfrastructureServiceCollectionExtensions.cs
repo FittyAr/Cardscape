@@ -7,6 +7,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Storage;
+using Cardscape.Application.Authentication.Abstractions;
 using Cardscape.Application.Realtime;
 using Cardscape.Application.Webhooks;
 using Cardscape.Domain.Activities;
@@ -48,6 +49,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using StackExchange.Redis;
 
 namespace Cardscape.Infrastructure.DependencyInjection;
 
@@ -234,9 +236,53 @@ public static class InfrastructureServiceCollectionExtensions
 
         // Two-step 2FA login: the password check mints a one-shot
         // PendingTotpToken; the /api/auth/login/totp endpoint consumes
-        // it. Singleton because the store is in-memory and shared by
-        // every request.
-        services.AddSingleton<Cardscape.Application.Authentication.Abstractions.IPendingTotpLoginStore, InMemoryPendingTotpLoginStore>();
+        // it. The backend is operator-selectable via
+        // Cardscape:Infrastructure:PendingTotpStore:Backend — see
+        // docs/operations/06-configurable-subsystems.md. The
+        // in-memory implementation is still the default so a
+        // single-instance deploy needs no extra infrastructure.
+        InfrastructureOptions infraOptions = InfrastructureOptions.Bind(configuration);
+        bool pendingTotpWantsRedis = infraOptions.PendingTotpStore.Backend == DistributedBackend.Redis;
+        bool rateLimiterWantsRedis = infraOptions.RateLimiter.Backend == DistributedBackend.Redis;
+        bool anyRedis = pendingTotpWantsRedis || rateLimiterWantsRedis;
+
+        if (anyRedis)
+        {
+            if (string.IsNullOrWhiteSpace(infraOptions.Redis.ConnectionString))
+            {
+                throw new InvalidOperationException(
+                    "Cardscape:Infrastructure:Redis:ConnectionString is required when at least "
+                    + "one subsystem sets its Backend to 'Redis'. Check "
+                    + "Cardscape:Infrastructure:RateLimiter:Backend and "
+                    + "Cardscape:Infrastructure:PendingTotpStore:Backend.");
+            }
+
+            services.AddSingleton<IConnectionMultiplexer>(sp =>
+            {
+                IConfiguration cfg = sp.GetRequiredService<IConfiguration>();
+                string connectionString = cfg["Cardscape:Infrastructure:Redis:ConnectionString"]
+                    ?? throw new InvalidOperationException(
+                        "Cardscape:Infrastructure:Redis:ConnectionString is required.");
+                ConfigurationOptions parsed = ConfigurationOptions.Parse(connectionString);
+                // AbortConnect=false: the multiplexer keeps
+                // trying to connect in the background instead
+                // of throwing at startup. The rate limiter and
+                // pending-2FA store both fail open on transport
+                // errors, so a temporary Redis outage is a
+                // degraded mode, not an outage.
+                parsed.AbortOnConnectFail = false;
+                return ConnectionMultiplexer.Connect(parsed);
+            });
+        }
+
+        if (pendingTotpWantsRedis)
+        {
+            services.AddSingleton<IPendingTotpLoginStore, RedisPendingTotpLoginStore>();
+        }
+        else
+        {
+            services.AddSingleton<IPendingTotpLoginStore, InMemoryPendingTotpLoginStore>();
+        }
 
         // 2FA secret encryption: protected with the same
         // ASP.NET Core data-protection ring the rest of the
@@ -260,7 +306,22 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<
             Cardscape.Application.Abstractions.Persistence.IRevokedTokenRepository,
             Cardscape.Infrastructure.Repositories.RevokedTokenRepository>();
-        services.AddSingleton<IRateLimiter, RateLimiter>();
+
+        // Rate limiter backend. The in-memory implementation
+        // is a per-instance bucket; the Redis implementation
+        // shares one bucket across every API instance. The
+        // choice is operator-facing configuration — see
+        // docs/operations/06-configurable-subsystems.md.
+        services.Configure<InfrastructureOptions>(configuration.GetSection(InfrastructureOptions.SectionName));
+        if (rateLimiterWantsRedis)
+        {
+            services.AddSingleton<IRateLimiter, RedisRateLimiter>();
+        }
+        else
+        {
+            services.AddSingleton<IRateLimiter, RateLimiter>();
+        }
+
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
 
         // OAuth 2.0 / OIDC for third-party apps. The repos are

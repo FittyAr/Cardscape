@@ -37,6 +37,23 @@
   </ItemGroup>
 
   <!--
+    StackExchange.Redis is a runtime dependency of the
+    Infrastructure assembly itself (RedisRateLimiter and
+    RedisPendingTotpLoginStore are wired by the DI extension
+    when the operator opts in). The package is NOT marked
+    PrivateAssets so the assembly is copied to the bin folder
+    of every host that loads the Infrastructure assembly
+    (API, MCP, integration tests). The in-memory default
+    means a Redis-less deploy never resolves any types from
+    this package at runtime, but the assembly still has to
+    be present because the type references are JIT-touched
+    on first use.
+  -->
+  <ItemGroup>
+    <PackageReference Include="StackExchange.Redis" />
+  </ItemGroup>
+
+  <!--
     Database providers are NOT referenced from this project. The Application
     layer only depends on Microsoft.EntityFrameworkCore. The concrete provider
     (SQLite, PostgreSQL, or MariaDB) is selected at composition time in the

@@ -50,20 +50,82 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        string signingKey = configuration["Jwt:SigningKey"]
-            ?? "dev-only-insecure-signing-key-please-override-in-production-32+chars";
+        // The signing key is non-negotiable. A hard-coded fallback
+        // (the previous behaviour) is a critical security risk: if
+        // the operator forgets to set Jwt:SigningKey in production
+        // the system silently uses a known secret that anyone can
+        // forge. Refuse to start instead. Development still gets a
+        // stable default so the smoke tests have a known secret;
+        // the host environment check is what differentiates the two.
+        string? signingKey = configuration["Jwt:SigningKey"];
+        string hostEnv = configuration["ASPNETCORE_ENVIRONMENT"]
+            ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+            ?? "Production";
+        bool jwtEnvIsDevelopment = string.Equals(
+            hostEnv, "Development", StringComparison.OrdinalIgnoreCase);
+
+        if (string.IsNullOrWhiteSpace(signingKey))
+        {
+            if (jwtEnvIsDevelopment)
+            {
+                signingKey = "dev-only-insecure-signing-key-please-override-in-production-32+chars";
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    "Jwt:SigningKey is required outside the Development environment. "
+                    + "Configure it via appsettings, environment variables, or a "
+                    + "secret store before starting the API.");
+            }
+        }
+        else if (Encoding.UTF8.GetByteCount(signingKey) < 32)
+        {
+            // RFC 7518 §3.2 requires keys for HS256 to be at least
+            // 256 bits. A shorter key weakens the signature; refuse
+            // to start so a misconfiguration is loud, not silent.
+            throw new InvalidOperationException(
+                "Jwt:SigningKey must be at least 32 bytes (256 bits) for HS256. "
+                + $"Current length: {Encoding.UTF8.GetByteCount(signingKey)} bytes.");
+        }
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
 
-        // CORS for the Blazor WASM client in development. The client
-        // (http(s)://localhost:5206 / 7188) needs to be allowed to
-        // call this API with credentials. In production the API is
-        // expected to be served behind a reverse proxy on the same
-        // origin as the SPA, so the policy is intentionally permissive
-        // on localhost in dev only.
-        string[] allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-            ?? new[] { "http://localhost:5206", "https://localhost:7188" };
+        // CORS for the Blazor WASM client. The client
+        // (http(s)://localhost:5206 / 7188 in dev) needs to be
+        // allowed to call this API with credentials. In
+        // production the API is expected to be served behind
+        // a reverse proxy on the same origin as the SPA, so
+        // the policy is intentionally permissive on localhost
+        // in dev only.
+        //
+        // SECURITY: AllowCredentials() combined with
+        // AllowAnyHeader() is a real CORS risk — the browser
+        // will accept any Access-Control-Request-Headers the
+        // client sends when the origin matches. Outside
+        // Development, we refuse to start with the dev-only
+        // localhost defaults so a missing operator override
+        // is loud, not silent.
+        string[]? configuredOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+        bool isDevelopment = string.Equals(
+            configuration["ASPNETCORE_ENVIRONMENT"]
+                ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+                ?? "Production",
+            "Development",
+            StringComparison.OrdinalIgnoreCase);
+
+        string[] allowedOrigins = configuredOrigins
+            ?? (isDevelopment
+                ? new[] { "http://localhost:5206", "https://localhost:7188" }
+                : throw new InvalidOperationException(
+                    "Cors:AllowedOrigins is required outside the Development environment. " +
+                    "Configure the list of origins allowed to call this API with credentials."));
+
+        if (allowedOrigins.Length == 0)
+        {
+            throw new InvalidOperationException(
+                "Cors:AllowedOrigins is empty. List at least one origin or remove the section entirely.");
+        }
 
         services.AddCors(options => options.AddDefaultPolicy(policy =>
             policy.WithOrigins(allowedOrigins)
@@ -120,11 +182,9 @@ public static class ServiceCollectionExtensions
                     // JWTs have at least one dot (three segments).
                     // API tokens are base64url-encoded random bytes
                     // with no dots.
-                    string selected = secret.Contains('.')
+                    return secret.Contains('.')
                         ? JwtBearerDefaults.AuthenticationScheme
                         : ApiTokenAuthenticationHandler.SchemeName;
-                    Console.Error.WriteLine($"[BearerPolicyScheme] selected={selected} for path={context.Request.Path}");
-                    return selected;
                 };
             });
 
@@ -271,13 +331,17 @@ public static class ServiceCollectionExtensions
             // AdminOnly policy: a request passes when the
             // authenticated principal carries the
             // <c>is_admin</c> claim embedded in the JWT
-            // at mint time (no DB lookup). Falls back to a
-            // users-table lookup for pre-v1.2.0 tokens that
-            // don't carry the claim, so the migration is
-            // automatic and existing sessions keep working
-            // until they expire. Used by the
-            // /api/admin/* endpoints (GDPR DSR, SOC 2
-            // control evidence export, etc.).
+            // at mint time (no DB lookup) — unless the
+            // operator has flipped
+            // Cardscape:Api:AdminAuthorization:CacheAdminClaim
+            // to false, in which case the handler always
+            // reads users.IsAdmin from the database. Both
+            // paths fall back to a users-table lookup for
+            // pre-v1.2.0 tokens that don't carry the claim,
+            // so the migration is automatic and existing
+            // sessions keep working until they expire. Used
+            // by the /api/admin/* endpoints (GDPR DSR,
+            // SOC 2 control evidence export, etc.).
             options.AddPolicy(
                 AdminOnlyPolicy.Name,
                 policy => policy
@@ -299,6 +363,8 @@ public static class ServiceCollectionExtensions
                     .RequireAuthenticatedUser()
                     .AddRequirements(new AdminOnlyRequirement()));
         });
+        services.Configure<AdminAuthorizationOptions>(
+            configuration.GetSection(AdminAuthorizationOptions.SectionName));
         services.AddScoped<IAuthorizationHandler, AdminOnlyAuthorizationHandler>();
         return services;
     }

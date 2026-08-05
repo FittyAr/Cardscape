@@ -45,6 +45,9 @@
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.10" />
     <!-- Override transitive Newtonsoft.Json (transitive from SignalR.Client 1.2.0). -->
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <!-- Redis client (opt-in distributed backends for the rate limiter
+         and the pending-2FA token store). See docs/operations/06-configurable-subsystems.md. -->
+    <PackageVersion Include="StackExchange.Redis" Version="2.8.16" />
     <!-- EF Core 10 LTS + Identity. -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
