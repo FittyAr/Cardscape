@@ -1,23 +1,34 @@
-using Cardscape.Api.Hubs;
 using Cardscape.Application.Abstractions.Persistence;
-using Cardscape.Application.Realtime;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Cards.Events;
 using Cardscape.Domain.Comments.Events;
+using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels.Events;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Lists.Events;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Cardscape.Api.Realtime;
+namespace Cardscape.Application.Realtime;
 
 /// <summary>
-/// Bridges the domain events that flow through the
-/// <c>WolverineDomainEventDispatcher</c> to the <see cref="BoardHub"/>.
-/// Each event class gets a static handler; the hub is reached via
-/// <see cref="IBoardNotifier"/> so the broadcaster itself stays
-/// transport-agnostic and easy to unit-test.
+/// Wolverine static handler that fans every card / list /
+/// comment / label / board domain event out to the
+/// <see cref="IBoardNotifier"/> (SignalR + MCP process).
+/// The class lives in the Application layer so the API's
+/// <c>DomainEventsInterceptor</c> discovery (which now
+/// includes the API assembly via
+/// <c>AddCardscapeApplication(params Assembly[])</c>) finds
+/// it without the Infrastructure layer needing to depend
+/// on the API.
+/// <para>
+/// The methods receive every dependency as a parameter —
+/// the broadcaster is a thin glue class with no instance
+/// state, so the static method convention is the natural
+/// fit and matches the rest of the Application assembly's
+/// Wolverine handlers.
+/// </para>
 /// </summary>
-public static class DomainEventBroadcaster
+public static class BoardEventBroadcaster
 {
     // ── Card lifecycle ─────────────────────────────────────────
 

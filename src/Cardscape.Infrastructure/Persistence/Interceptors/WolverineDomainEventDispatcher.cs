@@ -5,19 +5,23 @@ using Wolverine;
 namespace Cardscape.Infrastructure.Persistence.Interceptors;
 
 /// <summary>
-/// Dispatches domain events through Wolverine as messages.
-/// The events collection is typed as
+/// Dispatches domain events through the Wolverine
+/// <c>IMessageBus</c>. The events collection is typed as
 /// <see cref="IEnumerable{IDomainEvent}"/>, so a naive
-/// <c>PublishAsync(@event)</c> would infer <c>T = IDomainEvent</c>
-/// and Wolverine would not find any matching handler (the
-/// handlers are typed <c>Handle(CardCreated, ...)</c>, not
-/// <c>Handle(IDomainEvent, ...)</c>). Reflecting on the runtime
-/// type gives Wolverine the concrete type it needs to route
-/// the event to the right subscriber — the critical link
-/// that turns <c>SaveChangesAsync</c> into a broadcaster fire.
+/// <c>PublishAsync(@event)</c> would infer
+/// <c>T = IDomainEvent</c> and Wolverine would not find
+/// any matching handler (the handlers are typed
+/// <c>Handle(CardCreated, ...)</c>, not
+/// <c>Handle(IDomainEvent, ...)</c>). Reflecting on the
+/// runtime type gives Wolverine the concrete type it needs
+/// to route the event to the right subscriber — including
+/// the static <c>BoardEventBroadcaster.Handle</c> methods
+/// in the Application assembly.
 /// </summary>
 public sealed class WolverineDomainEventDispatcher(IMessageBus publisher) : IDomainEventDispatcher
 {
+    public static int PublishCount;
+
     public async Task DispatchAsync(IEnumerable<IDomainEvent> events, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
@@ -31,6 +35,7 @@ public sealed class WolverineDomainEventDispatcher(IMessageBus publisher) : IDom
             var generic = publishMethod.MakeGenericMethod(@event.GetType());
             var publishTask = (Task)generic.Invoke(publisher, new object[] { @event, null! })!;
             await publishTask.ConfigureAwait(false);
+            Interlocked.Increment(ref PublishCount);
         }
     }
 }

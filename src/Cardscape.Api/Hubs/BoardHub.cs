@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using Cardscape.Application.Realtime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -7,8 +7,9 @@ namespace Cardscape.Api.Hubs;
 /// <summary>
 /// Real-time hub for one board. Clients join the
 /// <c>board:{boardId}</c> group on <see cref="JoinBoard"/>; the
-/// <see cref="BoardNotifier"/> (driven by Wolverine domain-event
-/// handlers) pushes the actual events to every group member.
+/// <see cref="IBoardNotifier"/> (driven by the
+/// <c>BoardEventBroadcaster</c> in the Application layer) pushes
+/// the actual events to every group member.
 /// </summary>
 [Authorize]
 public sealed class BoardHub : Hub<IBoardClient>
@@ -37,15 +38,13 @@ public sealed class BoardHub : Hub<IBoardClient>
 }
 
 /// <summary>
-/// Server-side entry point for pushing events to subscribed clients.
-/// Resolved from DI; called by the Wolverine domain-event handlers
-/// that fire on every command.
+/// Pure-SignalR <see cref="IBoardNotifier"/> implementation
+/// (SignalR fan-out only; the MCP process is reached by the
+/// <c>CompositeBoardNotifier</c> wrapper that the API
+/// registers by default). Lives here so the test host that
+/// wants to exercise SignalR alone can register it directly
+/// without dragging in the MCP HTTP path.
 /// </summary>
-public interface IBoardNotifier
-{
-    Task BroadcastAsync(Guid boardId, Func<IBoardClient, Task> dispatch, CancellationToken ct = default);
-}
-
 public sealed class BoardNotifier(IHubContext<BoardHub, IBoardClient> hub) : IBoardNotifier
 {
     public async Task BroadcastAsync(
