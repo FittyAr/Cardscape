@@ -60,7 +60,9 @@ else
                 var card = context;
                 double opacity = ComputeCardOpacity(card, agingMode, now);
             }
-            <RadzenCard Style="@($"opacity: {opacity:0.00}; cursor: pointer;")"
+            <RadzenCard Style="@($"opacity: {opacity:0.00}; cursor: grab;")"
+                        draggable="true"
+                        @ondragstart="@(() => OnCardDragStart(card))"
                         @onclick="@(() => Nav.NavigateTo($"cards/{card.Id}"))">
                 <RadzenText Text="@card.Title" TextStyle="TextStyle.Body2"
                             Class="@(card.IsCompleted ? "rz-color-text-disabled" : null)"
@@ -77,6 +79,22 @@ else
                 var list = context;
                 Guid listId = Guid.Parse(list.Id);
             }
+            <div class="cs-kanban-column-dropzone"
+                 @ondragover="@OnColumnDragOver"
+                 @ondragover:preventDefault
+                 @ondrop="@(() => OnColumnDrop(listId))">
+                @foreach (CardSummaryDto cardInList in cardsByList.GetValueOrDefault(listId, []))
+                {
+                    <RadzenCard Style="cursor: grab;"
+                                draggable="true"
+                                @ondragstart="@(() => OnCardDragStart(cardInList))"
+                                @onclick="@(() => Nav.NavigateTo($"cards/{cardInList.Id}"))">
+                        <RadzenText Text="@cardInList.Title" TextStyle="TextStyle.Body2"
+                                    Class="@(cardInList.IsCompleted ? "rz-color-text-disabled" : null)"
+                                    Style="@(cardInList.IsCompleted ? "text-decoration: line-through; word-break: break-word;" : "word-break: break-word;")" />
+                    </RadzenCard>
+                }
+            </div>
             @if (openAddCardFor == listId)
             {
                 <RadzenStack Gap="0.5rem">
@@ -300,6 +318,64 @@ else
             openAddCardFor = null;
             await ReloadListsAndCardsAsync();
         }
+    }
+
+    // ── Drag-and-drop wiring ───────────────────────────────────
+    // The HTML5 drag-and-drop API in Blazor's
+    // Microsoft.AspNetCore.Components.Web surface does
+    // not expose DataTransfer.SetData / GetData from
+    // C# without a JS interop layer, and the ADR-0009
+    // "Radzen only" rule prohibits custom JS. We pass
+    // the source card id through component state
+    // instead: dragstart records the id in a private
+    // field, dragover just sets the dropEffect so the
+    // browser accepts the drop, and drop reads the
+    // cached id. The id is cleared at the end of a
+    // successful drop so two interleaved drags do not
+    // collide.
+    private Guid? draggingCardId;
+
+    private void OnCardDragStart(CardSummaryDto card)
+    {
+        draggingCardId = card.Id;
+    }
+
+    private void OnColumnDragOver(DragEventArgs args)
+    {
+        if (draggingCardId is not null)
+        {
+            args.DataTransfer!.DropEffect = "move";
+        }
+    }
+
+    private async Task OnColumnDrop(Guid destinationListId)
+    {
+        Guid? cardId = draggingCardId;
+        draggingCardId = null;
+        if (cardId is null)
+        {
+            return;
+        }
+
+        if (await MoveCardAsync(cardId.Value, destinationListId))
+        {
+            await ReloadListsAndCardsAsync();
+        }
+    }
+
+    // Public for the unit test: pure I/O so the
+    // logic is exercised in isolation. Returns
+    // true when the API accepted the move.
+    public async Task<bool> MoveCardAsync(Guid cardId, Guid destinationListId)
+    {
+        // Drop at the end of the destination column:
+        // the API's Move endpoint takes a double position;
+        // we send a large sentinel so the server
+        // appends rather than inserts mid-column.
+        const double appendPosition = double.MaxValue;
+        ApiResult<CardDto> result = await CardsApi.MoveAsync(
+            cardId, destinationListId, appendPosition, CancellationToken.None);
+        return result.IsSuccess;
     }
 
     // Pulls the board's CardAging extension and parses the
