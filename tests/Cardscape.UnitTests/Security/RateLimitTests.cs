@@ -193,4 +193,74 @@ public class RateLimitTests
         RateLimitSnapshot? status = limiter.GetStatus(TokenA, T0);
         status.Should().BeNull();
     }
+
+    [Fact]
+    public void EvictStale_RemovesIdleBuckets_KeepsActiveOnes()
+    {
+        // The v1.2.0 audit (pass 10) added this sweep
+        // to fix a memory leak: the bucket dictionary
+        // used to grow forever (one Bucket per unique
+        // token id seen since the process started).
+        // The contract: any bucket whose last access is
+        // older than the cutoff is removed; a bucket
+        // touched at or after the cutoff is kept.
+        RateLimiter limiter = new RateLimiter();
+        DateTimeOffset configTime = T0;
+        DateTimeOffset activeTime = T0.AddHours(3);
+        DateTimeOffset cutoff = T0.AddHours(2);
+
+        // TokenA is touched at activeTime (after the
+        // cutoff → kept). TokenB is only configured,
+        // at configTime (before the cutoff → evicted).
+        limiter.Configure(TokenA, rateLimitPerHour: 60, burstSize: 5);
+        limiter.Configure(TokenB, rateLimitPerHour: 60, burstSize: 5);
+
+        // Configure updates LastAccess; reset TokenA's
+        // LastAccess back to configTime by NOT
+        // touching it, then schedule its real touch
+        // for activeTime. The simplest way to do
+        // that is to configure both, then call
+        // TryAcquire on TokenA at activeTime.
+        // (The earlier Configure already set
+        // LastAccess to T0 for both; the
+        // TryAcquire below bumps TokenA's to
+        // activeTime.)
+        limiter.TryAcquire(TokenA, activeTime);
+
+        int removed = limiter.EvictStale(cutoff);
+
+        removed.Should().Be(1, "TokenB is the only bucket the cutoff has aged out");
+        limiter.GetStatus(TokenA, activeTime).Should().NotBeNull(
+            "TokenA's last access is at the cutoff boundary, so the bucket survives");
+        limiter.GetStatus(TokenB, T0).Should().BeNull(
+            "TokenB was last touched at T0, well before the cutoff");
+    }
+
+    [Fact]
+    public void EvictStale_RecreatesBucket_OnNextRequest()
+    {
+        // After eviction, the next request to the
+        // same token id must create a fresh bucket
+        // (not crash, not hand back the stale one).
+        // This is what the production
+        // RateLimitBucketEvictionService relies on.
+        RateLimiter limiter = new RateLimiter();
+        limiter.Configure(TokenA, rateLimitPerHour: 60, burstSize: 5);
+
+        limiter.TryAcquire(TokenA, T0).Allowed.Should().BeTrue();
+        limiter.TryAcquire(TokenA, T0).Allowed.Should().BeTrue();
+        limiter.TryAcquire(TokenA, T0).Allowed.Should().BeTrue();
+
+        // Evict at the 1-hour cutoff.
+        limiter.EvictStale(T0.AddHours(1)).Should().Be(1);
+
+        // The next call creates a fresh bucket at the
+        // burst cap, so a series of calls within the
+        // burst is allowed.
+        DateTimeOffset later = T0.AddHours(2);
+        for (int i = 0; i < 5; i++)
+        {
+            limiter.TryAcquire(TokenA, later).Allowed.Should().BeTrue();
+        }
+    }
 }

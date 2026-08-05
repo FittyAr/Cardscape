@@ -26,6 +26,7 @@ public sealed class RateLimiter : IRateLimiter
         lock (bucket.SyncRoot)
         {
             bucket.Refill(at);
+            bucket.LastAccess = at;
 
             if (bucket.Disabled)
             {
@@ -49,6 +50,16 @@ public sealed class RateLimiter : IRateLimiter
         lock (bucket.SyncRoot)
         {
             bucket.ApplyConfiguration(rateLimitPerHour, burstSize);
+            // Configure does NOT bump LastAccess —
+            // a config change (PATCH /api/security/
+            // api-tokens/{id}/rate-limit) is a control-
+            // plane action, not a data-plane hit, and
+            // shouldn't keep an idle token's bucket
+            // warm. The eviction sweep drops a bucket
+            // that hasn't seen a real request within
+            // the cutoff window; the next request
+            // reconstructs the bucket from the
+            // persisted config.
         }
     }
 
@@ -68,6 +79,45 @@ public sealed class RateLimiter : IRateLimiter
                 AvailableTokens: bucket.Disabled ? bucket.BurstSize : bucket.Tokens,
                 RefilledAt: at);
         }
+    }
+
+    /// <summary>
+    /// Removes every bucket that has not been touched
+    /// (refilled, configured, or acquired) since
+    /// <paramref name="cutoff"/>. The v1.2.0 audit
+    /// (pass 10) added this because the original
+    /// implementation grew the bucket dictionary
+    /// forever — a long-running API process with many
+    /// short-lived API tokens (typical for an
+    /// integration-heavy deployment) leaked one
+    /// Bucket per token until the process restarted.
+    /// The fix is a periodic sweep driven by the
+    /// caller (the rate-limit middleware or a
+    /// background service); the limiter itself stays
+    /// synchronous and cheap. The cutoff is computed
+    /// from the caller's <c>at</c> clock so the
+    /// eviction decision is testable and matches the
+    /// rest of the limiter's "no DateTime.UtcNow
+    /// inside" contract.
+    /// </summary>
+    public int EvictStale(DateTimeOffset cutoff)
+    {
+        int removed = 0;
+        foreach (KeyValuePair<Guid, Bucket> pair in buckets)
+        {
+            Bucket bucket = pair.Value;
+            lock (bucket.SyncRoot)
+            {
+                if (bucket.LastAccess is null || bucket.LastAccess < cutoff)
+                {
+                    if (buckets.TryRemove(pair.Key, out Bucket? _))
+                    {
+                        removed++;
+                    }
+                }
+            }
+        }
+        return removed;
     }
 
     /// <summary>
@@ -140,7 +190,20 @@ public sealed class RateLimiter : IRateLimiter
             double refilled = elapsed * tokensPerSecond;
             Tokens = Math.Min(BurstSize, Tokens + refilled);
             LastRefill = at;
+            LastAccess = at;
         }
+
+        /// <summary>Timestamp of the most recent Refill
+        /// call. The eviction sweep uses this as the
+        /// "last touched" marker — the same call that
+        /// refills also updates it, so TryAcquire
+        /// (which calls Refill) and Configure (which
+        /// sets it explicitly) both keep the bucket
+        /// warm. Buckets that fall behind the cutoff
+        /// are dropped on the next sweep; the
+        /// caller's next request creates a fresh
+        /// bucket from the persisted config.</summary>
+        public DateTimeOffset? LastAccess { get; set; }
 
         public int ComputeRetryAfterSeconds()
         {

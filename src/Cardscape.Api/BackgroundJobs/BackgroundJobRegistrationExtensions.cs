@@ -21,6 +21,7 @@ public static class BackgroundJobRegistrationExtensions
         services.AddSingleton(options);
         services.AddHostedService<BackgroundJobDispatcherService>();
         services.AddHostedService<CardRecurrenceDispatcherService>();
+        services.AddHostedService<RateLimitBucketEvictionService>();
         return services;
     }
 

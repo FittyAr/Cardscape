@@ -223,6 +223,25 @@ end
         }
     }
 
+    public int EvictStale(DateTimeOffset cutoff)
+    {
+        // The Redis implementation is naturally
+        // bounded — the bucket is the hash itself, and
+        // the API token is referenced by a fully-qualified
+        // key. The driver's hash entry TTL is what
+        // bounds memory; we don't track "last access"
+        // per token in Redis because every TryAcquire
+        // re-writes the hash and the natural hot key
+        // would dominate the eviction decision. A
+        // operator who wants hard eviction can set
+        // <c>EXPIRE</c> on the hash key from a
+        // housekeeping job; the in-memory limiter
+        // (the default) is the only one that needs an
+        // explicit sweep because it has no
+        // out-of-process TTL.
+        return 0;
+    }
+
     private RateLimitDecision ExecuteScript(
         Guid tokenId, DateTimeOffset at, int rateLimitPerHour, int burstSize)
     {

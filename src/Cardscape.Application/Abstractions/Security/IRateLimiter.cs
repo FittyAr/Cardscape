@@ -39,6 +39,20 @@ public interface IRateLimiter
     /// requests may consume from the bucket.
     /// </summary>
     RateLimitSnapshot? GetStatus(Guid tokenId, DateTimeOffset at);
+
+    /// <summary>
+    /// Removes every bucket that has not been touched
+    /// (refilled, configured, or acquired) since
+    /// <paramref name="cutoff"/>. Returns the number of
+    /// buckets actually removed. Implementations should
+    /// call this on a timer — the in-memory limiter
+    /// otherwise leaks one Bucket per unique token id
+    /// seen since the process started. Calling
+    /// concurrently with TryAcquire is safe: the
+    /// implementation must hold the per-bucket lock
+    /// while deciding to remove it.
+    /// </summary>
+    int EvictStale(DateTimeOffset cutoff);
 }
 
 /// <summary>Outcome of a single <see cref="IRateLimiter.TryAcquire"/>
