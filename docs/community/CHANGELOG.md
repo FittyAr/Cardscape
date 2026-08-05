@@ -7,6 +7,98 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v1.2.0-pending]
+
+In flight. The full workstream is the conformance
+matrix in [`docs/roadmap/05-plan-v1.2.0.md`](../roadmap/05-plan-v1.2.0.md)
+(26 items, 7 categories). The big themes:
+
+- **GDPR + DSR + user lifecycle** (S1, S2) — soft-delete,
+  anonymise, restrict, admin; DSR export + delete + retention
+  sweeper.
+- **MCP subscription observability** (S3, S9) — event log +
+  admin page + filter/export.
+- **Security regression suite** (S4) — OWASP A01/A03/A04/A07
+  + breached-password list.
+- **Cross-process broadcaster E2E** (S5, F2–F6) — the latent
+  production bugs the E2E test surfaced; the
+  `IDomainEventBroadcaster` direct-call pattern that
+  replaced Wolverine's static-handler-via-bus.
+- **Compliance evidence bundle** (S6) — the script that
+  hands the auditor the project-side controls.
+- **Pen-test RFP + security docs** (S7, S8) — the SOC 2
+  readiness, the GDPR compliance narrative, the
+  coordinated disclosure policy, the four GDPR
+  templates.
+- **SDK multi-target** — `netstandard2.0 + net8.0 + net10.0`,
+  wire-format drift fix, 11 round-trip tests.
+- **JWT revocation** — self-service `POST /api/auth/revoke`,
+  `JwtRevocationValidator` rejects revoked tokens on every
+  request, `RevocationSweeper` purges expired rows every
+  30 minutes.
+- **UI Web drag-and-drop** — HTML5-native, no JS interop
+  (ADR-0009 compliance).
+- **Audit prep** — OWASP ASVS v4.0.3 L1 line-by-line
+  matrix (`docs/security/06-asvs-controls.md`), GDPR
+  Article 30 records of processing template
+  (`docs/security/07-gdpr-article-30.md`), auditor-facing
+  self-assessment narrative
+  (`docs/security/08-self-assessment-narrative.md`). The
+  third-party pen test + SOC 2 Type II audit are explicit
+  v3.0+ work.
+
+### Added (this commit — pen test + SOC 2 / GDPR prep)
+
+- `docs/security/06-asvs-controls.md` — OWASP ASVS v4.0.3
+  Level 1 control matrix. Every V1–V14 section
+  (Architecture, Authentication, Session Management,
+  Access Control, Validation, Stored Cryptography, Error
+  Handling, Data Protection, Communication, Malicious
+  Code, Business Logic, Files, API/Web, Configuration) has
+  an Implemented / Operator-action / Out-of-scope status
+  with the corresponding artifact. The deployer hands
+  this to the pen-test firm as the scope-of-work
+  starting point.
+- `docs/security/07-gdpr-article-30.md` — GDPR Article 30
+  records of processing template. Four processing
+  activities (user account, workspace/board content,
+  MCP resource subscriptions, audit/observability) with
+  purpose, legal basis, categories of data subjects,
+  retention, and security measures. The DPO fills in
+  the OPERATOR fields at deploy time.
+- `docs/security/08-self-assessment-narrative.md` — the
+  auditor's first read. Five-minute summary that maps
+  questions to the right doc. The project-side vs.
+  deployer-side control split is the load-bearing
+  contract. Posture summary table with ✅/❌/partial
+  status. Known limitations (single maintainer, v1.2.0
+  pre-1.0, operator-action sub-processors, `DatabaseLogSink`
+  no-op) the auditor should weigh.
+- `docs/security/README.md` — updated index of the
+  security folder; the new docs are listed in
+  Contents + Quick links.
+- `scripts/compliance-export.ps1` — the bundle's internal
+  README now points the auditor at the self-assessment
+  narrative first, then the ASVS L1 / Article 30
+  matrixes. The header docstring is updated to mention
+  the new deliverables.
+- `docs/roadmap/05-plan-v1.2.0.md` — S6 evidence column
+  updated to mention the ASVS L1 + Article 30 +
+  self-assessment narrative in the bundle; the
+  v3.0+ "Pen test + SOC 2 / GDPR" callout now lists
+  the prep deliverables shipped in v1.2.0.
+
+### What this commit is NOT
+
+- Not a SOC 2 certification. The project does not
+  self-certify; the auditor certifies.
+- Not a pen-test report. The pen-test report comes from
+  the firm the deployer commissions.
+- Not legal advice. The GDPR templates are starting
+  points the deployer's legal counsel must review.
+
+---
+
 ## [v1.1.0-roadmap-execution] — 2026-07-29
 
 Execution release. Closes every gap surfaced by the systematic

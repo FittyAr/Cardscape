@@ -80,7 +80,7 @@ for the v1.3.0 workstream.
 | S3 | MCP: subscription event log + admin page for real-time visibility | operational + audit (AI client connections) | **MEDIUM** | M | ✅ DONE |
 | S4 | Security: regression test suite (OWASP A01/A03/A04/A07) + breached-password list | OWASP ASVS v4.0.3 L1 | **HIGH** | M | ✅ DONE |
 | S5 | E2E: `Cardscape.E2ETests` dual-host fixture + cross-process broadcaster chain (`Api_Mutation_Reaches_Mcp_Broadcaster_Across_Processes`) | v1.3.0 enabler | **MEDIUM** | M | ✅ DONE (5/5 tests; broadcaster chain wired) |
-| S6 | Compliance evidence export script (`scripts/compliance-export.ps1`) | SOC 2 / ISO 27001 / GDPR audit prep | **MEDIUM** | M | ✅ DONE |
+| S6 | Compliance evidence export script (`scripts/compliance-export.ps1`) — bundles the SOC 2 + ASVS L1 (`06-asvs-controls.md`) + Article 30 (`07-gdpr-article-30.md`) + self-assessment narrative (`08-self-assessment-narrative.md`) into one tarball for the deployer's auditor | SOC 2 / ISO 27001 / GDPR audit prep | **MEDIUM** | M | ✅ DONE |
 | S7 | Pen-test RFP template (`docs/security/templates/pen-test-rfp.md`) | coordinated disclosure + RFP process | **MEDIUM** | S | ✅ DONE |
 | S8 | Security docs: GDPR + SOC 2 + coordinated disclosure | v1.2.0 polish (compliance page) | **MEDIUM** | M | ✅ DONE |
 | S9 | UI Web: McpSubscriptions admin page filter + export | operator triage | **MEDIUM** | S | ✅ DONE |
@@ -564,15 +564,25 @@ sustained focus rather than a single PR:
   public URL wants to wire it up.
 - **Pen test + SOC 2 / GDPR (v3.0+ work)** — the
   `docs/security/` folder ships with the v1.2.0
-  deliverables: GDPR + SOC 2 narrative, coordinated
-  disclosure, the RFP template
-  (`docs/security/templates/pen-test-rfp.md`), and
-  `scripts/compliance-export.ps1` (the evidence
-  bundle the deployer hands to the auditor). The
-  third-party review, the accreditation, and the
-  SOC 2 Type II audit are explicit v3.0+ work —
-  the maintainer does not self-certify. The auditor
-  certifies.
+  deliverables: GDPR + SOC 2 narrative
+  (`03-gdpr-compliance.md` +
+  `04-soc2-readiness.md`), coordinated
+  disclosure (`05-vulnerability-disclosure.md`),
+  the OWASP ASVS v4.0.3 L1 line-by-line
+  matrix (`06-asvs-controls.md`), the Article 30
+  records of processing template
+  (`07-gdpr-article-30.md`), the auditor's
+  first read (`08-self-assessment-narrative.md`),
+  the RFP template
+  (`docs/security/templates/pen-test-rfp.md`),
+  and `scripts/compliance-export.ps1` (the
+  evidence bundle the deployer hands to the
+  auditor). The third-party review, the
+  accreditation, and the SOC 2 Type II audit
+  are explicit v3.0+ work — the maintainer
+  does not self-certify. The auditor certifies.
+  The v1.2.0 deliverable is the prep; the
+  v3.0+ deliverable is the certification.
 - ~~**MCP "subscriptions" admin page polish** — the
   v1.2.0 work landed the admin page itself
   (`/admin/mcp-subscriptions`) plus the snapshot

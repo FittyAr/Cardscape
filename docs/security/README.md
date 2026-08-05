@@ -41,6 +41,25 @@
   a security issue; the 90-day
   disclosure window; the safe
   harbour.
+- [`06-asvs-controls.md`](06-asvs-controls.md) —
+  the OWASP ASVS v4.0.3 Level 1
+  control matrix. The line-by-line
+  "Implemented / Operator-action /
+  Out-of-scope" status that the
+  pen-test firm uses to scope
+  their work. The auditor's
+  second read.
+- [`07-gdpr-article-30.md`](07-gdpr-article-30.md) —
+  the GDPR Article 30 records of
+  processing template. The
+  deployer fills in the OPERATOR
+  fields at deploy time; the DPO
+  signs off.
+- [`08-self-assessment-narrative.md`](08-self-assessment-narrative.md) —
+  the auditor-facing one-pager.
+  The first read; tells the
+  auditor which doc to open for
+  which question.
 - [`HALL_OF_FAME.md`](HALL_OF_FAME.md) —
   the public list of reporters who
   submitted a confirmed
@@ -94,6 +113,15 @@ audiences:
 
 ## Quick links
 
+- **First read for the auditor?**
+  [`08-self-assessment-narrative.md`](08-self-assessment-narrative.md)
+- **ASVS L1 line-by-line?**
+  [`06-asvs-controls.md`](06-asvs-controls.md)
+- **SOC 2 Common Criteria mapping?**
+  [`04-soc2-readiness.md`](04-soc2-readiness.md)
+- **GDPR posture + Article 30 records?**
+  [`03-gdpr-compliance.md`](03-gdpr-compliance.md) +
+  [`07-gdpr-article-30.md`](07-gdpr-article-30.md)
 - **Found a security issue?**
   [`05-vulnerability-disclosure.md`](05-vulnerability-disclosure.md)
 - **Need a privacy notice?**
@@ -107,6 +135,9 @@ audiences:
 - **Need a data subject access
   request response?**
   [`templates/dsar-response.md`](templates/dsar-response.md)
+- **Need a pen-test RFP to send
+  to firms?**
+  [`templates/pen-test-rfp.md`](templates/pen-test-rfp.md)
 
 ## Scope: what the project owns vs. what the deployer owns
 

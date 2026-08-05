@@ -15,10 +15,12 @@
     - project version + commit + build configuration
     - dependency list (transitive, pinned versions)
     - migration list (the schema is reproducible)
-    - the SOC 2 readiness doc + the threat model + the secure-
-      coding checklist
-    - the GDPR docs (compliance + breach notification + DPIA
-      templates + DSAR response template)
+    - the self-assessment narrative (auditor's first read)
+    - the SOC 2 readiness doc + the OWASP ASVS v4.0.3 L1 matrix
+    - the threat model + the secure-coding checklist
+    - the GDPR docs (compliance + Article 30 records of
+      processing + breach notification + DPIA + DSAR response
+      templates + privacy notice)
     - the vulnerability disclosure policy + the pen-test RFP
     - the test history (the latest CI run + the test count)
     - the Serilog config (the log retention policy)
@@ -153,10 +155,25 @@ This bundle is the deployer-facing evidence package for the SOC 2
   database and verify the resulting schema matches the deployer's
   production schema.
 - `04-documentation/`:
-  - `security/`: the threat model, secure-coding checklist,
-    GDPR compliance doc, SOC 2 readiness doc, vulnerability
-    disclosure policy, pen-test RFP, and the four GDPR templates
-    (privacy notice, breach notification, DPIA, DSAR response).
+  - `security/`:
+    - `08-self-assessment-narrative.md` — the auditor's first
+      read (5 minutes). Maps questions to the right doc.
+    - `04-soc2-readiness.md` — SOC 2 Common Criteria mapping.
+    - `06-asvs-controls.md` — OWASP ASVS v4.0.3 L1 line-by-line
+      control matrix.
+    - `03-gdpr-compliance.md` — the GDPR posture narrative.
+    - `07-gdpr-article-30.md` — the Article 30 records of
+      processing template (the deployer fills in OPERATOR
+      fields).
+    - `01-threat-model.md` — the STRIDE threat model.
+    - `02-secure-coding-checklist.md` — the rules every
+      contributor follows.
+    - `05-vulnerability-disclosure.md` — the coordinated
+      disclosure policy.
+    - `templates/pen-test-rfp.md` — the request-for-proposal
+      template the deployer sends to pen-test firms.
+    - `templates/{privacy-notice,breach-notification,dpia,
+      dsar-response}.md` — the four GDPR templates.
   - `audits/`: prior audit notes (refactoring, polish, etc.).
   - `adr/`: the architectural decision records.
   - `SECURITY.md`: the project's security posture summary.
@@ -169,17 +186,21 @@ This bundle is the deployer-facing evidence package for the SOC 2
 
 ## What the auditor should do
 
-1. Read `04-documentation/security/04-soc2-readiness.md` first —
-   it maps the project's design decisions to the SOC 2 Common
-   Criteria.
-2. For each control, the readiness doc points at the
+1. Read `04-documentation/security/08-self-assessment-narrative.md`
+   first — the five-minute summary that points at the right doc
+   for each question.
+2. For SOC 2: read `04-soc2-readiness.md` (framework mapping) +
+   `06-asvs-controls.md` (line-by-line control matrix).
+3. For GDPR: read `03-gdpr-compliance.md` (posture narrative) +
+   `07-gdpr-article-30.md` (records of processing template).
+4. For each control, the readiness doc points at the
    corresponding artifact in this bundle.
-3. The auditor's job is to verify the artifacts exist in the
+5. The auditor's job is to verify the artifacts exist in the
    deployer's production environment (e.g. the log retention
    policy in `06-log-retention/` matches the deployer's
    actual Serilog config; the migration list in `03-migrations/`
    matches the deployer's actual database schema).
-4. The auditor's report is the certification. This bundle is
+6. The auditor's report is the certification. This bundle is
    the input to the report, not the report itself.
 
 ## What this bundle is NOT
