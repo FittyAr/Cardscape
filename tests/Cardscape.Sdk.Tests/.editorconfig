@@ -1,0 +1,16 @@
+# Cardscape.Sdk.Tests — local editorconfig overrides
+#
+# xUnit community style for test names is BDD-style sentences with
+# underscores (e.g. `Boards_Get_Async_Hits_The_Expected_Path`). The
+# repo-wide .editorconfig inherits the Microsoft convention which
+# rejects underscores via CA1707; that rule doesn't fit tests.
+# We override here for this project only.
+
+[*.cs]
+# Disable CA1707 (Identifiers should not contain underscores) in
+# this test project so BDD-style test names like
+# `Cards_Move_Async_Posts_The_Expected_Body` are allowed.
+dotnet_diagnostic.CA1707.severity = none
+
+# Make test names readable in test runner output.
+dotnet_diagnostic.CA1709.severity = none

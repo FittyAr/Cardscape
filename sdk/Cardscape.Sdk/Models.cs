@@ -84,15 +84,15 @@ public sealed record BoardListDto(
     [property: JsonPropertyName("id")] Guid Id,
     [property: JsonPropertyName("boardId")] Guid BoardId,
     [property: JsonPropertyName("name")] string Name,
-    [property: JsonPropertyName("position")] int Position,
+    [property: JsonPropertyName("position")] double Position,
     [property: JsonPropertyName("wipLimit")] int? WipLimit,
     [property: JsonPropertyName("isArchived")] bool IsArchived,
-    [property: JsonPropertyName("createdAt")] DateTimeOffset CreatedAt);
+    [property: JsonPropertyName("createdAt")] DateTimeOffset CreatedAt,
+    [property: JsonPropertyName("cardCount")] int CardCount);
 
 public sealed record CreateListRequest(
     [property: JsonPropertyName("boardId")] Guid BoardId,
-    [property: JsonPropertyName("name")] string Name,
-    [property: JsonPropertyName("position")] int? Position = null);
+    [property: JsonPropertyName("name")] string Name);
 
 // ── Cards ──────────────────────────────────────────────
 public sealed record CardDto(
@@ -100,7 +100,7 @@ public sealed record CardDto(
     [property: JsonPropertyName("listId")] Guid ListId,
     [property: JsonPropertyName("title")] string Title,
     [property: JsonPropertyName("description")] string? Description,
-    [property: JsonPropertyName("position")] int Position,
+    [property: JsonPropertyName("position")] double Position,
     [property: JsonPropertyName("dueDate")] DateTimeOffset? DueDate,
     [property: JsonPropertyName("isCompleted")] bool IsCompleted,
     [property: JsonPropertyName("isArchived")] bool IsArchived,
@@ -109,9 +109,7 @@ public sealed record CardDto(
 public sealed record CreateCardRequest(
     [property: JsonPropertyName("listId")] Guid ListId,
     [property: JsonPropertyName("title")] string Title,
-    [property: JsonPropertyName("description")] string? Description = null,
-    [property: JsonPropertyName("position")] int? Position = null,
-    [property: JsonPropertyName("dueDate")] DateTimeOffset? DueDate = null);
+    [property: JsonPropertyName("description")] string? Description = null);
 
 public sealed record UpdateCardRequest(
     [property: JsonPropertyName("title")] string? Title = null,
@@ -119,8 +117,8 @@ public sealed record UpdateCardRequest(
     [property: JsonPropertyName("dueDate")] DateTimeOffset? DueDate = null);
 
 public sealed record MoveCardRequest(
-    [property: JsonPropertyName("targetListId")] Guid TargetListId,
-    [property: JsonPropertyName("position")] int Position);
+    [property: JsonPropertyName("newListId")] Guid NewListId,
+    [property: JsonPropertyName("newPosition")] double NewPosition);
 
 // ── Labels ─────────────────────────────────────────────
 public sealed record LabelDto(

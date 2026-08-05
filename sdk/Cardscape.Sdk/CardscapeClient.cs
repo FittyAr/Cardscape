@@ -51,8 +51,19 @@ public sealed class CardscapeClient : IAsyncDisposable
         _ownsHttp = ownsHttp;
 
         _http.BaseAddress ??= options.BaseAddress;
-
         _http.Timeout = options.HttpTimeout;
+
+        // The sub-clients fan out per-resource; each one routes
+        // through the parent (this) for the actual transport.
+        // The property is declared `null!` so the field can be
+        // initialised here without a circular constructor.
+        Workspaces = new WorkspacesClient(this);
+        Boards = new BoardsClient(this);
+        Lists = new ListsClient(this);
+        Cards = new CardsClient(this);
+        Labels = new LabelsClient(this);
+        Comments = new CommentsClient(this);
+        Activities = new ActivitiesClient(this);
     }
 
     public WorkspacesClient Workspaces { get; private set; } = null!;
@@ -77,9 +88,22 @@ public sealed class CardscapeClient : IAsyncDisposable
         HttpResponseMessage response = await SendCoreAsync(request, ct);
         try
         {
-            response.EnsureSuccessStatusCode();
-            TResult? body = await response.Content.ReadFromJsonAsync<TResult>(_options.JsonOptions, ct);
-            return body ?? throw new CardscapeApiException(
+            if (!response.IsSuccessStatusCode)
+            {
+                // Buffer the body once so we can both surface it
+                // on the exception and free the response stream.
+                string? errorBody = response.Content is null
+                    ? null
+                    : await ReadContentAsStringAsync(response.Content, ct);
+                throw new CardscapeApiException(
+                    code: "cardscape.http_error",
+                    message: $"Cardscape API returned {(int)response.StatusCode} {response.ReasonPhrase}.",
+                    statusCode: (int)response.StatusCode,
+                    responseBody: errorBody);
+            }
+
+            TResult? payload = await response.Content.ReadFromJsonAsync<TResult>(_options.JsonOptions, ct);
+            return payload ?? throw new CardscapeApiException(
                 "cardscape.empty_response",
                 "The server returned a 2xx with an empty body.",
                 (int)response.StatusCode);
@@ -102,6 +126,21 @@ public sealed class CardscapeClient : IAsyncDisposable
         }
 
         return await _http.SendAsync(request, ct);
+    }
+
+    /// <summary>
+    /// netstandard2.0 does not expose
+    /// <c>HttpContent.ReadAsStringAsync(CancellationToken)</c>;
+    /// the multi-target SDK bridges to the net8.0+ overload
+    /// via a single helper so the call site is uniform.
+    /// </summary>
+    private static Task<string> ReadContentAsStringAsync(HttpContent content, CancellationToken ct)
+    {
+#if NETSTANDARD2_0
+        return content.ReadAsStringAsync();
+#else
+        return content.ReadAsStringAsync(ct);
+#endif
     }
 
     public ValueTask DisposeAsync()

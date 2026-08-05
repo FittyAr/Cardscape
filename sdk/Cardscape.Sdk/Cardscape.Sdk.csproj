@@ -10,30 +10,49 @@
   <PropertyGroup>
     <!-- Override the repository-wide <TargetFramework>net10.0</TargetFramework>
          imposed by Directory.Build.props. The SDK is a multi-target
-         package (netstandard2.0 + net8.0). Unsetting TargetFramework
-         here is what makes TargetFrameworks (plural) win. -->
+         package (netstandard2.0 + net8.0 + net10.0). Unsetting
+         TargetFramework here is what makes TargetFrameworks
+         (plural) win. The three target line-up mirrors the
+         LTS support band the deployer is most likely to host
+         the consumer on: netstandard2.0 for legacy / Unity /
+         Xamarin (max compatibility), net8.0 for the current
+         LTS, and net10.0 for the latest LTS. -->
     <TargetFramework></TargetFramework>
-    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
     <RootNamespace>Cardscape.Sdk</RootNamespace>
     <AssemblyName>Cardscape.Sdk</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Cardscape.Sdk</PackageId>
-    <Version>1.1.0</Version>
-    <PackageDescription>Typed C# client for the Cardscape REST API. Hand-written for the 30 most-used endpoints; the rest of the surface stays reachable through the lower-level HttpClient extension methods.</PackageDescription>
-    <PackageTags>cardscape;kanban;trello;mcp;api-client;netstandard2.0</PackageTags>
+    <Version>1.2.0</Version>
+    <PackageDescription>Typed C# client for the Cardscape REST API. Hand-written for the 30 most-used endpoints; the rest of the surface stays reachable through the lower-level HttpClient extension methods. Multi-targets netstandard2.0 + net8.0 + net10.0.</PackageDescription>
+    <PackageTags>cardscape;kanban;trello;mcp;api-client;netstandard2.0;net8.0;net10.0</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
+    <!-- Source Link: the package metadata tells consumers the
+         exact commit + repo the package was built from. -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <DebugType>embedded</DebugType>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <!-- Symbol package (.snupkg) ships side-by-side with the
+         .nupkg so debugging into the SDK from a consumer
+         app lands in the matching source. -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" Condition="'$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- netstandard2.0 needs the explicit packages; net8.0 already
-         has them in the BCL through the FrameworkReference above,
-         so the PackageReferences are conditioned to that target. -->
+    <!-- netstandard2.0 needs the explicit packages; net8.0 and
+         net10.0 already have them in the BCL through the
+         FrameworkReference above, so the PackageReferences are
+         conditioned to the netstandard2.0 target only. -->
     <PackageReference Include="System.Text.Json" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
     <PackageReference Include="System.Net.Http.Json" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
   </ItemGroup>

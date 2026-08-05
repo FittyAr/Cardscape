@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Cardscape.Sdk.Tests</AssemblyName>
+    <RootNamespace>Cardscape.Sdk.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- The SDK is a multi-target package; the test project
+         runs against every supported consumer target so we
+         catch target-conditional code paths at CI time. The
+         target list is the same one in
+         sdk/Cardscape.Sdk/Cardscape.Sdk.csproj. -->
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <Description>Multi-target smoke + serialization tests for the published Cardscape.Sdk package.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Project reference (not PackageReference) so the test
+         project is always in lock-step with the source tree.
+         A round-trip integration check (one test method) also
+         adds a transitive <PackageReference Include="Cardscape.Sdk"/>
+         to verify the package metadata is publishable. -->
+    <ProjectReference Include="..\..\sdk\Cardscape.Sdk\Cardscape.Sdk.csproj" />
+  </ItemGroup>
+
+</Project>
