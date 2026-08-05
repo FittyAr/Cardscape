@@ -1,10 +1,15 @@
 @page "/admin/mcp-subscriptions"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Globalization
+@using System.Text
+@using System.Text.Json
 @using Cardscape.Web.Resources
 @using Cardscape.Web.Services.Api
 @using Microsoft.Extensions.Localization
+@using Microsoft.JSInterop
 @inject IStringLocalizer<SharedResource> L
 @inject IMcpSubscriptionsApiClient McpSubscriptions
+@inject IJSRuntime JS
 @implements IAsyncDisposable
 
 <PageTitle>@L["McpSubscriptionsTitle"] @L["PageTitleSuffix"]</PageTitle>
@@ -77,16 +82,30 @@
             <RadzenStack Gap="0.5rem">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
                     <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H3">@L["McpSubscriptionsEventLogHeader"]</RadzenText>
-                    <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@($"{_snapshot.Events.Count} events")" />
+                    <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@($"{FilteredEvents.Count} / {_snapshot.Events.Count} events")" />
                 </RadzenStack>
+
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    <RadzenDropDown TValue="string" @bind-Value="@_kindFilter" Data="@_kindOptions"
+                                    Placeholder="@L["McpSubscriptionsFilterKindAll"]" Style="min-width: 12rem;" />
+                    <RadzenTextBox @bind-Value="@_uriFilter" Placeholder="@L["McpSubscriptionsFilterUri"]" Style="min-width: 18rem;" />
+                    <RadzenDropDown TValue="string" @bind-Value="@_rangeFilter" Data="@_rangeOptions"
+                                    Placeholder="@L["McpSubscriptionsFilterRange"]" Style="min-width: 12rem;" />
+                    <RadzenDropDown TValue="int" @bind-Value="@_refreshSeconds" Data="@_refreshOptions"
+                                    Placeholder="@L["McpSubscriptionsRefreshInterval"]" Style="min-width: 10rem;" />
+                    <RadzenButton Text="@L["McpSubscriptionsExportCsv"]" ButtonStyle="ButtonStyle.Secondary" Click="@ExportCsvAsync" Disabled="@(FilteredEvents.Count == 0)" />
+                    <RadzenButton Text="@L["McpSubscriptionsExportJson"]" ButtonStyle="ButtonStyle.Secondary" Click="@ExportJsonAsync" Disabled="@(FilteredEvents.Count == 0)" />
+                </RadzenStack>
+
                 <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
-                    @L["McpSubscriptionsEventLogHint"]
+                    @L["McpSubscriptionsFilterMatched", FilteredEvents.Count, _snapshot.Events.Count]
                 </RadzenText>
-                <RadzenDataGrid Data="@_snapshot.Events" TItem="McpSubscriptionEventDto" AllowSorting="true" AllowPaging="true" PageSize="20">
+
+                <RadzenDataGrid Data="@FilteredEvents" TItem="McpSubscriptionEventDto" AllowSorting="true" AllowPaging="true" PageSize="20">
                     <Columns>
                         <RadzenDataGridColumn TItem="McpSubscriptionEventDto" Property="Timestamp" Title="@L["McpSubscriptionsEventTimeColumn"]" Width="14rem">
                             <Template Context="row">
-                                @row.Timestamp.ToString("HH:mm:ss")
+                                @row.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
                             </Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn TItem="McpSubscriptionEventDto" Property="EventKind" Title="@L["McpSubscriptionsEventKindColumn"]" Width="9rem">
@@ -120,37 +139,49 @@
 </RadzenStack>
 
 @code {
-    private const int RefreshIntervalMs = 5000;
+    private const int DefaultRefreshSeconds = 5;
+    private const int OffRefreshSeconds = 0;
+
+    private readonly List<string> _kindOptions = new() { "All", "Subscribed", "Unsubscribed", "Broadcast" };
+    private readonly List<string> _rangeOptions = new() { "LastHour", "LastDay", "All" };
+    private readonly List<int> _refreshOptions = new() { 0, 5, 15, 30 };
 
     private McpSubscriptionsSnapshotDto? _snapshot;
     private string? _error;
     private bool _loading;
+
+    private string _kindFilter = "All";
+    private string _uriFilter = string.Empty;
+    private string _rangeFilter = "LastDay";
+    private int _refreshSeconds = DefaultRefreshSeconds;
+
     private CancellationTokenSource? _refreshCts;
     private Task? _refreshTask;
 
     protected override void OnInitialized()
     {
-        // Auto-refresh loop. The token is cancelled in DisposeAsync
-        // so the loop tears down on navigation away.
         _refreshCts = new CancellationTokenSource();
         _refreshTask = RunAutoRefreshAsync(_refreshCts.Token);
     }
 
     private async Task RunAutoRefreshAsync(CancellationToken ct)
     {
-        // Initial load.
         await LoadAsync();
-
         while (!ct.IsCancellationRequested)
         {
+            int delayMs = _refreshSeconds <= 0
+                ? Timeout.Infinite
+                : _refreshSeconds * 1000;
             try
             {
-                await Task.Delay(RefreshIntervalMs, ct);
+                await Task.Delay(delayMs, ct);
             }
             catch (TaskCanceledException)
             {
                 return;
             }
+            // The user may have changed the interval while
+            // we slept; restart the loop on every change.
             await LoadAsync();
         }
     }
@@ -182,6 +213,38 @@
         }
     }
 
+    private IReadOnlyList<McpSubscriptionEventDto> FilteredEvents
+    {
+        get
+        {
+            if (_snapshot is null)
+            {
+                return Array.Empty<McpSubscriptionEventDto>();
+            }
+            IEnumerable<McpSubscriptionEventDto> query = _snapshot.Events;
+            if (_kindFilter != "All")
+            {
+                query = query.Where(e => string.Equals(e.EventKind, _kindFilter, StringComparison.Ordinal));
+            }
+            if (!string.IsNullOrWhiteSpace(_uriFilter))
+            {
+                string needle = _uriFilter.Trim();
+                query = query.Where(e => e.Uri.Contains(needle, StringComparison.OrdinalIgnoreCase));
+            }
+            if (_rangeFilter != "All" && _snapshot.CapturedAt != default)
+            {
+                DateTimeOffset cutoff = _rangeFilter switch
+                {
+                    "LastHour" => DateTimeOffset.UtcNow.AddHours(-1),
+                    "LastDay" => DateTimeOffset.UtcNow.AddDays(-1),
+                    _ => DateTimeOffset.MinValue
+                };
+                query = query.Where(e => e.Timestamp >= cutoff);
+            }
+            return query.ToList();
+        }
+    }
+
     private int TotalSubscriberCount()
     {
         if (_snapshot is null) return 0;
@@ -195,6 +258,74 @@
         "Broadcast" => BadgeStyle.Info,
         _ => BadgeStyle.Light
     };
+
+    private async Task ExportCsvAsync()
+    {
+        IReadOnlyList<McpSubscriptionEventDto> rows = FilteredEvents;
+        var sb = new StringBuilder();
+        sb.AppendLine("Timestamp,Kind,Uri,SessionId,Detail");
+        foreach (McpSubscriptionEventDto e in rows)
+        {
+            sb.Append(Csv(e.Timestamp.ToString("o", CultureInfo.InvariantCulture))).Append(',');
+            sb.Append(Csv(e.EventKind)).Append(',');
+            sb.Append(Csv(e.Uri)).Append(',');
+            sb.Append(Csv(e.SessionId ?? string.Empty)).Append(',');
+            sb.Append(Csv(e.Detail));
+            sb.AppendLine();
+        }
+        string fileName = $"mcp-events-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}.csv";
+        await DownloadFileAsync(fileName, "text/csv;charset=utf-8", sb.ToString());
+    }
+
+    private async Task ExportJsonAsync()
+    {
+        IReadOnlyList<McpSubscriptionEventDto> rows = FilteredEvents;
+        var export = new
+        {
+            ExportedAt = DateTimeOffset.UtcNow,
+            Filter = new
+            {
+                Kind = _kindFilter,
+                Uri = _uriFilter,
+                Range = _rangeFilter
+            },
+            Count = rows.Count,
+            Events = rows
+        };
+        string json = JsonSerializer.Serialize(export, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        string fileName = $"mcp-events-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}.json";
+        await DownloadFileAsync(fileName, "application/json;charset=utf-8", json);
+    }
+
+    private static string Csv(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+        bool mustQuote = value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r');
+        if (!mustQuote)
+        {
+            return value;
+        }
+        return "\"" + value.Replace("\"", "\"\"") + "\"";
+    }
+
+    private async Task DownloadFileAsync(string fileName, string contentType, string content)
+    {
+        // The browser-side helper writes the file via a
+        // Blob + temporary <a download>. The function is
+        // small enough to inline; if we need it elsewhere
+        // we can move it to a shared JS module.
+        await JS.InvokeVoidAsync(
+            "cardscape.downloadTextFile",
+            fileName,
+            contentType,
+            content);
+    }
 
     public async ValueTask DisposeAsync()
     {

@@ -196,6 +196,21 @@
   <data name="McpSubscriptionsEventKindColumn" xml:space="preserve"><value>Tipo</value></data>
   <data name="McpSubscriptionsSessionColumn" xml:space="preserve"><value>Sesión</value></data>
   <data name="McpSubscriptionsEventDetailColumn" xml:space="preserve"><value>Detalle</value></data>
+  <data name="McpSubscriptionsFilterKind" xml:space="preserve"><value>Filtrar por tipo</value></data>
+  <data name="McpSubscriptionsFilterKindAll" xml:space="preserve"><value>Todos los tipos</value></data>
+  <data name="McpSubscriptionsFilterUri" xml:space="preserve"><value>Filtrar por URI (subcadena)</value></data>
+  <data name="McpSubscriptionsFilterRange" xml:space="preserve"><value>Rango temporal</value></data>
+  <data name="McpSubscriptionsFilterRangeLastHour" xml:space="preserve"><value>Última hora</value></data>
+  <data name="McpSubscriptionsFilterRangeLastDay" xml:space="preserve"><value>Último día</value></data>
+  <data name="McpSubscriptionsFilterRangeAll" xml:space="preserve"><value>Todos (1.000 más recientes)</value></data>
+  <data name="McpSubscriptionsFilterMatched" xml:space="preserve"><value>{0} de {1} eventos coinciden con el filtro actual</value></data>
+  <data name="McpSubscriptionsExportCsv" xml:space="preserve"><value>Exportar CSV</value></data>
+  <data name="McpSubscriptionsExportJson" xml:space="preserve"><value>Exportar JSON</value></data>
+  <data name="McpSubscriptionsRefreshInterval" xml:space="preserve"><value>Auto-refresco</value></data>
+  <data name="McpSubscriptionsRefreshOff" xml:space="preserve"><value>Apagado</value></data>
+  <data name="McpSubscriptionsRefresh5s" xml:space="preserve"><value>Cada 5s</value></data>
+  <data name="McpSubscriptionsRefresh15s" xml:space="preserve"><value>Cada 15s</value></data>
+  <data name="McpSubscriptionsRefresh30s" xml:space="preserve"><value>Cada 30s</value></data>
   <data name="OAuthAppsNameLabel" xml:space="preserve"><value>Nombre de la aplicación</value></data>
   <data name="OAuthAppsRedirectLabel" xml:space="preserve"><value>URI de redirección</value></data>
   <data name="OAuthAppsRedirectHint" xml:space="preserve"><value>A dónde vuelve el navegador después del consentimiento. Debe coincidir exactamente.</value></data>

@@ -194,6 +194,21 @@
   <data name="McpSubscriptionsEventKindColumn" xml:space="preserve"><value>Kind</value></data>
   <data name="McpSubscriptionsSessionColumn" xml:space="preserve"><value>Session</value></data>
   <data name="McpSubscriptionsEventDetailColumn" xml:space="preserve"><value>Detail</value></data>
+  <data name="McpSubscriptionsFilterKind" xml:space="preserve"><value>Filter by kind</value></data>
+  <data name="McpSubscriptionsFilterKindAll" xml:space="preserve"><value>All kinds</value></data>
+  <data name="McpSubscriptionsFilterUri" xml:space="preserve"><value>Filter by URI (substring)</value></data>
+  <data name="McpSubscriptionsFilterRange" xml:space="preserve"><value>Time range</value></data>
+  <data name="McpSubscriptionsFilterRangeLastHour" xml:space="preserve"><value>Last hour</value></data>
+  <data name="McpSubscriptionsFilterRangeLastDay" xml:space="preserve"><value>Last day</value></data>
+  <data name="McpSubscriptionsFilterRangeAll" xml:space="preserve"><value>All (1,000 most recent)</value></data>
+  <data name="McpSubscriptionsFilterMatched" xml:space="preserve"><value>{0} of {1} events match the current filter</value></data>
+  <data name="McpSubscriptionsExportCsv" xml:space="preserve"><value>Export CSV</value></data>
+  <data name="McpSubscriptionsExportJson" xml:space="preserve"><value>Export JSON</value></data>
+  <data name="McpSubscriptionsRefreshInterval" xml:space="preserve"><value>Auto-refresh</value></data>
+  <data name="McpSubscriptionsRefreshOff" xml:space="preserve"><value>Off</value></data>
+  <data name="McpSubscriptionsRefresh5s" xml:space="preserve"><value>Every 5s</value></data>
+  <data name="McpSubscriptionsRefresh15s" xml:space="preserve"><value>Every 15s</value></data>
+  <data name="McpSubscriptionsRefresh30s" xml:space="preserve"><value>Every 30s</value></data>
   <data name="OAuthAppsNameLabel" xml:space="preserve"><value>Application name</value></data>
   <data name="OAuthAppsRedirectLabel" xml:space="preserve"><value>Redirect URI</value></data>
   <data name="OAuthAppsRedirectHint" xml:space="preserve"><value>Where the browser returns the user after consent. Must match exactly.</value></data>
