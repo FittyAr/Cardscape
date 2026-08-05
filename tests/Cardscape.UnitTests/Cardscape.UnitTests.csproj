@@ -29,6 +29,16 @@
     <ProjectReference Include="..\..\src\Cardscape.Domain\Cardscape.Domain.csproj" />
     <ProjectReference Include="..\..\src\Cardscape.Application\Cardscape.Application.csproj" />
     <ProjectReference Include="..\..\src\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
+    <!--
+      Cardscape.Api: needed for the in-process unit tests of
+      AdminOnlyAuthorizationHandler + AdminAuthorizationOptions
+      (the type lives in src/Cardscape.Api/Authentication/).
+      The transitive dependency on the Blazor WASM project is
+      tolerated because the unit test process only references
+      the auth handler; it never instantiates or loads any of
+      the Web types.
+    -->
+    <ProjectReference Include="..\..\src\Cardscape.Api\Cardscape.Api.csproj" />
   </ItemGroup>
 
 </Project>
