@@ -17,14 +17,28 @@ public static class ApplicationServiceCollectionExtensions
     /// and the shared abstractions (<see cref="IClock"/>,
     /// <see cref="ICurrentUser"/>, <see cref="IPasswordHasher"/>,
     /// <see cref="ITokenService"/>).
+    /// <para>
+    /// Optional <paramref name="additionalAssemblies"/> lets the
+    /// caller include static handlers in sibling projects
+    /// (the API hosts its own Wolverine handlers for the
+    /// SignalR / MCP broadcaster; without including the API
+    /// assembly, those handlers are silently skipped and
+    /// the broadcaster never fires).
+    /// </para>
     /// </summary>
-    public static IServiceCollection AddCardscapeApplication(this IServiceCollection services)
+    public static IServiceCollection AddCardscapeApplication(
+        this IServiceCollection services,
+        params Assembly[] additionalAssemblies)
     {
         var assembly = Assembly.GetExecutingAssembly();
 
         services.AddWolverine(opts =>
         {
             opts.Discovery.IncludeAssembly(assembly);
+            foreach (Assembly extra in additionalAssemblies)
+            {
+                opts.Discovery.IncludeAssembly(extra);
+            }
             // EF Core registers DbContextOptions as a scoped factory, which
             // conflicts with Wolverine's default "no service location" policy.
             opts.ServiceLocationPolicy = ServiceLocationPolicy.AllowedButWarn;

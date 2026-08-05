@@ -84,7 +84,7 @@ builder.Services.Configure<Microsoft.AspNetCore.Builder.RequestLocalizationOptio
     };
 });
 
-builder.Services.AddCardscapeApplication();
+builder.Services.AddCardscapeApplication(typeof(Program).Assembly);
 builder.Services.AddCardscapeInfrastructure(builder.Configuration);
 builder.Services.AddApiAuthentication(builder.Configuration);
 

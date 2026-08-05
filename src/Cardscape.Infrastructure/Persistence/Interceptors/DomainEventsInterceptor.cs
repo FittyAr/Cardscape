@@ -68,9 +68,20 @@ public sealed class DomainEventsInterceptor(
     {
         if (eventData.Context is not null)
         {
-            var events = eventData.Context.ChangeTracker
-                .Entries<AggregateRoot<Guid>>()
-                .SelectMany(e => e.Entity.DomainEvents)
+            // EF Core's generic Entries<AggregateRoot<Guid>>() filter does
+            // not match strongly-typed aggregate roots (Card : AggregateRoot<CardId>,
+            // Board : AggregateRoot<BoardId>, ...). The non-generic
+            // IAggregateRoot interface lets us pick every aggregate up
+            // regardless of its identifier type. Without this, the
+            // broadcaster never fires — a latent bug that the cross-process
+            // E2E test exposed.
+            var aggregateEntries = eventData.Context.ChangeTracker
+                .Entries()
+                .Where(e => e.Entity is IAggregateRoot)
+                .ToList();
+
+            var events = aggregateEntries
+                .SelectMany(e => ((IAggregateRoot)e.Entity).DomainEvents)
                 .ToList();
 
             if (events.Count > 0)
@@ -84,9 +95,9 @@ public sealed class DomainEventsInterceptor(
                     logger.LogError(ex, "Failed to dispatch {Count} domain event(s).", events.Count);
                 }
 
-                foreach (var entry in eventData.Context.ChangeTracker.Entries<AggregateRoot<Guid>>())
+                foreach (var entry in aggregateEntries)
                 {
-                    entry.Entity.ClearDomainEvents();
+                    ((IAggregateRoot)entry.Entity).ClearDomainEvents();
                 }
             }
         }
