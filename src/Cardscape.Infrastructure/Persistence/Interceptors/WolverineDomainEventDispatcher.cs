@@ -1,40 +1,74 @@
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Realtime;
 using Cardscape.Domain.Common;
-using Wolverine;
+using Microsoft.Extensions.Logging;
 
 namespace Cardscape.Infrastructure.Persistence.Interceptors;
 
 /// <summary>
-/// Dispatches domain events through the Wolverine
-/// <c>IMessageBus</c>. The events collection is typed as
-/// <see cref="IEnumerable{IDomainEvent}"/>, so a naive
-/// <c>PublishAsync(@event)</c> would infer
-/// <c>T = IDomainEvent</c> and Wolverine would not find
-/// any matching handler (the handlers are typed
-/// <c>Handle(CardCreated, ...)</c>, not
-/// <c>Handle(IDomainEvent, ...)</c>). Reflecting on the
-/// runtime type gives Wolverine the concrete type it needs
-/// to route the event to the right subscriber — including
-/// the static <c>BoardEventBroadcaster.Handle</c> methods
-/// in the Application assembly.
+/// Dispatches domain events through every registered
+/// <see cref="IDomainEventBroadcaster"/>. The original
+/// implementation reflected on the runtime type and called
+/// <c>IMessageBus.PublishAsync&lt;ConcreteType&gt;(@event)</c>,
+/// but Wolverine's static-handler discovery does not enumerate
+/// static methods for events that do not implement
+/// <c>Wolverine.IMessage</c>, and the Domain layer cannot
+/// reference Wolverine without breaking the layered
+/// architecture. The replacement routes every event through
+/// the broadcaster chain directly — the type-based dispatch
+/// lives in each broadcaster's <c>switch (@event) { ... }</c>
+/// expression.
+/// <para>
+/// The dispatcher is registered as scoped (it composes the
+/// <see cref="IDomainEventDispatcher"/> contract); the
+/// broadcasters it resolves are themselves singletons that
+/// create a fresh <see cref="IServiceProvider"/> scope per
+/// event so the EF Core repositories they use are bound to
+/// a short-lived container rather than the SaveChanges
+/// scope.
+/// </para>
 /// </summary>
-public sealed class WolverineDomainEventDispatcher(IMessageBus publisher) : IDomainEventDispatcher
+public sealed class WolverineDomainEventDispatcher : IDomainEventDispatcher
 {
+    private readonly IReadOnlyList<IDomainEventBroadcaster> _broadcasters;
+    private readonly ILogger<WolverineDomainEventDispatcher> _logger;
+
+    public WolverineDomainEventDispatcher(
+        IEnumerable<IDomainEventBroadcaster> broadcasters,
+        ILogger<WolverineDomainEventDispatcher> logger)
+    {
+        _broadcasters = broadcasters.ToList();
+        _logger = logger;
+    }
+
+    /// <summary>Test seam: counts every event handed to a broadcaster.</summary>
     public static int PublishCount;
 
     public async Task DispatchAsync(IEnumerable<IDomainEvent> events, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        foreach (var @event in events)
+        foreach (IDomainEvent @event in events)
         {
-            var publishMethod = typeof(IMessageBus)
-                .GetMethods()
-                .FirstOrDefault(m => m.Name == nameof(IMessageBus.PublishAsync) && m.IsGenericMethodDefinition)
-                ?? throw new InvalidOperationException(
-                    "Wolverine IMessageBus.PublishAsync<T>(T, DeliveryOptions) was not found.");
-            var generic = publishMethod.MakeGenericMethod(@event.GetType());
-            var publishTask = (Task)generic.Invoke(publisher, new object[] { @event, null! })!;
-            await publishTask.ConfigureAwait(false);
+            foreach (IDomainEventBroadcaster broadcaster in _broadcasters)
+            {
+                try
+                {
+                    await broadcaster.BroadcastAsync(@event, ct).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    // Broadcaster failures are best-effort. The
+                    // entity that raised the event is already
+                    // durable; we never want a broadcaster
+                    // exception to mask the SaveChanges
+                    // success.
+                    _logger.LogWarning(
+                        ex,
+                        "Broadcaster {Broadcaster} failed for event {Event}",
+                        broadcaster.GetType().Name,
+                        @event.GetType().Name);
+                }
+            }
             Interlocked.Increment(ref PublishCount);
         }
     }

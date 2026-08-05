@@ -4,7 +4,7 @@
 > **Status**: **PLANNED** — execution starts immediately.
 > **Predecessor**: [`03-execution-plan-v1.1.0.md`](03-execution-plan-v1.1.0.md)
 > (closed all 42 features, all 14 audit gaps G1–G14).
-> **TL;DR**: 8 small items, ~2 sessions, no new feature surface.
+> **TL;DR**: 26 items, ~3 sessions, no new feature surface.
 > The point is to (a) make the docs match reality, (b) close
 > the long tail of polish from the v1.1.0 audit, and
 > (c) build the foundation for the v1.3.0 workstream that
@@ -79,7 +79,7 @@ for the v1.3.0 workstream.
 | S2 | API: AdminOnly policy + 8 DSR endpoints + 6h retention sweeper | GDPR Art. 15/16/17 + Art. 5(1)(e) | **HIGH** | M | ✅ DONE |
 | S3 | MCP: subscription event log + admin page for real-time visibility | operational + audit (AI client connections) | **MEDIUM** | M | ✅ DONE |
 | S4 | Security: regression test suite (OWASP A01/A03/A04/A07) + breached-password list | OWASP ASVS v4.0.3 L1 | **HIGH** | M | ✅ DONE |
-| S5 | E2E: `Cardscape.E2ETests` dual-host fixture (cross-process broadcaster scaffolding) | v1.3.0 enabler | **MEDIUM** | M | ✅ DONE (4/5 tests; broadcaster-chain v1.3.0) |
+| S5 | E2E: `Cardscape.E2ETests` dual-host fixture + cross-process broadcaster chain (`Api_Mutation_Reaches_Mcp_Broadcaster_Across_Processes`) | v1.3.0 enabler | **MEDIUM** | M | ✅ DONE (5/5 tests; broadcaster chain wired) |
 | S6 | Compliance evidence export script (`scripts/compliance-export.ps1`) | SOC 2 / ISO 27001 / GDPR audit prep | **MEDIUM** | M | ✅ DONE |
 | S7 | Pen-test RFP template (`docs/security/templates/pen-test-rfp.md`) | coordinated disclosure + RFP process | **MEDIUM** | S | ✅ DONE |
 | S8 | Security docs: GDPR + SOC 2 + coordinated disclosure | v1.2.0 polish (compliance page) | **MEDIUM** | M | ✅ DONE |
@@ -89,11 +89,12 @@ for the v1.3.0 workstream.
 | F3 | `DomainEventsInterceptor`: aggregate-root filter via non-generic `IAggregateRoot` (was `Entries<AggregateRoot<Guid>>()` — matched nothing) | latent prod bug (no events ever dispatched) | **CRITICAL** | S | ✅ DONE |
 | F4 | `WolverineDomainEventDispatcher`: reflect on runtime type so `bus.PublishAsync<CardCreated>(...)` finds the right subscriber (was inferred as `IDomainEvent`) | latent prod bug (events silently dropped) | **CRITICAL** | S | ✅ DONE |
 | F5 | MCP: `JsonStringEnumConverter` for minimal-API responses (was sending `eventKind: 3` instead of `"Broadcast"`) | latent prod bug (admin page always 503) | **HIGH** | S | ✅ DONE |
+| F6 | Direct-call `IDomainEventBroadcaster` pattern (`WolverineDomainEventDispatcher` no longer uses `IMessageBus.PublishAsync`) | latent prod bug (webhooks + Slack + cross-process broadcaster never fired because Wolverine does not discover static handlers for events that don't implement `IMessage`) | **CRITICAL** | M | ✅ DONE |
 
-**Total: 25 items, 7 categories, ~3 sessions of focused work.**
+**Total: 26 items, 7 categories, ~3 sessions of focused work.**
 D1–D10 close the doc-reconciliation + polish. S1–S9 ship the
 GDPR + DSR + security + E2E + compliance deliverables the
-maintainer added when they accepted the v1.2.0 scope. F1–F5
+maintainer added when they accepted the v1.2.0 scope. F1–F6
 are the latent production bugs the new E2E test surfaced —
 fixing them was a precondition for the S5 deliverable to be
 credible.
@@ -584,7 +585,7 @@ sustained focus rather than a single PR:
   polish + public status page + SDK promotion"
   (to be detailed in a follow-up plan). The
   v1.3.0 backlog also includes:
-  - **Cross-process broadcaster chain E2E
+  - ~~**Cross-process broadcaster chain E2E
     (`McpSubscriptionsCrossProcessTests.Api_Mutation_Reaches_Mcp_Broadcaster_Across_Processes`)** —
     the dual-host fixture (S5) boots both processes
     and validates 4/5 of the cross-process contract;
@@ -612,7 +613,24 @@ sustained focus rather than a single PR:
     dispatcher's `DispatchAsync` invokes
     `XxxAsync` directly via a `switch` on event
     type. Wolverine remains the bus for any
-    other subscribers (webhooks, automation).
+    other subscribers (webhooks, automation).~~
+    ✅ DONE (F6 in this pass). The three
+    `IDomainEventBroadcaster` implementations
+    (`BoardEventBroadcaster`, `WebhookEventBroadcaster`,
+    `SlackEventBroadcaster`) are instance classes in
+    the Application layer. The
+    `WolverineDomainEventDispatcher` resolves
+    `IEnumerable<IDomainEventBroadcaster>` and invokes
+    `BroadcastAsync(@event, ct)` on each one. The type
+    switch is the broadcaster's responsibility
+    (Wolverine discovery is no longer in the picture
+    for domain events). The cross-process E2E
+    `Api_Mutation_Reaches_Mcp_Broadcaster_Across_Processes`
+    passes end-to-end; the 4/5 → 5/5 jump in S5
+    confirms the wiring. The same pattern unblocks
+    the v0 webhooks and Slack notifications
+    broadcasts (the static handlers there were also
+    silently dropped by the same Wolverine constraint).
   - ~~**Dedicated `McpSubscriptionsAdminPolicy`**
     with a cached `IsAdmin` claim to replace
     the per-request `AdminOnlyPolicy` DB lookup

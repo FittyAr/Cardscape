@@ -7,6 +7,8 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Storage;
+using Cardscape.Application.Realtime;
+using Cardscape.Application.Webhooks;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Domain.Authentication.Totp;
@@ -88,6 +90,23 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<DomainEventsInterceptor>();
         services.AddScoped<IDomainEventDispatcher, WolverineDomainEventDispatcher>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // Domain-event fan-out. Three broadcasters run
+        // side-by-side: BoardEventBroadcaster pushes the
+        // realtime update (SignalR + MCP resource
+        // subscription); WebhookEventBroadcaster queues the
+        // matching webhook deliveries on the background-job
+        // scheduler; SlackEventBroadcaster mirrors the same
+        // four events to subscribed Slack channels. All three
+        // are singletons because they create a fresh
+        // IServiceScope per event — the EF Core repositories
+        // they resolve (scoped) cannot live on a singleton
+        // directly.
+        services.AddSingleton<IDomainEventBroadcaster, BoardEventBroadcaster>();
+        services.AddSingleton<IDomainEventBroadcaster, WebhookEventBroadcaster>();
+        services.AddSingleton<
+            IDomainEventBroadcaster,
+            Cardscape.Application.Integrations.Slack.SlackEventBroadcaster>();
 
         services.AddScoped<IRepository<User, UserId>, UserRepository>();
         services.AddScoped<IUserRepository, UserRepository>();

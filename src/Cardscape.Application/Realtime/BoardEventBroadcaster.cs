@@ -7,37 +7,73 @@ using Cardscape.Domain.Labels.Events;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Lists.Events;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Cardscape.Application.Realtime;
 
 /// <summary>
-/// Wolverine static handler that fans every card / list /
-/// comment / label / board domain event out to the
-/// <see cref="IBoardNotifier"/> (SignalR + MCP process).
-/// The class lives in the Application layer so the API's
-/// <c>DomainEventsInterceptor</c> discovery (which now
-/// includes the API assembly via
-/// <c>AddCardscapeApplication(params Assembly[])</c>) finds
-/// it without the Infrastructure layer needing to depend
-/// on the API.
+/// Realtime fan-out for every board-relevant domain
+/// event. The implementation runs the switch on
+/// runtime type because Wolverine's static-handler
+/// discovery does not enumerate static methods for
+/// events that do not implement
+/// <c>Wolverine.IMessage</c>, and the Domain layer
+/// cannot reference Wolverine without breaking the
+/// layered architecture. Instead, the infrastructure
+/// <c>WolverineDomainEventDispatcher</c> invokes
+/// <see cref="IDomainEventBroadcaster.BroadcastAsync"/>
+/// directly — the type-based dispatch lives here.
 /// <para>
-/// The methods receive every dependency as a parameter —
-/// the broadcaster is a thin glue class with no instance
-/// state, so the static method convention is the natural
-/// fit and matches the rest of the Application assembly's
-/// Wolverine handlers.
+/// The broadcaster is registered as a singleton; the
+/// EF Core repositories it depends on are scoped, so
+/// the broadcaster creates a fresh
+/// <see cref="IServiceScope"/> per event (the scope is
+/// disposed when the handler returns). The work is
+/// awaited inline so the
+/// <c>WolverineDomainEventDispatcher.DispatchAsync</c>
+/// pipeline can complete before the scope is disposed.
 /// </para>
 /// </summary>
-public static class BoardEventBroadcaster
+public sealed class BoardEventBroadcaster : IDomainEventBroadcaster
 {
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<BoardEventBroadcaster> _logger;
+
+    public BoardEventBroadcaster(
+        IServiceScopeFactory scopeFactory,
+        ILogger<BoardEventBroadcaster> logger)
+    {
+        _scopeFactory = scopeFactory;
+        _logger = logger;
+    }
+
+    public Task BroadcastAsync(IDomainEvent @event, CancellationToken ct = default) =>
+        @event switch
+        {
+            CardCreated e => HandleCardCreated(e, ct),
+            CardRenamed e => HandleCardRenamed(e, ct),
+            CardMoved e => HandleCardMoved(e, ct),
+            CardCompleted e => BroadcastSimpleCard(e.CardId, e.OccurredAt, c => c.CardCompleted, ct),
+            CardReopened e => BroadcastSimpleCard(e.CardId, e.OccurredAt, c => c.CardReopened, ct),
+            CardArchived e => BroadcastSimpleCard(e.CardId, e.OccurredAt, c => c.CardArchived, ct),
+            CardRestored e => BroadcastSimpleCard(e.CardId, e.OccurredAt, c => c.CardRestored, ct),
+            ListCreated e => HandleListCreated(e, ct),
+            ListRenamed e => HandleListRenamed(e, ct),
+            ListArchived e => HandleListArchived(e, ct),
+            ListRestored e => HandleListRestored(e, ct),
+            CommentAdded e => HandleCommentAdded(e, ct),
+            LabelCreated e => HandleLabelCreated(e, ct),
+            _ => Task.CompletedTask
+        };
+
     // ── Card lifecycle ─────────────────────────────────────────
 
-    public static async Task Handle(
-        CardCreated @event,
-        IBoardListRepository lists,
-        IBoardNotifier notifier,
-        CancellationToken ct)
+    private async Task HandleCardCreated(CardCreated @event, CancellationToken ct)
     {
+        _logger.LogDebug("BoardEventBroadcaster.CardCreated for {CardId}", @event.CardId);
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
+        IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
         BoardList? list = await lists.GetByIdAsync(@event.ListId, ct);
         if (list is null)
         {
@@ -56,13 +92,12 @@ public static class BoardEventBroadcaster
             ct);
     }
 
-    public static async Task Handle(
-        CardRenamed @event,
-        ICardRepository cards,
-        IBoardListRepository lists,
-        IBoardNotifier notifier,
-        CancellationToken ct)
+    private async Task HandleCardRenamed(CardRenamed @event, CancellationToken ct)
     {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
+        IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
+        IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
         Card? card = await cards.GetByIdAsync(@event.CardId, ct);
         if (card is null)
         {
@@ -81,13 +116,12 @@ public static class BoardEventBroadcaster
             ct);
     }
 
-    public static async Task Handle(
-        CardMoved @event,
-        ICardRepository cards,
-        IBoardListRepository lists,
-        IBoardNotifier notifier,
-        CancellationToken ct)
+    private async Task HandleCardMoved(CardMoved @event, CancellationToken ct)
     {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
+        IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
+        IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
         Card? card = await cards.GetByIdAsync(@event.CardId, ct);
         if (card is null)
         {
@@ -107,47 +141,16 @@ public static class BoardEventBroadcaster
             ct);
     }
 
-    public static Task Handle(
-        CardCompleted @event,
-        ICardRepository cards,
-        IBoardListRepository lists,
-        IBoardNotifier notifier,
-        CancellationToken ct) =>
-        BroadcastSimpleCard(@event.CardId, @event.OccurredAt, c => c.CardCompleted, cards, lists, notifier, ct);
-
-    public static Task Handle(
-        CardReopened @event,
-        ICardRepository cards,
-        IBoardListRepository lists,
-        IBoardNotifier notifier,
-        CancellationToken ct) =>
-        BroadcastSimpleCard(@event.CardId, @event.OccurredAt, c => c.CardReopened, cards, lists, notifier, ct);
-
-    public static Task Handle(
-        CardArchived @event,
-        ICardRepository cards,
-        IBoardListRepository lists,
-        IBoardNotifier notifier,
-        CancellationToken ct) =>
-        BroadcastSimpleCard(@event.CardId, @event.OccurredAt, c => c.CardArchived, cards, lists, notifier, ct);
-
-    public static Task Handle(
-        CardRestored @event,
-        ICardRepository cards,
-        IBoardListRepository lists,
-        IBoardNotifier notifier,
-        CancellationToken ct) =>
-        BroadcastSimpleCard(@event.CardId, @event.OccurredAt, c => c.CardRestored, cards, lists, notifier, ct);
-
-    private static async Task BroadcastSimpleCard(
+    private async Task BroadcastSimpleCard(
         CardId cardId,
         DateTimeOffset at,
         Func<IBoardClient, Func<CardEventPayload, Task>> select,
-        ICardRepository cards,
-        IBoardListRepository lists,
-        IBoardNotifier notifier,
         CancellationToken ct)
     {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
+        IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
+        IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
         Card? card = await cards.GetByIdAsync(cardId, ct);
         if (card is null)
         {
@@ -168,11 +171,11 @@ public static class BoardEventBroadcaster
 
     // ── List lifecycle ─────────────────────────────────────────
 
-    public static Task Handle(
-        ListCreated @event,
-        IBoardNotifier notifier,
-        CancellationToken ct) =>
-        notifier.BroadcastAsync(
+    private async Task HandleListCreated(ListCreated @event, CancellationToken ct)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
+        await notifier.BroadcastAsync(
             @event.BoardId.Value,
             c => c.ListCreated(new ListEventPayload(
                 @event.ListId.Value,
@@ -180,13 +183,13 @@ public static class BoardEventBroadcaster
                 @event.Name.Value,
                 @event.OccurredAt)),
             ct);
+    }
 
-    public static async Task Handle(
-        ListRenamed @event,
-        IBoardListRepository lists,
-        IBoardNotifier notifier,
-        CancellationToken ct)
+    private async Task HandleListRenamed(ListRenamed @event, CancellationToken ct)
     {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
+        IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
         BoardList? list = await lists.GetByIdAsync(@event.ListId, ct);
         if (list is null)
         {
@@ -201,12 +204,11 @@ public static class BoardEventBroadcaster
             ct);
     }
 
-    public static async Task Handle(
-        ListArchived @event,
-        IBoardListRepository lists,
-        IBoardNotifier notifier,
-        CancellationToken ct)
+    private async Task HandleListArchived(ListArchived @event, CancellationToken ct)
     {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
+        IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
         BoardList? list = await lists.GetByIdAsync(@event.ListId, ct);
         if (list is null)
         {
@@ -221,12 +223,11 @@ public static class BoardEventBroadcaster
             ct);
     }
 
-    public static async Task Handle(
-        ListRestored @event,
-        IBoardListRepository lists,
-        IBoardNotifier notifier,
-        CancellationToken ct)
+    private async Task HandleListRestored(ListRestored @event, CancellationToken ct)
     {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
+        IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
         BoardList? list = await lists.GetByIdAsync(@event.ListId, ct);
         if (list is null)
         {
@@ -243,13 +244,12 @@ public static class BoardEventBroadcaster
 
     // ── Comments ───────────────────────────────────────────────
 
-    public static async Task Handle(
-        CommentAdded @event,
-        ICardRepository cards,
-        IBoardListRepository lists,
-        IBoardNotifier notifier,
-        CancellationToken ct)
+    private async Task HandleCommentAdded(CommentAdded @event, CancellationToken ct)
     {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
+        IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
+        IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
         Card? card = await cards.GetByIdAsync(@event.CardId, ct);
         if (card is null)
         {
@@ -270,11 +270,11 @@ public static class BoardEventBroadcaster
 
     // ── Labels ─────────────────────────────────────────────────
 
-    public static Task Handle(
-        LabelCreated @event,
-        IBoardNotifier notifier,
-        CancellationToken ct) =>
-        notifier.BroadcastAsync(
+    private async Task HandleLabelCreated(LabelCreated @event, CancellationToken ct)
+    {
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
+        await notifier.BroadcastAsync(
             @event.BoardId.Value,
             c => c.LabelCreated(new LabelEventPayload(
                 @event.LabelId.Value,
@@ -283,6 +283,7 @@ public static class BoardEventBroadcaster
                 @event.Color.Value,
                 @event.OccurredAt)),
             ct);
+    }
 
     // ── helpers ────────────────────────────────────────────────
 
