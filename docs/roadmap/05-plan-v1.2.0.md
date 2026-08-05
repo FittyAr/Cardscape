@@ -63,22 +63,40 @@ for the v1.3.0 workstream.
 
 ## 1. Conformance matrix
 
-| # | Item | Source | Severity | Effort |
-|---|---|---|---|---|
-| D1 | Doc desync: `.NET 11` → `.NET 10 (LTS)` across 15 docs | user directive + actual `global.json` / `Directory.Build.props` | **CRITICAL** (docs lie) | S |
-| D2 | Mark `docs/refactoring/01-audit.md` + `02-plan.md` as historical (work is done) | actual code (`app.css` < 100 lines, 0 IJSRuntime, 0 Bootstrap) | **CRITICAL** (docs lie) | S |
-| D3 | `01-implementation-plan.md` Phase 7 status → DONE + add Phase 8 pointer | v1.1.0 audit closed all 14 gaps | **HIGH** | S |
-| D4 | `community/ROADMAP.md` test counts + SDK version refresh | actual `dotnet test` output (343 + 10 + 1 + 100) | **HIGH** | S |
-| D5 | OpenAPI doc filename `01-` → `02-` (G18) | v1.1.0 audit §5 G18 | **LOW** | S |
-| D6 | RegionGuard integration-test isolation (serial collection + 4th test) | v1.1.0 audit §3 G5 | **DONE** | S |
-| D7 | i18n: rebuild the G12 push (Blazor WASM culture resolution) | v1.1.0 audit §3 G12 (PARTIAL) | **DONE** | L |
-| D8 | CI coverage diff comment (G17) | v1.1.0 audit §5 G17 | **DONE** | M |
-| D9 | i18n: 3 more key slots for the v1.2.0 strings (Language, English, Spanish) | new work in this plan | **DONE** | S |
-| D10 | Cardscape CI status badge in the root README | discoverability | **DONE** | S |
+| # | Item | Source | Severity | Effort | Status |
+|---|---|---|---|---|---|
+| D1 | Doc desync: `.NET 11` → `.NET 10 (LTS)` across 15 docs | user directive + actual `global.json` / `Directory.Build.props` | **CRITICAL** (docs lie) | S | ✅ DONE |
+| D2 | Mark `docs/refactoring/01-audit.md` + `02-plan.md` as historical (work is done) | actual code (`app.css` < 100 lines, 0 IJSRuntime, 0 Bootstrap) | **CRITICAL** (docs lie) | S | ✅ DONE |
+| D3 | `01-implementation-plan.md` Phase 7 status → DONE + add Phase 8 pointer | v1.1.0 audit closed all 14 gaps | **HIGH** | S | ✅ DONE |
+| D4 | `community/ROADMAP.md` test counts + SDK version refresh | actual `dotnet test` output (343 + 10 + 1 + 100) | **HIGH** | S | ✅ DONE |
+| D5 | OpenAPI doc filename `01-` → `02-` (G18) | v1.1.0 audit §5 G18 | **LOW** | S | ✅ DONE |
+| D6 | RegionGuard integration-test isolation (serial collection + 4th test) | v1.1.0 audit §3 G5 | **DONE** | S | ✅ DONE |
+| D7 | i18n: rebuild the G12 push (Blazor WASM culture resolution) | v1.1.0 audit §3 G12 (PARTIAL) | **DONE** | L | ✅ DONE |
+| D8 | CI coverage diff comment (G17) | v1.1.0 audit §5 G17 | **DONE** | M | ✅ DONE |
+| D9 | i18n: 3 more key slots for the v1.2.0 strings (Language, English, Spanish) | new work in this plan | **DONE** | S | ✅ DONE |
+| D10 | Cardscape CI status badge in the root README | discoverability | **DONE** | S | ✅ DONE |
+| S1 | Domain layer: user GDPR lifecycle (soft-delete, anonymise, restrict, admin) | GDPR Art. 17 + Art. 5(1)(e) | **HIGH** | M | ✅ DONE |
+| S2 | API: AdminOnly policy + 8 DSR endpoints + 6h retention sweeper | GDPR Art. 15/16/17 + Art. 5(1)(e) | **HIGH** | M | ✅ DONE |
+| S3 | MCP: subscription event log + admin page for real-time visibility | operational + audit (AI client connections) | **MEDIUM** | M | ✅ DONE |
+| S4 | Security: regression test suite (OWASP A01/A03/A04/A07) + breached-password list | OWASP ASVS v4.0.3 L1 | **HIGH** | M | ✅ DONE |
+| S5 | E2E: `Cardscape.E2ETests` dual-host fixture (cross-process broadcaster scaffolding) | v1.3.0 enabler | **MEDIUM** | M | ✅ DONE (4/5 tests; broadcaster-chain v1.3.0) |
+| S6 | Compliance evidence export script (`scripts/compliance-export.ps1`) | SOC 2 / ISO 27001 / GDPR audit prep | **MEDIUM** | M | ✅ DONE |
+| S7 | Pen-test RFP template (`docs/security/templates/pen-test-rfp.md`) | coordinated disclosure + RFP process | **MEDIUM** | S | ✅ DONE |
+| S8 | Security docs: GDPR + SOC 2 + coordinated disclosure | v1.2.0 polish (compliance page) | **MEDIUM** | M | ✅ DONE |
+| S9 | UI Web: McpSubscriptions admin page filter + export | operator triage | **MEDIUM** | S | ✅ DONE |
+| F1 | `IcsCalendarService` allows anonymous on Public boards (was rejecting on visibility=Public) | bug fix surfaced by ICal integration tests | **HIGH** (latent prod bug) | S | ✅ DONE |
+| F2 | Wolverine discovery: `AddCardscapeApplication` takes `params Assembly[]` for API's static `DomainEventBroadcaster` | latent prod bug (broadcaster never fired) | **HIGH** | S | ✅ DONE |
+| F3 | `DomainEventsInterceptor`: aggregate-root filter via non-generic `IAggregateRoot` (was `Entries<AggregateRoot<Guid>>()` — matched nothing) | latent prod bug (no events ever dispatched) | **CRITICAL** | S | ✅ DONE |
+| F4 | `WolverineDomainEventDispatcher`: reflect on runtime type so `bus.PublishAsync<CardCreated>(...)` finds the right subscriber (was inferred as `IDomainEvent`) | latent prod bug (events silently dropped) | **CRITICAL** | S | ✅ DONE |
+| F5 | MCP: `JsonStringEnumConverter` for minimal-API responses (was sending `eventKind: 3` instead of `"Broadcast"`) | latent prod bug (admin page always 503) | **HIGH** | S | ✅ DONE |
 
-**Total: 10 items, 5 categories, ~2 sessions of focused work.**
-(Of these, D1–D5 and D9–D10 are landing in this PR set
-already — see the checkmarks in the section headers.)
+**Total: 25 items, 7 categories, ~3 sessions of focused work.**
+D1–D10 close the doc-reconciliation + polish. S1–S9 ship the
+GDPR + DSR + security + E2E + compliance deliverables the
+maintainer added when they accepted the v1.2.0 scope. F1–F5
+are the latent production bugs the new E2E test surfaced —
+fixing them was a precondition for the S5 deliverable to be
+credible.
 
 ## 2. Priority 1 — Doc reconciliation (D1–D5)
 
@@ -532,15 +550,28 @@ sustained focus rather than a single PR:
   a hosted service today; the page is dormant
   until the first self-hosted instance with a
   public URL wants to wire it up.
-- **Pen test + SOC 2 / GDPR** — the
-  `docs/security/` folder is in place, but the
-  third-party review and the compliance docs are
-  v3.0+ work.
-- **MCP "subscriptions" follow-up UI** — G14
-  closed the broadcaster end-to-end, but the
-  Web UI does not yet surface the
-  resource-subscription event log. Worth a v1.3.0
-  card.
+- **Pen test + SOC 2 / GDPR (v3.0+ work)** — the
+  `docs/security/` folder ships with the v1.2.0
+  deliverables: GDPR + SOC 2 narrative, coordinated
+  disclosure, the RFP template
+  (`docs/security/templates/pen-test-rfp.md`), and
+  `scripts/compliance-export.ps1` (the evidence
+  bundle the deployer hands to the auditor). The
+  third-party review, the accreditation, and the
+  SOC 2 Type II audit are explicit v3.0+ work —
+  the maintainer does not self-certify. The auditor
+  certifies.
+- **MCP "subscriptions" admin page polish** — the
+  v1.2.0 work landed the admin page itself
+  (`/admin/mcp-subscriptions`) plus the snapshot
+  endpoint. Filter + export (event-kind dropdown,
+  URI substring, time range, auto-refresh, CSV +
+  JSON) shipped in this same workstream (S9). The
+  remaining gap is the dedicated
+  `McpSubscriptionsAdminPolicy` with a cached
+  `IsAdmin` claim instead of the per-request DB
+  lookup the current `AdminOnlyPolicy` does —
+  deferred to v1.3.0.
 
 ## 9. Tracking
 
@@ -550,8 +581,39 @@ sustained focus rather than a single PR:
 - The release tag at the end of the workstream is
   **`v1.2.0`**.
 - After v1.2.0, the v1.3.0 milestone is "long-tail
-  polish + public status page + SDK promotion" (to
-  be detailed in a follow-up plan).
+  polish + public status page + SDK promotion"
+  (to be detailed in a follow-up plan). The
+  v1.3.0 backlog also includes:
+  - **Cross-process broadcaster chain E2E
+    (`McpSubscriptionsCrossProcessTests.Api_Mutation_Reaches_Mcp_Broadcaster_Across_Processes`)** —
+    the dual-host fixture (S5) boots both processes
+    and validates 4/5 of the cross-process contract;
+    the 5th test (card creation → broadcaster →
+    MCP resource-subscription log) requires
+    replacing the static-handler-via-Wolverine-bus
+    pattern with a direct `IDomainEventBroadcaster`
+    interface call from the `DomainEventsInterceptor`
+    chain. The Wolverine static-handler discovery
+    does not pick up the API's
+    `DomainEventBroadcaster` even after the
+    `AddCardscapeApplication(params Assembly[])`
+    fix (F2); the runtime code generation does
+    not enumerate the static method on the static
+    class. The fix is a 3-file refactor: the
+    broadcaster becomes an instance class in the
+    Application layer (the interface only, with
+    the implementation in the API), and the
+    dispatcher's `DispatchAsync` invokes
+    `XxxAsync` directly via a `switch` on event
+    type. Wolverine remains the bus for any
+    other subscribers (webhooks, automation).
+  - **Dedicated `McpSubscriptionsAdminPolicy`**
+    with a cached `IsAdmin` claim to replace
+    the per-request `AdminOnlyPolicy` DB lookup
+    in the `/api/admin/mcp-subscriptions` endpoint.
+  - **G15 coverage** for the P3/P4 paths the v1.1.0
+    push added unit tests for but not integration
+    tests.
 
 ## 10. References
 
