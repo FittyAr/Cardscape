@@ -594,23 +594,41 @@ sustained focus rather than a single PR:
     pattern with a direct `IDomainEventBroadcaster`
     interface call from the `DomainEventsInterceptor`
     chain. The Wolverine static-handler discovery
-    does not pick up the API's
-    `DomainEventBroadcaster` even after the
-    `AddCardscapeApplication(params Assembly[])`
-    fix (F2); the runtime code generation does
-    not enumerate the static method on the static
-    class. The fix is a 3-file refactor: the
-    broadcaster becomes an instance class in the
-    Application layer (the interface only, with
-    the implementation in the API), and the
+    does not pick up the static handlers — even
+    after the broadcaster interfaces and the
+    static `BoardEventBroadcaster` class moved to
+    the Application layer in commit a4413d9. The
+    bus routes by the message's runtime type via
+    `MakeGenericMethod` in the dispatcher
+    (4e38ee7), but the Application assembly's
+    static `Handle` methods are not discovered for
+    events that don't implement `IMessage` (a
+    Wolverine constraint that doesn't apply to
+    commands because they implement `IMessage`).
+    The fix is a 3-file refactor: the broadcaster
+    becomes an instance class in the Application
+    layer (the interface only, with the
+    implementation in the API), and the
     dispatcher's `DispatchAsync` invokes
     `XxxAsync` directly via a `switch` on event
     type. Wolverine remains the bus for any
     other subscribers (webhooks, automation).
-  - **Dedicated `McpSubscriptionsAdminPolicy`**
+  - ~~**Dedicated `McpSubscriptionsAdminPolicy`**
     with a cached `IsAdmin` claim to replace
     the per-request `AdminOnlyPolicy` DB lookup
-    in the `/api/admin/mcp-subscriptions` endpoint.
+    in the `/api/admin/mcp-subscriptions` endpoint.~~
+    ✅ DONE in commit d234571. The
+    `McpSubscriptionsAdminPolicy` name aliases the
+    same `AdminOnlyRequirement`; the
+    `AdminOnlyAuthorizationHandler` reads the
+    `is_admin` claim embedded in the JWT at mint
+    time (no DB roundtrip). The claim falls back to
+    the users-table lookup for pre-v1.2.0 tokens so
+    the migration is automatic. A new
+    `GetSnapshot_Token_Minted_Before_Promotion_Still_Returns_403`
+    test pins the contract so the implementation
+    never silently falls back to the DB lookup for
+    tokens that do carry the claim.
   - **G15 coverage** for the P3/P4 paths the v1.1.0
     push added unit tests for but not integration
     tests.
