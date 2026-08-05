@@ -23,11 +23,32 @@ namespace Cardscape.Domain.Idempotency;
 /// retried write is byte-for-byte identical to the first
 /// attempt.
 /// </para>
+/// <para>
+/// Each row carries an <see cref="ExpiresAt"/>. The
+/// middleware treats a key past its expiry as a miss (the
+/// next caller is free to record a fresh response). Without
+/// an expiry a user-supplied key like <c>"foo"</c> would
+/// replay forever, defeating the at-most-once guarantee
+/// for any later write that happened to share the same
+/// key. The retention window is 24 hours — generous
+/// enough for any reasonable retry window, short enough
+/// that the table does not grow without bound.
+/// </para>
 /// </remarks>
 public sealed class IdempotencyKey : AggregateRoot<IdempotencyKeyId>
 {
     /// <summary>Lowercase hex SHA-256 of the request body.</summary>
     public const int RequestHashLength = 64;
+
+    /// <summary>
+    /// Retention window for a stored response. After this
+    /// the middleware treats a hit as a miss and the
+    /// retention sweeper hard-deletes the row. The value
+    /// is generous on purpose — 24 hours covers any
+    /// realistic retry window including client clock skew
+    /// and network brownouts.
+    /// </summary>
+    public static readonly TimeSpan RetentionWindow = TimeSpan.FromHours(24);
 
     /// <summary>Owner of the key (the user that minted it).</summary>
     public UserId OwnerId { get; private set; } = null!;
@@ -55,6 +76,15 @@ public sealed class IdempotencyKey : AggregateRoot<IdempotencyKeyId>
     /// </summary>
     public string ResponseJson { get; private set; } = string.Empty;
 
+    /// <summary>
+    /// UTC timestamp after which the stored response is
+    /// no longer authoritative. Set at record time to
+    /// <c>at + RetentionWindow</c>; the middleware treats
+    /// a hit past this as a miss and the retention
+    /// sweeper hard-deletes the row.
+    /// </summary>
+    public DateTimeOffset ExpiresAt { get; private set; }
+
     // EF Core.
     private IdempotencyKey() { }
 
@@ -74,6 +104,7 @@ public sealed class IdempotencyKey : AggregateRoot<IdempotencyKeyId>
         ResponseStatusCode = responseStatusCode;
         ResponseJson = responseJson;
         CreatedAt = at;
+        ExpiresAt = at + RetentionWindow;
     }
 
     /// <summary>
@@ -132,4 +163,13 @@ public sealed class IdempotencyKey : AggregateRoot<IdempotencyKeyId>
     public bool MatchesRequest(string requestHash) =>
         !string.IsNullOrWhiteSpace(requestHash)
         && string.Equals(RequestHash, requestHash.ToLowerInvariant(), StringComparison.Ordinal);
+
+    /// <summary>
+    /// True if the stored response is still authoritative
+    /// for replay at <paramref name="now"/>. The
+    /// middleware uses this to drop entries past their
+    /// <see cref="RetentionWindow"/> instead of returning
+    /// a stale response.
+    /// </summary>
+    public bool IsAlive(DateTimeOffset now) => ExpiresAt > now;
 }

@@ -133,7 +133,25 @@ public sealed class RetentionSweeper(
                 activityDeleted, _activityRetentionDays);
         }
 
-        // 3. The audit log entries live in the Serilog
+        // 3. Purge expired idempotency keys. The
+        // middleware also drops entries past their
+        // ExpiresAt at read time, so this sweep is
+        // cosmetic — it just bounds the table size. The
+        // 24h retention is a domain constant on
+        // IdempotencyKey.RetentionWindow; we read it
+        // here so a future change in the domain is
+        // picked up without touching the sweeper.
+        int idempotencyDeleted = await db.IdempotencyKeys
+            .Where(k => k.ExpiresAt <= now)
+            .ExecuteDeleteAsync(ct);
+        if (idempotencyDeleted > 0)
+        {
+            logger.LogInformation(
+                "RetentionSweeper: purged {Count} expired idempotency keys",
+                idempotencyDeleted);
+        }
+
+        // 4. The audit log entries live in the Serilog
         // file destination (rolling daily, 30-day
         // retention via the Serilog file sink config).
         // A future v1.3.0 PR can move the audit log

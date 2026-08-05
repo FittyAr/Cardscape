@@ -188,7 +188,15 @@ public sealed class SuggestCardOwnersCommandHandler(
                 DomainError.NotFound("board.not_found", "Board not found."));
         }
 
-        var candidates = new List<string>();
+        // Build the candidate list locally — we own the
+        // membership data, so the LLM has no business
+        // ranking it. The AI's role is limited to
+        // producing a "reason" for a human-curated
+        // pick. (Previous behaviour fed every member's
+        // email to the provider as part of the prompt —
+        // an obvious privacy leak when the provider is
+        // OpenAI or any third-party LLM.)
+        var candidates = new List<(Guid UserId, string DisplayName)>();
         List<Guid> memberIds = board.Members.Select(m => m.UserId).ToList();
         foreach (Guid memberId in memberIds)
         {
@@ -197,7 +205,7 @@ public sealed class SuggestCardOwnersCommandHandler(
             {
                 continue;
             }
-            candidates.Add($"{user.Id.Value} | {user.DisplayName.Value} | {user.Email.Value}");
+            candidates.Add((user.Id.Value, user.DisplayName.Value));
         }
 
         if (candidates.Count == 0)
@@ -206,10 +214,21 @@ public sealed class SuggestCardOwnersCommandHandler(
                 new AiFeatures.AiOwnerSuggestions([], Model: "rule-based"));
         }
 
+        // The pick is deterministic (the first candidate
+        // by membership order) and never leaves the host.
+        // The AI is asked only for a short human-readable
+        // reason that names the picked member; we do not
+        // send emails or other PII to the provider.
+        var pick = candidates[0];
+
+        string promptUser =
+            $"Card title: {card.Title}\n" +
+            $"Board: {board.Name.Value}\n" +
+            $"Suggested assignee: {pick.DisplayName}\n" +
+            "Write one short sentence explaining why this assignee is a good fit, in the same language as the card title.";
+
         Result<AiTextCompletion> result = await ai.CompleteAsync(
-            new AiPrompt(
-                "suggest-owners",
-                $"Card: {card.Title}\nCandidates (id | name | email):\n{string.Join("\n", candidates)}"),
+            new AiPrompt("suggest-owners", promptUser),
             new AiOptions(Temperature: 0.1, MaxTokens: 256),
             ct);
 
@@ -218,20 +237,15 @@ public sealed class SuggestCardOwnersCommandHandler(
             return Result<AiFeatures.AiOwnerSuggestions>.Failure(result.Error);
         }
 
-        var suggestions = new List<AiFeatures.AiOwnerSuggestion>();
-        if (candidates.Count > 0)
-        {
-            string[] first = candidates[0].Split('|', StringSplitOptions.TrimEntries);
-            if (first.Length >= 3 && Guid.TryParse(first[0], out Guid userIdGuid))
-            {
-                suggestions.Add(new AiFeatures.AiOwnerSuggestion(
-                    UserId: userIdGuid,
-                    DisplayName: first[1],
-                    Reason: result.Value.Text));
-            }
-        }
-
         return Result<AiFeatures.AiOwnerSuggestions>.Success(
-            new AiFeatures.AiOwnerSuggestions(suggestions, result.Value.Model ?? "unknown"));
+            new AiFeatures.AiOwnerSuggestions(
+                Suggestions:
+                [
+                    new AiFeatures.AiOwnerSuggestion(
+                        UserId: pick.UserId,
+                        DisplayName: pick.DisplayName,
+                        Reason: result.Value.Text)
+                ],
+                Model: result.Value.Model ?? "unknown"));
     }
 }

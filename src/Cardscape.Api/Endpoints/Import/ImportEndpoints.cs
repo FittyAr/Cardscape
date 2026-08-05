@@ -13,6 +13,17 @@ namespace Cardscape.Api.Endpoints.Import;
 /// </summary>
 public static class ImportEndpoints
 {
+    /// <summary>
+    /// Maximum size of a Trello boards.json upload. A real
+    /// Trello archive is well under 1 MB; 10 MB gives
+    /// generous headroom for unusually large boards while
+    /// keeping a single authenticated request from becoming
+    /// a DoS amplifier. The same cap is also enforced inside
+    /// the import service so a direct service call (e.g.
+    /// from the MCP) cannot bypass the endpoint cap.
+    /// </summary>
+    public const long MaxUploadBytes = 10 * 1024 * 1024;
+
     public static IEndpointRouteBuilder MapImportEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/imports").RequireAuthorization().WithTags("Imports");
@@ -64,6 +75,17 @@ public static class ImportEndpoints
                     error = "imports.no_file",
                     message = "The 'file' form part is required and must contain a Trello boards.json payload."
                 });
+            }
+
+            // Content-Length is the cheap path: reject before
+            // reading the file into memory. A spoofed or
+            // missing Content-Length is re-checked against
+            // the buffered stream after read.
+            if (file.Length > MaxUploadBytes)
+            {
+                return Results.Problem(
+                    detail: $"Trello boards.json exceeds the {MaxUploadBytes}-byte cap.",
+                    statusCode: StatusCodes.Status413PayloadTooLarge);
             }
 
             await using Stream stream = file.OpenReadStream();

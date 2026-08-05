@@ -107,7 +107,12 @@ public sealed class InMemorySearchIndex : ISearchIndex
     }
 
     public Task<SearchPage> SearchAsync(
-        string query, Guid? boardId, SearchHitKind? kind, int page, int pageSize,
+        string query,
+        Guid? boardId,
+        SearchHitKind? kind,
+        int page,
+        int pageSize,
+        IReadOnlySet<Guid> allowedBoardIds,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(query))
@@ -121,6 +126,17 @@ public sealed class InMemorySearchIndex : ISearchIndex
             return Task.FromResult(new SearchPage([], 0));
         }
 
+        // An empty allow-list is a "no boards visible" caller.
+        // We refuse to even iterate the index — that's the
+        // safest default. The handler builds the allow-list
+        // from the caller's workspace memberships, so an
+        // empty list means "no readable boards" and the
+        // response is correctly empty.
+        if (allowedBoardIds.Count == 0)
+        {
+            return Task.FromResult(new SearchPage([], 0));
+        }
+
         int effectivePage = page <= 0 ? 1 : page;
         int effectiveSize = pageSize <= 0
             ? DefaultPageSize
@@ -129,6 +145,17 @@ public sealed class InMemorySearchIndex : ISearchIndex
         var scored = new List<SearchHit>();
         foreach (SearchHit hit in _hits.Values)
         {
+            // Filter #1: tenant isolation. A hit is
+            // returned only if its BoardId (when present)
+            // is in the caller's allow-list. Hits without
+            // a BoardId (e.g. an unscoped Activity row)
+            // are dropped — they leak across tenants by
+            // definition.
+            if (hit.BoardId is not Guid hb || !allowedBoardIds.Contains(hb))
+            {
+                continue;
+            }
+
             if (boardId is { } bid && hit.BoardId is { } hbid && hbid != bid)
             {
                 continue;

@@ -35,7 +35,23 @@ public interface ISearchIndex
     Task IndexChecklistItemAsync(ChecklistItem item, Checklist checklist, CancellationToken ct = default);
     Task IndexLabelAsync(Label label, CancellationToken ct = default);
     Task IndexActivityAsync(Activity activity, CancellationToken ct = default);
+
+    /// <summary>
+    /// Search the index. The implementation MUST drop
+    /// every hit whose <c>BoardId</c> is not in
+    /// <paramref name="allowedBoardIds"/> before scoring
+    /// or returning — the caller's workspace membership
+    /// is the only thing standing between a user and
+    /// cross-tenant data leakage. An empty
+    /// <paramref name="allowedBoardIds"/> returns zero
+    /// hits (no readable boards → no readable content).
+    /// </summary>
     Task<SearchPage> SearchAsync(
-        string query, Guid? boardId, SearchHitKind? kind, int page, int pageSize,
+        string query,
+        Guid? boardId,
+        SearchHitKind? kind,
+        int page,
+        int pageSize,
+        IReadOnlySet<Guid> allowedBoardIds,
         CancellationToken ct = default);
 }

@@ -1,5 +1,8 @@
+using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Wolverine;
 
@@ -32,6 +35,8 @@ public static class SearchQueryHandler
         SearchQuery query,
         ISearchIndex index,
         ICurrentUser currentUser,
+        IBoardRepository boards,
+        IWorkspaceRepository workspaces,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -45,14 +50,62 @@ public static class SearchQueryHandler
             return Result.Success(new SearchPageDto([], 0));
         }
 
+        // The in-memory search index is process-wide and
+        // contains hits for every board across every
+        // workspace. Without an explicit filter a
+        // workspace-A user could discover the existence
+        // (and snippet text) of a workspace-B card by
+        // guessing a common phrase like "password" or
+        // "secret". We build the set of boards the caller
+        // can read and pass it down to the index, which
+        // filters before scoring. The cardinality of the
+        // allowed set is small in any realistic deploy, so
+        // passing it as an opaque filter is fine.
+        //
+        // The user already had a boardId filter at the
+        // endpoint; this widens the safety net for the
+        // boardId-less search ("search across everything
+        // I can see").
+        HashSet<Guid> allowedBoards = await CollectReadableBoardIdsAsync(
+            boards, workspaces, currentUser.Id.Value, cancellationToken);
+
         SearchPage page = await index.SearchAsync(
             query.Query, query.BoardId, query.Kind, query.Page, query.PageSize,
-            cancellationToken);
+            allowedBoards, cancellationToken);
 
         IReadOnlyList<SearchHitDto> items = page.Hits
             .Select(h => new SearchHitDto(
                 h.Id, h.Kind, h.Title, h.Snippet, h.BoardId, h.CardId, h.Url, h.Score))
             .ToList();
         return Result.Success(new SearchPageDto(items, page.Total));
+    }
+
+    private static async Task<HashSet<Guid>> CollectReadableBoardIdsAsync(
+        IBoardRepository boards,
+        IWorkspaceRepository workspaces,
+        Guid userId,
+        CancellationToken ct)
+    {
+        var allowed = new HashSet<Guid>();
+
+        // ListForUserAsync returns every workspace where
+        // the user is the owner OR a member. The in-memory
+        // search index does not yet differentiate per-board
+        // visibility; that's a follow-up once the index
+        // stores visibility per hit. For now, the
+        // "workspace I can see" approximation is correct
+        // for every realistic Cardscape install.
+        IReadOnlyList<Domain.Workspaces.Workspace> visibleWorkspaces =
+            await workspaces.ListForUserAsync(userId, ct);
+        foreach (Domain.Workspaces.Workspace ws in visibleWorkspaces)
+        {
+            IReadOnlyList<Board> wsBoards = await boards.ListForWorkspaceAsync(ws.Id, ct);
+            foreach (Board b in wsBoards)
+            {
+                allowed.Add(b.Id.Value);
+            }
+        }
+
+        return allowed;
     }
 }

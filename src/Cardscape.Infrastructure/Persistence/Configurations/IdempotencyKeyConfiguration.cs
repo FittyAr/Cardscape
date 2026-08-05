@@ -36,6 +36,9 @@ public sealed class IdempotencyKeyConfiguration : IEntityTypeConfiguration<Idemp
             .HasColumnType("TEXT")
             .IsRequired();
 
+        b.Property(k => k.ExpiresAt).IsRequired();
+        b.HasIndex(k => k.ExpiresAt);
+
         b.Property(k => k.CreatedAt).IsRequired();
         b.Property(k => k.UpdatedAt);
         b.Property(k => k.CreatedBy);

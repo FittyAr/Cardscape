@@ -71,6 +71,35 @@ public sealed class TrelloImportService(
             return Result.Failure<ImportResult>(NotMember);
         }
 
+        // Hard cap on the JSON payload so a direct service
+        // call (e.g. from the MCP, or a future internal
+        // pipeline) cannot bypass the endpoint-level cap on
+        // ImportEndpoints.MaxUploadBytes. A real Trello
+        // boards.json is well under 1 MB; 10 MB is generous
+        // and keeps a single request from becoming a DoS
+        // amplifier. We read once into a MemoryStream to
+        // measure length, then feed System.Text.Json the
+        // buffered bytes so a caller that supplies a
+        // non-seekable stream still gets a deterministic
+        // cap.
+        const int MaxBytes = 10 * 1024 * 1024;
+        if (json.CanSeek && json.Length - json.Position > MaxBytes)
+        {
+            return Result.Failure<ImportResult>(DomainError.Validation(
+                "imports.payload_too_large",
+                $"Trello boards.json exceeds the {MaxBytes}-byte cap."));
+        }
+
+        await using var buffer = new MemoryStream();
+        await json.CopyToAsync(buffer, ct);
+        if (buffer.Length > MaxBytes)
+        {
+            return Result.Failure<ImportResult>(DomainError.Validation(
+                "imports.payload_too_large",
+                $"Trello boards.json exceeds the {MaxBytes}-byte cap."));
+        }
+        buffer.Position = 0;
+
         TrelloBoard[]? trelloBoards;
         try
         {
