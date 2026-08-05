@@ -69,8 +69,22 @@ public interface IOAuthAppService
         string cleartextToken,
         CancellationToken ct);
 
-    /// <summary>Revokes the given access token. Idempotent.</summary>
-    Task<Result> RevokeAccessTokenAsync(string cleartextToken, CancellationToken ct);
+    /// <summary>
+    /// Revokes the given access token, authenticating the
+    /// calling client per RFC 7009. The presentation must
+    /// include the <c>client_id</c> and <c>client_secret</c>
+    /// the third-party app received at registration; the
+    /// service refuses to revoke a token whose
+    /// <see cref="Domain.Integrations.OAuthApps.OAuthAccessToken.AppId"/>
+    /// does not match the supplied client. Unknown tokens
+    /// still return success so the endpoint does not leak
+    /// which tokens existed.
+    /// </summary>
+    Task<Result> RevokeAccessTokenAsync(
+        string cleartextToken,
+        string clientId,
+        string clientSecret,
+        CancellationToken ct);
 
     /// <summary>Returns the user-facing <c>/oauth/userinfo</c>
     /// projection for the token's owner.</summary>

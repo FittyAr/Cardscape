@@ -296,6 +296,8 @@ public sealed class OAuthAppService(
 
     public async Task<Result> RevokeAccessTokenAsync(
         string cleartextToken,
+        string clientId,
+        string clientSecret,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(cleartextToken))
@@ -303,14 +305,62 @@ public sealed class OAuthAppService(
             return Result.Failure(OAuthAppErrors.UnknownAccessToken);
         }
 
+        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+        {
+            return Result.Failure(OAuthAppErrors.InvalidClientSecret);
+        }
+
+        // RFC 7009 §2.1: "The authorization server first
+        // validates the client credentials [...] and then
+        // verifies whether the token was issued to the client
+        // making the revocation request." We look up the
+        // client first, fail on a missing / revoked / bad-secret
+        // presentation, and only then attempt the revocation.
+        // The token lookup happens after the client check so a
+        // bad client_id never reveals whether the token exists.
+        var app = await apps.FindByClientIdAsync(clientId, ct);
+        if (app is null)
+        {
+            logger.LogWarning("OAuth revoke for unknown client {ClientId}.", clientId);
+            return Result.Failure(OAuthAppErrors.InvalidClientSecret);
+        }
+
+        if (app.IsRevoked)
+        {
+            return Result.Failure(OAuthAppErrors.AppRevoked);
+        }
+
+        if (!CryptographicOperations.FixedTimeEquals(
+                Encoding.ASCII.GetBytes(HashSecret(clientSecret)),
+                Encoding.ASCII.GetBytes(app.ClientSecretHash)))
+        {
+            logger.LogWarning("OAuth revoke for client {ClientId} presented an invalid secret.", clientId);
+            return Result.Failure(OAuthAppErrors.InvalidClientSecret);
+        }
+
         string tokenHash = HashSecret(cleartextToken);
         var token = await tokens.FindByTokenHashAsync(tokenHash, ct);
         if (token is null)
         {
-            // RFC 7009 says revocation of an unknown token is
-            // a 200, not a 404, to avoid leaking which tokens
-            // existed. Map to a successful no-op.
+            // RFC 7009 §2.2: revocation of an unknown token
+            // returns 200 so the server does not leak which
+            // tokens existed. The client authenticated
+            // successfully, so this is a clean no-op.
             return Result.Success();
+        }
+
+        // The client knows the token's plaintext; if the
+        // token's AppId does not match the client that is
+        // presenting it, refuse the revoke. A successful
+        // 200 here would otherwise let any client with a
+        // valid secret revoke any token they could guess or
+        // leak the existence of.
+        if (token.AppId != app.Id)
+        {
+            logger.LogWarning(
+                "OAuth revoke rejected: client {ClientId} presented token owned by a different app.",
+                clientId);
+            return Result.Failure(OAuthAppErrors.InvalidClientSecret);
         }
 
         token.Revoke(clock.UtcNow);

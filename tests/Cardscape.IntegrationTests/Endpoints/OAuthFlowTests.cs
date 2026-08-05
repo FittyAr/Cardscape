@@ -94,12 +94,17 @@ public sealed class OAuthFlowTests
         info.Sub.Should().Be(auth.User.Id);
         info.Email.Should().Be(auth.User.Email);
 
-        // 5. Revoke the access token.
+        // 5. Revoke the access token. RFC 7009 requires the
+        //    calling client to authenticate with its own
+        //    client_id + client_secret; the server refuses to
+        //    revoke a token owned by a different client.
         HttpResponseMessage revoke = await client.PostAsync(
             "oauth/revoke",
             new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                ["token"] = token.AccessToken
+                ["token"] = token.AccessToken,
+                ["client_id"] = registration.ClientId,
+                ["client_secret"] = registration.ClientSecret
             }), TestContext.Current.CancellationToken);
         revoke.IsSuccessStatusCode.Should().BeTrue();
 

@@ -134,6 +134,14 @@ app.Services.UseCardscapeBackgroundJobHandlers();
 // ── Middleware pipeline ─────────────────────────────────
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
+// Security headers run before everything else so the
+// headers land on every response — including 401s, 429s,
+// and the GlobalExceptionMiddleware 500 problem-details
+// body. The middleware no-ops on per-request overrides so
+// an endpoint that needs a relaxed policy (none today, but
+// the seam is there) can still set its own value.
+app.UseMiddleware<SecurityHeadersMiddleware>();
+
 // ── Localization middleware ────────────────────────────────
 // Honours the Accept-Language header (or the ?culture= query
 // string override) and sets the current request culture for

@@ -21,7 +21,8 @@ public sealed class ScimAuthenticationHandler(
     IOptionsMonitor<ScimAuthenticationOptions> options,
     ILoggerFactory loggerFactory,
     UrlEncoder encoder,
-    IScimTokenRepository tokens) : AuthenticationHandler<ScimAuthenticationOptions>(options, loggerFactory, encoder)
+    IScimTokenRepository tokens,
+    IUnitOfWork unitOfWork) : AuthenticationHandler<ScimAuthenticationOptions>(options, loggerFactory, encoder)
 {
     public const string SchemeName = "Scim";
     public const string WorkspaceIdItemKey = "scim.workspaceId";
@@ -53,6 +54,36 @@ public sealed class ScimAuthenticationHandler(
 
         Context.Items[WorkspaceIdItemKey] = scimToken.WorkspaceId.Value;
         scimToken.RecordUse(DateTimeOffset.UtcNow);
+
+        // The RecordUse call mutates the aggregate in memory
+        // (sets LastUsedAt) but EF Core never sees the change
+        // unless the surrounding unit of work calls
+        // SaveChanges. The auth handler historically relied
+        // on the per-request ScimEndpoint to flush changes
+        // implicitly — it does not, because the read-only
+        // ListUsersAsync / ListGroupsAsync paths do not
+        // trigger a SaveChanges, so the LastUsedAt column
+        // stayed at its initial value forever. The admin
+        // "this token was last used N days ago" widget was
+        // therefore permanently stale and a leaked token's
+        // "last touched" timestamp was useless for
+        // forensics. Persist here so every successful
+        // request — read or write — bumps the timestamp.
+        try
+        {
+            await unitOfWork.SaveChangesAsync(Context.RequestAborted);
+        }
+        catch (Exception ex)
+        {
+            // A failure to persist the last-used timestamp
+            // must not fail the auth — the operator's audit
+            // trail is best-effort, the IdP's request
+            // is not. Log loudly so a flaky DB is visible.
+            Logger.LogWarning(
+                ex,
+                "Failed to persist SCIM token LastUsedAt for token prefix {Prefix}.",
+                scimToken.TokenPrefix);
+        }
 
         Claim[] claims = [
             new(ClaimTypes.NameIdentifier, scimToken.Id.Value.ToString()),

@@ -168,9 +168,13 @@ public static class OAuthFlowEndpoints
             });
         });
 
-        // /oauth/revoke — RFC 7009 token revocation. A 200
-        // is returned for both known and unknown tokens so
-        // the server doesn't leak which tokens existed.
+        // /oauth/revoke — RFC 7009 token revocation. The
+        // client authenticates with the same client_id /
+        // client_secret it used at /oauth/token; the server
+        // refuses to revoke a token owned by a different
+        // client. A 200 is returned for both known and
+        // unknown tokens (and for an unknown client) so the
+        // server does not leak which tokens existed.
         group.MapPost("/revoke", async (
             HttpContext http,
             [FromServices] IOAuthAppService service,
@@ -187,10 +191,33 @@ public static class OAuthFlowEndpoints
                 });
             }
 
-            var result = await service.RevokeAccessTokenAsync(token, ct);
+            // RFC 7009 §2.1 lets the client authenticate via
+            // either HTTP Basic or form-encoded client_id +
+            // client_secret. Form params is what /oauth/token
+            // uses; we honour the same shape here so existing
+            // third-party SDKs do not need a separate code
+            // path for revoke. Per RFC 6749 §2.3.1 the Basic
+            // form is preferred for confidential clients, so
+            // we also accept the Authorization: Basic header
+            // when present.
+            (string clientId, string clientSecret) = ExtractClientCredentials(http, form);
+            if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+            {
+                return Results.Json(
+                    new
+                    {
+                        error = "invalid_client",
+                        error_description = "client_id and client_secret are required (form params or HTTP Basic auth)."
+                    },
+                    statusCode: StatusCodes.Status401Unauthorized);
+            }
+
+            var result = await service.RevokeAccessTokenAsync(token, clientId, clientSecret, ct);
             return result.IsSuccess
                 ? Results.Ok()
-                : Results.BadRequest(new { error = "invalid_request", error_description = result.Error.Message });
+                : Results.Json(
+                    new { error = "invalid_client", error_description = result.Error.Message },
+                    statusCode: StatusCodes.Status400BadRequest);
         });
 
         // /oauth/userinfo — returns the authenticated
@@ -237,5 +264,51 @@ public static class OAuthFlowEndpoints
         }
 
         return header[7..].Trim();
+    }
+
+    /// <summary>
+    /// Resolve the <c>client_id</c> + <c>client_secret</c>
+    /// pair for a confidential-client call. RFC 7009 §2.1
+    /// (and RFC 6749 §2.3.1) authorise both
+    /// <c>Authorization: Basic</c> and form params; the form
+    /// params win when both are present so the test suite can
+    /// pin the credentials in the body without re-encoding
+    /// the secret on every call.
+    /// </summary>
+    private static (string ClientId, string ClientSecret) ExtractClientCredentials(
+        HttpContext http,
+        IFormCollection form)
+    {
+        string formId = form["client_id"].ToString();
+        string formSecret = form["client_secret"].ToString();
+        if (!string.IsNullOrWhiteSpace(formId) && !string.IsNullOrWhiteSpace(formSecret))
+        {
+            return (formId, formSecret);
+        }
+
+        string? authHeader = http.Request.Headers.Authorization.ToString();
+        if (!string.IsNullOrWhiteSpace(authHeader)
+            && authHeader.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                string decoded = Encoding.UTF8.GetString(
+                    Convert.FromBase64String(authHeader["Basic ".Length..].Trim()));
+                int sep = decoded.IndexOf(':');
+                if (sep > 0 && sep < decoded.Length - 1)
+                {
+                    return (decoded[..sep], decoded[(sep + 1)..]);
+                }
+            }
+            catch (FormatException)
+            {
+                // Malformed Basic header — fall through to the
+                // form-params branch and let the service-layer
+                // validation surface a 401 with the canonical
+                // error_description.
+            }
+        }
+
+        return (formId, formSecret);
     }
 }
