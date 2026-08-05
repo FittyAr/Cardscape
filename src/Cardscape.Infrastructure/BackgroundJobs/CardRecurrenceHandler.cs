@@ -72,13 +72,29 @@ public sealed class CloneCardHandler(
             ? Position.Start().Value
             : sameList.Max(c => c.Position.Value) + 1;
 
+        // The source card was created by a real user. The
+        // CreatedBy Guid is non-null on every card written
+        // through the regular Create path (Card.Create rejects
+        // Guid.Empty), so a null value here is a data-integrity
+        // anomaly we should surface, not paper over with
+        // Guid.Empty. Skipping the clone is safer than creating
+        // a card with a meaningless CreatedBy that downstream
+        // audit and ownership checks would misattribute.
+        if (source.CreatedBy is null || source.CreatedBy.Value == Guid.Empty)
+        {
+            logger.LogWarning(
+                "CloneCardJob: source card {CardId} has no CreatedBy; skipping clone to avoid an unattributed row.",
+                source.Id.Value);
+            return;
+        }
+
         var clone = Card.Create(
             CardId.New(),
             source.ListId,
             source.Title,
             source.Description,
             Position.From(nextPos),
-            source.CreatedBy ?? Guid.Empty,
+            source.CreatedBy.Value,
             clock.UtcNow);
         if (clone.IsFailure)
         {

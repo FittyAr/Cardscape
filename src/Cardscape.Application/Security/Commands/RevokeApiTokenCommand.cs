@@ -33,6 +33,14 @@ public static class RevokeApiTokenCommandHandler
                 "security.api_token.not_found", "API token was not found."));
         }
 
-        return await tokens.RevokeAsync(existing.Id, command.Reason, cancellationToken);
+        // Audit trail: the revoke call below records the actual
+        // revoker on the row. The handler used to pass
+        // Guid.Empty (the service signature defaults `by` to
+        // Guid.Empty), which produced a NULL-looking revoker
+        // id on the row and broke the audit log. The service
+        // already requires the caller to be the token owner
+        // (the UserId check above), so passing the caller's id
+        // is both correct and consistent.
+        return await tokens.RevokeAsync(existing.Id, currentUser.Id.Value, command.Reason, cancellationToken);
     }
 }

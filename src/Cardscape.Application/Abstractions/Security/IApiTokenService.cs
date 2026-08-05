@@ -47,8 +47,15 @@ public interface IApiTokenService
     /// </summary>
     Task<Result<ApiTokenValidation>> ValidateAsync(string cleartextSecret, CancellationToken ct);
 
-    /// <summary>Revokes the given token. Idempotent.</summary>
-    Task<Result> RevokeAsync(ApiTokenId id, string? reason, CancellationToken ct);
+    /// <summary>
+    /// Revokes the given token. Idempotent. The <paramref name="by"/>
+    /// argument is the user id of the revoker; the audit row on the
+    /// token carries it so the audit log can tell "self-revoke"
+    /// from "admin revoke" once a future admin endpoint lands.
+    /// <paramref name="by"/> must not be <see cref="Guid.Empty"/>;
+    /// the call is rejected with a validation error otherwise.
+    /// </summary>
+    Task<Result> RevokeAsync(ApiTokenId id, Guid by, string? reason, CancellationToken ct);
 
     /// <summary>Lists every token owned by the given user. Used
     /// by the Web UI "API tokens" page.</summary>

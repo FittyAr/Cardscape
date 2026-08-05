@@ -111,7 +111,7 @@ public sealed class ApiTokenService(
             token.Scopes.Values.Select(s => s.ToWire()).ToList()));
     }
 
-    public async Task<Result> RevokeAsync(ApiTokenId id, string? reason, CancellationToken ct)
+    public async Task<Result> RevokeAsync(ApiTokenId id, Guid by, string? reason, CancellationToken ct)
     {
         var token = await repository.GetByIdAsync(id, ct);
         if (token is null)
@@ -120,7 +120,17 @@ public sealed class ApiTokenService(
                 "security.api_token.not_found", "API token was not found."));
         }
 
-        var result = token.Revoke(by: Guid.Empty, reason, clock.UtcNow);
+        if (by == Guid.Empty)
+        {
+            // The audit log records who revoked a token; an
+            // empty Guid is meaningless. Refuse rather than
+            // silently persisting a NULL-looking revoker.
+            return Result.Failure(DomainError.Validation(
+                "security.api_token.revoker_required",
+                "Revoker user id is required to revoke an API token."));
+        }
+
+        var result = token.Revoke(by, reason, clock.UtcNow);
         if (result.IsFailure)
         {
             return result;

@@ -142,6 +142,48 @@ public sealed class IcsCalendarService(
             }
         }
 
-        return sb.ToString();
+        return Fold(sb.ToString());
+    }
+
+    /// <summary>
+    /// RFC 5545 §3.1 requires content lines (after unfolding
+    /// escapes) to be no longer than 75 octets; longer lines
+    /// are split with a CRLF + space. We measure UTF-8 octets,
+    /// not chars, so multi-byte characters don't break the
+    /// budget. Lines that would start with a space or tab get
+    /// a CRLF only (no leading whitespace), per the spec.
+    /// </summary>
+    private static string Fold(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return text;
+        }
+
+        byte[] bytes = Encoding.UTF8.GetBytes(text);
+        if (bytes.Length <= 75)
+        {
+            return text;
+        }
+
+        var output = new StringBuilder(text.Length + 16);
+        var currentLine = new List<byte>(75);
+        foreach (byte b in bytes)
+        {
+            if (currentLine.Count >= 75)
+            {
+                output.Append(Encoding.UTF8.GetString(currentLine.ToArray()));
+                currentLine.Clear();
+                // Continuation line starts with a single space
+                // so the unfolded result matches the original.
+                output.Append("\r\n ");
+            }
+            currentLine.Add(b);
+        }
+        if (currentLine.Count > 0)
+        {
+            output.Append(Encoding.UTF8.GetString(currentLine.ToArray()));
+        }
+        return output.ToString();
     }
 }
