@@ -81,6 +81,31 @@ public sealed class OAuthApp : AggregateRoot<OAuthAppId>
                 "oauth.redirect_uri_required", "At least one redirect URI is required."));
         }
 
+        // Each registered redirect URI must be a valid
+        // absolute http(s) URL. The v1.2.0 audit (pass 10)
+        // observed that the previous incarnation accepted
+        // any string — a malicious app owner could register
+        // a javascript: URI, then have the /oauth/authorize
+        // endpoint redirect the bearer (with the code in
+        // the query string) to that URI, which is a
+        // textbook XSS-as-OAuth-redirect vector. The
+        // defence is at registration time (cheaper to
+        // reject) and re-validated in IssueAuthorizationCode
+        // (defence in depth — a future refactor that lets
+        // the redirect URI list be edited without going
+        // through Register cannot accidentally weaken the
+        // check).
+        foreach (string raw in redirectUris)
+        {
+            if (!Uri.TryCreate(raw, UriKind.Absolute, out Uri? parsed)
+                || (parsed.Scheme != Uri.UriSchemeHttp && parsed.Scheme != Uri.UriSchemeHttps))
+            {
+                return Result.Failure<OAuthApp>(DomainError.Validation(
+                    "oauth.redirect_uri_invalid",
+                    $"Redirect URI '{raw}' must be an absolute http(s) URL."));
+            }
+        }
+
         return Result.Success(new OAuthApp(
             id,
             name.Trim(),

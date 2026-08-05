@@ -158,6 +158,24 @@ public sealed class OAuthAppService(
                 $"Redirect URI {redirectUri} not registered for app {app.Id}.");
         }
 
+        // Defence in depth: even if a future refactor
+        // edits the RedirectUris list through a path that
+        // bypasses the OAuthApp.Register validation
+        // (a UI in the Web app, an admin migration, a
+        // bulk import), the authorize endpoint must
+        // refuse to redirect the bearer to a non-http(s)
+        // URL. Without this check a malicious owner who
+        // somehow got a javascript: URI past Register
+        // could turn the /oauth/authorize endpoint into
+        // an XSS sink. The cost is one Uri.TryCreate per
+        // authorize call; the safety is permanent.
+        if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out Uri? parsed)
+            || (parsed.Scheme != Uri.UriSchemeHttp && parsed.Scheme != Uri.UriSchemeHttps))
+        {
+            throw new InvalidOperationException(
+                $"Redirect URI {redirectUri} is not an absolute http(s) URL.");
+        }
+
         string cleartext = GenerateSecret();
         string codeHash = HashSecret(cleartext);
         DateTimeOffset now = clock.UtcNow;
