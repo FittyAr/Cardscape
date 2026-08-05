@@ -44,7 +44,7 @@ public static class OAuthFlowEndpoints
         // Cardscape; if not, the middleware redirects them
         // to /login?returnUrl=/oauth/authorize?... via the
         // standard authentication challenge.
-        group.MapGet("/authorize", (
+        group.MapGet("/authorize", async (
             [FromQuery] string? client_id,
             [FromQuery] string? redirect_uri,
             [FromQuery] string? scope,
@@ -86,15 +86,22 @@ public static class OAuthFlowEndpoints
                 ? []
                 : scope.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
+            // The minimal-API endpoint is sync-by-design;
+            // awaiting the bus call avoids the
+            // .GetAwaiter().GetResult() deadlock risk under
+            // a sync context. A failure of the service (an
+            // unregistered redirect_uri, a revoked app)
+            // surfaces as an invalid_request so the IdP
+            // surfaces a clean OAuth-style error to the user.
             OAuthAuthorizationCodeIssuance issuance;
             try
             {
-                issuance = service.IssueAuthorizationCodeAsync(
+                issuance = await service.IssueAuthorizationCodeAsync(
                     client_id,
                     userId,
                     redirect_uri,
                     scopes,
-                    ct).GetAwaiter().GetResult();
+                    ct);
             }
             catch (InvalidOperationException ex)
             {

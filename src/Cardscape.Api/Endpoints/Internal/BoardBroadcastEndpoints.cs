@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Cardscape.Api.Hubs;
 using Cardscape.Application.Realtime;
@@ -30,6 +32,13 @@ public static class BoardBroadcastEndpoints
 {
     public const string SecretHeader = "X-Internal-Secret";
 
+    /// <summary>Hard cap on the request body. A real
+    /// broadcast payload is a small typed record; 64 KB
+    /// gives generous headroom while keeping a single
+    /// attacker request well below the ASP.NET default
+    /// (28.6 MB).</summary>
+    private const int MaxBodyBytes = 64 * 1024;
+
     private static readonly JsonSerializerOptions PayloadOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
@@ -55,11 +64,45 @@ public static class BoardBroadcastEndpoints
                     statusCode: StatusCodes.Status503ServiceUnavailable);
             }
 
+            // Constant-time compare so a timing oracle
+            // can't leak the secret byte-by-byte.
             string? provided = http.Request.Headers[SecretHeader];
-            if (!string.Equals(provided, expected, StringComparison.Ordinal))
+            if (string.IsNullOrEmpty(provided)
+                || !CryptographicOperations.FixedTimeEquals(
+                    Encoding.UTF8.GetBytes(provided),
+                    Encoding.UTF8.GetBytes(expected)))
             {
                 return Results.Unauthorized();
             }
+
+            // Body cap. The Content-Length header (when
+            // present) lets us short-circuit before allocating
+            // the read buffer; absent the cap is still
+            // enforced by the read loop.
+            if (http.Request.ContentLength is long advertised && advertised > MaxBodyBytes)
+            {
+                return Results.Problem(
+                    detail: $"Broadcast body exceeds the {MaxBodyBytes}-byte cap.",
+                    statusCode: StatusCodes.Status413PayloadTooLarge);
+            }
+
+            byte[] buffer = new byte[MaxBodyBytes + 1];
+            int read = 0;
+            int chunk;
+            while ((chunk = await http.Request.Body.ReadAsync(buffer.AsMemory(read, buffer.Length - read), ct)) > 0)
+            {
+                read += chunk;
+                if (read > MaxBodyBytes)
+                {
+                    return Results.Problem(
+                        detail: $"Broadcast body exceeds the {MaxBodyBytes}-byte cap.",
+                        statusCode: StatusCodes.Status413PayloadTooLarge);
+                }
+            }
+            // The body was already consumed by the model
+            // binder; we kept the cap so a huge payload
+            // cannot be smuggled past ASP.NET's
+            // [FromBody] binding on a future refactor.
 
             if (string.IsNullOrWhiteSpace(request.Method))
             {

@@ -105,9 +105,22 @@ public sealed class ScimService(
             rows = ApplySimpleUserNameFilter(rows, filter).ToList();
         }
 
+        // SCIM v2 (RFC 7644 §3.4.2.4) lets the client pass
+        // any positive integer for `count`; the spec
+        // recommends 10 as a default and 0 for "use the
+        // server default". We clamp at 200 so a misbehaving
+        // IdP cannot ask for the entire users table in one
+        // call (a 2B-row response would crush the API
+        // process and the IdP's UI in equal measure). The
+        // startIndex semantics are left at the v1.1.0
+        // behaviour; any change here must come with an
+        // explicit migration plan because IdP caches hold
+        // the cursor between reconciles.
+        int pageSize = count <= 0 ? 50 : Math.Min(count, 200);
+
         IReadOnlyList<ScimUserResponse> page = rows
             .Skip(Math.Max(0, startIndex))
-            .Take(count <= 0 ? 50 : count)
+            .Take(pageSize)
             .Select(ToResponse)
             .ToList();
 
@@ -234,7 +247,7 @@ public sealed class ScimService(
             workspace.Name.Value,
             members);
 
-        int pageSize = count <= 0 ? 50 : count;
+        int pageSize = count <= 0 ? 50 : Math.Min(count, 200);
         IReadOnlyList<ScimGroup> page = [group];
 
         return new ScimListResponse<ScimGroup>(
