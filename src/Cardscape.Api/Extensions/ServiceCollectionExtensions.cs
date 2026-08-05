@@ -251,14 +251,32 @@ public static class ServiceCollectionExtensions
         services.AddAuthorization(options =>
         {
             // AdminOnly policy: a request passes when the
-            // authenticated principal maps to a User row
-            // whose IsAdmin flag is set. The handler does
-            // the per-request DB lookup. Used by
-            // /api/admin/* endpoints (GDPR DSR, MCP
-            // subscription snapshot, SOC 2 control
-            // evidence export, etc.).
+            // authenticated principal carries the
+            // <c>is_admin</c> claim embedded in the JWT
+            // at mint time (no DB lookup). Falls back to a
+            // users-table lookup for pre-v1.2.0 tokens that
+            // don't carry the claim, so the migration is
+            // automatic and existing sessions keep working
+            // until they expire. Used by the
+            // /api/admin/* endpoints (GDPR DSR, SOC 2
+            // control evidence export, etc.).
             options.AddPolicy(
                 AdminOnlyPolicy.Name,
+                policy => policy
+                    .RequireAuthenticatedUser()
+                    .AddRequirements(new AdminOnlyRequirement()));
+
+            // McpSubscriptionsAdmin: dedicated policy name
+            // for the /api/admin/mcp-subscriptions endpoint
+            // (subscription snapshot the Web UI's admin
+            // page reads). Reuses the AdminOnlyRequirement
+            // + cached-claim path; the distinct name is the
+            // seam the operator uses to attach dedicated
+            // telemetry, rate limits, or audit hooks in
+            // future v1.3.0 work without affecting the
+            // rest of the admin surface.
+            options.AddPolicy(
+                McpSubscriptionsAdminPolicy.Name,
                 policy => policy
                     .RequireAuthenticatedUser()
                     .AddRequirements(new AdminOnlyRequirement()));

@@ -16,8 +16,9 @@ namespace Cardscape.Api.Endpoints.Admin;
 /// endpoint over HTTP (using the same shared internal
 /// secret the API uses for the reverse direction).
 ///
-/// Gated by the <see cref="AdminOnlyPolicy"/>: only users
-/// whose <c>IsAdmin</c> flag is set can call it. The
+/// Gated by the <see cref="McpSubscriptionsAdminPolicy"/>:
+/// the handler reads the <c>is_admin</c> claim embedded in
+/// the JWT at mint time (no per-request DB lookup). The
 /// subscription event log discloses the per-URI session
 /// ids of every connected AI client, which is sensitive
 /// operational metadata — non-admin users (even
@@ -28,7 +29,7 @@ public static class McpSubscriptionsAdminEndpoints
     public static IEndpointRouteBuilder MapMcpSubscriptionsAdminEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/admin/mcp-subscriptions")
-            .RequireAuthorization(AdminOnlyPolicy.Name)
+            .RequireAuthorization(McpSubscriptionsAdminPolicy.Name)
             .WithTags("Admin.McpSubscriptions");
 
         group.MapGet("/", async Task<IResult> (McpSubscriptionsClient client, CancellationToken ct) =>

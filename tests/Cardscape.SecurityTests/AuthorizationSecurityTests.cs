@@ -95,14 +95,80 @@ public sealed class AuthorizationSecurityTests
 
     private async Task<HttpClient> CreateAdminClientAsync()
     {
-        HttpClient client = await CreateAuthenticatedClientAsync();
-        HttpResponseMessage promote = await client.PostAsync(
+        // Register, promote, then re-login so the new
+        // JWT carries the is_admin claim. The
+        // AdminOnlyPolicy reads the cached claim (no
+        // DB lookup); a stale token would 403.
+        HttpClient firstClient = await CreateAuthenticatedClientAsync();
+        HttpResponseMessage promote = await firstClient.PostAsync(
             "api/dev/promote-self-admin", content: null,
             TestContext.Current.CancellationToken);
         promote.IsSuccessStatusCode.Should().BeTrue(
             "the dev promote endpoint should accept the authenticated user " +
             "in Development; the regression is the endpoint stopped working");
-        return client;
+
+        // Re-register to recover the email + password
+        // pair (the original CreateAuthenticatedClientAsync
+        // helper doesn't keep them around). The
+        // /api/auth/login endpoint accepts the same
+        // credentials the registration used, so the
+        // new JWT carries the fresh is_admin claim.
+        string email = $"sec-admin-{Guid.NewGuid():N}@cardscape.local";
+        var register = new
+        {
+            email,
+            displayName = "Security (admin)",
+            password = "Goodpass123!"
+        };
+        HttpResponseMessage r = await firstClient.PostAsJsonAsync(
+            "api/auth/register", register, TestContext.Current.CancellationToken);
+        r.IsSuccessStatusCode.Should().BeTrue();
+        AuthResponse firstAuth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+
+        // Promote the just-registered user (the
+        // firstClient is already promoted; promoting
+        // (The dev endpoint accepts any authenticated
+        // user and promotes the calling user — we just
+        // need the new user's bearer. Re-login gives
+        // us the new bearer; promote is a no-op because
+        // the first user is already admin.)
+        // The new login response is in firstClient's
+        // DefaultRequestHeaders now; promote by reusing
+        // the dev endpoint with the new bearer.
+        HttpClient secondClient = _factory.CreateApiClient();
+        HttpResponseMessage login = await secondClient.PostAsJsonAsync(
+            "api/auth/login", new { email, password = register.password },
+            TestContext.Current.CancellationToken);
+        login.IsSuccessStatusCode.Should().BeTrue();
+        AuthResponse auth = (await login.Content.ReadFromJsonAsync<AuthResponse>())!;
+        // The first login promoted nothing; promote
+        // the second user explicitly. We need their
+        // bearer, which auth holds.
+        // (The dev endpoint accepts any authenticated
+        // user and promotes the calling user — we just
+        // need the new user's bearer.)
+        // First use the second user's bearer to promote.
+        secondClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        HttpResponseMessage promoteNew = await secondClient.PostAsync(
+            "api/dev/promote-self-admin", content: null,
+            TestContext.Current.CancellationToken);
+        promoteNew.IsSuccessStatusCode.Should().BeTrue();
+
+        // Re-login to get a JWT with the fresh
+        // is_admin claim.
+        HttpClient adminClient = _factory.CreateApiClient();
+        HttpResponseMessage reLogin = await adminClient.PostAsJsonAsync(
+            "api/auth/login", new { email, password = register.password },
+            TestContext.Current.CancellationToken);
+        reLogin.IsSuccessStatusCode.Should().BeTrue();
+        AuthResponse adminAuth = (await reLogin.Content.ReadFromJsonAsync<AuthResponse>())!;
+        adminClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", adminAuth.AccessToken);
+        // Suppress the unused warnings on the
+        // intermediate locals.
+        _ = firstAuth;
+        return adminClient;
     }
 
     private static async Task<AuthResponse> RegisterUserAsync(

@@ -162,23 +162,13 @@ public sealed class UserDsrAdminEndpointTests
 
     // ── helpers ─────────────────────────────────────────────
 
-    private async Task<HttpClient> CreateAuthenticatedClientAsync()
-    {
-        HttpClient client = _factory.CreateApiClient();
-        string email = $"dsr-{Guid.NewGuid():N}@cardscape.local";
-        RegisterRequest register = new(email, "DSR Tester", "Password123!");
-        HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
-        r.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
-        return client;
-    }
+    private async Task<HttpClient> CreateAuthenticatedClientAsync() =>
+        (await CreateRegisteredClientAsync()).Client;
 
     private async Task<HttpClient> CreateAdminClientAsync()
     {
-        HttpClient client = await CreateAuthenticatedClientAsync();
-        HttpResponseMessage promote = await client.PostAsync(
+        (HttpClient firstClient, string email) = await CreateRegisteredClientAsync();
+        HttpResponseMessage promote = await firstClient.PostAsync(
             "api/dev/promote-self-admin", content: null, TestContext.Current.CancellationToken);
         if (!promote.IsSuccessStatusCode)
         {
@@ -186,7 +176,34 @@ public sealed class UserDsrAdminEndpointTests
             throw new Xunit.Sdk.XunitException(
                 $"promote-self-admin returned {(int)promote.StatusCode} {promote.StatusCode}. Body: {body}");
         }
+
+        // Re-login so the new JWT carries the is_admin
+        // claim. The AdminOnlyPolicy reads the cached
+        // claim (no DB lookup); a stale token from
+        // before the promotion would 403.
+        HttpClient client = _factory.CreateApiClient();
+        HttpResponseMessage login = await client.PostAsJsonAsync(
+            "api/auth/login", new { email, password = "Password123!" },
+            TestContext.Current.CancellationToken);
+        login.IsSuccessStatusCode.Should().BeTrue(
+            "after promote-self-admin, the user should be able to log in with the same password");
+        AuthResponse auth = (await login.Content.ReadFromJsonAsync<AuthResponse>())!;
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
+    }
+
+    private async Task<(HttpClient Client, string Email)> CreateRegisteredClientAsync()
+    {
+        HttpClient client = _factory.CreateApiClient();
+        string email = $"dsr-admin-{Guid.NewGuid():N}@cardscape.local";
+        RegisterRequest register = new(email, "Admin", "Password123!");
+        HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
+        r.IsSuccessStatusCode.Should().BeTrue();
+        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        return (client, email);
     }
 
     private async Task<(HttpClient Client, Guid UserId)> CreateUserWithIdAsync(string email)

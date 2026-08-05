@@ -59,13 +59,13 @@ public sealed class McpSubscriptionsAdminEndpointTests
     [Fact]
     public async Task GetSnapshot_For_Admin_Returns_503_When_Mcp_Unreachable()
     {
-        // The AdminOnly policy passes (the test user is
-        // promoted to admin by the helper). The
-        // McpSubscriptionsClient then returns null
-        // because the MCP process is not running in
-        // the in-process test host, and the endpoint
-        // translates that to 503 + a structured
-        // problem body.
+        // The McpSubscriptionsAdminPolicy passes (the test
+        // user is promoted to admin and re-logs in to
+        // get a JWT with the fresh is_admin claim). The
+        // McpSubscriptionsClient then returns null because
+        // the MCP process is not running in the in-process
+        // test host, and the endpoint translates that to
+        // 503 + a structured problem body.
         HttpClient client = await CreateAdminClientAsync();
         HttpResponseMessage resp = await client.GetAsync(
             "api/admin/mcp-subscriptions/", TestContext.Current.CancellationToken);
@@ -74,9 +74,36 @@ public sealed class McpSubscriptionsAdminEndpointTests
         body.Should().Contain("MCP subscriptions snapshot is unavailable");
     }
 
+    [Fact]
+    public async Task GetSnapshot_Token_Minted_Before_Promotion_Still_Returns_403()
+    {
+        // The is_admin claim is embedded in the JWT at
+        // mint time. A token issued before the
+        // promote-self-admin call still carries
+        // is_admin=false even after the DB row is
+        // updated — the operator has to re-authenticate
+        // (or wait for the access-token TTL, default
+        // 60 minutes) to pick up the new value. This
+        // test pins the contract so the implementation
+        // never silently falls back to the DB lookup for
+        // tokens that DO carry the claim.
+        HttpClient client = await CreateAuthenticatedClientAsync();
+        HttpResponseMessage promote = await client.PostAsync(
+            "api/dev/promote-self-admin", content: null, TestContext.Current.CancellationToken);
+        promote.IsSuccessStatusCode.Should().BeTrue(
+            "the dev-only promote-self-admin endpoint should be wired in the Development environment");
+        // Same client, same token — no re-login. The
+        // is_admin claim is still false because the
+        // token was minted before the promotion.
+        HttpResponseMessage resp = await client.GetAsync(
+            "api/admin/mcp-subscriptions/", TestContext.Current.CancellationToken);
+        resp.StatusCode.Should().Be(HttpStatusCode.Forbidden,
+            "the cached is_admin claim wins over the DB row; the operator must re-login to pick up the change");
+    }
+
     // ── helpers ─────────────────────────────────────────────
 
-    private async Task<HttpClient> CreateAuthenticatedClientAsync()
+    private async Task<(HttpClient Client, string Email)> CreateRegisteredClientAsync()
     {
         HttpClient client = _factory.CreateApiClient();
         string email = $"mcp-admin-{Guid.NewGuid():N}@cardscape.local";
@@ -86,18 +113,24 @@ public sealed class McpSubscriptionsAdminEndpointTests
         AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        return (client, email);
+    }
+
+    private async Task<HttpClient> CreateAuthenticatedClientAsync()
+    {
+        (HttpClient client, string _) = await CreateRegisteredClientAsync();
         return client;
     }
 
     private async Task<HttpClient> CreateAdminClientAsync()
     {
-        HttpClient client = await CreateAuthenticatedClientAsync();
-        // The dev-only promote-self-admin endpoint is
-        // registered in Development only. The test
-        // fixture sets ASPNETCORE_ENVIRONMENT=Development,
-        // so the endpoint is wired and the POST
-        // promotes the calling user to admin in the DB.
-        HttpResponseMessage promote = await client.PostAsync(
+        // Register, promote, then re-login so the new
+        // JWT carries the is_admin=true claim. The
+        // McpSubscriptionsAdminPolicy reads the claim
+        // (no DB lookup) and a stale token would
+        // 403.
+        (HttpClient firstClient, string email) = await CreateRegisteredClientAsync();
+        HttpResponseMessage promote = await firstClient.PostAsync(
             "api/dev/promote-self-admin", content: null, TestContext.Current.CancellationToken);
         if (!promote.IsSuccessStatusCode)
         {
@@ -105,6 +138,20 @@ public sealed class McpSubscriptionsAdminEndpointTests
             throw new Xunit.Sdk.XunitException(
                 $"promote-self-admin returned {(int)promote.StatusCode} {promote.StatusCode}. Body: {body}");
         }
+
+        // Re-login to get a JWT with the fresh
+        // is_admin claim. The test API's login
+        // endpoint takes (email, password) and
+        // returns a fresh AuthResponse.
+        HttpClient client = _factory.CreateApiClient();
+        HttpResponseMessage login = await client.PostAsJsonAsync(
+            "api/auth/login", new { email, password = "Password123!" },
+            TestContext.Current.CancellationToken);
+        login.IsSuccessStatusCode.Should().BeTrue(
+            "after promote-self-admin, the user should be able to log in with the same password");
+        AuthResponse auth = (await login.Content.ReadFromJsonAsync<AuthResponse>())!;
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
     }
 }
