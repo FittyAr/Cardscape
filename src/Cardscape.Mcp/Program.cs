@@ -25,6 +25,21 @@ builder.UseCardscapeSerilog(ServiceType.Mcp);
 builder.Services.AddCardscapeMcp(builder.Configuration);
 builder.Services.AddMcpTracing(builder.Configuration);
 
+// The MCP's internal endpoints return snapshots with
+// enum-typed fields (e.g. SubscriptionEventKind). The
+// default System.Text.Json serialises enums as their
+// numeric value, which forces every consumer to know
+// the underlying integer. The API's McpSubscriptionsClient
+// (and the Web UI) expects the human-readable form, so
+// we register JsonStringEnumConverter here. The
+// converter applies to all minimal-API responses in the
+// MCP process.
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(
+        new System.Text.Json.Serialization.JsonStringEnumConverter());
+});
+
 var app = builder.Build();
 
 // ── Ambient bus for MCP tools ──────────────────────────────
