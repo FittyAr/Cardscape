@@ -101,24 +101,57 @@ public sealed class BoardExportAndICalTests
     }
 
     [Fact]
-    public async Task ICal_Returns_403_For_NonMember_Even_On_Public_Board()
+    public async Task ICal_For_Public_Board_Allows_Anonymous_NonMember()
     {
         // The /ics endpoint is mapped with .AllowAnonymous()
-        // but the IcsCalendarService currently rejects
-        // non-members with 403 even when the board is public.
-        // This is the actual production behaviour as of
-        // v1.1.0; the IcsCalendarService has no public-board
-        // read path for non-members yet. The test pins the
-        // current contract; a future PR can move to
-        // "public board is readable by any authenticated
-        // user" and update this test to assert 200.
+        // and the IcsCalendarService lets a Public board
+        // through for any caller (the public contract is
+        // "any user with a link, including unauthenticated").
+        // Owner creates a public board; an anonymous client
+        // reads the calendar and gets 200. Pinned so a future
+        // refactor that tightens the auth check on public
+        // boards fires here.
         HttpClient ownerClient = await CreateAuthenticatedClientAsync();
-        Guid boardId = await CreateBoardAsync(ownerClient, "ical-public", visibility: 1 /* Public */);
+        Guid boardId = await CreateBoardAsync(ownerClient, "ical-public",
+            visibility: 2 /* Public — see BoardVisibility enum */);
+
+        // Add a card with a due date so the calendar is non-empty.
+        Guid listId = await CreateListAsync(ownerClient, boardId, "List");
+        Guid cardId = await CreateCardAsync(ownerClient, listId, "Public due card");
+        DateTimeOffset due = DateTimeOffset.UtcNow.AddDays(3);
+        HttpResponseMessage setDue = await ownerClient.PostAsJsonAsync(
+            $"api/cards/{cardId}/due-date", new { dueDate = due }, TestContext.Current.CancellationToken);
+        setDue.IsSuccessStatusCode.Should().BeTrue();
+
+        // Anonymous client (no bearer) reads the calendar.
+        HttpClient anonymous = _factory.CreateApiClient();
+        HttpResponseMessage resp = await anonymous.GetAsync(
+            $"api/boards/{boardId}/ics", TestContext.Current.CancellationToken);
+        resp.IsSuccessStatusCode.Should().BeTrue(
+            "public boards must be readable by any caller, including anonymous");
+        string body = await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        body.Should().Contain("BEGIN:VEVENT");
+    }
+
+    [Fact]
+    public async Task ICal_For_Workspace_Board_Rejects_Outside_Authenticated_NonMember()
+    {
+        // The /ics endpoint is mapped with .AllowAnonymous()
+        // but the IcsCalendarService requires an authenticated
+        // workspace member for a Workspace-visibility board.
+        // The owner's user id is the only member of the
+        // freshly-created board; the second user is
+        // authenticated but not a member, so the service
+        // returns 403.
+        HttpClient ownerClient = await CreateAuthenticatedClientAsync();
+        Guid boardId = await CreateBoardAsync(ownerClient, "ical-workspace",
+            visibility: 1 /* Workspace — see BoardVisibility enum */);
 
         HttpClient otherClient = _factory.CreateApiClient();
         string otherEmail = $"ical-other-{Guid.NewGuid():N}@cardscape.local";
         HttpResponseMessage reg = await otherClient.PostAsJsonAsync(
-            "api/auth/register", new RegisterRequest(otherEmail, "Other", "Password123!"), TestContext.Current.CancellationToken);
+            "api/auth/register", new RegisterRequest(otherEmail, "Other", "Password123!"),
+            TestContext.Current.CancellationToken);
         reg.IsSuccessStatusCode.Should().BeTrue();
         AuthResponse auth = (await reg.Content.ReadFromJsonAsync<AuthResponse>(TestContext.Current.CancellationToken))!;
         otherClient.DefaultRequestHeaders.Authorization =
@@ -126,7 +159,8 @@ public sealed class BoardExportAndICalTests
 
         HttpResponseMessage resp = await otherClient.GetAsync(
             $"api/boards/{boardId}/ics", TestContext.Current.CancellationToken);
-        resp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        resp.StatusCode.Should().Be(HttpStatusCode.Forbidden,
+            "a Workspace-visibility board must reject non-workspace-member authenticated callers");
     }
 
     // ── helpers ─────────────────────────────────────────────

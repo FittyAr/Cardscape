@@ -32,12 +32,6 @@ public sealed class IcsCalendarService(
 {
     public async Task<Result<Stream>> RenderBoardAsync(Guid boardId, CancellationToken ct = default)
     {
-        if (currentUser.Id is null)
-        {
-            return Result.Failure<Stream>(DomainError.Unauthenticated(
-                "auth.required", "Authentication is required."));
-        }
-
         var board = await boards.GetByIdAsync(new BoardId(boardId), ct);
         if (board is null)
         {
@@ -45,14 +39,31 @@ public sealed class IcsCalendarService(
                 "boards.not_found", "Board was not found."));
         }
 
-        // Public boards allow anonymous reads; private boards are
-        // member-only. The membership check is the cheapest way
-        // to enforce the latter without a separate anonymous
-        // auth scheme.
-        if (board.Visibility != BoardVisibility.Public && !board.IsMember(currentUser.Id.Value))
+        // Public boards are readable by anyone, including
+        // anonymous (unauthenticated) callers — the endpoint
+        // is mapped with .AllowAnonymous() and the public
+        // contract is "any user with a link". Workspace and
+        // Private boards require an authenticated member of
+        // the right scope. The membership check below covers
+        // both cases: a public board short-circuits the
+        // `IsMember` check by the time we get here.
+        if (board.Visibility == BoardVisibility.Public)
         {
-            return Result.Failure<Stream>(DomainError.Forbidden(
-                "boards.forbidden", "You are not a member of this board."));
+            // Pass through — the board is publicly readable.
+        }
+        else
+        {
+            if (currentUser.Id is null)
+            {
+                return Result.Failure<Stream>(DomainError.Unauthenticated(
+                    "auth.required", "Authentication is required."));
+            }
+
+            if (!board.IsMember(currentUser.Id.Value))
+            {
+                return Result.Failure<Stream>(DomainError.Forbidden(
+                    "boards.forbidden", "You are not a member of this board."));
+            }
         }
 
         IReadOnlyList<BoardList> boardLists = await lists.ListForBoardAsync(board.Id, includeArchived: false, ct);
