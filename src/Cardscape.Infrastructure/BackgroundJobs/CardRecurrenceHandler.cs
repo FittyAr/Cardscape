@@ -63,6 +63,44 @@ public sealed class CloneCardHandler(
             return;
         }
 
+        // The source card is archived. A user who archived the
+        // source explicitly wants the recurrence paused; the
+        // same row will reappear if they restore. Skipping the
+        // clone is the user-aligned behaviour. The recurrence's
+        // NextOccurrenceAt is NOT advanced so the next tick
+        // still has a chance to clone once the user restores
+        // the card (or restores the parent list).
+        if (source.IsArchived)
+        {
+            logger.LogInformation(
+                "CloneCardJob: source card {CardId} is archived; deferring clone.",
+                cardGuid);
+            return;
+        }
+
+        // The parent list might be archived even if the card
+        // itself is not (a list archive cascades only on the
+        // list header, leaving the cards in a quiescent state
+        // for the restore flow). Cloning into an archived
+        // list is a UX bug: the cloned card would be
+        // invisible to the user until the list is restored.
+        BoardList? parentList = await lists.GetByIdAsync(source.ListId, ct);
+        if (parentList is null)
+        {
+            logger.LogWarning(
+                "CloneCardJob: source card {CardId} has no parent list; skipping.",
+                cardGuid);
+            return;
+        }
+
+        if (parentList.IsArchived)
+        {
+            logger.LogInformation(
+                "CloneCardJob: parent list of {CardId} is archived; deferring clone.",
+                cardGuid);
+            return;
+        }
+
         // Find the list's current max position so the clone goes
         // to the end. The in-memory list is one of a kind, so a
         // single linear scan is fine.

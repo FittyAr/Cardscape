@@ -31,6 +31,16 @@ public sealed record SearchQuery(
 
 public static class SearchQueryHandler
 {
+    /// <summary>Hard cap on the query string. A genuine search
+    /// phrase is well under 1 KB; a 4 KB cap keeps the
+    /// regex-based tokenizer and the per-hit O(n) scan
+    /// honest while still giving the user enough room for
+    /// long quoted phrases or error-message searches. A
+    /// 1 MB query string would be a denial-of-service
+    /// vector against the in-memory index, not a real
+    /// search.</summary>
+    public const int MaxQueryLength = 4 * 1024;
+
     public static async Task<Result<SearchPageDto>> Handle(
         SearchQuery query,
         ISearchIndex index,
@@ -48,6 +58,20 @@ public static class SearchQueryHandler
         if (string.IsNullOrWhiteSpace(query.Query))
         {
             return Result.Success(new SearchPageDto([], 0));
+        }
+
+        // Cap the query string at the endpoint. The index
+        // has no DoS protection of its own (a 1 MB query
+        // would walk every hit in the in-memory index with
+        // a tokenized scan of the same length); failing
+        // fast at the handler keeps the cap authoritative
+        // and the response shape consistent (an empty
+        // page, not a 500).
+        if (query.Query.Length > MaxQueryLength)
+        {
+            return Result.Failure<SearchPageDto>(DomainError.Validation(
+                "search.query_too_long",
+                $"The search query exceeds the {MaxQueryLength}-character limit."));
         }
 
         // The in-memory search index is process-wide and

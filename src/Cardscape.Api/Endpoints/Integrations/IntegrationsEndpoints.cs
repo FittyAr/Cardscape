@@ -145,10 +145,52 @@ public static class IntegrationsEndpoints
         // configured). The handler resolves the address to a
         // workspace + list and dispatches a CreateCardCommand
         // through Wolverine.
+        //
+        // SECURITY: the previous incarnation read the request
+        // body straight to a string with no upper bound. The
+        // ASP.NET default request body cap is 28.6 MB per
+        // request, which is fine for SendGrid / Mailgun /
+        // Postmark payloads (the largest legitimate send is
+        // ~250 KB for a 25 MB attachment base64-encoded, but
+        // we drop attachments server-side and the providers
+        // split them out) but would let a single unauthenticated
+        // POST hold the body in memory for a full minute. The
+        // 1 MB cap gives generous headroom for the
+        // attachment-less payload (text + headers + envelope,
+        // well under 64 KB in practice) while keeping the
+        // endpoint as cheap as the client-log relay. Content-
+        // Length is checked first to short-circuit without
+        // allocating the read buffer; chunked / unknown-
+        // length requests fall through to the read-loop guard.
+        const int MaxInboundEmailBodyBytes = 1 * 1024 * 1024;
         group.MapPost("/inbound", async (HttpRequest request, IMessageBus bus, CancellationToken ct) =>
         {
-            using StreamReader reader = new(request.Body);
-            string body = await reader.ReadToEndAsync(ct);
+            if (request.ContentLength is long advertised && advertised > MaxInboundEmailBodyBytes)
+            {
+                return Results.Problem(
+                    detail: $"Inbound email body exceeds the {MaxInboundEmailBodyBytes}-byte cap.",
+                    statusCode: StatusCodes.Status413PayloadTooLarge);
+            }
+
+            byte[] buffer = new byte[MaxInboundEmailBodyBytes + 1];
+            int read = 0;
+            int chunk;
+            while ((chunk = await request.Body.ReadAsync(buffer.AsMemory(read, buffer.Length - read), ct)) > 0)
+            {
+                read += chunk;
+                if (read > MaxInboundEmailBodyBytes)
+                {
+                    return Results.Problem(
+                        detail: $"Inbound email body exceeds the {MaxInboundEmailBodyBytes}-byte cap.",
+                        statusCode: StatusCodes.Status413PayloadTooLarge);
+                }
+            }
+
+            string body = System.Text.Encoding.UTF8.GetString(buffer, 0, read);
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                return Results.BadRequest(new { error = "Inbound email body was empty." });
+            }
 
             Dictionary<string, string> headers = new(StringComparer.OrdinalIgnoreCase);
             foreach (KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues> header in request.Headers)
