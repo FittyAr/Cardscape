@@ -100,22 +100,46 @@ public sealed class InboundEmailBodyCapTests
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
+    [Fact]
+    public async Task Inbound_Without_Signature_Header_Returns_401_When_Secret_Is_Configured()
+    {
+        // With a configured secret, an unsigned request
+        // must be rejected (401). The endpoint is the
+        // primary attack surface for an unauthenticated
+        // spam vector, so this pin is the most important
+        // contract the v1.2.0 audit established.
+        HttpClient client = CreateClientWithSecret();
+
+        using HttpRequestMessage request = new(HttpMethod.Post,
+            "api/integrations/email/inbound?provider=sendgrid")
+        {
+            Content = JsonContent.Create(new { from = "x@example.com", subject = "s", text = "t" })
+        };
+        // No X-Cardscape-Inbound-Signature header — the
+        // endpoint must refuse the request before reading
+        // the body.
+        HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
     private HttpClient CreateClientWithSecret()
     {
         // Build a one-shot factory that has the
-        // InboundEmail:SigningSecret configured. The
-        // shared factory cannot be reconfigured per-test
-        // (env vars were already set in CreateHost), so we
-        // spin a parallel host off the same database +
-        // storage root and inject the secret via the
-        // configuration builder.
+        // InboundEmail:SigningSecret configured. We
+        // re-inject the parent factory's connection string
+        // + storage root + provider so the per-test host
+        // re-attaches the same physical database the rest
+        // of the suite is using.
         WebApplicationFactory<Program> perTest = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureAppConfiguration((_, config) =>
             {
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["InboundEmail:SigningSecret"] = TestSigningSecret
+                    ["InboundEmail:SigningSecret"] = TestSigningSecret,
+                    ["ConnectionStrings:Default"] = _factory.ConnectionString,
+                    ["Storage:LocalRoot"] = _factory.StorageRoot,
+                    ["Database:Provider"] = "Sqlite"
                 });
             });
         });
@@ -134,4 +158,37 @@ public sealed class InboundEmailBodyCapTests
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
     }
+
+    // ── seed helpers for the happy-path test ─────────────────
+
+    private static async Task<Guid> CreateWorkspaceAsync(HttpClient client, string name)
+    {
+        HttpResponseMessage resp = await client.PostAsJsonAsync(
+            "api/workspaces/", new { name });
+        resp.IsSuccessStatusCode.Should().BeTrue();
+        var dto = (await resp.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        return dto.Id;
+    }
+
+    private static async Task<Guid> CreateBoardAsync(HttpClient client, Guid workspaceId, string name)
+    {
+        HttpResponseMessage resp = await client.PostAsJsonAsync(
+            "api/boards/", new { workspaceId, name, description = (string?)null, visibility = 0 });
+        resp.IsSuccessStatusCode.Should().BeTrue();
+        var dto = (await resp.Content.ReadFromJsonAsync<BoardDto>(TestContext.Current.CancellationToken))!;
+        return dto.Id;
+    }
+
+    private static async Task<Guid> CreateListAsync(HttpClient client, Guid boardId, string name)
+    {
+        HttpResponseMessage resp = await client.PostAsJsonAsync(
+            "api/lists/", new { boardId, name });
+        resp.IsSuccessStatusCode.Should().BeTrue();
+        var dto = (await resp.Content.ReadFromJsonAsync<ListDto>(TestContext.Current.CancellationToken))!;
+        return dto.Id;
+    }
+
+    private sealed record WorkspaceDto(Guid Id);
+    private sealed record BoardDto(Guid Id, Guid WorkspaceId);
+    private sealed record ListDto(Guid Id);
 }
