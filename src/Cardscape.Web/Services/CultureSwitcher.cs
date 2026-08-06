@@ -132,14 +132,20 @@ public sealed class CultureSwitcher
     private string _currentCulture = DefaultCulture;
     private bool _initialized;
 
-    public CultureSwitcher(HttpClient http, IJSRuntime js, ILogger<CultureSwitcher> logger)
+    public CultureSwitcher(
+        IHttpClientFactory httpClientFactory,
+        IJSRuntime js,
+        ILogger<CultureSwitcher> logger)
     {
-        // Use a named client so the request is treated as a
-        // static asset fetch (same-origin relative URL). The
-        // default HttpClient is fine here; the named-client
-        // "Cardscape.Api" carries the API base URL and bearer
-        // token and would 401 on a relative /Resources/ path.
-        _http = http;
+        // The default HttpClient in Blazor WASM has no base address,
+        // so a relative URL like `Resources/SharedResource.en.resx`
+        // throws `net_http_client_invalid_requesturi` and the page
+        // surfaces the unhandled-error UI for every navigation.
+        // Inject the named `Cardscape.Resources` client registered
+        // in Program.cs: its `BaseAddress` is set to the document
+        // base, which makes the relative URL resolve correctly and
+        // avoids the spurious error.
+        _http = httpClientFactory.CreateClient("Cardscape.Resources");
         _js = js;
         _logger = logger;
     }
@@ -228,9 +234,22 @@ public sealed class CultureSwitcher
 
     private async Task<IReadOnlyDictionary<string, string>> LoadTranslationsAsync(string culture)
     {
-        // The static asset is at /Resources/SharedResource.{culture}.resx
-        // (packaged from src/Cardscape.Web/Resources/SharedResource.es.resx
-        // per the <None Pack="true"> directive in the .csproj).
+        // The Spanish .resx is shipped as a static web asset at
+        // /Resources/SharedResource.es.resx, packaged from
+        // src/Cardscape.Web/Resources/SharedResource.es.resx per the
+        // <None Pack="true"> directive in the .csproj. The English
+        // resx is embedded in the assembly as a .NET resource so we
+        // skip the network roundtrip for the default culture (no
+        // file is published for it) and fall back to whatever the
+        // IStringLocalizer in HttpBackedStringLocalizer can resolve.
+        if (string.Equals(culture, DefaultCulture, StringComparison.OrdinalIgnoreCase))
+        {
+            // No HTTP fetch for English; the HttpBackedStringLocalizer
+            // falls back to the embedded StringLocalizer<SharedResource>
+            // which reads the assembly resource.
+            return EmptyTranslations;
+        }
+
         string url = $"Resources/SharedResource.{culture}.resx";
         using HttpRequestMessage request = new(HttpMethod.Get, url);
         using HttpResponseMessage response = await _http.SendAsync(request);

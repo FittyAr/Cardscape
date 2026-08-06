@@ -15,7 +15,7 @@ services:
     container_name: cardscape.api
     restart: unless-stopped
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       Database__Provider: Sqlite
       ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
@@ -23,6 +23,8 @@ services:
       Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:-dev-only-insecure-signing-key-please-override-in-production-32+chars}
       Jwt__Issuer: Cardscape
       Jwt__Audience: Cardscape
+      Cors__AllowedOrigins__0: http://localhost:8080
+      Cors__AllowedOrigins__1: http://127.0.0.1:8080
     ports:
       - "8080:8080"
     volumes:

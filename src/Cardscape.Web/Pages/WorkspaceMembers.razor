@@ -185,6 +185,12 @@
 
             issuedToken = result.Value!.CleartextToken;
             await ReloadAsync();
+            // The DataGrid is data-bound to `invitations`; an
+            // in-place mutation through `await ReloadAsync()`
+            // produces the same reference object, so the grid
+            // skips its refresh. Force a re-render so the new
+            // invitation row appears immediately (BUG #12).
+            await InvokeAsync(StateHasChanged);
         }
         finally
         {

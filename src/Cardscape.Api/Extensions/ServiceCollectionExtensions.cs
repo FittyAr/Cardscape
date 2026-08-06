@@ -202,13 +202,44 @@ public static class ServiceCollectionExtensions
                 ClockSkew = TimeSpan.FromMinutes(1)
             };
 
+            // SignalR WebSocket upgrade does not carry the
+            // bearer header. Without this hook the BoardHub
+            // `[Authorize]` always sees an anonymous user
+            // and the JoinBoard handler throws
+            // "Authentication required" on every page load,
+            // degrading the real-time features to "off" —
+            // see BUG #17 in test-results/BETA-TEST-REPORT.md.
+            // Read the token from the `access_token` query
+            // string (Microsoft.AspNetCore.SignalR
+            // documented mechanism) so the connection is
+            // authenticated before the hub is constructed.
+            options.Events ??= new JwtBearerEvents();
+            options.Events.OnMessageReceived = ctx =>
+            {
+                Microsoft.AspNetCore.Http.IRequestCookieCollection? cookies = ctx.Request.Cookies;
+                if (cookies.TryGetValue("Cardscape.AccessToken", out string? cookieToken)
+                    && !string.IsNullOrWhiteSpace(cookieToken))
+                {
+                    ctx.Token = cookieToken;
+                    return Task.CompletedTask;
+                }
+
+                Microsoft.Extensions.Primitives.StringValues accessToken = ctx.Request.Query["access_token"];
+                Microsoft.AspNetCore.Http.PathString path = ctx.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    ctx.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            };
+
             // Revocation gate. Wired directly in
             // AddJwtBearer so the events are attached to
             // the same JwtBearerOptions instance the
             // handler reads on the first request. The
             // handler resolves JwtRevocationValidator
             // through the per-request IServiceProvider.
-            options.Events ??= new JwtBearerEvents();
             options.Events.OnTokenValidated = ctx =>
                 ctx.HttpContext.RequestServices
                     .GetRequiredService<JwtRevocationValidator>()

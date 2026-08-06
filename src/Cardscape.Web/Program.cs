@@ -26,8 +26,19 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.UseCardscapeBrowserSerilog();
 
 // ── Configuration (reads from wwwroot/appsettings.json) ─────────────
-string apiBaseUrl = builder.Configuration["ApiBaseUrl"]
-    ?? throw new InvalidOperationException("ApiBaseUrl is required (set in wwwroot/appsettings.json).");
+// Resolve the API base URL with a sane default. The Blazor WASM client and
+// the API are served from the same origin in the self-hosted Docker setup,
+// so leaving `ApiBaseUrl` empty (the new default) means "same origin as the
+// document" and uses the document base address (`HostEnvironment.BaseAddress`)
+// as the HttpClient BaseAddress. Operators running a split-origin deploy
+// (Blazor WASM on one host, API on another) still set the full URL here
+// (e.g. `"https://api.example.com/"`).
+string configuredApiBaseUrl = builder.Configuration["ApiBaseUrl"]?.Trim() ?? string.Empty;
+if (string.IsNullOrEmpty(configuredApiBaseUrl))
+{
+    configuredApiBaseUrl = builder.HostEnvironment.BaseAddress;
+}
+string apiBaseUrl = configuredApiBaseUrl;
 
 // ── Radzen component services + theme service ───────────────────────
 // The cookie theme service persists the user's theme choice (default

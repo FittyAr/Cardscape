@@ -19,7 +19,23 @@ public static class RecurrenceEndpoints
         {
             var result = await bus.InvokeAsync<Result<CardRecurrenceDto?>>(
                 new GetCardRecurrenceQuery(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            if (!result.IsSuccess)
+            {
+                return MapError(result.Error);
+            }
+
+            // The handler folds three "no recurrence" branches into a
+            // Success(null) result: the card has no recurrence row, the
+            // card itself was not found, or the caller is not a board
+            // member (IDOR defence). `Results.Ok((Dto?)null)` would
+            // serialise the null value with a zero-byte body, which the
+            // Blazor WASM client fails to deserialise as `CardRecurrenceDto`
+            // and breaks the CardDetail page on every load. Returning
+            // 404 here is the documented "no recurrence" signal and
+            // matches the spec the Blazor client already handles.
+            return result.Value is null
+                ? Results.NotFound()
+                : Results.Ok(result.Value);
         });
 
         group.MapPut("/", async (

@@ -92,8 +92,8 @@ else
 
     private async Task ReloadAsync()
     {
-        ApiResult<int> count = await Notifications.GetUnreadCountAsync();
-        unreadCount = count.IsSuccess ? count.Value : 0;
+        ApiResult<UnreadCountResponse> count = await Notifications.GetUnreadCountAsync();
+        unreadCount = count.IsSuccess && count.Value is not null ? count.Value.Count : 0;
 
         ApiResult<IReadOnlyList<NotificationDto>> list = await Notifications.ListAsync(
             unreadOnly: filter == "unread", take: 100);

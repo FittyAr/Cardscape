@@ -74,9 +74,18 @@ public static class ClientLogEndpoint
             string? expected = config["Internal:Secret"];
             if (string.IsNullOrWhiteSpace(expected))
             {
-                return Results.Problem(
-                    detail: "Internal:Secret is not configured on the API; the client-log endpoint is unavailable.",
-                    statusCode: StatusCodes.Status503ServiceUnavailable);
+                // The internal secret is not configured on
+                // this deploy. The Serilog BrowserHttp sink on
+                // the Blazor WASM client POSTs every page-load
+                // event here; returning 503 makes the sink throw,
+                // which the Blazor renderer treats as an
+                // unhandled exception and surfaces the
+                // `An unhandled error has occurred` overlay on
+                // every navigation. Silent 204 lets the client
+                // log the event locally without polluting the
+                // UI. Operators that want the server-side relay
+                // set `Internal__Secret` in their environment.
+                return Results.NoContent();
             }
 
             string? provided = http.Request.Headers[SecretHeader];

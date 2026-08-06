@@ -34,6 +34,8 @@ services:
       Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:?Set CARDS_CAPE_JWT_KEY in your .env file (openssl rand -base64 48)}
       Jwt__Issuer: Cardscape
       Jwt__Audience: Cardscape
+      Cors__AllowedOrigins__0: http://localhost:8080
+      Cors__AllowedOrigins__1: http://127.0.0.1:8080
     ports:
       - "8080:8080"
     volumes:

@@ -40,6 +40,23 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ── JSON options ───────────────────────────────────────────
+// Accept enum values as their string name in BOTH directions
+// (request body deserialisation + response body serialisation).
+// Without this, every endpoint that takes an `enum` body
+// parameter (BoardVisibility, WorkspaceRole, etc.) returns a
+// 500 from the model binder the moment a human types
+// `"Private"` instead of `0` — see BUG #9 in
+// test-results/BETA-TEST-REPORT.md. The Blazor WASM client
+// always sends ints, so this only opens the door for external
+// consumers (MCP, scripts, swagger "Try it out").
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(
+        new System.Text.Json.Serialization.JsonStringEnumConverter(
+            System.Text.Json.JsonNamingPolicy.CamelCase, allowIntegerValues: true));
+});
+
 // ── Logging ────────────────────────────────────────────────
 // Serilog is wired before every other service so config
 // providers, EF Core, the hosted background dispatcher, and
@@ -165,8 +182,25 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.ApplyMigrations();
     app.MapDevOnlyEndpoints();
+}
+
+// Apply pending EF Core migrations on startup.
+//
+// In Development, this is unconditional (matches the historical behaviour).
+// Outside Development (Staging, Production, …) the operator can still opt in
+// per-deploy by setting `Cardscape:Database:RunMigrationsOnStartup=true`
+// (env var: `Cardscape__Database__RunMigrationsOnStartup=true`). The default
+// for non-Development is `true` so that the documented self-hostable
+// `docker compose up` workflow actually produces a working schema instead
+// of a 500-loop from the BackgroundJobDispatcher. Operators that prefer to
+// run migrations as a separate step (e.g. via `dotnet ef database update`
+// in a CI job) can flip the flag to `false` to opt out.
+bool runMigrations = app.Configuration.GetValue("Cardscape:Database:RunMigrationsOnStartup",
+    app.Environment.IsDevelopment());
+if (runMigrations)
+{
+    app.ApplyMigrations();
 }
 
 app.UseHttpsRedirection();

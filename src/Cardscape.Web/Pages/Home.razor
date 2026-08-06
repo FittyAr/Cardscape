@@ -147,13 +147,13 @@
         {
             Task<ApiResult<IReadOnlyList<WorkspaceDto>>> wsTask = WorkspacesApi.ListAsync();
             Task<ApiResult<IReadOnlyList<BoardSummaryDto>>> starredTask = BoardsApi.ListStarredAsync();
-            Task<ApiResult<int>> unreadTask = NotificationsApi.GetUnreadCountAsync();
+            Task<ApiResult<UnreadCountResponse>> unreadTask = NotificationsApi.GetUnreadCountAsync();
 
             await Task.WhenAll(wsTask, starredTask, unreadTask);
 
             ApiResult<IReadOnlyList<WorkspaceDto>> ws = await wsTask;
             ApiResult<IReadOnlyList<BoardSummaryDto>> st = await starredTask;
-            ApiResult<int> unread = await unreadTask;
+            ApiResult<UnreadCountResponse> unread = await unreadTask;
 
             if (ws.IsSuccess)
             {
@@ -165,9 +165,9 @@
                 starred = st.Value;
             }
 
-            if (unread.IsSuccess)
+            if (unread.IsSuccess && unread.Value is not null)
             {
-                unreadCount = unread.Value;
+                unreadCount = unread.Value.Count;
             }
         }
         catch

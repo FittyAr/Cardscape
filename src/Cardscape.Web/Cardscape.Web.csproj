@@ -64,6 +64,13 @@
     `SharedResource.resx` (English) at runtime.
   -->
   <ItemGroup>
+    <!--
+      The Spanish .resx is shipped as a static web asset so the
+      client-side CultureSwitcher can fetch it (the default English
+      culture is served from the assembly-embedded resource via
+      the IStringLocalizer fallback — see
+      Services/CultureSwitcher.cs).
+    -->
     <None Include="Resources\SharedResource.es.resx" Pack="true" PackagePath="wwwroot\Resources\SharedResource.es.resx" />
   </ItemGroup>
 

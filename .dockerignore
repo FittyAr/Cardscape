@@ -20,7 +20,10 @@
 **/TestResults
 **/it-tmp
 **/storage
-**/Storage
+# Only ignore the API's upload storage folder (case-insensitive on Linux);
+# `Abstractions/Storage/` is source code, not uploaded files.
+**/Cardscape.Api/Storage
+**/Cardscape.Api/storage
 **/Data/*.db
 **/Data/*.db-wal
 **/Data/*.db-shm

@@ -11,6 +11,7 @@ COPY Directory.Build.props Directory.Packages.props global.json ./
 COPY src/Cardscape.Domain/Cardscape.Domain.csproj           src/Cardscape.Domain/
 COPY src/Cardscape.Application/Cardscape.Application.csproj src/Cardscape.Application/
 COPY src/Cardscape.Infrastructure/Cardscape.Infrastructure.csproj src/Cardscape.Infrastructure/
+COPY src/Cardscape.Web/Cardscape.Web.csproj                 src/Cardscape.Web/
 COPY src/Cardscape.Api/Cardscape.Api.csproj                 src/Cardscape.Api/
 
 RUN dotnet restore src/Cardscape.Api/Cardscape.Api.csproj

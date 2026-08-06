@@ -79,21 +79,16 @@ else
                 var list = context;
                 Guid listId = Guid.Parse(list.Id);
             }
+            @* The `KanbanBoard` component renders each card in each column
+               from the `Columns` parameter via the `CardTemplate` above.
+               Re-rendering the cards here would duplicate every card (see
+               BUG #10 in test-results/BETA-TEST-REPORT.md), so the
+               ChildContent is reserved for the per-column shell: the
+               drop target and the add-card affordance. *@
             <div class="cs-kanban-column-dropzone"
                  @ondragover="@OnColumnDragOver"
                  @ondragover:preventDefault
                  @ondrop="@(() => OnColumnDrop(listId))">
-                @foreach (CardSummaryDto cardInList in cardsByList.GetValueOrDefault(listId, []))
-                {
-                    <RadzenCard Style="cursor: grab;"
-                                draggable="true"
-                                @ondragstart="@(() => OnCardDragStart(cardInList))"
-                                @onclick="@(() => Nav.NavigateTo($"cards/{cardInList.Id}"))">
-                        <RadzenText Text="@cardInList.Title" TextStyle="TextStyle.Body2"
-                                    Class="@(cardInList.IsCompleted ? "rz-color-text-disabled" : null)"
-                                    Style="@(cardInList.IsCompleted ? "text-decoration: line-through; word-break: break-word;" : "word-break: break-word;")" />
-                    </RadzenCard>
-                }
             </div>
             @if (openAddCardFor == listId)
             {

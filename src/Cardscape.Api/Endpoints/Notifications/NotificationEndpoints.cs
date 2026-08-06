@@ -23,11 +23,23 @@ public static class NotificationEndpoints
         // not to a max); the v1.2.0 audit (pass 12) caps
         // the page at 200 entries per the same constant
         // the SCIM list endpoint uses.
-        group.MapGet("/", async (bool unreadOnly, int skip, int take, IMessageBus bus, CancellationToken ct) =>
+        // All three query parameters are optional. Forcing every consumer
+        // (including future MCP clients, scripts, and Swagger's "Try it out"
+        // pane) to know the exact query string contract produces 500s from
+        // the model binder when any of them is missing — see the BUG #8
+        // entry in test-results/BETA-TEST-REPORT.md. Defaults match the
+        // ListNotificationsQuery record.
+        group.MapGet("/", async (
+            bool? unreadOnly,
+            int? skip,
+            int? take,
+            IMessageBus bus,
+            CancellationToken ct) =>
         {
-            int effectiveTake = take <= 0 ? 50 : Math.Min(take, 200);
+            int effectiveTake = take is null or <= 0 ? 50 : Math.Min(take.Value, 200);
+            int effectiveSkip = skip is null or < 0 ? 0 : skip.Value;
             var result = await bus.InvokeAsync<Result<IReadOnlyList<NotificationDto>>>(
-                new ListNotificationsQuery(unreadOnly, skip, effectiveTake), ct);
+                new ListNotificationsQuery(unreadOnly ?? false, effectiveSkip, effectiveTake), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 

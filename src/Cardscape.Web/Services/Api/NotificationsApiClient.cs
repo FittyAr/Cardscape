@@ -8,12 +8,26 @@ public interface INotificationsApiClient
     Task<ApiResult<IReadOnlyList<NotificationDto>>> ListAsync(
         bool unreadOnly = false, int skip = 0, int take = 50, CancellationToken ct = default);
 
-    Task<ApiResult<int>> GetUnreadCountAsync(CancellationToken ct = default);
+    // Server wraps the count in `{ "count": N }` (see
+    // Cardscape.Api.Endpoints.Notifications.UnreadCountResponse) so the
+    // response is self-describing and can grow new counters without
+    // breaking the contract. The Blazor WASM client must read the
+    // wrapper, not a bare int.
+    Task<ApiResult<UnreadCountResponse>> GetUnreadCountAsync(CancellationToken ct = default);
 
     Task<ApiResult> MarkReadAsync(Guid notificationId, CancellationToken ct = default);
 
     Task<ApiResult> MarkAllReadAsync(CancellationToken ct = default);
 }
+
+/// <summary>
+/// Mirror of the server-side <c>UnreadCountResponse</c> (see
+/// <c>src/Cardscape.Api/Endpoints/Notifications/NotificationEndpoints.cs</c>).
+/// The Blazor WASM client does not share a DTO assembly with the API,
+/// so the contract is duplicated here. The two records must stay in
+/// sync; the API one is the source of truth.
+/// </summary>
+public sealed record UnreadCountResponse(int Count);
 
 public sealed class NotificationsApiClient(IHttpClientFactory http)
     : ApiClientBase(http), INotificationsApiClient
@@ -26,10 +40,10 @@ public sealed class NotificationsApiClient(IHttpClientFactory http)
         return await ReadAsync<IReadOnlyList<NotificationDto>>(response, ct);
     }
 
-    public async Task<ApiResult<int>> GetUnreadCountAsync(CancellationToken ct = default)
+    public async Task<ApiResult<UnreadCountResponse>> GetUnreadCountAsync(CancellationToken ct = default)
     {
         HttpResponseMessage response = await CreateClient().GetAsync("api/notifications/unread-count", ct);
-        return await ReadAsync<int>(response, ct);
+        return await ReadAsync<UnreadCountResponse>(response, ct);
     }
 
     public async Task<ApiResult> MarkReadAsync(Guid notificationId, CancellationToken ct = default)

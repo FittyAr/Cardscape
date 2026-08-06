@@ -48,10 +48,10 @@
 
         try
         {
-            ApiResult<int> result = await Notifications.GetUnreadCountAsync();
-            if (result.IsSuccess)
+            ApiResult<UnreadCountResponse> result = await Notifications.GetUnreadCountAsync();
+            if (result.IsSuccess && result.Value is not null)
             {
-                count = result.Value;
+                count = result.Value.Count;
                 await InvokeAsync(StateHasChanged);
             }
         }

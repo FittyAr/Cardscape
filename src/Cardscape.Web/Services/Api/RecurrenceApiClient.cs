@@ -20,6 +20,17 @@ public sealed class RecurrenceApiClient(IHttpClientFactory http)
     {
         HttpResponseMessage response = await CreateClient().GetAsync(
             $"api/cards/{cardId}/recurrence/", ct);
+
+        // The server returns 404 when the card has no recurrence row
+        // (and as a side-effect of the IDOR-defence branches that also
+        // fold to "no recurrence"). Treat that as the documented
+        // "no recurrence" signal so CardDetail can render the page
+        // for every card, not just the ones that have a recurrence set.
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return ApiResult<CardRecurrenceDto?>.Ok(null);
+        }
+
         return await ReadAsync<CardRecurrenceDto?>(response, ct);
     }
 

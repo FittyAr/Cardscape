@@ -1,9 +1,27 @@
 using Cardscape.Domain.Integrations.OAuthApps;
 using Cardscape.Domain.Members;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Cardscape.Infrastructure.Persistence.Configurations;
+
+/// <summary>
+/// Shared element-by-element value comparer for <c>IReadOnlyList&lt;string&gt;</c>
+/// properties stored as delimited text. EF Core raises a
+/// <c>CollectionWithoutComparer</c> warning whenever a property has
+/// a value converter but no comparer, because reference equality
+/// on collections is the default and silently breaks change
+/// detection — see BUG #15 in
+/// <c>test-results/BETA-TEST-REPORT.md</c>.
+/// </summary>
+internal static class StringArrayValueComparer
+{
+    public static readonly ValueComparer<IReadOnlyList<string>> Instance = new(
+        (left, right) => left!.SequenceEqual(right!),
+        values => values.Aggregate(0, (hash, value) => HashCode.Combine(hash, value.GetHashCode())),
+        values => values.ToArray());
+}
 
 public sealed class OAuthAppConfiguration : IEntityTypeConfiguration<OAuthApp>
 {
@@ -36,15 +54,15 @@ public sealed class OAuthAppConfiguration : IEntityTypeConfiguration<OAuthApp>
             .HasConversion(
                 s => string.Join(';', s),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries))
-            .HasColumnType("TEXT")
-            .IsRequired();
+            .Metadata.SetValueComparer(StringArrayValueComparer.Instance);
+        b.Property(a => a.AllowedScopes).HasColumnType("TEXT").IsRequired();
 
         b.Property(a => a.RedirectUris)
             .HasConversion(
                 s => string.Join(';', s),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries))
-            .HasColumnType("TEXT")
-            .IsRequired();
+            .Metadata.SetValueComparer(StringArrayValueComparer.Instance);
+        b.Property(a => a.RedirectUris).HasColumnType("TEXT").IsRequired();
 
         b.Property(a => a.IsRevoked).IsRequired();
 
@@ -85,8 +103,8 @@ public sealed class OAuthAuthorizationCodeConfiguration : IEntityTypeConfigurati
             .HasConversion(
                 s => string.Join(';', s),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries))
-            .HasColumnType("TEXT")
-            .IsRequired();
+            .Metadata.SetValueComparer(StringArrayValueComparer.Instance);
+        b.Property(c => c.Scopes).HasColumnType("TEXT").IsRequired();
 
         b.Property(c => c.ExpiresAt).IsRequired();
         b.Property(c => c.IsConsumed).IsRequired();
@@ -123,8 +141,8 @@ public sealed class OAuthAccessTokenConfiguration : IEntityTypeConfiguration<OAu
             .HasConversion(
                 s => string.Join(';', s),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries))
-            .HasColumnType("TEXT")
-            .IsRequired();
+            .Metadata.SetValueComparer(StringArrayValueComparer.Instance);
+        b.Property(t => t.Scopes).HasColumnType("TEXT").IsRequired();
 
         b.Property(t => t.ExpiresAt).IsRequired();
         b.HasIndex(t => t.ExpiresAt);
