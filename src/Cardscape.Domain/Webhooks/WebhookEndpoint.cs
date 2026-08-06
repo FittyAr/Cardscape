@@ -156,123 +156,26 @@ public sealed class WebhookEndpoint : AggregateRoot<WebhookEndpointId>
     /// Cloud metadata endpoints (169.254.169.254, fd00:ec2::254)
     /// are in the block-list.
     /// </summary>
-    private static Result ValidateNotInternalHost(Uri parsed)
-    {
-        string host = parsed.Host;
-        if (string.IsNullOrEmpty(host))
-        {
-            return Result.Failure(DomainError.Validation(
-                "webhooks.url_host_required", "Webhook URL must have a hostname."));
-        }
+    private static Result ValidateNotInternalHost(Uri parsed) =>
+        WebhookUrlValidator.ValidateNotInternalHost(parsed);
 
-        // Cheap textual checks first (no DNS). Hostnames the
-        // platform conventionally treats as local.
-        if (host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
-            || host.EndsWith(".localhost", StringComparison.OrdinalIgnoreCase)
-            || host.EndsWith(".local", StringComparison.OrdinalIgnoreCase)
-            || host.EndsWith(".internal", StringComparison.OrdinalIgnoreCase))
-        {
-            return Result.Failure(DomainError.Validation(
-                "webhooks.url_host_internal",
-                "Webhook URL host resolves to a local or internal address."));
-        }
+    private static bool IsPrivateIPv4(System.Net.IPAddress ip) =>
+        WebhookUrlValidator.IsPrivateIPv4(ip);
 
-        // IP literal? Reject anything non-global.
-        if (System.Net.IPAddress.TryParse(host, out System.Net.IPAddress? ip))
-        {
-            if (System.Net.IPAddress.IsLoopback(ip)
-                || ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork
-                   && (IsPrivateIPv4(ip) || IsLinkLocalIPv4(ip) || IsMulticastIPv4(ip))
-                || ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6
-                   && (IsPrivateIPv6(ip) || IsLinkLocalIPv6(ip) || IsMulticastIPv6(ip)))
-            {
-                return Result.Failure(DomainError.Validation(
-                    "webhooks.url_host_internal",
-                    "Webhook URL host resolves to a local or internal address."));
-            }
-        }
-        else
-        {
-            // DNS resolution check. An attacker can't bypass this
-            // by pointing at a public hostname that resolves to
-            // 127.0.0.1 or to a metadata IP; both literal IPs
-            // AND resolved IPs are blocked.
-            try
-            {
-                System.Net.IPAddress[] addresses = System.Net.Dns.GetHostAddresses(host);
-                foreach (System.Net.IPAddress resolved in addresses)
-                {
-                    if (System.Net.IPAddress.IsLoopback(resolved)
-                        || resolved.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork
-                           && (IsPrivateIPv4(resolved) || IsLinkLocalIPv4(resolved) || IsMulticastIPv4(resolved))
-                        || resolved.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6
-                           && (IsPrivateIPv6(resolved) || IsLinkLocalIPv6(resolved) || IsMulticastIPv6(resolved)))
-                    {
-                        return Result.Failure(DomainError.Validation(
-                            "webhooks.url_host_internal",
-                            "Webhook URL host resolves to a local or internal address."));
-                    }
-                }
-            }
-            catch (System.Net.Sockets.SocketException)
-            {
-                return Result.Failure(DomainError.Validation(
-                    "webhooks.url_host_unresolvable",
-                    "Webhook URL host could not be resolved."));
-            }
-        }
+    private static bool IsLinkLocalIPv4(System.Net.IPAddress ip) =>
+        WebhookUrlValidator.IsLinkLocalIPv4(ip);
 
-        return Result.Success();
-    }
+    private static bool IsMulticastIPv4(System.Net.IPAddress ip) =>
+        WebhookUrlValidator.IsMulticastIPv4(ip);
 
-    private static bool IsPrivateIPv4(System.Net.IPAddress ip)
-    {
-        byte[] b = ip.GetAddressBytes();
-        // 10.0.0.0/8
-        if (b[0] == 10) return true;
-        // 172.16.0.0/12
-        if (b[0] == 172 && b[1] >= 16 && b[1] <= 31) return true;
-        // 192.168.0.0/16
-        if (b[0] == 192 && b[1] == 168) return true;
-        // 0.0.0.0/8
-        if (b[0] == 0) return true;
-        return false;
-    }
+    private static bool IsPrivateIPv6(System.Net.IPAddress ip) =>
+        WebhookUrlValidator.IsPrivateIPv6(ip);
 
-    private static bool IsLinkLocalIPv4(System.Net.IPAddress ip)
-    {
-        byte[] b = ip.GetAddressBytes();
-        // 169.254.0.0/16 — covers the AWS/GCP/Azure metadata
-        // endpoint (169.254.169.254) and other link-local.
-        if (b[0] == 169 && b[1] == 254) return true;
-        return false;
-    }
+    private static bool IsLinkLocalIPv6(System.Net.IPAddress ip) =>
+        WebhookUrlValidator.IsLinkLocalIPv6(ip);
 
-    private static bool IsMulticastIPv4(System.Net.IPAddress ip)
-    {
-        // 224.0.0.0/4
-        return ip.GetAddressBytes()[0] >= 224 && ip.GetAddressBytes()[0] <= 239;
-    }
-
-    private static bool IsPrivateIPv6(System.Net.IPAddress ip)
-    {
-        // fc00::/7 — unique-local addresses.
-        byte[] b = ip.GetAddressBytes();
-        return (b[0] & 0xFE) == 0xFC;
-    }
-
-    private static bool IsLinkLocalIPv6(System.Net.IPAddress ip)
-    {
-        // fe80::/10
-        byte[] b = ip.GetAddressBytes();
-        return b[0] == 0xFE && (b[1] & 0xC0) == 0x80;
-    }
-
-    private static bool IsMulticastIPv6(System.Net.IPAddress ip)
-    {
-        // ff00::/8
-        return ip.GetAddressBytes()[0] == 0xFF;
-    }
+    private static bool IsMulticastIPv6(System.Net.IPAddress ip) =>
+        WebhookUrlValidator.IsMulticastIPv6(ip);
 
     /// <summary>Replaces the subscribed event list. The list is
     /// canonicalised (lowercase, deduped, sorted) before storing.</summary>

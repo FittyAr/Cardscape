@@ -99,6 +99,41 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
             return;
         }
 
+        // Defence-in-depth SSRF check. WebhookEndpoint.Create
+        // and ChangeUrl already validate the URL against
+        // WebhookUrlValidator, so a freshly-registered
+        // endpoint never sees an internal host. The
+        // re-check at delivery time closes a DNS
+        // rebinding window: a public hostname whose A
+        // record is swapped to 127.0.0.1 (or a cloud
+        // metadata IP) between enqueue and dispatch
+        // would otherwise let the handler POST the
+        // signed payload to an internal service. The
+        // check is cheap (one DNS resolution per
+        // delivery) and the cost is amortised by the
+        // 10-second HTTP timeout the handler already
+        // has. The pairing recommendation in the
+        // WebhookUrlValidator doc comment (outbound IP
+        // pinning at the SocketsHttpHandler) is the
+        // production-grade defence; this re-check is
+        // the in-process belt-and-braces.
+        if (Uri.TryCreate(endpoint.Url, UriKind.Absolute, out Uri? parsed))
+        {
+            Cardscape.Domain.Common.Result ssrfCheck =
+                Cardscape.Domain.Webhooks.WebhookUrlValidator.ValidateNotInternalHost(parsed);
+            if (ssrfCheck.IsFailure)
+            {
+                delivery.MarkDeadLettered(
+                    $"URL no longer resolves to a public address: {ssrfCheck.Error.Message}",
+                    clock.UtcNow);
+                await unitOfWork.SaveChangesAsync(ct);
+                _logger.LogWarning(
+                    "Webhook delivery {DeliveryId} dead-lettered by SSRF re-check: {Reason}",
+                    delivery.Id.Value, ssrfCheck.Error.Message);
+                return;
+            }
+        }
+
         DateTimeOffset now = clock.UtcNow;
         try
         {
