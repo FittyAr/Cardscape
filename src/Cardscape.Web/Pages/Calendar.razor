@@ -11,8 +11,10 @@
 <PageHeader Title="@monthLabel"
             Subtitle="@($"Cards with a due date in {monthLabel}. Click a card to open it; click an empty day to add a new card (coming soon).")">
     <Actions>
-        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth" />
-        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth" />
+        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth"
+                      aria-label="@($"Previous month ({firstOfMonth.AddMonths(-1):MMMM yyyy})")" />
+        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth"
+                      aria-label="@($"Next month ({firstOfMonth.AddMonths(1):MMMM yyyy})")" />
     </Actions>
 </PageHeader>
 

@@ -26,6 +26,7 @@ using Cardscape.Domain.Notifications;
 using Cardscape.Domain.Recurrence;
 using Cardscape.Domain.Security;
 using Cardscape.Domain.Voting;
+using Cardscape.Domain.Webhooks;
 using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Ai;
 using Cardscape.Infrastructure.Authentication;
@@ -164,6 +165,29 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<BackgroundJobRepository>();
         services.AddScoped<IRepository<BackgroundJob, BackgroundJobId>, BackgroundJobRepository>(sp => sp.GetRequiredService<BackgroundJobRepository>());
         services.AddScoped<IBackgroundJobStore, BackgroundJobRepository>(sp => sp.GetRequiredService<BackgroundJobRepository>());
+
+        // BETA-4-#1 — see test-results/BETA-TEST-REPORT.md.
+        //
+        // The repository + the broadcaster were both in place
+        // (Infrastructure/Repositories/WebhookEndpointRepository.cs
+        // + Application/Webhooks/WebhookEventBroadcaster.cs) but
+        // the DI line was missing, so every domain event that
+        // needed to fan out to webhooks threw
+        // InvalidOperationException("No service for type
+        // IWebhookEndpointRepository has been registered") and
+        // surfaced as a 500. The unit tests passed because they
+        // mock the broadcaster; the smoke test caught it because
+        // 50 concurrent board mutations each triggered a
+        // BoardUpdated domain event. The same fix applies to
+        // WebhookDeliveryRepository — both repositories sit
+        // behind the broadcaster and both were unregistered.
+        services.AddScoped<WebhookEndpointRepository>();
+        services.AddScoped<IRepository<WebhookEndpoint, WebhookEndpointId>, WebhookEndpointRepository>(sp => sp.GetRequiredService<WebhookEndpointRepository>());
+        services.AddScoped<IWebhookEndpointRepository, WebhookEndpointRepository>(sp => sp.GetRequiredService<WebhookEndpointRepository>());
+
+        services.AddScoped<WebhookDeliveryRepository>();
+        services.AddScoped<IRepository<WebhookDelivery, WebhookDeliveryId>, WebhookDeliveryRepository>(sp => sp.GetRequiredService<WebhookDeliveryRepository>());
+        services.AddScoped<IWebhookDeliveryRepository, WebhookDeliveryRepository>(sp => sp.GetRequiredService<WebhookDeliveryRepository>());
 
         services.AddScoped<IBackgroundJobScheduler, BackgroundJobScheduler>();
         services.AddSingleton<IBackgroundJobHandlerRegistry, BackgroundJobHandlerRegistry>();

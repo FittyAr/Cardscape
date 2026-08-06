@@ -1,0 +1,80 @@
+﻿   at Microsoft.EntityFrameworkCore.Storage.NonRetryingExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext()
+   at System.Linq.Enumerable.IEnumerableWhereIterator`1.ToList()
+   at Cardscape.Infrastructure.Repositories.WebhookEndpointRepository.<>c__DisplayClass2_0.<ListActiveForEventAsync>b__0() in /src/src/Cardscape.Infrastructure/Repositories/WebhookEndpointRepository.cs:line 35
+   at System.Threading.Tasks.Task`1.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Cardscape.Infrastructure.Repositories.WebhookEndpointRepository.ListActiveForEventAsync(String eventType, CancellationToken ct) in /src/src/Cardscape.Infrastructure/Repositories/WebhookEndpointRepository.cs:line 33
+   at Cardscape.Application.Webhooks.WebhookEventBroadcaster.FanOutAsync(String eventType, Guid boardId, Object data, CancellationToken ct) in /src/src/Cardscape.Application/Webhooks/WebhookEventBroadcaster.cs:line 209
+   at Cardscape.Application.Webhooks.WebhookEventBroadcaster.HandleCardCreated(CardCreated event, CancellationToken ct) in /src/src/Cardscape.Application/Webhooks/WebhookEventBroadcaster.cs:line 94
+   at Cardscape.Infrastructure.Persistence.Interceptors.WolverineDomainEventDispatcher.DispatchAsync(IEnumerable`1 events, CancellationToken ct) in /src/src/Cardscape.Infrastructure/Persistence/Interceptors/WolverineDomainEventDispatcher.cs:line 56
+[16:53:31 WRN] [api] Utilizing service location for Message Handler for Cardscape.Application.Boards.Queries.GetBoardQuery for Service Cardscape.Application.Abstractions.Persistence.IBoardRepository: The service registration for Cardscape.Application.Abstractions.Persistence.IBoardRepository is an 'opaque' lambda factory with the Scoped lifetime and requires service location. This will throw in Wolverine 6.0 when ServiceLocationPolicy.NotAllowed becomes the default. See https://wolverinefx.net/guide/codegen.html {"SourceContext": "JasperFx.CodeGeneration.ICodeFile", "RequestId": "0HNNJRBCLSLPL:00000001", "RequestPath": "/api/boards/617172a8-9286-4e1a-b5fe-108872a617be", "ConnectionId": "0HNNJRBCLSLPL", "MachineName": "9636fa194157", "ProcessId": 1, "ProcessName": "dotnet", "ThreadId": 30, "SpanId": "d95643833c5ef8dc", "TraceId": "372523e4c7cce2d027827e2945a7b723", "ParentId": "0000000000000000", "CorrelationId": "ef6706f8-e7b7-4ecf-a6d7-e5318f0a169a", "Application": "Cardscape.Api"}
+[16:53:31 ERR] [api] Failed executing DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT "w"."Id", "w"."Active", "w"."BoardId", "w"."CreatedAt", "w"."CreatedBy", "w"."Events", "w"."IsDeleted", "w"."RowVersion", "w"."SecretHash", "w"."UpdatedAt", "w"."UpdatedBy", "w"."Url"
+FROM "webhook_endpoints" AS "w" {"EventId": {"Id": 20102, "Name": "Microsoft.EntityFrameworkCore.Database.Command.CommandError"}, "SourceContext": "Microsoft.EntityFrameworkCore.Database.Command", "RequestId": "0HNNJRBCLSLPN:00000001", "RequestPath": "/api/cards", "ConnectionId": "0HNNJRBCLSLPN", "MachineName": "9636fa194157", "ProcessId": 1, "ProcessName": "dotnet", "ThreadId": 30, "SpanId": "cc235162ac174ee8", "TraceId": "18c4067e78a6fe84f8bc934e1be8dceb", "ParentId": "0000000000000000", "CorrelationId": "ba2626b2-1911-49b5-8643-7ebdebba95be", "Application": "Cardscape.Api"}
+[16:53:31 ERR] [api] An exception occurred while iterating over the results of a query for context type 'Cardscape.Infrastructure.Persistence.CardscapeDbContext'.
+Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such table: webhook_endpoints'.
+   at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReader(CommandBehavior behavior)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.InitializeReader(Enumerator enumerator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.<>c.<MoveNext>b__21_0(DbContext _, Enumerator enumerator)
+   at Microsoft.EntityFrameworkCore.Storage.NonRetryingExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext() {"EventId": {"Id": 10100, "Name": "Microsoft.EntityFrameworkCore.Query.QueryIterationFailed"}, "SourceContext": "Microsoft.EntityFrameworkCore.Query", "RequestId": "0HNNJRBCLSLPN:00000001", "RequestPath": "/api/cards", "ConnectionId": "0HNNJRBCLSLPN", "MachineName": "9636fa194157", "ProcessId": 1, "ProcessName": "dotnet", "ThreadId": 30, "SpanId": "cc235162ac174ee8", "TraceId": "18c4067e78a6fe84f8bc934e1be8dceb", "ParentId": "0000000000000000", "CorrelationId": "ba2626b2-1911-49b5-8643-7ebdebba95be", "Application": "Cardscape.Api"}
+Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such table: webhook_endpoints'.
+   at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReader(CommandBehavior behavior)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.InitializeReader(Enumerator enumerator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.<>c.<MoveNext>b__21_0(DbContext _, Enumerator enumerator)
+   at Microsoft.EntityFrameworkCore.Storage.NonRetryingExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext()
+   at System.Linq.Enumerable.IEnumerableWhereIterator`1.ToList()
+   at Cardscape.Infrastructure.Repositories.WebhookEndpointRepository.<>c__DisplayClass2_0.<ListActiveForEventAsync>b__0() in /src/src/Cardscape.Infrastructure/Repositories/WebhookEndpointRepository.cs:line 35
+   at System.Threading.Tasks.Task`1.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Cardscape.Infrastructure.Repositories.WebhookEndpointRepository.ListActiveForEventAsync(String eventType, CancellationToken ct) in /src/src/Cardscape.Infrastructure/Repositories/WebhookEndpointRepository.cs:line 33
+   at Cardscape.Application.Webhooks.WebhookEventBroadcaster.FanOutAsync(String eventType, Guid boardId, Object data, CancellationToken ct) in /src/src/Cardscape.Application/Webhooks/WebhookEventBroadcaster.cs:line 209
+   at Cardscape.Application.Webhooks.WebhookEventBroadcaster.HandleCardCreated(CardCreated event, CancellationToken ct) in /src/src/Cardscape.Application/Webhooks/WebhookEventBroadcaster.cs:line 94
+   at Cardscape.Infrastructure.Persistence.Interceptors.WolverineDomainEventDispatcher.DispatchAsync(IEnumerable`1 events, CancellationToken ct) in /src/src/Cardscape.Infrastructure/Persistence/Interceptors/WolverineDomainEventDispatcher.cs:line 56
+[16:53:31 WRN] [api] Broadcaster WebhookEventBroadcaster failed for event CardCreated {"SourceContext": "Cardscape.Infrastructure.Persistence.Interceptors.WolverineDomainEventDispatcher", "RequestId": "0HNNJRBCLSLPN:00000001", "RequestPath": "/api/cards", "ConnectionId": "0HNNJRBCLSLPN", "MachineName": "9636fa194157", "ProcessId": 1, "ProcessName": "dotnet", "ThreadId": 30, "SpanId": "cc235162ac174ee8", "TraceId": "18c4067e78a6fe84f8bc934e1be8dceb", "ParentId": "0000000000000000", "CorrelationId": "ba2626b2-1911-49b5-8643-7ebdebba95be", "Application": "Cardscape.Api"}
+Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such table: webhook_endpoints'.
+   at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReader(CommandBehavior behavior)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.InitializeReader(Enumerator enumerator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.<>c.<MoveNext>b__21_0(DbContext _, Enumerator enumerator)
+   at Microsoft.EntityFrameworkCore.Storage.NonRetryingExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext()
+   at System.Linq.Enumerable.IEnumerableWhereIterator`1.ToList()
+   at Cardscape.Infrastructure.Repositories.WebhookEndpointRepository.<>c__DisplayClass2_0.<ListActiveForEventAsync>b__0() in /src/src/Cardscape.Infrastructure/Repositories/WebhookEndpointRepository.cs:line 35
+   at System.Threading.Tasks.Task`1.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Cardscape.Infrastructure.Repositories.WebhookEndpointRepository.ListActiveForEventAsync(String eventType, CancellationToken ct) in /src/src/Cardscape.Infrastructure/Repositories/WebhookEndpointRepository.cs:line 33
+   at Cardscape.Application.Webhooks.WebhookEventBroadcaster.FanOutAsync(String eventType, Guid boardId, Object data, CancellationToken ct) in /src/src/Cardscape.Application/Webhooks/WebhookEventBroadcaster.cs:line 209
+   at Cardscape.Application.Webhooks.WebhookEventBroadcaster.HandleCardCreated(CardCreated event, CancellationToken ct) in /src/src/Cardscape.Application/Webhooks/WebhookEventBroadcaster.cs:line 94
+   at Cardscape.Infrastructure.Persistence.Interceptors.WolverineDomainEventDispatcher.DispatchAsync(IEnumerable`1 events, CancellationToken ct) in /src/src/Cardscape.Infrastructure/Persistence/Interceptors/WolverineDomainEventDispatcher.cs:line 56

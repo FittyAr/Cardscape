@@ -37,26 +37,31 @@ public sealed class RevokedTokenRepository(
 
     public async Task<int> PurgeExpiredAsync(DateTimeOffset now, CancellationToken ct = default)
     {
-        // BETA-2-#13 — see test-results/BETA-TEST-REPORT.md.
+        // BETA-2-#13 / BETA-4-#2 — see test-results/BETA-TEST-REPORT.md.
         //
-        // The previous implementation called
+        // The original implementation called
         // ExecuteDeleteAsync(Where(t => t.TokenExpiresAt <= now))
-        // expecting EF Core 7+ to emit a single bulk DELETE.
-        // In this build the SQLite provider refuses to
-        // translate the `DateTimeOffset` comparison in a
-        // `ExecuteDelete` context (the SQL translation
-        // visitor throws "could not be translated") so the
-        // whole call 500s and the RevocationSweeper retries
-        // every poll interval. The pragmatic fix is the same
-        // pattern used by the other bulk-cleanup paths in
-        // the project: load the matching row ids, then
-        // issue a regular RemoveRange + SaveChanges. Sweeper
-        // runs every 60s on a small table; the cost of the
-        // SELECT is dwarfed by the DELETE itself.
-        var expired = await context.RevokedTokens
-            .Where(t => t.TokenExpiresAt <= now)
-            .Select(t => t.Id)
-            .ToListAsync(ct);
+        // and the R2 fix split it into a SELECT + RemoveRange,
+        // but EF Core 10 + SQLite still cannot translate
+        // `TokenExpiresAt <= now` (a DateTimeOffset comparison
+        // against a captured local) — the provider throws
+        // "could not be translated" at runtime and the
+        // RevocationSweeper's background loop logs an error
+        // every minute. The pragmatic fix is the same pattern
+        // BETA-2-#7 used: pull the rows with AsAsyncEnumerable
+        // and filter on the client. The revoked-tokens table
+        // is bounded by the JWT TTL, so the client-side
+        // filter is cheap; the win is that the sweeper
+        // actually completes instead of erroring on every tick.
+        var expired = new List<RevokedTokenId>();
+        await foreach (var token in context.RevokedTokens.AsAsyncEnumerable().WithCancellation(ct))
+        {
+            if (token.TokenExpiresAt <= now)
+            {
+                expired.Add(token.Id);
+            }
+        }
+
         if (expired.Count == 0)
         {
             return 0;

@@ -17,7 +17,8 @@
                 Change="@OnChange"
                 Data="@(Culture.AvailableCultures)"
                 Placeholder="@L["CommonLanguage"]"
-                Style="width: 7rem;">
+                Style="width: 7rem;"
+                aria-label="@L["CommonLanguage"]">
     <Template>
         @GetLabel(context)
     </Template>

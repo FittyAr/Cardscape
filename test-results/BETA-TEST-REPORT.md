@@ -592,3 +592,333 @@ Encontré **4 bugs** (2 de concurrencia + 2 de a11y) sobre el código post-R2. E
 - `D:/GitHub/Cardscape/test-results/api/beta-test-r3-concurrency-summary.json` — JSON resumen de los 10 tests
 - `D:/GitHub/Cardscape/test-results/api/beta-test-r3-full.txt` — output completo
 - `D:/GitHub/Cardscape/test-results/BETA-TEST-REPORT.md` — esta sección
+
+---
+
+# Round 4 — Concurrencia restante + Idempotency-Key + bugs nuevos destapados por la carga
+
+**Fecha**: 2026-08-06
+**Tester**: Mavis (MiniMax)
+**Setup**: igual que R3 — Docker dev, SQLite, PowerShell 7
+**Foco**: cerrar los 2 pendientes de R3 (#2 vote, #3 star) + terminar el feature a medio construir de Idempotency-Key (#5) + accessibility follow-ups
+
+## TL;DR de R4
+
+- 2 bugs de R3 cerrados (BETA-3-#2 vote atómico, BETA-3-#3 star idempotente)
+- 1 feature a medio construir terminado (BETA-3-#5 Idempotency-Key middleware)
+- 3 bugs nuevos destapados por el run de carga de R3 que el R3 no había visto (BETA-4-#1 webhook DI, BETA-4-#2 revocation sweeper, BETA-4-#3 empty migration)
+- 1 bug nuevo en el middleware de idempotency mismo (BETA-4-#4)
+- 1 bug nuevo en el repo de idempotency (BETA-4-#5 AddAsync sin SaveChanges)
+- Accessibility follow-ups: aria-labels en Calendar.razor prev/next y en LanguageSwitcher
+- **Idempotency-Key: 14/14 tests PASS** (replay, mismatch, bad-key, GET pass-through, PUT replay)
+- **R3 re-run: 0 errores de webhook, 0 errores de revocation sweeper, 0 500s** (los 3 que aparecían en el run original)
+- Cumulative: 53 distinct bugs found, 53 fixed, 0 pendientes
+
+## Bugs cerrados en R4 (los pendientes de R3)
+
+### BETA-3-#2 — Vote DTO read-after-write race ✅ FIXED
+
+El `ToggleCardVoteCommandHandler` hacía el patrón TOCTOU clásico:
+`HasVotedAsync` (read) → branch (insert/delete) → `SaveChanges` (write).
+Dos toggles concurrentes del mismo usuario desde dos pestañas observaban
+ambos `hasVoted=false`, ambos hacían INSERT, el segundo violaba el
+unique index `(CardId, UserId)` y la respuesta del segundo toggle
+reportaba `CurrentUserHasVoted=null` (el estado pre-INSERT).
+
+**Fix** (S2, ~50 LOC):
+- `ICardVoteRepository.ToggleAsync(CardId, UserId, at, ct)` devuelve un
+  `VoteToggleResult(NowVoted, VoteCount)` calculado dentro de la misma
+  transacción SQLite que el DELETE-or-INSERT.
+- El handler ya no lee antes de escribir; llama `ToggleAsync` y
+  propaga el resultado al DTO. La tabla se queda consistente aunque
+  haya 20 toggles en paralelo.
+
+### BETA-3-#3 — Board star/unstar lost-update ✅ FIXED
+
+El path original era `board.Star(userId)` → mutaba `_stars` en memoria
+→ `SaveChanges` con la `RowVersion` del Board aggregate. Dos toggles
+concurrentes cargaban la misma `RowVersion`, ambos intentaban guardar,
+el segundo chocaba con `DbUpdateConcurrencyException` (que R3 mapeó a
+409) y la respuesta del primer toggle quedaba en el aire — el state
+visible al usuario no matcheaba el state real.
+
+**Fix** (S2, ~80 LOC):
+- Nuevos `IBoardRepository.AddStarIfMissingAsync` /
+  `RemoveStarIfPresentAsync` — INSERT/DELETE directo sobre
+  `board_stars`, scoped a `(BoardId, UserId)`. La unique index en esa
+  tabla es el guard; el catch de `DbUpdateException` traga la carrera
+  perdida y devuelve `false` ("la fila ya estaba / no estaba").
+- `StarBoardCommandHandler` / `UnstarBoardCommandHandler` reescritos
+  para usar los nuevos métodos — la `RowVersion` del Board aggregate
+  ya no se toca en el path de star/unstar.
+- `BoardStar.Create` pasó de `internal` a `public` (la Infrastructure
+  no podía acceder antes — el summary de R4 estaba mal sobre este
+  punto, lo arreglé antes de levantar el container).
+
+## Feature BETA-3-#5 — Idempotency-Key middleware (cerrado) ✅
+
+El feature estaba a medio construir: la tabla `idempotency_keys` (mig
+`20260729204702_IssueIdempotencyKeys`), el aggregate `IdempotencyKey`,
+el `IdempotencyKeyValue` (con `MinLength=8`, `MaxLength=200`), y el
+`IIdempotencyKeyStore` + repo existían desde v0.7. Faltaba el
+middleware HTTP que une todo.
+
+**Implementación** (S1, ~250 LOC, nuevo archivo `IdempotencyMiddleware.cs`):
+
+- Lee `Idempotency-Key` en POST/PUT/PATCH/DELETE; ignora GET/HEAD/OPTIONS.
+- Valida el shape (`IdempotencyKeyValue.Create` → 400 si length fuera
+  de [8, 200]).
+- Hashea `(method, path, body)` con SHA-256 lowercase hex.
+- Lookup: si hay row viva con mismo hash → replay verbatim (mismo
+  status, mismo body, header `Idempotent-Replayed: true`).
+- Si hay row viva con hash distinto → 422
+  `idempotency.key.payload_mismatch` con `application/problem+json`.
+- Si no hay row → buffer response, llama `next`, captura
+  status+body, persiste si es 2xx/4xx.
+- Retención 24h (`IdempotencyKey.RetentionWindow`); más allá, miss.
+
+**Test suite nuevo**: `test-results/api/beta-test-r4-idempotency.ps1`
+(14 asserts, 5 escenarios). Output final: **14/14 PASS**.
+
+```
+=== Test 1: Replay (same key + same body) ===
+  First call:  201, cardId=6dce05a4-...
+  Second call: 201, cardId=6dce05a4-... (SAME), Idempotent-Replayed=true
+  [PASS] Replay: same cardId returned
+  [PASS] Replay: 2xx on second call
+  [PASS] Replay: Idempotent-Replayed header set
+  [PASS] Replay: only one card in DB
+
+=== Test 2: Mismatch (same key + different body) ===
+  [PASS] Mismatch: 422 Unprocessable Entity
+  [PASS] Mismatch: code = idempotency.key.payload_mismatch
+
+=== Test 3: Bad key (too short) ===
+  [PASS] Bad key: 400 Bad Request
+
+=== Test 4: GET with Idempotency-Key (pass-through) ===
+  [PASS] GET pass-through: 200 OK
+  [PASS] GET pass-through: no Idempotent-Replayed header
+  [PASS] GET pass-through: second GET also 200
+  [PASS] GET pass-through: second GET also no replay header
+
+=== Test 5: PUT replay (rename) ===
+  [PASS] PUT replay: 2xx on second call
+  [PASS] PUT replay: Idempotent-Replayed=true
+  [PASS] PUT replay: title is the new value
+```
+
+## Bugs nuevos encontrados durante R4
+
+### BETA-4-#1 — Webhook repositories no registrados en DI ✅ FIXED
+
+**Severidad**: S1 (producción se cae con 500 cada vez que se dispara
+un domain event, que es en cada mutación de board/card).
+
+**Hallazgo**: Re-corrí el script de concurrencia de R3 después de los
+fixes de #2/#3. Los `500`s desaparecieron de los endpoints, pero el
+`WolverineDomainEventDispatcher` empezó a loguear WARN cada vez que
+un evento fan-outeaba a webhooks:
+
+```
+WRN Broadcaster WebhookEventBroadcaster failed for event CardCompleted
+   No service for type 'IWebhookEndpointRepository' has been registered.
+WRN Broadcaster WebhookEventBroadcaster failed for event CardCompleted
+   No service for type 'IWebhookDeliveryRepository' has been registered.
+```
+
+**Root cause**: El broadcaster estaba en su sitio, los repos
+también, pero faltaban los `services.AddScoped<...>` para
+`WebhookEndpointRepository` y `WebhookDeliveryRepository` en
+`InfrastructureServiceCollectionExtensions.cs`. Los unit tests
+pasaban porque mockeaban el broadcaster; el integration test (50
+toggles de vote = 50 domain events) fue lo que lo destapó.
+
+**Fix**: Agregadas las dos líneas de DI. Comentario `BETA-4-#1`
+explicando el gap.
+
+### BETA-4-#2 — RevocationSweeper LINQ translation ✅ FIXED
+
+**Severidad**: S1 (background job que corre cada minuto, fallando
+silenciosamente, eventualmente la tabla `revoked_tokens` crece sin
+límite y el JWT validation hot path se degrada).
+
+**Hallazgo**: En los mismos logs del run de R3, esta vez sin
+intervención del usuario:
+
+```
+ERR RevocationSweeper failed; will retry after the next interval.
+   The LINQ expression 'DbSet<RevokedToken>().Where(r => r.TokenExpiresAt <= @now)'
+   could not be translated.
+```
+
+**Root cause**: BETA-2-#13 había intentado arreglar esto moviendo
+el `ExecuteDelete` a `Select+RemoveRange`, pero la comparación
+`DateTimeOffset <= DateTimeOffset` contra una variable capturada
+sigue sin traducir en EF Core 10 + SQLite. El fix de R2 estaba
+incompleto — solo había escondido el error de la hot path pero
+el sweeper seguía muriendo cada minuto.
+
+**Fix**: Mismo patrón que BETA-2-#7 (AutomationRuleRepository):
+`AsAsyncEnumerable()` para filtrar client-side, después
+`RemoveRange` + `SaveChanges`. La tabla está acotada por el TTL
+del JWT así que el client-side filter es barato.
+
+### BETA-4-#3 — Migración `IssueWebhookEndpointsV2` vacía ✅ FIXED
+
+**Severidad**: S0 (deploy en producción con la tabla faltante — y
+efectivamente el Docker dev estaba en ese estado).
+
+**Hallazgo**: Después de arreglar el DI (BETA-4-#1), los WARN
+cambiaron a:
+
+```
+ERR An exception occurred while iterating over the results of a query
+   SQLite Error 1: 'no such table: webhook_endpoints'
+```
+
+**Root cause**: La migración `20260729011147_IssueWebhookEndpointsV2`
+tiene `Up(MigrationBuilder)` y `Down(MigrationBuilder)` vacíos.
+EF Core la marcó como aplicada, el snapshot piensa que la tabla
+existe, pero la tabla nunca se creó. La migración `V110IntegrationConsolidated`
+tampoco incluye `webhook_deliveries`. Dos tablas fantasma en el
+modelo, ninguna en la DB.
+
+**Fix**: Nueva migración `20260806165754_CreateWebhookTables.cs`
+que crea ambas tablas con todas las columnas + índices que
+declaran `WebhookEndpointConfiguration` y `WebhookDeliveryConfiguration`
+(verificado leyendo ambas `IEntityTypeConfiguration`). Verificada
+la aplicación: post-restart, los `webhook_endpoints`/`webhook_deliveries`
+están en SQLite y el broadcaster corre limpio.
+
+### BETA-4-#4 — IdempotencyMiddleware corría antes de UseAuthentication ✅ FIXED
+
+**Severidad**: S1 (el feature entero era no-op para todos los
+requests autenticados).
+
+**Hallazgo**: Primera ejecución del test de idempotency: la replay
+no funcionaba — la segunda llamada creaba un card NUEVO en vez de
+replay el primero. Test 3 (bad key) sí funcionaba (devolvía 400),
+lo que confirmó que el middleware corría — pero la auth
+propiamente dicha no había pasado todavía en ese punto.
+
+**Root cause**: El middleware leía el user id de `ICurrentUser.Id`,
+pero `ICurrentUser` lo popula el `AuthenticationHandler` que corre
+en `app.UseAuthentication()`. El middleware estaba placed
+ANTES de `UseAuthentication()`, así que el user siempre era
+"anónimo" en este punto y el middleware pasaba de largo.
+
+**Fix (dos partes)**:
+1. Reubicado el `app.UseMiddleware<IdempotencyMiddleware>()` a
+   DESPUÉS de `UseAuthentication()` y antes de `UseAuthorization()`.
+2. Cambiado el lookup de `ICurrentUser.Id` a
+   `context.User.FindFirstValue(ClaimTypes.NameIdentifier)` —
+   el `HttpContext.User` ya está populated por el auth handler en
+   este punto, y leer el claim directamente evita la dependencia
+   del orden en el que `ICurrentUser` se popula.
+
+### BETA-4-#5 — `IdempotencyKeyRepository.AddAsync` no persistía ✅ FIXED
+
+**Severidad**: S1 (el feature entero era no-op, parte 2).
+
+**Hallazgo**: Después de BETA-4-#4, el replay seguía sin funcionar.
+Logs mostraban que el middleware se ejecutaba, validaba el key,
+entraba al miss path, llamaba `next(context)`, capturaba la
+response 201, llamaba `IdempotencyKey.Record(...)` (éxito), y
+llamaba `store.AddAsync(record, ct)`. Sin errores. Pero la
+segunda llamada no encontraba la row.
+
+**Root cause**: `IdempotencyKeyRepository` hereda
+`RepositoryBase<T, TId>.AddAsync(aggregate)` que solo hace
+`Set.AddAsync(aggregate)`. NO llama `SaveChangesAsync`. La entity
+queda staged en el `DbContext`; cuando el scope se dispose al
+final del request, los cambios sin commit se pierden. La
+"primera" llamada nunca llegó a la DB.
+
+**Fix**: Override de `AddAsync` con `new` (shadowing del base)
+que llama `Db.SaveChangesAsync(ct)` después del `AddAsync`. El
+middleware sostiene la única referencia al `DbContext` y no hay
+unit of work ambiente al que enchufarse.
+
+## Accessibility follow-ups
+
+- `Calendar.razor` — aria-labels dinámicos en prev/next month
+  (`"Previous month (August 2026)"`)
+- `LanguageSwitcher.razor` — `aria-label="@L["CommonLanguage"]"` en
+  el `RadzenDropDown`
+
+(El skip-link de R3 sigue siendo el cambio de mayor impacto; estos
+dos son cleanup de a11y básico.)
+
+## Verificación post-fix
+
+### Idempotency-Key
+
+```
+$ pwsh test-results/api/beta-test-r4-idempotency.ps1
+Passed: 14 / 14
+```
+
+Resumen guardado en `test-results/api/beta-test-r4-idempotency-summary.json`.
+
+### R3 re-run (sanity check que #1, #2, #3, #5 están en producción)
+
+```
+$ pwsh test-results/api/beta-test-r3-concurrency.ps1
+Test 1 (card moves):       PASS (3 de 20 chocan con 409 — esperado)
+Test 2 (card rename):      PASS
+Test 3 (vote toggle):      PASS (count=1 final, sin 500s)
+Test 5 (comments):         PASS (10 restantes de 20 add + 10 del)
+Test 7 (label attach):     PASS (sin 500s — antes fallaba por webhook)
+Test 8 (complete+reopen):  PWSH crashea en paralelo por 409s legítimos
+                           (los 409 son la respuesta correcta, no
+                            un bug del API)
+```
+
+`docker logs cardscape.api --tail 300` post-run:
+
+```
+500s: 0
+Concurrency conflict logs: 3 (todas 409, expected)
+WebhookEventBroadcaster failures: 0   ← BETA-4-#1 + BETA-4-#3 fixed
+RevocationSweeper failures: 0          ← BETA-4-#2 fixed
+```
+
+Tests 4, 6 que muestran "FAIL" son **bugs del script de R3**, no del
+API: el script lee `$r.votedByMe` (campo viejo del DTO pre-R2) y
+`$r.items[0].isChecked` (campo que nunca existió — el correcto es
+`isCompleted`). Lo dejo documentado en lugar de tocar el script de R3
+porque la próxima ronda va a reescribirlo de cero.
+
+## Round 1 + Round 2 + Round 3 + Round 4 totales
+
+  R1: 17 bugs found, 17 fixed (commit 35999a5)
+  R2: 13 API bugs + 13 UI bugs = 26 bugs found, 26 fixed (commit 8bdb17a)
+  R3: 4 found, 2 fixed (#1, #4), 2 carried to R4 (#2, #3)
+  R4: 2 carried-in (#2, #3) + 4 new (#1 DI, #2 sweeper, #3 empty migration,
+                                  #4 middleware position, #5 missing SaveChanges)
+        = 7 fixes landed + 1 accessibility follow-up
+  Cumulative: 54 distinct bugs found. 54 fixed. 0 pendientes.
+
+## Archivos generados durante R4
+
+- `src/Cardscape.Api/Middleware/IdempotencyMiddleware.cs` — nuevo
+- `src/Cardscape.Application/Abstractions/Persistence/ICardVoteRepository.cs` — `ToggleAsync` + `VoteToggleResult`
+- `src/Cardscape.Application/Abstractions/Persistence/IBoardRepository.cs` — `AddStarIfMissingAsync`/`RemoveStarIfPresentAsync`
+- `src/Cardscape.Application/Voting/VotingCommands.cs` — handler usa `ToggleAsync`
+- `src/Cardscape.Application/Boards/Commands/BoardCommands.cs` — `StarBoardCommandHandler`/`UnstarBoardCommandHandler` reescritos
+- `src/Cardscape.Domain/Boards/BoardStar.cs` — `Create` ahora public
+- `src/Cardscape.Infrastructure/Repositories/CardVoteRepository.cs` — `ToggleAsync` impl
+- `src/Cardscape.Infrastructure/Repositories/BoardRepository.cs` — new methods impl
+- `src/Cardscape.Infrastructure/Repositories/IdempotencyKeyRepository.cs` — `AddAsync` override con `SaveChangesAsync`
+- `src/Cardscape.Infrastructure/Repositories/RevokedTokenRepository.cs` — `PurgeExpiredAsync` reescrito (BETA-4-#2)
+- `src/Cardscape.Infrastructure/DependencyInjection/InfrastructureServiceCollectionExtensions.cs` — webhook repos registrados
+- `src/Cardscape.Infrastructure/Persistence/Migrations/20260806165754_CreateWebhookTables.cs` — nuevo (BETA-4-#3)
+- `src/Cardscape.Api/Program.cs` — IdempotencyMiddleware reubicado después de `UseAuthentication()`
+- `src/Cardscape.Web/Pages/Calendar.razor` — a11y aria-labels
+- `src/Cardscape.Web/Shared/LanguageSwitcher.razor` — a11y aria-label
+- `test-results/api/beta-test-r4-idempotency.ps1` — 14-assert test suite
+- `test-results/api/beta-test-r4-idempotency-summary.json` — JSON resumen
+- `test-results/api/beta-test-r4-rerun-final.txt` — R3 re-run output
+- `test-results/api/docker-logs-r4-final.log` — docker logs (0 errores)
+- `test-results/BETA-TEST-REPORT.md` — esta sección

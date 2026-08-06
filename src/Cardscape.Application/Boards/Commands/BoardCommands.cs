@@ -392,19 +392,31 @@ public static class StarBoardCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
+        // BETA-3-#3 — see test-results/BETA-TEST-REPORT.md.
+        //
+        // Bypass the Board aggregate's RowVersion. The previous
+        // "load board → mutate _stars via board.Star() → SaveChanges"
+        // pattern violated the optimistic-concurrency token when two
+        // tabs toggled at once: both calls loaded the same RowVersion,
+        // both tried to save, the second hit DbUpdateConcurrencyException
+        // (now 409, but the side effect from the first save was already
+        // persisted so the state went out of sync with what the user
+        // saw on screen).
+        //
+        // AddStarIfMissingAsync is a direct INSERT on board_stars
+        // that swallows the unique-index violation when the row is
+        // already there — the side effect becomes idempotent, no
+        // RowVersion is touched, and a re-tried POST /star is a
+        // 200-still-starred no-op.
+        await boards.AddStarIfMissingAsync(
+            new BoardId(command.BoardId), currentUser.Id.Value, clock.UtcNow, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         var board = await boards.GetByIdAsync(new BoardId(command.BoardId), cancellationToken);
         if (board is null)
         {
             return Result.Failure<BoardDto>(NotFound);
         }
-
-        var result = board.Star(currentUser.Id.Value, clock.UtcNow);
-        if (result.IsFailure)
-        {
-            return Result.Failure<BoardDto>(result.Error);
-        }
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(new BoardDto(
             board.Id.Value,
@@ -428,7 +440,6 @@ public static class UnstarBoardCommandHandler
         IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
-        IClock clock,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -437,19 +448,18 @@ public static class UnstarBoardCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
+        // BETA-3-#3 — symmetric with StarBoardCommandHandler.
+        // Direct DELETE on board_stars; missing row is a 200-still-unstarred
+        // no-op.
+        await boards.RemoveStarIfPresentAsync(
+            new BoardId(command.BoardId), currentUser.Id.Value, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         var board = await boards.GetByIdAsync(new BoardId(command.BoardId), cancellationToken);
         if (board is null)
         {
             return Result.Failure<BoardDto>(NotFound);
         }
-
-        var result = board.Unstar(currentUser.Id.Value, clock.UtcNow);
-        if (result.IsFailure)
-        {
-            return Result.Failure<BoardDto>(result.Error);
-        }
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(new BoardDto(
             board.Id.Value,

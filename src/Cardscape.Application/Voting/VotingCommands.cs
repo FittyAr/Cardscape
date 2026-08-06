@@ -67,38 +67,25 @@ public static class ToggleCardVoteCommandHandler
                 "boards.forbidden", "You are not a member of this board."));
         }
 
-        bool alreadyVoted = await votes.HasVotedAsync(
-            card.Id, currentUser.Id.Value, cancellationToken);
-        if (alreadyVoted)
-        {
-            // Idempotent un-vote path: remove the user's row.
-            IReadOnlyList<CardVote> existing = await votes.ListForCardAsync(
-                card.Id, cancellationToken);
-            CardVote? mine = existing.FirstOrDefault(v => v.UserId == currentUser.Id.Value);
-            if (mine is not null)
-            {
-                votes.Remove(mine);
-            }
-        }
-        else
-        {
-            var create = CardVote.Create(
-                CardVoteId.New(), card.Id, currentUser.Id.Value, clock.UtcNow);
-            if (create.IsFailure)
-            {
-                return Result.Failure<CardVoteStateDto>(create.Error);
-            }
+        // BETA-3-#2 — see test-results/BETA-TEST-REPORT.md.
+        //
+        // Atomic DELETE-or-INSERT on the (CardId, UserId) pair.
+        // The previous "read HasVotedAsync, branch, save"
+        // pattern was vulnerable to a TOCTOU race when the
+        // same user toggled from two browser tabs at once:
+        // both calls would observe HasVoted=false, both
+        // INSERT, the second INSERT would violate the unique
+        // index and surface as 500. ToggleAsync wraps the
+        // pair in a SQLite transaction and re-reads the
+        // state after the commit, so the returned DTO is
+        // always consistent with the actual DB state.
+        VoteToggleResult toggled = await votes.ToggleAsync(
+            card.Id, currentUser.Id.Value, clock.UtcNow, cancellationToken);
 
-            await votes.AddAsync(create.Value, cancellationToken);
-        }
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        int count = await votes.CountForCardAsync(card.Id, cancellationToken);
         return Result.Success(new CardVoteStateDto(
             CardId: card.Id.Value,
-            VoteCount: count,
-            CurrentUserHasVoted: !alreadyVoted));
+            VoteCount: toggled.VoteCount,
+            CurrentUserHasVoted: toggled.NowVoted));
     }
 }
 

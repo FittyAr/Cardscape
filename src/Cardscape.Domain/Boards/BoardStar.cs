@@ -23,6 +23,6 @@ public sealed class BoardStar : Entity<Guid>
         CreatedAt = at;
     }
 
-    internal static BoardStar Create(BoardId boardId, Guid userId, DateTimeOffset at) =>
+    public static BoardStar Create(BoardId boardId, Guid userId, DateTimeOffset at) =>
         new(boardId, userId, at);
 }

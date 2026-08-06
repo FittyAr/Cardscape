@@ -27,4 +27,24 @@ public sealed class IdempotencyKeyRepository(CardscapeDbContext db)
                   && k.Key == key,
                 ct);
     }
+
+    // BETA-4-#5 — see test-results/BETA-TEST-REPORT.md.
+    //
+    // The base RepositoryBase<T,TId>.AddAsync only stages the
+    // entity with Set.AddAsync(aggregate) and never calls
+    // SaveChangesAsync. The IdempotencyMiddleware calls
+    // store.AddAsync on the captured response and then drops
+    // the scoped DbContext at the end of the request, so the
+    // staged-but-unsaved INSERT is silently lost — the next
+    // request from the same user with the same key finds no
+    // existing row, treats the call as a fresh miss, and the
+    // endpoint executes again. The override commits in-line
+    // because the middleware holds the only reference to the
+    // DbContext and there's no ambient unit of work to
+    // piggy-back on.
+    public new async Task AddAsync(IdempotencyKey record, CancellationToken ct = default)
+    {
+        await Set.AddAsync(record, ct);
+        await Db.SaveChangesAsync(ct);
+    }
 }

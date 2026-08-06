@@ -225,6 +225,48 @@ public sealed class InMemoryBoardRepository : InMemoryRepositoryBase<Board, Boar
 
     public Task<Board?> GetWithMembersAsync(BoardId id, CancellationToken ct = default) =>
         GetByIdAsync(id, ct);
+
+    // BETA-3-#3 — see test-results/BETA-TEST-REPORT.md. The
+    // in-memory fake mirrors the production behaviour: toggle
+    // the star directly on the aggregate so we don't go through
+    // the Board's RowVersion. The aggregate's Star/Unstar methods
+    // already do an existence check so the "missing/already there"
+    // distinction is preserved.
+    public Task<bool> AddStarIfMissingAsync(
+        BoardId boardId, Guid userId, DateTimeOffset at, CancellationToken ct = default)
+    {
+        var board = Store.Values.FirstOrDefault(b => b.Id.Value == boardId.Value);
+        if (board is null)
+        {
+            return Task.FromResult(false);
+        }
+
+        if (board.IsStarredBy(userId))
+        {
+            return Task.FromResult(false);
+        }
+
+        board.Star(userId, at);
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> RemoveStarIfPresentAsync(
+        BoardId boardId, Guid userId, CancellationToken ct = default)
+    {
+        var board = Store.Values.FirstOrDefault(b => b.Id.Value == boardId.Value);
+        if (board is null)
+        {
+            return Task.FromResult(false);
+        }
+
+        if (!board.IsStarredBy(userId))
+        {
+            return Task.FromResult(false);
+        }
+
+        board.Unstar(userId, at: DateTimeOffset.UtcNow);
+        return Task.FromResult(true);
+    }
 }
 
 /// <summary>In-memory <see cref="ICardRepository"/>.</summary>
@@ -450,6 +492,39 @@ public sealed class InMemoryCardVoteRepository
     public Task<IReadOnlyList<CardVote>> ListForCardAsync(CardId cardId, CancellationToken ct = default) =>
         Task.FromResult<IReadOnlyList<CardVote>>(
             Store.Values.Where(v => v.CardId.Value == cardId.Value).OrderBy(v => v.VotedAt).ToList());
+
+    // BETA-3-#2 — see test-results/BETA-TEST-REPORT.md. The in-memory
+    // fake mirrors the production ToggleAsync: delete-then-insert in
+    // a single step (in-memory transactions are implicit), then
+    // re-read state for the response DTO.
+    public Task<VoteToggleResult> ToggleAsync(
+        CardId cardId, Guid userId, DateTimeOffset at, CancellationToken ct = default)
+    {
+        var existing = Store.Values
+            .FirstOrDefault(v => v.CardId.Value == cardId.Value && v.UserId == userId);
+        bool nowVoted;
+        if (existing is not null)
+        {
+            Store.Remove(existing.Id);
+            nowVoted = false;
+        }
+        else
+        {
+            var createResult = CardVote.Create(new CardVoteId(Guid.NewGuid()), cardId, userId, at);
+            if (createResult.IsSuccess)
+            {
+                Store[createResult.Value.Id] = createResult.Value;
+                nowVoted = true;
+            }
+            else
+            {
+                nowVoted = false;
+            }
+        }
+
+        int count = Store.Values.Count(v => v.CardId.Value == cardId.Value);
+        return Task.FromResult(new VoteToggleResult(nowVoted, count));
+    }
 }
 
 

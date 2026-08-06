@@ -205,6 +205,18 @@ if (runMigrations)
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
+
+// BETA-3-#5 — see test-results/BETA-TEST-REPORT.md. The
+// Idempotency-Key middleware sits after UseAuthentication so
+// the JWT principal is already attached to HttpContext.User
+// (the middleware reads the user id from the NameIdentifier
+// claim; ICurrentUser is not populated until the auth handler
+// runs). The response capture wraps the authorization + the
+// endpoint so a 401/403/422 still goes through the replay
+// path. It only acts on state-changing methods with the
+// header present; GET / HEAD / OPTIONS are no-ops.
+app.UseMiddleware<Cardscape.Api.Middleware.IdempotencyMiddleware>();
+
 app.UseAuthorization();
 app.UseMiddleware<RateLimitMiddleware>();
 

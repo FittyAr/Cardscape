@@ -1,0 +1,200 @@
+﻿   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 288
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 300
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+[16:51:01 INF] [api] Concurrency conflict at /api/cards/fd62b51f-fbc6-4bec-acff-a0b16d281aef/complete {"SourceContext": "Cardscape.Api.Middleware.GlobalExceptionMiddleware", "RequestId": "0HNNJRBCLSLOJ:00000001", "RequestPath": "/api/cards/fd62b51f-fbc6-4bec-acff-a0b16d281aef/complete", "ConnectionId": "0HNNJRBCLSLOJ", "MachineName": "9636fa194157", "ProcessId": 1, "ProcessName": "dotnet", "ThreadId": 26, "SpanId": "715d9bcfa7047849", "TraceId": "f2febfb8b085f93c034f5e995dae6d5f", "ParentId": "0000000000000000", "CorrelationId": "57025b2d-b9e9-4dd2-a645-e172efa93558", "Application": "Cardscape.Api"}
+Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException: The database operation was expected to affect 1 row(s), but actually affected 0 row(s); data may have been modified or deleted since entities were loaded. See https://go.microsoft.com/fwlink/?LinkId=527962 for information on understanding and handling optimistic concurrency exceptions.
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ThrowAggregateUpdateConcurrencyExceptionAsync(RelationalDataReader reader, Int32 commandIndex, Int32 expectedRowsAffected, Int32 rowsAffected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetWithRowsAffectedOnlyAsync(Int32 commandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Cardscape.Application.Cards.Commands.CompleteCardCommandHandler.Handle(CompleteCardCommand command, ICardRepository cards, IBoardListRepository lists, IBoardRepository boards, IUnitOfWork unitOfWork, ICurrentUser currentUser, IClock clock, CancellationToken cancellationToken) in /src/src/Cardscape.Application/Cards/Commands/CardCommands.cs:line 391
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 288
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 300
+   at Wolverine.Runtime.Handlers.Executor.InvokeInlineAsync(Envelope envelope, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 150
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync[T](Object message, MessageBus bus, CancellationToken cancellation, Nullable`1 timeout, DeliveryOptions options) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 191
+   at Cardscape.Api.Endpoints.Cards.CardEndpoints.<>c.<<MapCardEndpoints>b__0_10>d.MoveNext() in /src/src/Cardscape.Api/Endpoints/Cards/CardEndpoints.cs:line 113
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Cardscape.Api.Middleware.RateLimitMiddleware.InvokeAsync(HttpContext context) in /src/src/Cardscape.Api/Middleware/RateLimitMiddleware.cs:line 45
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Localization.RequestLocalizationMiddleware.Invoke(HttpContext context)
+   at Cardscape.Api.Middleware.IdempotencyMiddleware.InvokeAsync(HttpContext context) in /src/src/Cardscape.Api/Middleware/IdempotencyMiddleware.cs:line 97
+   at Cardscape.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in /src/src/Cardscape.Api/Middleware/GlobalExceptionMiddleware.cs:line 37
+[16:51:01 ERR] [api] Invocation of CompleteCardCommand { CardId = fd62b51f-fbc6-4bec-acff-a0b16d281aef } failed! {"SourceContext": "Cardscape.Application.Cards.Commands.CompleteCardCommand", "RequestId": "0HNNJRBCLSLP5:00000001", "RequestPath": "/api/cards/fd62b51f-fbc6-4bec-acff-a0b16d281aef/complete", "ConnectionId": "0HNNJRBCLSLP5", "MachineName": "9636fa194157", "ProcessId": 1, "ProcessName": "dotnet", "ThreadId": 26, "SpanId": "10722d73880dc171", "TraceId": "57482df65e5371083f82bdc10c920b13", "ParentId": "0000000000000000", "CorrelationId": "60560963-4ce7-482d-abe6-947d9130b524", "Application": "Cardscape.Api"}
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Cardscape.Application.Cards.Commands.CompleteCardCommandHandler.Handle(CompleteCardCommand command, ICardRepository cards, IBoardListRepository lists, IBoardRepository boards, IUnitOfWork unitOfWork, ICurrentUser currentUser, IClock clock, CancellationToken cancellationToken) in /src/src/Cardscape.Application/Cards/Commands/CardCommands.cs:line 391
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 288
+[16:51:01 ERR] [api] Unhandled exception at /api/cards/fd62b51f-fbc6-4bec-acff-a0b16d281aef/complete {"SourceContext": "Cardscape.Api.Middleware.GlobalExceptionMiddleware", "RequestId": "0HNNJRBCLSLP5:00000001", "RequestPath": "/api/cards/fd62b51f-fbc6-4bec-acff-a0b16d281aef/complete", "ConnectionId": "0HNNJRBCLSLP5", "MachineName": "9636fa194157", "ProcessId": 1, "ProcessName": "dotnet", "ThreadId": 26, "SpanId": "10722d73880dc171", "TraceId": "57482df65e5371083f82bdc10c920b13", "ParentId": "0000000000000000", "CorrelationId": "60560963-4ce7-482d-abe6-947d9130b524", "Application": "Cardscape.Api"}
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Cardscape.Application.Cards.Commands.CompleteCardCommandHandler.Handle(CompleteCardCommand command, ICardRepository cards, IBoardListRepository lists, IBoardRepository boards, IUnitOfWork unitOfWork, ICurrentUser currentUser, IClock clock, CancellationToken cancellationToken) in /src/src/Cardscape.Application/Cards/Commands/CardCommands.cs:line 391
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 288
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 300
+   at Wolverine.Runtime.Handlers.Executor.InvokeInlineAsync(Envelope envelope, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 150
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync[T](Object message, MessageBus bus, CancellationToken cancellation, Nullable`1 timeout, DeliveryOptions options) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 191
+   at Cardscape.Api.Endpoints.Cards.CardEndpoints.<>c.<<MapCardEndpoints>b__0_10>d.MoveNext() in /src/src/Cardscape.Api/Endpoints/Cards/CardEndpoints.cs:line 113
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Cardscape.Api.Middleware.RateLimitMiddleware.InvokeAsync(HttpContext context) in /src/src/Cardscape.Api/Middleware/RateLimitMiddleware.cs:line 45
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Localization.RequestLocalizationMiddleware.Invoke(HttpContext context)
+   at Cardscape.Api.Middleware.IdempotencyMiddleware.InvokeAsync(HttpContext context) in /src/src/Cardscape.Api/Middleware/IdempotencyMiddleware.cs:line 97
+   at Cardscape.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in /src/src/Cardscape.Api/Middleware/GlobalExceptionMiddleware.cs:line 37
+[16:51:01 ERR] [api] Failed to look up revocation for jti=d3963ecd-b92c-4b02-9f17-87f51df83e9f; failing closed. {"SourceContext": "Cardscape.Api.Authentication.JwtRevocationValidator", "RequestId": "0HNNJRBCLSLP6:00000001", "RequestPath": "/api/cards/fd62b51f-fbc6-4bec-acff-a0b16d281aef/reopen", "ConnectionId": "0HNNJRBCLSLP6", "MachineName": "9636fa194157", "ProcessId": 1, "ProcessName": "dotnet", "ThreadId": 11, "SpanId": "8e9f2ef18e0ee5e3", "TraceId": "2cb539dd5fcb0632d88670f8dee7e88c", "ParentId": "0000000000000000", "CorrelationId": "925a625c-1f31-4df0-86d2-cfd5d0b49a7e", "Application": "Cardscape.Api"}
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Cardscape.Infrastructure.Repositories.RevokedTokenRepository.IsRevokedAsync(String jti, CancellationToken ct) in /src/src/Cardscape.Infrastructure/Repositories/RevokedTokenRepository.cs:line 33
+   at Cardscape.Api.Authentication.JwtRevocationValidator.OnTokenValidated(TokenValidatedContext context) in /src/src/Cardscape.Api/Authentication/JwtRevocationValidator.cs:line 62
+[16:51:01 ERR] [api] Invocation of CompleteCardCommand { CardId = fd62b51f-fbc6-4bec-acff-a0b16d281aef } failed! {"SourceContext": "Cardscape.Application.Cards.Commands.CompleteCardCommand", "RequestId": "0HNNJRBCLSLOR:00000001", "RequestPath": "/api/cards/fd62b51f-fbc6-4bec-acff-a0b16d281aef/complete", "ConnectionId": "0HNNJRBCLSLOR", "MachineName": "9636fa194157", "ProcessId": 1, "ProcessName": "dotnet", "ThreadId": 21, "SpanId": "628cf41de120e18f", "TraceId": "df9324e7211aebd54ea3b28729a42a4e", "ParentId": "0000000000000000", "CorrelationId": "7906a47e-b647-4634-8da9-88438f8c35fb", "Application": "Cardscape.Api"}
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetWithRowsAffectedOnlyAsync(Int32 commandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Cardscape.Application.Cards.Commands.CompleteCardCommandHandler.Handle(CompleteCardCommand command, ICardRepository cards, IBoardListRepository lists, IBoardRepository boards, IUnitOfWork unitOfWork, ICurrentUser currentUser, IClock clock, CancellationToken cancellationToken) in /src/src/Cardscape.Application/Cards/Commands/CardCommands.cs:line 391
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 288
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 300
+[16:51:01 ERR] [api] Unhandled exception at /api/cards/fd62b51f-fbc6-4bec-acff-a0b16d281aef/complete {"SourceContext": "Cardscape.Api.Middleware.GlobalExceptionMiddleware", "RequestId": "0HNNJRBCLSLOR:00000001", "RequestPath": "/api/cards/fd62b51f-fbc6-4bec-acff-a0b16d281aef/complete", "ConnectionId": "0HNNJRBCLSLOR", "MachineName": "9636fa194157", "ProcessId": 1, "ProcessName": "dotnet", "ThreadId": 21, "SpanId": "628cf41de120e18f", "TraceId": "df9324e7211aebd54ea3b28729a42a4e", "ParentId": "0000000000000000", "CorrelationId": "7906a47e-b647-4634-8da9-88438f8c35fb", "Application": "Cardscape.Api"}
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetWithRowsAffectedOnlyAsync(Int32 commandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Cardscape.Application.Cards.Commands.CompleteCardCommandHandler.Handle(CompleteCardCommand command, ICardRepository cards, IBoardListRepository lists, IBoardRepository boards, IUnitOfWork unitOfWork, ICurrentUser currentUser, IClock clock, CancellationToken cancellationToken) in /src/src/Cardscape.Application/Cards/Commands/CardCommands.cs:line 391
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 288
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 300
+   at Wolverine.Runtime.Handlers.Executor.InvokeInlineAsync(Envelope envelope, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 150
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync[T](Object message, MessageBus bus, CancellationToken cancellation, Nullable`1 timeout, DeliveryOptions options) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 191
+   at Cardscape.Api.Endpoints.Cards.CardEndpoints.<>c.<<MapCardEndpoints>b__0_10>d.MoveNext() in /src/src/Cardscape.Api/Endpoints/Cards/CardEndpoints.cs:line 113
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Cardscape.Api.Middleware.RateLimitMiddleware.InvokeAsync(HttpContext context) in /src/src/Cardscape.Api/Middleware/RateLimitMiddleware.cs:line 45
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Localization.RequestLocalizationMiddleware.Invoke(HttpContext context)
+   at Cardscape.Api.Middleware.IdempotencyMiddleware.InvokeAsync(HttpContext context) in /src/src/Cardscape.Api/Middleware/IdempotencyMiddleware.cs:line 97
+   at Cardscape.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in /src/src/Cardscape.Api/Middleware/GlobalExceptionMiddleware.cs:line 37
+[16:51:01 ERR] [api] Invocation of CompleteCardCommand { CardId = fd62b51f-fbc6-4bec-acff-a0b16d281aef } failed! {"SourceContext": "Cardscape.Application.Cards.Commands.CompleteCardCommand", "RequestId": "0HNNJRBCLSLOL:00000001", "RequestPath": "/api/cards/fd62b51f-fbc6-4bec-acff-a0b16d281aef/complete", "ConnectionId": "0HNNJRBCLSLOL", "MachineName": "9636fa194157", "ProcessId": 1, "ProcessName": "dotnet", "ThreadId": 28, "SpanId": "1f2f52e5506f5988", "TraceId": "320e901aa1769dbdf987a89195b5cd72", "ParentId": "0000000000000000", "CorrelationId": "fb56b9f8-fcc7-4c94-a674-db403ecfa89f", "Application": "Cardscape.Api"}
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetWithRowsAffectedOnlyAsync(Int32 commandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Cardscape.Application.Cards.Commands.CompleteCardCommandHandler.Handle(CompleteCardCommand command, ICardRepository cards, IBoardListRepository lists, IBoardRepository boards, IUnitOfWork unitOfWork, ICurrentUser currentUser, IClock clock, CancellationToken cancellationToken) in /src/src/Cardscape.Application/Cards/Commands/CardCommands.cs:line 391
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 288
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 300
+   at Wolverine.Runtime.Handlers.Executor.InvokeInlineAsync(Envelope envelope, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 150
+[16:51:01 ERR] [api] Unhandled exception at /api/cards/fd62b51f-fbc6-4bec-acff-a0b16d281aef/complete {"SourceContext": "Cardscape.Api.Middleware.GlobalExceptionMiddleware", "RequestId": "0HNNJRBCLSLOL:00000001", "RequestPath": "/api/cards/fd62b51f-fbc6-4bec-acff-a0b16d281aef/complete", "ConnectionId": "0HNNJRBCLSLOL", "MachineName": "9636fa194157", "ProcessId": 1, "ProcessName": "dotnet", "ThreadId": 28, "SpanId": "1f2f52e5506f5988", "TraceId": "320e901aa1769dbdf987a89195b5cd72", "ParentId": "0000000000000000", "CorrelationId": "fb56b9f8-fcc7-4c94-a674-db403ecfa89f", "Application": "Cardscape.Api"}
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetWithRowsAffectedOnlyAsync(Int32 commandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Cardscape.Application.Cards.Commands.CompleteCardCommandHandler.Handle(CompleteCardCommand command, ICardRepository cards, IBoardListRepository lists, IBoardRepository boards, IUnitOfWork unitOfWork, ICurrentUser currentUser, IClock clock, CancellationToken cancellationToken) in /src/src/Cardscape.Application/Cards/Commands/CardCommands.cs:line 391
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Internal.Generated.WolverineHandlers.CompleteCardCommandHandler393793929.HandleAsync(MessageContext context, CancellationToken cancellation)
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 288
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 300
+   at Wolverine.Runtime.Handlers.Executor.InvokeInlineAsync(Envelope envelope, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 150
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync[T](Object message, MessageBus bus, CancellationToken cancellation, Nullable`1 timeout, DeliveryOptions options) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 191
+   at Cardscape.Api.Endpoints.Cards.CardEndpoints.<>c.<<MapCardEndpoints>b__0_10>d.MoveNext() in /src/src/Cardscape.Api/Endpoints/Cards/CardEndpoints.cs:line 113
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Cardscape.Api.Middleware.RateLimitMiddleware.InvokeAsync(HttpContext context) in /src/src/Cardscape.Api/Middleware/RateLimitMiddleware.cs:line 45
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Localization.RequestLocalizationMiddleware.Invoke(HttpContext context)
+   at Cardscape.Api.Middleware.IdempotencyMiddleware.InvokeAsync(HttpContext context) in /src/src/Cardscape.Api/Middleware/IdempotencyMiddleware.cs:line 97
+   at Cardscape.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in /src/src/Cardscape.Api/Middleware/GlobalExceptionMiddleware.cs:line 37
