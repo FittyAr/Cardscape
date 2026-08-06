@@ -1,8 +1,10 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Common;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Lists;
 using Wolverine;
 
 namespace Cardscape.Application.Cards;
@@ -17,6 +19,8 @@ public static class SetCardAgingModeCommandHandler
     public static async Task<Result> Handle(
         SetCardAgingModeCommand command,
         IRepository<Card, CardId> cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         ICardAgingSettingsRepository settings,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
@@ -29,11 +33,25 @@ public static class SetCardAgingModeCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
+        // v1.2.0 audit (pass 12): the previous incarnation
+        // had no board-membership check. The MCP
+        // `cards_set_aging_mode` tool and any code that
+        // routed through this command could mutate the
+        // aging mode of any card by guessing the id. The
+        // fix reuses the same MembershipGuards helper the
+        // card write paths already use.
         var card = await cards.GetByIdAsync(new CardId(command.CardId), ct);
         if (card is null)
         {
             return Result.Failure(DomainError.NotFound(
                 "cards.not_found", $"Card {command.CardId} was not found."));
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, ct);
+        if (guard.IsFailure)
+        {
+            return Result.Failure(guard.Error);
         }
 
         var existing = await settings.GetByCardIdAsync(card.Id, ct);
@@ -80,7 +98,8 @@ public static class MirrorCardCommandHandler
     public static async Task<Result<Guid>> Handle(
         MirrorCardCommand command,
         IRepository<Card, CardId> cards,
-        IRepository<Domain.Lists.BoardList, Domain.Lists.BoardListId> lists,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         ICardMirrorRepository mirrors,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
@@ -100,11 +119,35 @@ public static class MirrorCardCommandHandler
                 "cards.not_found", $"Card {command.SourceCardId} was not found."));
         }
 
+        // v1.2.0 audit (pass 12): the previous incarnation
+        // had no membership check. The MCP `cards_mirror_to`
+        // tool would happily mirror a card from workspace-A
+        // into workspace-B, cross-leaking the title and
+        // description. Both source-card and target-list
+        // membership are now enforced — the canonical
+        // MirrorCardCommand in CardscapeExtensions does the
+        // same with a fuller mirror-row write; this stub is
+        // kept for the MCP code path that does not need the
+        // second card row yet.
+        var sourceGuard = await MembershipGuards.EnsureCanMutateCardAsync(
+            source, lists, boards, currentUser.Id.Value, ct);
+        if (sourceGuard.IsFailure)
+        {
+            return Result.Failure<Guid>(sourceGuard.Error);
+        }
+
         var targetList = await lists.GetByIdAsync(new Domain.Lists.BoardListId(command.TargetListId), ct);
         if (targetList is null)
         {
             return Result.Failure<Guid>(DomainError.NotFound(
                 "lists.not_found", $"List {command.TargetListId} was not found."));
+        }
+
+        var targetBoard = await boards.GetByIdAsync(targetList.BoardId, ct);
+        if (targetBoard is null || !targetBoard.IsMember(currentUser.Id.Value))
+        {
+            return Result.Failure<Guid>(DomainError.Forbidden(
+                "boards.forbidden", "You are not a member of the target list's board."));
         }
 
         // The full mirror flow would create a new Card in
@@ -142,11 +185,32 @@ public static class ListSnoozedCardIdsQueryHandler
         ListSnoozedCardIdsQuery query,
         ICardSnoozeRepository snoozes,
         IRepository<Card, CardId> cards,
-        IRepository<Domain.Lists.BoardList, Domain.Lists.BoardListId> lists,
-        IRepository<Domain.Boards.Board, Domain.Boards.BoardId> boards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
+        ICurrentUser currentUser,
         DateTimeOffset now,
         CancellationToken ct)
     {
+        if (currentUser.Id is null)
+        {
+            return Result.Failure<IReadOnlyList<Guid>>(DomainError.Unauthenticated(
+                "auth.required", "Authentication is required."));
+        }
+
+        // v1.2.0 audit (pass 12): the previous incarnation
+        // had no auth and no membership check. The MCP
+        // `cards_list_snoozed` tool and the HTTP
+        // `/api/boards/{id}/snoozed` endpoint would both
+        // hand back the snoozed-card ids of any board by
+        // guessing the id.
+        var board = await boards.GetWithMembersAsync(
+            new Domain.Boards.BoardId(query.BoardId), ct);
+        if (board is null || !board.IsMember(currentUser.Id.Value))
+        {
+            return Result.Failure<IReadOnlyList<Guid>>(DomainError.Forbidden(
+                "boards.forbidden", "You are not a member of this board."));
+        }
+
         IReadOnlyList<CardSnooze> rows = await snoozes.ListForBoardAsync(query.BoardId, now, ct);
         IReadOnlyList<Guid> ids = rows
             .Where(s => s.IsActive(now))
