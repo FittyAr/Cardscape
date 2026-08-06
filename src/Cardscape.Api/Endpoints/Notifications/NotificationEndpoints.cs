@@ -15,9 +15,19 @@ public static class NotificationEndpoints
     {
         var group = app.MapGroup("/api/notifications").RequireAuthorization().WithTags("Notifications");
 
+        // The query has no upper cap on `take` so a
+        // malicious caller cannot ask the server to
+        // materialise the entire notifications table in
+        // one response. The previous endpoint passed the
+        // raw `take` through (capped to 0 → 50 default but
+        // not to a max); the v1.2.0 audit (pass 12) caps
+        // the page at 200 entries per the same constant
+        // the SCIM list endpoint uses.
         group.MapGet("/", async (bool unreadOnly, int skip, int take, IMessageBus bus, CancellationToken ct) =>
         {
-            var result = await bus.InvokeAsync<Result<IReadOnlyList<NotificationDto>>>(new ListNotificationsQuery(unreadOnly, skip, take == 0 ? 50 : take), ct);
+            int effectiveTake = take <= 0 ? 50 : Math.Min(take, 200);
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<NotificationDto>>>(
+                new ListNotificationsQuery(unreadOnly, skip, effectiveTake), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 

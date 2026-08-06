@@ -1,5 +1,7 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Comments;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
@@ -45,12 +47,32 @@ public sealed class GenerateCardDescriptionCommandHandler(
     ICardRepository cards,
     IBoardRepository boards,
     IBoardListRepository lists,
+    ICurrentUser currentUser,
     IAiService ai) : IWolverineHandler
 {
     public async Task<Result<AiFeatures.AiGeneratedText>> Handle(
         AiFeatures.GenerateCardDescriptionCommand request,
         CancellationToken ct)
     {
+        if (currentUser.Id is null)
+        {
+            return Result<AiFeatures.AiGeneratedText>.Failure(
+                DomainError.Unauthenticated("auth.required", "Authentication is required."));
+        }
+
+        // v1.2.0 audit (pass 12): the previous incarnation
+        // had no auth / membership check — any authenticated
+        // user could ask the LLM to summarise a card on a
+        // board they had no business with, leaking the title
+        // (and the description, if present) to the AI
+        // provider.
+        var access = await CommentAccessGuard.EnsureCanAccessCardAsync(
+            cards, boards, lists, request.CardId, currentUser.Id.Value, ct);
+        if (access.IsFailure)
+        {
+            return Result<AiFeatures.AiGeneratedText>.Failure(access.Error);
+        }
+
         Card? card = await cards.GetByIdAsync(new CardId(request.CardId), ct);
         if (card is null)
         {
@@ -80,18 +102,36 @@ public sealed class GenerateCardDescriptionCommandHandler(
 
 public sealed class SummarizeCommentThreadCommandHandler(
     ICommentRepository comments,
+    ICardRepository cards,
+    IBoardRepository boards,
+    IBoardListRepository lists,
+    ICurrentUser currentUser,
     IAiService ai) : IWolverineHandler
 {
     public async Task<Result<AiFeatures.AiGeneratedText>> Handle(
         AiFeatures.SummarizeCommentThreadCommand request,
         CancellationToken ct)
     {
+        if (currentUser.Id is null)
+        {
+            return Result<AiFeatures.AiGeneratedText>.Failure(
+                DomainError.Unauthenticated("auth.required", "Authentication is required."));
+        }
+
         if (request.CommentIds.Count == 0)
         {
             return Result<AiFeatures.AiGeneratedText>.Failure(
                 DomainError.Validation("comments.empty", "At least one comment id is required."));
         }
 
+        // v1.2.0 audit (pass 12): the previous incarnation
+        // had no auth / membership check and a malicious
+        // caller could supply a list of comment ids from
+        // any card on any board and ask the LLM to
+        // summarise them — leaking the comment bodies to
+        // the AI provider. The fix is the same card→list
+        // →board membership check the comment handlers
+        // adopted in the same pass.
         var lines = new List<string>();
         foreach (Guid id in request.CommentIds)
         {
@@ -100,6 +140,19 @@ public sealed class SummarizeCommentThreadCommandHandler(
             {
                 continue;
             }
+
+            var access = await CommentAccessGuard.EnsureCanAccessCardAsync(
+                cards, boards, lists, comment.CardId.Value, currentUser.Id.Value, ct);
+            if (access.IsFailure)
+            {
+                // Skip comments the caller cannot see —
+                // returning Forbidden would leak the
+                // existence of comments on cards the caller
+                // has no access to, while still filtering
+                // them out of the LLM prompt.
+                continue;
+            }
+
             lines.Add($"- {comment.Body.Value}");
         }
         if (lines.Count == 0)
@@ -122,12 +175,30 @@ public sealed class SummarizeCommentThreadCommandHandler(
 
 public sealed class GenerateChecklistFromDescriptionCommandHandler(
     ICardRepository cards,
+    IBoardRepository boards,
+    IBoardListRepository lists,
+    ICurrentUser currentUser,
     IAiService ai) : IWolverineHandler
 {
     public async Task<Result<AiFeatures.AiGeneratedChecklist>> Handle(
         AiFeatures.GenerateChecklistFromDescriptionCommand request,
         CancellationToken ct)
     {
+        if (currentUser.Id is null)
+        {
+            return Result<AiFeatures.AiGeneratedChecklist>.Failure(
+                DomainError.Unauthenticated("auth.required", "Authentication is required."));
+        }
+
+        // v1.2.0 audit (pass 12): same IDOR as
+        // GenerateCardDescription — see that handler.
+        var access = await CommentAccessGuard.EnsureCanAccessCardAsync(
+            cards, boards, lists, request.CardId, currentUser.Id.Value, ct);
+        if (access.IsFailure)
+        {
+            return Result<AiFeatures.AiGeneratedChecklist>.Failure(access.Error);
+        }
+
         Card? card = await cards.GetByIdAsync(new CardId(request.CardId), ct);
         if (card is null)
         {
@@ -161,12 +232,31 @@ public sealed class SuggestCardOwnersCommandHandler(
     IBoardRepository boards,
     IBoardListRepository lists,
     IUserRepository users,
+    ICurrentUser currentUser,
     IAiService ai) : IWolverineHandler
 {
     public async Task<Result<AiFeatures.AiOwnerSuggestions>> Handle(
         AiFeatures.SuggestCardOwnersCommand request,
         CancellationToken ct)
     {
+        if (currentUser.Id is null)
+        {
+            return Result<AiFeatures.AiOwnerSuggestions>.Failure(
+                DomainError.Unauthenticated("auth.required", "Authentication is required."));
+        }
+
+        // v1.2.0 audit (pass 12): same IDOR as the other
+        // AI endpoints. The previous incarnation also
+        // leaked every board member's email to the LLM
+        // provider (fixed in pass 4). The board-membership
+        // gate is the IDOR half of the fix.
+        var access = await CommentAccessGuard.EnsureCanAccessCardAsync(
+            cards, boards, lists, request.CardId, currentUser.Id.Value, ct);
+        if (access.IsFailure)
+        {
+            return Result<AiFeatures.AiOwnerSuggestions>.Failure(access.Error);
+        }
+
         Card? card = await cards.GetByIdAsync(new CardId(request.CardId), ct);
         if (card is null)
         {

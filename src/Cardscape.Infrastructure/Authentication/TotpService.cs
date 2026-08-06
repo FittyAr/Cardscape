@@ -151,6 +151,20 @@ public sealed class TotpService(
             return Result.Failure(TotpErrors.InvalidRecoveryCode);
         }
 
+        // The recovery-code length is fixed at
+        // TotpCredential.RecoveryCodeLength (10 chars) but
+        // a malicious caller could POST a megabyte-long
+        // string and force a large substring scan + hex
+        // hash before the regex / equality check fails.
+        // Cap the input at 64 chars (the canonical 10 plus
+        // generous headroom for whitespace and a
+        // copy-paste trailing newline) so the per-request
+        // cost stays bounded.
+        if (code.Length > 64)
+        {
+            return Result.Failure(TotpErrors.InvalidRecoveryCode);
+        }
+
         var credential = await credentials.FindForUserAsync(userId, ct);
         if (credential is null || credential.IsDeleted)
         {
