@@ -12,13 +12,16 @@ public sealed class InboundEmailAddressRepository(CardscapeDbContext db)
         WorkspaceId workspaceId, CancellationToken ct = default)
     {
         var workspaceValue = workspaceId.Value;
-        return await Task.Run<IReadOnlyList<InboundEmailAddress>>(() =>
+        var rows = new List<InboundEmailAddress>();
+        await foreach (var a in Db.Set<InboundEmailAddress>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<InboundEmailAddress>().AsEnumerable()
-                .Where(a => a.WorkspaceId.Value == workspaceValue && !a.IsDeleted)
-                .OrderBy(a => a.CreatedAt)
-                .ToList();
-        }, ct);
+            if (a.WorkspaceId.Value == workspaceValue && !a.IsDeleted)
+            {
+                rows.Add(a);
+            }
+        }
+        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
+        return rows;
     }
 
     public async Task<InboundEmailAddress?> FindByEmailAsync(
@@ -30,13 +33,15 @@ public sealed class InboundEmailAddressRepository(CardscapeDbContext db)
         }
 
         var needle = email.Trim().ToLowerInvariant();
-        return await Task.Run<InboundEmailAddress?>(() =>
+        await foreach (var a in Db.Set<InboundEmailAddress>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<InboundEmailAddress>().AsEnumerable()
-                .Where(a => !a.IsDeleted
-                            && a.Active
-                            && string.Equals(a.EmailAddress, needle, StringComparison.Ordinal))
-                .FirstOrDefault();
-        }, ct);
+            if (!a.IsDeleted
+                && a.Active
+                && string.Equals(a.EmailAddress, needle, StringComparison.Ordinal))
+            {
+                return a;
+            }
+        }
+        return null;
     }
 }

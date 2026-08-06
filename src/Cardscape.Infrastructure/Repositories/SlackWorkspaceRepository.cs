@@ -13,12 +13,17 @@ public sealed class SlackWorkspaceRepository(CardscapeDbContext db)
         WorkspaceId workspaceId, CancellationToken ct = default)
     {
         var workspaceValue = workspaceId.Value;
-        return await Task.Run<SlackWorkspace?>(() =>
+        SlackWorkspace? best = null;
+        await foreach (var w in Db.Set<SlackWorkspace>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<SlackWorkspace>().AsEnumerable()
-                .Where(w => w.WorkspaceId.Value == workspaceValue && !w.IsDeleted)
-                .OrderByDescending(w => w.CreatedAt)
-                .FirstOrDefault();
-        }, ct);
+            if (w.WorkspaceId.Value == workspaceValue && !w.IsDeleted)
+            {
+                if (best is null || w.CreatedAt > best.CreatedAt)
+                {
+                    best = w;
+                }
+            }
+        }
+        return best;
     }
 }

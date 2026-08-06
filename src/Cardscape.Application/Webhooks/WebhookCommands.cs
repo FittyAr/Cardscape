@@ -72,7 +72,7 @@ public sealed record WebhookDeliveryDto(
 public sealed record CreateWebhookEndpointCommand(
     Guid BoardId,
     string Url,
-    string Secret,
+    string? Secret,
     IReadOnlyList<string> Events) : IMessage;
 
 public static class CreateWebhookEndpointCommandHandler
@@ -109,7 +109,17 @@ public static class CreateWebhookEndpointCommandHandler
             }
         }
 
-        if (string.IsNullOrWhiteSpace(command.Secret) || command.Secret.Length < 8)
+        // BETA-6-#1 — see test-results/BETA-TEST-REPORT.md.
+        // If the caller did not provide a secret, the server
+        // generates one and returns it in the issuance payload.
+        // This matches the Trello / GitHub webhook flow: a
+        // client never picks the shared secret, the server
+        // hands it out once and the client has to copy it.
+        string cleartext = string.IsNullOrWhiteSpace(command.Secret)
+            ? GenerateWebhookSecret()
+            : command.Secret;
+
+        if (cleartext.Length < 8)
         {
             return Result.Failure<WebhookEndpointIssuance>(DomainError.Validation(
                 "webhooks.secret_too_short",
@@ -130,7 +140,7 @@ public static class CreateWebhookEndpointCommandHandler
                 "boards.forbidden", "You are not a member of this board."));
         }
 
-        string secretHash = HashSecret(command.Secret);
+        string secretHash = HashSecret(cleartext);
 
         // The factory validates URL/secret/events again; we
         // pre-filtered above to surface friendlier errors.
@@ -156,7 +166,7 @@ public static class CreateWebhookEndpointCommandHandler
 
         return Result.Success(new WebhookEndpointIssuance(
             WebhookEndpointDto.FromEntity(creation.Value),
-            command.Secret));
+            cleartext));
     }
 
     private static string HashSecret(string cleartext)
@@ -164,6 +174,15 @@ public static class CreateWebhookEndpointCommandHandler
         Span<byte> hash = stackalloc byte[32];
         SHA256.HashData(Encoding.UTF8.GetBytes(cleartext), hash);
         return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    private static string GenerateWebhookSecret()
+    {
+        // 32 random bytes → 64 hex chars. Way over the
+        // 8-char minimum and unguessable.
+        Span<byte> bytes = stackalloc byte[32];
+        System.Security.Cryptography.RandomNumberGenerator.Fill(bytes);
+        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 }
 

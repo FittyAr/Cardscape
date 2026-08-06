@@ -15,36 +15,48 @@ public sealed class CardVoteRepository(CardscapeDbContext db)
         // HasConversion on the CardId value-object means EF can't
         // translate the navigation in the WHERE clause; do the
         // filter client-side. The result set is bounded by the
-        // vote count on a single card.
-        return await Task.Run(() =>
+        // vote count on a single card. AsAsyncEnumerable yields
+        // rows lazily so the SQL round-trip doesn't park a
+        // thread-pool worker.
+        int count = 0;
+        await foreach (var v in Db.Set<CardVote>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<CardVote>().AsEnumerable()
-                .Count(v => v.CardId.Value == cardIdValue);
-        }, ct);
+            if (v.CardId.Value == cardIdValue)
+            {
+                count++;
+            }
+        }
+        return count;
     }
 
     public async Task<bool> HasVotedAsync(
         CardId cardId, Guid userId, CancellationToken ct = default)
     {
         var cardIdValue = cardId.Value;
-        return await Task.Run(() =>
+        await foreach (var v in Db.Set<CardVote>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<CardVote>().AsEnumerable()
-                .Any(v => v.CardId.Value == cardIdValue && v.UserId == userId);
-        }, ct);
+            if (v.CardId.Value == cardIdValue && v.UserId == userId)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public async Task<IReadOnlyList<CardVote>> ListForCardAsync(
         CardId cardId, CancellationToken ct = default)
     {
         var cardIdValue = cardId.Value;
-        return await Task.Run(() =>
+        var rows = new List<CardVote>();
+        await foreach (var v in Db.Set<CardVote>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<CardVote>().AsEnumerable()
-                .Where(v => v.CardId.Value == cardIdValue)
-                .OrderBy(v => v.VotedAt)
-                .ToList();
-        }, ct);
+            if (v.CardId.Value == cardIdValue)
+            {
+                rows.Add(v);
+            }
+        }
+        rows.Sort((a, b) => a.VotedAt.CompareTo(b.VotedAt));
+        return rows;
     }
 
     // BETA-3-#2 — see test-results/BETA-TEST-REPORT.md.

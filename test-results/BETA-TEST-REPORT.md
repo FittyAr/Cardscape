@@ -974,3 +974,74 @@ porque la prÃ³xima ronda va a reescribirlo de cero.
 ### Totales
 - R5: 8 API bugs + 2 UI bugs = 10 bugs found, 10 fixed.
 - Cumulative: R1=17 + R2=26 + R3=4 + R4=10 + R5=10 = **67 distinct bugs found, 67 fixed, 0 pendientes**.
+
+
+## Round 6 (R6) — async refactor + exhaustive UI walkthrough
+
+### Enfoque
+- Convertir todos los `Task.Run + AsEnumerable().Where/Any/ToList` (anti-pattern) en streams asíncronos con `AsAsyncEnumerable`. Diez repositorios refactorizados.
+- Pase exhaustivo de UI con Playwright MCP y nueva suite API de boundary/race/auth/malformed.
+- Cerrar los huecos UI que la API ya soportaba pero la Web no exponía: board settings, card delete, recurrence 204, etc.
+
+### Async refactor (R6, 10 repos)
+- `CardVoteRepository.CountForCardAsync` / `HasVotedAsync` / `ListForCardAsync` / `ToggleAsync`
+- `CardRecurrenceRepository.ExistsForCardAsync` / `GetForCardAsync` / `ListDueAsync`
+- `WebhookEndpointRepository.ListForBoardAsync` / `ListActiveForEventAsync`
+- `WebhookDeliveryRepository.ListForEndpointAsync`
+- `SlackChannelRepository.ListForBoardAsync` / `ListActiveSubscribersAsync`
+- `SlackWorkspaceRepository.FindForWorkspaceAsync`
+- `InboundEmailAddressRepository.ListForWorkspaceAsync` / `FindByEmailAsync`
+- `GoogleDriveConnectionRepository.FindForUserAsync`
+- `GitHubRepoLinkRepository.ListForBoardAsync` / `FindForBoardAndRepoAsync` + `GitHubPullRequestLinkRepository.ListForCardAsync`
+- `ChecklistRepository.ListForCardAsync` + `ChecklistItemRepository.ListForChecklistAsync`
+- SamlAuthenticationHandler: `ReadMetadataFromLocation` + `BuildSustainsysOptions` + 3 callers (`HandleLogin`/`HandleAcs`/`HandleMetadata`) — async I/O en vez de `GetAwaiter().GetResult()`
+- `HttpGoogleCalendarSyncService.MapHttpError` + 4 callers — `await response.Content.ReadAsStringAsync(ct)`
+
+### Bugs encontrados y arreglados
+
+| ID       | Tipo | Descripción                                                                                              | Fix                                                                                          |
+|----------|------|----------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
+| BETA-6-#1  | API  | Webhook `CreateWebhookBody.Secret` era `string` (no-nullable). Omitir el campo → 400 `webhooks.secret_too_short`. | DTO pasa a `string?`. El comando genera un secret de 32 bytes hex si llega null.               |
+| BETA-6-#2  | UI   | SignalR negotiate apuntaba a `file:///hubs/board/negotiate` — el navegador lo bloquea con "Not allowed to load local resource". | `BoardHubClient` ahora lee el `BaseAddress` del `HttpClient` "Cardscape.Api" (que Program.cs ya resuelve contra `HostEnvironment.BaseAddress`). |
+| BETA-6-#3  | API  | `GET /api/cards/{id}/recurrence/` devolvía 404 cuando no hay recurrencia. La Blazor lo trata como "sin recurrencia" pero el browser mostraba el 404 como error rojo en consola. | Servidor ahora responde `204 No Content`; cliente Blazor trata 204 y 404 como "sin recurrencia".     |
+| BETA-6-#4  | UI   | `CardDetail.razor` tiene cuatro `â€¦` (mojibake del U+2026 ellipsis). La UI mostraba literalmente "â€¦". | Reemplazo por `…` (U+2026) en el código fuente.                                                  |
+| BETA-6-#5  | UI   | `CardDetail.razor` tiene `Â·` (mojibake del U+00B7 middle dot) en timestamps de comments y activity.      | Reemplazo por `·` (U+00B7) en el código fuente.                                                  |
+| BETA-6-#6  | UI   | Board API tiene `rename`/`description`/`visibility`/`archive`/`unarchive` desde R1 pero la Web nunca expuso una UI. | Nuevo botón "Settings" + panel en `BoardDetail.razor` con rename, descripción, visibility dropdown, archive/unarchive. |
+| BETA-6-#7  | UI   | Card DELETE endpoint (BETA-5-#5) sin botón en la UI.                                                     | Botón "Delete" rojo en `CardDetail.razor` que llama a `Cards.DeleteAsync` y navega a `/workspaces` después. |
+
+### Walkthrough UI (con MCP browser)
+- Register / login / logout — funciona.
+- Create workspace / board / list / card — funciona.
+- Card vote (heart), comment, recurrence, archive, restore, complete, reopen — funcionan.
+- 2FA enrollment (otpauth URI + recovery codes) — funciona.
+- API tokens: create / list / revoke — funcionan.
+- Inbox, Calendar (aria-labels), Planner (aria-labels) — sin errores en consola.
+- Language switcher cambia el combobox pero el resto de la UI sigue en inglés (BETA-5-#13, documentado, requiere mover a IStringLocalizer en todos los componentes).
+
+### Test suites
+- `test-results/api/beta-test-r5-api-full.ps1` (existente): 99 asserts, 21 áreas — **99/99 PASS** en fresh DB y en cada rebuild.
+- `test-results/api/beta-test-r6-boundary.ps1` (nuevo): 44 asserts, 14 áreas (auth edge, malformed payloads, idempotency, race, permission, pagination, rate-limit, webhook, delete) — **44/44 PASS**.
+
+### Archivos generados/modificados en R6
+- `src/Cardscape.Api/Endpoints/Webhooks/WebhookEndpoints.cs` (BETA-6-#1)
+- `src/Cardscape.Api/Endpoints/Recurrence/RecurrenceEndpoints.cs` (BETA-6-#3)
+- `src/Cardscape.Application/Webhooks/WebhookCommands.cs` (BETA-6-#1)
+- `src/Cardscape.Web/Services/Api/RecurrenceApiClient.cs` (BETA-6-#3)
+- `src/Cardscape.Web/Services/Api/BoardsApiClient.cs` (BETA-6-#6: Rename/ChangeDescription/ChangeVisibility)
+- `src/Cardscape.Web/Services/Api/CardsApiClient.cs` (BETA-6-#7: DeleteAsync)
+- `src/Cardscape.Web/Services/BoardHubClient.cs` (BETA-6-#2)
+- `src/Cardscape.Web/Pages/CardDetail.razor` (BETA-6-#4, #5, #7)
+- `src/Cardscape.Web/Pages/BoardDetail.razor` (BETA-6-#6)
+- 10 repositorios (async refactor)
+- `src/Cardscape.Api/Authentication/SamlAuthenticationHandler.cs` (async I/O)
+- `src/Cardscape.Infrastructure/Integrations/HttpGoogleCalendarSyncService.cs` (async I/O)
+- `test-results/api/beta-test-r6-boundary.ps1` (nuevo)
+- `test-results/api/r6-final-r5-verify.txt` (nuevo)
+- `test-results/api/r6-final-r6-verify.txt` (nuevo)
+- `test-results/BETA-TEST-REPORT.md` (esta sección)
+
+### Totales
+- R6: 7 bugs found, 7 fixed (1 API + 6 UI).
+- Cumulative: R1=17 + R2=26 + R3=4 + R4=10 + R5=10 + R6=7 = **74 distinct bugs found, 74 fixed, 0 pendientes**.
+- Async refactor: 10 repositorios + 2 servicios (SAML, Google Calendar).
+- API tests verdes: R5 99/99 + R6 boundary 44/44.

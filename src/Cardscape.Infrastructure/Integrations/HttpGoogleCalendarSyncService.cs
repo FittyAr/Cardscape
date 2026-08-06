@@ -65,7 +65,7 @@ public sealed class HttpGoogleCalendarSyncService(
                     $"calendars/{Uri.EscapeDataString(connection.CalendarId)}/events/{Uri.EscapeDataString(eventId)}", ct);
                 if (!delete.IsSuccessStatusCode && delete.StatusCode != System.Net.HttpStatusCode.NotFound)
                 {
-                    return Result.Failure<string>(MapHttpError(delete, "delete"));
+                    return Result.Failure<string>(await MapHttpError(delete, "delete", ct));
                 }
             }
             return Result.Success(eventId ?? string.Empty);
@@ -88,7 +88,7 @@ public sealed class HttpGoogleCalendarSyncService(
 
         if (!response.IsSuccessStatusCode)
         {
-            return Result.Failure<string>(MapHttpError(response, eventId is null ? "create" : "update"));
+            return Result.Failure<string>(await MapHttpError(response, eventId is null ? "create" : "update", ct));
         }
 
         JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
@@ -139,7 +139,7 @@ public sealed class HttpGoogleCalendarSyncService(
                 $"calendars/{Uri.EscapeDataString(connection.CalendarId)}/events?{queryString}", ct);
             if (!response.IsSuccessStatusCode)
             {
-                return Result.Failure<int>(MapHttpError(response, "list"));
+                return Result.Failure<int>(await MapHttpError(response, "list", ct));
             }
 
             JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
@@ -245,7 +245,7 @@ public sealed class HttpGoogleCalendarSyncService(
             $"calendars/{Uri.EscapeDataString(connection.CalendarId)}/watch", watchRequest, ct);
         if (!response.IsSuccessStatusCode)
         {
-            return Result.Failure<GoogleCalendarWatchInfo>(MapHttpError(response, "watch"));
+            return Result.Failure<GoogleCalendarWatchInfo>(await MapHttpError(response, "watch", ct));
         }
 
         JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
@@ -283,9 +283,10 @@ public sealed class HttpGoogleCalendarSyncService(
         return body.GetProperty("access_token").GetString() ?? string.Empty;
     }
 
-    private static DomainError MapHttpError(HttpResponseMessage response, string verb)
+    private static async Task<DomainError> MapHttpError(
+        HttpResponseMessage response, string verb, CancellationToken ct)
     {
-        string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        string body = await response.Content.ReadAsStringAsync(ct);
         return DomainError.External(
             $"google_calendar.{(int)response.StatusCode}",
             $"Google Calendar {verb} failed ({(int)response.StatusCode}): {body}");

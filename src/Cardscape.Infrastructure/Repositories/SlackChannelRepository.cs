@@ -12,13 +12,16 @@ public sealed class SlackChannelRepository(CardscapeDbContext db)
         BoardId boardId, CancellationToken ct = default)
     {
         var boardValue = boardId.Value;
-        return await Task.Run<IReadOnlyList<SlackChannel>>(() =>
+        var rows = new List<SlackChannel>();
+        await foreach (var c in Db.Set<SlackChannel>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<SlackChannel>().AsEnumerable()
-                .Where(c => c.BoardId.Value == boardValue && !c.IsDeleted)
-                .OrderBy(c => c.CreatedAt)
-                .ToList();
-        }, ct);
+            if (c.BoardId.Value == boardValue && !c.IsDeleted)
+            {
+                rows.Add(c);
+            }
+        }
+        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
+        return rows;
     }
 
     public async Task<IReadOnlyList<SlackChannel>> ListActiveSubscribersAsync(
@@ -30,14 +33,17 @@ public sealed class SlackChannelRepository(CardscapeDbContext db)
         }
 
         var boardValue = boardId.Value;
-        return await Task.Run<IReadOnlyList<SlackChannel>>(() =>
+        var rows = new List<SlackChannel>();
+        await foreach (var c in Db.Set<SlackChannel>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<SlackChannel>().AsEnumerable()
-                .Where(c => c.BoardId.Value == boardValue
-                            && !c.IsDeleted
-                            && c.Active
-                            && c.SubscribesTo(eventType))
-                .ToList();
-        }, ct);
+            if (c.BoardId.Value == boardValue
+                && !c.IsDeleted
+                && c.Active
+                && c.SubscribesTo(eventType))
+            {
+                rows.Add(c);
+            }
+        }
+        return rows;
     }
 }

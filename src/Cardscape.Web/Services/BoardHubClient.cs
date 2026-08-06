@@ -14,16 +14,19 @@ public sealed class BoardHubClient : IAsyncDisposable
 {
     private readonly TokenStore _tokens;
     private readonly IConfiguration _config;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<BoardHubClient> _logger;
     private HubConnection? _connection;
 
     public BoardHubClient(
         TokenStore tokens,
         IConfiguration config,
+        IHttpClientFactory httpClientFactory,
         ILogger<BoardHubClient> logger)
     {
         _tokens = tokens;
         _config = config;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -50,7 +53,36 @@ public sealed class BoardHubClient : IAsyncDisposable
             return;
         }
 
-        string apiBase = _config["ApiBaseUrl"]?.TrimEnd('/') ?? string.Empty;
+        // BETA-6-#2 — see test-results/BETA-TEST-REPORT.md.
+        // The previous implementation read `ApiBaseUrl` from
+        // config and built `${apiBase}/hubs/board`. When the
+        // appsettings.json left the value empty (the same-origin
+        // default), `apiBase` was the empty string and the URL
+        // became the bare path `/hubs/board`. SignalR's
+        // HubConnectionBuilder does NOT resolve that path against
+        // the document base like HttpClient does — it goes
+        // through the BrowserHttpMessageHandler which inherits
+        // the *window* base (often `file:///` for a Blazor WASM
+        // document fetched via the API's static-asset path), so
+        // the negotiate call ended up at
+        // `file:///hubs/board/negotiate?…` and the console threw
+        // "Not allowed to load local resource".
+        //
+        // The fix: use the HttpClient's already-resolved
+        // BaseAddress (which Program.cs sets to
+        // HostEnvironment.BaseAddress when ApiBaseUrl is empty)
+        // so the hub URL is always absolute and points at the
+        // same origin as the API calls.
+        IHttpClientFactory httpFactory = _httpClientFactory;
+        HttpClient http = httpFactory.CreateClient("Cardscape.Api");
+        string apiBase = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
+        if (string.IsNullOrEmpty(apiBase))
+        {
+            // Fallback for split-origin deploys: respect the
+            // explicit ApiBaseUrl setting, just like the typed
+            // HttpClient does.
+            apiBase = _config["ApiBaseUrl"]?.TrimEnd('/') ?? string.Empty;
+        }
         string hubUrl = $"{apiBase}/hubs/board";
 
         string? accessToken = await _tokens.GetAccessTokenAsync();

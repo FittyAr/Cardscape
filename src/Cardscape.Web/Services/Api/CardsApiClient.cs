@@ -22,6 +22,7 @@ public interface ICardsApiClient
     Task<ApiResult<CardDto>> ReopenAsync(Guid cardId, CancellationToken ct = default);
     Task<ApiResult<CardDto>> ArchiveAsync(Guid cardId, CancellationToken ct = default);
     Task<ApiResult<CardDto>> RestoreAsync(Guid cardId, CancellationToken ct = default);
+    Task<ApiResult> DeleteAsync(Guid cardId, CancellationToken ct = default);
     Task<ApiResult<CardDto>> AssignAsync(Guid cardId, Guid userId, CancellationToken ct = default);
     Task<ApiResult<CardDto>> UnassignAsync(Guid cardId, Guid userId, CancellationToken ct = default);
     Task<ApiResult<CardDto>> AttachLabelAsync(Guid cardId, Guid labelId, CancellationToken ct = default);
@@ -141,6 +142,12 @@ public sealed class CardsApiClient(IHttpClientFactory http) : ApiClientBase(http
     {
         HttpResponseMessage response = await CreateClient().PostAsync($"api/cards/{cardId}/restore", content: null, ct);
         return await ReadAsync<CardDto>(response, ct);
+    }
+
+    public async Task<ApiResult> DeleteAsync(Guid cardId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().DeleteAsync($"api/cards/{cardId}", ct);
+        return await ReadAsync(response, ct);
     }
 
     public async Task<ApiResult<CardDto>> AssignAsync(Guid cardId, Guid userId, CancellationToken ct = default)

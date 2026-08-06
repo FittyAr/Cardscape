@@ -27,7 +27,7 @@
     "Area": "Auth",
     "Test": "/me returns alice",
     "Status": "PASS",
-    "Detail": "email=r5.alice.170004@cardscape.test"
+    "Detail": "email=r5.alice.175937@cardscape.test"
   },
   {
     "Area": "Auth",
@@ -87,13 +87,13 @@
     "Area": "Workspaces",
     "Test": "get by id",
     "Status": "PASS",
-    "Detail": "id=371fa93f-ed55-4dc0-9c7d-edb937e9dbd4"
+    "Detail": "id=e9b6eff3-721e-429e-9584-8bb49fef218e"
   },
   {
     "Area": "Workspaces",
     "Test": "update name",
     "Status": "PASS",
-    "Detail": "name=R5 WS renamed status=200 body={\"id\":\"371fa93f-ed55-4dc0-9c7d-edb937e9dbd4\",\"name\":\"R5 WS renamed\",\"ownerId\":\"50f46a73-5d43-4c93-b90e-b682e3d58f83\",\"region\":\"unspecified\",\"isArchived\":false,\"createdAt\":\"2026-08-06T20:00:07.3852454+..."
+    "Detail": "name=R5 WS renamed status=200 body={\"id\":\"e9b6eff3-721e-429e-9584-8bb49fef218e\",\"name\":\"R5 WS renamed\",\"ownerId\":\"5ff6dc21-0c91-4a7f-ab50-854f62b94019\",\"region\":\"unspecified\",\"isArchived\":false,\"createdAt\":\"2026-08-06T20:59:37.8156568+..."
   },
   {
     "Area": "Workspaces",
@@ -117,7 +117,7 @@
     "Area": "Members",
     "Test": "bob accepts",
     "Status": "PASS",
-    "Detail": "status=200 body={\"id\":\"371fa93f-ed55-4dc0-9c7d-edb937e9dbd4\",\"name\":\"R5 WS renamed\",\"ownerId\":\"50f46a73-5d43-4c93-b90e-b682e3d58f83\",\"region\":\"unspecified\",\"isArchived\":false,\"createdAt\":\"2026-08-06T20:00:07.3852454+..."
+    "Detail": "status=200 body={\"id\":\"e9b6eff3-721e-429e-9584-8bb49fef218e\",\"name\":\"R5 WS renamed\",\"ownerId\":\"5ff6dc21-0c91-4a7f-ab50-854f62b94019\",\"region\":\"unspecified\",\"isArchived\":false,\"createdAt\":\"2026-08-06T20:59:37.8156568+..."
   },
   {
     "Area": "Members",
@@ -153,7 +153,7 @@
     "Area": "Boards",
     "Test": "update name via POST",
     "Status": "PASS",
-    "Detail": "status=200 body={\"id\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"workspaceId\":\"371fa93f-ed55-4dc0-9c7d-edb937e9dbd4\",\"name\":\"R5 Board renamed\",\"description\":\"test\",\"visibility\":\"private\",\"isArchived\":false,\"isStarred\":f..."
+    "Detail": "status=200 body={\"id\":\"5a3aa433-c7e4-4fad-affa-c7ce99409ca3\",\"workspaceId\":\"e9b6eff3-721e-429e-9584-8bb49fef218e\",\"name\":\"R5 Board renamed\",\"description\":\"test\",\"visibility\":\"private\",\"isArchived\":false,\"isStarred\":f..."
   },
   {
     "Area": "Boards",
@@ -165,7 +165,7 @@
     "Area": "Boards",
     "Test": "star",
     "Status": "PASS",
-    "Detail": "isStarred=True status=200 body={\"id\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"workspaceId\":\"371fa93f-ed55-4dc0-9c7d-edb937e9dbd4\",\"name\":\"R5 Board renamed\",\"description\":\"updated\",\"visibility\":\"private\",\"isArchived\":false,\"isStarred..."
+    "Detail": "isStarred=True status=200 body={\"id\":\"5a3aa433-c7e4-4fad-affa-c7ce99409ca3\",\"workspaceId\":\"e9b6eff3-721e-429e-9584-8bb49fef218e\",\"name\":\"R5 Board renamed\",\"description\":\"updated\",\"visibility\":\"private\",\"isArchived\":false,\"isStarred..."
   },
   {
     "Area": "Boards",
@@ -177,7 +177,7 @@
     "Area": "Boards",
     "Test": "unstar 2xx",
     "Status": "PASS",
-    "Detail": "status=200 body={\"id\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"workspaceId\":\"371fa93f-ed55-4dc0-9c7d-edb937e9dbd4\",\"name\":\"R5 Board renamed\",\"description\":\"updated\",\"visibility\":\"private\",\"isArchived\":false,\"isStarred..."
+    "Detail": "status=200 body={\"id\":\"5a3aa433-c7e4-4fad-affa-c7ce99409ca3\",\"workspaceId\":\"e9b6eff3-721e-429e-9584-8bb49fef218e\",\"name\":\"R5 Board renamed\",\"description\":\"updated\",\"visibility\":\"private\",\"isArchived\":false,\"isStarred..."
   },
   {
     "Area": "Boards",
@@ -213,7 +213,7 @@
     "Area": "Lists",
     "Test": "update name",
     "Status": "PASS",
-    "Detail": "status=200 body={\"id\":\"21250b22-8d11-4e1e-8f61-ea348d9ee21c\",\"boardId\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"name\":\"To Do (renamed)\",\"position\":1,\"isArchived\":false,\"createdAt\":\"2026-08-06T20:00:10.4983418+00:00\",\"..."
+    "Detail": "status=200 body={\"id\":\"8c9ad38b-6cc2-4e8a-8847-e63f62b34ba3\",\"boardId\":\"5a3aa433-c7e4-4fad-affa-c7ce99409ca3\",\"name\":\"To Do (renamed)\",\"position\":1,\"isArchived\":false,\"createdAt\":\"2026-08-06T20:59:38.1234885+00:00\",\"..."
   },
   {
     "Area": "Cards",
@@ -237,7 +237,7 @@
     "Area": "Cards",
     "Test": "update via rename",
     "Status": "PASS",
-    "Detail": "status=200 body={\"id\":\"24df6892-d9f9-4a14-add8-e49985f91bfa\",\"listId\":\"21250b22-8d11-4e1e-8f61-ea348d9ee21c\",\"title\":\"Card 1 renamed\",\"description\":\"first card\",\"position\":1,\"dueDate\":null,\"isArchived\":false,\"isCompl..."
+    "Detail": "status=200 body={\"id\":\"307cb354-1c02-48d6-a989-7930152c0bcf\",\"listId\":\"8c9ad38b-6cc2-4e8a-8847-e63f62b34ba3\",\"title\":\"Card 1 renamed\",\"description\":\"first card\",\"position\":1,\"dueDate\":null,\"isArchived\":false,\"isCompl..."
   },
   {
     "Area": "Cards",
@@ -321,7 +321,7 @@
     "Area": "Comments",
     "Test": "update 200",
     "Status": "PASS",
-    "Detail": "status=200 body={\"id\":\"7c996395-620a-4657-acb0-04ab9620bbbc\",\"cardId\":\"c0e4f225-c95d-4ef6-a1fd-2b22e30ae5aa\",\"authorId\":\"50f46a73-5d43-4c93-b90e-b682e3d58f83\",\"body\":\"First comment (edited)\",\"createdAt\":\"2026-08-06T2..."
+    "Detail": "status=200 body={\"id\":\"56f44beb-5317-4b51-8b4b-6c73d1cf305a\",\"cardId\":\"f3394ee9-9a0d-48be-8aea-e5a2f91bcbd5\",\"authorId\":\"5ff6dc21-0c91-4a7f-ab50-854f62b94019\",\"body\":\"First comment (edited)\",\"createdAt\":\"2026-08-06T2..."
   },
   {
     "Area": "Comments",
@@ -345,7 +345,7 @@
     "Area": "Labels",
     "Test": "update 2xx",
     "Status": "PASS",
-    "Detail": "status=200 body={\"id\":\"141332a1-603c-478b-8b06-35825353b73a\",\"boardId\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"name\":\"Bug (renamed)\",\"color\":\"#cc0000\"}"
+    "Detail": "status=200 body={\"id\":\"b29ccf0e-badb-4957-9d2d-4673f0e9f17a\",\"boardId\":\"5a3aa433-c7e4-4fad-affa-c7ce99409ca3\",\"name\":\"Bug (renamed)\",\"color\":\"#cc0000\"}"
   },
   {
     "Area": "Labels",
@@ -411,7 +411,7 @@
     "Area": "Voting",
     "Test": "toggle 2xx",
     "Status": "PASS",
-    "Detail": "status=200 body={\"cardId\":\"c0e4f225-c95d-4ef6-a1fd-2b22e30ae5aa\",\"voteCount\":1,\"currentUserHasVoted\":true}"
+    "Detail": "status=200 body={\"cardId\":\"f3394ee9-9a0d-48be-8aea-e5a2f91bcbd5\",\"voteCount\":1,\"currentUserHasVoted\":true}"
   },
   {
     "Area": "Voting",
@@ -429,7 +429,7 @@
     "Area": "CustomFields",
     "Test": "create 2xx",
     "Status": "PASS",
-    "Detail": "status=201 body={\"id\":\"b464ac1f-982d-4cae-ba83-6926748f0a5e\",\"boardId\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"name\":\"Estimate\",\"kind\":0,\"optionsJson\":\"[]\",\"position\":0}"
+    "Detail": "status=201 body={\"id\":\"7a62646c-eed3-49ba-b3f4-96ff61b6f748\",\"boardId\":\"5a3aa433-c7e4-4fad-affa-c7ce99409ca3\",\"name\":\"Estimate\",\"kind\":0,\"optionsJson\":\"[]\",\"position\":0}"
   },
   {
     "Area": "Activities",
@@ -453,7 +453,7 @@
     "Area": "Recurrence",
     "Test": "set 2xx",
     "Status": "PASS",
-    "Detail": "status=200 body={\"cardId\":\"f13787b4-0386-43ce-bb73-baff93ec87f2\",\"intervalDays\":1,\"nextOccurrenceAt\":\"2026-08-06T17:00:16.40181-03:00\",\"isActive\":true}"
+    "Detail": "status=200 body={\"cardId\":\"92eda5e5-dc6c-48c3-b118-efa7f281845e\",\"intervalDays\":1,\"nextOccurrenceAt\":\"2026-08-06T17:59:38.7107123-03:00\",\"isActive\":true}"
   },
   {
     "Area": "Search",
@@ -465,7 +465,7 @@
     "Area": "Idempotency",
     "Test": "replay same cardId",
     "Status": "PASS",
-    "Detail": "first=e4484370-19b2-4184-8589-e0883228dc7f second=e4484370-19b2-4184-8589-e0883228dc7f replayed=true"
+    "Detail": "first=484670ae-0f2e-40e2-a40d-e39b7ca15c1a second=484670ae-0f2e-40e2-a40d-e39b7ca15c1a replayed=true"
   },
   {
     "Area": "Errors",
@@ -531,7 +531,7 @@
     "Area": "TwoUser",
     "Test": "bob creates card",
     "Status": "PASS",
-    "Detail": "status=201 body={\"id\":\"a1d09e3d-5777-4471-8248-fc7f7acc42f2\",\"listId\":\"21250b22-8d11-4e1e-8f61-ea348d9ee21c\",\"title\":\"Bob's card\",\"description\":\"\",\"position\":1,\"dueDate\":null,\"isArchived\":false,\"isCompleted\":false,\"c..."
+    "Detail": "status=201 body={\"id\":\"1519eecb-1ce6-4015-8d67-2231d0b4361a\",\"listId\":\"8c9ad38b-6cc2-4e8a-8847-e63f62b34ba3\",\"title\":\"Bob's card\",\"description\":\"\",\"position\":1,\"dueDate\":null,\"isArchived\":false,\"isCompleted\":false,\"c..."
   },
   {
     "Area": "TwoUser",
@@ -561,7 +561,7 @@
     "Area": "Webhooks",
     "Test": "create 2xx",
     "Status": "PASS",
-    "Detail": "status=201 body={\"endpoint\":{\"id\":\"6238daf6-3708-40e4-9619-8dc315716afc\",\"boardId\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"url\":\"https://example.com/hook\",\"secretPrefix\":\"a8ae6e6e\",\"events\":[\"card.completed\",\"card.cr..."
+    "Detail": "status=201 body={\"endpoint\":{\"id\":\"fa8a9c12-0592-4296-8013-d28d745b5c92\",\"boardId\":\"5a3aa433-c7e4-4fad-affa-c7ce99409ca3\",\"url\":\"https://example.com/hook\",\"secretPrefix\":\"a8ae6e6e\",\"events\":[\"card.completed\",\"card.cr..."
   },
   {
     "Area": "Webhooks",
@@ -579,7 +579,7 @@
     "Area": "ApiToken",
     "Test": "create 2xx",
     "Status": "PASS",
-    "Detail": "status=201 body={\"id\":\"85843bde-7954-43a1-8413-ed4269b0e96f\",\"cleartextSecret\":\"zyov4jfMk5rg0pjuaryCywbD6DEobXpKhzXHVGp6SRA\"}"
+    "Detail": "status=201 body={\"id\":\"9dd2c434-51e5-42c7-8d6a-4d2039ebd474\",\"cleartextSecret\":\"NDmM3K3806q42sEiYa_OwrYT3xUm85KIIyvZpwJZZNI\"}"
   },
   {
     "Area": "ApiToken",

@@ -15,25 +15,27 @@ public sealed class WebhookDeliveryRepository(CardscapeDbContext db)
         CancellationToken ct = default)
     {
         var endpointValue = endpointId.Value;
-        return await Task.Run<IReadOnlyList<WebhookDelivery>>(() =>
+        var rows = new List<WebhookDelivery>();
+        await foreach (var d in Db.Set<WebhookDelivery>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            var rows = Db.Set<WebhookDelivery>().AsEnumerable()
-                .Where(d => d.EndpointId.Value == endpointValue
-                            && (statusFilter is null || d.Status == statusFilter.Value))
-                .ToList();
-
-            // SQLite cannot ORDER BY on DateTimeOffset, so sort
-            // client-side. The list is bounded by the page size
-            // (default 50, max 200) and the per-endpoint delivery
-            // history, which is small in practice.
-            rows.Sort((a, b) => b.CreatedAt.CompareTo(a.CreatedAt));
-            if (skip >= rows.Count)
+            if (d.EndpointId.Value == endpointValue
+                && (statusFilter is null || d.Status == statusFilter.Value))
             {
-                return new List<WebhookDelivery>();
+                rows.Add(d);
             }
+        }
 
-            int end = Math.Min(skip + take, rows.Count);
-            return rows.GetRange(skip, end - skip);
-        }, ct);
+        // SQLite cannot ORDER BY on DateTimeOffset, so sort
+        // client-side. The list is bounded by the page size
+        // (default 50, max 200) and the per-endpoint delivery
+        // history, which is small in practice.
+        rows.Sort((a, b) => b.CreatedAt.CompareTo(a.CreatedAt));
+        if (skip >= rows.Count)
+        {
+            return new List<WebhookDelivery>();
+        }
+
+        int end = Math.Min(skip + take, rows.Count);
+        return rows.GetRange(skip, end - skip);
     }
 }

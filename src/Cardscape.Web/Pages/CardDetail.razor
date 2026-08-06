@@ -56,6 +56,8 @@ else
                     }
                     <RadzenButton Text="@(card.IsArchived ? "Restore" : "Archive")"
                                   ButtonStyle="ButtonStyle.Warning" Click="@ToggleArchive" />
+                    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger"
+                                  Click="@DeleteCard" />
                     @* P3.3 / G6c â€” "Mirror to..." entry. Opens a RadzenDialog
                        with a board picker + a list picker. On confirm the
                        dialog returns the target list id and the parent
@@ -94,7 +96,7 @@ else
                         <RadzenDatePicker @bind-Value="snoozeUntilLocal"
                                           ShowTime="true"
                                           DateFormat="yyyy-MM-dd HH:mm" />
-                        <RadzenButton Text="Snooze untilâ€¦"
+                        <RadzenButton Text="Snooze until…"
                                       Icon="schedule"
                                       ButtonStyle="ButtonStyle.Secondary"
                                       Click="@SnoozeAsync"
@@ -182,7 +184,7 @@ else
                     {
                         <RadzenCard Variant="Variant.Flat">
                             <RadzenStack Gap="0.25rem">
-                                <RadzenText Text="@($"{c.CreatedAt.LocalDateTime:yyyy-MM-dd HH:mm} Â· {c.AuthorId}")"
+                                <RadzenText Text="@($"{c.CreatedAt.LocalDateTime:yyyy-MM-dd HH:mm} · {c.AuthorId}")"
                                             TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
                                 <RadzenText Text="@c.Body" TextStyle="TextStyle.Body2" />
                             </RadzenStack>
@@ -192,7 +194,7 @@ else
 
                 <RadzenTemplateForm TItem="AddCommentModel" Data="@addCommentModel" Submit="@AddComment">
                     <RadzenStack Gap="0.5rem" Class="rz-mt-2">
-                        <RadzenTextArea @bind-Value="addCommentModel.Body" Rows="2" Placeholder="Write a commentâ€¦"
+                        <RadzenTextArea @bind-Value="addCommentModel.Body" Rows="2" Placeholder="Write a comment…"
                                         Style="width:100%" />
                         <RadzenButton Text="Comment" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
                                       IsBusy="@addingComment" />
@@ -262,7 +264,7 @@ else
                                 }
                                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
                                              Gap="0.5rem">
-                                    <RadzenTextBox @bind-Value="newChecklistItemText" Placeholder="Add an itemâ€¦"
+                                    <RadzenTextBox @bind-Value="newChecklistItemText" Placeholder="Add an item…"
                                                    Style="flex:1" />
                                     <RadzenButton Text="Add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
                                                   Click="@(() => AddItemAsync(cl.Id))" />
@@ -272,7 +274,7 @@ else
                     }
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                                  Wrap="FlexWrap.Wrap">
-                        <RadzenTextBox @bind-Value="newChecklistTitle" Placeholder="New checklist titleâ€¦"
+                        <RadzenTextBox @bind-Value="newChecklistTitle" Placeholder="New checklist title…"
                                        Style="flex:1" />
                         <RadzenButton Text="Create checklist" Icon="add" ButtonStyle="ButtonStyle.Secondary"
                                       Click="@CreateChecklistAsync" />
@@ -302,9 +304,9 @@ else
                                          Gap="0.5rem" Wrap="FlexWrap.Wrap">
                                 <RadzenText Text="@a.KindName" TextStyle="TextStyle.Body2"
                                             TagName="TagName.Span" />
-                                <RadzenText Text="@($"Â· {a.OccurredAt.LocalDateTime:yyyy-MM-dd HH:mm}")"
+                                <RadzenText Text="@($"· {a.OccurredAt.LocalDateTime:yyyy-MM-dd HH:mm}")"
                                             TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
-                                <RadzenText Text="@($"Â· {FormatActivityPayload(a)}")" TextStyle="TextStyle.Body2"
+                                <RadzenText Text="@($"· {FormatActivityPayload(a)}")" TextStyle="TextStyle.Body2"
                                             class="rz-color-text-secondary" />
                             </RadzenStack>
                         }
@@ -659,6 +661,29 @@ else
         if (result.IsSuccess) card = result.Value;
     }
 
+    // BETA-6-#7 — see test-results/BETA-TEST-REPORT.md.
+    // The card DELETE endpoint landed in BETA-5-#5 but the Blazor
+    // client never wired a button to it. We add a red "Delete"
+    // button in the card actions strip; on success we navigate
+    // back to the workspace page (the CardDto does not carry the
+    // board id directly, so the cheapest stable post-delete
+    // landing is the workspace the user came from — the back
+    // button still works for the in-board flow).
+    [Inject] private Microsoft.AspNetCore.Components.NavigationManager NavForDelete { get; set; } = default!;
+    private async Task DeleteCard()
+    {
+        if (card is null) return;
+        ApiResult result = await Cards.DeleteAsync(CardId);
+        if (result.IsSuccess)
+        {
+            // Send the user back to the workspaces index; the
+            // back button or the workspace's board list takes
+            // them to the right board without us having to
+            // thread the board id through the card DTO.
+            NavForDelete.NavigateTo("workspaces");
+        }
+    }
+
     private async Task SnoozeAsync()
     {
         if (snoozing || card is null) return;
@@ -826,7 +851,7 @@ else
                     parts.Add($"{p.Name}: {p.Value}");
                 }
 
-                return string.Join(" Â· ", parts);
+                return string.Join(" · ", parts);
             }
         }
         catch

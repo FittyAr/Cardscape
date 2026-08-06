@@ -92,7 +92,7 @@ public static class WebhookEndpoints
         return app;
     }
 
-    public sealed record CreateWebhookBody(string Url, string Secret, IReadOnlyList<string> Events);
+    public sealed record CreateWebhookBody(string Url, string? Secret, IReadOnlyList<string> Events);
     public sealed record UpdateWebhookBody(string? Url, IReadOnlyList<string>? Events, bool? Active);
 
     private static IResult MapError(DomainError error) => error.Type switch

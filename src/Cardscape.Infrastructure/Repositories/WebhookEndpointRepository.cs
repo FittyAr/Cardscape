@@ -13,13 +13,16 @@ public sealed class WebhookEndpointRepository(CardscapeDbContext db)
         BoardId boardId, CancellationToken ct = default)
     {
         var boardValue = boardId.Value;
-        return await Task.Run<IReadOnlyList<WebhookEndpoint>>(() =>
+        var rows = new List<WebhookEndpoint>();
+        await foreach (var e in Db.Set<WebhookEndpoint>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<WebhookEndpoint>().AsEnumerable()
-                .Where(e => e.BoardId.Value == boardValue && !e.IsDeleted)
-                .OrderBy(e => e.CreatedAt)
-                .ToList();
-        }, ct);
+            if (e.BoardId.Value == boardValue && !e.IsDeleted)
+            {
+                rows.Add(e);
+            }
+        }
+        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
+        return rows;
     }
 
     public async Task<IReadOnlyList<WebhookEndpoint>> ListActiveForEventAsync(
@@ -30,11 +33,14 @@ public sealed class WebhookEndpointRepository(CardscapeDbContext db)
             return [];
         }
 
-        return await Task.Run<IReadOnlyList<WebhookEndpoint>>(() =>
+        var rows = new List<WebhookEndpoint>();
+        await foreach (var e in Db.Set<WebhookEndpoint>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<WebhookEndpoint>().AsEnumerable()
-                .Where(e => e.Active && !e.IsDeleted && e.SubscribesTo(eventType))
-                .ToList();
-        }, ct);
+            if (e.Active && !e.IsDeleted && e.SubscribesTo(eventType))
+            {
+                rows.Add(e);
+            }
+        }
+        return rows;
     }
 }

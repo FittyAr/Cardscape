@@ -13,13 +13,16 @@ public sealed class GitHubRepoLinkRepository(CardscapeDbContext db)
         BoardId boardId, CancellationToken ct = default)
     {
         var boardValue = boardId.Value;
-        return await Task.Run<IReadOnlyList<GitHubRepoLink>>(() =>
+        var rows = new List<GitHubRepoLink>();
+        await foreach (var l in Db.Set<GitHubRepoLink>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<GitHubRepoLink>().AsEnumerable()
-                .Where(l => l.BoardId.Value == boardValue && !l.IsDeleted)
-                .OrderBy(l => l.CreatedAt)
-                .ToList();
-        }, ct);
+            if (l.BoardId.Value == boardValue && !l.IsDeleted)
+            {
+                rows.Add(l);
+            }
+        }
+        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
+        return rows;
     }
 
     public async Task<GitHubRepoLink?> FindForBoardAndRepoAsync(
@@ -32,15 +35,17 @@ public sealed class GitHubRepoLinkRepository(CardscapeDbContext db)
 
         var boardValue = boardId.Value;
         var needle = repoFullName.Trim().ToLowerInvariant();
-        return await Task.Run<GitHubRepoLink?>(() =>
+        await foreach (var l in Db.Set<GitHubRepoLink>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<GitHubRepoLink>().AsEnumerable()
-                .Where(l => l.BoardId.Value == boardValue
-                            && !l.IsDeleted
-                            && l.Active
-                            && string.Equals(l.RepoFullName, needle, StringComparison.Ordinal))
-                .FirstOrDefault();
-        }, ct);
+            if (l.BoardId.Value == boardValue
+                && !l.IsDeleted
+                && l.Active
+                && string.Equals(l.RepoFullName, needle, StringComparison.Ordinal))
+            {
+                return l;
+            }
+        }
+        return null;
     }
 }
 
@@ -51,12 +56,15 @@ public sealed class GitHubPullRequestLinkRepository(CardscapeDbContext db)
         CardId cardId, CancellationToken ct = default)
     {
         var cardValue = cardId.Value;
-        return await Task.Run<IReadOnlyList<GitHubPullRequestLink>>(() =>
+        var rows = new List<GitHubPullRequestLink>();
+        await foreach (var l in Db.Set<GitHubPullRequestLink>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<GitHubPullRequestLink>().AsEnumerable()
-                .Where(l => l.CardId.Value == cardValue && !l.IsDeleted)
-                .OrderBy(l => l.CreatedAt)
-                .ToList();
-        }, ct);
+            if (l.CardId.Value == cardValue && !l.IsDeleted)
+            {
+                rows.Add(l);
+            }
+        }
+        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
+        return rows;
     }
 }

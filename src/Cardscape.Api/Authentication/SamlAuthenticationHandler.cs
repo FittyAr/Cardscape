@@ -147,7 +147,7 @@ public sealed class SamlAuthenticationHandler
         Domain.Authentication.Saml.SamlConnection connection, string slug)
     {
         (Saml2ConfigurationOptions options, Saml2IdentityProvider idp) =
-            BuildSustainsysOptions(connection, slug);
+            await BuildSustainsysOptions(connection, slug);
 
         Saml2HttpRequestData requestData = BuildRequestData();
         string returnPath = $"/saml/{slug}/login-init";
@@ -176,7 +176,7 @@ public sealed class SamlAuthenticationHandler
         Domain.Authentication.Saml.SamlConnection connection, string slug)
     {
         (Saml2ConfigurationOptions options, _) =
-            BuildSustainsysOptions(connection, slug);
+            await BuildSustainsysOptions(connection, slug);
 
         Saml2HttpRequestData requestData = BuildRequestData();
         Saml2CommandResult result;
@@ -264,7 +264,7 @@ public sealed class SamlAuthenticationHandler
         Domain.Authentication.Saml.SamlConnection connection, string slug)
     {
         (Saml2ConfigurationOptions options, _) =
-            BuildSustainsysOptions(connection, slug);
+            await BuildSustainsysOptions(connection, slug);
 
         Saml2HttpRequestData requestData = BuildRequestData();
         Saml2CommandResult result = (Saml2CommandResult)Sustainsys.Saml2.WebSso.CommandFactory
@@ -282,7 +282,7 @@ public sealed class SamlAuthenticationHandler
         return true;
     }
 
-    private (Saml2ConfigurationOptions, Saml2IdentityProvider) BuildSustainsysOptions(
+    private async Task<(Saml2ConfigurationOptions, Saml2IdentityProvider)> BuildSustainsysOptions(
         Domain.Authentication.Saml.SamlConnection connection, string slug)
     {
         var spOptions = new SPOptions
@@ -326,7 +326,7 @@ public sealed class SamlAuthenticationHandler
             // admin UI exposes the signing cert upload.
             try
             {
-                string metadataXml = ReadMetadataFromLocation(connection.IdpMetadataUrl);
+                string metadataXml = await ReadMetadataFromLocation(connection.IdpMetadataUrl);
                 TryApplyInlineMetadata(idp, metadataXml);
             }
             catch (Exception ex)
@@ -382,16 +382,16 @@ public sealed class SamlAuthenticationHandler
         }
     }
 
-    private static string ReadMetadataFromLocation(string location)
+    private static async Task<string> ReadMetadataFromLocation(string location)
     {
         if (Uri.TryCreate(location, UriKind.Absolute, out var uri)
             && uri.Scheme == Uri.UriSchemeFile)
         {
-            return System.IO.File.ReadAllText(uri.LocalPath);
+            return await System.IO.File.ReadAllTextAsync(uri.LocalPath).ConfigureAwait(false);
         }
 
         using var http = new HttpClient();
-        return http.GetStringAsync(location).GetAwaiter().GetResult();
+        return await http.GetStringAsync(location).ConfigureAwait(false);
     }
 
     private Saml2HttpRequestData BuildRequestData()

@@ -12,12 +12,17 @@ public sealed class GoogleDriveConnectionRepository(CardscapeDbContext db)
         UserId userId, CancellationToken ct = default)
     {
         var userValue = userId.Value;
-        return await Task.Run<GoogleDriveConnection?>(() =>
+        GoogleDriveConnection? best = null;
+        await foreach (var c in Db.Set<GoogleDriveConnection>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<GoogleDriveConnection>().AsEnumerable()
-                .Where(c => c.UserId.Value == userValue && !c.IsDeleted)
-                .OrderByDescending(c => c.CreatedAt)
-                .FirstOrDefault();
-        }, ct);
+            if (c.UserId.Value == userValue && !c.IsDeleted)
+            {
+                if (best is null || c.CreatedAt > best.CreatedAt)
+                {
+                    best = c;
+                }
+            }
+        }
+        return best;
     }
 }

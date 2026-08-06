@@ -35,6 +35,8 @@ else
                           Click="@(() => Nav.NavigateTo($"boards/{BoardId}/extensions"))" />
             <RadzenButton Text="Activity" Icon="history" ButtonStyle="ButtonStyle.Light"
                           Click="@(() => Nav.NavigateTo($"boards/{BoardId}/activity"))" />
+            <RadzenButton Text="Settings" Icon="settings" ButtonStyle="ButtonStyle.Light"
+                          Click="@(() => showSettings = !showSettings)" />
         </Actions>
     </PageHeader>
 
@@ -51,6 +53,62 @@ else
                     </RadzenStack>
                 </RadzenStack>
             </RadzenTemplateForm>
+        </RadzenCard>
+    }
+
+    @* BETA-6-#6 — see test-results/BETA-TEST-REPORT.md.
+       The board API has supported rename / description / visibility /
+       archive / unarchive / delete endpoints since v1.0.0, but the
+       Blazor UI never surfaced them — the only affordance on the
+       board page was "Star" + "Add list" + navigation. This panel
+       closes that gap with a single expandable settings card. The
+       rename / description / visibility / archive / unarchive
+       commands already exist in IBoardsApiClient, so this is just
+       wiring. *@
+    @if (showSettings)
+    {
+        <RadzenCard>
+            <RadzenStack Gap="0.75rem">
+                <RadzenText Text="Board settings" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                <RadzenTemplateForm TItem="RenameBoardModel" Data="@renameModel" Submit="@RenameBoard">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenTextBox @bind-Value="renameModel.NewName" Placeholder="New board name…"
+                                       Style="width:100%" />
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                            <RadzenButton Text="Rename" ButtonType="ButtonType.Submit"
+                                          ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenTemplateForm>
+                <RadzenTemplateForm TItem="DescriptionBoardModel" Data="@descriptionModel" Submit="@ChangeDescription">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenTextArea @bind-Value="descriptionModel.NewDescription" Rows="2"
+                                         Placeholder="New description…" Style="width:100%" />
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                            <RadzenButton Text="Update description" ButtonType="ButtonType.Submit"
+                                          ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenTemplateForm>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
+                             Wrap="FlexWrap.Wrap">
+                    <RadzenText Text="Visibility" TextStyle="TextStyle.Body2" />
+                    <RadzenDropDown TValue="string" @bind-Value="newVisibility" Data="@visibilityOptions"
+                                    Change="@ChangeVisibility" Style="width:10rem" />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    @if (board.IsArchived)
+                    {
+                        <RadzenButton Text="Unarchive" Icon="unarchive" ButtonStyle="ButtonStyle.Warning"
+                                      Click="@UnarchiveBoard" />
+                    }
+                    else
+                    {
+                        <RadzenButton Text="Archive" Icon="archive" ButtonStyle="ButtonStyle.Warning"
+                                      Click="@ArchiveBoard" />
+                    }
+                </RadzenStack>
+            </RadzenStack>
         </RadzenCard>
     }
 
@@ -142,6 +200,13 @@ else
     private bool addingList;
     private readonly AddListModel addListModel = new();
     private bool hubConnected;
+
+    // BETA-6-#6 — board settings panel state.
+    private bool showSettings;
+    private readonly RenameBoardModel renameModel = new();
+    private readonly DescriptionBoardModel descriptionModel = new();
+    private readonly IReadOnlyList<string> visibilityOptions = new[] { "private", "workspace", "public" };
+    private string newVisibility = "private";
 
     private Guid? openAddCardFor;
     private string newCardTitle = string.Empty;
@@ -328,6 +393,56 @@ else
             await ReloadListsAndCardsAsync();
         }
     }
+
+    // BETA-6-#6 — board settings handlers. All four back the
+    // settings panel above; every call already exists on
+    // IBoardsApiClient, so this is just glue.
+    private async Task RenameBoard()
+    {
+        if (string.IsNullOrWhiteSpace(renameModel.NewName)) return;
+        ApiResult<BoardDto> result = await BoardsApi.RenameAsync(BoardId, renameModel.NewName);
+        if (result.IsSuccess)
+        {
+            board = result.Value;
+            renameModel.NewName = string.Empty;
+        }
+    }
+
+    private async Task ChangeDescription()
+    {
+        if (string.IsNullOrWhiteSpace(descriptionModel.NewDescription)) return;
+        ApiResult<BoardDto> result = await BoardsApi.ChangeDescriptionAsync(
+            BoardId, descriptionModel.NewDescription);
+        if (result.IsSuccess)
+        {
+            board = result.Value;
+            descriptionModel.NewDescription = string.Empty;
+        }
+    }
+
+    private async Task ChangeVisibility()
+    {
+        ApiResult<BoardDto> result = await BoardsApi.ChangeVisibilityAsync(BoardId, newVisibility);
+        if (result.IsSuccess)
+        {
+            board = result.Value;
+        }
+    }
+
+    private async Task ArchiveBoard()
+    {
+        ApiResult<BoardDto> result = await BoardsApi.ArchiveAsync(BoardId);
+        if (result.IsSuccess) board = result.Value;
+    }
+
+    private async Task UnarchiveBoard()
+    {
+        ApiResult<BoardDto> result = await BoardsApi.UnarchiveAsync(BoardId);
+        if (result.IsSuccess) board = result.Value;
+    }
+
+    private sealed class RenameBoardModel { public string NewName { get; set; } = string.Empty; }
+    private sealed class DescriptionBoardModel { public string NewDescription { get; set; } = string.Empty; }
 
     // ── Drag-and-drop wiring ───────────────────────────────────
     // The HTML5 drag-and-drop API in Blazor's

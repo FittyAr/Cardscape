@@ -24,17 +24,19 @@ public static class RecurrenceEndpoints
                 return MapError(result.Error);
             }
 
-            // The handler folds three "no recurrence" branches into a
-            // Success(null) result: the card has no recurrence row, the
-            // card itself was not found, or the caller is not a board
-            // member (IDOR defence). `Results.Ok((Dto?)null)` would
-            // serialise the null value with a zero-byte body, which the
-            // Blazor WASM client fails to deserialise as `CardRecurrenceDto`
-            // and breaks the CardDetail page on every load. Returning
-            // 404 here is the documented "no recurrence" signal and
-            // matches the spec the Blazor client already handles.
+            // BETA-6-#3 — see test-results/BETA-TEST-REPORT.md.
+            // The previous implementation returned 404 when the
+            // card has no recurrence row. The Blazor client does
+            // treat 404 as "no recurrence" (so the page renders
+            // correctly) but the browser console logs every 404
+            // as a noisy error, which makes real errors harder
+            // to spot in the dev tools. 204 No Content is the
+            // idiomatic REST signal for "exists, but no
+            // representation" and doesn't show up as a red
+            // network error. The Blazor client now treats both
+            // 204 and 404 as the "no recurrence" path.
             return result.Value is null
-                ? Results.NotFound()
+                ? Results.NoContent()
                 : Results.Ok(result.Value);
         });
 
