@@ -97,3 +97,45 @@
         scroll-behavior: auto !important;
     }
 }
+
+/* Skip-link (BETA-3-UI-#14) — invisible until focused, then
+   snaps to the top-left of the page. The first Tab on any
+   page surfaces it. Without this, keyboard / screen-reader
+   users have to tab through the entire header + sidebar
+   before they reach the page body. */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--rz-primary, #1a73e8);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    z-index: 10000;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 0 0 0.25rem 0;
+    transition: top 0.15s ease-in;
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+    top: 0;
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+/* Visible focus indicator on every interactive Radzen
+   primitive. The default browser ring is suppressed by
+   Radzen's reset; without this override a keyboard user
+   cannot tell which control has focus. The :focus-visible
+   pseudo keeps mouse users from seeing the ring. */
+button:focus-visible,
+a:focus-visible,
+.rz-button:focus-visible,
+.rz-panel-menuitem-link:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--rz-primary, #1a73e8);
+    outline-offset: 2px;
+}

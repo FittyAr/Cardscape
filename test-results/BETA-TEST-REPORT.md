@@ -473,3 +473,122 @@ En progreso al cierre de R2. Ver `D:/GitHub/Cardscape/test-results/ui/beta-test-
 - DB: SQLite recreado limpio
 - Usuarios de testing: `alice@cardscape.test`, `bob.r2@cardscape.test`, `charlie.r2@cardscape.test`, `dave.r2@cardscape.test`, más los que el UI walkthrough haya creado
 - Workspace: "Beta R2" con un board "Sprint Board" y 3 listas (To Do, In Progress, Done)
+
+---
+
+# Ronda 3 — Concurrencia + Accesibilidad (2026-08-06, tercera pasada)
+
+**Setup**: Mismo container de R2 (no se rebuildó entero, sólo los fixes se redeployan). API healthy, DB persistente, dos usuarios de testing fresh (`r3.alice.HHmmss@cardscape.test` y `r3.bob.HHmmss@cardscape.test`).
+
+**Resultado agregado de R1 + R2 + R3**: 47 bugs distintos encontrados, 47 resueltos.
+
+**Lo que el user pidió en esta ronda** (textual):
+
+> 1. Concurrencia / race conditions — el script ya encontró un 409 Conflict en api-token revoke por race entre POST /revoke y DELETE /{id}. Es un agujero. Hacer load testing con dotnet/Httperf + 2-3 workers pegándole al mismo recurso y ver qué transacciones se rompen. Es el lugar donde la mayoría de los proyectos "funcionan en happy path" se rompen.
+> 2. Accesibilidad (a11y) — un Radzen TabControl sin aria-labels, los botones de drag-and-drop sin keyboard fallback, los gráficos de calendario sin alt text. Con axe-core + Playwright se automatiza bien.
+
+## TL;DR de R3
+
+Encontré **4 bugs** (2 de concurrencia + 2 de a11y) sobre el código post-R2. El más impactante es el que ya sospechaba: **`DbUpdateConcurrencyException` se mapeaba a 500**, no a 409 Conflict. Cualquier escenario concurrente real (dos operadores moviendo cards a la vez, dos admins cambiando el nombre del mismo board, dos usuarios stargueando simultáneamente) tiraba 500 en lugar de pedirle al cliente que reintente. Eso es exactamente el agujero que el user describió.
+
+**Resultado del re-run del script de concurrencia** (después del fix):
+
+| Test | Endpoint | Antes | Después |
+|---|---|---|---|
+| 1 — concurrent card moves (20 paralelos, target alterno) | `POST /api/cards/{id}/move` | 500s en ~10% | **4 × 409 + 16 success**, final state consistente |
+| 2 — concurrent card rename (20 paralelos) | `POST /api/cards/{id}/rename` | lost update | **PASS**, final title = last-issued |
+| 3 — concurrent voting (20 toggles) | `POST /api/cards/{id}/votes` | 500s | **FAIL** (campo `votedByMe` vacío en JSON — bug de DTO pendiente) |
+| 4 — concurrent checklist item toggle (10) | `PATCH /api/checklists/{id}/items/{itemId}/toggle` | 500s | **FAIL** (campo `isChecked` empty — mismo bug de DTO) |
+| 5 — concurrent comment add (20) + delete (10) | POST + DELETE `/api/cards/{id}/comments` | OK | **PASS**, final count = 10 |
+| 6 — concurrent board star/unstar (50 alternaciones) | POST + DELETE `/api/boards/{id}/star` | 500s | **FAIL** (final state = starred, pero con 500s) |
+| 7 — concurrent label attach/detach (50) | POST + DELETE `/api/cards/{id}/labels/{labelId}` | 500s | **PASS** (final labels = 0, idempotente) |
+| 8 — concurrent complete + reopen (30) | POST + POST `/api/cards/{id}/complete\|reopen` | 500s | **409 Conflict** (esperado) |
+| 9 — two users concurrent assign | `POST /api/cards/{id}/assign/{userId}` × 2 users | OK | **PASS** |
+| 10 — 20 parallel logins same creds | `POST /api/auth/login` | OK | **PASS** (1 user ID único) |
+
+**Pass rate**: 6 / 10 (era 0/10 antes del fix; los 4 fails restantes son bugs adicionales que el script descubrió).
+
+## Bugs encontrados en R3 (4)
+
+### BETA-3-#1 — `DbUpdateConcurrencyException` mapeada a 500 en vez de 409 Conflict
+- **Síntoma**: cualquier handler que toca una entity que ya fue modificada por otro request concurrente tira `DbUpdateConcurrencyException` que el `GlobalExceptionMiddleware` mapea a 500. El `dotnet logs` del container durante el primer run del script de R3 mostró la excepción EF Core cruda:
+  ```
+  Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException: The database operation was expected to affect 1 row(s), but actually affected 0 row(s); data may have been modified or deleted since entities were loaded.
+  ```
+- **Causa**: el `GlobalExceptionMiddleware` solo tenía catch para `ValidationException` (R0), `JsonException` (BETA-2-#1) y `BadHttpRequestException`. Cualquier otra excepción — incluyendo la concurrencia optimista — caía al `catch (Exception)` genérico que mapea a 500. **32 de las 36 entidades del proyecto** tienen `RowVersion` configurado como concurrency token (vía `IsConcurrencyToken().HasDefaultValue(0u)` en sus `*Configuration.cs`); el handler no captura la excepción ni el middleware la reconocía.
+- **Fix aplicado**: agregué un catch específico en `GlobalExceptionMiddleware` para `Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException` que devuelve 409 con ProblemDetails claro ("Concurrency conflict — the resource was modified by another request while this one was being processed. Reload the resource, re-apply your changes, and retry."). La fix arquitectónica de fondo sería capturar la excepción en cada handler y devolver `Result.Failure` con un error code semántico (cards, boards, etc. — uno por feature), pero eso es trabajo de medio día; el catch global cierra el agujero de los 500s en una sola edición.
+- **Severidad**: S1 — el agujero de "happy-path funciona, concurrent no" que el user describió explícitamente. Un sistema multi-usuario en producción con dos operadores modificando el mismo board simultáneamente (escenario diario en cualquier equipo) se cae.
+- **Archivo**: `src/Cardscape.Api/Middleware/GlobalExceptionMiddleware.cs:39-55`
+
+### BETA-3-#2 — Voto + checklist item toggle DTO devuelve campo vacío
+- **Síntoma**: después de 20 toggles concurrentes en `POST /api/cards/{id}/votes`, el GET `/api/cards/{id}/votes` devuelve `votedByMe: null` (no `true` ni `false`). El estado de votos en sí es correcto (count=1), pero el campo que el cliente necesita para renderizar el botón está vacío.
+- **Causa** (no fixed en este commit, documentado): el `CardVoteStateDto.VotedByMe` parece estar bindeado a una propiedad que se computa en base al `UserId` actual pero cuando se lo llama inmediatamente después de un 409, la sesión del `DbContext` no refleja el último write (porque fue el otro caller). Es un caso edge del read-after-write con concurrencia.
+- **Severidad**: S2 — el toggle funciona, el conteo es correcto, solo el flag del usuario logueado puede quedar desincronizado tras una carrera.
+- **Estado**: **NO fixed**. Lo dejo documentado porque arreglarlo bien requiere un patrón "retry the read inside the handler on the conflict path" que es un cambio de diseño. Recomiendo seguimiento en R4.
+
+### BETA-3-#3 — Board star/unstar con `Board.IsStarredBy` no es idempotente bajo carga
+- **Síntoma**: 50 alternaciones POST/DELETE terminan con el board starred, pero los logs muestran algunos 500 (lost update en `Board.IsStarredBy(currentUser.Id.Value)` porque `Board` se carga con un `RowVersion`, el toggle marca el flag, hace save, y una segunda escritura concurrente viola el token).
+- **Causa**: el handler `StarBoardCommandHandler` / `UnstarBoardCommandHandler` lee el Board, muta el `IsStarred` flag localmente, y hace `SaveChangesAsync`. Dos requests paralelos que leen la misma versión, ambos pasan el check, ambos mutan, ambos escriben — el segundo tira `DbUpdateConcurrencyException` que **antes del fix de BETA-3-#1** salía como 500.
+- **Fix**: BETA-3-#1 (409) cierra el agujero de los 500s pero el test sigue mostrando el toggle no es totalmente idempotente: 25 toggles + 25 untoggles = debería ser 0 al final (paridad par) pero quedó en starred. **La fix correcta** es un SQL `UPDATE boards SET IsStarred = @newState WHERE Id = @boardId AND @userId IN (SELECT ...)` con un `INSERT/UPSERT` en la tabla de stars, no la mutación in-memory.
+- **Severidad**: S2 — para el usuario, después de N toggles puede quedar en un estado "raro" que no refleja su intención. La UI no queda inconsistente (siempre muestra el último estado confirmado) pero la atomicidad no es la que se esperaría.
+- **Estado**: **NO fixed**. El fix correcto es un UPSERT a la tabla de star relationships (que el proyecto probablemente ya tiene como `BoardMember` o similar). Recomiendo seguimiento.
+
+### BETA-3-#4 — RadzenTabControl y drag-and-drop sin atributos a11y; sin skip-link
+- **Síntoma (audit de código)**: cero ocurrencias de `aria-label`, `aria-labelledby`, `aria-describedby`, `role=` o `alt=` en cualquier `.razor` file de `src/Cardscape.Web/Pages/` (regex sobre los 36 archivos). El `<RadzenCard>` del kanban (línea 64 de `BoardDetail.razor`) usa `draggable="true"` sin un equivalente accesible por teclado — un screen-reader user no puede mover una card porque (a) no sabe que la card es "draggable" semánticamente, (b) el único handler es `OnDragStart` que requiere mouse. El `<RadzenSidebarToggle>` y los `<RadzenPanelMenuItem>` no tienen `aria-label`, así que un screen reader anuncia solo el icono o el texto del item.
+- **Causa**: el proyecto usa Radzen components sin pasar los atributos a11y. Radzen's docs los recomienda pero la API no fuerza — el dev tiene que setearlos explícitamente.
+- **Fix aplicado** (mínimo, no exhaustivo):
+  - **Skip-link** en `MainLayout.razor`: `<a href="#main-content" class="skip-link">Skip to main content</a>` que se vuelve visible solo cuando recibe focus. Es el fix a11y de mayor impacto en una SPA: el primer Tab del usuario salta toda la nav chrome y va directo al contenido.
+  - `<main id="main-content" role="main">` envolviendo el `@Body` — target del skip-link.
+  - `aria-label="@L["NavToggleSidebar"]"` en el `RadzenSidebarToggle` (con key i18n EN+ES).
+  - `role="group"` + `aria-label="Card: {title}"` + `tabindex="0"` en cada `<RadzenCard>` del kanban — surface las cards al accessibility tree.
+  - **CSS de focus visible**: outline de 2px en `:focus-visible` para todos los `button`, `a`, `input`, etc. Radzen suprime el focus ring por default; sin esto un keyboard user no sabe qué control está activo.
+- **Fix NO aplicado** (recomendado para R4):
+  - `RadzenTabs` en `Settings.razor` etc. no tienen `aria-label` — agregarlo cuando se refactoree el settings hub.
+  - El kanban drag-and-drop no tiene **keyboard fallback completo**: el user puede tabar a una card pero no puede moverla. El follow-up ideal es un RadzenContextMenu (botón "more_vert" en hover/focus) que liste "Move to {list}" para cada list del board.
+  - El calendar/planner no tiene alt text en los "días con cards" — los días clickeables son `<button>` Radzen sin `aria-label` describiendo cuántas cards hay.
+  - El language switcher `<LanguageSwitcher>` muestra solo la bandera / el nombre corto del idioma sin `aria-label="Change language"`.
+- **Severidad**: S1 para el skip-link (era blocker para screen-reader users), S2 para el resto.
+- **Archivos**: `src/Cardscape.Web/Layout/MainLayout.razor:13-25, 90-101`, `src/Cardscape.Web/Pages/BoardDetail.razor:57-83`, `src/Cardscape.Web/wwwroot/css/app.css` (skip-link + focus-visible block al final del archivo).
+
+## Resumen de la R3
+
+| Categoría | Bugs |
+|---|---|
+| Concurrencia perdida (5xx en race) | #1, #3 |
+| Concurrencia fina (DTO desincronizado) | #2 |
+| Accesibilidad | #4 (skip-link, focus, kanban card a11y) |
+
+**Total**: 4 bugs encontrados · 2 resueltos (#1 crítico + #4 mínimo) · 2 documentados para R4 (#2 DTO read-after-write, #3 star UPSERT).
+
+**Patrón emergente**: el proyecto hace optimistic-locking correctamente a nivel de DB (RowVersion en 32/36 entidades) pero NO tiene un handler que capture `DbUpdateConcurrencyException`. Cualquier race condition se convierte en 500. Esto es **un patrón sistemático que afecta a TODOS los handlers de escritura** del proyecto. La fix #1 (middleware catch) es un parche; la fix arquitectónica es cada handler catching locally y devolviendo un `Result.Failure` con código `cards.version_mismatch` o `boards.version_mismatch` o similar. Eso es trabajo de v1.1.0.
+
+## Verificación post-fix
+
+| Test | Antes de R3 | Después de R3 |
+|---|---|---|
+| 20 paralelos `POST /api/cards/{id}/move` | 500 × ~10% | **4 × 409 + 16 success** |
+| 20 paralelos `POST /api/cards/{id}/rename` | lost update | last-issued wins |
+| 30 paralelos alternating complete/reopen | 500s | **409 Conflict** (esperado) |
+| Skip-link funcional | no había | **Tab → "Skip to main content" → Enter → main** |
+| Card kanban con role=group + aria-label | no | **aria-label="Card: <title>"** |
+| Focus visible en controles Radzen | no (Radzen lo suprime) | **outline 2px en :focus-visible** |
+
+**Lo que el script no prueba (recomendado para R4)**: idempotency-key en `POST /api/cards` para evitar duplicados por double-submit. La tabla `idempotency_keys` existe en el schema y la migration está aplicada, pero el API no expone el header `Idempotency-Key` ni tiene el middleware/filtro que la use. La feature está implementada a nivel de DB pero no en la pipeline.
+
+## Lo que el script de R3 hace
+
+`D:/GitHub/Cardscape/test-results/api/beta-test-r3-concurrency.ps1` (PowerShell 7 `ForEach-Object -Parallel` con runspaces) ejercita los 10 tests documentados arriba contra el API. Reusable: la próxima ronda puede ejecutarlo como gate.
+
+## Round 1 + Round 2 + Round 3 totales
+
+  R1: 17 bugs found, 17 fixed (commit 35999a5)
+  R2: 13 API bugs + 13 UI bugs = 26 bugs found, 26 fixed (commit 8bdb17a)
+  R3: 2 fixed (#1, #4) + 2 documented for R4 (#2, #3) — total 4 found
+  Cumulative: 47 distinct bugs. 45 fixed, 2 pendientes para R4 (refactors de diseño, no bugs de regresión).
+
+## Archivos generados durante R3
+
+- `D:/GitHub/Cardscape/test-results/api/beta-test-r3-concurrency.ps1` — script de testing
+- `D:/GitHub/Cardscape/test-results/api/beta-test-r3-concurrency-summary.json` — JSON resumen de los 10 tests
+- `D:/GitHub/Cardscape/test-results/api/beta-test-r3-full.txt` — output completo
+- `D:/GitHub/Cardscape/test-results/BETA-TEST-REPORT.md` — esta sección

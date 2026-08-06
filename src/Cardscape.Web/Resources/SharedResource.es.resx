@@ -331,4 +331,4 @@
   <data name="ImportBlurb" xml:space="preserve"><value>Subí un export JSON de Trello para crear un tablero nuevo con listas y tarjetas.</value></data>
   <data name="ImportTrelloFile" xml:space="preserve"><value>Archivo JSON de Trello</value></data>
   <data name="ImportTitle" xml:space="preserve"><value>Importar un tablero de Trello</value></data>
-</root>
+<data name="NavToggleSidebar" xml:space="preserve"><value>Mostrar/ocultar panel de navegación</value></data></root>

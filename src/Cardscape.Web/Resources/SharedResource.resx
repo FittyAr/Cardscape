@@ -332,4 +332,4 @@
   <data name="ImportTitle" xml:space="preserve"><value>Import a Trello board</value></data>
   <data name="ImportBlurb" xml:space="preserve"><value>Upload a Trello JSON export to create a new board with lists and cards.</value></data>
   <data name="ImportTrelloFile" xml:space="preserve"><value>Trello JSON file</value></data>
-</root>
+<data name="NavToggleSidebar" xml:space="preserve"><value>Toggle navigation sidebar</value></data></root>

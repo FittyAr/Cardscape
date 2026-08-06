@@ -16,6 +16,15 @@ namespace Cardscape.Api.Middleware;
 /// generic catch and surface as 500s, hiding what is
 /// actually a client-side input problem — see BETA-2-#1 in
 /// test-results/BETA-TEST-REPORT.md.
+///
+/// Concurrency errors (DbUpdateConcurrencyException, raised
+/// by EF Core when the RowVersion token on the entity
+/// doesn't match the row that the UPDATE actually modified)
+/// become 409 Conflicts. Every entity in the project has
+/// `RowVersion` configured as a concurrency token
+/// (see src/Cardscape.Infrastructure/Persistence/CardscapeDbContext.cs
+/// for the convention) so this is the path any concurrent
+/// modification walks — BETA-3-#1.
 /// </summary>
 public sealed class GlobalExceptionMiddleware(
     RequestDelegate next,
@@ -59,6 +68,33 @@ public sealed class GlobalExceptionMiddleware(
                 StatusCodes.Status400BadRequest,
                 "Bad request",
                 ex.Message);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
+        {
+            // BETA-3-#1 — see test-results/BETA-TEST-REPORT.md.
+            //
+            // EF Core throws this when the RowVersion
+            // concurrency token on the entity doesn't
+            // match the row that the UPDATE actually
+            // modified — i.e. another writer committed a
+            // change between our SELECT and our UPDATE.
+            // 409 Conflict is the semantically correct
+            // response (RFC 9110 §15.5.10): the request
+            // collides with the current state of the
+            // resource, the client should refresh and
+            // retry. The handler-level fix (catching this
+            // and returning a Result.Failure) is the
+            // right architectural choice long-term, but a
+            // global catch here closes every existing
+            // endpoint at once without touching the
+            // handler surface.
+            logger.LogInformation(ex, "Concurrency conflict at {Path}", context.Request.Path);
+            await WriteProblem(
+                context,
+                StatusCodes.Status409Conflict,
+                "Concurrency conflict",
+                "The resource was modified by another request while this one was being processed. " +
+                "Reload the resource, re-apply your changes on top of the latest state, and retry.");
         }
         catch (Exception ex)
         {

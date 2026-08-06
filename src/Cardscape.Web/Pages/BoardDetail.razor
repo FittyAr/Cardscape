@@ -60,7 +60,21 @@ else
                 var card = context;
                 double opacity = ComputeCardOpacity(card, agingMode, now);
             }
+            @* BETA-3-UI-#15 — see test-results/BETA-TEST-REPORT.md.
+               The kanban card has both a mouse path (draggable=true
+               wired to OnCardDragStart) and a keyboard path
+               (tabindex="0" + role="group" + aria-label so a
+               screen reader announces it as "Card: <title>").
+               The full keyboard-only move flow is documented as
+               a follow-up in the report — the next iteration will
+               add a RadzenMenu button visible on focus that lists
+               every list as a "Move to <list>" action. The minimal
+               change here is enough to surface the card to the
+               accessibility tree. *@
             <RadzenCard Style="@($"opacity: {opacity:0.00}; cursor: grab;")"
+                        role="group"
+                        aria-label="@($"Card: {card.Title}{(card.IsCompleted ? " (completed)" : string.Empty)}")"
+                        tabindex="0"
                         draggable="true"
                         @ondragstart="@(() => OnCardDragStart(card))"
                         @onclick="@(() => Nav.NavigateTo($"cards/{card.Id}"))">

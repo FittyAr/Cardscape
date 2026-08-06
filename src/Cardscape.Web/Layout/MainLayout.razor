@@ -12,13 +12,23 @@
 
 <RadzenComponents />
 
+@*
+  BETA-3-UI-#14 — see test-results/BETA-TEST-REPORT.md.
+  Skip-link is the single highest-impact a11y fix on a
+  SPA: keyboard / screen-reader users hit Tab once and
+  jump straight past the sidebar / header chrome to the
+  page body. The CSS in wwwroot/css/app.css styles
+  `.skip-link` so it stays invisible until focused.
+*@
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
 <AuthorizeView>
     <Authorized>
         <RadzenLayout>
             <RadzenHeader>
                 <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
                     <RadzenColumn Size="3">
-                        <RadzenSidebarToggle Click="@ToggleSidebar" />
+                        <RadzenSidebarToggle Click="@ToggleSidebar" aria-label="@L["NavToggleSidebar"]" />
                     </RadzenColumn>
                     <RadzenColumn Size="9">
                         <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
@@ -67,7 +77,13 @@
             <RadzenBody Expanded="@sidebarExpanded">
                 <RadzenRow Class="rz-mx-auto rz-px-4 rz-pt-2 rz-pt-md-4 rz-pt-lg-6 rz-pt-xl-12 rz-pb-2 rz-pb-lg-12" Style="max-width: 1440px;">
                     <RadzenColumn Size="12">
-                        @Body
+                        @* BETA-3-UI-#14 — see test-results/BETA-TEST-REPORT.md.
+                           id="main-content" is the target of the
+                           skip-link above. Keyboard / screen-reader
+                           users land here on the first Tab press. *@
+                        <main id="main-content" role="main">
+                            @Body
+                        </main>
                     </RadzenColumn>
                 </RadzenRow>
             </RadzenBody>
