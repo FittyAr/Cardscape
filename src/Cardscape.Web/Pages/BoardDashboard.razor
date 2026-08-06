@@ -21,8 +21,8 @@
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
             <LabeledField Text="@L["DashboardKind"]" Component="d-kind">
-                <RadzenDropDown @bind-Value="createModel.KindIndex" Data="@availableKinds"
-                                TextProperty="Label" ValueProperty="Index" Name="d-kind" Style="width:100%" />
+                <RadzenDropDown @bind-Value="createModel.Kind" Data="@availableKinds"
+                                TextProperty="Label" ValueProperty="Kind" Name="d-kind" Style="width:100%" />
             </LabeledField>
             <LabeledField Text="@L["DashboardTitle_Label"]" Component="d-title">
                 <RadzenTextBox @bind-Value="createModel.Title" Name="d-title" Style="width:100%" />
@@ -86,15 +86,15 @@ else
     private string? error;
     private readonly CreateModel createModel = new();
 
-    private record KindOption(int Index, string Label);
+    private record KindOption(DashcardKind Kind, string Label);
 
     private readonly IReadOnlyList<KindOption> availableKinds = new[]
     {
-        new KindOption(0, "OverdueCount"),
-        new KindOption(1, "ByMember"),
-        new KindOption(2, "ByLabel"),
-        new KindOption(3, "ByList"),
-        new KindOption(4, "DueThisWeek")
+        new KindOption(DashcardKind.OverdueCount, "OverdueCount"),
+        new KindOption(DashcardKind.ByMember, "ByMember"),
+        new KindOption(DashcardKind.ByLabel, "ByLabel"),
+        new KindOption(DashcardKind.ByList, "ByList"),
+        new KindOption(DashcardKind.DueThisWeek, "DueThisWeek")
     };
 
     protected override async Task OnInitializedAsync()
@@ -110,7 +110,7 @@ else
         try
         {
             var result = await DashboardsApi.CreateAsync(new CreateDashcardRequest(
-                BoardId, availableKinds[createModel.KindIndex].Label,
+                BoardId, createModel.Kind,
                 createModel.Title, createModel.ConfigurationJson, dashcards?.Count ?? 0));
             if (!result.IsSuccess)
             {
@@ -140,19 +140,19 @@ else
         dashcards = (dashcards ?? []).Where(d => d.Id != id).ToList();
     }
 
-    private string KindLabel(int kind) => kind switch
+    private string KindLabel(DashcardKind kind) => kind switch
     {
-        0 => "OverdueCount",
-        1 => "ByMember",
-        2 => "ByLabel",
-        3 => "ByList",
-        4 => "DueThisWeek",
+        DashcardKind.OverdueCount => "OverdueCount",
+        DashcardKind.ByMember => "ByMember",
+        DashcardKind.ByLabel => "ByLabel",
+        DashcardKind.ByList => "ByList",
+        DashcardKind.DueThisWeek => "DueThisWeek",
         _ => "Unknown"
     };
 
     private sealed class CreateModel
     {
-        public int KindIndex { get; set; }
+        public DashcardKind Kind { get; set; } = DashcardKind.OverdueCount;
         public string Title { get; set; } = string.Empty;
         public string ConfigurationJson { get; set; } = "{}";
     }

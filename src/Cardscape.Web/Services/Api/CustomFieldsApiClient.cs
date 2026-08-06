@@ -39,7 +39,7 @@ public sealed class CustomFieldsApiClient(IHttpClientFactory http)
         Guid boardId, CreateCustomFieldRequestDto body, CancellationToken ct = default)
     {
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
-            $"api/boards/{boardId}/custom-fields/", body, ct);
+            $"api/boards/{boardId}/custom-fields/", body, JsonOptions, ct);
         return await ReadAsync<CustomFieldDefinitionDto>(response, ct);
     }
 
@@ -47,7 +47,7 @@ public sealed class CustomFieldsApiClient(IHttpClientFactory http)
         Guid boardId, Guid fieldId, RenameCustomFieldRequestDto body, CancellationToken ct = default)
     {
         HttpResponseMessage response = await CreateClient().PatchAsJsonAsync(
-            $"api/boards/{boardId}/custom-fields/{fieldId}", body, ct);
+            $"api/boards/{boardId}/custom-fields/{fieldId}", body, JsonOptions, ct);
         return await ReadAsync<CustomFieldDefinitionDto>(response, ct);
     }
 

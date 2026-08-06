@@ -134,9 +134,9 @@
 
     private readonly List<RoleOption> roles = new()
     {
-        new(0, "Admin"),
-        new(1, "Member"),
-        new(2, "Observer")
+        new(WorkspaceRole.Admin, "Admin"),
+        new(WorkspaceRole.Member, "Member"),
+        new(WorkspaceRole.Observer, "Observer")
     };
 
     private RenderFragment ShowInviteButton() => __builder =>
@@ -225,19 +225,19 @@
         }
     }
 
-    private static string RoleName(int role) => role switch
+    private static string RoleName(WorkspaceRole role) => role switch
     {
-        0 => "Admin",
-        1 => "Member",
-        2 => "Observer",
+        WorkspaceRole.Admin => "Admin",
+        WorkspaceRole.Member => "Member",
+        WorkspaceRole.Observer => "Observer",
         _ => "Unknown"
     };
 
     private sealed class InviteModel
     {
         public string Email { get; set; } = string.Empty;
-        public int Role { get; set; } = 1; // Member by default
+        public WorkspaceRole Role { get; set; } = WorkspaceRole.Member;
     }
 
-    private sealed record RoleOption(int Value, string Label);
+    private sealed record RoleOption(WorkspaceRole Value, string Label);
 }

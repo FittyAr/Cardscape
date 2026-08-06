@@ -31,7 +31,7 @@
                                     Name="rule-trigger" Style="width:100%" Change="@OnTriggerChanged" />
                 </LabeledField>
 
-                @if (newRule.Trigger == 3)
+                @if (newRule.Trigger == AutomationTrigger.CardCreatedInList)
                 {
                     <LabeledField Text="In list (id)" Component="rule-trigger-list">
                         <RadzenTextBox @bind-Value="newRule.TriggerListIdText" Name="rule-trigger-list"
@@ -84,7 +84,7 @@
                             <RadzenText Text="@rule.Name" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
                             <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
                                 When: <em>@TriggerName(rule.Trigger)</em>
-                                @if (rule.Trigger == 3)
+                                @if (rule.Trigger == AutomationTrigger.CardCreatedInList)
                                 {
                                     <text> (list @rule.TriggerListId)</text>
                                 }
@@ -127,18 +127,18 @@
 
     private readonly List<TriggerOption> triggerOptions = new()
     {
-        new(0, "Card moved to any list"),
-        new(1, "Card completed"),
-        new(2, "Card reopened"),
-        new(3, "Card created in a specific list")
+        new(AutomationTrigger.CardMoved, "Card moved to any list"),
+        new(AutomationTrigger.CardCompleted, "Card completed"),
+        new(AutomationTrigger.CardReopened, "Card reopened"),
+        new(AutomationTrigger.CardCreatedInList, "Card created in a specific list")
     };
 
     private readonly List<ActionOption> actionOptions = new()
     {
-        new(0, "Move card to list (arg = list id)"),
-        new(1, "Assign user (arg = user id)"),
-        new(2, "Set due date (arg = ISO date)"),
-        new(3, "Mark complete")
+        new(AutomationAction.MoveCardToList, "Move card to list (arg = list id)"),
+        new(AutomationAction.AssignUser, "Assign user (arg = user id)"),
+        new(AutomationAction.SetDueDate, "Set due date (arg = ISO date)"),
+        new(AutomationAction.MarkComplete, "Mark complete")
     };
 
     private RenderFragment NewRuleButton() => __builder =>
@@ -161,7 +161,7 @@
 
     private void OnTriggerChanged()
     {
-        if (newRule.Trigger != 3)
+        if (newRule.Trigger != AutomationTrigger.CardCreatedInList)
         {
             newRule.TriggerListIdText = string.Empty;
         }
@@ -174,7 +174,7 @@
         try
         {
             Guid? triggerListId = null;
-            if (newRule.Trigger == 3 && Guid.TryParse(newRule.TriggerListIdText, out var tlid))
+            if (newRule.Trigger == AutomationTrigger.CardCreatedInList && Guid.TryParse(newRule.TriggerListIdText, out var tlid))
             {
                 triggerListId = tlid;
             }
@@ -230,33 +230,33 @@
         if (r.IsSuccess) await ReloadAsync();
     }
 
-    private static string TriggerName(int t) => t switch
+    private static string TriggerName(AutomationTrigger t) => t switch
     {
-        0 => "card moved",
-        1 => "card completed",
-        2 => "card reopened",
-        3 => "card created in list",
+        AutomationTrigger.CardMoved => "card moved",
+        AutomationTrigger.CardCompleted => "card completed",
+        AutomationTrigger.CardReopened => "card reopened",
+        AutomationTrigger.CardCreatedInList => "card created in list",
         _ => "unknown"
     };
 
-    private static string ActionName(int a) => a switch
+    private static string ActionName(AutomationAction a) => a switch
     {
-        0 => "move card to list",
-        1 => "assign user",
-        2 => "set due date",
-        3 => "mark complete",
+        AutomationAction.MoveCardToList => "move card to list",
+        AutomationAction.AssignUser => "assign user",
+        AutomationAction.SetDueDate => "set due date",
+        AutomationAction.MarkComplete => "mark complete",
         _ => "unknown"
     };
 
     private sealed class NewRuleModel
     {
         public string Name { get; set; } = string.Empty;
-        public int Trigger { get; set; } = 1;
+        public AutomationTrigger Trigger { get; set; } = AutomationTrigger.CardCompleted;
         public string TriggerListIdText { get; set; } = string.Empty;
-        public int Action { get; set; } = 3;
+        public AutomationAction Action { get; set; } = AutomationAction.MarkComplete;
         public string ActionArgument { get; set; } = string.Empty;
     }
 
-    private sealed record TriggerOption(int Value, string Label);
-    private sealed record ActionOption(int Value, string Label);
+    private sealed record TriggerOption(AutomationTrigger Value, string Label);
+    private sealed record ActionOption(AutomationAction Value, string Label);
 }

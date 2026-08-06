@@ -239,8 +239,23 @@ public static class DeleteChecklistCommandHandler
 
         Checklist? checklist = await checklists.GetByIdAsync(
             new ChecklistId(command.ChecklistId), ct);
-        if (checklist is null)
+        if (checklist is null || checklist.IsDeleted)
         {
+            // BETA-2-#6 — see test-results/BETA-TEST-REPORT.md.
+            //
+            // RepositoryBase.GetByIdAsync uses
+            // `Set.FindAsync()` which does NOT filter by
+            // IsDeleted (the soft-delete column is a domain
+            // concept, not an EF Core global query filter
+            // here). `Checklist.Delete()` is idempotent — a
+            // second call short-circuits with Success() and
+            // the handler returns 204. The contract a UI /
+            // MCP client expects is "second delete on an
+            // already-deleted resource = 404". Treat
+            // IsDeleted as NotFound for write operations;
+            // the read paths still see the row because
+            // their ListForCardAsync filters
+            // !IsDeleted.
             return Result.Failure(DomainError.NotFound(
                 "checklists.not_found", "Checklist was not found."));
         }

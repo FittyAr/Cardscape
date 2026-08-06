@@ -781,14 +781,14 @@ else
         public string Body { get; set; } = string.Empty;
     }
 
-    private static string FieldKindLabel(int kind) => kind switch
+    private static string FieldKindLabel(CustomFieldKind kind) => kind switch
     {
-        0 => "Text",
-        1 => "Number",
-        2 => "Date",
-        3 => "Dropdown",
-        4 => "Checkbox",
-        _ => $"Kind {kind}",
+        CustomFieldKind.Text => "Text",
+        CustomFieldKind.Number => "Number",
+        CustomFieldKind.Date => "Date",
+        CustomFieldKind.Dropdown => "Dropdown",
+        CustomFieldKind.Checkbox => "Checkbox",
+        _ => $"Kind {(int)kind}",
     };
 
     private static string FormatFieldValue(CustomFieldValueDto value)
@@ -802,8 +802,8 @@ else
 
         return value.Kind switch
         {
-            4 => raw.Equals("true", StringComparison.OrdinalIgnoreCase) ? "â˜‘ Yes" : "â˜ No",
-            2 => raw, // ISO date; render as-is
+            CustomFieldKind.Checkbox => raw.Equals("true", StringComparison.OrdinalIgnoreCase) ? "â˜‘ Yes" : "â˜ No",
+            CustomFieldKind.Date => raw, // ISO date; render as-is
             _ => raw,
         };
     }

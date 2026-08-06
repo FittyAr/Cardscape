@@ -65,7 +65,7 @@ else
                     <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
                         @ws.MemberCount members · created @ws.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")
                     </RadzenText>
-                    @if (ws.Region != 0)
+                    @if (ws.Region != Region.Unspecified)
                     {
                         <div class="rz-mt-2">
                             <RadzenBadge Text="@RegionLabel(ws.Region)" BadgeStyle="BadgeStyle.Info" />
@@ -92,15 +92,15 @@ else
     private string? error;
     private readonly CreateModel createModel = new();
 
-    private record RegionOption(int Value, string Label);
+    private record RegionOption(Region Value, string Label);
 
     private IReadOnlyList<RegionOption> availableRegions = new[]
     {
-        new RegionOption(0, "Unspecified (auto)"),
-        new RegionOption(1, "Europe"),
-        new RegionOption(2, "North America"),
-        new RegionOption(3, "Asia Pacific"),
-        new RegionOption(4, "South America"),
+        new RegionOption(Region.Unspecified, "Unspecified (auto)"),
+        new RegionOption(Region.Europe, "Europe"),
+        new RegionOption(Region.NorthAmerica, "North America"),
+        new RegionOption(Region.AsiaPacific, "Asia Pacific"),
+        new RegionOption(Region.SouthAmerica, "South America"),
     };
 
     protected override async Task OnInitializedAsync()
@@ -119,7 +119,7 @@ else
         error = null;
         try
         {
-            int? region = createModel.Region == 0 ? null : createModel.Region;
+            Region? region = createModel.Region == Region.Unspecified ? null : createModel.Region;
             ApiResult<WorkspaceDto> result = await WorkspacesApi.CreateAsync(createModel.Name, region);
             if (!result.IsSuccess)
             {
@@ -129,7 +129,7 @@ else
 
             workspaces = [.. (workspaces ?? Array.Empty<WorkspaceDto>()), result.Value!];
             createModel.Name = string.Empty;
-            createModel.Region = 0;
+            createModel.Region = Region.Unspecified;
             showCreate = false;
         }
         finally
@@ -138,18 +138,18 @@ else
         }
     }
 
-    private string RegionLabel(int region) => region switch
+    private string RegionLabel(Region region) => region switch
     {
-        1 => "Europe",
-        2 => "North America",
-        3 => "Asia Pacific",
-        4 => "South America",
+        Region.Europe => "Europe",
+        Region.NorthAmerica => "North America",
+        Region.AsiaPacific => "Asia Pacific",
+        Region.SouthAmerica => "South America",
         _ => "Unspecified"
     };
 
     private sealed class CreateModel
     {
         public string Name { get; set; } = string.Empty;
-        public int Region { get; set; }
+        public Region Region { get; set; } = Region.Unspecified;
     }
 }

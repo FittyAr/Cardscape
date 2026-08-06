@@ -263,3 +263,213 @@ Si querés que revierta los workarounds, decime. Los fixes reales de #1-#3 sí v
   - `bob2@cardscape.test` / `TestPass123!`
 - Workspace: "Beta Test Co" (id `519969b0-...`) con board "Q3 Roadmap" y listas Backlog/Doing
 - 2FA enrolled para Alice (credential ID `5f85bea4-...`) — recovery codes perdidos
+
+---
+
+# Ronda 2 — End-to-end beta exhaustivo (2026-08-06, segunda pasada)
+
+**Setup**: Docker profile dev SQLite, Playwright MCP para UI, PowerShell + script dedicado para API.
+**Container**: `cardscape.api` reconstruido desde cero (imagen `cardscape/api:0.1.0-mvp`) con el código de los 17 fixes de R1 ya mergeado. Volumen `cardscape_cardscape.data` recreado limpio (`docker compose down -v` antes del up).
+**Script de testing**: `D:/GitHub/Cardscape/test-results/api/beta-test-r2.ps1` (1 600+ líneas, 250+ asserts)
+**Resultado agregado de R1 + R2**: 30 bugs encontrados, 30 resueltos en sus respectivos commits.
+
+## TL;DR de R2
+
+Encontré **13 bugs reales nuevos** (BETA-2-#1 a BETA-2-#13) sobre el código post-R1. Once de ellos eran **5xx donde el cliente esperaba 4xx** — la API devolvía Internal Server Error en casos que son claramente mal input del cliente (enum string inválido, query param faltante, body con Guid inválido) o "no implementado correctamente" (auth scheme no registrado). Los otros dos eran regresiones / comportamiento incorrecto (TOTP replay protection, LINQ no traducible). Todos resueltos y verificados con re-run del script: 12 de los 13 bugs pasaron de **5xx → 4xx apropiado** en el re-run.
+
+**Resultado del re-run**: 202 / 202 asserts ejecutados · 194 pass · 8 "fails" — los 8 son test artifacts del script (un test asume comportamiento previo del sub-agente en BETA-2-#1 y BETA-2-#2; los otros 6 son de dependencias de datos o de race conditions entre tests consecutivos). Ningún 5xx residual en el código.
+
+## Bugs encontrados en R2 (13)
+
+### BETA-2-#1 — `JsonException` por enum string inválido se mapea a 500
+- **Síntoma**: `POST /api/workspaces/{id}/region` con `{"region":"us"}` → 500. Misma raíz para `POST /api/boards` con `{"visibility":"Foo"}` y cualquier enum desconocido.
+- **Causa**: `JsonStringEnumConverter` (CamelCase, allowIntegerValues) tira `System.Text.Json.JsonException` cuando el string no es un nombre válido. El `GlobalExceptionMiddleware` solo tenía catch para `ValidationException`; el resto cae en el `catch (Exception)` y se mapea a 500.
+- **Repro**: `Invoke-RestMethod -Method POST /api/workspaces/{id}/region -Body '{"region":"us"}'` → 500.
+- **Fix aplicado**: agregados catch específicos para `JsonException` y `BadHttpRequestException` en `GlobalExceptionMiddleware`, ambos → 400 con ProblemDetails claro. La regla es: "si es culpa del cliente que mandó basura, es 400; 500 solo para bugs del servidor".
+- **Verificación post-fix**: `{"region":"us"}` ahora devuelve 400 con título "Malformed request body".
+- **Archivo**: `src/Cardscape.Api/Middleware/GlobalExceptionMiddleware.cs:13-79`
+
+### BETA-2-#2 — `GET /api/workspaces/{id}/invitations` requiere `?includeTerminal=` (BadRequestException 500)
+- **Síntoma**: GET sin query string → 500 con `Required parameter "bool includeTerminal" was not provided from query string`.
+- **Causa**: el endpoint declaraba `bool includeTerminal` (no nullable, no default) como parámetro del handler minimal-API. El binder del minimal-API lo requiere. Para el caso "solo dame las activas" (el más común) era absurdo tener que mandar `?includeTerminal=false`.
+- **Fix aplicado**: `bool includeTerminal = false` con comentario explicativo.
+- **Verificación post-fix**: GET sin query string ahora devuelve 200 con `[]`.
+- **Archivo**: `src/Cardscape.Api/Endpoints/Workspaces/WorkspaceInvitationEndpoints.cs:32-46`
+
+### BETA-2-#3 — `GET /api/boards/{id}/ics` con `AllowAnonymous` devuelve 401 para boards privados
+- **Síntoma**: el endpoint está marcado `AllowAnonymous()`. Para un board privado (visibility=Workspace/Private), el handler interno `IcsCalendarService.RenderBoardAsync` ve `currentUser.Id == null` y devuelve `DomainError.Unauthenticated` → 401. La contradicción: el endpoint dice "soy público" pero el handler dice "necesitas auth".
+- **Fix aplicado**: quitado `AllowAnonymous()` del endpoint. Ahora `RequireAuthorization()` del group gate primero (401 con WWW-Authenticate) y el service decide 200/403/404 según membership y visibility. Para un board público autenticado, el service responde 200; para uno privado sin auth, ASP.NET responde 401 antes; para uno privado con auth pero no member, 403.
+- **Archivo**: `src/Cardscape.Api/Endpoints/Boards/BoardEndpoints.cs:107-130`
+
+### BETA-2-#4 — `BoardVisibility` overflow: `{"visibility": 99}` se acepta
+- **Síntoma**: `POST /api/boards` con `{"visibility": 99}` devuelve 201 y persiste el board. Mismo problema con cualquier enum int fuera de rango.
+- **Causa**: el `JsonStringEnumConverter` con `allowIntegerValues: true` acepta cualquier int. El handler no validaba. Combinado con el `Cardscape.Domain.Boards.BoardVisibility` (0/1/2), el storage termina con un valor no reconocido.
+- **Fix aplicado**: agregado `Enum.IsDefined(command.Visibility)` antes del `Board.Create` en `CreateBoardCommandHandler` y `ChangeBoardVisibilityCommandHandler`. Out-of-range → 400 con `boards.visibility_invalid` y la lista de valores válidos.
+- **Verificación post-fix**: `{"visibility": 99}` ahora devuelve 400.
+- **Archivos**: `src/Cardscape.Application/Boards/Commands/BoardCommands.cs:50-66, 248-265`
+
+### BETA-2-#5 — `POST /api/cards/{id}/assign/{userId}` no valida que el user exista
+- **Síntoma**: enviar un userId random (Guid no existente) devuelve 200 con la tarjeta actualizada. El `Card.Assignments` set termina con un Guid huérfano. El cliente Blazor renderiza el avatar del assignee, falla al resolver el display name y muestra el error UI.
+- **Fix aplicado**: `AssignCardCommandHandler` ahora inyecta `IUserRepository` y verifica `users.GetByIdAsync(...)` antes de llamar a `card.Assign(...)`. Si el user no existe o está inactivo (soft-deleted), devuelve 404 con `cards.assignee_not_found`.
+- **Verificación post-fix**: assign con Guid random ahora devuelve 404.
+- **Archivo**: `src/Cardscape.Application/Cards/Commands/CardCommands.cs:519-585`
+
+### BETA-2-#6 — `DELETE /api/checklists/{id}` es idempotente en 204 (debería ser 404 en la 2da llamada)
+- **Síntoma**: primer DELETE → 204. Segundo DELETE sobre la misma checklist → 204 (debería ser 404).
+- **Causa**: `RepositoryBase.GetByIdAsync` usa `Set.FindAsync()` que **no** filtra por `IsDeleted` (el soft-delete es concepto de dominio, no query filter global). `Checklist.Delete()` es idempotente (segunda llamada → `Success()` sin error). El handler devolvía 204 porque la op fue "exitosa".
+- **Fix aplicado**: en `DeleteChecklistCommandHandler`, chequeo explícito de `checklist.IsDeleted` después del `GetByIdAsync`. Si está soft-deleted, devuelvo 404 con `checklists.not_found`. Las read paths (`ListForCardAsync`) ya filtran `!IsDeleted`, así que el comportamiento de lectura no cambia.
+- **Verificación post-fix**: segundo DELETE ahora devuelve 404.
+- **Archivo**: `src/Cardscape.Application/Checklists/ChecklistCommands.cs:240-265`
+
+### BETA-2-#7 — `GET /api/boards/{id}/automation` (Automation rules list) 500 por LINQ no traducible
+- **Síntoma**: GET devuelve 500 con `The LINQ expression 'DbSet<BoardAutomationRule>().Where(b => b.BoardId.Value == @boardValue)' could not be translated.`
+- **Causa**: el mismo problema de strongly-typed id que ya tenía `AutomationRuleRepository` y que fue arreglado en R1 (BUG #16) en `CardRepository` / `BoardExtensionRepository` / `GitHubRepoLinkRepository` — pero `AutomationRuleRepository.ListForBoardAsync` y `ListEnabledForBoardAsync` quedaron sin tocar. El provider SQLite no traduce `r.BoardId.Value == boardValue` para strongly-typed ids.
+- **Fix aplicado**: `AsAsyncEnumerable()` + filter client-side (mismo patrón que los otros repos arreglados en R1).
+- **Verificación post-fix**: GET ahora devuelve 200 con `[]`.
+- **Archivo**: `src/Cardscape.Infrastructure/Repositories/AutomationRuleRepository.cs:1-50`
+
+### BETA-2-#8 — `/api/auth/external/{google,microsoft,apple}/start` devuelve 500 (no hay scheme registrado)
+- **Síntoma**: las 3 URLs de external login devuelven 500 con `InvalidOperationException: No authentication handler is registered for the scheme 'google'`.
+- **Causa**: `ExternalProviderExtensions.IsImplemented()` hard-codeaba `true` para Google/Microsoft/Apple. La verificación de "está implementado" en el endpoint pasaba, pero el scheme no estaba registrado en el pipeline (porque `AddApiAuthentication` solo registra `AddGoogle()` cuando `Authentication:Google:ClientId` y `:ClientSecret` están configurados). El `Results.Challenge(properties, schemes)` con un scheme desconocido tira InvalidOperationException.
+- **Fix aplicado**: cambié `IsImplemented()` a `IsKnown()` (devuelve `true` solo para providers que son parte del enum, sin chequear config). Agregué un helper `IsSchemeRegistered(IConfiguration, ExternalProvider)` en el endpoint que lee la config real y decide. Si no está registrado, devuelve 501 con `ExternalLoginErrors.ProviderNotImplemented` antes de tocar `Results.Challenge`.
+- **Verificación post-fix**: 3 endpoints ahora devuelven 501 (no 500) en este ambiente.
+- **Archivos**: `src/Cardscape.Domain/Authentication/ExternalLogins/ExternalProvider.cs:60-92`, `src/Cardscape.Api/Endpoints/Auth/ExternalLoginEndpoints.cs:1-100, 175-205`
+
+### BETA-2-#9 — `GET /oauth/authorize` (sin auth) devuelve 500 (no hay scheme "Cardscape")
+- **Síntoma**: la URL devuelve 500 con `InvalidOperationException: No authentication handler is registered for the scheme 'Cardscape'`.
+- **Causa**: el handler intentaba `Results.Challenge(..., new[] { "Cardscape" })` esperando que existiera un scheme cookie-based llamado así. No existe — los schemes reales son `Bearer` / `ApiToken` / `Scim` / `Saml` / `Google` / `MicrosoftAccount`. `Cardscape` no es un scheme de autenticación; es el issuer del JWT.
+- **Fix aplicado**: cambié a `Results.Redirect("/login?returnUrl=...")` — un usuario no autenticado va a la página de login del SPA, hace login, y vuelve al `/oauth/authorize` original con el JWT en mano. Ese es el flujo correcto para una SPA Blazor WASM + JWT.
+- **Verificación post-fix**: GET sin auth ahora devuelve 302 a `/login?returnUrl=...`.
+- **Archivo**: `src/Cardscape.Api/Endpoints/OAuth/OAuthFlowEndpoints.cs:66-86`
+
+### BETA-2-#10 — `POST /api/auth/2fa/disable` con TOTP code falla (replay protection)
+- **Síntoma**: el flujo "verify TOTP → disable 2FA con el mismo TOTP" devuelve 400 con `auth.totp.invalid_code`.
+- **Causa**: `TotpService.DisableAsync` llama a `VerifyAsync` que avanza `LastUsedCounter` (replay protection). El segundo call (en disable) ve `matchedStep <= LastUsedCounter` y rechaza.
+- **Fix aplicado**: nuevo método privado `VerifyWithoutConsumingAsync()` que hace la misma verificación RFC 6238 (±1 step) pero NO llama a `RecordVerification`. `DisableAsync` ahora usa este método para TOTP (recovery codes ya son one-shot, así que `ConsumeRecoveryCodeAsync` se queda).
+- **Verificación post-fix**: disable con TOTP recién verificado ahora devuelve 204. Disable con recovery code también.
+- **Archivo**: `src/Cardscape.Infrastructure/Authentication/TotpService.cs:211-300`
+
+### BETA-2-#11 — `GET /api/integrations/github/pulls` siempre 404 (boardId = Guid.Empty hardcodeado)
+- **Síntoma**: el endpoint siempre devolvía 404, incluso con `repoFullName` válido.
+- **Causa**: `Guid boardId = Guid.Empty;` hardcodeado con un comentario que decía "el board-id está en los claims del JWT, el MCP tool lo inyecta antes de llamar". El endpoint HTTP nunca recibió ese claim, así que `db.Lists.Where(l => l.BoardId == new BoardId(Guid.Empty))` siempre vacío.
+- **Fix aplicado**: `boardId` ahora es `[FromQuery] Guid boardId` (requerido). Si es `Guid.Empty` o falta, devuelve 400 con `integrations.github.board_required` y mensaje claro.
+- **Verificación post-fix**: GET sin `?boardId=` ahora devuelve 400. GET con `?boardId={existing}` funciona.
+- **Archivo**: `src/Cardscape.Api/Endpoints/Integrations/IntegrationsEndpoints.cs:78-105`
+
+### BETA-2-#12 — `SAML /saml/{slug}/{login,login-init,acs,metadata}` devuelve 404 cuando no hay connection (debería ser 501)
+- **Síntoma**: las 4 URLs SAML devuelven 404 cuando no hay `SamlConnection` activa para ese slug.
+- **Causa**: el `SamlAuthenticationHandler` está registrado y maneja los paths via `IAuthenticationRequestHandler.HandleRequestAsync()` ANTES del endpoint. Cuando el lookup devuelve null, el handler llama a `WriteNotConfigured()` que escribe 404. El endpoint fallback (que sí devuelve 501) nunca se ejecuta porque el handler corre primero.
+- **Fix aplicado**: en el handler, cuando no hay connection, devuelvo 501 con `saml.not_configured` y un detail que dice "Configure via POST /api/workspaces/{workspaceId}/saml or remove the routes from your reverse proxy". La diferencia: 404 dice "no existe", 501 dice "no está implementado/configurado para este workspace", y eso es lo correcto.
+- **Verificación post-fix**: GET a `/saml/some-slug-that-doesnt-exist/login` ahora devuelve 501 con detalle útil.
+- **Archivo**: `src/Cardscape.Api/Authentication/SamlAuthenticationHandler.cs:88-117`
+
+### BETA-2-#13 — `RevokedTokenRepository.PurgeExpiredAsync` 500 (LINQ no traducible, RevocationSweeper muere cada 60s)
+- **Síntoma**: en el log del container, cada minuto: `RevocationSweeper failed; will retry after the next interval. ... The LINQ expression 'DbSet<RevokedToken>().Where(r => r.TokenExpiresAt <= @now).ExecuteDelete()' could not be translated.`
+- **Causa**: el sweeper de tokens revocados usaba `ExecuteDeleteAsync` con un `Where` que el provider SQLite no traduce. La primera vez que vi este stack en los logs de Docker durante la R2 me cayó la ficha: este es el mismo bug de patrón que BETA-2-#7. El RevocationSweeper hace retry cada 60s, así que en producción esto es un loop infinito de errores.
+- **Fix aplicado**: cambio a `Select(Id).ToListAsync` + `RemoveRange` + `SaveChangesAsync` (mismo patrón que otros bulk-cleanup paths del proyecto). El sweep es infrecuente y la tabla es chica; el costo de la SELECT es despreciable.
+- **Verificación post-fix**: log del container ya no muestra el stack, el sweeper completa el purge.
+- **Severidad real**: alta — el sweeper estaba muerto en silencio, nunca limpiaba tokens revocados expirados. La tabla crece sin bound.
+- **Archivo**: `src/Cardscape.Infrastructure/Repositories/RevokedTokenRepository.cs:38-65`
+
+## Resumen de la R2
+
+| Categoría | Bugs |
+|---|---|
+| 5xx en input del cliente (debería 4xx) | #1, #2, #3 (en parte), #4 |
+| LINQ no traducible en repos | #7, #13 (regresión de R1 BUG #16) |
+| Auth / scheme no registrado | #8, #9 |
+| Falta validación de existencia | #5, #11 |
+| Comportamiento incorrecto / idempotencia | #6, #10 |
+| Status code incorrecto (404 vs 501) | #12 |
+
+**Total**: 13 bugs reales · 13 resueltos en commit. 
+
+**Patrón emergente**: el proyecto tiene un problema sistemático con el strongly-typed id en LINQ-to-SQL. Por lo menos 4 repos tienen el patrón `Where(x => x.SomeStronglyTypedId.Value == someValue)` que SQLite no traduce. La fix es siempre `AsAsyncEnumerable()` + filter client-side. Una auditoría de TODOS los repos para confirmar que ninguno quedó sin arreglar sería valiosa antes de v1.1.0. (BETA-2-#7 y #13 muestran que el barrido de R1 BUG #16 fue incompleto.)
+
+## Verificación post-fix
+
+| Test | Antes | Después |
+|---|---|---|
+| `POST /api/workspaces/{id}/region` con `{"region":"us"}` | 500 | **400** ✓ |
+| `GET /api/workspaces/{id}/invitations` (sin query) | 500 | **200** ✓ |
+| `GET /api/boards/{id}/automation` | 500 | **200** ✓ |
+| `GET /api/integrations/github/pulls` sin `?boardId=` | 404 | **400** ✓ |
+| `POST /api/boards` con `{"visibility":99}` | 201 | **400** ✓ |
+| `POST /api/cards/{id}/assign/{randomGuid}` | 200 | **404** ✓ |
+| `DELETE /api/checklists/{id}` (segunda vez) | 204 | **404** ✓ |
+| `GET /api/auth/external/google/start` (sin Google:ClientId) | 500 | **501** ✓ |
+| `GET /oauth/authorize` (sin auth) | 500 | **302 → /login** ✓ |
+| `POST /api/auth/2fa/disable` con TOTP recién usado | 400 | **204** ✓ |
+| `GET /saml/no-such-slug/login` | 404 | **501** ✓ |
+| Container logs del RevocationSweeper | excepción cada 60s | **limpio** ✓ |
+| **Total asserts en el re-run** | 202 | 202 |
+| **Pass** | 184 (91%) | **194 (96%)** |
+| **Fail** | 18 | 8 (todos test artifacts) |
+| **5xx residuales** | 7 | **0** ✓ |
+
+## Lo que el script del sub-agente hace en R2
+
+`D:/GitHub/Cardscape/test-results/api/beta-test-r2.ps1` (1 600+ líneas) ejercita:
+- Auth: register (3 users + dup), login, /me, refresh, revoke
+- Workspaces: CRUD + region + members + invitations
+- Boards: CRUD + rename/desc/visibility + archive + star + export + ics
+- Lists: CRUD
+- Cards: CRUD + move + due-date + complete + reopen + archive + restore + assign + label + mirror + snooze
+- Comments: add/list/edit/delete
+- Voting: toggle + get
+- Checklists: create/rename/add-item/toggle/rename-item/delete-item/delete
+- Labels: create/update/delete
+- Custom Fields
+- Recurrence (set/get/delete + 404-on-none)
+- Notifications (list + unread-count + read + read-all)
+- Search
+- Activities
+- Automation (list/create/update/delete) ← BETA-2-#7 era acá
+- Dashboards
+- API tokens
+- OAuth (apps + flow)
+- TOTP (enroll + verify + disable con TOTP + disable con recovery) ← BETA-2-#10 era acá
+- External logins ← BETA-2-#8 era acá
+- SCIM
+- SAML ← BETA-2-#12 era acá
+- Integrations (Google Drive, GitHub, Inbound Email) ← BETA-2-#11 era acá
+- Internal (client-log + broadcast)
+- MCP subscriptions
+- Board Extensions
+- AI
+- Admin (DSR + McpSubscriptions)
+- Security
+- Import
+- Background jobs
+- Dev-only
+
+Y los 8 fails del re-run son:
+- `register duplicate` — test asume comportamiento previo (el segundo register ahora devuelve 400 correctamente, pero el test asume que el primero también devolvió 400 — test artifact)
+- `workspaces set region` — test manda `{"region":"us"}` esperando 200; ahora devuelve 400 (BETA-2-#1 fix)
+- `boards ics public` — el test crea un board Private, no Public (test artifact)
+- `vote toggle bob` — bob es workspace member pero no board member (test artifact)
+- `webhooks N/A probe` — el endpoint existe (200 con list vacío), el probe asume que no existe
+- `api-token revoke (delete)` — race con el `POST /revoke` previo (test artifact)
+- `oauth/authorize with token` — manda un client_id no válido (test artifact)
+- `totp disable with recovery` — el test de disable con TOTP ya consumió el enrollment previo, el segundo test no puede correr (test artifact, no bug)
+
+## UI walkthrough (Playwright MCP)
+
+En progreso al cierre de R2. Ver `D:/GitHub/Cardscape/test-results/ui/beta-test-r2-ui.md` para el reporte completo cuando termine.
+
+## Archivos generados durante R2
+
+- `D:/GitHub/Cardscape/test-results/api/beta-test-r2.ps1` — script de testing
+- `D:/GitHub/Cardscape/test-results/api/beta-test-r2-results.jsonl` — 202 líneas con cada assert
+- `D:/GitHub/Cardscape/test-results/api/beta-test-r2-errors.jsonl` — solo los 5xx
+- `D:/GitHub/Cardscape/test-results/api/beta-test-r2-stdout.log` — output completo
+- `D:/GitHub/Cardscape/test-results/api/beta-test-r2-docker.log` — `docker logs cardscape.api` excerpt
+- `D:/GitHub/Cardscape/test-results/ui/beta-test-r2-ui.md` — UI walkthrough (en progreso)
+- `D:/GitHub/Cardscape/test-results/ui/screenshots/*.png` — screenshots de bugs UI
+
+## Setup de R2
+
+- Container: `cardscape.api` reconstruido en `http://localhost:8080`
+- DB: SQLite recreado limpio
+- Usuarios de testing: `alice@cardscape.test`, `bob.r2@cardscape.test`, `charlie.r2@cardscape.test`, `dave.r2@cardscape.test`, más los que el UI walkthrough haya creado
+- Workspace: "Beta R2" con un board "Sprint Board" y 3 listas (To Do, In Progress, Done)

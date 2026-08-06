@@ -1,5 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
 @using Cardscape.Web.Layout
+@implements IDisposable
+@inject NavigationManager Nav
 
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
@@ -20,3 +23,47 @@
 <RadzenNotification />
 <RadzenTooltip />
 <RadzenContextMenu />
+
+@code {
+    // BETA-2-UI-#11 — see test-results/ui/beta-test-r2-ui.md.
+    //
+    // The default Blazor `blazor-error-ui` banner is shown when
+    // a page throws during render. The framework only clears it
+    // on the SAME component's next successful render, so once
+    // a page throws in OnInitializedAsync (e.g. a JsonException
+    // from a mis-shaped DTO) the user navigates away to a
+    // working page but the red banner stays visible until a
+    // hard reload. We hide the banner on every navigation so
+    // it only ever reflects a CURRENT-page error.
+    [Inject] private IJSRuntime Js { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        // Defer one tick so we don't fight the framework
+        // when the navigation itself triggered the error
+        // it just rendered.
+        try
+        {
+            await Task.Delay(50);
+            await Js.InvokeVoidAsync("eval",
+                "var el=document.getElementById('blazor-error-ui');if(el){el.classList.add('d-none');el.style.display='none';}");
+        }
+        catch
+        {
+            // IJSRuntime is not yet available on the very
+            // first render — silently ignore. Subsequent
+            // navigations (which is when the banner can
+            // actually be stuck) will succeed.
+        }
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+}

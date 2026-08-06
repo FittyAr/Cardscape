@@ -41,7 +41,7 @@
                                 <RadzenText Text="@field.Name" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
                                 <RadzenBadge Text="@KindLabel(field.Kind)" BadgeStyle="BadgeStyle.Info" />
                             </RadzenStack>
-                            @if (field.Kind == 3)
+                            @if (field.Kind == CustomFieldKind.Dropdown)
                             {
                                 <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
                                     Options: @string.Join(", ", ParseOptions(field.OptionsJson))
@@ -83,7 +83,7 @@
                     <RadzenDropDown @bind-Value="createModel.KindValue" Data="@allKinds"
                                     TextProperty="Label" ValueProperty="Value" Name="cf-kind" Style="width:100%" />
                 </LabeledField>
-                @if (createModel.KindValue == 3)
+                @if (createModel.KindValue == CustomFieldKind.Dropdown)
                 {
                     <LabeledField Text="Dropdown options (comma-separated)" Component="cf-options">
                         <RadzenTextBox @bind-Value="createModel.OptionsRaw"
@@ -120,11 +120,11 @@
 
     private static readonly IReadOnlyList<KindOption> allKinds = new[]
     {
-        new KindOption(0, "Text"),
-        new KindOption(1, "Number"),
-        new KindOption(2, "Date"),
-        new KindOption(3, "Dropdown"),
-        new KindOption(4, "Checkbox"),
+        new KindOption(CustomFieldKind.Text, "Text"),
+        new KindOption(CustomFieldKind.Number, "Number"),
+        new KindOption(CustomFieldKind.Date, "Date"),
+        new KindOption(CustomFieldKind.Dropdown, "Dropdown"),
+        new KindOption(CustomFieldKind.Checkbox, "Checkbox"),
     };
 
     private RenderFragment NewFieldButton() => __builder =>
@@ -173,7 +173,7 @@
         }
 
         IReadOnlyList<string>? options = null;
-        if (createModel.KindValue == 3)
+        if (createModel.KindValue == CustomFieldKind.Dropdown)
         {
             options = (createModel.OptionsRaw ?? string.Empty)
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -266,7 +266,7 @@
         }
     }
 
-    private static string KindLabel(int kind) => allKinds.FirstOrDefault(k => k.Value == kind)?.Label ?? $"Kind {kind}";
+    private static string KindLabel(CustomFieldKind kind) => allKinds.FirstOrDefault(k => k.Value == kind)?.Label ?? $"Kind {(int)kind}";
 
     private static IEnumerable<string> ParseOptions(string json)
     {
@@ -285,12 +285,12 @@
         }
     }
 
-    private sealed record KindOption(int Value, string Label);
+    private sealed record KindOption(CustomFieldKind Value, string Label);
 
     private sealed class CreateModel
     {
         public string Name { get; set; } = string.Empty;
-        public int KindValue { get; set; } = 0;
+        public CustomFieldKind KindValue { get; set; } = CustomFieldKind.Text;
         public string OptionsRaw { get; set; } = string.Empty;
     }
 }

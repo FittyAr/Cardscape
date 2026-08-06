@@ -123,13 +123,24 @@ public sealed class SecurityHeadersMiddleware(
             // either way.
             headers["X-XSS-Protection"] = "0";
 
-            // Cross-Origin-Opener-Policy and
-            // Cross-Origin-Resource-Policy: same-origin.
-            // The API does not need to be loaded into a
-            // cross-origin popup; same-origin is the safest
-            // default and matches how the Blazor client is
-            // hosted (same origin as the API).
-            headers["Cross-Origin-Opener-Policy"] = "same-origin";
+            // Cross-Origin-Opener-Policy: only on requests from
+            // a "trustworthy origin" (HTTPS or localhost /
+            // 127.0.0.1 / ::1). On untrustworthy origins (e.g.
+            // `host.docker.internal` reached over plain HTTP in
+            // a dev container) the browser refuses to honour the
+            // header AND logs
+            //   "The Cross-Origin-Opener-Policy header has been
+            //    ignored, because the URL's origin was
+            //    untrustworthy"
+            // which drowns the dev console — see
+            // BETA-2-UI-#13 in test-results/ui/beta-test-r2-ui.md.
+            // The same policy value is still applied in
+            // production where the origin is always trustworthy,
+            // so there is no security regression.
+            if (IsTrustworthyOrigin(ctx.Request))
+            {
+                headers["Cross-Origin-Opener-Policy"] = "same-origin";
+            }
             headers["Cross-Origin-Resource-Policy"] = "same-origin";
 
             // Cache-Control: no-store on the API surface
@@ -164,5 +175,27 @@ public sealed class SecurityHeadersMiddleware(
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Browsers only honour <c>Cross-Origin-Opener-Policy</c> on
+    /// "trustworthy origins" — the spec's definition of which is
+    /// narrower than just "any host" and explicitly excludes
+    /// hostnames like <c>host.docker.internal</c> reached over
+    /// plain HTTP. Without this gate, the dev console fills with
+    /// "Cross-Origin-Opener-Policy header has been ignored" on
+    /// every request — see BETA-2-UI-#13.
+    /// </summary>
+    private static bool IsTrustworthyOrigin(HttpRequest request)
+    {
+        if (request.IsHttps)
+        {
+            return true;
+        }
+
+        string host = request.Host.Host;
+        return string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(host, "127.0.0.1", StringComparison.Ordinal)
+            || string.Equals(host, "::1", StringComparison.Ordinal);
     }
 }

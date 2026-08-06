@@ -143,7 +143,7 @@ else
     // Card aging: the board-scoped CardAging extension stores the
     // chosen mode in its ConfigJson. We fetch it once with the rest
     // of the board data and apply the opacity in the card template.
-    private const int CardAgingKind = 3;
+    private const BoardExtensionKind CardAgingKind = BoardExtensionKind.CardAging;
     private CardAgingMode agingMode = CardAgingMode.Disabled;
     private DateTimeOffset now = DateTimeOffset.UtcNow;
 

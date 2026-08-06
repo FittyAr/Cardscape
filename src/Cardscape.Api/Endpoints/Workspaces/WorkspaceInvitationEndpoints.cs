@@ -29,11 +29,18 @@ public static class WorkspaceInvitationEndpoints
             .RequireRegionGuard()
             .WithTags("Workspace invitations");
 
+        // `includeTerminal` defaults to false so the common case
+        // (list active invitations) is a clean GET with no
+        // query string — see BETA-2-#2 in
+        // test-results/BETA-TEST-REPORT.md. Setting it to
+        // true returns the historical record including
+        // revoked/expired rows, which the operator dashboard
+        // uses.
         wsGroup.MapGet("/", async (
             Guid workspaceId,
-            bool includeTerminal,
             IMessageBus bus,
-            CancellationToken ct) =>
+            CancellationToken ct,
+            bool includeTerminal = false) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
                 new ListWorkspaceInvitationsQuery(workspaceId, includeTerminal), ct);

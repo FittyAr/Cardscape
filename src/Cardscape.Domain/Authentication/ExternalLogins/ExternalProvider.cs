@@ -56,16 +56,35 @@ public static class ExternalProviderExtensions
     }
 
     /// <summary>
-    /// Returns <c>true</c> when this provider is fully wired
-    /// in the current build. Apple requires
-    /// <c>Authentication:Apple:TeamId</c>, <c>ClientId</c>,
-    /// <c>KeyId</c> and <c>PrivateKeyPem</c> in configuration;
-    /// when those are missing the OIDC handler is not
-    /// registered and <see cref="IsImplemented"/> reports
-    /// <c>false</c> so the UI hides the "Sign in with Apple"
-    /// button. Google and Microsoft are complete.
+    /// Returns <c>true</c> when this provider is known to the
+    /// API surface (a valid value of the
+    /// <see cref="ExternalProvider"/> enum that the
+    /// external-login start endpoint accepts in the URL).
+    ///
+    /// <para>
+    /// <b>NOTE:</b> this check used to be the only gate in
+    /// the start endpoint, and it hard-coded <c>true</c> for
+    /// Google / Microsoft / Apple. That meant an
+    /// operator who had not supplied the
+    /// <c>Authentication:Google:*</c> keys still got a
+    /// 200-then-500 from <c>Results.Challenge</c> when the
+    /// challenge couldn't find a registered "google"
+    /// scheme — see BETA-2-#8 in
+    /// test-results/BETA-TEST-REPORT.md.
+    /// </para>
+    ///
+    /// <para>
+    /// The check that actually matters for the
+    /// challenge-to-scheme wiring now lives next to the
+    /// endpoint (see <c>ExternalLoginEndpoints.cs</c>):
+    /// the start endpoint reads
+    /// <c>Microsoft.Extensions.Configuration.IConfiguration</c>
+    /// directly and verifies the matching
+    /// <c>Authentication:{Provider}:*</c> keys are
+    /// populated before it calls <c>Results.Challenge</c>.
+    /// </para>
     /// </summary>
-    public static bool IsImplemented(this ExternalProvider provider) => provider switch
+    public static bool IsKnown(this ExternalProvider provider) => provider switch
     {
         ExternalProvider.Google => true,
         ExternalProvider.Microsoft => true,

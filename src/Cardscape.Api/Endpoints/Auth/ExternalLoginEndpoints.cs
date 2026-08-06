@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Auth;
@@ -43,7 +44,7 @@ namespace Cardscape.Api.Endpoints.Auth;
 /// regenerated per request) — the OIDC handler is only
 /// registered when the full <c>Authentication:Apple:*</c>
 /// configuration block is present; otherwise the
-/// <see cref="ExternalProviderExtensions.IsImplemented"/>
+/// <see cref="ExternalProviderExtensions.IsKnown"/>
 /// check on the <c>apple</c> provider keeps the start
 /// endpoint out of the menu (returns 501).
 /// </summary>
@@ -60,6 +61,7 @@ public static class ExternalLoginEndpoints
         group.MapGet("/{provider}/start", (
             string provider,
             HttpContext http,
+            IConfiguration configuration,
             string? returnUrl) =>
         {
             if (!ExternalProviderExtensions.TryParse(provider, out var parsed))
@@ -70,7 +72,28 @@ public static class ExternalLoginEndpoints
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
-            if (!parsed.IsImplemented())
+            // BETA-2-#8 — see test-results/BETA-TEST-REPORT.md.
+            //
+            // The old `IsImplemented()` hard-coded `true`
+            // for Google / Microsoft / Apple. The
+            // challenge call below would then throw
+            // `InvalidOperationException: No authentication
+            // handler is registered for the scheme
+            // 'google'` when the operator hadn't supplied
+            // the matching Authentication:Google:* keys, and
+            // the GlobalExceptionMiddleware mapped it to 500.
+            // The check now reads the live IConfiguration
+            // and verifies the matching
+            // Authentication:{Provider}:* keys are
+            // populated — exactly the precondition the
+            // scheme registration in ServiceCollectionExtensions
+            // uses to decide whether to call
+            // `AddGoogle()` / `AddMicrosoftAccount()` /
+            // `AddOpenIdConnect()`. If the keys are missing,
+            // the auth scheme is not registered, and the
+            // 501 keeps the user on the right side of the
+            // 500 cliff.
+            if (!IsSchemeRegistered(configuration, parsed))
             {
                 return Results.Problem(
                     title: ExternalLoginErrors.ProviderNotImplemented.Code,
@@ -192,4 +215,32 @@ public static class ExternalLoginEndpoints
 
         return app;
     }
+
+    /// <summary>
+    /// Returns <c>true</c> when the matching authentication
+    /// scheme is actually registered for this provider. The
+    /// registration in <c>ServiceCollectionExtensions</c> only
+    /// calls <c>AddGoogle()</c> / <c>AddMicrosoftAccount()</c>
+    /// / <c>AddOpenIdConnect()</c> when the corresponding
+    /// <c>Authentication:{Provider}:*</c> configuration keys
+    /// are present, so the same keys are the source of truth
+    /// here. Mirrors the conditions in
+    /// <c>AddApiAuthentication</c> verbatim — see BETA-2-#8
+    /// in test-results/BETA-TEST-REPORT.md.
+    /// </summary>
+    private static bool IsSchemeRegistered(IConfiguration configuration, ExternalProvider provider) => provider switch
+    {
+        ExternalProvider.Google =>
+            !string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientId"])
+            && !string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientSecret"]),
+        ExternalProvider.Microsoft =>
+            !string.IsNullOrWhiteSpace(configuration["Authentication:Microsoft:ClientId"])
+            && !string.IsNullOrWhiteSpace(configuration["Authentication:Microsoft:ClientSecret"]),
+        ExternalProvider.Apple =>
+            !string.IsNullOrWhiteSpace(configuration["Authentication:Apple:ClientId"])
+            && !string.IsNullOrWhiteSpace(configuration["Authentication:Apple:TeamId"])
+            && !string.IsNullOrWhiteSpace(configuration["Authentication:Apple:KeyId"])
+            && !string.IsNullOrWhiteSpace(configuration["Authentication:Apple:PrivateKeyPem"]),
+        _ => false
+    };
 }

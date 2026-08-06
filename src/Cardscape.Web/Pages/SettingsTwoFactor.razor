@@ -4,7 +4,7 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @using Radzen
-@inject HttpClient Http
+@inject IHttpClientFactory HttpFactory
 @inject TokenStore Tokens
 @inject AuthStateProvider Auth
 @inject NavigationManager Nav
@@ -170,9 +170,22 @@
         }
     }
 
+    // BETA-2-UI-#5 — see test-results/ui/beta-test-r2-ui.md.
+    //
+    // The previous version used `@inject HttpClient Http`
+    // (the framework-provided client with no BaseAddress) and
+    // called `http.GetAsync("api/auth/2fa/status")` on a
+    // relative URL — that throws
+    // `net_http_client_invalid_requesturi` because there's
+    // no base URL. The right pattern (used by every other
+    // page in the app) is to ask the IHttpClientFactory for
+    // the "Cardscape.Api" client, which has its BaseAddress
+    // configured in Program.cs. The auth token is attached
+    // per-request so we don't mutate the shared client's
+    // DefaultRequestHeaders across calls.
     private async Task<HttpClient> AuthedClientAsync()
     {
-        var http = Http;
+        var http = HttpFactory.CreateClient("Cardscape.Api");
         var token = await Tokens.GetAccessTokenAsync();
         if (!string.IsNullOrWhiteSpace(token))
         {

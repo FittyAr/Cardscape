@@ -36,7 +36,7 @@ public sealed class AutomationApiClient(IHttpClientFactory http)
         Guid boardId, CreateRuleRequestDto body, CancellationToken ct = default)
     {
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
-            $"api/boards/{boardId}/automation/", body, ct);
+            $"api/boards/{boardId}/automation/", body, JsonOptions, ct);
         return await ReadAsync<BoardAutomationRuleDto>(response, ct);
     }
 

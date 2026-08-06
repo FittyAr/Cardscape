@@ -9,7 +9,7 @@ public interface IBoardsApiClient
     Task<ApiResult<IReadOnlyList<BoardSummaryDto>>> ListForWorkspaceAsync(Guid workspaceId, CancellationToken ct = default);
     Task<ApiResult<BoardDto>> GetAsync(Guid boardId, CancellationToken ct = default);
     Task<ApiResult<BoardDto>> CreateAsync(
-        Guid workspaceId, string name, string? description, int visibility, CancellationToken ct = default);
+        Guid workspaceId, string name, string? description, BoardVisibility visibility, CancellationToken ct = default);
     Task<ApiResult<BoardDto>> StarAsync(Guid boardId, CancellationToken ct = default);
     Task<ApiResult<BoardDto>> UnstarAsync(Guid boardId, CancellationToken ct = default);
     Task<ApiResult<BoardDto>> ArchiveAsync(Guid boardId, CancellationToken ct = default);
@@ -39,11 +39,12 @@ public sealed class BoardsApiClient(IHttpClientFactory http) : ApiClientBase(htt
     }
 
     public async Task<ApiResult<BoardDto>> CreateAsync(
-        Guid workspaceId, string name, string? description, int visibility, CancellationToken ct = default)
+        Guid workspaceId, string name, string? description, BoardVisibility visibility, CancellationToken ct = default)
     {
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             "api/boards/",
             new CreateBoardRequestDto(workspaceId, name, description, visibility),
+            JsonOptions,
             ct);
         return await ReadAsync<BoardDto>(response, ct);
     }

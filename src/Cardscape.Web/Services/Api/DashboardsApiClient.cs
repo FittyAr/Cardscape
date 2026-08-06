@@ -22,7 +22,7 @@ public sealed class DashboardsApiClient(IHttpClientFactory http) : ApiClientBase
     public async Task<ApiResult<DashcardDto>> CreateAsync(CreateDashcardRequest body, CancellationToken ct = default)
     {
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
-            $"api/boards/{body.BoardId}/dashcards/", body, ct);
+            $"api/boards/{body.BoardId}/dashcards/", body, JsonOptions, ct);
         return await ReadAsync<DashcardDto>(response, ct);
     }
 

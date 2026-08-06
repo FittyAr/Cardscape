@@ -213,16 +213,31 @@ public sealed class TotpService(
         string code,
         CancellationToken ct)
     {
+        // BETA-2-#10 — see test-results/BETA-TEST-REPORT.md.
+        //
         // Accept either a TOTP code or a recovery code so
         // a user who lost their authenticator can still
-        // remove 2FA.
-        var totpResult = await VerifyAsync(userId, code, ct);
+        // remove 2FA. The previous implementation called
+        // VerifyAsync() which advances LastUsedCounter
+        // (replay protection). When the UI flow did
+        // "verify → disable" with the same TOTP code in two
+        // consecutive requests, the second VerifyAsync saw
+        // `matchedStep <= LastUsedCounter` and rejected
+        // with auth.totp.invalid_code, which the endpoint
+        // surfaces as 400. The fix is to verify without
+        // advancing the counter on the disable path —
+        // VerifyWithoutConsumingAsync() is a TOTP-only
+        // counterpart that does the same RFC 6238 step
+        // math but never updates LastUsedCounter.
+        var totpResult = await VerifyWithoutConsumingAsync(userId, code, ct);
         if (totpResult.IsSuccess)
         {
             await ApplyDisableAsync(userId, ct);
             return Result.Success();
         }
 
+        // Recovery codes are already one-shot, so a fresh
+        // call to ConsumeRecoveryCodeAsync is correct.
         var recoveryResult = await ConsumeRecoveryCodeAsync(userId, code, ct);
         if (recoveryResult.IsSuccess)
         {
@@ -231,6 +246,47 @@ public sealed class TotpService(
         }
 
         return Result.Failure(TotpErrors.InvalidCode);
+    }
+
+    /// <summary>
+    /// Verifies a 6-digit TOTP code without updating the
+    /// <c>LastUsedCounter</c>. Used by the disable path so
+    /// "verify → disable" with the same code in consecutive
+    /// requests doesn't trip the replay guard. The same
+    /// RFC 6238 ±1 step window as <see cref="VerifyAsync"/>
+    /// is honoured; the only difference is that this method
+    /// does not call <c>RecordVerification</c>.
+    /// </summary>
+    private async Task<Result<long>> VerifyWithoutConsumingAsync(
+        UserId userId,
+        string code,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(code) || code.Length is < 6 or > 10)
+        {
+            return Result.Failure<long>(TotpErrors.InvalidCode);
+        }
+
+        var credential = await credentials.FindForUserAsync(userId, ct);
+        if (credential is null || credential.IsDeleted)
+        {
+            return Result.Failure<long>(TotpErrors.NotEnrolled);
+        }
+
+        string cleartextSecret = protector.Unprotect(credential.EncryptedSecret);
+        var totp = new Totp(Base32Encoding.ToBytes(cleartextSecret));
+
+        if (!totp.VerifyTotp(
+                code.Trim(),
+                out long matchedStep,
+                VerificationWindow.RfcSpecifiedNetworkDelay))
+        {
+            return Result.Failure<long>(TotpErrors.InvalidCode);
+        }
+
+        // No replay guard, no DB write — see the
+        // DisableAsync comment for the rationale.
+        return Result.Success(matchedStep);
     }
 
     public async Task<TotpStatus> GetStatusAsync(

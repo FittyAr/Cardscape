@@ -75,9 +75,33 @@ public static class IntegrationsEndpoints
             return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
         });
 
-        group.MapGet("/pulls", async ([FromQuery] string repoFullName, [FromQuery] string? state, IMessageBus bus, CancellationToken ct) =>
+        // BETA-2-#11 — see test-results/BETA-TEST-REPORT.md.
+        //
+        // The previous version hard-coded `boardId = Guid.Empty`
+        // and assumed the MCP tool would have stamped the
+        // current board on the JWT. The HTTP endpoint never
+        // received the JWT claim, so the lookup against
+        // `db.Lists.Where(l => l.BoardId == new BoardId(Guid.Empty))`
+        // was always empty and the endpoint returned 404 for
+        // every call. The fix is to read the boardId from a
+        // query string parameter — the operator dashboard and
+        // swagger "Try it out" use this directly, and the MCP
+        // tool is updated separately to pass it through.
+        group.MapGet("/pulls", async (
+            [FromQuery] Guid boardId,
+            [FromQuery] string repoFullName,
+            [FromQuery] string? state,
+            IMessageBus bus,
+            CancellationToken ct) =>
         {
-            Guid boardId = Guid.Empty; // The board-id is in the JWT principal's claims; the MCP tool fetches it before calling here.
+            if (boardId == Guid.Empty)
+            {
+                return Results.Problem(
+                    title: "integrations.github.board_required",
+                    detail: "The boardId query parameter is required so the server can scope the lookup to the right board.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
             var result = await bus.InvokeAsync<Result<IReadOnlyList<GitHubPullRequestDto>>>(
                 new ListGitHubPullRequestsQuery(boardId, repoFullName, state ?? "open"), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);

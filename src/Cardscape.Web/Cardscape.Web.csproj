@@ -70,8 +70,22 @@
       culture is served from the assembly-embedded resource via
       the IStringLocalizer fallback — see
       Services/CultureSwitcher.cs).
+
+      BETA-2-UI-#8 fix — the previous `<None … Pack="true" />`
+      entry was being eaten by the SDK before the static web
+      assets pipeline ran, so `bin/Release/net10.0/wwwroot/
+      Resources/SharedResource.es.resx` was empty and the
+      CultureSwitcher received a 404. Switching to `<Content>`
+      with CopyToOutputDirectory = PreserveNewest makes the
+      file part of the Blazor static-web-assets manifest and
+      it ships correctly into the API's wwwroot when the API
+      project is built.
     -->
-    <None Include="Resources\SharedResource.es.resx" Pack="true" PackagePath="wwwroot\Resources\SharedResource.es.resx" />
+    <Content Include="Resources\SharedResource.es.resx"
+             Pack="true"
+             PackagePath="wwwroot\Resources\SharedResource.es.resx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

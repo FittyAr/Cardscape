@@ -30,7 +30,7 @@ public sealed record WorkspaceDto(
     Guid Id,
     string Name,
     Guid OwnerId,
-    int Region,
+    Region Region,
     bool IsArchived,
     DateTimeOffset CreatedAt,
     int MemberCount);
@@ -39,11 +39,11 @@ public sealed record WorkspaceMemberDto(
     Guid UserId,
     string Email,
     string DisplayName,
-    int Role,
+    WorkspaceRole Role,
     DateTimeOffset JoinedAt);
 
-public sealed record CreateWorkspaceRequestDto(string Name, int? Region = null);
-public sealed record SetWorkspaceRegionRequestDto(int Region);
+public sealed record CreateWorkspaceRequestDto(string Name, Region? Region = null);
+public sealed record SetWorkspaceRegionRequestDto(Region Region);
 
 // ── Google Calendar ──────────────────────────────────────
 public sealed record GoogleCalendarConnectionDto(
@@ -71,14 +71,14 @@ public sealed record ScimTokenDto(
 public sealed record DashcardDto(
     Guid Id,
     Guid BoardId,
-    int Kind,
+    DashcardKind Kind,
     string Title,
     string ConfigurationJson,
     int Position);
 
 public sealed record CreateDashcardRequest(
     Guid BoardId,
-    string Kind,
+    DashcardKind Kind,
     string Title,
     string ConfigurationJson,
     int Position);
@@ -103,7 +103,7 @@ public sealed record BoardDto(
     Guid WorkspaceId,
     string Name,
     string Description,
-    int Visibility,
+    BoardVisibility Visibility,
     bool IsArchived,
     bool IsStarred,
     DateTimeOffset CreatedAt,
@@ -112,7 +112,7 @@ public sealed record BoardDto(
 public sealed record BoardSummaryDto(
     Guid Id,
     string Name,
-    int Visibility,
+    BoardVisibility Visibility,
     bool IsArchived,
     bool IsStarred,
     DateTimeOffset CreatedAt);
@@ -121,7 +121,7 @@ public sealed record CreateBoardRequestDto(
     Guid WorkspaceId,
     string Name,
     string? Description,
-    int Visibility);
+    BoardVisibility Visibility);
 
 // ── Lists ───────────────────────────────────────────────
 public sealed record BoardListDto(
@@ -258,7 +258,7 @@ public sealed record WorkspaceInvitationDto(
     Guid WorkspaceId,
     string WorkspaceName,
     string Email,
-    int Role,
+    WorkspaceRole Role,
     Guid InvitedBy,
     DateTimeOffset InvitedAt,
     DateTimeOffset ExpiresAt,
@@ -271,30 +271,28 @@ public sealed record WorkspaceInvitationIssuanceDto(
 
 public sealed record IssueWorkspaceInvitationRequestDto(
     string Email,
-    int Role,
+    WorkspaceRole Role,
     TimeSpan? Lifetime = null);
 
 public sealed record AcceptWorkspaceInvitationRequestDto(string Token);
 
 // ── Automation (v0.6.3) ────────────────────────────────
-// Trigger enum: 0 = CardMoved, 1 = CardCompleted, 2 = CardReopened, 3 = CardCreatedInList
-// Action  enum: 0 = MoveCardToList, 1 = AssignUser, 2 = SetDueDate, 3 = MarkComplete
 public sealed record BoardAutomationRuleDto(
     Guid Id,
     Guid BoardId,
     string Name,
-    int Trigger,
+    AutomationTrigger Trigger,
     Guid? TriggerListId,
-    int Action,
+    AutomationAction Action,
     string? ActionArgument,
     bool IsEnabled,
     int Position);
 
 public sealed record CreateRuleRequestDto(
     string Name,
-    int Trigger,
+    AutomationTrigger Trigger,
     Guid? TriggerListId,
-    int Action,
+    AutomationAction Action,
     string? ActionArgument,
     int Position = 0);
 
@@ -323,36 +321,34 @@ public sealed record UnreadCountDto(int Count);
 public sealed record ApiErrorDto(string? Title, string? Detail, int? Status);
 
 // v0.6.4: Board extensions
-// Kind enum: 0 = CustomFields, 1 = Voting, 2 = CardRepeater
 public sealed record BoardExtensionDto(
     Guid Id,
     Guid BoardId,
-    int Kind,
+    BoardExtensionKind Kind,
     string? ConfigJson,
     bool IsEnabled);
 
-public sealed record EnableExtensionRequestDto(int Kind, string? ConfigJson);
+public sealed record EnableExtensionRequestDto(BoardExtensionKind Kind, string? ConfigJson);
 public sealed record UpdateExtensionConfigRequestDto(string? ConfigJson);
 
 // ── Custom fields (v0.7.1) ─────────────────────────────────
-// Kind enum: 0 = Text, 1 = Number, 2 = Date, 3 = Dropdown, 4 = Checkbox
 public sealed record CustomFieldDefinitionDto(
     Guid Id,
     Guid BoardId,
     string Name,
-    int Kind,
+    CustomFieldKind Kind,
     string OptionsJson,
     int Position);
 
 public sealed record CustomFieldValueDto(
     Guid FieldDefinitionId,
     Guid CardId,
-    int Kind,
+    CustomFieldKind Kind,
     string ValueJson);
 
 public sealed record CreateCustomFieldRequestDto(
     string Name,
-    int Kind,
+    CustomFieldKind Kind,
     IReadOnlyList<string>? DropdownOptions,
     int Position = 0);
 

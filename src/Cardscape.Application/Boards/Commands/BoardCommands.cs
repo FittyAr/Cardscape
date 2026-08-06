@@ -59,6 +59,25 @@ public static class CreateBoardCommandHandler
             return Result.Failure<BoardDto>(descResult.Error);
         }
 
+        // BETA-2-#4 — see test-results/BETA-TEST-REPORT.md.
+        //
+        // The JSON binding accepts any int for the
+        // BoardVisibility field because the
+        // JsonStringEnumConverter is configured with
+        // `allowIntegerValues: true` (so the Blazor WASM
+        // client can keep sending ints). That same
+        // permissiveness lets the caller pass
+        // `{"visibility": 99}` and have a board created
+        // with an out-of-range enum value. Reject unknown
+        // values explicitly so the storage layer never
+        // sees a Visibility the domain doesn't recognise.
+        if (!Enum.IsDefined(command.Visibility))
+        {
+            return Result.Failure<BoardDto>(DomainError.Validation(
+                "boards.visibility_invalid",
+                $"Visibility must be one of: {string.Join(", ", Enum.GetNames<BoardVisibility>())}."));
+        }
+
         var boardResult = BoardEntity.Create(
             BoardId.New(),
             new WorkspaceId(command.WorkspaceId),
@@ -230,6 +249,18 @@ public static class ChangeBoardVisibilityCommandHandler
         if (!board.IsMember(currentUser.Id.Value))
         {
             return Result.Failure<BoardDto>(NotMember);
+        }
+
+        // BETA-2-#4 — see test-results/BETA-TEST-REPORT.md.
+        // Same range check as the create path; the
+        // JsonStringEnumConverter is permissive about
+        // integer values, so an out-of-range Visibility
+        // would otherwise land on the entity.
+        if (!Enum.IsDefined(command.NewVisibility))
+        {
+            return Result.Failure<BoardDto>(DomainError.Validation(
+                "boards.visibility_invalid",
+                $"Visibility must be one of: {string.Join(", ", Enum.GetNames<BoardVisibility>())}."));
         }
 
         var changeResult = board.ChangeVisibility(command.NewVisibility, clock.UtcNow);

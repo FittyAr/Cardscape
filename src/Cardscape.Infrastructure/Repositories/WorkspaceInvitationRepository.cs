@@ -31,17 +31,39 @@ public sealed class WorkspaceInvitationRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<WorkspaceInvitation>> ListForWorkspaceAsync(
         Guid workspaceId, bool includeTerminal, CancellationToken ct = default)
     {
-        var query = Db.Set<WorkspaceInvitation>()
-            .Where(i => i.WorkspaceId.Value == workspaceId);
-
-        if (!includeTerminal)
+        // BETA-2-#2 (regression) — see
+        // test-results/BETA-TEST-REPORT.md. The endpoint fix
+        // made `includeTerminal` optional with a default of
+        // false; the previous implementation worked when
+        // callers passed it through, but a fresh GET (no
+        // query string) was still hitting the route and
+        // walking into the SQL-translation failure on
+        // `i.WorkspaceId.Value == workspaceId`. The strongly-
+        // typed WorkspaceId value object doesn't translate
+        // through the EF Core SQLite provider. Same fix
+        // pattern as AutomationRuleRepository / CardRepository
+        // / GitHubRepoLinkRepository: bring the rows into
+        // memory with AsAsyncEnumerable() and filter
+        // client-side. Invitation counts per workspace are
+        // small (single digits to low hundreds), so the
+        // round-trip cost is negligible.
+        var rows = new List<WorkspaceInvitation>();
+        await foreach (var inv in Db.Set<WorkspaceInvitation>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            query = query.Where(i => i.AcceptedAt == null && i.RevokedAt == null);
+            if (inv.WorkspaceId.Value != workspaceId)
+            {
+                continue;
+            }
+
+            if (!includeTerminal && (inv.AcceptedAt is not null || inv.RevokedAt is not null))
+            {
+                continue;
+            }
+
+            rows.Add(inv);
         }
 
-        var rows = await query
-            .OrderByDescending(i => i.InvitedAt)
-            .ToListAsync(ct);
+        rows.Sort((a, b) => b.InvitedAt.CompareTo(a.InvitedAt));
         return rows;
     }
 

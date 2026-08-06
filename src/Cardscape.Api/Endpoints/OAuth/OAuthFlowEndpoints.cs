@@ -67,18 +67,30 @@ public static class OAuthFlowEndpoints
             // the login page with the original request as
             // the returnUrl so the browser comes back here
             // after the user signs in.
+            //
+            // BETA-2-#9 — see test-results/BETA-TEST-REPORT.md.
+            // The previous implementation called
+            // `Results.Challenge(..., new[] { "Cardscape" })`
+            // to invoke the cookie-based sign-in scheme, but
+            // no scheme named "Cardscape" is registered (the
+            // real schemes are Bearer, ApiToken, Scim, Saml,
+            // Google, MicrosoftAccount). Results.Challenge
+            // surfaces an `InvalidOperationException` for
+            // unknown schemes, which the
+            // GlobalExceptionMiddleware then maps to 500. A
+            // 302 redirect to the SPA's /login page is the
+            // correct contract: the SPA is Blazor WASM, the
+            // JWT is the only session carrier, and an
+            // unauthenticated user must round-trip through
+            // the WASM client to mint one.
             if (currentUser.Id is null)
             {
                 string returnUrl = $"/oauth/authorize?client_id={Uri.EscapeDataString(client_id)}" +
                                    $"&redirect_uri={Uri.EscapeDataString(redirect_uri)}" +
                                    (string.IsNullOrEmpty(scope) ? string.Empty : $"&scope={Uri.EscapeDataString(scope)}") +
                                    (string.IsNullOrEmpty(state) ? string.Empty : $"&state={Uri.EscapeDataString(state)}");
-                return Results.Challenge(
-                    new Microsoft.AspNetCore.Authentication.AuthenticationProperties
-                    {
-                        RedirectUri = returnUrl
-                    },
-                    new[] { "Cardscape" });
+                string loginUrl = $"/login?returnUrl={Uri.EscapeDataString(returnUrl)}";
+                return Results.Redirect(loginUrl);
             }
 
             var userId = new Domain.Members.UserId(currentUser.Id.Value);

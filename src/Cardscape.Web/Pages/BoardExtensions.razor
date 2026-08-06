@@ -79,7 +79,7 @@ else
 
     // Must match ExtensionKind.CardAging in
     // src/Cardscape.Domain/Boards/BoardExtension.cs.
-    private const int CardAgingKind = 3;
+    private const BoardExtensionKind CardAgingKind = BoardExtensionKind.CardAging;
 
     private IReadOnlyList<BoardExtensionDto>? rows;
     private string? error;
@@ -88,9 +88,9 @@ else
 
     private readonly List<ExtensionOption> allOptions = new()
     {
-        new(0, "ExtensionCustomFieldsName", "ExtensionCustomFieldsDescription"),
-        new(1, "ExtensionVotingName", "ExtensionVotingDescription"),
-        new(2, "ExtensionCardRepeaterName", "ExtensionCardRepeaterDescription"),
+        new(BoardExtensionKind.CustomFields, "ExtensionCustomFieldsName", "ExtensionCustomFieldsDescription"),
+        new(BoardExtensionKind.Voting, "ExtensionVotingName", "ExtensionVotingDescription"),
+        new(BoardExtensionKind.CardRepeater, "ExtensionCardRepeaterName", "ExtensionCardRepeaterDescription"),
         new(CardAgingKind, "ExtensionCardAgingName", "ExtensionCardAgingDescription")
     };
 
@@ -153,7 +153,7 @@ else
     private static string SerializeAgingMode(CardAgingMode mode) =>
         $$"""{"mode":"{{mode}}"}""";
 
-    private async Task EnableAsync(int kind)
+    private async Task EnableAsync(BoardExtensionKind kind)
     {
         ApiResult<BoardExtensionDto> result = await ExtensionsClient.EnableAsync(
             BoardId, new EnableExtensionRequestDto(kind, ConfigJson: null));
@@ -167,7 +167,7 @@ else
         }
     }
 
-    private async Task DisableAsync(int kind)
+    private async Task DisableAsync(BoardExtensionKind kind)
     {
         ApiResult result = await ExtensionsClient.DisableAsync(BoardId, kind);
         if (result.IsSuccess)
@@ -204,7 +204,7 @@ else
         }
     }
 
-    private sealed record ExtensionOption(int Kind, string NameKey, string DescriptionKey);
+    private sealed record ExtensionOption(BoardExtensionKind Kind, string NameKey, string DescriptionKey);
 
     // Mirrors Cardscape.Domain.Cards.CardAgingMode. Kept local so
     // the Web project doesn't need a domain reference just to drive

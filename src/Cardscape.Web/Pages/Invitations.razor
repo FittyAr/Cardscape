@@ -62,11 +62,11 @@ else
         }
     }
 
-    private static string RoleName(int role) => role switch
+    private static string RoleName(WorkspaceRole role) => role switch
     {
-        0 => "Admin",
-        1 => "Member",
-        2 => "Observer",
+        WorkspaceRole.Admin => "Admin",
+        WorkspaceRole.Member => "Member",
+        WorkspaceRole.Observer => "Observer",
         _ => "Unknown"
     };
 }

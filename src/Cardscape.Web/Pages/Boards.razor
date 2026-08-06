@@ -28,9 +28,9 @@
 
             <LabeledField Text="Visibility" Component="b-vis">
                 <RadzenDropDown @bind-Value="createModel.Visibility" Name="b-vis" Style="width:100%"
-                                Data="@(new[] { new { Value = 0, Label = "Private" },
-                                                new { Value = 1, Label = "Workspace" },
-                                                new { Value = 2, Label = "Public" } })"
+                                Data="@(new[] { new { Value = BoardVisibility.Private, Label = "Private" },
+                                                new { Value = BoardVisibility.Workspace, Label = "Workspace" },
+                                                new { Value = BoardVisibility.Public, Label = "Public" } })"
                                 TextProperty="Label" ValueProperty="Value" />
             </LabeledField>
 
@@ -95,7 +95,7 @@ else
     private bool showCreate;
     private bool busy;
     private string? error;
-    private readonly CreateModel createModel = new() { Visibility = 0 };
+    private readonly CreateModel createModel = new() { Visibility = BoardVisibility.Private };
 
     protected override async Task OnParametersSetAsync()
     {
@@ -143,6 +143,6 @@ else
     {
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public int Visibility { get; set; }
+        public BoardVisibility Visibility { get; set; }
     }
 }

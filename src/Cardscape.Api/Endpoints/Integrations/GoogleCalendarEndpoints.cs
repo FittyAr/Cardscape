@@ -42,9 +42,40 @@ public static class GoogleCalendarEndpoints
         {
             var result = await bus.InvokeAsync<Result<GoogleCalendarConnectionDto?>>(
                 new GetGoogleCalendarConnectionQuery(), ct);
-            return result.IsSuccess
-                ? Results.Ok(result.Value)
-                : MapError(result.Error);
+            if (!result.IsSuccess)
+            {
+                return MapError(result.Error);
+            }
+
+            // BETA-2-UI-#6 — see test-results/ui/beta-test-r2-ui.md.
+            //
+            // The previous handler returned `Results.Ok(result.Value)`
+            // where `result.Value` was a nullable `GoogleCalendarConnectionDto?`.
+            // When the user had not connected a Google Calendar, the
+            // value was `null` and `Results.Ok(null)` serialised a
+            // 0-byte body. The Blazor WASM client
+            // (`GoogleCalendarApiClient.GetConnectionAsync`) called
+            // `ReadFromJsonAsync<GoogleCalendarConnectionDto>(...)` on
+            // the empty response and threw `JsonException:
+            // ExpectedJsonTokens`, leaving the page stuck on "Loading…".
+            // The fix is to always return a non-null body so the
+            // client can deserialise a default "not connected" state
+            // and render the connect form.
+            if (result.Value is null)
+            {
+                return Results.Ok(new GoogleCalendarConnectionDto(
+                    Id: Guid.Empty,
+                    UserId: Guid.Empty,
+                    WorkspaceId: Guid.Empty,
+                    GoogleEmail: string.Empty,
+                    CalendarId: string.Empty,
+                    LastSyncedAt: null,
+                    LastSyncErrorAt: null,
+                    LastSyncError: null,
+                    IsActive: false));
+            }
+
+            return Results.Ok(result.Value);
         });
 
         group.MapDelete("/", async (IMessageBus bus, CancellationToken ct) =>

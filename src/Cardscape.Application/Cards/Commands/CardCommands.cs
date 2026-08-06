@@ -9,6 +9,7 @@ using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
+using Cardscape.Domain.Members;
 using Cardscape.Domain.Notifications;
 using Wolverine;
 using static Cardscape.Domain.Cards.Errors.CardErrors;
@@ -523,6 +524,7 @@ public static class AssignCardCommandHandler
         ICardRepository cards,
         IBoardListRepository lists,
         IBoardRepository boards,
+        IUserRepository users,
         INotificationRepository notifications,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
@@ -546,6 +548,28 @@ public static class AssignCardCommandHandler
         if (guard.IsFailure)
         {
             return Result.Failure<CardDto>(guard.Error);
+        }
+
+        // BETA-2-#5 — see test-results/BETA-TEST-REPORT.md.
+        //
+        // The previous implementation trusted
+        // `command.UserId` blindly and called
+        // `card.Assign(command.UserId, ...)`. The card's
+        // Assignments set ended up holding a Guid that
+        // pointed to nothing — the card returned 200 and
+        // the UI rendered the assignee avatar against a
+        // missing user, which then made the Web UI throw
+        // when it tried to resolve the display name. Verify
+        // the user exists (and is active) before we record
+        // the assignment. Soft-deleted / inactive users are
+        // treated as "not found" so a stale link doesn't
+        // resurrect in the assignee dropdown.
+        var assignee = await users.GetByIdAsync(new UserId(command.UserId), cancellationToken);
+        if (assignee is null || !assignee.IsActive)
+        {
+            return Result.Failure<CardDto>(DomainError.NotFound(
+                "cards.assignee_not_found",
+                "The user you tried to assign is not a known Cardscape user."));
         }
 
         var result = card.Assign(command.UserId, clock.UtcNow);

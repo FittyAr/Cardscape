@@ -104,10 +104,28 @@ public static class BoardEndpoints
             return Results.File(result.Value, "application/zip", fileName);
         });
 
-        // Public board calendars are reachable without a bearer
-        // token. Private boards still require membership and
-        // therefore an authenticated request; the inner service
-        // enforces the rule.
+        // BETA-2-#3 — see test-results/BETA-TEST-REPORT.md.
+        //
+        // The previous version of this endpoint was
+        // .AllowAnonymous()'d with the rationale "public
+        // boards are readable by anyone with a link". The
+        // effect was that an unauthenticated GET on a
+        // PRIVATE board reached the service layer, the
+        // service saw `currentUser.Id == null`, and
+        // returned DomainError.Unauthenticated which
+        // surfaces as 401 — so the endpoint's external
+        // contract was "401 for everyone who isn't
+        // authenticated, regardless of board visibility".
+        // The cleanest fix is to let the standard
+        // `RequireAuthorization()` on the parent group gate
+        // the request first (so an unauthenticated caller
+        // always sees 401 with WWW-Authenticate before any
+        // service code runs) and let the service decide
+        // 200/403/404 for authenticated callers based on
+        // board visibility. Operators that want truly
+        // anonymous calendar feeds should expose this
+        // endpoint through a separate reverse-proxy rule
+        // that injects a service-account JWT.
         group.MapGet("/{boardId:guid}/ics", async (
             Guid boardId,
             [FromServices] Cardscape.Application.Calendar.IIcalendarService calendar,
@@ -120,7 +138,7 @@ public static class BoardEndpoints
             }
 
             return Results.File(result.Value, "text/calendar", $"board-{boardId}.ics");
-        }).AllowAnonymous();
+        });
 
         return app;
     }
