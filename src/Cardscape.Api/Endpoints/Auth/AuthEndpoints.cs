@@ -165,6 +165,28 @@ public static class AuthEndpoints
                     title: result.Error.Code);
         }).RequireAuthorization();
 
+        // BETA-5-#4 — see test-results/BETA-TEST-REPORT.md.
+        //
+        // "logout" is the conventional name clients reach for
+        // (fetch('/api/auth/logout', { method: 'POST' })). The
+        // underlying revocation logic is the same as
+        // POST /api/auth/revoke — same JwtRevocationValidator
+        // path, same RevokeCurrentTokenCommand — so this is
+        // a thin alias rather than a second implementation.
+        group.MapPost("/logout", async (
+            [FromBody] RevokeTokenRequest? request,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            string? reason = request?.Reason;
+            var result = await bus.InvokeAsync<Result>(new RevokeCurrentTokenCommand(reason), ct);
+            return result.IsSuccess
+                ? Results.NoContent()
+                : Results.Problem(result.Error.Message,
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: result.Error.Code);
+        }).RequireAuthorization();
+
         return app;
     }
 

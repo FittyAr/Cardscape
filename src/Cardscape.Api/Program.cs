@@ -26,6 +26,7 @@ using Cardscape.Api.Endpoints.Scim;
 using Cardscape.Api.Endpoints.Search;
 using Cardscape.Api.Endpoints.Security;
 using Cardscape.Api.Endpoints.Voting;
+using Cardscape.Api.Endpoints.Webhooks;
 using Cardscape.Api.Endpoints.Workspaces;
 using Cardscape.Api.Extensions;
 using Cardscape.Api.Hubs;
@@ -233,6 +234,7 @@ app.MapExternalLoginEndpoints();
 app.MapWorkspaceEndpoints();
 app.MapWorkspaceInvitationEndpoints();
 app.MapBoardEndpoints();
+app.MapWebhookEndpoints();
 app.MapListEndpoints();
 app.MapCardEndpoints();
 app.MapCommentEndpoints();
@@ -284,7 +286,22 @@ app.MapHub<BoardHub>("/hubs/board");
 // Anything that didn't match an API endpoint or the static files above
 // falls through to the Blazor client's index.html so its router can take
 // over (e.g. /boards/123, /login, /workspaces).
-app.MapFallbackToFile("index.html");
+//
+// BETA-5-#11 — see test-results/BETA-TEST-REPORT.md.
+// The original MapFallbackToFile matched every unmatched path, so a
+// malformed API URL like /api/boards/not-a-guid (the :guid
+// route constraint rejects the segment, so no API endpoint
+// matches) was falling through to the Blazor SPA and returning
+// 200 + index.html. The API was effectively hiding 4xx responses
+// for malformed GUIDs and any other routing typos. The scoped
+// fallback only handles non-/api paths, so missing API routes
+// now bubble up to 404 as the client expects.
+app.MapWhen(
+    context => !context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase),
+    branch => branch.UseStaticFiles().UseRouting().UseEndpoints(endpoints =>
+    {
+        endpoints.MapFallbackToFile("index.html");
+    }));
 
 app.Run();
 

@@ -476,6 +476,44 @@ public static class ArchiveCardCommandHandler
     }
 }
 
+public sealed record DeleteCardCommand(Guid CardId) : IMessage;
+
+public static class DeleteCardCommandHandler
+{
+    public static async Task<Result> Handle(
+        DeleteCardCommand command,
+        ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        CancellationToken cancellationToken)
+    {
+        if (currentUser.Id is null)
+        {
+            return Result.Failure(DomainError.Unauthenticated(
+                "auth.required", "Authentication is required."));
+        }
+
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
+        if (card is null)
+        {
+            return Result.Failure(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure(guard.Error);
+        }
+
+        cards.Remove(card);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+}
+
 public sealed record RestoreCardCommand(Guid CardId) : IMessage;
 
 public static class RestoreCardCommandHandler

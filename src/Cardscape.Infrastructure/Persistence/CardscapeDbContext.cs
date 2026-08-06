@@ -62,6 +62,12 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<OAuthAuthorizationCode> OAuthAuthorizationCodes => Set<OAuthAuthorizationCode>();
     public DbSet<OAuthAccessToken> OAuthAccessTokens => Set<OAuthAccessToken>();
     public DbSet<Domain.Authentication.RevokedTokens.RevokedToken> RevokedTokens => Set<Domain.Authentication.RevokedTokens.RevokedToken>();
+    // BETA-5-#1 — see test-results/BETA-TEST-REPORT.md. Exposed as a
+    // standalone DbSet (not via OwnsMany) so the star-toggle path
+    // can issue a direct INSERT/DELETE on board_stars without going
+    // through the Board's RowVersion. The (BoardId, UserId) unique
+    // index is the safety net against double-stars.
+    public DbSet<BoardStar> BoardStars => Set<BoardStar>();
 
     /// <summary>
     /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't

@@ -4,6 +4,7 @@ using Cardscape.Application.Lists.Queries;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
@@ -15,9 +16,25 @@ public static class ListEndpoints
     {
         var group = app.MapGroup("/api/lists").RequireAuthorization().WithTags("Lists");
 
-        group.MapGet("/", async (Guid boardId, bool includeArchived, IMessageBus bus, CancellationToken ct) =>
+        // BETA-5-#8 — see test-results/BETA-TEST-REPORT.md.
+        //
+        // The endpoint previously bound `includeArchived` as a
+        // required parameter, so every call had to send
+        // `?boardId=...&includeArchived=...` even though the
+        // field has a sensible default (`false`). The
+        // ListListsForBoardQuery record has
+        // `IncludeArchived = false` baked in; binding the
+        // endpoint parameter to a default-valued local and
+        // forwarding keeps the same handler signature while
+        // making the parameter optional at the HTTP layer.
+        group.MapGet("/", async (
+            Guid boardId,
+            [FromQuery] bool? includeArchived,
+            IMessageBus bus,
+            CancellationToken ct) =>
         {
-            var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardListDto>>>(new ListListsForBoardQuery(boardId, includeArchived), ct);
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardListDto>>>(
+                new ListListsForBoardQuery(boardId, includeArchived ?? false), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 

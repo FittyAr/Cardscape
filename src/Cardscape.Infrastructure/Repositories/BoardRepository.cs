@@ -90,14 +90,19 @@ public sealed class BoardRepository(CardscapeDbContext db) : RepositoryBase<Boar
             throw new ArgumentException("userId must be non-empty.", nameof(userId));
         }
 
-        // First, cheap existence check (HasConversion on BoardId
-        // blocks a server-side WHERE; this is a single-row
-        // lookup so the client-side filter is cheap).
-        bool exists = await Task.Run(() =>
+        // AsAsyncEnumerable so the existence probe yields rows
+        // lazily without blocking a thread-pool worker (the
+        // previous Task.Run + AsEnumerable().Any form would park
+        // a worker for the duration of the SQL round-trip).
+        bool exists = false;
+        await foreach (var s in Db.Set<BoardStar>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<BoardStar>().AsEnumerable()
-                .Any(s => s.BoardId.Value == boardId.Value && s.UserId == userId);
-        }, ct);
+            if (s.BoardId.Value == boardId.Value && s.UserId == userId)
+            {
+                exists = true;
+                break;
+            }
+        }
         if (exists)
         {
             return false;
@@ -131,15 +136,17 @@ public sealed class BoardRepository(CardscapeDbContext db) : RepositoryBase<Boar
             throw new ArgumentException("userId must be non-empty.", nameof(userId));
         }
 
-        // Find the row to remove (HasConversion on BoardId,
-        // so the predicate is evaluated client-side; the
-        // stars table is bounded by user × board so this is
-        // cheap in practice).
-        BoardStar? existing = await Task.Run(() =>
+        // Same shape as AddStarIfMissingAsync: true async stream
+        // scan with early-exit on the first match.
+        BoardStar? existing = null;
+        await foreach (var s in Db.Set<BoardStar>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<BoardStar>().AsEnumerable()
-                .FirstOrDefault(s => s.BoardId.Value == boardId.Value && s.UserId == userId);
-        }, ct);
+            if (s.BoardId.Value == boardId.Value && s.UserId == userId)
+            {
+                existing = s;
+                break;
+            }
+        }
         if (existing is null)
         {
             return false;

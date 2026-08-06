@@ -11,8 +11,10 @@
 <PageHeader Title="@monthLabel"
             Subtitle="@($"Cards with a due date in {monthLabel}, grouped by list (one swimlane per list). Click a card to open it.")">
     <Actions>
-        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth" />
-        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth" />
+        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth"
+                      aria-label="Previous month" title="Previous month" />
+        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth"
+                      aria-label="Next month" title="Next month" />
     </Actions>
 </PageHeader>
 

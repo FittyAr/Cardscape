@@ -1,0 +1,20 @@
+{
+  "Replay_CardId_Match": true,
+  "Replay_Status": false,
+  "Replay_Header": [
+    "true"
+  ],
+  "Replay_OnlyOnce": true,
+  "Mismatch_Status": false,
+  "Mismatch_Code": true,
+  "BadKey_Status": true,
+  "GetPassThrough_200": true,
+  "GetPassThrough_NoHeader": true,
+  "GetPassThrough_Second200": true,
+  "GetPassThrough_SecondNoHeader": true,
+  "PutReplay_200": true,
+  "PutReplay_Header": [
+    "true"
+  ],
+  "PutReplay_TitleApplied": true
+}

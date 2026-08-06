@@ -88,6 +88,25 @@ public static class BoardEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
+        // BETA-5-#12 — see test-results/BETA-TEST-REPORT.md.
+        // No HTTP surface existed for promoting a workspace
+        // member to a board member. The Board aggregate had
+        // an AddMember method, the application had no command,
+        // and the API had no endpoint — so any board mutation
+        // that required board membership was effectively
+        // un-callable by a workspace member. This endpoint is
+        // the seam that closes the loop.
+        group.MapPost("/{boardId:guid}/members", async (
+            Guid boardId,
+            AddBoardMemberBody body,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result>(
+                new AddBoardMemberCommand(boardId, body.UserId, body.Role), ct);
+            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+        });
+
         // Export the board as a ZIP archive (board.json + attachments).
         group.MapGet("/{boardId:guid}/export", async (
             Guid boardId,
@@ -146,6 +165,7 @@ public static class BoardEndpoints
     public sealed record RenameRequest(string NewName);
     public sealed record DescriptionRequest(string NewDescription);
     public sealed record VisibilityRequest(BoardVisibility NewVisibility);
+    public sealed record AddBoardMemberBody(Guid UserId, BoardMemberRole Role);
 
     private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
     {

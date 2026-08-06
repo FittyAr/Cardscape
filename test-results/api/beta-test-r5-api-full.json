@@ -1,0 +1,596 @@
+[
+  {
+    "Area": "Auth",
+    "Test": "register alice",
+    "Status": "PASS",
+    "Detail": "status=201"
+  },
+  {
+    "Area": "Auth",
+    "Test": "register bob",
+    "Status": "PASS",
+    "Detail": "status=201"
+  },
+  {
+    "Area": "Auth",
+    "Test": "login alice",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Auth",
+    "Test": "login wrong password",
+    "Status": "PASS",
+    "Detail": "status=401"
+  },
+  {
+    "Area": "Auth",
+    "Test": "/me returns alice",
+    "Status": "PASS",
+    "Detail": "email=r5.alice.170004@cardscape.test"
+  },
+  {
+    "Area": "Auth",
+    "Test": "refresh token",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Auth",
+    "Test": "duplicate register",
+    "Status": "PASS",
+    "Detail": "status=400"
+  },
+  {
+    "Area": "Auth",
+    "Test": "weak password",
+    "Status": "PASS",
+    "Detail": "status=400"
+  },
+  {
+    "Area": "Auth",
+    "Test": "bad email",
+    "Status": "PASS",
+    "Detail": "status=400"
+  },
+  {
+    "Area": "Auth",
+    "Test": "/me no token 401",
+    "Status": "PASS",
+    "Detail": "status=401"
+  },
+  {
+    "Area": "Auth",
+    "Test": "logout",
+    "Status": "PASS",
+    "Detail": "status=204"
+  },
+  {
+    "Area": "Auth",
+    "Test": "re-login after logout",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Workspaces",
+    "Test": "create",
+    "Status": "PASS",
+    "Detail": "status=201"
+  },
+  {
+    "Area": "Workspaces",
+    "Test": "list contains new ws",
+    "Status": "PASS",
+    "Detail": "count=1"
+  },
+  {
+    "Area": "Workspaces",
+    "Test": "get by id",
+    "Status": "PASS",
+    "Detail": "id=371fa93f-ed55-4dc0-9c7d-edb937e9dbd4"
+  },
+  {
+    "Area": "Workspaces",
+    "Test": "update name",
+    "Status": "PASS",
+    "Detail": "name=R5 WS renamed status=200 body={\"id\":\"371fa93f-ed55-4dc0-9c7d-edb937e9dbd4\",\"name\":\"R5 WS renamed\",\"ownerId\":\"50f46a73-5d43-4c93-b90e-b682e3d58f83\",\"region\":\"unspecified\",\"isArchived\":false,\"createdAt\":\"2026-08-06T20:00:07.3852454+..."
+  },
+  {
+    "Area": "Workspaces",
+    "Test": "bob does not see alice ws",
+    "Status": "PASS",
+    "Detail": "bob_count=0"
+  },
+  {
+    "Area": "Members",
+    "Test": "invite bob",
+    "Status": "PASS",
+    "Detail": "status=201"
+  },
+  {
+    "Area": "Members",
+    "Test": "list invitations 1+",
+    "Status": "PASS",
+    "Detail": "count=1"
+  },
+  {
+    "Area": "Members",
+    "Test": "bob accepts",
+    "Status": "PASS",
+    "Detail": "status=200 body={\"id\":\"371fa93f-ed55-4dc0-9c7d-edb937e9dbd4\",\"name\":\"R5 WS renamed\",\"ownerId\":\"50f46a73-5d43-4c93-b90e-b682e3d58f83\",\"region\":\"unspecified\",\"isArchived\":false,\"createdAt\":\"2026-08-06T20:00:07.3852454+..."
+  },
+  {
+    "Area": "Members",
+    "Test": "bob sees ws after accept",
+    "Status": "PASS",
+    "Detail": ""
+  },
+  {
+    "Area": "Members",
+    "Test": "list members has 2",
+    "Status": "PASS",
+    "Detail": "count=2"
+  },
+  {
+    "Area": "Boards",
+    "Test": "create",
+    "Status": "PASS",
+    "Detail": "status=201"
+  },
+  {
+    "Area": "Boards",
+    "Test": "list for ws 1+",
+    "Status": "PASS",
+    "Detail": "count=1"
+  },
+  {
+    "Area": "Boards",
+    "Test": "get by id",
+    "Status": "PASS",
+    "Detail": ""
+  },
+  {
+    "Area": "Boards",
+    "Test": "update name via POST",
+    "Status": "PASS",
+    "Detail": "status=200 body={\"id\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"workspaceId\":\"371fa93f-ed55-4dc0-9c7d-edb937e9dbd4\",\"name\":\"R5 Board renamed\",\"description\":\"test\",\"visibility\":\"private\",\"isArchived\":false,\"isStarred\":f..."
+  },
+  {
+    "Area": "Boards",
+    "Test": "update description",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Boards",
+    "Test": "star",
+    "Status": "PASS",
+    "Detail": "isStarred=True status=200 body={\"id\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"workspaceId\":\"371fa93f-ed55-4dc0-9c7d-edb937e9dbd4\",\"name\":\"R5 Board renamed\",\"description\":\"updated\",\"visibility\":\"private\",\"isArchived\":false,\"isStarred..."
+  },
+  {
+    "Area": "Boards",
+    "Test": "list starred contains board",
+    "Status": "PASS",
+    "Detail": ""
+  },
+  {
+    "Area": "Boards",
+    "Test": "unstar 2xx",
+    "Status": "PASS",
+    "Detail": "status=200 body={\"id\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"workspaceId\":\"371fa93f-ed55-4dc0-9c7d-edb937e9dbd4\",\"name\":\"R5 Board renamed\",\"description\":\"updated\",\"visibility\":\"private\",\"isArchived\":false,\"isStarred..."
+  },
+  {
+    "Area": "Boards",
+    "Test": "update visibility private",
+    "Status": "PASS",
+    "Detail": "status=200 visibility=private"
+  },
+  {
+    "Area": "Boards",
+    "Test": "non-member cannot see private board",
+    "Status": "PASS",
+    "Detail": "status=403"
+  },
+  {
+    "Area": "Boards",
+    "Test": "back to workspace visibility",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Lists",
+    "Test": "create 1",
+    "Status": "PASS",
+    "Detail": "status=201"
+  },
+  {
+    "Area": "Lists",
+    "Test": "list for board 3",
+    "Status": "PASS",
+    "Detail": "count=3"
+  },
+  {
+    "Area": "Lists",
+    "Test": "update name",
+    "Status": "PASS",
+    "Detail": "status=200 body={\"id\":\"21250b22-8d11-4e1e-8f61-ea348d9ee21c\",\"boardId\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"name\":\"To Do (renamed)\",\"position\":1,\"isArchived\":false,\"createdAt\":\"2026-08-06T20:00:10.4983418+00:00\",\"..."
+  },
+  {
+    "Area": "Cards",
+    "Test": "create",
+    "Status": "PASS",
+    "Detail": "status=201"
+  },
+  {
+    "Area": "Cards",
+    "Test": "list for board 1+",
+    "Status": "PASS",
+    "Detail": "count=1"
+  },
+  {
+    "Area": "Cards",
+    "Test": "get by id",
+    "Status": "PASS",
+    "Detail": ""
+  },
+  {
+    "Area": "Cards",
+    "Test": "update via rename",
+    "Status": "PASS",
+    "Detail": "status=200 body={\"id\":\"24df6892-d9f9-4a14-add8-e49985f91bfa\",\"listId\":\"21250b22-8d11-4e1e-8f61-ea348d9ee21c\",\"title\":\"Card 1 renamed\",\"description\":\"first card\",\"position\":1,\"dueDate\":null,\"isArchived\":false,\"isCompl..."
+  },
+  {
+    "Area": "Cards",
+    "Test": "update description",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Cards",
+    "Test": "rename via POST",
+    "Status": "PASS",
+    "Detail": ""
+  },
+  {
+    "Area": "Cards",
+    "Test": "move list",
+    "Status": "PASS",
+    "Detail": ""
+  },
+  {
+    "Area": "Cards",
+    "Test": "complete",
+    "Status": "PASS",
+    "Detail": ""
+  },
+  {
+    "Area": "Cards",
+    "Test": "reopen",
+    "Status": "PASS",
+    "Detail": ""
+  },
+  {
+    "Area": "Cards",
+    "Test": "assign alice 2xx",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Cards",
+    "Test": "unassign 2xx",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Cards",
+    "Test": "archive",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Cards",
+    "Test": "restore",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Cards",
+    "Test": "delete 2xx",
+    "Status": "PASS",
+    "Detail": "status=204"
+  },
+  {
+    "Area": "Cards",
+    "Test": "get after delete 404",
+    "Status": "PASS",
+    "Detail": "status=404"
+  },
+  {
+    "Area": "Comments",
+    "Test": "create",
+    "Status": "PASS",
+    "Detail": "status=201"
+  },
+  {
+    "Area": "Comments",
+    "Test": "list 1+",
+    "Status": "PASS",
+    "Detail": "count=1"
+  },
+  {
+    "Area": "Comments",
+    "Test": "update 200",
+    "Status": "PASS",
+    "Detail": "status=200 body={\"id\":\"7c996395-620a-4657-acb0-04ab9620bbbc\",\"cardId\":\"c0e4f225-c95d-4ef6-a1fd-2b22e30ae5aa\",\"authorId\":\"50f46a73-5d43-4c93-b90e-b682e3d58f83\",\"body\":\"First comment (edited)\",\"createdAt\":\"2026-08-06T2..."
+  },
+  {
+    "Area": "Comments",
+    "Test": "delete 2xx",
+    "Status": "PASS",
+    "Detail": "status=204"
+  },
+  {
+    "Area": "Labels",
+    "Test": "create",
+    "Status": "PASS",
+    "Detail": "status=201"
+  },
+  {
+    "Area": "Labels",
+    "Test": "list 1+",
+    "Status": "PASS",
+    "Detail": "count=1"
+  },
+  {
+    "Area": "Labels",
+    "Test": "update 2xx",
+    "Status": "PASS",
+    "Detail": "status=200 body={\"id\":\"141332a1-603c-478b-8b06-35825353b73a\",\"boardId\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"name\":\"Bug (renamed)\",\"color\":\"#cc0000\"}"
+  },
+  {
+    "Area": "Labels",
+    "Test": "attach 2xx",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Labels",
+    "Test": "detach 2xx",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Labels",
+    "Test": "delete 2xx",
+    "Status": "PASS",
+    "Detail": "status=204"
+  },
+  {
+    "Area": "Checklists",
+    "Test": "create",
+    "Status": "PASS",
+    "Detail": "status=201"
+  },
+  {
+    "Area": "Checklists",
+    "Test": "add item",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Checklists",
+    "Test": "list 1+",
+    "Status": "PASS",
+    "Detail": "count=1"
+  },
+  {
+    "Area": "Checklists",
+    "Test": "toggle 2xx",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Checklists",
+    "Test": "rename item 2xx",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Checklists",
+    "Test": "delete item 2xx",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Checklists",
+    "Test": "delete 2xx",
+    "Status": "PASS",
+    "Detail": "status=204"
+  },
+  {
+    "Area": "Voting",
+    "Test": "toggle 2xx",
+    "Status": "PASS",
+    "Detail": "status=200 body={\"cardId\":\"c0e4f225-c95d-4ef6-a1fd-2b22e30ae5aa\",\"voteCount\":1,\"currentUserHasVoted\":true}"
+  },
+  {
+    "Area": "Voting",
+    "Test": "list 200",
+    "Status": "PASS",
+    "Detail": "count=1"
+  },
+  {
+    "Area": "Voting",
+    "Test": "second toggle",
+    "Status": "PASS",
+    "Detail": "votedByMe=False"
+  },
+  {
+    "Area": "CustomFields",
+    "Test": "create 2xx",
+    "Status": "PASS",
+    "Detail": "status=201 body={\"id\":\"b464ac1f-982d-4cae-ba83-6926748f0a5e\",\"boardId\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"name\":\"Estimate\",\"kind\":0,\"optionsJson\":\"[]\",\"position\":0}"
+  },
+  {
+    "Area": "Activities",
+    "Test": "board",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Activities",
+    "Test": "card",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Notifications",
+    "Test": "list",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Recurrence",
+    "Test": "set 2xx",
+    "Status": "PASS",
+    "Detail": "status=200 body={\"cardId\":\"f13787b4-0386-43ce-bb73-baff93ec87f2\",\"intervalDays\":1,\"nextOccurrenceAt\":\"2026-08-06T17:00:16.40181-03:00\",\"isActive\":true}"
+  },
+  {
+    "Area": "Search",
+    "Test": "200",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "Idempotency",
+    "Test": "replay same cardId",
+    "Status": "PASS",
+    "Detail": "first=e4484370-19b2-4184-8589-e0883228dc7f second=e4484370-19b2-4184-8589-e0883228dc7f replayed=true"
+  },
+  {
+    "Area": "Errors",
+    "Test": "GET non-existent board 404",
+    "Status": "PASS",
+    "Detail": "status=404"
+  },
+  {
+    "Area": "Errors",
+    "Test": "GET bad guid 404",
+    "Status": "PASS",
+    "Detail": "status=404"
+  },
+  {
+    "Area": "Errors",
+    "Test": "create card bad listId 4xx",
+    "Status": "PASS",
+    "Detail": "status=400"
+  },
+  {
+    "Area": "Errors",
+    "Test": "create card non-existent list 4xx",
+    "Status": "PASS",
+    "Detail": "status=404"
+  },
+  {
+    "Area": "Errors",
+    "Test": "create board with non-existent ws 4xx",
+    "Status": "PASS",
+    "Detail": "status=404"
+  },
+  {
+    "Area": "Security",
+    "Test": "X-Content-Type-Options",
+    "Status": "PASS",
+    "Detail": ""
+  },
+  {
+    "Area": "Security",
+    "Test": "X-Frame-Options",
+    "Status": "PASS",
+    "Detail": ""
+  },
+  {
+    "Area": "Security",
+    "Test": "Referrer-Policy",
+    "Status": "PASS",
+    "Detail": ""
+  },
+  {
+    "Area": "TwoUser",
+    "Test": "add bob to board",
+    "Status": "PASS",
+    "Detail": "status=204 body="
+  },
+  {
+    "Area": "TwoUser",
+    "Test": "bob sees ws-visible board",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "TwoUser",
+    "Test": "bob creates card",
+    "Status": "PASS",
+    "Detail": "status=201 body={\"id\":\"a1d09e3d-5777-4471-8248-fc7f7acc42f2\",\"listId\":\"21250b22-8d11-4e1e-8f61-ea348d9ee21c\",\"title\":\"Bob's card\",\"description\":\"\",\"position\":1,\"dueDate\":null,\"isArchived\":false,\"isCompleted\":false,\"c..."
+  },
+  {
+    "Area": "TwoUser",
+    "Test": "alice edits bobs card",
+    "Status": "PASS",
+    "Detail": ""
+  },
+  {
+    "Area": "TwoUser",
+    "Test": "eve cannot see card 403/404",
+    "Status": "PASS",
+    "Detail": "status=403"
+  },
+  {
+    "Area": "TwoUser",
+    "Test": "bob votes on alice card 2xx",
+    "Status": "PASS",
+    "Detail": "status=200"
+  },
+  {
+    "Area": "TwoUser",
+    "Test": "bob comments 2xx",
+    "Status": "PASS",
+    "Detail": "status=201"
+  },
+  {
+    "Area": "Webhooks",
+    "Test": "create 2xx",
+    "Status": "PASS",
+    "Detail": "status=201 body={\"endpoint\":{\"id\":\"6238daf6-3708-40e4-9619-8dc315716afc\",\"boardId\":\"a533e00c-fbc2-4381-a52b-404f791c8be4\",\"url\":\"https://example.com/hook\",\"secretPrefix\":\"a8ae6e6e\",\"events\":[\"card.completed\",\"card.cr..."
+  },
+  {
+    "Area": "Webhooks",
+    "Test": "list 1+",
+    "Status": "PASS",
+    "Detail": "count=1"
+  },
+  {
+    "Area": "Webhooks",
+    "Test": "delete 2xx",
+    "Status": "PASS",
+    "Detail": "status=204"
+  },
+  {
+    "Area": "ApiToken",
+    "Test": "create 2xx",
+    "Status": "PASS",
+    "Detail": "status=201 body={\"id\":\"85843bde-7954-43a1-8413-ed4269b0e96f\",\"cleartextSecret\":\"zyov4jfMk5rg0pjuaryCywbD6DEobXpKhzXHVGp6SRA\"}"
+  },
+  {
+    "Area": "ApiToken",
+    "Test": "list 1+",
+    "Status": "PASS",
+    "Detail": "count=1"
+  },
+  {
+    "Area": "ApiToken",
+    "Test": "delete 2xx",
+    "Status": "PASS",
+    "Detail": "status=204"
+  }
+]

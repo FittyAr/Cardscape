@@ -77,12 +77,18 @@ public sealed class CardVoteRepository(CardscapeDbContext db)
         var cardIdValue = cardId.Value;
         await using var tx = await Db.Database.BeginTransactionAsync(ct);
 
-        // 1. Try to delete the existing row (if any).
-        CardVote? existing = await Task.Run(() =>
+        // 1. Async-stream the votes for this card and find the
+        //    (CardId, UserId) pair. AsAsyncEnumerable yields
+        //    rows without parking a thread-pool worker.
+        CardVote? existing = null;
+        await foreach (var v in Db.Set<CardVote>().AsAsyncEnumerable().WithCancellation(ct))
         {
-            return Db.Set<CardVote>().AsEnumerable()
-                .FirstOrDefault(v => v.CardId.Value == cardIdValue && v.UserId == userId);
-        }, ct);
+            if (v.CardId.Value == cardIdValue && v.UserId == userId)
+            {
+                existing = v;
+                break;
+            }
+        }
 
         if (existing is not null)
         {

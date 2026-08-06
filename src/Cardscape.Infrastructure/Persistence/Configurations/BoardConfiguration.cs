@@ -45,15 +45,30 @@ public sealed class BoardConfiguration : IEntityTypeConfiguration<Board>
             mb.HasIndex(m => new { m.BoardId, m.UserId }).IsUnique();
         });
 
-        b.OwnsMany(x => x.Stars, sb =>
-        {
-            sb.ToTable("board_stars");
-            sb.HasKey(s => s.Id);
-            sb.Property(s => s.BoardId).HasConversion(id => id.Value, v => new BoardId(v));
-            sb.Property(s => s.UserId).IsRequired();
-            sb.Property(s => s.StarredAt).IsRequired();
-            sb.Property(s => s.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
-            sb.HasIndex(s => new { s.BoardId, s.UserId }).IsUnique();
-        });
+        // BETA-5-#1 — see test-results/BETA-TEST-REPORT.md.
+        //
+        // The previous configuration declared Stars as an
+        // OWNED entity collection (b.OwnsMany(x => x.Stars, ...))
+        // which made the rows addressable only through the
+        // owning Board aggregate. The star toggle path in
+        // BoardRepository.AddStarIfMissingAsync /
+        // RemoveStarIfPresentAsync issues a direct INSERT or
+        // DELETE on the board_stars table — which is the
+        // correct atomicity model for the lost-update race
+        // fixed in BETA-3-#3 — but EF Core refused with
+        // "Cannot create a DbSet for 'BoardStar' because it
+        // is configured as an owned entity type".
+        //
+        // The fix is to model Stars as a regular
+        // one-to-many association instead of an owned
+        // collection. The (BoardId, UserId) unique index is
+        // preserved, so the atomicity contract from R4 is
+        // intact. The Board aggregate still exposes the
+        // Stars navigation property and EF Core still
+        // hydrates it from the board_stars table when a
+        // Board is loaded with .Include(b => b.Stars).
+        b.HasMany(x => x.Stars).WithOne()
+            .HasForeignKey(s => s.BoardId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

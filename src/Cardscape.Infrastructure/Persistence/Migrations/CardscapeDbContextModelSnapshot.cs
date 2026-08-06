@@ -585,6 +585,50 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.ToTable("board_extensions", (string)null);
                 });
 
+            modelBuilder.Entity("Cardscape.Domain.Boards.BoardStar", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("BoardId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0u);
+
+                    b.Property<DateTimeOffset>("StarredAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BoardId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("board_stars", (string)null);
+                });
+
             modelBuilder.Entity("Cardscape.Domain.Boards.CustomFieldDefinition", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2366,56 +2410,16 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                                 .HasForeignKey("BoardId");
                         });
 
-                    b.OwnsMany("Cardscape.Domain.Boards.BoardStar", "Stars", b1 =>
-                        {
-                            b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<Guid>("BoardId")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<Guid?>("CreatedBy")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<bool>("IsDeleted")
-                                .HasColumnType("INTEGER");
-
-                            b1.Property<uint>("RowVersion")
-                                .IsConcurrencyToken()
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("INTEGER")
-                                .HasDefaultValue(0u);
-
-                            b1.Property<DateTimeOffset>("StarredAt")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<Guid?>("UpdatedBy")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<Guid>("UserId")
-                                .HasColumnType("TEXT");
-
-                            b1.HasKey("Id");
-
-                            b1.HasIndex("BoardId", "UserId")
-                                .IsUnique();
-
-                            b1.ToTable("board_stars", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("BoardId");
-                        });
-
                     b.Navigation("Members");
+                });
 
-                    b.Navigation("Stars");
+            modelBuilder.Entity("Cardscape.Domain.Boards.BoardStar", b =>
+                {
+                    b.HasOne("Cardscape.Domain.Boards.Board", null)
+                        .WithMany("Stars")
+                        .HasForeignKey("BoardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Cardscape.Domain.Cards.Card", b =>
@@ -2624,6 +2628,11 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Members");
+                });
+
+            modelBuilder.Entity("Cardscape.Domain.Boards.Board", b =>
+                {
+                    b.Navigation("Stars");
                 });
 #pragma warning restore 612, 618
         }

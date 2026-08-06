@@ -132,6 +132,18 @@ public static class CardEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
+        // BETA-5-#5 — see test-results/BETA-TEST-REPORT.md. The card
+        // could only be archived (soft-deleted) and restored before,
+        // never truly removed. The UI "Delete" affordance needs a
+        // hard delete so the trash bin can be emptied and the
+        // list-reordering math doesn't have to special-case archived
+        // cards forever.
+        group.MapDelete("/{cardId:guid}", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result>(new DeleteCardCommand(cardId), ct);
+            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+        });
+
         group.MapPost("/{cardId:guid}/assign/{userId:guid}", async (Guid cardId, Guid userId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new AssignCardCommand(cardId, userId), ct);
