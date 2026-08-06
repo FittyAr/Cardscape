@@ -72,11 +72,23 @@ public sealed class RateLimiter : IRateLimiter
 
         lock (bucket.SyncRoot)
         {
-            bucket.Refill(at);
+            // PeekRefill computes the post-refill token
+            // count without mutating the bucket. The v1.2.0
+            // audit (pass 12) found that the previous
+            // implementation called Refill here, which
+            // bumped LastAccess and let a caller (anyone
+            // who could hit the rate-limit-status endpoint
+            // with a valid token id) keep an idle bucket
+            // warm — defeating the EvictStale sweep the
+            // pass 10 fix added. The read-only status
+            // check now mirrors the same "control-plane
+            // actions do not bump" invariant Configure
+            // already obeys.
+            double available = bucket.PeekRefill(at);
             return new RateLimitSnapshot(
                 RateLimitPerHour: bucket.RateLimitPerHour,
                 BurstSize: bucket.BurstSize,
-                AvailableTokens: bucket.Disabled ? bucket.BurstSize : bucket.Tokens,
+                AvailableTokens: bucket.Disabled ? bucket.BurstSize : available,
                 RefilledAt: at);
         }
     }
@@ -177,6 +189,7 @@ public sealed class RateLimiter : IRateLimiter
             {
                 LastRefill = at;
                 Tokens = BurstSize;
+                LastAccess = at;
                 return;
             }
 
@@ -191,6 +204,42 @@ public sealed class RateLimiter : IRateLimiter
             Tokens = Math.Min(BurstSize, Tokens + refilled);
             LastRefill = at;
             LastAccess = at;
+        }
+
+        /// <summary>
+        /// Computes the post-refill token count without
+        /// mutating <see cref="LastRefill"/> or
+        /// <see cref="LastAccess"/>. Read-only callers
+        /// (e.g. the rate-limit status endpoint) use
+        /// this to project the current balance at
+        /// <paramref name="at"/> without keeping the
+        /// bucket warm — the same control-plane
+        /// invariant <see cref="ApplyConfiguration"/>
+        /// already obeys. Mirrors the formula in
+        /// <see cref="Refill"/> exactly; if the formula
+        /// changes both methods must change in lockstep.
+        /// </summary>
+        public double PeekRefill(DateTimeOffset at)
+        {
+            if (Disabled || BurstSize == 0)
+            {
+                return Tokens;
+            }
+
+            if (LastRefill is null)
+            {
+                return BurstSize;
+            }
+
+            double elapsed = Math.Max(0, (at - LastRefill.Value).TotalSeconds);
+            if (elapsed <= 0)
+            {
+                return Tokens;
+            }
+
+            double tokensPerSecond = RateLimitPerHour / 3600.0;
+            double refilled = elapsed * tokensPerSecond;
+            return Math.Min(BurstSize, Tokens + refilled);
         }
 
         /// <summary>Timestamp of the most recent Refill

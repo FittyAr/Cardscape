@@ -17,6 +17,8 @@ public static class AddCommentCommandHandler
     public static async Task<Result<CommentDto>> Handle(
         AddCommentCommand command,
         ICardRepository cards,
+        IBoardRepository boards,
+        IBoardListRepository lists,
         ICommentRepository comments,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
@@ -29,11 +31,17 @@ public static class AddCommentCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
-        if (card is null)
+        // The v1.2.0 audit (pass 12) found that the previous
+        // incarnation did not check board membership — any
+        // authenticated user could post a comment on any
+        // card, including cards in workspaces they had no
+        // business with. The fix is a single guard before
+        // the body validation.
+        var access = await CommentAccessGuard.EnsureCanAccessCardAsync(
+            cards, boards, lists, command.CardId, currentUser.Id.Value, cancellationToken);
+        if (access.IsFailure)
         {
-            return Result.Failure<CommentDto>(DomainError.NotFound(
-                "cards.not_found", "Card was not found."));
+            return Result.Failure<CommentDto>(access.Error);
         }
 
         var bodyResult = CommentBody.Create(command.Body);
@@ -73,6 +81,9 @@ public static class EditCommentCommandHandler
 {
     public static async Task<Result<CommentDto>> Handle(
         EditCommentCommand command,
+        ICardRepository cards,
+        IBoardRepository boards,
+        IBoardListRepository lists,
         ICommentRepository comments,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
@@ -89,6 +100,21 @@ public static class EditCommentCommandHandler
         if (comment is null)
         {
             return Result.Failure<CommentDto>(NotFound);
+        }
+
+        // The v1.2.0 audit (pass 12) closes the IDOR: a
+        // non-member could probe whether a comment exists
+        // (the domain `Comment.Edit` check below would
+        // otherwise return Forbidden only when the
+        // authorId mismatches, leaking existence to anyone
+        // who could guess the comment id). With this guard
+        // a non-member sees NotFound and the author check
+        // is a second line of defence for in-board edits.
+        var access = await CommentAccessGuard.EnsureCanAccessCardAsync(
+            cards, boards, lists, comment.CardId.Value, currentUser.Id.Value, cancellationToken);
+        if (access.IsFailure)
+        {
+            return Result.Failure<CommentDto>(access.Error);
         }
 
         var bodyResult = CommentBody.Create(command.NewBody);
@@ -116,6 +142,9 @@ public static class DeleteCommentCommandHandler
 {
     public static async Task<Result> Handle(
         DeleteCommentCommand command,
+        ICardRepository cards,
+        IBoardRepository boards,
+        IBoardListRepository lists,
         ICommentRepository comments,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
@@ -132,6 +161,15 @@ public static class DeleteCommentCommandHandler
         if (comment is null)
         {
             return Result.Failure(NotFound);
+        }
+
+        // Same IDOR defence as EditCommentCommandHandler
+        // — see that handler for the rationale.
+        var access = await CommentAccessGuard.EnsureCanAccessCardAsync(
+            cards, boards, lists, comment.CardId.Value, currentUser.Id.Value, cancellationToken);
+        if (access.IsFailure)
+        {
+            return access;
         }
 
         var result = comment.Delete(currentUser.Id.Value, clock.UtcNow);

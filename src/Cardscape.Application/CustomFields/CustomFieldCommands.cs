@@ -240,6 +240,21 @@ public static class SetCustomFieldValueCommandHandler
                 "boards.forbidden", "You are not a member of this board."));
         }
 
+        // The previous incarnation only checked the field's
+        // board. A user who is a member of board A could
+        // write a value for a board-A field onto a card
+        // living on board B (which they cannot see) by
+        // guessing the card id. The v1.2.0 audit (pass 12)
+        // adds the second check: the card must live on a
+        // list that belongs to the same board as the field.
+        if (!await CustomFieldGuards.CardBelongsToBoardAsync(
+                lists, card, field.BoardId, cancellationToken))
+        {
+            return Result.Failure<CustomFieldValueDto>(DomainError.Forbidden(
+                "boards.card_not_in_board",
+                "Card does not belong to the field's board."));
+        }
+
         CustomFieldValue? existing = await values.GetByFieldAndCardAsync(
             field.Id, card.Id, cancellationToken);
 
@@ -397,6 +412,24 @@ public static class CustomFieldGuards
 
         Board? board = await boards.GetWithMembersAsync(new BoardId(boardId), ct);
         return board is not null && board.IsMember(userId);
+    }
+
+    /// <summary>
+    /// True when the card's list belongs to <paramref name="expectedBoardId"/>.
+    /// The v1.2.0 audit (pass 12) uses this as a second
+    /// line of defence in <c>SetCustomFieldValueCommandHandler</c>
+    /// so a value can never be written onto a card that
+    /// lives in a board different from the field's board.
+    /// </summary>
+    public static async Task<bool> CardBelongsToBoardAsync(
+        IBoardListRepository lists,
+        Card card,
+        BoardId expectedBoardId,
+        CancellationToken ct)
+    {
+        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
+        return map.TryGetValue(card.ListId.Value, out Guid boardId)
+            && boardId == expectedBoardId.Value;
     }
 }
 

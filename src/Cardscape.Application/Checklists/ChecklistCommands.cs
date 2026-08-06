@@ -159,6 +159,9 @@ public static class RenameChecklistCommandHandler
     public static async Task<Result<ChecklistDto>> Handle(
         RenameChecklistCommand command,
         IChecklistRepository checklists,
+        ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
@@ -174,6 +177,15 @@ public static class RenameChecklistCommandHandler
         if (titleResult.IsFailure)
         {
             return Result.Failure<ChecklistDto>(titleResult.Error);
+        }
+
+        // v1.2.0 audit (pass 12): IDOR — see
+        // ChecklistsAccess.EnsureCanAccessChecklistAsync.
+        var access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
+            command.ChecklistId, checklists, cards, lists, boards, currentUser, ct);
+        if (access.IsFailure)
+        {
+            return Result.Failure<ChecklistDto>(access.Error);
         }
 
         Checklist? checklist = await checklists.GetByIdAsync(
@@ -202,6 +214,9 @@ public static class DeleteChecklistCommandHandler
     public static async Task<Result> Handle(
         DeleteChecklistCommand command,
         IChecklistRepository checklists,
+        ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
@@ -211,6 +226,15 @@ public static class DeleteChecklistCommandHandler
         {
             return Result.Failure(DomainError.Unauthenticated(
                 "auth.required", "Authentication is required."));
+        }
+
+        // v1.2.0 audit (pass 12): IDOR — see
+        // ChecklistsAccess.EnsureCanAccessChecklistAsync.
+        var access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
+            command.ChecklistId, checklists, cards, lists, boards, currentUser, ct);
+        if (access.IsFailure)
+        {
+            return access;
         }
 
         Checklist? checklist = await checklists.GetByIdAsync(
@@ -239,6 +263,9 @@ public static class AddChecklistItemCommandHandler
     public static async Task<Result<ChecklistDto>> Handle(
         AddChecklistItemCommand command,
         IChecklistRepository checklists,
+        ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
@@ -254,6 +281,15 @@ public static class AddChecklistItemCommandHandler
         if (textResult.IsFailure)
         {
             return Result.Failure<ChecklistDto>(textResult.Error);
+        }
+
+        // v1.2.0 audit (pass 12): IDOR — see
+        // ChecklistsAccess.EnsureCanAccessChecklistAsync.
+        var access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
+            command.ChecklistId, checklists, cards, lists, boards, currentUser, ct);
+        if (access.IsFailure)
+        {
+            return Result.Failure<ChecklistDto>(access.Error);
         }
 
         Checklist? checklist = await checklists.GetByIdAsync(
@@ -278,6 +314,9 @@ public static class RenameChecklistItemCommandHandler
     public static async Task<Result<ChecklistDto>> Handle(
         RenameChecklistItemCommand command,
         IChecklistRepository checklists,
+        ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
@@ -293,6 +332,15 @@ public static class RenameChecklistItemCommandHandler
         if (textResult.IsFailure)
         {
             return Result.Failure<ChecklistDto>(textResult.Error);
+        }
+
+        // v1.2.0 audit (pass 12): IDOR — see
+        // ChecklistsAccess.EnsureCanAccessChecklistAsync.
+        var access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
+            command.ChecklistId, checklists, cards, lists, boards, currentUser, ct);
+        if (access.IsFailure)
+        {
+            return Result.Failure<ChecklistDto>(access.Error);
         }
 
         Checklist? checklist = await checklists.GetByIdAsync(
@@ -322,6 +370,9 @@ public static class ToggleChecklistItemCommandHandler
     public static async Task<Result<ChecklistDto>> Handle(
         ToggleChecklistItemCommand command,
         IChecklistRepository checklists,
+        ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
@@ -331,6 +382,15 @@ public static class ToggleChecklistItemCommandHandler
         {
             return Result.Failure<ChecklistDto>(DomainError.Unauthenticated(
                 "auth.required", "Authentication is required."));
+        }
+
+        // v1.2.0 audit (pass 12): IDOR — see
+        // ChecklistsAccess.EnsureCanAccessChecklistAsync.
+        var access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
+            command.ChecklistId, checklists, cards, lists, boards, currentUser, ct);
+        if (access.IsFailure)
+        {
+            return Result.Failure<ChecklistDto>(access.Error);
         }
 
         Checklist? checklist = await checklists.GetByIdAsync(
@@ -369,6 +429,9 @@ public static class DeleteChecklistItemCommandHandler
     public static async Task<Result<ChecklistDto>> Handle(
         DeleteChecklistItemCommand command,
         IChecklistRepository checklists,
+        ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
@@ -378,6 +441,15 @@ public static class DeleteChecklistItemCommandHandler
         {
             return Result.Failure<ChecklistDto>(DomainError.Unauthenticated(
                 "auth.required", "Authentication is required."));
+        }
+
+        // v1.2.0 audit (pass 12): IDOR — see
+        // ChecklistsAccess.EnsureCanAccessChecklistAsync.
+        var access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
+            command.ChecklistId, checklists, cards, lists, boards, currentUser, ct);
+        if (access.IsFailure)
+        {
+            return Result.Failure<ChecklistDto>(access.Error);
         }
 
         Checklist? checklist = await checklists.GetByIdAsync(
@@ -401,40 +473,62 @@ public static class DeleteChecklistItemCommandHandler
 }
 
 /// <summary>Internal helper that wraps the membership-check pattern
-/// shared by all per-card operations.</summary>
+/// shared by all per-checklist operations.</summary>
 internal static class ChecklistsAccess
 {
-    /// <summary>True if the card exists and the user is a member of
-    /// the board it lives in. False if the user is anonymous,
-    /// the card is missing, or the user is not a board member.
-    /// Errors are reported by the calling handler with the
-    /// appropriate context-specific code.</summary>
-    public static async Task<bool> CanAccessCardAsync(
-        Guid cardId,
-        ICurrentUser currentUser,
+    /// <summary>
+    /// Loads the checklist, follows card→list→board, and verifies
+    /// the current user is a board member. The v1.2.0 audit
+    /// (pass 12) found that the rename / delete / item handlers
+    /// accepted any <c>checklistId</c> from any authenticated
+    /// user — a clear IDOR. The handler chain now goes
+    /// handler → load checklist → this guard → aggregate
+    /// mutation, mirroring the pattern the comment handlers
+    /// adopted in the same pass.
+    /// </summary>
+    public static async Task<Result> EnsureCanAccessChecklistAsync(
+        Guid checklistId,
+        IChecklistRepository checklists,
         ICardRepository cards,
         IBoardListRepository lists,
         IBoardRepository boards,
+        ICurrentUser currentUser,
         CancellationToken ct)
     {
         if (currentUser.Id is null)
         {
-            return false;
+            return Result.Failure(DomainError.Unauthenticated(
+                "auth.required", "Authentication is required."));
         }
 
-        Card? card = await cards.GetByIdAsync(new CardId(cardId), ct);
+        Checklist? checklist = await checklists.GetByIdAsync(new ChecklistId(checklistId), ct);
+        if (checklist is null)
+        {
+            return Result.Failure(DomainError.NotFound(
+                "checklists.not_found", "Checklist was not found."));
+        }
+
+        Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
         if (card is null)
         {
-            return false;
+            return Result.Failure(DomainError.NotFound(
+                "cards.not_found", "Card was not found."));
         }
 
         IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
         if (!map.TryGetValue(card.ListId.Value, out Guid boardId))
         {
-            return false;
+            return Result.Failure(DomainError.NotFound(
+                "boards.not_found", "Board was not found."));
         }
 
         Board? board = await boards.GetWithMembersAsync(new BoardId(boardId), ct);
-        return board is not null && board.IsMember(currentUser.Id.Value);
+        if (board is null || !board.IsMember(currentUser.Id.Value))
+        {
+            return Result.Failure(DomainError.Forbidden(
+                "boards.forbidden", "You are not a member of this board."));
+        }
+
+        return Result.Success();
     }
 }

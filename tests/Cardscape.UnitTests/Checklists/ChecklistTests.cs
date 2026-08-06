@@ -180,7 +180,8 @@ public class ChecklistTests
 
         var withItem = await AddChecklistItemCommandHandler.Handle(
             new AddChecklistItemCommand(created.Value!.Id, "Buy milk"),
-            checklists, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            checklists, ctx.Cards, ctx.Lists, ctx.Boards,
+            ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         withItem.IsSuccess.Should().BeTrue();
         withItem.Value!.Items.Should().HaveCount(1);
@@ -188,7 +189,8 @@ public class ChecklistTests
 
         var toggled = await ToggleChecklistItemCommandHandler.Handle(
             new ToggleChecklistItemCommand(created.Value.Id, itemId),
-            checklists, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            checklists, ctx.Cards, ctx.Lists, ctx.Boards,
+            ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         toggled.IsSuccess.Should().BeTrue();
         toggled.Value!.CompletedCount.Should().Be(1);
@@ -214,10 +216,12 @@ public class ChecklistTests
             ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
         await AddChecklistItemCommandHandler.Handle(
             new AddChecklistItemCommand(created.Value!.Id, "x"),
-            checklists, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            checklists, ctx.Cards, ctx.Lists, ctx.Boards,
+            ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
         await AddChecklistItemCommandHandler.Handle(
             new AddChecklistItemCommand(created.Value.Id, "y"),
-            checklists, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            checklists, ctx.Cards, ctx.Lists, ctx.Boards,
+            ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         var listed = await ListCardChecklistsQueryHandler.Handle(
             new ListCardChecklistsQuery(card.Id.Value),

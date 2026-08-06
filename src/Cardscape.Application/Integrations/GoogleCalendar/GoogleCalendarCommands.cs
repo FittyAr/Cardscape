@@ -24,6 +24,7 @@ public static class EstablishGoogleCalendarConnectionCommandHandler
     public static async Task<Result<GoogleCalendarConnectionDto>> Handle(
         EstablishGoogleCalendarConnectionCommand command,
         IGoogleCalendarConnectionRepository connections,
+        IRepository<Workspace, WorkspaceId> workspaces,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -33,6 +34,25 @@ public static class EstablishGoogleCalendarConnectionCommandHandler
         {
             return Result.Failure<GoogleCalendarConnectionDto>(DomainError.Unauthenticated(
                 "auth.required", "Authentication is required."));
+        }
+
+        // The previous incarnation accepted any
+        // WorkspaceId from any authenticated user — a
+        // non-member could attach a Google Calendar
+        // connection to a workspace they had no business
+        // with. The fix is the same workspace-membership
+        // gate the SCIM provisioning flow already uses.
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(command.WorkspaceId), ct);
+        if (workspace is null)
+        {
+            return Result.Failure<GoogleCalendarConnectionDto>(DomainError.NotFound(
+                "workspaces.not_found", "Workspace was not found."));
+        }
+
+        if (!workspace.HasMember(currentUser.Id.Value))
+        {
+            return Result.Failure<GoogleCalendarConnectionDto>(DomainError.Forbidden(
+                "workspaces.forbidden", "You are not a member of this workspace."));
         }
 
         var existing = await connections.FindByUserAsync(currentUser.Id.Value, ct);

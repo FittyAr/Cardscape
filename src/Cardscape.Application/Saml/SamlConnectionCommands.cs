@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Authentication.Saml;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Webhooks;
 using Cardscape.Domain.Workspaces;
 using Wolverine;
 
@@ -53,6 +54,33 @@ public static class ConfigureSamlConnectionCommandHandler
         {
             return Result.Failure<SamlConnectionDto>(DomainError.Conflict(
                 "saml.slug_taken", $"The slug '{command.Slug}' is already taken by another workspace."));
+        }
+
+        // The SAML handler fetches this URL at request time
+        // (every login / metadata / acs call). A workspace
+        // owner pointing it at an internal address (loopback,
+        // RFC 1918, link-local metadata IP) turns the API
+        // server into an SSRF proxy for that admin. The
+        // v1.2.0 audit (pass 12) reuses the same guard the
+        // webhook subsystem already enforces. Inline-XML
+        // uploads are not subject to the same check because
+        // the metadata is stored verbatim and never fetched
+        // over the network.
+        if (!string.IsNullOrWhiteSpace(command.IdpMetadataUrl))
+        {
+            if (!Uri.TryCreate(command.IdpMetadataUrl, UriKind.Absolute, out Uri? parsed)
+                || (parsed.Scheme != Uri.UriSchemeHttp && parsed.Scheme != Uri.UriSchemeHttps))
+            {
+                return Result.Failure<SamlConnectionDto>(DomainError.Validation(
+                    "saml.idp_metadata_url_invalid",
+                    "The IdP metadata URL must be an absolute http(s) URL."));
+            }
+
+            var urlCheck = WebhookUrlValidator.ValidateNotInternalHost(parsed);
+            if (urlCheck.IsFailure)
+            {
+                return Result.Failure<SamlConnectionDto>(urlCheck.Error);
+            }
         }
 
         var existing = await connections.FindByWorkspaceAsync(command.WorkspaceId, ct);

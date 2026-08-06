@@ -44,6 +44,16 @@ public static class CreateDashcardCommandHandler
                 "boards.not_found", "Board not found."));
         }
 
+        // v1.2.0 audit (pass 12): the previous incarnation
+        // did not check board membership — any authenticated
+        // user could drop a dashcard on any board by
+        // guessing the board id.
+        if (!board.IsMember(currentUser.Id.Value))
+        {
+            return Result.Failure<DashcardDto>(DomainError.Forbidden(
+                "boards.forbidden", "You are not a member of this board."));
+        }
+
         Result<Dashcard> create = Dashcard.Create(
             new DashcardId(Guid.NewGuid()),
             new BoardId(command.BoardId),
@@ -73,16 +83,35 @@ public static class UpdateDashcardConfigCommandHandler
 {
     public static async Task<Result<DashcardDto>> Handle(
         UpdateDashcardConfigCommand command,
+        IBoardRepository boards,
         IDashboardRepository repo,
         IUnitOfWork uow,
+        ICurrentUser currentUser,
         IClock clock,
         CancellationToken ct)
     {
+        if (currentUser.Id is null)
+        {
+            return Result.Failure<DashcardDto>(DomainError.Unauthenticated(
+                "auth.required", "Authentication is required."));
+        }
+
         Dashcard? card = await repo.GetByIdAsync(new DashcardId(command.DashcardId), ct);
         if (card is null)
         {
             return Result.Failure<DashcardDto>(DomainError.NotFound(
                 "dashcards.not_found", "Dashcard not found."));
+        }
+
+        // v1.2.0 audit (pass 12): the previous incarnation
+        // had no authentication AND no membership check —
+        // any caller (even anonymous) could rewrite the
+        // configuration of any dashcard by guessing the id.
+        Board? board = await boards.GetByIdAsync(card.BoardId, ct);
+        if (board is null || !board.IsMember(currentUser.Id.Value))
+        {
+            return Result.Failure<DashcardDto>(DomainError.Forbidden(
+                "boards.forbidden", "You are not a member of this board."));
         }
 
         if (command.ConfigurationJson.Length > 8192)
@@ -110,16 +139,34 @@ public static class DeleteDashcardCommandHandler
 {
     public static async Task<Result> Handle(
         DeleteDashcardCommand command,
+        IBoardRepository boards,
         IDashboardRepository repo,
         IUnitOfWork uow,
+        ICurrentUser currentUser,
         IClock clock,
         CancellationToken ct)
     {
+        if (currentUser.Id is null)
+        {
+            return Result.Failure(DomainError.Unauthenticated(
+                "auth.required", "Authentication is required."));
+        }
+
         Dashcard? card = await repo.GetByIdAsync(new DashcardId(command.DashcardId), ct);
         if (card is null)
         {
             return Result.Failure(DomainError.NotFound("dashcards.not_found", "Dashcard not found."));
         }
+
+        // v1.2.0 audit (pass 12): the previous incarnation
+        // had no authentication AND no membership check.
+        Board? board = await boards.GetByIdAsync(card.BoardId, ct);
+        if (board is null || !board.IsMember(currentUser.Id.Value))
+        {
+            return Result.Failure(DomainError.Forbidden(
+                "boards.forbidden", "You are not a member of this board."));
+        }
+
         card.Delete(clock.UtcNow);
         await uow.SaveChangesAsync(ct);
         return Result.Success();

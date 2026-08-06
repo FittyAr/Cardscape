@@ -17,6 +17,17 @@ namespace Cardscape.Api.Endpoints.Scim;
 /// </summary>
 public static class ScimEndpoints
 {
+    // Per RFC 7644 §3.4.2.4, the SCIM `filter` parameter is
+    // unbounded. A misbehaving (or hostile) IdP can ship a
+    // multi-megabyte string and pin the API process's CPU
+    // on repeated substring scans. Cap the filter at 1 KiB —
+    // the only shape we recognise today is
+    // `userName eq "alice@example.com"`, which fits in ~80
+    // bytes; 1 KiB leaves headroom for any future supported
+    // predicate (`displayName co "..."`, etc.) without
+    // inviting a DoS.
+    private const int MaxScimFilterLength = 1024;
+
     public static IEndpointRouteBuilder MapScimEndpoints(this IEndpointRouteBuilder app)
     {
         // SCIM uses /scim/v2/... — the v2 segment is part of
@@ -37,6 +48,16 @@ public static class ScimEndpoints
             if (!TryGetWorkspaceId(http, out Guid workspaceId, out IResult? error))
             {
                 return error!;
+            }
+
+            if (!string.IsNullOrEmpty(filter) && filter.Length > MaxScimFilterLength)
+            {
+                return Results.Json(new
+                {
+                    schemas = new[] { "urn:ietf:params:scim:api:messages:2.0:Error" },
+                    status = "400",
+                    detail = $"filter is too long (max {MaxScimFilterLength} characters)."
+                }, statusCode: StatusCodes.Status400BadRequest);
             }
 
             var result = await scim.ListUsersAsync(

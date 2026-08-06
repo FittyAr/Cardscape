@@ -7,6 +7,7 @@ using Cardscape.Domain.Authentication.Totp;
 using Cardscape.Domain.Authentication.Totp.Errors;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
+using Microsoft.EntityFrameworkCore;
 using OtpNet;
 
 namespace Cardscape.Infrastructure.Authentication;
@@ -120,7 +121,23 @@ public sealed class TotpService(
         }
 
         credential.RecordVerification(matchedStep, clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // The v1.2.0 audit (pass 12) closes the replay
+            // window: a second concurrent verification with
+            // the same TOTP step would otherwise load the
+            // credential, pass the LastUsedCounter check,
+            // and try to write. The RowVersion concurrency
+            // token on the aggregate rejects the second
+            // write — we treat that as "code already
+            // consumed" so the user gets the canonical
+            // InvalidCode error rather than a 500.
+            return Result.Failure<long>(TotpErrors.InvalidCode);
+        }
         return Result.Success(matchedStep);
     }
 
@@ -155,7 +172,25 @@ public sealed class TotpService(
         lines[matchIndex] = $"used:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
         string updatedHash = string.Join('\n', lines);
         credential.RecordRecoveryCodeUsed(updatedHash, clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // The v1.2.0 audit (pass 12) closes a
+            // single-use-recovery-code race: two
+            // concurrent requests with the same code
+            // would both load the credential at the same
+            // RowVersion, both find the match, and both
+            // write. The first wins; the second hits the
+            // concurrency token and we surface it as
+            // "code already used" — the same canonical
+            // error a sequential second attempt would
+            // produce, so the client does not need a
+            // special branch.
+            return Result.Failure(TotpErrors.InvalidRecoveryCode);
+        }
         return Result.Success();
     }
 

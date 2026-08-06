@@ -38,8 +38,10 @@ public class SamlEndpointsTests
 
         string slug = $"saml-md-{Guid.NewGuid():N}";
         string spEntityId = $"https://cardscape.local/saml/{slug}";
-        SamlConfigResult setup = await ConfigureSamlConnection(
-            ownerClient, slug, spEntityId, "https://idp.test/metadata");
+        SamlConfigResult setup = await ConfigureSamlConnectionWithInlineMetadata(
+            ownerClient, slug, spEntityId,
+            idpEntityId: "https://idp.test/metadata",
+            ssoLocation: "https://idp.test/sso");
 
         HttpResponseMessage response = await ownerClient.GetAsync(
             $"saml/{setup.Slug}/metadata", TestContext.Current.CancellationToken);
@@ -87,63 +89,28 @@ public class SamlEndpointsTests
         string idpEntityId = "https://idp.test/metadata";
         string ssoLocation = "https://idp.test/sso";
 
-        // Sustainsys.Saml2 fetches the IdP metadata over
-        // HTTP (or file://). We stage the metadata in a
-        // temp file and hand the handler a file:// URL.
-        string metadataFile = Path.Combine(
-            Path.GetTempPath(), $"cardscape-saml-{Guid.NewGuid():N}.xml");
-        await File.WriteAllTextAsync(metadataFile,
-            BuildIdpMetadataXml(idpEntityId, ssoLocation), TestContext.Current.CancellationToken);
+        // The v1.2.0 audit (pass 12) added a SSRF guard on
+        // the metadata URL (the previous incarnation used a
+        // file:// URL via a temp file — the validator
+        // rejects empty / loopback hosts now). Inline XML
+        // exercises the same handler code without the
+        // network round trip.
+        SamlConfigResult setup = await ConfigureSamlConnectionWithInlineMetadata(
+            ownerClient, slug, spEntityId, idpEntityId, ssoLocation);
 
-        try
-        {
-            string idpMetadataUrl = new Uri(metadataFile).AbsoluteUri;
+        HttpResponseMessage response = await ownerClient.GetAsync(
+            $"saml/{setup.Slug}/login", TestContext.Current.CancellationToken);
 
-            // Create the workspace first; the SAML endpoint
-            // is scoped under /api/workspaces/{workspaceId}/saml,
-            // not /api/workspaces/{userId}/saml.
-            string workspaceSlug = $"ws-{Guid.NewGuid():N}";
-            HttpResponseMessage createWorkspace = await ownerClient.PostAsJsonAsync(
-                "api/workspaces/",
-                new CreateWorkspaceRequest($"SAML Workspace {workspaceSlug}"), TestContext.Current.CancellationToken);
-            createWorkspace.IsSuccessStatusCode.Should().BeTrue();
-            WorkspaceDto workspace = (await createWorkspace.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
-            HttpResponseMessage configure = await ownerClient.PostAsJsonAsync(
-                $"api/workspaces/{workspace.Id}/saml/",
-                new
-                {
-                    slug,
-                    displayName = "SAML Test IdP",
-                    idpEntityId,
-                    idpMetadataUrl,
-                    idpMetadataXml = (string?)null,
-                    spEntityId
-                }, TestContext.Current.CancellationToken);
-            configure.IsSuccessStatusCode.Should().BeTrue(
-                $"ConfigureSamlConnection must succeed; body was {await configure.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
-
-            HttpResponseMessage response = await ownerClient.GetAsync(
-                $"saml/{slug}/login", TestContext.Current.CancellationToken);
-
-            string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-
-            // The handler issues a 302 redirect to the IdP's
-            // SingleSignOnService URL.
-            response.StatusCode.Should().Be(HttpStatusCode.Redirect,
-                $"body was: {body}");
-            Uri? location = response.Headers.Location;
-            location.Should().NotBeNull();
-            location!.Host.Should().Be("idp.test");
-            location.AbsolutePath.Should().Be("/sso");
-        }
-        finally
-        {
-            if (File.Exists(metadataFile))
-            {
-                File.Delete(metadataFile);
-            }
-        }
+        // The handler issues a 302 redirect to the IdP's
+        // SingleSignOnService URL.
+        response.StatusCode.Should().Be(HttpStatusCode.Redirect,
+            $"body was: {body}");
+        Uri? location = response.Headers.Location;
+        location.Should().NotBeNull();
+        location!.Host.Should().Be("idp.test");
+        location.AbsolutePath.Should().Be("/sso");
     }
 
     [Fact]
@@ -219,6 +186,49 @@ public class SamlEndpointsTests
         $"                      Location=\"{ssoLocation}\" />" +
         $"  </IDPSSODescriptor>" +
         $"</EntityDescriptor>";
+
+    /// <summary>
+    /// Configures a workspace SAML connection with inline
+    /// metadata. The v1.2.0 audit (pass 12) added a
+    /// <see cref="Cardscape.Domain.Webhooks.WebhookUrlValidator"/>
+    /// SSRF guard on the metadata URL; the previous
+    /// <c>file://</c>-based test setup is no longer
+    /// accepted (the validator rejects empty / loopback
+    /// hosts). Inline XML is the supported
+    /// development-mode path and exercises the same
+    /// code in <see cref="Cardscape.Api.Authentication.SamlAuthenticationHandler"/>
+    /// without the network round trip.
+    /// </summary>
+    private async Task<SamlConfigResult> ConfigureSamlConnectionWithInlineMetadata(
+        HttpClient client,
+        string slug,
+        string spEntityId,
+        string idpEntityId,
+        string ssoLocation)
+    {
+        string workspaceSlug = $"ws-{Guid.NewGuid():N}";
+        HttpResponseMessage createWorkspace = await client.PostAsJsonAsync(
+            "api/workspaces/",
+            new CreateWorkspaceRequest($"SAML Workspace {workspaceSlug}"));
+        createWorkspace.IsSuccessStatusCode.Should().BeTrue();
+        WorkspaceDto workspace = (await createWorkspace.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+
+        HttpResponseMessage configure = await client.PostAsJsonAsync(
+            $"api/workspaces/{workspace.Id}/saml/",
+            new
+            {
+                slug,
+                displayName = "SAML Test IdP",
+                idpEntityId,
+                idpMetadataUrl = string.Empty,
+                idpMetadataXml = BuildIdpMetadataXml(idpEntityId, ssoLocation),
+                spEntityId
+            });
+        configure.IsSuccessStatusCode.Should().BeTrue(
+            $"ConfigureSamlConnection must succeed; body was {await configure.Content.ReadAsStringAsync()}");
+
+        return new SamlConfigResult(slug, workspace.Id);
+    }
 
     private sealed record SamlConfigResult(string Slug, Guid WorkspaceId);
 }
