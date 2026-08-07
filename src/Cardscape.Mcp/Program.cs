@@ -45,17 +45,12 @@ var app = builder.Build();
 // ── Ambient bus for MCP tools ──────────────────────────────
 // The MCP tools (decorated with [McpServerTool]) need a
 // Wolverine IMessageBus to dispatch commands. The bus is
-// registered as scoped, so the ambient capture goes through
-// a short-lived scope to satisfy the DI validation
-// (the root provider cannot resolve scoped services
-// directly). The captured bus reference lives for the
-// process lifetime; a new scope is opened per tool
-// invocation, so the lifetime is the same as if each tool
-// took the bus through DI.
-using (IServiceScope scope = app.Services.CreateScope())
-{
-    McpToolContext.Bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
-}
+// a singleton on the root provider (Wolverine registers it
+// there as part of the AddCardscapeMcp composition), so
+// resolving it from the root is the right lifetime - no
+// short-lived scope, no risk of the captured reference
+// racing against a half-disposed host (BETA-8-MCP-#8).
+McpToolContext.Bus = app.Services.GetRequiredService<IMessageBus>();
 
 // ── Pipeline ─────────────────────────────────────────────
 app.UseCardscapeMcp();
