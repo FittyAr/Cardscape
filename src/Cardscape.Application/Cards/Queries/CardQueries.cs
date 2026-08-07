@@ -76,6 +76,7 @@ public static class ListCardsForBoardQueryHandler
         ListCardsForBoardQuery query,
         ICardRepository cards,
         ICardSnoozeRepository snoozes,
+        ICardMirrorRepository mirrors,
         IBoardRepository boards,
         ICurrentUser currentUser,
         IClock clock,
@@ -111,6 +112,29 @@ public static class ListCardsForBoardQueryHandler
         Dictionary<Guid, DateTimeOffset> snoozeUntil = activeSnoozes.ToDictionary(
             s => s.Id.Value, s => s.Until);
 
+        // BETA-7-#13 — see test-results/BETA-TEST-REPORT.md.
+        // Same bulk-build pattern as the snooze lookup above:
+        // one round-trip to fetch every mirror in the board,
+        // then a single dictionary lookup per card. Without
+        // this, `ListCardsForBoard` left `MirrorOfCardId` at
+        // its default (`null`) for every row, so the kanban
+        // never rendered the mirror badge even when the
+        // single-card `GetCardQuery` correctly populated it.
+        IReadOnlyList<CardMirror> boardMirrors = await mirrors.ListForBoardAsync(
+            query.BoardId, cancellationToken);
+        Dictionary<Guid, Guid> mirrorOf = boardMirrors.ToDictionary(
+            m => m.MirroredCardId.Value,
+            m => m.SourceCardId.Value);
+
+        // BETA-7-#13 — see test-results/BETA-TEST-REPORT.md.
+        // Default(Guid) leaks into the DTO for non-mirror cards;
+        // the Blazor template's `is not null` check then treats a
+        // zero-guid as "is a mirror". Normalise to null here so
+        // the UI sees a clean three-state: source (null), mirror
+        // (the source id), or never (never — every card is one of
+        // the first two in a fully-mirrored board).
+        Guid? MirrorOf(Guid cardId) => mirrorOf.TryGetValue(cardId, out Guid src) ? src : (Guid?)null;
+
         // Default behaviour: snoozed cards are hidden from the
         // board view. The Web UI opt-in toggle adds
         // ?includeSnoozed=true to the request.
@@ -132,7 +156,8 @@ public static class ListCardsForBoardQueryHandler
                 // visual fade on the board.
                 c.UpdatedAt ?? c.CreatedAt,
                 IsSnoozed: snoozedCardIds.Contains(c.Id.Value),
-                SnoozeUntil: snoozeUntil.GetValueOrDefault(c.Id.Value)))
+                SnoozeUntil: snoozeUntil.GetValueOrDefault(c.Id.Value),
+                MirrorOfCardId: MirrorOf(c.Id.Value)))
             .ToList();
 
         return Result.Success<IReadOnlyList<CardSummaryDto>>(rows);
