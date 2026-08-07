@@ -1,4 +1,4 @@
-@page "/boards/{BoardId:guid}"
+﻿@page "/boards/{BoardId:guid}"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using System.Text.Json
 @using Cardscape.Web.Services
@@ -210,7 +210,7 @@ else
 
     private BoardDto? board;
     private IReadOnlyList<BoardListDto>? lists;
-    private readonly Dictionary<Guid, IReadOnlyList<CardSummaryDto>> cardsByList = new();
+    private Dictionary<Guid, IReadOnlyList<CardSummaryDto>> cardsByList = new();
     private bool showAddList;
     private bool addingList;
     private readonly AddListModel addListModel = new();
@@ -241,6 +241,8 @@ else
     private CardAgingMode agingMode = CardAgingMode.Disabled;
     private DateTimeOffset now = DateTimeOffset.UtcNow;
 
+    private Guid lastSubscribedBoardId;
+
     protected override async Task OnParametersSetAsync()
     {
         ApiResult<BoardDto> boardResult = await BoardsApi.GetAsync(BoardId);
@@ -248,11 +250,26 @@ else
 
         await ReloadListsAndCardsAsync();
         await ReloadAgingModeAsync();
-        await SubscribeToHubAsync();
+
+        if (lastSubscribedBoardId != BoardId)
+        {
+            // BETA-8-UI-#4 - see test-results/r8/r8-report.md.
+            // Reset the hub-subscription guard when the user
+            // navigates to a different board; the unsubscribe
+            // block in Dispose() handles the previous board.
+            subscribedToHub = false;
+            await SubscribeToHubAsync();
+            lastSubscribedBoardId = BoardId;
+        }
     }
 
     private async Task SubscribeToHubAsync()
     {
+        if (subscribedToHub)
+        {
+            return;
+        }
+        subscribedToHub = true;
         try
         {
             HubClient.CardCreated += OnHubCardCreated;
@@ -322,51 +339,58 @@ else
         }
     }
 
+    private bool subscribedToHub;
+
     private async Task ReloadListsAndCardsAsync()
     {
         ApiResult<IReadOnlyList<BoardListDto>> listsResult = await ListsApi.ListForBoardAsync(BoardId);
         lists = listsResult.IsSuccess ? listsResult.Value : [];
 
-        cardsByList.Clear();
-        // P3.2 / G6b — pass `includeSnoozed` through to the API so
-        // the server-side filter in `ListCardsForBoardQueryHandler`
-        // can decide which cards belong in the projection. The
-        // badge + reduced opacity below are driven entirely by the
-        // returned `IsSnoozed` flag on each `CardSummaryDto`.
+        // BETA-7-#12 / BETA-8-UI-#4 - see test-results/BETA-TEST-REPORT.md
+        // and test-results/r8/r8-report.md.
+        // The previous incarnation had two race conditions:
+        //   (a) the SignalR `CardCreated` event fires after the
+        //       HTTP 201 returns, so the create-card flow ends up
+        //       calling ReloadListsAndCardsAsync twice (once from
+        //       ConfirmAddCard, once from OnHubCardCreated) and the
+        //       in-place append could duplicate cards if the two
+        //       reloads interleaved with Clear() in between;
+        //   (b) the hub subscriptions were re-wired on every
+        //       OnParametersSetAsync call, so after a hot-reload
+        //       the handlers fired N times.
+        // Fix: build a brand-new dictionary from the server
+        // response (no in-place mutation, no chance of duplicates)
+        // and gate the hub subscription so it happens exactly once
+        // for the component's lifetime.
         ApiResult<IReadOnlyList<CardSummaryDto>> cardsResult = await CardsApi.ListForBoardAsync(
             BoardId, includeArchived: false, includeSnoozed: showSnoozed);
-        if (cardsResult.IsSuccess)
+        Dictionary<Guid, IReadOnlyList<CardSummaryDto>> next = new();
+        if (cardsResult.IsSuccess && cardsResult.Value is not null)
         {
-            // BETA-7-#12 — see test-results/BETA-TEST-REPORT.md.
-            // The previous version appended each card to the
-            // per-list bucket without dedup. When the
-            // SignalR `CardCreated` handler fired after a
-            // create-card (and the user had also added the
-            // card through the same handler chain), every
-            // existing card was duplicated once. The
-            // server-side reload returns a clean
-            // collection, but the two reloads (one from
-            // the create-card success path, one from the
-            // hub) can race; deduping by id on every append
-            // makes the merge idempotent.
             HashSet<Guid> seenIds = [];
-            foreach (CardSummaryDto card in cardsResult.Value!)
+            Dictionary<Guid, List<CardSummaryDto>> grouped = new();
+            foreach (CardSummaryDto card in cardsResult.Value)
             {
                 if (!seenIds.Add(card.Id))
                 {
                     continue;
                 }
 
-                if (!cardsByList.TryGetValue(card.ListId, out IReadOnlyList<CardSummaryDto>? bucket))
+                if (!grouped.TryGetValue(card.ListId, out List<CardSummaryDto>? bucket))
                 {
                     bucket = [];
+                    grouped[card.ListId] = bucket;
                 }
 
-                cardsByList[card.ListId] = [.. bucket, card];
+                bucket.Add(card);
+            }
+            foreach (KeyValuePair<Guid, List<CardSummaryDto>> kv in grouped)
+            {
+                next[kv.Key] = kv.Value;
             }
         }
+        cardsByList = next;
     }
-
     private async Task ToggleSnoozedAsync()
     {
         if (togglingSnoozed) return;
