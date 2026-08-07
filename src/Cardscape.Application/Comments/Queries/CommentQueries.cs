@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Comments.DTOs;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Members;
 using Wolverine;
 
 namespace Cardscape.Application.Comments.Queries;
@@ -17,6 +18,7 @@ public static class ListCommentsForCardQueryHandler
         IBoardRepository boards,
         IBoardListRepository lists,
         ICommentRepository comments,
+        IUserRepository users,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -39,11 +41,24 @@ public static class ListCommentsForCardQueryHandler
         }
 
         var items = await comments.ListForCardAsync(new CardId(query.CardId), cancellationToken);
+
+        // BETA-8-UI-#12 - see test-results/r8/r8-report.md.
+        // Batch-load the display names for every distinct
+        // author so the Web UI can render 'Alice' instead
+        // of '72fc4808-bcfd-48d8-b9cf-0b38b5de6808'. The list
+        // projection kept the previous rows' AuthorId raw,
+        // which was correct on the wire but useless to a
+        // human reading the activity feed.
+        List<UserId> authorIds = items.Select(c => new UserId(c.AuthorId)).Distinct().ToList();
+        Dictionary<Guid, string> displayNames = (await users.ListByIdsAsync(authorIds, cancellationToken))
+            .ToDictionary(u => u.Id.Value, u => u.DisplayName.Value);
+
         var rows = items
             .Select(c => new CommentDto(
                 c.Id.Value,
                 c.CardId.Value,
                 c.AuthorId,
+                displayNames.GetValueOrDefault(c.AuthorId, string.Empty),
                 c.Body.Value,
                 c.CreatedAt,
                 c.UpdatedAt))

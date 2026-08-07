@@ -7,6 +7,7 @@ using Cardscape.Domain.Activities;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Comments;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Members;
 using Wolverine;
 using static Cardscape.Domain.Comments.Errors.CommentErrors;
 
@@ -22,6 +23,7 @@ public static class AddCommentCommandHandler
         IBoardRepository boards,
         IBoardListRepository lists,
         ICommentRepository comments,
+        IUserRepository users,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -79,6 +81,16 @@ public static class AddCommentCommandHandler
         await comments.AddAsync(commentResult.Value, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // BETA-8-UI-#12 — see test-results/r8/r8-report.md.
+        // The list query batch-loads display names; on the
+        // write path we only need the one author, so a
+        // single GetByIdAsync is the cheapest stable
+        // choice. Falling back to empty keeps the row
+        // honest (a deleted user renders as blank rather
+        // than a stale UUID).
+        User? author = await users.GetByIdAsync(new UserId(commentResult.Value.AuthorId), cancellationToken);
+        string authorDisplayName = author?.DisplayName.Value ?? string.Empty;
+
         // BETA-7-#1 / #2 — see test-results/BETA-TEST-REPORT.md.
         // Populate the search index + the activity feed on every
         // write. Both calls are guarded by the board-id lookup
@@ -101,6 +113,7 @@ public static class AddCommentCommandHandler
             commentResult.Value.Id.Value,
             commentResult.Value.CardId.Value,
             commentResult.Value.AuthorId,
+            authorDisplayName,
             commentResult.Value.Body.Value,
             commentResult.Value.CreatedAt,
             commentResult.Value.UpdatedAt));
@@ -117,6 +130,7 @@ public static class EditCommentCommandHandler
         IBoardRepository boards,
         IBoardListRepository lists,
         ICommentRepository comments,
+        IUserRepository users,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -184,8 +198,15 @@ public static class EditCommentCommandHandler
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
 
+        // BETA-8-UI-#12 — populate the display name so the
+        // edited comment row in the UI is consistent with
+        // the fresh AddComment row (see handler above).
+        User? author = await users.GetByIdAsync(new UserId(comment.AuthorId), cancellationToken);
+        string authorDisplayName = author?.DisplayName.Value ?? string.Empty;
+
         return Result.Success(new CommentDto(
             comment.Id.Value, comment.CardId.Value, comment.AuthorId,
+            authorDisplayName,
             comment.Body.Value, comment.CreatedAt, comment.UpdatedAt));
     }
 }

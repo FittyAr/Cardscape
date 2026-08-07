@@ -4,6 +4,7 @@ using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Members;
 using Wolverine;
 
 namespace Cardscape.Application.Activities.Queries;
@@ -13,16 +14,18 @@ public sealed record ActivityDto(
     Guid BoardId,
     Guid? CardId,
     Guid ActorId,
+    string? ActorDisplayName,
     int Kind,
     string KindName,
     string PayloadJson,
     DateTimeOffset OccurredAt)
 {
-    public static ActivityDto FromEntity(Activity a) => new(
+    public static ActivityDto FromEntity(Activity a, IReadOnlyDictionary<Guid, string> actorDisplayNames) => new(
         a.Id.Value,
         a.BoardId.Value,
         a.CardId,
         a.ActorId,
+        actorDisplayNames.GetValueOrDefault(a.ActorId, string.Empty),
         (int)a.Kind,
         a.Kind.ToString(),
         a.PayloadJson,
@@ -46,6 +49,7 @@ public static class ListBoardActivitiesQueryHandler
         ListBoardActivitiesQuery query,
         IActivityRepository activities,
         IBoardRepository boards,
+        IUserRepository users,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -91,7 +95,7 @@ public static class ListBoardActivitiesQueryHandler
             nextCursor = ActivityCursor.Encode(last.OccurredAt, last.Id.Value);
         }
 
-        IReadOnlyList<ActivityDto> dtos = page.Select(ActivityDto.FromEntity).ToList();
+        IReadOnlyList<ActivityDto> dtos = await ActivityDtoMappingHelpers.ToDtosAsync(page, users, cancellationToken);
         return Result.Success(new ActivityPage(dtos, nextCursor));
     }
 }
@@ -109,6 +113,7 @@ public static class ListCardActivitiesQueryHandler
         ICardRepository cards,
         IBoardListRepository lists,
         IBoardRepository boards,
+        IUserRepository users,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -160,7 +165,32 @@ public static class ListCardActivitiesQueryHandler
             nextCursor = ActivityCursor.Encode(last.OccurredAt, last.Id.Value);
         }
 
-        IReadOnlyList<ActivityDto> dtos = page.Select(ActivityDto.FromEntity).ToList();
+        IReadOnlyList<ActivityDto> dtos = await ActivityDtoMappingHelpers.ToDtosAsync(page, users, cancellationToken);
         return Result.Success(new ActivityPage(dtos, nextCursor));
+    }
+}
+
+internal static class ActivityDtoMappingHelpers
+{
+    // BETA-8-UI-#13 — see test-results/r8/r8-report.md.
+    // The previous version projected the entity straight to
+    // the wire DTO; the activity feed in the UI therefore
+    // showed `actor: 72fc4808-bcfd-…` for every row. We
+    // batch-load the user display names for the page (one
+    // DB round-trip for the whole list, no N+1) and project
+    // a name alongside the GUID. The Web fallback for an
+    // empty name is to render the GUID (see CardDetail.razor).
+    internal static async Task<IReadOnlyList<ActivityDto>> ToDtosAsync(
+        IReadOnlyList<Activity> page,
+        IUserRepository users,
+        CancellationToken cancellationToken)
+    {
+        List<UserId> actorIds = page
+            .Select(a => new UserId(a.ActorId))
+            .Distinct()
+            .ToList();
+        IReadOnlyDictionary<Guid, string> displayNames = (await users.ListByIdsAsync(actorIds, cancellationToken))
+            .ToDictionary(u => u.Id.Value, u => u.DisplayName.Value);
+        return page.Select(a => ActivityDto.FromEntity(a, displayNames)).ToList();
     }
 }

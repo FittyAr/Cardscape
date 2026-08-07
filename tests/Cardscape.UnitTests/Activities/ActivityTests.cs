@@ -134,7 +134,7 @@ public class ActivityTests
         Activity source = Activity.Create(
             TestBoard, TestCard.Value, TestActor, ActivityKind.CardMoved, "{\"from\":\"a\"}", at);
 
-        ActivityDto dto = ActivityDto.FromEntity(source);
+        ActivityDto dto = ActivityDto.FromEntity(source, new Dictionary<Guid, string>());
 
         dto.Id.Should().Be(source.Id.Value);
         dto.BoardId.Should().Be(source.BoardId.Value);

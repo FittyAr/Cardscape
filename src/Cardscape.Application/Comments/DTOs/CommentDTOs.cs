@@ -4,6 +4,7 @@ public sealed record CommentDto(
     Guid Id,
     Guid CardId,
     Guid AuthorId,
+    string? AuthorDisplayName,
     string Body,
     DateTimeOffset CreatedAt,
     DateTimeOffset? UpdatedAt);

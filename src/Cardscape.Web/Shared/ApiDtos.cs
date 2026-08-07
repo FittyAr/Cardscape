@@ -213,6 +213,7 @@ public sealed record CommentDto(
     Guid Id,
     Guid CardId,
     Guid AuthorId,
+    string? AuthorDisplayName,
     string Body,
     DateTimeOffset CreatedAt,
     DateTimeOffset? UpdatedAt);
@@ -396,6 +397,7 @@ public sealed record ActivityDto(
     Guid BoardId,
     Guid? CardId,
     Guid ActorId,
+    string? ActorDisplayName,
     int Kind,
     string KindName,
     string PayloadJson,

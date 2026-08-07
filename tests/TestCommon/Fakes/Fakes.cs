@@ -178,6 +178,16 @@ public sealed class InMemoryUserRepository : InMemoryRepositoryBase<User, UserId
             string.Equals(u.Email.Value, normalized, StringComparison.OrdinalIgnoreCase)));
     }
 
+    public Task<IReadOnlyList<User>> ListByIdsAsync(
+        IReadOnlyList<UserId> ids, CancellationToken ct = default)
+    {
+        HashSet<UserId> idSet = new(ids);
+        IReadOnlyList<User> matches = Store.Values
+            .Where(u => idSet.Contains(u.Id))
+            .ToList();
+        return Task.FromResult(matches);
+    }
+
     public Task<IReadOnlyList<WorkspaceMember>> ListWorkspaceMembersAsync(
         WorkspaceId workspaceId, CancellationToken ct = default)
     {

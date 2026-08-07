@@ -34,6 +34,26 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
         return null;
     }
 
+
+    public async Task<IReadOnlyList<User>> ListByIdsAsync(
+        IReadOnlyList<UserId> ids, CancellationToken ct = default)
+    {
+        if (ids is null || ids.Count == 0)
+        {
+            return [];
+        }
+
+        // EF Core can translate the strongly-typed id to SQL via
+        // the value-object converter; the Contains call is the
+        // simplest batching primitive the relational provider
+        // supports and avoids an N+1 round-trip when a list
+        // projection (comments, activities, etc.) needs the
+        // display name for every distinct author.
+        HashSet<UserId> wanted = new(ids);
+        return await Db.Set<User>()
+            .Where(u => wanted.Contains(u.Id))
+            .ToListAsync(ct);
+    }
     public async Task<IReadOnlyList<WorkspaceMember>> ListWorkspaceMembersAsync(
         WorkspaceId workspaceId, CancellationToken ct = default)
     {
