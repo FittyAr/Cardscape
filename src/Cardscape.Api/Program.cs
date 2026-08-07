@@ -25,6 +25,7 @@ using Cardscape.Api.Endpoints.Saml;
 using Cardscape.Api.Endpoints.Scim;
 using Cardscape.Api.Endpoints.Search;
 using Cardscape.Api.Endpoints.Security;
+using Cardscape.Api.Endpoints.Users;
 using Cardscape.Api.Endpoints.Voting;
 using Cardscape.Api.Endpoints.Webhooks;
 using Cardscape.Api.Endpoints.Workspaces;
@@ -282,6 +283,7 @@ app.MapOAuthFlowEndpoints();
 app.MapAiEndpoints();
 app.MapMcpSubscriptionsAdminEndpoints();
 app.MapUserDsrAdminEndpoints();
+app.MapUserSelfEndpoints();
 
 // Companion endpoint for Serilog.Sinks.BrowserHttp on the
 // Blazor WASM client. Browser-side log events (e.g. uncaught
