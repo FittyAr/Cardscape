@@ -286,13 +286,14 @@ app.MapUserDsrAdminEndpoints();
 // exceptions, navigation failures) are POSTed here in CLEF
 // JSON; the endpoint re-emits them through the standard
 // pipeline so the file / OTel sinks see them.
-app.MapClientLogEndpoint();
-
-// Companion endpoint for Serilog.Sinks.BrowserHttp on the
-// Blazor WASM client. Browser-side log events (e.g. uncaught
-// exceptions, navigation failures) are POSTed here in CLEF
-// JSON; the endpoint re-emits them through the standard
-// pipeline so the file / OTel sinks see them.
+//
+// BETA-8-UI-#2 — see test-results/r8/r8-report.md.
+// The endpoint was previously registered TWICE in this file.
+// ASP.NET Core's router raises AmbiguousMatchException on
+// every POST and returns 500, which the Blazor renderer
+// surfaces as the persistent 'An unhandled error has
+// occurred' overlay on every page. Keep the single
+// registration.
 app.MapClientLogEndpoint();
 
 // Real-time board hub. Sits at /hubs/board with the same JWT
