@@ -122,6 +122,25 @@ public static class BoardEndpoints
             return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
         });
 
+        // BETA-8-API-#1 - see test-results/r8/r8-report.md.
+        // The add-member endpoint above (BETA-5-#12) existed
+        // since 1.2.0 but no GET counterpart did: the
+        // /api/boards/{id}/members URL returned 405. This
+        // closes the gap so external integrators (and the
+        // future Blazor member panel) can audit board
+        // membership. Auth + access mirrors the other board
+        // endpoints: the caller must be a member of the
+        // board itself.
+        group.MapGet("/{boardId:guid}/members", async (
+            Guid boardId,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardMemberDto>>>(
+                new ListBoardMembersQuery(boardId), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+        });
+
         // Export the board as a ZIP archive (board.json + attachments).
         group.MapGet("/{boardId:guid}/export", async (
             Guid boardId,

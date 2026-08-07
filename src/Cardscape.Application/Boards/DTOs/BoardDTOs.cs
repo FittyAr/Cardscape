@@ -20,3 +20,9 @@ public sealed record BoardSummaryDto(
     bool IsArchived,
     bool IsStarred,
     DateTimeOffset CreatedAt);
+
+public sealed record BoardMemberDto(
+    Guid UserId,
+    string? DisplayName,
+    BoardMemberRole Role,
+    DateTimeOffset JoinedAt);
