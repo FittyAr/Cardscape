@@ -33,7 +33,7 @@ public class ScimEndpointTests
         HttpResponseMessage wsResp = await client.PostAsJsonAsync(
             "api/workspaces/", new CreateWorkspaceRequest("SCIM WS"), TestContext.Current.CancellationToken);
         wsResp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         // Initially the token list is empty.
         HttpResponseMessage listResp = await client.GetAsync(
@@ -48,7 +48,7 @@ public class ScimEndpointTests
             $"api/workspaces/{ws.Id}/scim/tokens", new { name = "Okta" }, TestContext.Current.CancellationToken);
         issueResp.IsSuccessStatusCode.Should().BeTrue();
         ScimIssueResponseDto issueBody =
-            (await issueResp.Content.ReadFromJsonAsync<ScimIssueResponseDto>(TestContext.Current.CancellationToken))!;
+            (await issueResp.Content.ReadFromJsonAsync<ScimIssueResponseDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         issueBody.PlaintextToken.Should().NotBeNullOrWhiteSpace();
         issueBody.Token.Name.Should().Be("Okta");
 
@@ -81,7 +81,7 @@ public class ScimEndpointTests
         RegisterRequest register = new(email, "Scim User", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        return (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        return (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
     }
 
     public sealed record ScimTokenListItemDto(

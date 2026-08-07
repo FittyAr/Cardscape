@@ -101,19 +101,33 @@ public sealed class BoardExportAndICalTests
     }
 
     [Fact]
-    public async Task ICal_For_Public_Board_Allows_Anonymous_NonMember()
+    public async Task ICal_For_Public_Board_Allows_Authenticated_NonMember()
     {
-        // The /ics endpoint is mapped with .AllowAnonymous()
-        // and the IcsCalendarService lets a Public board
-        // through for any caller (the public contract is
-        // "any user with a link, including unauthenticated").
-        // Owner creates a public board; an anonymous client
-        // reads the calendar and gets 200. Pinned so a future
-        // refactor that tightens the auth check on public
-        // boards fires here.
+        // BETA-2-#3 — see src/Cardscape.Api/Endpoints/Boards/BoardEndpoints.cs.
+        // The /ics endpoint is no longer .AllowAnonymous()'d.
+        // The previous version let unauthenticated GETs reach
+        // the service layer where `currentUser.Id == null` was
+        // treated as Unauthenticated (401) for every request,
+        // regardless of board visibility. The fix is to let
+        // the standard RequireAuthorization() gate the request
+        // first (so an unauthenticated caller always sees 401
+        // with WWW-Authenticate before any service code runs)
+        // and let the service decide 200/403/404 for
+        // authenticated callers based on board visibility.
+        // Operators that want truly anonymous calendar feeds
+        // should expose /api/boards/{id}/ics through a
+        // reverse-proxy rule that injects a service-account JWT.
+        //
+        // The contract under test here: a public board is
+        // readable by any authenticated user (even one who is
+        // not a workspace member).
         HttpClient ownerClient = await CreateAuthenticatedClientAsync();
+        // BoardVisibility.Public == camelCase string "public" (the
+        // API configures JsonStringEnumConverter with
+        // JsonNamingPolicy.CamelCase, so the wire format is the
+        // camelCase enum name, not the int ordinal).
         Guid boardId = await CreateBoardAsync(ownerClient, "ical-public",
-            visibility: 2 /* Public — see BoardVisibility enum */);
+            visibility: "public");
 
         // Add a card with a due date so the calendar is non-empty.
         Guid listId = await CreateListAsync(ownerClient, boardId, "List");
@@ -123,12 +137,15 @@ public sealed class BoardExportAndICalTests
             $"api/cards/{cardId}/due-date", new { dueDate = due }, TestContext.Current.CancellationToken);
         setDue.IsSuccessStatusCode.Should().BeTrue();
 
-        // Anonymous client (no bearer) reads the calendar.
-        HttpClient anonymous = _factory.CreateApiClient();
-        HttpResponseMessage resp = await anonymous.GetAsync(
+        // Authenticated but non-member client reads the calendar
+        // and gets 200. The whole point of public boards is
+        // that any logged-in user can see them, so this pins
+        // the access control.
+        HttpClient otherClient = await CreateAuthenticatedClientAsync();
+        HttpResponseMessage resp = await otherClient.GetAsync(
             $"api/boards/{boardId}/ics", TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue(
-            "public boards must be readable by any caller, including anonymous");
+            "public boards must be readable by any authenticated user, including non-members");
         string body = await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         body.Should().Contain("BEGIN:VEVENT");
     }
@@ -145,7 +162,7 @@ public sealed class BoardExportAndICalTests
         // returns 403.
         HttpClient ownerClient = await CreateAuthenticatedClientAsync();
         Guid boardId = await CreateBoardAsync(ownerClient, "ical-workspace",
-            visibility: 1 /* Workspace — see BoardVisibility enum */);
+            visibility: "workspace");
 
         HttpClient otherClient = _factory.CreateApiClient();
         string otherEmail = $"ical-other-{Guid.NewGuid():N}@cardscape.local";
@@ -153,7 +170,7 @@ public sealed class BoardExportAndICalTests
             "api/auth/register", new RegisterRequest(otherEmail, "Other", "Password123!"),
             TestContext.Current.CancellationToken);
         reg.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse auth = (await reg.Content.ReadFromJsonAsync<AuthResponse>(TestContext.Current.CancellationToken))!;
+        AuthResponse auth = (await reg.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options, TestContext.Current.CancellationToken))!;
         otherClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
@@ -172,23 +189,24 @@ public sealed class BoardExportAndICalTests
         RegisterRequest register = new(email, "Tester", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
     }
 
-    private async Task<Guid> CreateBoardAsync(HttpClient client, string name, int visibility = 0)
+    private async Task<Guid> CreateBoardAsync(
+        HttpClient client, string name, string visibility = "private")
     {
         HttpResponseMessage wsResp = await client.PostAsJsonAsync(
             "api/workspaces/", new { name = $"WS for {name}" });
         wsResp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
         HttpResponseMessage boardResp = await client.PostAsJsonAsync(
             "api/boards/",
             new { workspaceId = ws.Id, name, description = (string?)null, visibility });
         boardResp.IsSuccessStatusCode.Should().BeTrue();
-        BoardDto board = (await boardResp.Content.ReadFromJsonAsync<BoardDto>())!;
+        BoardDto board = (await boardResp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
         return board.Id;
     }
 
@@ -197,7 +215,7 @@ public sealed class BoardExportAndICalTests
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/lists/", new { boardId, name });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        ListDto list = (await resp.Content.ReadFromJsonAsync<ListDto>())!;
+        ListDto list = (await resp.Content.ReadFromJsonAsync<ListDto>(TestJson.Options))!;
         return list.Id;
     }
 
@@ -206,7 +224,7 @@ public sealed class BoardExportAndICalTests
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/cards/", new { listId, title, description = (string?)null });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        CardDto card = (await resp.Content.ReadFromJsonAsync<CardDto>())!;
+        CardDto card = (await resp.Content.ReadFromJsonAsync<CardDto>(TestJson.Options))!;
         return card.Id;
     }
 

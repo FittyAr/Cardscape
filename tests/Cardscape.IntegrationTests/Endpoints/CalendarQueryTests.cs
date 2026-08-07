@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Cardscape.Application.Authentication.DTOs;
+using Cardscape.Domain.Boards;
 using Cardscape.IntegrationTests.Fixtures;
 
 namespace Cardscape.IntegrationTests.Endpoints;
@@ -36,7 +37,7 @@ public sealed class CalendarQueryTests
         HttpResponseMessage resp = await owner.GetAsync(
             $"api/cards/calendar?from={Uri.EscapeDataString(from.ToString("o"))}&to={Uri.EscapeDataString(to.ToString("o"))}", TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
-        CalendarEntryDto[]? rows = await resp.Content.ReadFromJsonAsync<CalendarEntryDto[]>(TestContext.Current.CancellationToken);
+        CalendarEntryDto[]? rows = await resp.Content.ReadFromJsonAsync<CalendarEntryDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         rows.Should().NotBeNull();
         rows!.Should().Contain(r => r.CardId == inRange.Id);
     }
@@ -59,7 +60,7 @@ public sealed class CalendarQueryTests
         HttpResponseMessage resp = await owner.GetAsync(
             $"api/cards/calendar?from={Uri.EscapeDataString(from.ToString("o"))}&to={Uri.EscapeDataString(to.ToString("o"))}", TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
-        CalendarEntryDto[]? rows = await resp.Content.ReadFromJsonAsync<CalendarEntryDto[]>(TestContext.Current.CancellationToken);
+        CalendarEntryDto[]? rows = await resp.Content.ReadFromJsonAsync<CalendarEntryDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         rows.Should().NotBeNull();
         rows!.Should().NotContain(r => r.CardId == outsideCard.Id);
     }
@@ -94,7 +95,7 @@ public sealed class CalendarQueryTests
         RegisterRequest register = new(email, $"{displayNamePrefix} User", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
     }
@@ -103,7 +104,7 @@ public sealed class CalendarQueryTests
     {
         HttpResponseMessage resp = await client.PostAsJsonAsync("api/workspaces/", new { name });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        return (await resp.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        return (await resp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
     }
 
     private static async Task<BoardDto> CreateBoardAsync(HttpClient client, Guid workspaceId, string name)
@@ -111,7 +112,7 @@ public sealed class CalendarQueryTests
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/boards/", new { workspaceId, name, description = (string?)null, visibility = 0 });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        return (await resp.Content.ReadFromJsonAsync<BoardDto>())!;
+        return (await resp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
     }
 
     private static async Task<BoardListDto> CreateListAsync(HttpClient client, Guid boardId, string name)
@@ -119,7 +120,7 @@ public sealed class CalendarQueryTests
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/lists/", new { boardId, name });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        return (await resp.Content.ReadFromJsonAsync<BoardListDto>())!;
+        return (await resp.Content.ReadFromJsonAsync<BoardListDto>(TestJson.Options))!;
     }
 
     private static async Task<CardDto> CreateCardAsync(HttpClient client, Guid listId, string title)
@@ -127,7 +128,7 @@ public sealed class CalendarQueryTests
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/cards/", new { listId, title, description = (string?)null });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        return (await resp.Content.ReadFromJsonAsync<CardDto>())!;
+        return (await resp.Content.ReadFromJsonAsync<CardDto>(TestJson.Options))!;
     }
 
     private static async Task SetDueDateAsync(HttpClient client, Guid cardId, DateTimeOffset dueDate)
@@ -140,7 +141,7 @@ public sealed class CalendarQueryTests
     // ── DTOs (mirror the API) ──────────────────────────────────
 
     public sealed record WorkspaceDto(Guid Id, Guid OwnerId, string Name, int MemberCount);
-    public sealed record BoardDto(Guid Id, Guid WorkspaceId, string Name, int Visibility, bool IsArchived, bool IsStarred, DateTimeOffset CreatedAt);
+    public sealed record BoardDto(Guid Id, Guid WorkspaceId, string Name, BoardVisibility Visibility, bool IsArchived, bool IsStarred, DateTimeOffset CreatedAt);
     public sealed record BoardListDto(Guid Id, Guid BoardId, string Name, double Position, bool IsArchived, DateTimeOffset CreatedAt, int CardCount);
     public sealed record CardDto(Guid Id, Guid ListId, string Title, string Description, double Position, DateTimeOffset? DueDate, bool IsArchived, bool IsCompleted, string? CoverColor, DateTimeOffset CreatedAt, int MemberCount, int LabelCount);
     public sealed record CalendarEntryDto(Guid CardId, Guid ListId, Guid BoardId, string BoardName, string Title, DateTimeOffset DueDate, bool IsCompleted);

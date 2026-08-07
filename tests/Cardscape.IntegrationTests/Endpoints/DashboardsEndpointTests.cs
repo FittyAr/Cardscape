@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Cardscape.Application.Authentication.DTOs;
+using Cardscape.Domain.Dashboards;
 using Cardscape.IntegrationTests.Fixtures;
 using FluentAssertions;
 
@@ -66,7 +67,7 @@ public sealed class DashboardsEndpointTests
             },
             TestContext.Current.CancellationToken);
         created.IsSuccessStatusCode.Should().BeTrue();
-        DashcardDto dashcard = (await created.Content.ReadFromJsonAsync<DashcardDto>(TestContext.Current.CancellationToken))!;
+        DashcardDto dashcard = (await created.Content.ReadFromJsonAsync<DashcardDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         HttpResponseMessage updated = await client.PutAsJsonAsync(
             $"api/boards/{seed.BoardId}/dashcards/{dashcard.Id}/config",
@@ -93,7 +94,7 @@ public sealed class DashboardsEndpointTests
             },
             TestContext.Current.CancellationToken);
         created.IsSuccessStatusCode.Should().BeTrue();
-        DashcardDto dashcard = (await created.Content.ReadFromJsonAsync<DashcardDto>(TestContext.Current.CancellationToken))!;
+        DashcardDto dashcard = (await created.Content.ReadFromJsonAsync<DashcardDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         HttpResponseMessage deleted = await client.DeleteAsync(
             $"api/boards/{seed.BoardId}/dashcards/{dashcard.Id}", TestContext.Current.CancellationToken);
@@ -125,7 +126,7 @@ public sealed class DashboardsEndpointTests
         RegisterRequest register = new(email, "Tester", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
@@ -136,17 +137,17 @@ public sealed class DashboardsEndpointTests
         HttpResponseMessage wsResp = await client.PostAsJsonAsync(
             "api/workspaces/", new { name = $"WS for {name}" });
         wsResp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
         HttpResponseMessage boardResp = await client.PostAsJsonAsync(
             "api/boards/",
             new { workspaceId = ws.Id, name, description = (string?)null, visibility = 0 });
         boardResp.IsSuccessStatusCode.Should().BeTrue();
-        BoardDto board = (await boardResp.Content.ReadFromJsonAsync<BoardDto>())!;
+        BoardDto board = (await boardResp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
         return new Seed(board.Id);
     }
 
     private sealed record Seed(Guid BoardId);
     private sealed record WorkspaceDto(Guid Id);
     private sealed record BoardDto(Guid Id, Guid WorkspaceId);
-    private sealed record DashcardDto(Guid Id, Guid BoardId, int Kind, int Position, string? Title, string? ConfigJson);
+    private sealed record DashcardDto(Guid Id, Guid BoardId, DashcardKind Kind, int Position, string? Title, string? ConfigJson);
 }

@@ -31,13 +31,13 @@ public sealed class BoardExtensionTests
             $"api/boards/{board.Id}/extensions/",
             new { kind = 0, configJson = (string?)null }, TestContext.Current.CancellationToken);
         enable.IsSuccessStatusCode.Should().BeTrue();
-        BoardExtensionDto enabled = (await enable.Content.ReadFromJsonAsync<BoardExtensionDto>(TestContext.Current.CancellationToken))!;
+        BoardExtensionDto enabled = (await enable.Content.ReadFromJsonAsync<BoardExtensionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         enabled.IsEnabled.Should().BeTrue();
         enabled.Kind.Should().Be(0);
 
         HttpResponseMessage list = await client.GetAsync($"api/boards/{board.Id}/extensions/", TestContext.Current.CancellationToken);
         list.IsSuccessStatusCode.Should().BeTrue();
-        BoardExtensionDto[]? rows = await list.Content.ReadFromJsonAsync<BoardExtensionDto[]>(TestContext.Current.CancellationToken);
+        BoardExtensionDto[]? rows = await list.Content.ReadFromJsonAsync<BoardExtensionDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         rows.Should().NotBeNull().And.HaveCount(1);
 
         HttpResponseMessage disable = await client.DeleteAsync(
@@ -47,7 +47,7 @@ public sealed class BoardExtensionTests
         HttpResponseMessage listAfter = await client.GetAsync(
             $"api/boards/{board.Id}/extensions/", TestContext.Current.CancellationToken);
         BoardExtensionDto[]? after =
-            await listAfter.Content.ReadFromJsonAsync<BoardExtensionDto[]>(TestContext.Current.CancellationToken);
+            await listAfter.Content.ReadFromJsonAsync<BoardExtensionDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         after!.Should().ContainSingle()
               .Which.IsEnabled.Should().BeFalse();
     }
@@ -71,7 +71,7 @@ public sealed class BoardExtensionTests
 
         HttpResponseMessage list = await client.GetAsync(
             $"api/boards/{board.Id}/extensions/", TestContext.Current.CancellationToken);
-        BoardExtensionDto[]? rows = await list.Content.ReadFromJsonAsync<BoardExtensionDto[]>(TestContext.Current.CancellationToken);
+        BoardExtensionDto[]? rows = await list.Content.ReadFromJsonAsync<BoardExtensionDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         rows.Should().NotBeNull().And.HaveCount(1);
     }
 
@@ -89,7 +89,7 @@ public sealed class BoardExtensionTests
             $"api/boards/{board.Id}/extensions/0/config",
             new { configJson = """{"theme":"light"}""" }, TestContext.Current.CancellationToken);
         put.IsSuccessStatusCode.Should().BeTrue();
-        BoardExtensionDto updated = (await put.Content.ReadFromJsonAsync<BoardExtensionDto>(TestContext.Current.CancellationToken))!;
+        BoardExtensionDto updated = (await put.Content.ReadFromJsonAsync<BoardExtensionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         updated.ConfigJson.Should().Contain("light");
     }
 
@@ -146,7 +146,7 @@ public sealed class BoardExtensionTests
         RegisterRequest register = new(email, "Ext User", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
@@ -157,13 +157,13 @@ public sealed class BoardExtensionTests
         HttpResponseMessage wsResp = await client.PostAsJsonAsync(
             "api/workspaces/", new { name = $"WS for {name}" });
         wsResp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
 
         HttpResponseMessage boardResp = await client.PostAsJsonAsync(
             "api/boards/",
             new { workspaceId = ws.Id, name, description = (string?)null, visibility = 0 });
         boardResp.IsSuccessStatusCode.Should().BeTrue();
-        return (await boardResp.Content.ReadFromJsonAsync<BoardDto>())!;
+        return (await boardResp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
     }
 
     public sealed record BoardExtensionDto(

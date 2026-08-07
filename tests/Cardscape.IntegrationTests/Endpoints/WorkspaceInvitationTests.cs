@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Cardscape.Application.Authentication.DTOs;
+using Cardscape.Domain.Workspaces;
 using Cardscape.IntegrationTests.Fixtures;
 
 namespace Cardscape.IntegrationTests.Endpoints;
@@ -33,7 +34,7 @@ public sealed class WorkspaceInvitationTests
             $"api/workspaces/{ws.Id}/invitations/",
             new { email = inviteeEmail, role = 1 }, TestContext.Current.CancellationToken);
         issueResp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceInvitationIssuanceDto issued = (await issueResp.Content.ReadFromJsonAsync<WorkspaceInvitationIssuanceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceInvitationIssuanceDto issued = (await issueResp.Content.ReadFromJsonAsync<WorkspaceInvitationIssuanceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         issued.CleartextToken.Should().NotBeNullOrWhiteSpace();
 
         // The invitee registers with the same email the invite was
@@ -44,13 +45,13 @@ public sealed class WorkspaceInvitationTests
         HttpResponseMessage acceptResp = await invitee.PostAsJsonAsync(
             "api/invitations/accept", new { token = issued.CleartextToken }, TestContext.Current.CancellationToken);
         acceptResp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto acceptedWs = (await acceptResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceDto acceptedWs = (await acceptResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         acceptedWs.Id.Should().Be(ws.Id);
 
         // The invitee is now a member.
         HttpResponseMessage membersResp = await invitee.GetAsync($"api/workspaces/{ws.Id}/members", TestContext.Current.CancellationToken);
         membersResp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceMemberDto[]? members = await membersResp.Content.ReadFromJsonAsync<WorkspaceMemberDto[]>(TestContext.Current.CancellationToken);
+        WorkspaceMemberDto[]? members = await membersResp.Content.ReadFromJsonAsync<WorkspaceMemberDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         members.Should().NotBeNull().And.HaveCount(2);
         members!.Select(m => m.Email).Should().Contain(inviteeEmail);
 
@@ -69,7 +70,7 @@ public sealed class WorkspaceInvitationTests
         HttpResponseMessage issueResp = await owner.PostAsJsonAsync(
             $"api/workspaces/{ws.Id}/invitations/",
             new { email = $"target-{Guid.NewGuid():N}@cardscape.local", role = 1 }, TestContext.Current.CancellationToken);
-        WorkspaceInvitationIssuanceDto issued = (await issueResp.Content.ReadFromJsonAsync<WorkspaceInvitationIssuanceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceInvitationIssuanceDto issued = (await issueResp.Content.ReadFromJsonAsync<WorkspaceInvitationIssuanceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         // A different user (different email) tries to redeem it.
         HttpClient wrongUser = await CreateAuthenticatedClientAsync("Wrong", $"wrong-{Guid.NewGuid():N}@cardscape.local");
@@ -94,7 +95,7 @@ public sealed class WorkspaceInvitationTests
         HttpResponseMessage strangerInbox = await stranger.GetAsync("api/invitations/pending", TestContext.Current.CancellationToken);
         strangerInbox.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceInvitationDto[]? strangerRows =
-            await strangerInbox.Content.ReadFromJsonAsync<WorkspaceInvitationDto[]>(TestContext.Current.CancellationToken);
+            await strangerInbox.Content.ReadFromJsonAsync<WorkspaceInvitationDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         strangerRows.Should().BeEmpty();
 
         // The target user does see it.
@@ -102,7 +103,7 @@ public sealed class WorkspaceInvitationTests
         HttpResponseMessage targetInbox = await target.GetAsync("api/invitations/pending", TestContext.Current.CancellationToken);
         targetInbox.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceInvitationDto[]? targetRows =
-            await targetInbox.Content.ReadFromJsonAsync<WorkspaceInvitationDto[]>(TestContext.Current.CancellationToken);
+            await targetInbox.Content.ReadFromJsonAsync<WorkspaceInvitationDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         targetRows.Should().NotBeNull().And.HaveCount(1);
         targetRows![0].Email.Should().Be(targetEmail);
         targetRows[0].WorkspaceId.Should().Be(ws.Id);
@@ -131,7 +132,7 @@ public sealed class WorkspaceInvitationTests
         HttpResponseMessage issueResp = await owner.PostAsJsonAsync(
             $"api/workspaces/{ws.Id}/invitations/",
             new { email = targetEmail, role = 1 }, TestContext.Current.CancellationToken);
-        WorkspaceInvitationIssuanceDto issued = (await issueResp.Content.ReadFromJsonAsync<WorkspaceInvitationIssuanceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceInvitationIssuanceDto issued = (await issueResp.Content.ReadFromJsonAsync<WorkspaceInvitationIssuanceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         HttpResponseMessage revoke = await owner.DeleteAsync(
             $"api/workspaces/{ws.Id}/invitations/{issued.Id}", TestContext.Current.CancellationToken);
@@ -163,7 +164,7 @@ public sealed class WorkspaceInvitationTests
         RegisterRequest register = new(email, $"{displayNamePrefix} User", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
     }
@@ -172,7 +173,7 @@ public sealed class WorkspaceInvitationTests
     {
         HttpResponseMessage resp = await client.PostAsJsonAsync("api/workspaces/", new { name });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        return (await resp.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        return (await resp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
     }
 
     // ── DTOs (local; mirror the API surface) ───────────────────
@@ -180,6 +181,6 @@ public sealed class WorkspaceInvitationTests
     public sealed record WorkspaceInvitationIssuanceDto(Guid Id, Guid WorkspaceId, string CleartextToken);
     public sealed record WorkspaceInvitationDto(
         Guid Id, Guid WorkspaceId, string WorkspaceName, string Email,
-        int Role, Guid InvitedBy, DateTimeOffset InvitedAt, DateTimeOffset ExpiresAt, string TokenPrefix);
-    public sealed record WorkspaceMemberDto(Guid UserId, string Email, string DisplayName, int Role, DateTimeOffset JoinedAt);
+        WorkspaceRole Role, Guid InvitedBy, DateTimeOffset InvitedAt, DateTimeOffset ExpiresAt, string TokenPrefix);
+    public sealed record WorkspaceMemberDto(Guid UserId, string Email, string DisplayName, WorkspaceRole Role, DateTimeOffset JoinedAt);
 }

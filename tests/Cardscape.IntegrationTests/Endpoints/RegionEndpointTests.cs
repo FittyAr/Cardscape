@@ -58,7 +58,7 @@ public class RegionEndpointTests : IClassFixture<CardscapeWebApplicationFactory>
             "api/workspaces/", new CreateWorkspaceRequest("Acme Default"), TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        WorkspaceDto? workspace = await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken);
+        WorkspaceDto? workspace = await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken);
         workspace.Should().NotBeNull();
         workspace!.Region.Should().Be(Domain.Workspaces.Region.Europe);
     }
@@ -69,6 +69,6 @@ public class RegionEndpointTests : IClassFixture<CardscapeWebApplicationFactory>
         RegisterRequest register = new(email, "Region User", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        return (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        return (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
     }
 }

@@ -77,7 +77,7 @@ public sealed class IntegrationsEndpointTests
             TestContext.Current.CancellationToken);
         connected.IsSuccessStatusCode.Should().BeTrue();
         SlackWorkspaceDto workspace =
-            (await connected.Content.ReadFromJsonAsync<SlackWorkspaceDto>(TestContext.Current.CancellationToken))!;
+            (await connected.Content.ReadFromJsonAsync<SlackWorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         HttpResponseMessage linked = await client.PostAsJsonAsync(
             $"api/workspaces/{workspaceId}/integrations/slack/channels",
@@ -97,7 +97,7 @@ public sealed class IntegrationsEndpointTests
             TestContext.Current.CancellationToken);
         channels.IsSuccessStatusCode.Should().BeTrue();
         SlackChannelDto[] list =
-            (await channels.Content.ReadFromJsonAsync<SlackChannelDto[]>(TestContext.Current.CancellationToken))!;
+            (await channels.Content.ReadFromJsonAsync<SlackChannelDto[]>(TestJson.Options, TestContext.Current.CancellationToken))!;
         list.Should().ContainSingle(c =>
             c.ChannelId == "C00000001" && c.ChannelName == "general");
     }
@@ -120,7 +120,7 @@ public sealed class IntegrationsEndpointTests
             new { teamId = "T00000003", teamName = "Acme3", botToken = "xoxb-test-1111111111" },
             TestContext.Current.CancellationToken);
         SlackWorkspaceDto workspace =
-            (await connected.Content.ReadFromJsonAsync<SlackWorkspaceDto>(TestContext.Current.CancellationToken))!;
+            (await connected.Content.ReadFromJsonAsync<SlackWorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         HttpResponseMessage linked = await client.PostAsJsonAsync(
             $"/api/workspaces/{workspaceId}/integrations/slack/channels",
@@ -135,7 +135,7 @@ public sealed class IntegrationsEndpointTests
             TestContext.Current.CancellationToken);
         linked.IsSuccessStatusCode.Should().BeTrue();
         SlackChannelDto channel =
-            (await linked.Content.ReadFromJsonAsync<SlackChannelDto>(TestContext.Current.CancellationToken))!;
+            (await linked.Content.ReadFromJsonAsync<SlackChannelDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         channel.Active.Should().BeTrue();
 
         HttpResponseMessage unlinked = await client.DeleteAsync(
@@ -148,7 +148,7 @@ public sealed class IntegrationsEndpointTests
             TestContext.Current.CancellationToken);
         channels.IsSuccessStatusCode.Should().BeTrue();
         SlackChannelDto[] list =
-            (await channels.Content.ReadFromJsonAsync<SlackChannelDto[]>(TestContext.Current.CancellationToken))!;
+            (await channels.Content.ReadFromJsonAsync<SlackChannelDto[]>(TestJson.Options, TestContext.Current.CancellationToken))!;
         SlackChannelDto reloaded = list.Single(c => c.Id == channel.Id);
         reloaded.Active.Should().BeFalse();
     }
@@ -229,28 +229,31 @@ public sealed class IntegrationsEndpointTests
             "api/integrations/google-calendar/", TestContext.Current.CancellationToken);
         got.IsSuccessStatusCode.Should().BeTrue();
         GoogleCalendarConnectionDto reloaded =
-            (await got.Content.ReadFromJsonAsync<GoogleCalendarConnectionDto>(TestContext.Current.CancellationToken))!;
+            (await got.Content.ReadFromJsonAsync<GoogleCalendarConnectionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         reloaded.Should().NotBeNull();
         reloaded.IsActive.Should().BeFalse();
     }
 
     [Fact]
-    public async Task GoogleCalendar_Get_For_Fresh_User_Returns_Null()
+    public async Task GoogleCalendar_Get_For_Fresh_User_Returns_Default_Not_Connected_Dto()
     {
+        // BETA-2-UI-#6 — see src/Cardscape.Api/Endpoints/Integrations/GoogleCalendarEndpoints.cs.
+        // The handler used to return Results.Ok(null) which
+        // produced a 200 with a 0-byte body, breaking the Blazor
+        // WASM client's ReadFromJsonAsync<> (threw
+        // JsonException: ExpectedJsonTokens and the page got
+        // stuck on "Loading…"). The fix is to always return a
+        // non-null default DTO with IsActive=false so the client
+        // can deserialise a "not connected" state and render the
+        // connect form.
         HttpClient client = await CreateAuthenticatedClientAsync();
         HttpResponseMessage got = await client.GetAsync(
             "api/integrations/google-calendar/", TestContext.Current.CancellationToken);
-        // Results.Ok(null) in the minimal-API host returns 200
-        // with an empty body (the framework's default JSON
-        // serialiser writes nothing for a top-level null).
-        // The contract under test is "the endpoint does not
-        // 404 / 500 when no connection exists" — both a 200
-        // with an empty body and a 200 with the literal
-        // string "null" satisfy the contract today.
         got.IsSuccessStatusCode.Should().BeTrue();
-        string body = await got.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        (body == "null" || body.Length == 0).Should().BeTrue(
-            "the no-connection response is 200 + empty body or 200 + literal 'null'");
+        GoogleCalendarConnectionDto? dto = await got.Content.ReadFromJsonAsync<GoogleCalendarConnectionDto>(TestJson.Options, TestContext.Current.CancellationToken);
+        dto.Should().NotBeNull();
+        dto!.IsActive.Should().BeFalse(
+            "a user with no Google Calendar connection gets a default DTO with IsActive=false");
     }
 
     // ── Inbound email ─────────────────────────────────────
@@ -281,7 +284,7 @@ public sealed class IntegrationsEndpointTests
         }
         registered.StatusCode.Should().Be(HttpStatusCode.Created);
         InboundEmailAddressDto created =
-            (await registered.Content.ReadFromJsonAsync<InboundEmailAddressDto>(TestContext.Current.CancellationToken))!;
+            (await registered.Content.ReadFromJsonAsync<InboundEmailAddressDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         created.EmailAddress.Should().Be("inbox-abc@cardscape.example");
         created.TargetListId.Should().Be(listId);
 
@@ -290,7 +293,7 @@ public sealed class IntegrationsEndpointTests
             TestContext.Current.CancellationToken);
         listed.IsSuccessStatusCode.Should().BeTrue();
         InboundEmailAddressDto[] list =
-            (await listed.Content.ReadFromJsonAsync<InboundEmailAddressDto[]>(TestContext.Current.CancellationToken))!;
+            (await listed.Content.ReadFromJsonAsync<InboundEmailAddressDto[]>(TestJson.Options, TestContext.Current.CancellationToken))!;
         list.Should().ContainSingle(a => a.Id == created.Id);
     }
 
@@ -317,7 +320,7 @@ public sealed class IntegrationsEndpointTests
             },
             TestContext.Current.CancellationToken);
         InboundEmailAddressDto created =
-            (await registered.Content.ReadFromJsonAsync<InboundEmailAddressDto>(TestContext.Current.CancellationToken))!;
+            (await registered.Content.ReadFromJsonAsync<InboundEmailAddressDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         created.Active.Should().BeTrue();
 
         HttpResponseMessage unreg = await client.DeleteAsync(
@@ -330,7 +333,7 @@ public sealed class IntegrationsEndpointTests
             TestContext.Current.CancellationToken);
         listed.IsSuccessStatusCode.Should().BeTrue();
         InboundEmailAddressDto[] list =
-            (await listed.Content.ReadFromJsonAsync<InboundEmailAddressDto[]>(TestContext.Current.CancellationToken))!;
+            (await listed.Content.ReadFromJsonAsync<InboundEmailAddressDto[]>(TestJson.Options, TestContext.Current.CancellationToken))!;
         InboundEmailAddressDto reloaded = list.Single(a => a.Id == created.Id);
         reloaded.Active.Should().BeFalse();
     }
@@ -354,7 +357,7 @@ public sealed class IntegrationsEndpointTests
         RegisterRequest register = new(email, "Tester", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
@@ -365,7 +368,7 @@ public sealed class IntegrationsEndpointTests
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/workspaces/", new { name });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto ws = (await resp.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto ws = (await resp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
         return ws.Id;
     }
 
@@ -375,7 +378,7 @@ public sealed class IntegrationsEndpointTests
             "api/boards/",
             new { workspaceId, name, description = (string?)null, visibility = 0 });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        BoardDto board = (await resp.Content.ReadFromJsonAsync<BoardDto>())!;
+        BoardDto board = (await resp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
         return board.Id;
     }
 
@@ -384,7 +387,7 @@ public sealed class IntegrationsEndpointTests
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/lists/", new { boardId, name });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        ListDto list = (await resp.Content.ReadFromJsonAsync<ListDto>())!;
+        ListDto list = (await resp.Content.ReadFromJsonAsync<ListDto>(TestJson.Options))!;
         return list.Id;
     }
 

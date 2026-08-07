@@ -12,3 +12,4 @@ global using Cardscape.Application.Lists.DTOs;
 global using Cardscape.Application.Cards.DTOs;
 global using Cardscape.Application.Labels.DTOs;
 global using Cardscape.Application.Comments.DTOs;
+global using Cardscape.Tests.Common;

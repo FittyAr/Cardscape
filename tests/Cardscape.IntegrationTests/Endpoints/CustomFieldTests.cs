@@ -32,7 +32,7 @@ public sealed class CustomFieldTests
             new { name = "Priority", kind = 0, dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
         create.IsSuccessStatusCode.Should().BeTrue();
         CustomFieldDefinitionDto created =
-            (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestContext.Current.CancellationToken))!;
+            (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         created.Name.Should().Be("Priority");
         created.Kind.Should().Be(0);
 
@@ -41,7 +41,7 @@ public sealed class CustomFieldTests
             $"api/boards/{seed.BoardId}/custom-fields/", TestContext.Current.CancellationToken);
         list.IsSuccessStatusCode.Should().BeTrue();
         CustomFieldDefinitionDto[]? rows =
-            await list.Content.ReadFromJsonAsync<CustomFieldDefinitionDto[]>(TestContext.Current.CancellationToken);
+            await list.Content.ReadFromJsonAsync<CustomFieldDefinitionDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         rows.Should().NotBeNull().And.HaveCount(1);
 
         // Rename
@@ -50,7 +50,7 @@ public sealed class CustomFieldTests
             new { newName = "Importance" }, TestContext.Current.CancellationToken);
         rename.IsSuccessStatusCode.Should().BeTrue();
         CustomFieldDefinitionDto renamed =
-            (await rename.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestContext.Current.CancellationToken))!;
+            (await rename.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         renamed.Name.Should().Be("Importance");
 
         // Delete
@@ -62,7 +62,7 @@ public sealed class CustomFieldTests
         HttpResponseMessage after = await client.GetAsync(
             $"api/boards/{seed.BoardId}/custom-fields/", TestContext.Current.CancellationToken);
         CustomFieldDefinitionDto[]? remaining =
-            await after.Content.ReadFromJsonAsync<CustomFieldDefinitionDto[]>(TestContext.Current.CancellationToken);
+            await after.Content.ReadFromJsonAsync<CustomFieldDefinitionDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         remaining.Should().BeEmpty();
     }
 
@@ -89,7 +89,7 @@ public sealed class CustomFieldTests
             $"api/boards/{seed.BoardId}/custom-fields/",
             new { name = "Priority", kind = 0, dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
         CustomFieldDefinitionDto field =
-            (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestContext.Current.CancellationToken))!;
+            (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         // Set value
         HttpResponseMessage set = await client.PutAsJsonAsync(
@@ -97,7 +97,7 @@ public sealed class CustomFieldTests
             new { valueJson = "\"high\"" }, TestContext.Current.CancellationToken);
         set.IsSuccessStatusCode.Should().BeTrue();
         CustomFieldValueDto setValue =
-            (await set.Content.ReadFromJsonAsync<CustomFieldValueDto>(TestContext.Current.CancellationToken))!;
+            (await set.Content.ReadFromJsonAsync<CustomFieldValueDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         setValue.ValueJson.Should().Be("\"high\"");
 
         // List
@@ -105,7 +105,7 @@ public sealed class CustomFieldTests
             $"api/cards/{seed.CardId}/custom-field-values/", TestContext.Current.CancellationToken);
         list.IsSuccessStatusCode.Should().BeTrue();
         CustomFieldValueDto[]? values =
-            await list.Content.ReadFromJsonAsync<CustomFieldValueDto[]>(TestContext.Current.CancellationToken);
+            await list.Content.ReadFromJsonAsync<CustomFieldValueDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         values.Should().NotBeNull().And.HaveCount(1);
         values![0].ValueJson.Should().Be("\"high\"");
 
@@ -119,7 +119,7 @@ public sealed class CustomFieldTests
         HttpResponseMessage after = await client.GetAsync(
             $"api/cards/{seed.CardId}/custom-field-values/", TestContext.Current.CancellationToken);
         CustomFieldValueDto[]? remaining =
-            await after.Content.ReadFromJsonAsync<CustomFieldValueDto[]>(TestContext.Current.CancellationToken);
+            await after.Content.ReadFromJsonAsync<CustomFieldValueDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         remaining.Should().BeEmpty();
     }
 
@@ -133,7 +133,7 @@ public sealed class CustomFieldTests
             $"api/boards/{seed.BoardId}/custom-fields/",
             new { name = "Severity", kind = 3, dropdownOptions = new[] { "Low", "High" }, position = 0 }, TestContext.Current.CancellationToken);
         CustomFieldDefinitionDto field =
-            (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestContext.Current.CancellationToken))!;
+            (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         HttpResponseMessage set = await client.PutAsJsonAsync(
             $"api/cards/{seed.CardId}/custom-field-values/{field.Id}",
@@ -151,7 +151,7 @@ public sealed class CustomFieldTests
             $"api/boards/{seed.BoardId}/custom-fields/",
             new { name = "Priority", kind = 0, dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
         CustomFieldDefinitionDto field =
-            (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestContext.Current.CancellationToken))!;
+            (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         await client.PutAsJsonAsync(
             $"api/cards/{seed.CardId}/custom-field-values/{field.Id}",
@@ -164,7 +164,7 @@ public sealed class CustomFieldTests
         HttpResponseMessage after = await client.GetAsync(
             $"api/cards/{seed.CardId}/custom-field-values/", TestContext.Current.CancellationToken);
         CustomFieldValueDto[]? remaining =
-            await after.Content.ReadFromJsonAsync<CustomFieldValueDto[]>(TestContext.Current.CancellationToken);
+            await after.Content.ReadFromJsonAsync<CustomFieldValueDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         remaining.Should().BeEmpty();
     }
 
@@ -199,7 +199,7 @@ public sealed class CustomFieldTests
         RegisterRequest register = new(email, "CF User", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
@@ -210,23 +210,23 @@ public sealed class CustomFieldTests
         HttpResponseMessage wsResp = await client.PostAsJsonAsync(
             "api/workspaces/", new { name = $"WS for {name}" });
         wsResp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
 
         HttpResponseMessage boardResp = await client.PostAsJsonAsync(
             "api/boards/",
             new { workspaceId = ws.Id, name, description = (string?)null, visibility = 0 });
         boardResp.IsSuccessStatusCode.Should().BeTrue();
-        BoardDto board = (await boardResp.Content.ReadFromJsonAsync<BoardDto>())!;
+        BoardDto board = (await boardResp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
 
         HttpResponseMessage listResp = await client.PostAsJsonAsync(
             "api/lists/", new { boardId = board.Id, name = "Todo" });
         listResp.IsSuccessStatusCode.Should().BeTrue();
-        ListDto list = (await listResp.Content.ReadFromJsonAsync<ListDto>())!;
+        ListDto list = (await listResp.Content.ReadFromJsonAsync<ListDto>(TestJson.Options))!;
 
         HttpResponseMessage cardResp = await client.PostAsJsonAsync(
             "api/cards/", new { listId = list.Id, title = "Card", description = (string?)null });
         cardResp.IsSuccessStatusCode.Should().BeTrue();
-        CardDto card = (await cardResp.Content.ReadFromJsonAsync<CardDto>())!;
+        CardDto card = (await cardResp.Content.ReadFromJsonAsync<CardDto>(TestJson.Options))!;
 
         return new Seed(board.Id, card.Id);
     }

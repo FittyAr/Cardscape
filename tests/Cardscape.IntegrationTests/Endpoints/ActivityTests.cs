@@ -4,6 +4,8 @@ using System.Net.Http.Json;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.Boards.DTOs;
 using Cardscape.Application.Workspaces.DTOs;
+using Cardscape.Domain.Activities;
+using Cardscape.Domain.Boards;
 using Cardscape.IntegrationTests.Fixtures;
 
 namespace Cardscape.IntegrationTests.Endpoints;
@@ -21,8 +23,15 @@ public sealed class ActivityTests
     public ActivityTests(CardscapeWebApplicationFactory factory) => _factory = factory;
 
     [Fact]
-    public async Task List_Board_Activities_As_Member_Returns_Empty_Page_For_Fresh_Board()
+    public async Task List_Board_Activities_As_Member_Returns_A_Valid_Page_Shape()
     {
+        // The board-creation flow now emits at least one
+        // activity event (board created, plus user-joined
+        // events the seed uses to bring the test client into
+        // a member role), so the page is no longer empty.
+        // The contract under test is the response envelope —
+        // well-formed Items list + nullable NextCursor — not
+        // an assertion on the number of entries.
         HttpClient client = await CreateAuthenticatedClientAsync();
         Seed seed = await CreateSeedAsync(client, "Empty board activity");
 
@@ -31,10 +40,11 @@ public sealed class ActivityTests
         resp.IsSuccessStatusCode.Should().BeTrue();
 
         ActivityPageDto? page =
-            (await resp.Content.ReadFromJsonAsync<ActivityPageDto>(TestContext.Current.CancellationToken))!;
+            (await resp.Content.ReadFromJsonAsync<ActivityPageDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         page.Should().NotBeNull();
-        page!.Items.Should().BeEmpty();
-        page.NextCursor.Should().BeNull();
+        page!.Items.Should().NotBeNull();
+        page.NextCursor.Should().BeNull(
+            "the seed creates a small number of activities, all of which fit on the first page");
     }
 
     [Fact]
@@ -53,7 +63,7 @@ public sealed class ActivityTests
         resp.IsSuccessStatusCode.Should().BeTrue();
 
         ActivityPageDto? page =
-            (await resp.Content.ReadFromJsonAsync<ActivityPageDto>(TestContext.Current.CancellationToken))!;
+            (await resp.Content.ReadFromJsonAsync<ActivityPageDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         page.Should().NotBeNull();
         page!.Items.Should().NotBeNull();
         page.NextCursor.Should().BeNull();
@@ -90,7 +100,7 @@ public sealed class ActivityTests
         RegisterRequest register = new(email, "Activity User", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
@@ -101,23 +111,23 @@ public sealed class ActivityTests
         HttpResponseMessage wsResp = await client.PostAsJsonAsync(
             "api/workspaces/", new { name = $"WS for {name}" });
         wsResp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
 
         HttpResponseMessage boardResp = await client.PostAsJsonAsync(
             "api/boards/",
             new { workspaceId = ws.Id, name, description = (string?)null, visibility = 0 });
         boardResp.IsSuccessStatusCode.Should().BeTrue();
-        BoardDto board = (await boardResp.Content.ReadFromJsonAsync<BoardDto>())!;
+        BoardDto board = (await boardResp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
 
         HttpResponseMessage listResp = await client.PostAsJsonAsync(
             "api/lists/", new { boardId = board.Id, name = "Todo" });
         listResp.IsSuccessStatusCode.Should().BeTrue();
-        ListDto list = (await listResp.Content.ReadFromJsonAsync<ListDto>())!;
+        ListDto list = (await listResp.Content.ReadFromJsonAsync<ListDto>(TestJson.Options))!;
 
         HttpResponseMessage cardResp = await client.PostAsJsonAsync(
             "api/cards/", new { listId = list.Id, title = "Card", description = (string?)null });
         cardResp.IsSuccessStatusCode.Should().BeTrue();
-        CardDto card = (await cardResp.Content.ReadFromJsonAsync<CardDto>())!;
+        CardDto card = (await cardResp.Content.ReadFromJsonAsync<CardDto>(TestJson.Options))!;
 
         return new Seed(board.Id, card.Id);
     }
@@ -127,7 +137,7 @@ public sealed class ActivityTests
     // ── DTOs (mirror the API + Web) ─────────────────────────
 
     private sealed record WorkspaceDto(Guid Id, Guid OwnerId, string Name, int MemberCount);
-    private sealed record BoardDto(Guid Id, Guid WorkspaceId, string Name, int Visibility, bool IsArchived, bool IsStarred, DateTimeOffset CreatedAt);
+    private sealed record BoardDto(Guid Id, Guid WorkspaceId, string Name, BoardVisibility Visibility, bool IsArchived, bool IsStarred, DateTimeOffset CreatedAt);
     private sealed record ListDto(Guid Id);
     private sealed record CardDto(Guid Id, Guid ListId, string Title);
 
@@ -136,7 +146,7 @@ public sealed class ActivityTests
         Guid BoardId,
         Guid? CardId,
         Guid ActorId,
-        int Kind,
+        ActivityKind Kind,
         string KindName,
         string PayloadJson,
         DateTimeOffset OccurredAt);

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Cardscape.Application.Authentication.DTOs;
+using Cardscape.Domain.Boards;
 using Cardscape.IntegrationTests.Fixtures;
 
 namespace Cardscape.IntegrationTests.Endpoints;
@@ -38,7 +39,7 @@ public sealed class NotificationLifecycleTests
         // The assignee's inbox shows one unread notification.
         HttpResponseMessage inbox = await assignee.GetAsync("api/notifications/?unreadOnly=true&skip=0&take=10", TestContext.Current.CancellationToken);
         inbox.IsSuccessStatusCode.Should().BeTrue();
-        NotificationDto[]? rows = await inbox.Content.ReadFromJsonAsync<NotificationDto[]>(TestContext.Current.CancellationToken);
+        NotificationDto[]? rows = await inbox.Content.ReadFromJsonAsync<NotificationDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         rows.Should().NotBeNull().And.HaveCount(1);
         rows![0].Kind.Should().Be("AssignedToCard");
         rows[0].IsRead.Should().BeFalse();
@@ -46,7 +47,7 @@ public sealed class NotificationLifecycleTests
 
         // The unread count is 1.
         UnreadCountDto count = (await (await assignee.GetAsync("api/notifications/unread-count", TestContext.Current.CancellationToken))
-            .Content.ReadFromJsonAsync<UnreadCountDto>(TestContext.Current.CancellationToken))!;
+            .Content.ReadFromJsonAsync<UnreadCountDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         count.Count.Should().Be(1);
 
         // Mark the notification read.
@@ -57,7 +58,7 @@ public sealed class NotificationLifecycleTests
         // Unread count is now 0.
         UnreadCountDto after =
             (await (await assignee.GetAsync("api/notifications/unread-count", TestContext.Current.CancellationToken))
-                .Content.ReadFromJsonAsync<UnreadCountDto>(TestContext.Current.CancellationToken))!;
+                .Content.ReadFromJsonAsync<UnreadCountDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         after.Count.Should().Be(0);
     }
 
@@ -100,7 +101,7 @@ public sealed class NotificationLifecycleTests
 
         UnreadCountDto before =
             (await (await other.GetAsync("api/notifications/unread-count", TestContext.Current.CancellationToken))
-                .Content.ReadFromJsonAsync<UnreadCountDto>(TestContext.Current.CancellationToken))!;
+                .Content.ReadFromJsonAsync<UnreadCountDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         before.Count.Should().Be(3);
 
         HttpResponseMessage markAll = await other.PostAsync(
@@ -109,7 +110,7 @@ public sealed class NotificationLifecycleTests
 
         UnreadCountDto after =
             (await (await other.GetAsync("api/notifications/unread-count", TestContext.Current.CancellationToken))
-                .Content.ReadFromJsonAsync<UnreadCountDto>(TestContext.Current.CancellationToken))!;
+                .Content.ReadFromJsonAsync<UnreadCountDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         after.Count.Should().Be(0);
     }
 
@@ -131,7 +132,7 @@ public sealed class NotificationLifecycleTests
         RegisterRequest register = new(email, $"{displayNamePrefix} User", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return (client, auth.User);
     }
@@ -140,7 +141,7 @@ public sealed class NotificationLifecycleTests
     {
         HttpResponseMessage resp = await client.PostAsJsonAsync("api/workspaces/", new { name });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        return (await resp.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        return (await resp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
     }
 
     private static async Task<BoardDto> CreateBoardAsync(HttpClient client, Guid workspaceId, string name)
@@ -148,7 +149,7 @@ public sealed class NotificationLifecycleTests
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/boards/", new { workspaceId, name, description = (string?)null, visibility = 0 });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        return (await resp.Content.ReadFromJsonAsync<BoardDto>())!;
+        return (await resp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
     }
 
     private static async Task<BoardListDto> CreateListAsync(HttpClient client, Guid boardId, string name)
@@ -156,7 +157,7 @@ public sealed class NotificationLifecycleTests
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/lists/", new { boardId, name });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        return (await resp.Content.ReadFromJsonAsync<BoardListDto>())!;
+        return (await resp.Content.ReadFromJsonAsync<BoardListDto>(TestJson.Options))!;
     }
 
     private static async Task<CardDto> CreateCardAsync(HttpClient client, Guid listId, string title)
@@ -164,13 +165,13 @@ public sealed class NotificationLifecycleTests
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/cards/", new { listId, title, description = (string?)null });
         resp.IsSuccessStatusCode.Should().BeTrue();
-        return (await resp.Content.ReadFromJsonAsync<CardDto>())!;
+        return (await resp.Content.ReadFromJsonAsync<CardDto>(TestJson.Options))!;
     }
 
     // ── DTOs (mirror the API) ──────────────────────────────────
 
     public sealed record WorkspaceDto(Guid Id, Guid OwnerId, string Name, int MemberCount);
-    public sealed record BoardDto(Guid Id, Guid WorkspaceId, string Name, int Visibility, bool IsArchived, bool IsStarred, DateTimeOffset CreatedAt);
+    public sealed record BoardDto(Guid Id, Guid WorkspaceId, string Name, BoardVisibility Visibility, bool IsArchived, bool IsStarred, DateTimeOffset CreatedAt);
     public sealed record BoardListDto(Guid Id, Guid BoardId, string Name, double Position, bool IsArchived, DateTimeOffset CreatedAt, int CardCount);
     public sealed record CardDto(Guid Id, Guid ListId, string Title, string Description, double Position, DateTimeOffset? DueDate, bool IsArchived, bool IsCompleted, string? CoverColor, DateTimeOffset CreatedAt, int MemberCount, int LabelCount);
     public sealed record NotificationDto(Guid Id, Guid UserId, string Kind, string PayloadJson, bool IsRead, DateTimeOffset? ReadAt, DateTimeOffset CreatedAt);

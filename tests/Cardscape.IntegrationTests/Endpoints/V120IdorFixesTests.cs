@@ -250,7 +250,7 @@ public sealed class V120IdorFixesTests
         RegisterRequest register = new(email, "V120 User", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
     }
@@ -260,7 +260,7 @@ public sealed class V120IdorFixesTests
         HttpResponseMessage response = await client.PostAsJsonAsync(
             "api/workspaces/", new { name = $"WS-{Guid.NewGuid():N}" });
         response.IsSuccessStatusCode.Should().BeTrue();
-        return (await response.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        return (await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
     }
 
     private async Task<BoardDto> CreateBoardAsync(HttpClient client, Guid workspaceId, string name)
@@ -275,7 +275,7 @@ public sealed class V120IdorFixesTests
                 visibility = 0
             });
         response.IsSuccessStatusCode.Should().BeTrue();
-        return (await response.Content.ReadFromJsonAsync<BoardDto>())!;
+        return (await response.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
     }
 
     private async Task<(BoardDto Board, BoardListDto List, CardDto Card)> SeedBoardListCardAsync(HttpClient client)
@@ -285,7 +285,7 @@ public sealed class V120IdorFixesTests
 
         HttpResponseMessage createList = await client.PostAsJsonAsync(
             "api/lists/", new { boardId = board.Id, name = "List" });
-        BoardListDto list = (await createList.Content.ReadFromJsonAsync<BoardListDto>())!;
+        BoardListDto list = (await createList.Content.ReadFromJsonAsync<BoardListDto>(TestJson.Options))!;
         CardDto card = await CreateCardAsync(client, list.Id, "Card");
         return (board, list, card);
     }
@@ -295,7 +295,7 @@ public sealed class V120IdorFixesTests
         HttpResponseMessage response = await client.PostAsJsonAsync(
             "api/cards/", new { listId, title, description = (string?)null });
         response.IsSuccessStatusCode.Should().BeTrue();
-        return (await response.Content.ReadFromJsonAsync<CardDto>())!;
+        return (await response.Content.ReadFromJsonAsync<CardDto>(TestJson.Options))!;
     }
 
     private static async Task<Guid> PostCommentAsync(HttpClient client, Guid cardId, string body)

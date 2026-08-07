@@ -114,14 +114,21 @@ public class SamlEndpointsTests
     }
 
     [Fact]
-    public async Task Login_ForUnknownSlug_Returns404()
+    public async Task Login_ForUnknownSlug_Returns501()
     {
+        // BETA-2-#12 — see SamlAuthenticationHandler.cs. The
+        // handler is registered (so the static /saml/{slug}/login
+        // fallback that returns 501 is correctly bypassed), but
+        // the per-workspace IdP config is missing, so the
+        // request cannot be processed. The truthful status is
+        // 501, not 404 — see the BETA-2-#12 comment for why
+        // 404 would hide the failure mode from operators.
         HttpClient client = _factory.CreateApiClient();
         string slug = $"missing-{Guid.NewGuid():N}";
 
         HttpResponseMessage response = await client.GetAsync($"saml/{slug}/login", TestContext.Current.CancellationToken);
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.Should().Be(HttpStatusCode.NotImplemented);
     }
 
     // ── helpers ───────────────────────────────────────────
@@ -132,7 +139,7 @@ public class SamlEndpointsTests
         RegisterRequest register = new(email, "SAML Owner", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        return (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        return (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
     }
 
     private static async Task<SamlConfigResult> ConfigureSamlConnection(
@@ -146,7 +153,7 @@ public class SamlEndpointsTests
             "api/workspaces/",
             new CreateWorkspaceRequest($"SAML Workspace {workspaceSlug}"));
         createWorkspace.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto workspace = (await createWorkspace.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto workspace = (await createWorkspace.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
 
         HttpResponseMessage configure = await client.PostAsJsonAsync(
             $"api/workspaces/{workspace.Id}/saml/",
@@ -211,7 +218,7 @@ public class SamlEndpointsTests
             "api/workspaces/",
             new CreateWorkspaceRequest($"SAML Workspace {workspaceSlug}"));
         createWorkspace.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto workspace = (await createWorkspace.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto workspace = (await createWorkspace.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
 
         HttpResponseMessage configure = await client.PostAsJsonAsync(
             $"api/workspaces/{workspace.Id}/saml/",

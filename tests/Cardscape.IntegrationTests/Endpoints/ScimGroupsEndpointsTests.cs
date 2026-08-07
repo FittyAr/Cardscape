@@ -37,14 +37,14 @@ public class ScimGroupsEndpointsTests
         HttpResponseMessage wsResp = await admin.PostAsJsonAsync(
             "api/workspaces/", new CreateWorkspaceRequest("SCIM Groups List WS"), TestContext.Current.CancellationToken);
         wsResp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         // Issue a SCIM token scoped to that workspace.
         HttpResponseMessage issueResp = await admin.PostAsJsonAsync(
             $"api/workspaces/{ws.Id}/scim/tokens", new { name = "Okta Groups" }, TestContext.Current.CancellationToken);
         issueResp.IsSuccessStatusCode.Should().BeTrue();
         ScimIssueResponseDto issue =
-            (await issueResp.Content.ReadFromJsonAsync<ScimIssueResponseDto>(TestContext.Current.CancellationToken))!;
+            (await issueResp.Content.ReadFromJsonAsync<ScimIssueResponseDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         // The IdP now calls /scim/v2/Groups with the SCIM
         // bearer; the workspace id is the only group it
@@ -56,7 +56,7 @@ public class ScimGroupsEndpointsTests
         HttpResponseMessage listResp = await idp.GetAsync("scim/v2/Groups", TestContext.Current.CancellationToken);
         listResp.IsSuccessStatusCode.Should().BeTrue();
         ScimListResponseBody? list =
-            (await listResp.Content.ReadFromJsonAsync<ScimListResponseBody>(TestContext.Current.CancellationToken))!;
+            (await listResp.Content.ReadFromJsonAsync<ScimListResponseBody>(TestJson.Options, TestContext.Current.CancellationToken))!;
         list.Should().NotBeNull();
         list!.TotalResults.Should().Be(1);
         list.Resources.Should().HaveCount(1);
@@ -80,12 +80,12 @@ public class ScimGroupsEndpointsTests
         HttpResponseMessage wsResp = await admin.PostAsJsonAsync(
             "api/workspaces/", new CreateWorkspaceRequest("SCIM Groups Create WS"), TestContext.Current.CancellationToken);
         wsResp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         HttpResponseMessage issueResp = await admin.PostAsJsonAsync(
             $"api/workspaces/{ws.Id}/scim/tokens", new { name = "Okta Groups" }, TestContext.Current.CancellationToken);
         ScimIssueResponseDto issue =
-            (await issueResp.Content.ReadFromJsonAsync<ScimIssueResponseDto>(TestContext.Current.CancellationToken))!;
+            (await issueResp.Content.ReadFromJsonAsync<ScimIssueResponseDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         HttpClient idp = _factory.CreateApiClient();
         idp.DefaultRequestHeaders.Authorization =
@@ -98,7 +98,7 @@ public class ScimGroupsEndpointsTests
             "scim/v2/Groups", new { displayName = "Provisioned From IdP" }, TestContext.Current.CancellationToken);
         createResp.StatusCode.Should().Be(HttpStatusCode.Created);
         ScimGroupBody? created =
-            (await createResp.Content.ReadFromJsonAsync<ScimGroupBody>(TestContext.Current.CancellationToken))!;
+            (await createResp.Content.ReadFromJsonAsync<ScimGroupBody>(TestJson.Options, TestContext.Current.CancellationToken))!;
         created.Should().NotBeNull();
         created!.DisplayName.Should().Be("Provisioned From IdP");
         created.Id.Should().StartWith("workspace-");
@@ -120,7 +120,7 @@ public class ScimGroupsEndpointsTests
         // the admin GET is the end-to-end check.
         HttpResponseMessage wsListResp = await admin.GetAsync("api/workspaces/", TestContext.Current.CancellationToken);
         wsListResp.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto[]? all = await wsListResp.Content.ReadFromJsonAsync<WorkspaceDto[]>(TestContext.Current.CancellationToken);
+        WorkspaceDto[]? all = await wsListResp.Content.ReadFromJsonAsync<WorkspaceDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         all.Should().NotBeNull();
         all!.Select(w => w.Name).Should().Contain("Provisioned From IdP");
     }
@@ -133,7 +133,7 @@ public class ScimGroupsEndpointsTests
         RegisterRequest register = new(email, "Scim Groups User", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        return (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        return (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
     }
 
     // ── DTOs (local; mirror the API surface) ───────────────────

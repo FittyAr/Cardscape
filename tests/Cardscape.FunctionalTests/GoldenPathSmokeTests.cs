@@ -41,7 +41,7 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
         registerResponse.IsSuccessStatusCode.Should().BeTrue(
             $"register must succeed. Body: {await registerResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
-        AuthResponse? auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(TestContext.Current.CancellationToken);
+        AuthResponse? auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options, TestContext.Current.CancellationToken);
         auth.Should().NotBeNull();
         auth!.AccessToken.Should().NotBeNullOrWhiteSpace();
         client.DefaultRequestHeaders.Authorization =
@@ -53,7 +53,7 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
         wsResponse.IsSuccessStatusCode.Should().BeTrue(
             $"workspace create must succeed. Body: {await wsResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
-        WorkspaceDto? workspace = await wsResponse.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken);
+        WorkspaceDto? workspace = await wsResponse.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken);
         workspace.Should().NotBeNull();
         workspace!.Name.Should().Be(workspaceRequest.Name);
 
@@ -69,7 +69,7 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
         boardResponse.IsSuccessStatusCode.Should().BeTrue(
             $"board create must succeed. Body: {await boardResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
-        BoardDto? board = await boardResponse.Content.ReadFromJsonAsync<BoardDto>(TestContext.Current.CancellationToken);
+        BoardDto? board = await boardResponse.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options, TestContext.Current.CancellationToken);
         board.Should().NotBeNull();
         board!.WorkspaceId.Should().Be(workspace.Id);
 
@@ -79,14 +79,14 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
         listResponse.IsSuccessStatusCode.Should().BeTrue(
             $"list create must succeed. Body: {await listResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
-        BoardListDto? list = await listResponse.Content.ReadFromJsonAsync<BoardListDto>(TestContext.Current.CancellationToken);
+        BoardListDto? list = await listResponse.Content.ReadFromJsonAsync<BoardListDto>(TestJson.Options, TestContext.Current.CancellationToken);
         list.Should().NotBeNull();
 
         // ── 5. Second list (target for the move) ──────────────
         var secondListRequest = new { BoardId = board.Id, Name = "Doing" };
         HttpResponseMessage secondListResponse = await client.PostAsJsonAsync("api/lists/", secondListRequest, TestContext.Current.CancellationToken);
         secondListResponse.IsSuccessStatusCode.Should().BeTrue();
-        BoardListDto? secondList = await secondListResponse.Content.ReadFromJsonAsync<BoardListDto>(TestContext.Current.CancellationToken);
+        BoardListDto? secondList = await secondListResponse.Content.ReadFromJsonAsync<BoardListDto>(TestJson.Options, TestContext.Current.CancellationToken);
         secondList.Should().NotBeNull();
 
         // ── 6. Card ───────────────────────────────────────────
@@ -95,7 +95,7 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
         cardResponse.IsSuccessStatusCode.Should().BeTrue(
             $"card create must succeed. Body: {await cardResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
-        CardDto? card = await cardResponse.Content.ReadFromJsonAsync<CardDto>(TestContext.Current.CancellationToken);
+        CardDto? card = await cardResponse.Content.ReadFromJsonAsync<CardDto>(TestJson.Options, TestContext.Current.CancellationToken);
         card.Should().NotBeNull();
         card!.Title.Should().Be(cardRequest.Title);
         card.ListId.Should().Be(list.Id);
@@ -106,7 +106,7 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
         moveResponse.IsSuccessStatusCode.Should().BeTrue(
             $"card move must succeed. Body: {await moveResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
 
-        CardDto? movedCard = await moveResponse.Content.ReadFromJsonAsync<CardDto>(TestContext.Current.CancellationToken);
+        CardDto? movedCard = await moveResponse.Content.ReadFromJsonAsync<CardDto>(TestJson.Options, TestContext.Current.CancellationToken);
         movedCard.Should().NotBeNull();
         movedCard!.ListId.Should().Be(secondList.Id);
 
@@ -118,7 +118,7 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
         // ── 9. Verify the card is archived ────────────────────
         HttpResponseMessage getCardResponse = await client.GetAsync($"api/cards/{card.Id}", TestContext.Current.CancellationToken);
         getCardResponse.IsSuccessStatusCode.Should().BeTrue();
-        CardDto? fetched = await getCardResponse.Content.ReadFromJsonAsync<CardDto>(TestContext.Current.CancellationToken);
+        CardDto? fetched = await getCardResponse.Content.ReadFromJsonAsync<CardDto>(TestJson.Options, TestContext.Current.CancellationToken);
         fetched.Should().NotBeNull();
         fetched!.IsArchived.Should().BeTrue();
     }

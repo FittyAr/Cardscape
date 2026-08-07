@@ -73,7 +73,7 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
         HttpResponseMessage createWs = await ownerClient.PostAsJsonAsync(
             "api/workspaces/", new CreateWorkspaceRequest("Acme EU", Region: Domain.Workspaces.Region.Europe), TestContext.Current.CancellationToken);
         createWs.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         workspace.Region.Should().Be(Domain.Workspaces.Region.Europe);
 
         // Arrange — build a secondary host whose deployment region
@@ -151,7 +151,7 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
         HttpResponseMessage createWs = await ownerClient.PostAsJsonAsync(
             "api/workspaces/", new CreateWorkspaceRequest("Acme EU 2", Region: Domain.Workspaces.Region.Europe), TestContext.Current.CancellationToken);
         createWs.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         // Arrange — secondary host whose deployment region is
         // Europe (the same as the workspace). The guard should
@@ -191,7 +191,7 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
         // Assert — same-region reads are not rejected by the
         // guard, so the request reaches the inner handler.
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        WorkspaceDto returned = (await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceDto returned = (await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         returned.Id.Should().Be(workspace.Id);
     }
 
@@ -209,7 +209,7 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
         HttpResponseMessage createWs = await ownerClient.PostAsJsonAsync(
             "api/workspaces/", new CreateWorkspaceRequest("Acme APAC", Region: Domain.Workspaces.Region.AsiaPacific), TestContext.Current.CancellationToken);
         createWs.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         // Act — read the workspace through the original client
         // (deployment still Unspecified).
@@ -254,7 +254,7 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
         HttpResponseMessage createWs = await ownerClient.PostAsJsonAsync(
             "api/workspaces/", new CreateWorkspaceRequest("ConfigInjection Probe", Region: Domain.Workspaces.Region.Europe), TestContext.Current.CancellationToken);
         createWs.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         // Read the workspace through a fresh aux host whose
         // deployment region matches the workspace. The
@@ -289,7 +289,7 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
             $"api/workspaces/{workspace.Id}", TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        WorkspaceDto returned = (await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestContext.Current.CancellationToken))!;
+        WorkspaceDto returned = (await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         returned.Id.Should().Be(workspace.Id);
     }
 
@@ -299,6 +299,6 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
         RegisterRequest register = new(email, "Region Guard User", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
-        return (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        return (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
     }
 }

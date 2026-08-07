@@ -63,7 +63,7 @@ public sealed class RealtimeHubTests
         HttpResponseMessage create = await client.PostAsJsonAsync(
             "api/cards/", new { listId, title = "Live card", description = (string?)null }, TestContext.Current.CancellationToken);
         create.IsSuccessStatusCode.Should().BeTrue();
-        CardDto card = (await create.Content.ReadFromJsonAsync<CardDto>(TestContext.Current.CancellationToken))!;
+        CardDto card = (await create.Content.ReadFromJsonAsync<CardDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         card.Title.Should().Be("Live card");
 
         // The list shows the new card, proving the broadcast flow
@@ -72,7 +72,7 @@ public sealed class RealtimeHubTests
         HttpResponseMessage list = await client.GetAsync(
             $"api/cards/?boardId={boardId}&includeArchived=false", TestContext.Current.CancellationToken);
         list.IsSuccessStatusCode.Should().BeTrue();
-        CardSummaryDto[]? cards = await list.Content.ReadFromJsonAsync<CardSummaryDto[]>(TestContext.Current.CancellationToken);
+        CardSummaryDto[]? cards = await list.Content.ReadFromJsonAsync<CardSummaryDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
         cards.Should().NotBeNull().And.Contain(c => c.Id == card.Id);
     }
 
@@ -84,7 +84,7 @@ public sealed class RealtimeHubTests
             "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", request);
         r.IsSuccessStatusCode.Should().BeTrue();
-        return (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
+        return (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
     }
 
     private static async Task<(Guid workspaceId, Guid boardId)> SeedWorkspaceBoardAsync(HttpClient client)
@@ -92,12 +92,12 @@ public sealed class RealtimeHubTests
         HttpResponseMessage ws = await client.PostAsJsonAsync(
             "api/workspaces/", new { name = $"hub-ws-{Guid.NewGuid():N}" });
         ws.IsSuccessStatusCode.Should().BeTrue();
-        WorkspaceDto workspace = (await ws.Content.ReadFromJsonAsync<WorkspaceDto>())!;
+        WorkspaceDto workspace = (await ws.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
 
         HttpResponseMessage bd = await client.PostAsJsonAsync(
             "api/boards/", new { workspaceId = workspace.Id, name = "Hub board", description = (string?)null, visibility = 0 });
         bd.IsSuccessStatusCode.Should().BeTrue();
-        BoardDto board = (await bd.Content.ReadFromJsonAsync<BoardDto>())!;
+        BoardDto board = (await bd.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
 
         return (workspace.Id, board.Id);
     }
@@ -107,7 +107,7 @@ public sealed class RealtimeHubTests
         HttpResponseMessage response = await client.PostAsJsonAsync(
             "api/lists/", new { boardId, name });
         response.IsSuccessStatusCode.Should().BeTrue();
-        BoardListDto list = (await response.Content.ReadFromJsonAsync<BoardListDto>())!;
+        BoardListDto list = (await response.Content.ReadFromJsonAsync<BoardListDto>(TestJson.Options))!;
         return list.Id;
     }
 }
