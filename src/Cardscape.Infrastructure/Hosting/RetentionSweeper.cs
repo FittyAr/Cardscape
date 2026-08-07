@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Cardscape.Application.Abstractions;
 using Cardscape.Domain.Members;
 using Microsoft.EntityFrameworkCore;
@@ -93,7 +94,16 @@ public sealed class RetentionSweeper(
         }
     }
 
-    private async Task SweepOnceAsync(CancellationToken ct)
+    /// <summary>
+    /// Runs one full retention sweep: anonymises past-grace-period users,
+    /// purges old activity entries, purges expired idempotency keys. Marked
+    /// <c>internal</c> (not <c>private</c>) so the unit test
+    /// <c>RetentionSweeperTests</c> can drive a deterministic sweep without
+    /// having to spin up the full hosted-service loop. The
+    /// <c>InternalsVisibleTo</c> grant in <c>Cardscape.Infrastructure.csproj</c>
+    /// gates the visibility to the test assembly only.
+    /// </summary>
+    internal async Task SweepOnceAsync(CancellationToken ct)
     {
         DateTimeOffset now = clock.UtcNow;
         DateTimeOffset anonymiseCutoff = now.AddDays(-_userGracePeriodDays);
@@ -107,22 +117,45 @@ public sealed class RetentionSweeper(
         // in batches to avoid loading the entire users
         // table.
         //
-        // BETA-7-#3 — see test-results/BETA-TEST-REPORT.md.
-        // `User.IsDeleted` shadows the base
-        // `Entity<TId>.IsDeleted` with the `new` keyword
-        // and EF Core's LINQ translator can't disambiguate
-        // the two; the previous query threw
-        // `InvalidOperationException` every sweep tick.
-        // Going through `EF.Property<bool>(u, "IsDeleted")`
-        // routes the read through EF's metadata pipeline
-        // and bypasses the C# property override.
-        var deletedUsers = await db.Users
-            .Where(u => EF.Property<bool>(u, "IsDeleted")
-                && !u.IsAnonymised
-                && u.DeletedAt != null
-                && u.DeletedAt <= anonymiseCutoff)
-            .Take(_batchSize)
-            .ToListAsync(ct);
+        // EF Core 10 + SQLite cannot translate
+        // `DateTimeOffset? <= DateTimeOffset` lifted
+        // comparisons (the same limitation
+        // `RevokedTokenRepository.PurgeExpiredAsync`
+        // documents in detail — see the long comment
+        // block at the top of that method). The
+        // translator throws
+        // `InvalidOperationException: The LINQ
+        // expression … could not be translated` at
+        // runtime, and the sweeper caught that every
+        // tick in production (the docker log captured
+        // it; see
+        // `tests/Cardscape.UnitTests/Hosting/RetentionSweeperTests.cs`
+        // for the regression test).
+        //
+        // The fix mirrors the `RevokedTokenRepository`
+        // pattern: keep the translatable pieces
+        // (`IsDeleted`, `!IsAnonymised`) in the LINQ
+        // query, stream the candidates with
+        // `AsAsyncEnumerable`, and apply the
+        // `DeletedAt` null + range check on the client.
+        // The batch cap (`_batchSize`) is enforced
+        // after the client-side filter so the per-tick
+        // DB write stays bounded.
+        List<Domain.Members.User> deletedUsers = new(_batchSize);
+        await foreach (Domain.Members.User user in db.Users
+            .Where(u => u.IsDeleted && !u.IsAnonymised)
+            .AsAsyncEnumerable()
+            .WithCancellation(ct))
+        {
+            if (user.DeletedAt is { } deletedAt && deletedAt <= anonymiseCutoff)
+            {
+                deletedUsers.Add(user);
+                if (deletedUsers.Count >= _batchSize)
+                {
+                    break;
+                }
+            }
+        }
         foreach (Domain.Members.User user in deletedUsers)
         {
             user.Anonymise(now);
@@ -135,10 +168,17 @@ public sealed class RetentionSweeper(
                 deletedUsers.Count);
         }
 
-        // 2. Purge old activity feed entries.
-        int activityDeleted = await db.Activities
-            .Where(a => a.OccurredAt <= activityCutoff)
-            .ExecuteDeleteAsync(ct);
+        // 2. Purge old activity feed entries. Same
+        // `DateTimeOffset` translation limitation
+        // applies here — see
+        // `RevokedTokenRepository.PurgeExpiredAsync`.
+        // Stream + client-filter + bulk delete by id.
+        int activityDeleted = await PurgeByDateCutoffAsync(
+            db.Activities,
+            a => a.OccurredAt,
+            a => a.Id,
+            activityCutoff,
+            ct);
         if (activityDeleted > 0)
         {
             logger.LogInformation(
@@ -154,9 +194,12 @@ public sealed class RetentionSweeper(
         // IdempotencyKey.RetentionWindow; we read it
         // here so a future change in the domain is
         // picked up without touching the sweeper.
-        int idempotencyDeleted = await db.IdempotencyKeys
-            .Where(k => k.ExpiresAt <= now)
-            .ExecuteDeleteAsync(ct);
+        int idempotencyDeleted = await PurgeByDateCutoffAsync(
+            db.IdempotencyKeys,
+            k => k.ExpiresAt,
+            k => k.Id,
+            now,
+            ct);
         if (idempotencyDeleted > 0)
         {
             logger.LogInformation(
@@ -173,6 +216,74 @@ public sealed class RetentionSweeper(
         // (Cardscape:Retention:AuditDays) so the wiring
         // is in place when the table is added.
         _ = _auditRetentionDays;
+    }
+
+    /// <summary>
+    /// Bulk-delete every row whose projected <c>date</c>
+    /// is on or before <paramref name="cutoff"/>. The
+    /// EF Core 10 SQLite provider can't translate the
+    /// lifted <c>DateTimeOffset? &lt;= DateTimeOffset</c>
+    /// comparison, so the date filter runs on the
+    /// client (over an <c>AsAsyncEnumerable</c> stream)
+    /// and the actual delete is a single
+    /// <c>DELETE … WHERE Id IN (…)</c> batched
+    /// by the primary key. Keeping the filter logic
+    /// in a single helper means the activity sweep
+    /// and the idempotency sweep both use the same
+    /// shape and any future fix to the EF Core
+    /// translation (or a switch to a different
+    /// provider) lands in one place.
+    /// </summary>
+    private static async Task<int> PurgeByDateCutoffAsync<TEntity, TId>(
+        IQueryable<TEntity> table,
+        Func<TEntity, DateTimeOffset> dateSelector,
+        Func<TEntity, TId> idSelector,
+        DateTimeOffset cutoff,
+        CancellationToken ct)
+        where TEntity : class
+        where TId : notnull
+    {
+        List<TId> ids = new();
+        await foreach (TEntity row in table.AsAsyncEnumerable().WithCancellation(ct))
+        {
+            if (dateSelector(row) <= cutoff)
+            {
+                ids.Add(idSelector(row));
+            }
+        }
+
+        if (ids.Count == 0)
+        {
+            return 0;
+        }
+
+        // The `Contains` predicate is translatable
+        // across every supported provider (SQLite,
+        // PostgreSQL, MariaDB) and the IN-list is
+        // parameterised so the bulk delete is safe
+        // from injection.
+        return await table
+            .Where(BuildIdInPredicate<TEntity, TId>(ids))
+            .Cast<TEntity>()
+            .ExecuteDeleteAsync(ct);
+    }
+
+    private static Expression<Func<TEntity, bool>> BuildIdInPredicate<TEntity, TId>(
+        IReadOnlyCollection<TId> ids)
+        where TEntity : class
+        where TId : notnull
+    {
+        ParameterExpression pe = Expression.Parameter(typeof(TEntity), "e");
+        MemberExpression idAccess = Expression.Property(pe, "Id");
+        System.Reflection.MethodInfo containsMethod = typeof(Enumerable)
+            .GetMethods()
+            .First(m => m.Name == nameof(Enumerable.Contains) && m.GetParameters().Length == 2)
+            .MakeGenericMethod(typeof(TId));
+        MethodCallExpression containsCall = Expression.Call(
+            containsMethod,
+            Expression.Constant(ids, typeof(IReadOnlyCollection<TId>)),
+            idAccess);
+        return Expression.Lambda<Func<TEntity, bool>>(containsCall, pe);
     }
 }
 

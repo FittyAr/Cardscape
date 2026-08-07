@@ -74,4 +74,17 @@
     <ProjectReference Include="..\Cardscape.Application\Cardscape.Application.csproj" />
   </ItemGroup>
 
+  <!--
+    Grant the unit-test assembly access to internal members.
+    The `RetentionSweeper.SweepOnceAsync` method is marked
+    `internal` (not `private`) so `RetentionSweeperTests`
+    can drive a deterministic sweep without having to spin
+    up the full `BackgroundService` loop. The grant is
+    scoped to the test assembly only; no other consumer of
+    `Cardscape.Infrastructure` can see internals.
+  -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Cardscape.UnitTests" />
+  </ItemGroup>
+
 </Project>
