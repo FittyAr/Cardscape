@@ -26,7 +26,7 @@ namespace Cardscape.Mcp.Tools;
 /// </list>
 /// </summary>
 [McpServerToolType]
-public sealed class MissingTools
+public sealed class V110Tools
 {
     // ── Card Aging (P3.1) ────────────────────────────────
     [McpServerTool(Name = "cards_set_aging_mode")]
