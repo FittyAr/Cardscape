@@ -13,8 +13,8 @@ using Cardscape.Domain.Authentication.Totp.Errors;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
-using Cardscape.Domain.Common;
 using Cardscape.Domain.Comments;
+using Cardscape.Domain.Common;
 using Cardscape.Domain.Idempotency;
 using Cardscape.Domain.Integrations.GoogleCalendar;
 using Cardscape.Domain.Labels;
@@ -882,7 +882,7 @@ public sealed class FakeGoogleCalendarSyncService : IGoogleCalendarSyncService
             DateTimeOffset.UtcNow.AddHours(24))));
 }
 
-/// <summary>BETA-7-#1 — see test-results/BETA-TEST-REPORT.md. No-op in-memory ISearchIndex for the test suite. The production InMemorySearchIndex lives in Cardscape.Infrastructure; we keep this fake here so the test projects can resolve the new dependency without pulling in EF / Infrastructure.</summary>
+/// <summary>BETA-7-#1 â€” see test-results/BETA-TEST-REPORT.md. No-op in-memory ISearchIndex for the test suite. The production InMemorySearchIndex lives in Cardscape.Infrastructure; we keep this fake here so the test projects can resolve the new dependency without pulling in EF / Infrastructure.</summary>
 public sealed class FakeSearchIndex : ISearchIndex
 {
     public List<Guid> IndexedCardIds { get; } = [];

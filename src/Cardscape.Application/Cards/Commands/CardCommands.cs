@@ -993,5 +993,9 @@ public static class CardMappingExtensions
             {
                 IsSnoozed = snooze.IsActive(now),
                 SnoozeUntil = snooze.Until
-            }) with { MirrorOfCardId = mirrorOfCardId };
+            })
+        with
+        {
+            MirrorOfCardId = mirrorOfCardId
+        };
 }

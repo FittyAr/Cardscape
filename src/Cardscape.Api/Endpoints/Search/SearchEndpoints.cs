@@ -21,21 +21,25 @@ public static class SearchEndpoints
         // endpoint now accepts BOTH the integer form
         // (`?kind=0`, kept for back-compat) and the name
         // form (`?kind=card`, the new friendly surface).
-        // The name form wins when both are supplied.
+        // We take `kind` as a raw `string?` and parse it
+        // inside the handler — declaring it as `int?` would
+        // make ASP.NET's binder reject the request with 400
+        // before the handler ever runs, which is exactly the
+        // bug we are fixing.
         group.MapGet("/", async (
             string? q,
             Guid? boardId,
-            int? kind,
-            string? kindName,
+            string? kind,
             int? page,
             int? pageSize,
             IMessageBus bus,
             CancellationToken ct) =>
         {
             SearchHitKind? resolvedKind = null;
-            if (!string.IsNullOrWhiteSpace(kindName))
+            if (!string.IsNullOrWhiteSpace(kind))
             {
-                if (Enum.TryParse<SearchHitKind>(kindName, ignoreCase: true, out SearchHitKind parsed))
+                if (Enum.TryParse<SearchHitKind>(kind, ignoreCase: true, out SearchHitKind parsed) &&
+                    Enum.IsDefined(typeof(SearchHitKind), parsed))
                 {
                     resolvedKind = parsed;
                 }
@@ -44,13 +48,9 @@ public static class SearchEndpoints
                     return Results.BadRequest(new
                     {
                         code = "search.kind_invalid",
-                        message = $"Unknown kind '{kindName}'. Valid values: {string.Join(", ", Enum.GetNames<SearchHitKind>())}."
+                        message = $"Unknown kind '{kind}'. Valid values: {string.Join(", ", Enum.GetNames<SearchHitKind>())}."
                     });
                 }
-            }
-            else if (kind is int kindInt && Enum.IsDefined(typeof(SearchHitKind), kindInt))
-            {
-                resolvedKind = (SearchHitKind)kindInt;
             }
 
             var result = await bus.InvokeAsync<Result<SearchPageDto>>(

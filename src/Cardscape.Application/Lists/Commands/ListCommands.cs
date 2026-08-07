@@ -53,9 +53,13 @@ public static class CreateListCommandHandler
         // appending one Position unit past the max.
         IReadOnlyList<BoardList> existing = await lists.ListForBoardAsync(
             new BoardId(command.BoardId), includeArchived: true, cancellationToken);
+        // Position is a `readonly record struct` wrapping a double;
+        // `Max(l => l.Position)` would have to compare the struct, which
+        // is not IComparable. Project to the underlying double so
+        // `Enumerable.Max` can compare.
         Position position = existing.Count == 0
             ? Position.Start()
-            : Position.After(existing.Max(l => l.Position));
+            : Position.From(existing.Max(l => l.Position.Value) + 1.0d);
 
         var listResult = BoardList.Create(
             BoardListId.New(),
