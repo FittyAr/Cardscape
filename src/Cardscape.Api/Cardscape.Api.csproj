@@ -71,4 +71,20 @@
     <EmbeddedResource Include="..\Cardscape.Infrastructure\Persistence\Migrations\*.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!--
+      BETA-8-UI-#3 + BETA-8-UI-#9 — see test-results/r8/r8-report.md.
+      The per-culture SharedResource.{culture}.resx files live in the
+      Web project. The translation endpoint in the API reads them
+      from the file system at runtime (AppContext.BaseDirectory),
+      so we copy the Spanish resx into the API's output directory
+      under Resources/. CopyToOutputDirectory=PreserveNewest ensures
+      a fresh build ships the file.
+    -->
+    <Content Include="..\Cardscape.Web\Resources\SharedResource.es.resx"
+             Link="Resources\SharedResource.es.resx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

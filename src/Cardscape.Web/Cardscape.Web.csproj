@@ -56,34 +56,23 @@
   </ItemGroup>
 
   <!--
-    The Spanish .resx is shipped as a static web asset so a future
-    client-side CulturePicker can fetch it via HttpClient and
-    switch cultures without going through the
-    `CultureInfo.DefaultThreadCurrentCulture` path. Until that
-    picker is wired, the localizer uses the embedded
-    `SharedResource.resx` (English) at runtime.
+    BETA-8-UI-#3 + BETA-8-UI-#9 — see test-results/r8/r8-report.md.
+    The per-culture SharedResource.{culture}.resx files (es, …)
+    are copied to the API's output directory as a static
+    Resource at <root>/Resources/SharedResource.{culture}.resx
+    so the API's /api/internal/translate/{culture} endpoint can
+    read them from the file system at runtime. The invariant
+    SharedResource.resx stays embedded in the Web assembly
+    (the SDK's default behaviour) and is served by the
+    IStringLocalizer fallback path.
+
+    CopyToOutputDirectory=PreserveNewest ships the file into
+    the bin folder of the referencing project (the API). The
+    Web app itself does not need this file at runtime, only
+    the API does.
   -->
   <ItemGroup>
-    <!--
-      The Spanish .resx is shipped as a static web asset so the
-      client-side CultureSwitcher can fetch it (the default English
-      culture is served from the assembly-embedded resource via
-      the IStringLocalizer fallback — see
-      Services/CultureSwitcher.cs).
-
-      BETA-2-UI-#8 fix — the previous `<None … Pack="true" />`
-      entry was being eaten by the SDK before the static web
-      assets pipeline ran, so `bin/Release/net10.0/wwwroot/
-      Resources/SharedResource.es.resx` was empty and the
-      CultureSwitcher received a 404. Switching to `<Content>`
-      with CopyToOutputDirectory = PreserveNewest makes the
-      file part of the Blazor static-web-assets manifest and
-      it ships correctly into the API's wwwroot when the API
-      project is built.
-    -->
-    <Content Include="Resources\SharedResource.es.resx"
-             Pack="true"
-             PackagePath="wwwroot\Resources\SharedResource.es.resx">
+    <Content Include="Resources\SharedResource.es.resx" Link="Resources\SharedResource.es.resx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

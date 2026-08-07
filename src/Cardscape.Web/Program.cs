@@ -90,6 +90,19 @@ builder.Services.AddLocalization(options =>
 // src/Cardscape.Web/Services/CultureSwitcher.cs for the full
 // rationale). The picker is a singleton; the localizer wraps the
 // standard StringLocalizer<SharedResource> for the fallback path.
+//
+// BETA-8-UI-#3 + BETA-8-UI-#9 — see test-results/r8/r8-report.md.
+// The wrapper localizer is registered for BOTH the generic
+// (IStringLocalizer<SharedResource>, which every component
+// injects) and the non-generic (IStringLocalizer) flavours. The
+// previous registration only mapped the non-generic interface
+// (and the bare class), so the generic-resolution path bypassed
+// the wrapper and every @L["…"] expression kept rendering the
+// embedded English string even after the picker called
+// SetCultureAsync("es"). The persistence half of #9 is fixed by
+// the same wiring: the wrapper reads from the singleton
+// CultureSwitcher dictionary, which InitializeAsync hydrates
+// from localStorage on first render.
 builder.Services.AddSingleton<Cardscape.Web.Services.CultureSwitcher>();
 builder.Services.AddHttpClient("Cardscape.Resources", client =>
 {
@@ -99,9 +112,11 @@ builder.Services.AddHttpClient("Cardscape.Resources", client =>
     // production static-asset path both resolve.
     client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 });
-builder.Services.AddSingleton<Cardscape.Web.Services.HttpBackedStringLocalizer>();
+builder.Services.AddSingleton<Cardscape.Web.Services.HttpBackedStringLocalizer<SharedResource>>();
+builder.Services.AddSingleton<Microsoft.Extensions.Localization.IStringLocalizer<SharedResource>>(sp =>
+    sp.GetRequiredService<Cardscape.Web.Services.HttpBackedStringLocalizer<SharedResource>>());
 builder.Services.AddSingleton<Microsoft.Extensions.Localization.IStringLocalizer>(sp =>
-    sp.GetRequiredService<Cardscape.Web.Services.HttpBackedStringLocalizer>());
+    sp.GetRequiredService<Cardscape.Web.Services.HttpBackedStringLocalizer<SharedResource>>());
 
 // ── Auth + state providers ───────────────────────────────────────────
 builder.Services.AddAuthorizationCore();
@@ -109,7 +124,6 @@ builder.Services.AddSingleton<TokenStore>();
 builder.Services.AddSingleton<AuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthStateProvider>());
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<IStringLocalizer<SharedResource>, StringLocalizer<SharedResource>>();
 
 // ── HTTP client to the API ───────────────────────────────────────────
 builder.Services.AddTransient<AuthTokenHandler>();

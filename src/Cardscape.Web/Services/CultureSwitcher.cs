@@ -40,28 +40,49 @@ namespace Cardscape.Web.Services;
 /// stays at <see cref="CultureInfo.InvariantCulture"/>, and the
 /// Blazor culture-change detection never fires.
 /// </para>
+/// <para>
+/// BETA-8-UI-#3 + BETA-8-UI-#9 — see test-results/r8/r8-report.md.
+/// The previous incarnation was a non-generic wrapper registered
+/// only as <see cref="IStringLocalizer"/>. Components in this
+/// app inject <see cref="IStringLocalizer{T}"/> (the generic
+/// flavour, with <c>SharedResource</c> as the resource marker),
+/// so the wrapper was never resolved: they got the raw
+/// <c>StringLocalizer&lt;SharedResource&gt;</c> from the DI
+/// container, which only knows about the embedded English
+/// resx. Changing the picker updated the dictionary but every
+/// @L["…"] expression still resolved to the English key. The
+/// fix is to expose the wrapper under the generic interface too
+/// (this class implements both) and re-register the DI mappings.
+/// </para>
 /// </summary>
-public sealed class HttpBackedStringLocalizer : IStringLocalizer
+public sealed class HttpBackedStringLocalizer<TResource> : IStringLocalizer<TResource>, IStringLocalizer
 {
-    private readonly IStringLocalizer _fallback;
+    private readonly IStringLocalizer<TResource> _fallback;
     private readonly CultureSwitcher _switcher;
 
-    public HttpBackedStringLocalizer(IStringLocalizer<SharedResource> fallback, CultureSwitcher switcher)
+    public HttpBackedStringLocalizer(IStringLocalizer<TResource> fallback, CultureSwitcher switcher)
     {
         // The generic localizer is the standard
         // StringLocalizer<SharedResource> that reads the
         // embedded SharedResource.resx (English). It is the
         // fallback for the first render before the picker
         // has loaded the static .resx.
-        _fallback = (IStringLocalizer)fallback;
+        _fallback = fallback;
         _switcher = switcher;
     }
 
+    // The two interfaces share `this[string]` / `this[string, params object[]]`
+    // / `GetAllStrings(bool)`. Implementing the public surface against the
+    // generic interface and the non-generic one explicitly keeps the
+    // compiler happy without forcing a runtime cast.
     public LocalizedString this[string name] => Lookup(name, arguments: null);
 
     public LocalizedString this[string name, params object[] arguments] => Lookup(name, arguments);
 
-    public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures)
+    public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures) =>
+        EnumerateAll(includeParentCultures);
+
+    private IEnumerable<LocalizedString> EnumerateAll(bool includeParentCultures)
     {
         foreach (KeyValuePair<string, string> pair in _switcher.GetCurrentTranslations())
         {
@@ -80,8 +101,6 @@ public sealed class HttpBackedStringLocalizer : IStringLocalizer
             yield return s;
         }
     }
-
-    public IStringLocalizer WithCulture(CultureInfo? culture) => this;
 
     private LocalizedString Lookup(string name, object[]? arguments)
     {
@@ -116,7 +135,7 @@ public sealed class HttpBackedStringLocalizer : IStringLocalizer
 /// <see cref="System.Threading.Thread.CurrentCulture"/>; the
 /// runtime culture stays at <see cref="CultureInfo.InvariantCulture"/>
 /// and the localizer reads translations from the dictionary.
-/// See the comment on <see cref="HttpBackedStringLocalizer"/>
+/// See the comment on <see cref="HttpBackedStringLocalizer{TResource}"/>
 /// for the full rationale.
 /// </para>
 /// </summary>
@@ -234,14 +253,15 @@ public sealed class CultureSwitcher
 
     private async Task<IReadOnlyDictionary<string, string>> LoadTranslationsAsync(string culture)
     {
-        // The Spanish .resx is shipped as a static web asset at
-        // /Resources/SharedResource.es.resx, packaged from
-        // src/Cardscape.Web/Resources/SharedResource.es.resx per the
-        // <None Pack="true"> directive in the .csproj. The English
-        // resx is embedded in the assembly as a .NET resource so we
-        // skip the network roundtrip for the default culture (no
-        // file is published for it) and fall back to whatever the
-        // IStringLocalizer in HttpBackedStringLocalizer can resolve.
+        // BETA-8-UI-#3 + BETA-8-UI-#9 — see test-results/r8/r8-report.md.
+        // Translations are now served by GET /api/internal/translate/{culture}
+        // on the API. The previous path (a static /Resources/SharedResource.{c}.resx
+        // file shipped as a Blazor static web asset) was never reachable
+        // because the .resx lived under the Web project's Resources/ tree,
+        // not wwwroot/, so the static-web-assets manifest never included it
+        // and the Blazor client always 404'd the fetch. The new endpoint
+        // reads the embedded SharedResource from the API assembly and
+        // returns the parsed dictionary as JSON.
         if (string.Equals(culture, DefaultCulture, StringComparison.OrdinalIgnoreCase))
         {
             // No HTTP fetch for English; the HttpBackedStringLocalizer
@@ -250,25 +270,28 @@ public sealed class CultureSwitcher
             return EmptyTranslations;
         }
 
-        string url = $"Resources/SharedResource.{culture}.resx";
+        string url = $"api/internal/translate/{culture}";
         using HttpRequestMessage request = new(HttpMethod.Get, url);
         using HttpResponseMessage response = await _http.SendAsync(request);
         response.EnsureSuccessStatusCode();
         await using Stream stream = await response.Content.ReadAsStreamAsync();
-        XDocument doc = XDocument.Load(stream);
-        Dictionary<string, string> dict = new(StringComparer.Ordinal);
-        XNamespace ns = doc.Root?.GetDefaultNamespace() ?? XNamespace.None;
-        foreach (XElement data in doc.Descendants(ns + "data"))
+        TranslationResponse? payload = await JsonSerializer.DeserializeAsync<TranslationResponse>(
+            stream,
+            TranslationJsonOptions);
+        if (payload?.Translations is null)
         {
-            string? name = data.Attribute("name")?.Value;
-            string? value = data.Element(ns + "value")?.Value;
-            if (!string.IsNullOrEmpty(name) && value is not null)
-            {
-                dict[name] = value;
-            }
+            return EmptyTranslations;
         }
-        return dict;
+        return new Dictionary<string, string>(payload.Translations, StringComparer.Ordinal);
     }
+
+    private sealed record TranslationResponse(string Culture, IReadOnlyDictionary<string, string> Translations);
+
+    // CA1869 — cache and reuse the options instance; deserialising
+    // once per culture change is fine but we still don't want a
+    // fresh JsonSerializerOptions each time.
+    private static readonly JsonSerializerOptions TranslationJsonOptions =
+        new(JsonSerializerDefaults.Web);
 
     private static readonly IReadOnlyDictionary<string, string> EmptyTranslations = new Dictionary<string, string>(StringComparer.Ordinal);
 }

@@ -296,6 +296,16 @@ app.MapUserDsrAdminEndpoints();
 // registration.
 app.MapClientLogEndpoint();
 
+// Translation relay for the Blazor client's CultureSwitcher.
+// The static-web-assets manifest does not include .resx files
+// from the Web project's Resources/ tree, so the client cannot
+// fetch them directly. This endpoint reads the embedded
+// SharedResource for the requested culture and returns the
+// parsed key/value map as JSON. See TranslationEndpoint.cs
+// for the rationale and BETA-8-UI-#3 in
+// test-results/r8/r8-report.md.
+app.MapTranslationEndpoint();
+
 // Real-time board hub. Sits at /hubs/board with the same JWT
 // bearer authentication as the REST API; clients bring the
 // access token in the query string (the SignalR client
