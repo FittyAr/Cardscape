@@ -1,4 +1,4 @@
-﻿@page "/boards/{BoardId:guid}"
+@page "/boards/{BoardId:guid}"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using System.Text.Json
 @using Cardscape.Web.Services
@@ -45,7 +45,16 @@ else
         <RadzenCard>
             <RadzenTemplateForm TItem="AddListModel" Data="@addListModel" Submit="@AddList">
                 <RadzenStack Gap="0.5rem">
-                    <RadzenTextBox @bind-Value="addListModel.Name" Placeholder="List name…" Style="width:100%" />
+                    @* BETA-8-UI-#17 — see test-results/r8/r8-report.md.
+                       RadzenTemplateForm's HTML <form> would submit on
+                       Enter inside a TextBox *if* the submit button is
+                       the page's first RadzenButton. The form sits
+                       next to several Light-style buttons above, so
+                       we wire Enter explicitly through @onkeydown —
+                       that works regardless of button order. *@
+                    <RadzenTextBox @bind-Value="addListModel.Name" Placeholder="List name…"
+                                   Style="width:100%"
+                                   @onkeydown="@OnAddListKeyDown" />
                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
                                  Gap="0.5rem" Class="rz-mt-3">
                         <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => showAddList = false)" />
@@ -180,7 +189,10 @@ else
             @if (openAddCardFor == listId)
             {
                 <RadzenStack Gap="0.5rem">
-                    <RadzenTextBox @bind-Value="newCardTitle" Placeholder="Card title…" Style="width:100%" />
+                    @* BETA-8-UI-#17 — see comment in AddList above. *@
+                    <RadzenTextBox @bind-Value="newCardTitle" Placeholder="Card title…"
+                                   Style="width:100%"
+                                   @onkeydown="@(e => OnAddCardKeyDown(e, listId))" />
                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
                                  Gap="0.5rem">
                         <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
@@ -415,6 +427,27 @@ else
         if (result.IsSuccess)
         {
             board = result.Value;
+        }
+    }
+
+    // BETA-8-UI-#17 — see test-results/r8/r8-report.md.
+    // Enter on the inline TextBox fires KeyDown with key "Enter";
+    // we dispatch to the same handler the submit button uses so
+    // both paths converge. The @onkeydown attribute is wired in
+    // the markup above (AddList form + AddCard inline).
+    private async Task OnAddListKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
+        {
+            await AddList();
+        }
+    }
+
+    private async Task OnAddCardKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, Guid listId)
+    {
+        if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
+        {
+            await ConfirmAddCard(listId);
         }
     }
 
