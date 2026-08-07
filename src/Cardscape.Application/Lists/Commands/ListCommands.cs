@@ -44,11 +44,24 @@ public static class CreateListCommandHandler
             return Result.Failure<BoardListDto>(nameResult.Error);
         }
 
+        // BETA-7-#9 — see test-results/BETA-TEST-REPORT.md.
+        // Two new lists in a row used to both get
+        // `position: 1` (the `Position.Start()` value), so
+        // the second list sorted to the top of the board
+        // when the user reloaded. Compute the next position
+        // by looking at the existing lists on the board and
+        // appending one Position unit past the max.
+        IReadOnlyList<BoardList> existing = await lists.ListForBoardAsync(
+            new BoardId(command.BoardId), includeArchived: true, cancellationToken);
+        Position position = existing.Count == 0
+            ? Position.Start()
+            : Position.After(existing.Max(l => l.Position));
+
         var listResult = BoardList.Create(
             BoardListId.New(),
             new BoardId(command.BoardId),
             nameResult.Value,
-            Position.Start(),
+            position,
             currentUser.Id.Value,
             clock.UtcNow);
 

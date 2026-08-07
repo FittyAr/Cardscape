@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces;
 using Wolverine;
 using static Cardscape.Domain.Workspaces.Errors.WorkspaceErrors;
@@ -187,6 +188,7 @@ public static class AddWorkspaceMemberCommandHandler
     public static async Task<Result<WorkspaceDto>> Handle(
         AddWorkspaceMemberCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
+        IUserRepository users,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -207,6 +209,26 @@ public static class AddWorkspaceMemberCommandHandler
         if (workspace.OwnerId != currentUser.Id.Value)
         {
             return Result.Failure<WorkspaceDto>(InsufficientPermissions);
+        }
+
+        // BETA-7-#11 — see test-results/BETA-TEST-REPORT.md.
+        // A non-existent userId was silently no-op'd; the
+        // workspace DTO came back 200 and the bad row was
+        // *not* persisted, but the response lied. Verify
+        // the user exists and is in a state that can be
+        // invited (not soft-deleted, not anonymised).
+        User? invitee = await users.GetByIdAsync(new UserId(command.UserId), cancellationToken);
+        if (invitee is null || invitee.IsAnonymised)
+        {
+            return Result.Failure<WorkspaceDto>(DomainError.NotFound(
+                "users.not_found",
+                "The user you tried to invite is not a known Cardscape user."));
+        }
+        if (invitee.IsDeleted || !invitee.IsActive)
+        {
+            return Result.Failure<WorkspaceDto>(DomainError.NotFound(
+                "users.not_found",
+                "The user you tried to invite is no longer active."));
         }
 
         var addResult = workspace.AddMember(command.UserId, command.Role, clock.UtcNow);

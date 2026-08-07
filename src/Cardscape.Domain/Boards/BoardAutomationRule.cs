@@ -108,6 +108,26 @@ public sealed class BoardAutomationRule : AggregateRoot<BoardAutomationRuleId>
                 "automation.name_too_long", "Rule name must be 120 characters or fewer."));
         }
 
+        // BETA-7-#8 — see test-results/BETA-TEST-REPORT.md.
+        // The JSON deserialiser happily accepts any int for
+        // an enum, so `trigger: 99` and `action: 99` would
+        // create a rule that the dispatcher can never fire.
+        // Range-check the enums explicitly so the caller
+        // gets a clear 400 instead of a silent zombie rule.
+        if (!Enum.IsDefined(typeof(AutomationTrigger), trigger))
+        {
+            return Result.Failure<BoardAutomationRule>(DomainError.Validation(
+                "automation.trigger_invalid",
+                "Trigger value is not a recognised AutomationTrigger."));
+        }
+
+        if (!Enum.IsDefined(typeof(AutomationAction), action))
+        {
+            return Result.Failure<BoardAutomationRule>(DomainError.Validation(
+                "automation.action_invalid",
+                "Action value is not a recognised AutomationAction."));
+        }
+
         if (trigger == AutomationTrigger.CardCreatedInList && triggerListId is null)
         {
             return Result.Failure<BoardAutomationRule>(DomainError.Validation(

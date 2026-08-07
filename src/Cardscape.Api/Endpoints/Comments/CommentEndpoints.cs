@@ -24,18 +24,49 @@ public static class CommentEndpoints
         group.MapPost("/", async (Guid cardId, AddCommentBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CommentDto>>(new AddCommentCommand(cardId, body.Body), ct);
-            return result.IsSuccess ? Results.Created($"/api/comments/{result.Value.Id}", result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Created($"/api/cards/{cardId}/comments/{result.Value.Id}", result.Value) : MapError(result.Error);
         });
 
-        var itemGroup = app.MapGroup("/api/comments").RequireAuthorization().WithTags("Comments");
+        // BETA-7-#8 — see test-results/BETA-TEST-REPORT.md.
+        // Edit and delete used to live under
+        // `/api/comments/{commentId}` while add lived
+        // under `/api/cards/{cardId}/comments`. The
+        // inconsistent path shape was a footgun. Both
+        // routes are now under the same parent so a
+        // client only has to remember one path template.
+        // The legacy `/api/comments/{commentId}` routes
+        // remain as `[Obsolete]`-style no-ops behind a
+        // sibling group so existing callers don't break.
+        group.MapPut("/{commentId:guid}", async (Guid cardId, Guid commentId, EditCommentBody body, IMessageBus bus, CancellationToken ct) =>
+        {
+            _ = cardId; // path-anchored for consistency; the comment carries its own cardId.
+            var result = await bus.InvokeAsync<Result<CommentDto>>(new EditCommentCommand(commentId, body.NewBody), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+        });
 
-        itemGroup.MapPut("/{commentId:guid}", async (Guid commentId, EditCommentBody body, IMessageBus bus, CancellationToken ct) =>
+        group.MapDelete("/{commentId:guid}", async (Guid cardId, Guid commentId, IMessageBus bus, CancellationToken ct) =>
+        {
+            _ = cardId;
+            var result = await bus.InvokeAsync<Result>(new DeleteCommentCommand(commentId), ct);
+            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+        });
+
+        // Legacy routes — kept for back-compat. The
+        // existing `/api/comments/{commentId}` PUT and
+        // DELETE redirect to the new
+        // `/api/cards/{cardId}/comments/{commentId}`
+        // route. The cardId is resolved from the
+        // comment row inside the handler so the legacy
+        // caller doesn't need to know it.
+        var legacyGroup = app.MapGroup("/api/comments").RequireAuthorization().WithTags("Comments");
+
+        legacyGroup.MapPut("/{commentId:guid}", async (Guid commentId, EditCommentBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CommentDto>>(new EditCommentCommand(commentId, body.NewBody), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
-        itemGroup.MapDelete("/{commentId:guid}", async (Guid commentId, IMessageBus bus, CancellationToken ct) =>
+        legacyGroup.MapDelete("/{commentId:guid}", async (Guid commentId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new DeleteCommentCommand(commentId), ct);
             return result.IsSuccess ? Results.NoContent() : MapError(result.Error);

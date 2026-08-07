@@ -77,9 +77,15 @@ public sealed class CardsApiClient(IHttpClientFactory http) : ApiClientBase(http
 
     public async Task<ApiResult<CardDto>> RenameAsync(Guid cardId, string newTitle, CancellationToken ct = default)
     {
+        // BETA-7-#7 — see test-results/BETA-TEST-REPORT.md.
+        // The endpoint now accepts the consistent `title`
+        // field; `NewTitle` is the legacy v1.0.0 surface
+        // kept for back-compat. The Blazor client was
+        // updated in this round to use the consistent
+        // name everywhere.
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             $"api/cards/{cardId}/rename",
-            new { NewTitle = newTitle },
+            new { Title = newTitle },
             ct);
         return await ReadAsync<CardDto>(response, ct);
     }
@@ -87,9 +93,13 @@ public sealed class CardsApiClient(IHttpClientFactory http) : ApiClientBase(http
     public async Task<ApiResult<CardDto>> ChangeDescriptionAsync(
         Guid cardId, string newDescription, CancellationToken ct = default)
     {
+        // BETA-7-#7 — see test-results/BETA-TEST-REPORT.md.
+        // The endpoint now accepts the consistent
+        // `description` field; `NewDescription` is the
+        // legacy v1.0.0 surface kept for back-compat.
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             $"api/cards/{cardId}/description",
-            new { NewDescription = newDescription },
+            new { Description = newDescription },
             ct);
         return await ReadAsync<CardDto>(response, ct);
     }
@@ -97,9 +107,14 @@ public sealed class CardsApiClient(IHttpClientFactory http) : ApiClientBase(http
     public async Task<ApiResult<CardDto>> MoveAsync(
         Guid cardId, Guid newListId, double newPosition, CancellationToken ct = default)
     {
+        // BETA-7-#7 — see test-results/BETA-TEST-REPORT.md.
+        // The endpoint now accepts the consistent
+        // `listId` / `position` fields; `NewListId` /
+        // `NewPosition` are the legacy v1.0.0 surface kept
+        // for back-compat.
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             $"api/cards/{cardId}/move",
-            new MoveCardRequestDto(newListId, newPosition),
+            new { ListId = newListId, Position = newPosition },
             ct);
         return await ReadAsync<CardDto>(response, ct);
     }

@@ -1,6 +1,8 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
@@ -284,6 +286,8 @@ public static class AddChecklistItemCommandHandler
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
+        ISearchIndex searchIndex,
+        IActivityRepository activities,
         CancellationToken ct)
     {
         if (currentUser.Id is null)
@@ -318,6 +322,26 @@ public static class AddChecklistItemCommandHandler
         Position position = Position.From(checklist.Items.Count + 1);
         checklist.AddItem(textResult.Value, position, clock.UtcNow);
         await uow.SaveChangesAsync(ct);
+
+        // BETA-7-#1 / #2 — index the new item and record the
+        // addition on the activity feed. The new item is the
+        // last one in the checklist (highest position).
+        ChecklistItem? newItem = checklist.Items.OrderByDescending(i => i.Position.Value).FirstOrDefault();
+        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
+        Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
+        if (newItem is not null && card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
+        {
+            await searchIndex.IndexChecklistItemAsync(newItem, checklist, boardId, ct);
+            await activities.AddAsync(Activity.Create(
+                new Domain.Boards.BoardId(boardId),
+                card.Id.Value,
+                currentUser.Id.Value,
+                ActivityKind.ChecklistCreated, // ChecklistItemAdded reuses ChecklistCreated until a dedicated kind is added.
+                $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{newItem.Id.Value}\"}}",
+                clock.UtcNow), ct);
+            await uow.SaveChangesAsync(ct);
+        }
+
         return Result.Success(ChecklistDto.FromEntity(checklist));
     }
 }
@@ -335,6 +359,8 @@ public static class RenameChecklistItemCommandHandler
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
+        ISearchIndex searchIndex,
+        IActivityRepository activities,
         CancellationToken ct)
     {
         if (currentUser.Id is null)
@@ -374,6 +400,24 @@ public static class RenameChecklistItemCommandHandler
         }
 
         await uow.SaveChangesAsync(ct);
+
+        // BETA-7-#1 / #2 — re-index the renamed item.
+        ChecklistItem? updated = checklist.Items.FirstOrDefault(i => i.Id.Value == command.ItemId);
+        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
+        Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
+        if (updated is not null && card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
+        {
+            await searchIndex.IndexChecklistItemAsync(updated, checklist, boardId, ct);
+            await activities.AddAsync(Activity.Create(
+                new Domain.Boards.BoardId(boardId),
+                card.Id.Value,
+                currentUser.Id.Value,
+                ActivityKind.ChecklistCreated, // ChecklistItemRenamed reuses ChecklistCreated until a dedicated kind is added.
+                $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{updated.Id.Value}\"}}",
+                clock.UtcNow), ct);
+            await uow.SaveChangesAsync(ct);
+        }
+
         return Result.Success(ChecklistDto.FromEntity(checklist));
     }
 }
@@ -391,6 +435,7 @@ public static class ToggleChecklistItemCommandHandler
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken ct)
     {
         if (currentUser.Id is null)
@@ -433,6 +478,27 @@ public static class ToggleChecklistItemCommandHandler
         }
 
         await uow.SaveChangesAsync(ct);
+
+        // BETA-7-#2 — record the toggle on the activity feed.
+        // Check / uncheck use the dedicated ChecklistItem*
+        // kinds; the existing completed flag tells us which.
+        ActivityKind kind = item.IsCompleted
+            ? ActivityKind.ChecklistItemCompleted
+            : ActivityKind.ChecklistItemUncompleted;
+        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
+        Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
+        if (card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
+        {
+            await activities.AddAsync(Activity.Create(
+                new Domain.Boards.BoardId(boardId),
+                card.Id.Value,
+                currentUser.Id.Value,
+                kind,
+                $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{item.Id.Value}\"}}",
+                clock.UtcNow), ct);
+            await uow.SaveChangesAsync(ct);
+        }
+
         return Result.Success(ChecklistDto.FromEntity(checklist));
     }
 }
@@ -450,6 +516,7 @@ public static class DeleteChecklistItemCommandHandler
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken ct)
     {
         if (currentUser.Id is null)
@@ -483,6 +550,24 @@ public static class DeleteChecklistItemCommandHandler
         }
 
         await uow.SaveChangesAsync(ct);
+
+        // BETA-7-#2 — record the deletion on the activity
+        // feed. There is no dedicated ChecklistItemDeleted
+        // kind, so we reuse ChecklistCreated.
+        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
+        Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
+        if (card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
+        {
+            await activities.AddAsync(Activity.Create(
+                new Domain.Boards.BoardId(boardId),
+                card.Id.Value,
+                currentUser.Id.Value,
+                ActivityKind.ChecklistCreated,
+                $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{command.ItemId}\",\"action\":\"delete\"}}",
+                clock.UtcNow), ct);
+            await uow.SaveChangesAsync(ct);
+        }
+
         return Result.Success(ChecklistDto.FromEntity(checklist));
     }
 }

@@ -52,13 +52,20 @@ public static class ListEndpoints
 
         group.MapPost("/{listId:guid}/rename", async (Guid listId, RenameBody body, IMessageBus bus, CancellationToken ct) =>
         {
-            var result = await bus.InvokeAsync<Result<BoardListDto>>(new RenameListCommand(listId, body.NewName), ct);
+            // BETA-7-#7 — see test-results/BETA-TEST-REPORT.md.
+            // Accept both `name` and the legacy `newName` for
+            // back-compat with the v1.0.0 client surface.
+            string newName = body.Name ?? body.NewName ?? string.Empty;
+            var result = await bus.InvokeAsync<Result<BoardListDto>>(new RenameListCommand(listId, newName), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
         group.MapPost("/{listId:guid}/move", async (Guid listId, MoveBody body, IMessageBus bus, CancellationToken ct) =>
         {
-            var result = await bus.InvokeAsync<Result<BoardListDto>>(new MoveListCommand(listId, body.NewPosition), ct);
+            // BETA-7-#7 — accept both `position` and the
+            // legacy `newPosition` for back-compat.
+            double newPosition = body.Position ?? body.NewPosition;
+            var result = await bus.InvokeAsync<Result<BoardListDto>>(new MoveListCommand(listId, newPosition), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
@@ -78,8 +85,8 @@ public static class ListEndpoints
     }
 
     public sealed record CreateListBody(Guid BoardId, string Name);
-    public sealed record RenameBody(string NewName);
-    public sealed record MoveBody(double NewPosition);
+    public sealed record RenameBody(string? Name, string? NewName);
+    public sealed record MoveBody(double? Position, double NewPosition);
 
     private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
     {

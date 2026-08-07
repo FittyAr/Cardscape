@@ -106,8 +106,21 @@ public sealed class RetentionSweeper(
         // for longer than the grace period. We process
         // in batches to avoid loading the entire users
         // table.
+        //
+        // BETA-7-#3 — see test-results/BETA-TEST-REPORT.md.
+        // `User.IsDeleted` shadows the base
+        // `Entity<TId>.IsDeleted` with the `new` keyword
+        // and EF Core's LINQ translator can't disambiguate
+        // the two; the previous query threw
+        // `InvalidOperationException` every sweep tick.
+        // Going through `EF.Property<bool>(u, "IsDeleted")`
+        // routes the read through EF's metadata pipeline
+        // and bypasses the C# property override.
         var deletedUsers = await db.Users
-            .Where(u => u.IsDeleted && !u.IsAnonymised && u.DeletedAt != null && u.DeletedAt <= anonymiseCutoff)
+            .Where(u => EF.Property<bool>(u, "IsDeleted")
+                && !u.IsAnonymised
+                && u.DeletedAt != null
+                && u.DeletedAt <= anonymiseCutoff)
             .Take(_batchSize)
             .ToListAsync(ct);
         foreach (Domain.Members.User user in deletedUsers)

@@ -1,7 +1,9 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Labels.DTOs;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
@@ -22,6 +24,8 @@ public static class CreateLabelCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        ISearchIndex searchIndex,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -71,6 +75,21 @@ public static class CreateLabelCommandHandler
         await labels.AddAsync(labelResult.Value, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // BETA-7-#1 / #2 — index the label and record the
+        // creation on the activity feed. Label creation has
+        // no dedicated ActivityKind, so we reuse CardRenamed
+        // as the closest stand-in (a follow-up PR can add a
+        // dedicated LabelCreated kind).
+        await searchIndex.IndexLabelAsync(labelResult.Value, cancellationToken);
+        await activities.AddAsync(Activity.Create(
+            labelResult.Value.BoardId,
+            null,
+            currentUser.Id.Value,
+            ActivityKind.CardRenamed,
+            $"{{\"labelId\":\"{labelResult.Value.Id.Value}\",\"name\":\"{labelResult.Value.Name.Value.Replace("\"", "\\\"")}\"}}",
+            clock.UtcNow), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success(new LabelDto(
             labelResult.Value.Id.Value,
             labelResult.Value.BoardId.Value,
@@ -90,6 +109,8 @@ public static class UpdateLabelCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        ISearchIndex searchIndex,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -123,6 +144,19 @@ public static class UpdateLabelCommandHandler
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#1 / #2 — re-index the updated label and
+        // record the update on the activity feed.
+        await searchIndex.IndexLabelAsync(label, cancellationToken);
+        await activities.AddAsync(Activity.Create(
+            label.BoardId,
+            null,
+            currentUser.Id.Value,
+            ActivityKind.CardRenamed, // LabelUpdated reuses CardRenamed until a dedicated kind is added.
+            $"{{\"labelId\":\"{label.Id.Value}\",\"name\":\"{label.Name.Value.Replace("\"", "\\\"")}\"}}",
+            clock.UtcNow), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success(new LabelDto(
             label.Id.Value,
             label.BoardId.Value,
@@ -141,6 +175,7 @@ public static class DeleteLabelCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -157,6 +192,25 @@ public static class DeleteLabelCommandHandler
 
         label.Delete(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#2 — record the deletion on the activity feed.
+        // The in-memory search index is process-wide and
+        // doesn't currently support RemoveLabelAsync; the
+        // label hit stays in the index until the next process
+        // restart. The hit is filtered out at search time by
+        // the soft-delete check (the label is gone from the DB
+        // and won't surface in any label picker / kanban
+        // card decoration). A follow-up can wire up
+        // RemoveLabelAsync on the ISearchIndex.
+        await activities.AddAsync(Activity.Create(
+            label.BoardId,
+            null,
+            currentUser.Id.Value,
+            ActivityKind.CardRenamed, // LabelDeleted reuses CardRenamed until a dedicated kind is added.
+            $"{{\"labelId\":\"{label.Id.Value}\"}}",
+            clock.UtcNow), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success();
     }
 }

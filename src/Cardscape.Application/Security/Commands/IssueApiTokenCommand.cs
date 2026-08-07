@@ -15,11 +15,21 @@ public sealed record IssueApiTokenCommand(
 
 public static class IssueApiTokenCommandHandler
 {
+    // BETA-7-#16 — see test-results/BETA-TEST-REPORT.md.
+    // A token issued with no rate-limit args is
+    // effectively unlimited. We default to a sensible
+    // (still generous) budget so a "no limits specified"
+    // token still has a guard rail. A caller that wants
+    // the old unlimited behaviour can pass 0 (the
+    // existing explicit opt-in).
+    private const int DefaultRateLimitPerHour = 1_000;
+    private const int DefaultBurstSize = 100;
+
     public static async Task<Result<ApiTokenIssuanceDto>> Handle(
         IssueApiTokenCommand command,
         IApiTokenService tokens,
         ICurrentUser currentUser,
-        CancellationToken cancellationToken)
+        CancellationToken cancellation)
     {
         if (currentUser.Id is null)
         {
@@ -42,14 +52,17 @@ public static class IssueApiTokenCommandHandler
             return Result.Failure<ApiTokenIssuanceDto>(scopesResult.Error);
         }
 
+        int rateLimit = command.RateLimitPerHour ?? DefaultRateLimitPerHour;
+        int burst = command.BurstSize ?? DefaultBurstSize;
+
         var issuance = await tokens.IssueAsync(
             currentUser.Id,
             command.Name,
             command.Scopes,
             command.ExpiresAt,
-            command.RateLimitPerHour,
-            command.BurstSize,
-            cancellationToken);
+            rateLimit,
+            burst,
+            cancellation);
 
         return Result.Success(new ApiTokenIssuanceDto(
             issuance.Id.Value,

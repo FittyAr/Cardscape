@@ -29,10 +29,17 @@ public sealed record SearchPage(IReadOnlyList<SearchHit> Hits, int Total);
 
 public interface ISearchIndex
 {
-    Task IndexCardAsync(Card card, CancellationToken ct = default);
+    // BETA-7-#1 — see test-results/BETA-TEST-REPORT.md.
+    // Card / comment / checklist hits must carry a
+    // BoardId so the search query's tenant-isolation
+    // filter (which drops every hit whose BoardId is not
+    // in the caller's allow-list) doesn't drop them.
+    // The BoardId is supplied by the caller because the
+    // indexed entities reference a list, not a board.
+    Task IndexCardAsync(Card card, Guid boardId, CancellationToken ct = default);
     Task RemoveCardAsync(Guid cardId, CancellationToken ct = default);
-    Task IndexCommentAsync(Comment comment, CancellationToken ct = default);
-    Task IndexChecklistItemAsync(ChecklistItem item, Checklist checklist, CancellationToken ct = default);
+    Task IndexCommentAsync(Comment comment, Guid boardId, CancellationToken ct = default);
+    Task IndexChecklistItemAsync(ChecklistItem item, Checklist checklist, Guid boardId, CancellationToken ct = default);
     Task IndexLabelAsync(Label label, CancellationToken ct = default);
     Task IndexActivityAsync(Activity activity, CancellationToken ct = default);
 

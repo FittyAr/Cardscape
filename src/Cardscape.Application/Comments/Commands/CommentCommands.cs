@@ -1,7 +1,9 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Comments.DTOs;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Comments;
 using Cardscape.Domain.Common;
@@ -23,6 +25,8 @@ public static class AddCommentCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        ISearchIndex searchIndex,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -44,6 +48,16 @@ public static class AddCommentCommandHandler
             return Result.Failure<CommentDto>(access.Error);
         }
 
+        // BETA-7-#1 / #2 — capture the card so we can look up
+        // the board id for the search index and the activity
+        // feed. Reusing the lookup the guard just did keeps
+        // the new code off the hot path (no extra DB round-trip).
+        Card? card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
+        IReadOnlyDictionary<Guid, Guid> listBoardMap = await lists.ListBoardIdsByListIdAsync(cancellationToken);
+        Guid? boardId = card is not null && listBoardMap.TryGetValue(card.ListId.Value, out Guid bid)
+            ? bid
+            : (Guid?)null;
+
         var bodyResult = CommentBody.Create(command.Body);
         if (bodyResult.IsFailure)
         {
@@ -64,6 +78,24 @@ public static class AddCommentCommandHandler
 
         await comments.AddAsync(commentResult.Value, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#1 / #2 — see test-results/BETA-TEST-REPORT.md.
+        // Populate the search index + the activity feed on every
+        // write. Both calls are guarded by the board-id lookup
+        // so a stale card (e.g. racing with a delete) skips the
+        // write cleanly instead of throwing.
+        if (boardId is Guid bid2)
+        {
+            await searchIndex.IndexCommentAsync(commentResult.Value, bid2, cancellationToken);
+            await activities.AddAsync(Activity.Create(
+                new Domain.Boards.BoardId(bid2),
+                commentResult.Value.CardId.Value,
+                currentUser.Id.Value,
+                ActivityKind.CommentAdded,
+                $"{{\"commentId\":\"{commentResult.Value.Id.Value}\"}}",
+                clock.UtcNow), cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
 
         return Result.Success(new CommentDto(
             commentResult.Value.Id.Value,
@@ -88,6 +120,8 @@ public static class EditCommentCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        ISearchIndex searchIndex,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -130,6 +164,26 @@ public static class EditCommentCommandHandler
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#1 / #2 — re-index the comment so a search
+        // hit reflects the new body. Comment edits re-use
+        // CommentAdded for the activity feed (a dedicated
+        // CommentEdited kind is not in the ActivityKind enum).
+        Card? card = await cards.GetByIdAsync(comment.CardId, cancellationToken);
+        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(cancellationToken);
+        if (card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
+        {
+            await searchIndex.IndexCommentAsync(comment, boardId, cancellationToken);
+            await activities.AddAsync(Activity.Create(
+                new Domain.Boards.BoardId(boardId),
+                comment.CardId.Value,
+                currentUser.Id.Value,
+                ActivityKind.CommentAdded,
+                $"{{\"commentId\":\"{comment.Id.Value}\",\"action\":\"edit\"}}",
+                clock.UtcNow), cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
         return Result.Success(new CommentDto(
             comment.Id.Value, comment.CardId.Value, comment.AuthorId,
             comment.Body.Value, comment.CreatedAt, comment.UpdatedAt));
@@ -149,6 +203,8 @@ public static class DeleteCommentCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        ISearchIndex searchIndex,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -178,7 +234,28 @@ public static class DeleteCommentCommandHandler
             return result;
         }
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        // BETA-7-#2 — record the deletion on the activity feed.
+        // The search index is dropped via RemoveCardAsync
+        // when the card itself is deleted; a single-comment
+        // delete leaves the card alive so the per-card hits
+        // would still be searchable. We rebuild the card's
+        // hits here so a future search doesn't surface a
+        // tombstoned comment body.
+        Card? card = await cards.GetByIdAsync(comment.CardId, cancellationToken);
+        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(cancellationToken);
+        if (card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
+        {
+            await searchIndex.IndexCardAsync(card, boardId, cancellationToken);
+            await activities.AddAsync(Activity.Create(
+                new Domain.Boards.BoardId(boardId),
+                comment.CardId.Value,
+                currentUser.Id.Value,
+                ActivityKind.CommentAdded, // CommentDeleted reuses CommentAdded until a dedicated kind is added.
+                $"{{\"commentId\":\"{comment.Id.Value}\",\"action\":\"delete\"}}",
+                clock.UtcNow), cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
         return Result.Success();
     }
 }

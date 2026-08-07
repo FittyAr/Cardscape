@@ -131,14 +131,29 @@ else
                accessibility tree. *@
             <RadzenCard Style="@($"opacity: {opacity:0.00}; cursor: grab;")"
                         role="group"
-                        aria-label="@($"Card: {card.Title}{(card.IsCompleted ? " (completed)" : string.Empty)}")"
+                        aria-label="@($"Card: {card.Title}{(card.IsCompleted ? " (completed)" : string.Empty)}{(card.MirrorOfCardId is not null ? " (mirror)" : string.Empty)}")"
                         tabindex="0"
                         draggable="true"
                         @ondragstart="@(() => OnCardDragStart(card))"
                         @onclick="@(() => Nav.NavigateTo($"cards/{card.Id}"))">
-                <RadzenText Text="@card.Title" TextStyle="TextStyle.Body2"
-                            Class="@(card.IsCompleted ? "rz-color-text-disabled" : null)"
-                            Style="@(card.IsCompleted ? "text-decoration: line-through; word-break: break-word;" : "word-break: break-word;")" />
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                    <RadzenText Text="@card.Title" TextStyle="TextStyle.Body2"
+                                Class="@(card.IsCompleted ? "rz-color-text-disabled" : null)"
+                                Style="@(card.IsCompleted ? "text-decoration: line-through; word-break: break-word;" : "word-break: break-word;")" />
+                    @* BETA-7-#13 — see test-results/BETA-TEST-REPORT.md.
+                       A mirror card is a real Card row that
+                       shares title + description with the
+                       source. The "Mirror" badge tells the
+                       user which copy is the mirror so the
+                       two same-titled cards are not
+                       confusing in the kanban. *@
+                    @if (card.MirrorOfCardId is not null)
+                    {
+                        <RadzenIcon Icon="content_copy"
+                                    Style="font-size: 0.85rem;"
+                                    title="Mirror card" />
+                    }
+                </RadzenStack>
                 @if (card.DueDate is not null)
                 {
                     <RadzenText Text="@($"📅 {card.DueDate.Value.LocalDateTime:yyyy-MM-dd}")"
@@ -322,12 +337,29 @@ else
             BoardId, includeArchived: false, includeSnoozed: showSnoozed);
         if (cardsResult.IsSuccess)
         {
+            // BETA-7-#12 — see test-results/BETA-TEST-REPORT.md.
+            // The previous version appended each card to the
+            // per-list bucket without dedup. When the
+            // SignalR `CardCreated` handler fired after a
+            // create-card (and the user had also added the
+            // card through the same handler chain), every
+            // existing card was duplicated once. The
+            // server-side reload returns a clean
+            // collection, but the two reloads (one from
+            // the create-card success path, one from the
+            // hub) can race; deduping by id on every append
+            // makes the merge idempotent.
+            HashSet<Guid> seenIds = [];
             foreach (CardSummaryDto card in cardsResult.Value!)
             {
+                if (!seenIds.Add(card.Id))
+                {
+                    continue;
+                }
+
                 if (!cardsByList.TryGetValue(card.ListId, out IReadOnlyList<CardSummaryDto>? bucket))
                 {
                     bucket = [];
-                    cardsByList[card.ListId] = bucket;
                 }
 
                 cardsByList[card.ListId] = [.. bucket, card];

@@ -23,14 +23,14 @@ public sealed class InMemorySearchIndex : ISearchIndex
     private readonly Regex _tokenizer = new("[a-z0-9áéíóúñü]+",
         RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
-    public Task IndexCardAsync(Card card, CancellationToken ct = default)
+    public Task IndexCardAsync(Card card, Guid boardId, CancellationToken ct = default)
     {
         _hits[$"card:{card.Id.Value}"] = new SearchHit(
             Id: card.Id.Value.ToString(),
             Kind: SearchHitKind.Card,
             Title: card.Title.Value,
             Snippet: Truncate(card.Description.Value, 200),
-            BoardId: null,
+            BoardId: boardId,
             CardId: card.Id.Value,
             Url: $"/cards/{card.Id.Value}",
             Score: 0);
@@ -49,14 +49,14 @@ public sealed class InMemorySearchIndex : ISearchIndex
         return Task.CompletedTask;
     }
 
-    public Task IndexCommentAsync(Comment comment, CancellationToken ct = default)
+    public Task IndexCommentAsync(Comment comment, Guid boardId, CancellationToken ct = default)
     {
         _hits[$"comment:{comment.Id.Value}"] = new SearchHit(
             Id: comment.Id.Value.ToString(),
             Kind: SearchHitKind.Comment,
             Title: Truncate(comment.Body.Value, 60),
             Snippet: Truncate(comment.Body.Value, 200),
-            BoardId: null,
+            BoardId: boardId,
             CardId: comment.CardId.Value,
             Url: $"/cards/{comment.CardId.Value}",
             Score: 0);
@@ -64,14 +64,14 @@ public sealed class InMemorySearchIndex : ISearchIndex
     }
 
     public Task IndexChecklistItemAsync(ChecklistItem item, Checklist checklist,
-        CancellationToken ct = default)
+        Guid boardId, CancellationToken ct = default)
     {
         _hits[$"checklist-item:{item.Id.Value}"] = new SearchHit(
             Id: item.Id.Value.ToString(),
             Kind: SearchHitKind.ChecklistItem,
             Title: item.Text.Value,
             Snippet: string.Empty,
-            BoardId: null,
+            BoardId: boardId,
             CardId: checklist.CardId.Value,
             Url: $"/cards/{checklist.CardId.Value}",
             Score: 0);

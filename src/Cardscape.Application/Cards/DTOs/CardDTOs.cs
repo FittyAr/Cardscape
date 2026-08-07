@@ -14,7 +14,8 @@ public sealed record CardDto(
     int MemberCount,
     int LabelCount,
     bool IsSnoozed = false,
-    DateTimeOffset? SnoozeUntil = null);
+    DateTimeOffset? SnoozeUntil = null,
+    Guid? MirrorOfCardId = null);
 
 public sealed record CardSummaryDto(
     Guid Id,
@@ -25,7 +26,8 @@ public sealed record CardSummaryDto(
     bool IsCompleted,
     DateTimeOffset UpdatedAt,
     bool IsSnoozed = false,
-    DateTimeOffset? SnoozeUntil = null);
+    DateTimeOffset? SnoozeUntil = null,
+    Guid? MirrorOfCardId = null);
 
 /// <summary>
 /// Per-card snooze projection. The <see cref="IsSnoozed"/> flag

@@ -48,19 +48,34 @@ public static class BoardEndpoints
 
         group.MapPost("/{boardId:guid}/rename", async (Guid boardId, RenameRequest body, IMessageBus bus, CancellationToken ct) =>
         {
-            var result = await bus.InvokeAsync<Result<BoardDto>>(new RenameBoardCommand(boardId, body.NewName), ct);
+            // BETA-7-#7 — see test-results/BETA-TEST-REPORT.md.
+            // The DTO accepts BOTH `name` (the consistent
+            // shape used by every other create / update
+            // endpoint) and the legacy `newName` (kept for
+            // backward compatibility with clients written
+            // against the v1.0.0 surface). `name` wins when
+            // both are supplied so a forward-compatible
+            // client never has to think about it.
+            string newName = body.Name ?? body.NewName ?? string.Empty;
+            var result = await bus.InvokeAsync<Result<BoardDto>>(new RenameBoardCommand(boardId, newName), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
         group.MapPost("/{boardId:guid}/description", async (Guid boardId, DescriptionRequest body, IMessageBus bus, CancellationToken ct) =>
         {
-            var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardDescriptionCommand(boardId, body.NewDescription), ct);
+            // BETA-7-#7 — accept both `description` and the
+            // legacy `newDescription` for back-compat.
+            string newDescription = body.Description ?? body.NewDescription ?? string.Empty;
+            var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardDescriptionCommand(boardId, newDescription), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
         group.MapPost("/{boardId:guid}/visibility", async (Guid boardId, VisibilityRequest body, IMessageBus bus, CancellationToken ct) =>
         {
-            var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardVisibilityCommand(boardId, body.NewVisibility), ct);
+            // BETA-7-#7 — accept both `visibility` and the
+            // legacy `newVisibility` for back-compat.
+            BoardVisibility visibility = body.Visibility ?? body.NewVisibility ?? BoardVisibility.Private;
+            var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardVisibilityCommand(boardId, visibility), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
@@ -162,9 +177,9 @@ public static class BoardEndpoints
         return app;
     }
 
-    public sealed record RenameRequest(string NewName);
-    public sealed record DescriptionRequest(string NewDescription);
-    public sealed record VisibilityRequest(BoardVisibility NewVisibility);
+    public sealed record RenameRequest(string? Name, string? NewName);
+    public sealed record DescriptionRequest(string? Description, string? NewDescription);
+    public sealed record VisibilityRequest(BoardVisibility? Visibility, BoardVisibility? NewVisibility);
     public sealed record AddBoardMemberBody(Guid UserId, BoardMemberRole Role);
 
     private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch

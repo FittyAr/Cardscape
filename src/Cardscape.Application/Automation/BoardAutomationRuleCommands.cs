@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
+using FluentValidation;
 using Wolverine;
 
 namespace Cardscape.Application.Automation;

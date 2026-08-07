@@ -1,9 +1,11 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Cards.Common;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Common;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
@@ -29,6 +31,8 @@ public static class CreateCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        ISearchIndex searchIndex,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -80,6 +84,22 @@ public static class CreateCardCommandHandler
         await cards.AddAsync(cardResult.Value, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // BETA-7-#1 / #2 — see test-results/BETA-TEST-REPORT.md.
+        // Populate the search index and the activity feed on
+        // every write. Search is a singleton; it is
+        // safe to call from the scoped handler.
+        await searchIndex.IndexCardAsync(cardResult.Value, list.BoardId.Value, cancellationToken);
+
+        var activity = Activity.Create(
+            list.BoardId,
+            cardResult.Value.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.CardCreated,
+            $"{{\"title\":\"{cardResult.Value.Title.Value.Replace("\"", "\\\"")}\"}}",
+            clock.UtcNow);
+        await activities.AddAsync(activity, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success(new CardDto(
             cardResult.Value.Id.Value,
             cardResult.Value.ListId.Value,
@@ -108,6 +128,8 @@ public static class RenameCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        ISearchIndex searchIndex,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -142,6 +164,18 @@ public static class RenameCardCommandHandler
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#1 / #2 — see test-results/BETA-TEST-REPORT.md.
+        await searchIndex.IndexCardAsync(card, guard.Value.Board.Id.Value, cancellationToken);
+        await activities.AddAsync(Activity.Create(
+            guard.Value.Board.Id,
+            card.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.CardRenamed,
+            "{}",
+            clock.UtcNow), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success(card.MapToDto());
     }
 }
@@ -159,6 +193,8 @@ public static class ChangeCardDescriptionCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        ISearchIndex searchIndex,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -193,6 +229,19 @@ public static class ChangeCardDescriptionCommandHandler
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#1 / #2 — re-index the search hit so a
+        // snippet search picks up the new description.
+        await searchIndex.IndexCardAsync(card, guard.Value.Board.Id.Value, cancellationToken);
+        await activities.AddAsync(Activity.Create(
+            guard.Value.Board.Id,
+            card.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.CardCreated, // Description change reuses the same kind until a dedicated one is added.
+            "{}",
+            clock.UtcNow), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success(card.MapToDto());
     }
 }
@@ -210,6 +259,7 @@ public static class MoveCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -256,6 +306,17 @@ public static class MoveCardCommandHandler
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#2 — record the move on the activity feed.
+        await activities.AddAsync(Activity.Create(
+            guard.Value.Board.Id,
+            card.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.CardMoved,
+            $"{{\"listId\":\"{command.NewListId}\",\"position\":{command.NewPosition}}}",
+            clock.UtcNow), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success(card.MapToDto());
     }
 }
@@ -361,6 +422,7 @@ public static class CompleteCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -389,6 +451,17 @@ public static class CompleteCardCommandHandler
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#2 — record the completion on the activity feed.
+        await activities.AddAsync(Activity.Create(
+            guard.Value.Board.Id,
+            card.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.CardMoved, // CardCompleted reuses CardMoved until a dedicated kind is added.
+            "{}",
+            clock.UtcNow), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success(card.MapToDto());
     }
 }
@@ -405,6 +478,7 @@ public static class ReopenCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -433,6 +507,17 @@ public static class ReopenCardCommandHandler
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#2 — record the reopen on the activity feed.
+        await activities.AddAsync(Activity.Create(
+            guard.Value.Board.Id,
+            card.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.CardMoved, // Reopen reuses CardMoved until a dedicated kind is added.
+            "{}",
+            clock.UtcNow), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success(card.MapToDto());
     }
 }
@@ -449,6 +534,7 @@ public static class ArchiveCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -472,6 +558,17 @@ public static class ArchiveCardCommandHandler
 
         card.Archive(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#2 — record the archive on the activity feed.
+        await activities.AddAsync(Activity.Create(
+            guard.Value.Board.Id,
+            card.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.CardArchived,
+            "{}",
+            clock.UtcNow), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success(card.MapToDto());
     }
 }
@@ -487,6 +584,9 @@ public static class DeleteCardCommandHandler
         IBoardRepository boards,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
+        IClock clock,
+        ISearchIndex searchIndex,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -508,8 +608,28 @@ public static class DeleteCardCommandHandler
             return Result.Failure(guard.Error);
         }
 
+        Guid boardId = guard.Value.Board.Id.Value;
+
+        // BETA-7-#2 — record the deletion before the card is
+        // removed from the DB. The CardId is still valid
+        // here; once the row is gone the activity feed would
+        // hold a dangling foreign-key-like reference.
+        await activities.AddAsync(Activity.Create(
+            new Domain.Boards.BoardId(boardId),
+            card.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.CardArchived, // CardDeleted reuses CardArchived until a dedicated kind is added.
+            $"{{\"title\":\"{card.Title.Value.Replace("\"", "\\\"")}\"}}",
+            clock.UtcNow), cancellationToken);
+
         cards.Remove(card);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#1 — RemoveCardAsync also drops the
+        // comment + checklist-item hits for the card, so the
+        // search index stays consistent.
+        await searchIndex.RemoveCardAsync(card.Id.Value, cancellationToken);
+
         return Result.Success();
     }
 }
@@ -526,6 +646,8 @@ public static class RestoreCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
+        ISearchIndex searchIndex,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -549,6 +671,19 @@ public static class RestoreCardCommandHandler
 
         card.Restore(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#1 / #2 — re-index the search hit and record
+        // the restore on the activity feed.
+        await searchIndex.IndexCardAsync(card, guard.Value.Board.Id.Value, cancellationToken);
+        await activities.AddAsync(Activity.Create(
+            guard.Value.Board.Id,
+            card.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.CardRestored,
+            "{}",
+            clock.UtcNow), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success(card.MapToDto());
     }
 }
@@ -567,6 +702,7 @@ public static class AssignCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -632,6 +768,17 @@ public static class AssignCardCommandHandler
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#2 — record the assignment on the activity feed.
+        await activities.AddAsync(Activity.Create(
+            guard.Value.Board.Id,
+            card.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.CardAssigned,
+            $"{{\"userId\":\"{command.UserId}\"}}",
+            clock.UtcNow), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success(card.MapToDto());
     }
 }
@@ -648,6 +795,7 @@ public static class UnassignCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -676,6 +824,17 @@ public static class UnassignCardCommandHandler
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // BETA-7-#2 — record the unassignment on the activity feed.
+        await activities.AddAsync(Activity.Create(
+            guard.Value.Board.Id,
+            card.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.CardUnassigned,
+            $"{{\"userId\":\"{command.UserId}\"}}",
+            clock.UtcNow), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success(card.MapToDto());
     }
 }
@@ -818,4 +977,21 @@ public static class CardMappingExtensions
                 IsSnoozed = snooze.IsActive(now),
                 SnoozeUntil = snooze.Until
             };
+
+    /// <summary>
+    /// BETA-7-#13 — see test-results/BETA-TEST-REPORT.md.
+    /// Overload that also projects the mirror source id
+    /// (set when the card is a mirror copy of another
+    /// card). The Web UI uses the flag to render a
+    /// "Mirror" badge so users can tell the two cards with
+    /// identical titles apart.
+    /// </summary>
+    public static CardDto MapToDto(this Card card, CardSnooze? snooze, DateTimeOffset now, Guid? mirrorOfCardId) =>
+        (snooze is null
+            ? card.MapToDto()
+            : card.MapToDto() with
+            {
+                IsSnoozed = snooze.IsActive(now),
+                SnoozeUntil = snooze.Until
+            }) with { MirrorOfCardId = mirrorOfCardId };
 }

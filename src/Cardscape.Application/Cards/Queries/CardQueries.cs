@@ -20,6 +20,7 @@ public static class GetCardQueryHandler
         GetCardQuery query,
         ICardRepository cards,
         ICardSnoozeRepository snoozes,
+        ICardMirrorRepository mirrors,
         IBoardListRepository lists,
         IBoardRepository boards,
         ICurrentUser currentUser,
@@ -50,7 +51,16 @@ public static class GetCardQueryHandler
         // round-trip. The IsSnoozed flag is derived from the
         // stored Until vs. the current time.
         CardSnooze? snooze = await snoozes.GetByCardIdAsync(card.Id, cancellationToken);
-        return Result.Success(card.MapToDto(snooze, clock.UtcNow));
+
+        // BETA-7-#13 — see test-results/BETA-TEST-REPORT.md.
+        // A mirror card has a CardMirror row where
+        // MirroredCardId == card.Id and SourceCardId is
+        // the original. The Web UI surfaces the relationship
+        // so the user can tell the two same-titled cards
+        // apart.
+        CardMirror? mirror = await mirrors.GetByMirroredCardIdAsync(card.Id, cancellationToken);
+
+        return Result.Success(card.MapToDto(snooze, clock.UtcNow, mirror?.SourceCardId.Value));
     }
 }
 

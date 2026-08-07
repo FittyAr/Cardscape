@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
+using Cardscape.Domain.Workspaces;
 using Wolverine;
 
 namespace Cardscape.Application.Users.Commands;
@@ -21,6 +22,7 @@ public static class SoftDeleteUserCommandHandler
     public static async Task<Result> Handle(
         SoftDeleteUserCommand command,
         IUserRepository users,
+        IWorkspaceRepository workspaces,
         IUnitOfWork unitOfWork,
         IClock clock,
         CancellationToken cancellation)
@@ -35,6 +37,28 @@ public static class SoftDeleteUserCommandHandler
         if (user.IsDeleted)
         {
             return Result.Success();
+        }
+
+        // BETA-7-#4 — see test-results/BETA-TEST-REPORT.md.
+        // A soft-deleted user kept their workspace + board
+        // memberships, so the members list still showed a
+        // ghost row. Drop the memberships now so the UI
+        // reflects the soft-delete immediately (the
+        // retention sweeper would have done it 30 days
+        // later, but the soft-delete UI claim is
+        // "the user is gone").
+        IReadOnlyList<Workspace> userWorkspaces = await workspaces.ListForUserAsync(user.Id.Value, cancellation);
+        foreach (Workspace ws in userWorkspaces)
+        {
+            if (ws.OwnerId == user.Id.Value)
+            {
+                // The user owns this workspace; skip — a
+                // soft-deleted owner is a separate flow
+                // (the workspace inherits the
+                // anonymised-but-still-resolvable owner).
+                continue;
+            }
+            ws.RemoveMember(user.Id.Value, clock.UtcNow);
         }
 
         user.SoftDelete(clock.UtcNow);
@@ -85,6 +109,7 @@ public static class AnonymiseUserCommandHandler
     public static async Task<Result> Handle(
         AnonymiseUserCommand command,
         IUserRepository users,
+        IWorkspaceRepository workspaces,
         IUnitOfWork unitOfWork,
         IClock clock,
         CancellationToken cancellation)
@@ -99,6 +124,25 @@ public static class AnonymiseUserCommandHandler
         if (user.IsAnonymised)
         {
             return Result.Success();
+        }
+
+        // BETA-7-#4 — see test-results/BETA-TEST-REPORT.md.
+        // Anonymisation did not drop the user's workspace /
+        // board memberships, so the members list kept
+        // showing a placeholder "Anonymised user" with
+        // the original role (e.g. admin). Drop every
+        // membership the user is not the workspace owner
+        // of. Workspace ownership is preserved so the
+        // foreign keys from boards still resolve; a
+        // follow-up can also reassign the owner.
+        IReadOnlyList<Workspace> userWorkspaces = await workspaces.ListForUserAsync(user.Id.Value, cancellation);
+        foreach (Workspace ws in userWorkspaces)
+        {
+            if (ws.OwnerId == user.Id.Value)
+            {
+                continue;
+            }
+            ws.RemoveMember(user.Id.Value, clock.UtcNow);
         }
 
         user.Anonymise(clock.UtcNow);

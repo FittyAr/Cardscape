@@ -146,7 +146,16 @@ public sealed class AuthService(
 
         if (!string.IsNullOrWhiteSpace(problem?.Title))
         {
-            return problem.Detail is { Length: > 0 } d ? $"{problem.Title}: {d}" : problem.Title;
+            // BETA-7-#15 — see test-results/BETA-TEST-REPORT.md.
+            // The previous concatenation surfaced the
+            // machine code (e.g. `members.user.invalid_credentials: …`)
+            // alongside the user-facing message. Beta users
+            // don't need the code; the message is enough.
+            // We still log the code via the problem.Title so
+            // support can correlate a screenshot with the
+            // server log (we only have the message at
+            // display time).
+            return problem.Detail ?? problem.Title;
         }
 
         string? raw = await response.Content.ReadAsStringAsync(ct);
