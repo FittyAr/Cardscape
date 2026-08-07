@@ -18,9 +18,6 @@ internal sealed class BearerSecuritySchemeTransformer : IOpenApiDocumentTransfor
 {
     public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
     {
-        var logger = context.ApplicationServices.GetService<ILoggerFactory>()?.CreateLogger("OpenApiTest");
-        logger?.LogInformation("BearerSecuritySchemeTransformer running");
-
         document.Components ??= new OpenApiComponents();
         document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>(StringComparer.Ordinal);
 
