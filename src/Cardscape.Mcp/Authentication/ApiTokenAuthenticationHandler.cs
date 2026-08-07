@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Cardscape.Application.Abstractions.Security;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -38,14 +39,38 @@ public sealed class ApiTokenAuthenticationHandler
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        if (!Request.Headers.TryGetValue("Authorization", out var authHeader))
+        // BETA-8-MCP-#6 — see test-results/r8/r8-report.md and
+        // docs/mcp/claude-desktop.md. The MCP transport is stdio,
+        // so a desktop AI client (Claude Desktop, Cursor, …) has
+        // no HTTP request to put the token on. We fall back to
+        // the `Cardscape__ApiToken` env var the client sets in
+        // `claude_desktop_config.json`, then to the
+        // `CARDS_API_TOKEN` shorthand. Either path produces the
+        // same `Bearer <secret>` value the rest of the handler
+        // expects.
+        string? raw = null;
+        if (Request.Headers.TryGetValue("Authorization", out var authHeader))
+        {
+            raw = authHeader.ToString();
+        }
+        else
+        {
+            string? fromEnv = Request.HttpContext?.RequestServices
+                    .GetService<IConfiguration>()?["Cardscape:ApiToken"]
+                ?? Environment.GetEnvironmentVariable("CARDS_API_TOKEN")
+                ?? Environment.GetEnvironmentVariable("Cardscape__ApiToken");
+            if (!string.IsNullOrWhiteSpace(fromEnv))
+            {
+                raw = "Bearer " + fromEnv;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(raw))
         {
             return AuthenticateResult.NoResult();
         }
 
-        string raw = authHeader.ToString();
-        if (string.IsNullOrWhiteSpace(raw)
-            || !raw.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        if (!raw.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
             return AuthenticateResult.Fail(
                 "Authorization header must be 'Bearer <secret>'.");
