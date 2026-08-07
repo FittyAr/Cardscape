@@ -57,6 +57,44 @@ working on this repository.
 6. **Don't touch the `.gitignore` for `obj/`, `bin/`, `.vs/`, etc.** unless
    the human maintainer asks for it.
 
+7. **No worktrees. Ever, unless the human explicitly asks for one.**
+   Worktrees spawn diverging branches that don't sync cleanly with
+   `master` and the cleanup cost dwarfs the benefit. (We lost a
+   session to this on 2026-08-07: the `verify-no-workaround`
+   worktree had two unique commits plus uncommitted WIP, and
+   bringing it home took three new commits and seven conflict
+   resolutions.) All edits happen in the directory the maintainer
+   is in when they ask — never under `tmp/`, `temp/`, `/tmp/`, or
+   anywhere else. Branches are allowed only with explicit
+   authorisation, and the moment the work is done the branch
+   must be merged back into `master` and deleted in the same
+   turn.
+
+8. **Resolve every failure in the moment. Never leave a bug,
+   pre-existing test failure, warning, lint debt, or build noise
+   for "later".** If the maintainer points at a red test, every
+   red test has to go green before the turn ends. If something
+   genuinely cannot be fixed in the current turn, surface it
+   explicitly and ask — do not silently defer. The v1.2.0
+   pre-existing 60 integration-test failures (which had been
+   sitting in `master` for a while) are the case study: a
+   single test helper (`TestJson.Options` in `tests/TestCommon`)
+   plus a few contract updates cleared them all; the cost of
+   doing it then was trivial, the cost of doing it on top of
+   the worktree merge was enormous.
+
+9. **When integrating diverged work, integrate FIRST, then edit.**
+   If there is unintegrated work on a branch (worktree, stash,
+   divergent HEAD), bring it into the current branch and resolve
+   conflicts BEFORE starting any new edits on the current
+   branch. Starting new edits first and then merging creates a
+   second conflict between the merged content and the new
+   edits, which has to be resolved a second time. The previous
+   turn on this repo got this wrong (the JSON deserialization
+   fixes were started before the verify branch was merged,
+   so the merge collided with edits that were already on
+   master).
+
 ## Design philosophy: design for three, test on one
 
 > *"todo el desarrollo debe ser pensado, diseñador y programado pensando en los 3."*
