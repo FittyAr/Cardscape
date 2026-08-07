@@ -85,6 +85,7 @@ builder.UseCardscapeSerilog(ServiceType.Api);
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+    options.AddDocumentTransformer<CardBodySchemasTransformer>();
 });
 builder.Services.AddValidation();
 
