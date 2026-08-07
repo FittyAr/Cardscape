@@ -86,6 +86,7 @@ builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
     options.AddDocumentTransformer<CardBodySchemasTransformer>();
+    options.AddDocumentTransformer<WebhookEventsSchemaTransformer>();
 });
 builder.Services.AddValidation();
 
