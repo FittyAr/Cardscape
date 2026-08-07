@@ -54,7 +54,13 @@ public static class ChecklistEndpoints
         itemGroup.MapPost("/items/", async (
             Guid checklistId, AddItemBody body, IMessageBus bus, CancellationToken ct) =>
         {
-            var result = await bus.InvokeAsync<Result<ChecklistDto>>(
+            // BETA-8-API-#3 — see test-results/r8/r8-report.md.
+            // The endpoint used to return the full ChecklistDto
+            // (everything + the freshly-added item buried in
+            // `items[]`); the canonical REST shape for a POST
+            // that creates a single resource is the resource
+            // itself. The handler now returns ChecklistItemDto.
+            var result = await bus.InvokeAsync<Result<ChecklistItemDto>>(
                 new AddChecklistItemCommand(checklistId, body.Text), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });

@@ -551,6 +551,9 @@ else
             Guid newChecklistId = created.Value.Id;
             foreach (string item in result.Value.Items)
             {
+                // BETA-8-API-#3 — return type is now ChecklistItemDto
+                // (we still discard the result here, the next line
+                // reloads the checklists to render the final shape).
                 await Checklists.AddItemAsync(newChecklistId, item);
             }
 
@@ -792,8 +795,23 @@ else
     private async Task AddItemAsync(Guid checklistId)
     {
         if (string.IsNullOrWhiteSpace(newChecklistItemText)) return;
-        ApiResult<ChecklistDto> result = await Checklists.AddItemAsync(checklistId, newChecklistItemText);
-        if (result.IsSuccess) await ReplaceChecklistAsync(result.Value!);
+        // BETA-8-API-#3 — backend now returns the freshly-added
+        // ChecklistItemDto alone, not the whole checklist. We
+        // append the new item to the in-memory list so the UI
+        // re-renders without a full GET.
+        ApiResult<ChecklistItemDto> result = await Checklists.AddItemAsync(checklistId, newChecklistItemText);
+        if (result.IsSuccess && result.Value is not null && checklists is not null)
+        {
+            checklists = checklists
+                .Select(c => c.Id != checklistId
+                    ? c
+                    : new ChecklistDto(
+                        c.Id, c.CardId, c.Title,
+                        [.. c.Items, result.Value],
+                        CompletedCount: c.CompletedCount,
+                        TotalCount: c.TotalCount + 1))
+                .ToList();
+        }
         newChecklistItemText = string.Empty;
     }
 

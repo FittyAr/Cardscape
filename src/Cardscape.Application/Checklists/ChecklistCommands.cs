@@ -277,7 +277,7 @@ public sealed record AddChecklistItemCommand(Guid ChecklistId, string Text) : IM
 
 public static class AddChecklistItemCommandHandler
 {
-    public static async Task<Result<ChecklistDto>> Handle(
+    public static async Task<Result<ChecklistItemDto>> Handle(
         AddChecklistItemCommand command,
         IChecklistRepository checklists,
         ICardRepository cards,
@@ -292,14 +292,14 @@ public static class AddChecklistItemCommandHandler
     {
         if (currentUser.Id is null)
         {
-            return Result.Failure<ChecklistDto>(DomainError.Unauthenticated(
+            return Result.Failure<ChecklistItemDto>(DomainError.Unauthenticated(
                 "auth.required", "Authentication is required."));
         }
 
         var textResult = ChecklistItemText.Create(command.Text);
         if (textResult.IsFailure)
         {
-            return Result.Failure<ChecklistDto>(textResult.Error);
+            return Result.Failure<ChecklistItemDto>(textResult.Error);
         }
 
         // v1.2.0 audit (pass 12): IDOR — see
@@ -308,14 +308,14 @@ public static class AddChecklistItemCommandHandler
             command.ChecklistId, checklists, cards, lists, boards, currentUser, ct);
         if (access.IsFailure)
         {
-            return Result.Failure<ChecklistDto>(access.Error);
+            return Result.Failure<ChecklistItemDto>(access.Error);
         }
 
         Checklist? checklist = await checklists.GetByIdAsync(
             new ChecklistId(command.ChecklistId), ct);
         if (checklist is null)
         {
-            return Result.Failure<ChecklistDto>(DomainError.NotFound(
+            return Result.Failure<ChecklistItemDto>(DomainError.NotFound(
                 "checklists.not_found", "Checklist was not found."));
         }
 
@@ -327,9 +327,15 @@ public static class AddChecklistItemCommandHandler
         // addition on the activity feed. The new item is the
         // last one in the checklist (highest position).
         ChecklistItem? newItem = checklist.Items.OrderByDescending(i => i.Position.Value).FirstOrDefault();
+        if (newItem is null)
+        {
+            return Result.Failure<ChecklistItemDto>(DomainError.Conflict(
+                "checklists.item_not_added", "Checklist item could not be added."));
+        }
+
         IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
         Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
-        if (newItem is not null && card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
+        if (card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
         {
             await searchIndex.IndexChecklistItemAsync(newItem, checklist, boardId, ct);
             await activities.AddAsync(Activity.Create(
@@ -342,7 +348,19 @@ public static class AddChecklistItemCommandHandler
             await uow.SaveChangesAsync(ct);
         }
 
-        return Result.Success(ChecklistDto.FromEntity(checklist));
+        // BETA-8-API-#3 — return the created item alone. The
+        // previous shape returned the whole ChecklistDto, which
+        // forced the client to diff/replace a list it already
+        // had in memory just to learn the new item id. We
+        // hand the caller the one row it actually needs.
+        ChecklistItemDto dto = new(
+            newItem.Id.Value,
+            newItem.ChecklistId.Value,
+            newItem.Text.Value,
+            newItem.IsCompleted,
+            (int)newItem.Position.Value,
+            newItem.AssignedTo);
+        return Result.Success(dto);
     }
 }
 

@@ -17,7 +17,7 @@ public interface IChecklistsApiClient
 
     Task<ApiResult> DeleteAsync(Guid checklistId, CancellationToken ct = default);
 
-    Task<ApiResult<ChecklistDto>> AddItemAsync(
+    Task<ApiResult<ChecklistItemDto>> AddItemAsync(
         Guid checklistId, string text, CancellationToken ct = default);
 
     Task<ApiResult<ChecklistDto>> ToggleItemAsync(
@@ -64,12 +64,12 @@ public sealed class ChecklistsApiClient(IHttpClientFactory http)
         return await ReadAsync(response, ct);
     }
 
-    public async Task<ApiResult<ChecklistDto>> AddItemAsync(
+    public async Task<ApiResult<ChecklistItemDto>> AddItemAsync(
         Guid checklistId, string text, CancellationToken ct = default)
     {
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             $"api/checklists/{checklistId}/items/", new { text }, ct);
-        return await ReadAsync<ChecklistDto>(response, ct);
+        return await ReadAsync<ChecklistItemDto>(response, ct);
     }
 
     public async Task<ApiResult<ChecklistDto>> ToggleItemAsync(

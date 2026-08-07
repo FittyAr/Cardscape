@@ -184,8 +184,10 @@ public class ChecklistTests
             ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.SearchIndex, ctx.Activities, CancellationToken.None);
 
         withItem.IsSuccess.Should().BeTrue();
-        withItem.Value!.Items.Should().HaveCount(1);
-        Guid itemId = withItem.Value.Items[0].Id;
+        // BETA-8-API-#3 — AddChecklistItemCommand now returns the
+        // newly-added item alone, not the whole checklist.
+        withItem.Value!.Text.Should().Be("Buy milk");
+        Guid itemId = withItem.Value.Id;
 
         var toggled = await ToggleChecklistItemCommandHandler.Handle(
             new ToggleChecklistItemCommand(created.Value.Id, itemId),
