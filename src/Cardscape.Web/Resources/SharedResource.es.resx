@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <root xmlns:ns1="urn:schemas-microsoft-com:xml-msdata" xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:schema id="root">
     <xs:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -331,4 +331,39 @@
   <data name="ImportBlurb" xml:space="preserve"><value>Subí un export JSON de Trello para crear un tablero nuevo con listas y tarjetas.</value></data>
   <data name="ImportTrelloFile" xml:space="preserve"><value>Archivo JSON de Trello</value></data>
   <data name="ImportTitle" xml:space="preserve"><value>Importar un tablero de Trello</value></data>
-<data name="NavToggleSidebar" xml:space="preserve"><value>Mostrar/ocultar panel de navegación</value></data></root>
+<data name="NavToggleSidebar" xml:space="preserve"><value>Mostrar/ocultar panel de navegación</value></data>  <data name="CardNotFoundTitle" xml:space="preserve"><value>No se encontró esta tarjeta</value></data>
+  <data name="CardNotFoundBody" xml:space="preserve"><value>Puede haber sido eliminada, archivada o no tenés acceso. El id de la tarjeta se conserva en la URL — volvé a la lista de espacios de trabajo y elegí otra tarjeta de un tablero donde seas miembro.</value></data>
+  <data name="CardNotFoundBack" xml:space="preserve"><value>Volver a los espacios de trabajo</value></data>
+  <data name="CardEditTitle" xml:space="preserve"><value>Editar título</value></data>
+  <data name="BoardAddList" xml:space="preserve"><value>Agregar lista</value></data>
+  <data name="BoardAddCard" xml:space="preserve"><value>Agregar tarjeta</value></data>
+  <data name="BoardAddItem" xml:space="preserve"><value>Agregar</value></data>
+  <data name="WebhooksTitle" xml:space="preserve"><value>Webhooks</value></data>
+  <data name="WebhooksBlurb" xml:space="preserve"><value>Enviá eventos de tarjetas a una URL que controles. Cada webhook recibe un POST firmado por cada evento al que te suscribiste.</value></data>
+  <data name="WebhooksNew" xml:space="preserve"><value>Nuevo webhook</value></data>
+  <data name="WebhooksUrl" xml:space="preserve"><value>URL</value></data>
+  <data name="WebhooksEvents" xml:space="preserve"><value>Eventos (separados por coma)</value></data>
+  <data name="WebhooksActive" xml:space="preserve"><value>Activo</value></data>
+  <data name="WebhooksNoWebhooks" xml:space="preserve"><value>Aún no hay webhooks.</value></data>
+  <data name="WebhooksCreated" xml:space="preserve"><value>Webhook creado. Tu secreto se muestra abajo — copialo ahora, el servidor solo guarda el hash.</value></data>
+  <data name="WebhooksSecretLabel" xml:space="preserve"><value>Secreto (una vez)</value></data>
+  <data name="WebhooksDeliveries" xml:space="preserve"><value>Entregas recientes</value></data>
+  <data name="WebhooksDeliveryStatus" xml:space="preserve"><value>Estado</value></data>
+  <data name="WebhooksDeliveryUrl" xml:space="preserve"><value>URL</value></data>
+  <data name="WebhooksDeliveryTimestamp" xml:space="preserve"><value>Marca de tiempo</value></data>
+  <data name="WebhooksDeliveryNoDeliveries" xml:space="preserve"><value>Aún no hay entregas.</value></data>
+  <data name="WebhooksCreatedAt" xml:space="preserve"><value>Creado</value></data>
+  <data name="WebhooksDisable" xml:space="preserve"><value>Desactivar</value></data>
+  <data name="WebhooksEnable" xml:space="preserve"><value>Activar</value></data>
+  <data name="WebhooksDelete" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="WebhooksCreate" xml:space="preserve"><value>Crear</value></data>
+  <data name="DeleteCardDialogTitle" xml:space="preserve"><value>Eliminar tarjeta</value></data>
+  <data name="DeleteCardDialogBody" xml:space="preserve"><value>¿Eliminar la tarjeta \"{0}\"? Esta acción no se puede deshacer.</value></data>
+  <data name="DeleteCardDialogConfirm" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="DeleteCardDialogCancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="DescriptionEdit" xml:space="preserve"><value>Editar</value></data>
+  <data name="DescriptionSave" xml:space="preserve"><value>Guardar</value></data>
+  <data name="DescriptionCancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="DescriptionEmpty" xml:space="preserve"><value>Agregar descripción</value></data>
+  <data name="ChecklistProgress" xml:space="preserve"><value>{0}% hecho</value></data>
+</root>
