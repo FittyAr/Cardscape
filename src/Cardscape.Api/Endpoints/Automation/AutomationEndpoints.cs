@@ -72,9 +72,9 @@ public static class AutomationEndpoints
 
     public sealed record CreateRuleBody(
         string Name,
-        int Trigger,
+        AutomationTrigger Trigger,
         Guid? TriggerListId,
-        int Action,
+        AutomationAction Action,
         string? ActionArgument,
         int Position = 0);
 

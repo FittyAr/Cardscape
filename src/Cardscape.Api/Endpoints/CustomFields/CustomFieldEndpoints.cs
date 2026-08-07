@@ -1,4 +1,5 @@
 using Cardscape.Application.CustomFields;
+using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -30,7 +31,7 @@ public static class CustomFieldEndpoints
         {
             var result = await bus.InvokeAsync<Result<CustomFieldDefinitionDto>>(
                 new CreateCustomFieldDefinitionCommand(
-                    boardId, body.Name, body.Kind, body.DropdownOptions, body.Position),
+                    boardId, body.Name, (int)body.Kind, body.DropdownOptions, body.Position),
                 ct);
             return result.IsSuccess
                 ? Results.Created(
@@ -96,7 +97,7 @@ public static class CustomFieldEndpoints
 
     public sealed record CreateFieldBody(
         string Name,
-        int Kind,
+        CustomFieldKind Kind,
         IReadOnlyList<string>? DropdownOptions,
         int Position = 0);
 
