@@ -1,0 +1,215 @@
+@page "/boards/{BoardId:guid}/webhooks"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@using Microsoft.Extensions.Localization
+@inject IWebhooksApiClient WebhooksClient
+@inject DialogService DialogService
+@inject NotificationService Notify
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["WebhooksTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<PageHeader Title="@L["WebhooksTitle"]" Subtitle="@L["WebhooksBlurb"]">
+    <Actions>
+        <RadzenButton Text="@L["WebhooksNew"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                      Click="@ShowCreate" Disabled="@(rows is null)" />
+    </Actions>
+</PageHeader>
+
+@if (rows is null)
+{
+    <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+}
+else if (rows.Count == 0 && !showCreate)
+{
+    <RadzenCard>
+        <RadzenText Text="@L["WebhooksNoWebhooks"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    </RadzenCard>
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        @foreach (WebhookEndpointDto endpoint in rows)
+        {
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+                                 AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                <RadzenText Text="@endpoint.Url" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
+                                <RadzenBadge BadgeStyle="@(endpoint.Active ? BadgeStyle.Success : BadgeStyle.Light)"
+                                             Text="@(endpoint.Active ? L["WebhooksActive"] : "Disabled")" />
+                            </RadzenStack>
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                                @foreach (string evt in endpoint.Events)
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@evt" />
+                                }
+                            </RadzenStack>
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                                @($"{L["WebhooksCreatedAt"]}: {endpoint.CreatedAt.LocalDateTime:yyyy-MM-dd HH:mm} · secret prefix: {endpoint.SecretPrefix}")
+                            </RadzenText>
+                        </RadzenStack>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                            <RadzenButton Text="@(endpoint.Active ? L["WebhooksDisable"] : L["WebhooksEnable"])"
+                                          ButtonStyle="@(endpoint.Active ? ButtonStyle.Warning : ButtonStyle.Success)"
+                                          Size="ButtonSize.Small" Click="@(() => ToggleAsync(endpoint))" />
+                            <RadzenButton Text="@L["WebhooksDeliveries"]" ButtonStyle="ButtonStyle.Light"
+                                          Size="ButtonSize.Small" Click="@(() => ShowDeliveriesAsync(endpoint))" />
+                            <RadzenButton Text="@L["WebhooksDelete"]" ButtonStyle="ButtonStyle.Danger"
+                                          Size="ButtonSize.Small" Click="@(() => DeleteAsync(endpoint))" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        }
+    </RadzenStack>
+}
+
+@if (showCreate)
+{
+    <RadzenCard>
+        <RadzenStack Gap="0.75rem">
+            <RadzenText Text="@L["WebhooksNew"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <LabeledField Text="@L["WebhooksUrl"]" Component="wh-url">
+                <RadzenTextBox @bind-Value="createModel.Url" Name="wh-url"
+                               Placeholder="https://example.com/hook" Style="width:100%" />
+            </LabeledField>
+            <LabeledField Text="@L["WebhooksEvents"]" Component="wh-events">
+                <RadzenTextBox @bind-Value="createModel.EventsRaw" Name="wh-events"
+                               Placeholder="card.created, card.moved, board.created" Style="width:100%" />
+            </LabeledField>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
+                <RadzenButton Text="@L["WebhooksCreate"]" ButtonStyle="ButtonStyle.Primary" Click="@CreateAsync"
+                              IsBusy="@creating" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+}
+
+@if (showSecret is not null)
+{
+    <RadzenCard>
+        <RadzenStack Gap="0.5rem">
+            <RadzenText Text="@L["WebhooksCreated"]" TextStyle="TextStyle.Body1" />
+            <RadzenText Text="@showSecret.Endpoint.SecretPrefix" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
+            <RadzenTextBox Value="@showSecret.CleartextSecret" ReadOnly="true" Style="width:100%; font-family: monospace" />
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                <RadzenButton Text="@L["ActionClose"]" Click="@(() => showSecret = null)" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+}
+
+@code {
+    [Parameter] public Guid BoardId { get; set; }
+
+    private IReadOnlyList<WebhookEndpointDto>? rows;
+    private WebhookEndpointIssuance? showSecret;
+    private bool showCreate;
+    private bool creating;
+    private CreateModel createModel = new();
+
+    private sealed class CreateModel
+    {
+        public string Url { get; set; } = string.Empty;
+        public string EventsRaw { get; set; } = "card.created, card.moved";
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        ApiResult<IReadOnlyList<WebhookEndpointDto>> result = await WebhooksClient.ListForBoardAsync(BoardId);
+        rows = result.IsSuccess ? result.Value : [];
+    }
+
+    private void ShowCreate() => showCreate = true;
+
+    private void CancelCreate()
+    {
+        showCreate = false;
+        createModel = new();
+    }
+
+    private async Task CreateAsync()
+    {
+        if (creating) return;
+        if (string.IsNullOrWhiteSpace(createModel.Url))
+        {
+            return;
+        }
+        List<string> events = createModel.EventsRaw
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+        if (events.Count == 0)
+        {
+            events = new() { "card.created" };
+        }
+        creating = true;
+        try
+        {
+            ApiResult<WebhookEndpointIssuance> result = await WebhooksClient.CreateAsync(
+                BoardId, new CreateWebhookRequestDto(createModel.Url.Trim(), null, events));
+            if (result.IsSuccess && result.Value is not null)
+            {
+                showSecret = result.Value;
+                showCreate = false;
+                createModel = new();
+                await ReloadAsync();
+            }
+            else
+            {
+                Notify.Notify(NotificationSeverity.Error, L["WebhooksTitle"], result.Error ?? "Failed");
+            }
+        }
+        finally
+        {
+            creating = false;
+        }
+    }
+
+    private async Task ToggleAsync(WebhookEndpointDto endpoint)
+    {
+        ApiResult<WebhookEndpointDto> result = await WebhooksClient.UpdateAsync(
+            BoardId, endpoint.Id, null, !endpoint.Active);
+        if (result.IsSuccess)
+        {
+            await ReloadAsync();
+        }
+    }
+
+    private async Task DeleteAsync(WebhookEndpointDto endpoint)
+    {
+        ApiResult result = await WebhooksClient.DeleteAsync(BoardId, endpoint.Id);
+        if (result.IsSuccess)
+        {
+            await ReloadAsync();
+        }
+    }
+
+    private async Task ShowDeliveriesAsync(WebhookEndpointDto endpoint)
+    {
+        ApiResult<IReadOnlyList<WebhookDeliveryDto>> result = await WebhooksClient.ListDeliveriesAsync(
+            BoardId, endpoint.Id, take: 10);
+        if (!result.IsSuccess || result.Value is null)
+        {
+            Notify.Notify(NotificationSeverity.Error, L["WebhooksTitle"], result.Error ?? "Failed");
+            return;
+        }
+        string body = result.Value.Count == 0
+            ? L["WebhooksDeliveryNoDeliveries"]
+            : string.Join("\n", result.Value.Select(d =>
+                $"{d.CreatedAt.LocalDateTime:HH:mm:ss} · {d.EventType} · status={d.Status} · attempts={d.AttemptCount}" +
+                (string.IsNullOrEmpty(d.LastError) ? string.Empty : $" · {d.LastError}")));
+        await DialogService.Alert(body, $"{L["WebhooksDeliveries"]} — {endpoint.Url}");
+    }
+}
