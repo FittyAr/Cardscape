@@ -58,8 +58,9 @@ public static class AuthEndpoints
         // takes the JWT access token from the Authorization header and
         // returns the matching user. The Blazor WASM client already
         // has the JWT claims locally and does not currently call this,
-        // but external consumers (MCP server, scripts, swagger "Try
-        // it out") expect a /me endpoint to confirm a token is alive.
+        // but external consumers (MCP server, scripts, the Scalar
+        // "Try it out" panel) expect a /me endpoint to confirm a
+        // token is alive.
         // The Blazor-side `AuthService.AuthState` still gets its
         // identity from the JWT itself; this endpoint is read-only
         // and does not affect the existing client behaviour.

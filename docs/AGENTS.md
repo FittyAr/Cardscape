@@ -41,7 +41,7 @@ MCP server decision.
 | DB providers (runtime) | Sqlite, Npgsql, MySql.EntityFrameworkCore | 10.0.10 / 10.0.3 / 10.0.7 |
 | Validation | FluentValidation | 11.11.0 |
 | CQRS / Mediator | MediatR | 12.4.1 |
-| API docs | Swashbuckle.AspNetCore | 10.2.3 |
+| API docs | Microsoft.AspNetCore.OpenApi + Scalar.AspNetCore | 10.0.10 / 2.12.50 |
 | AI integration | ModelContextProtocol (MCP) | latest stable (>= 0.3) |
 | Tests | xUnit + FluentAssertions + Moq + NetArchTest | 2.9.2 / 6.12.2 / 4.20.72 / 1.3.2 |
 | License | Reciprocal Public License 1.5 | RPL-1.5 |
@@ -61,7 +61,7 @@ strict and one-directional:
                              ▼
    ┌──────────────────────────────────────────────────────┐
    │                      Cardscape.Api                    │  ← presentation
-   │   minimal API endpoints, JWT bearer, Swagger,         │
+   │   minimal API endpoints, JWT bearer, Scalar (OpenAPI), │
    │   DI composition root, provider selection             │
    └──────┬───────────────────────────────────┬────────────┘
           │                                   │

@@ -23,7 +23,7 @@ namespace Cardscape.Api.Middleware;
 ///   <item>the <c>/api/account/...</c> paths (so a user can
 ///         always raise/lower their own limits, even when
 ///         throttled);</item>
-///   <item>health, swagger and other non-API surfaces.</item>
+///   <item>health, the OpenAPI / Scalar reference surface and other non-API surfaces.</item>
 /// </list>
 /// </summary>
 public sealed class RateLimitMiddleware(
@@ -105,7 +105,8 @@ public sealed class RateLimitMiddleware(
         string path = context.Request.Path.Value ?? string.Empty;
         if (path.StartsWith("/api/account", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("/health", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/openapi", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/scalar", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("/hubs/", StringComparison.OrdinalIgnoreCase))
         {
             return true;

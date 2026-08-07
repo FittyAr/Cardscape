@@ -535,7 +535,7 @@ end-to-end vertical slice for a single user:
                               ▼
    ┌─────────────────────────────────────────────────────┐
    │                       Cardscape.Api                   │  ← presentation
-   │   minimal API endpoints, JWT bearer, Swagger,        │
+   │   minimal API endpoints, JWT bearer, Scalar (OpenAPI), │
    │   DI composition root, provider selection             │
    └──────┬───────────────────────────────────┬───────────┘
           │                                   │

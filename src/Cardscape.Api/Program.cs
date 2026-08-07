@@ -31,6 +31,7 @@ using Cardscape.Api.Endpoints.Workspaces;
 using Cardscape.Api.Extensions;
 using Cardscape.Api.Hubs;
 using Cardscape.Api.Middleware;
+using Cardscape.Api.OpenApi;
 using Cardscape.Api.Realtime;
 using Cardscape.Application.DependencyInjection;
 using Cardscape.Application.Realtime;
@@ -38,6 +39,7 @@ using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Logging;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,7 +52,7 @@ var builder = WebApplication.CreateBuilder(args);
 // `"Private"` instead of `0` — see BUG #9 in
 // test-results/BETA-TEST-REPORT.md. The Blazor WASM client
 // always sends ints, so this only opens the door for external
-// consumers (MCP, scripts, swagger "Try it out").
+// consumers (MCP, scripts, the Scalar "Try it out" panel).
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(
@@ -68,16 +70,21 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.UseCardscapeSerilog(ServiceType.Api);
 
 // ── Services ─────────────────────────────────────────────
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+// Native .NET 10+ OpenAPI document generation
+// (Microsoft.AspNetCore.OpenApi). The generator emits the
+// document at /openapi/v1.json when MapOpenApi() is called
+// (Development only) and uses the type's full name as the
+// schema id, so the nested `private record class RenameBody`
+// types in endpoint classes no longer collide — the
+// Swashbuckle-era CustomSchemaIds workaround is gone. The
+// Bearer security scheme is contributed by
+// BearerSecuritySchemeTransformer; Scalar renders the
+// "Authorize" button and the padlock on every endpoint that
+// goes through RequireAuthorization() without any further
+// wiring.
+builder.Services.AddOpenApi(options =>
 {
-    // Endpoint body types are nested as `private record class RenameBody`
-    // inside each endpoint class. Multiple endpoint classes (Cards,
-    // Lists, …) define records with the same short name, so the
-    // default schemaId generator collides and the OpenAPI document
-    // fails to build. Use the full type name (with `+` replaced by
-    // `.`) as the schemaId so every body type is unique.
-    c.CustomSchemaIds(t => t.FullName?.Replace("+", "."));
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
 });
 builder.Services.AddValidation();
 
@@ -181,8 +188,12 @@ app.UseStaticFiles();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // /openapi/v1.json — the OpenAPI document.
+    // /scalar           — the Scalar API reference UI.
+    // Both are wired on top of the same document the rest of the
+    // pipeline (release job, third-party SDK generators) consumes.
+    app.MapOpenApi();
+    app.MapScalarApiReference();
     app.MapDevOnlyEndpoints();
 }
 
@@ -296,8 +307,16 @@ app.MapHub<BoardHub>("/hubs/board");
 // for malformed GUIDs and any other routing typos. The scoped
 // fallback only handles non-/api paths, so missing API routes
 // now bubble up to 404 as the client expects.
+//
+// /openapi/* and /scalar are also excluded: MapOpenApi()/MapScalarApiReference()
+// are endpoint registrations, not middleware, so the sub-pipeline
+// below would otherwise intercept the request and return index.html
+// (200 with the SPA shell) before the routing middleware ever sees
+// the OpenAPI document or Scalar UI endpoints.
 app.MapWhen(
-    context => !context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase),
+    context => !context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
+        && !context.Request.Path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase)
+        && !context.Request.Path.StartsWithSegments("/scalar", StringComparison.OrdinalIgnoreCase),
     branch => branch.UseStaticFiles().UseRouting().UseEndpoints(endpoints =>
     {
         endpoints.MapFallbackToFile("index.html");

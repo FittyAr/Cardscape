@@ -18,7 +18,7 @@ strict and one-directional:
                                  ▼
    ┌──────────────────────────────────────────────────────┐
    │                      Cardscape.Api                    │  ← public REST
-   │   minimal API endpoints, JWT bearer, Swagger,         │
+   │   minimal API endpoints, JWT bearer, Scalar (OpenAPI), │
    │   DI composition root, provider selection             │
    └──────┬───────────────────────────────────┬────────────┘
           │                                   │
@@ -113,7 +113,7 @@ src/
 │   ├── Middleware/              ← exception handling, request logging
 │   ├── Filters/                 ← endpoint filters
 │   ├── Extensions/              ← ServiceCollectionExtensions, WebApplicationExtensions
-│   ├── OpenApi/                 ← Swagger conventions
+│   ├── OpenApi/                 ← OpenAPI transformers (Bearer scheme, …)
 │   ├── HealthChecks/            ← liveness + readiness
 │   └── Program.cs
 │

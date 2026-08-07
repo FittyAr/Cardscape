@@ -141,7 +141,7 @@ reads them on demand when a task matches their trigger.
 
 | `configuring-opentelemetry-dotnet` | Configure OpenTelemetry distributed tracing, metrics, and logging in ASP.NET Core using the .NET OpenTelemetry SDK | adding or changing observability configuration (matches `docs/design/02-logging-observability.md`) |
 | `convert-blazor-server-to-webapp` | Convert a pre-.NET 8 Blazor Server app to a .NET 8+ Blazor Web App | migrating legacy Blazor Server codebases (Cardscape is already Blazor WebAssembly, not a target) |
-| `dotnet-webapi` | Create or modify ASP.NET Core Web API endpoints with controllers or minimal APIs, correct HTTP semantics, and OpenAPI/Swagger | adding new endpoints under `src/Cardscape.Api/` |
+| `dotnet-webapi` | Create or modify ASP.NET Core Web API endpoints with controllers or minimal APIs, correct HTTP semantics, and OpenAPI/Scalar | adding new endpoints under `src/Cardscape.Api/` |
 | `minimal-api-file-upload` | File upload endpoints in ASP.NET minimal APIs (.NET 8+) | implementing attachment or asset upload in `src/Cardscape.Api/` |
 
 **From `dotnet/dotnet-data`**

@@ -160,7 +160,7 @@ smallest end-to-end vertical that proves the architecture.
 - [ ] JWT bearer authentication.
 - [ ] CORS for the Blazor dev server.
 - [ ] Health checks.
-- [ ] Swagger UI in Development.
+- [ ] Scalar / OpenAPI reference UI in Development.
 
 ### 2.4 Web
 

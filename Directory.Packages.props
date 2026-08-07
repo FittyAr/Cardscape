@@ -68,7 +68,25 @@
       LTS-friendly surface area).
     -->
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+    <!--
+      OpenAPI / API reference (replaces Swashbuckle.AspNetCore).
+      Microsoft.AspNetCore.OpenApi is the native .NET 10+ OpenAPI
+      document generator (Microsoft.AspNetCore.OpenApi package on
+      NuGet, ships as part of the ASP.NET Core shared framework in
+      10.0.x). Scalar.AspNetCore mounts the Scalar reference UI on
+      top of the document emitted by MapOpenApi().
+    -->
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.12.50" />
+    <!--
+      Override transitive Microsoft.OpenApi (pulled in by both
+      Microsoft.AspNetCore.OpenApi 10.0.10 and Scalar.AspNetCore).
+      The 2.0.0 default is flagged by GHSA-v5pm-xwqc-g5wc (CVE-2026-49451,
+      uncontrolled recursion on circular schema references, fixed in
+      2.7.5). Central Package Management is what lets us pin the
+      transitive once instead of overriding per project.
+    -->
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
     <!-- Localization (Blazor WASM). -->
     <PackageVersion Include="Microsoft.Extensions.Localization" Version="10.0.10" />
     <!-- OAuth 2.0 / OIDC external login providers. -->

@@ -417,9 +417,10 @@ not yet implemented.
   downloadable from the docs.
 - Add a step to `.github/workflows/ci.yml` that runs
   `dotnet build /p:GenerateDocumentationFile=true` and then
-  uses Swashbuckle to dump the spec to
-  `artifacts/openapi.json`. The CI uploads the file as an
-  artifact on every release tag.
+  uses the native .NET 10+ OpenAPI generator to dump the
+  spec from `/openapi/v1.json` to `artifacts/openapi.json`.
+  The CI uploads the file as an artifact on every release
+  tag.
 - New doc page `docs/api/02-openapi-spec.md` with a link to
   the latest release artifact.
 

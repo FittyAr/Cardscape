@@ -85,8 +85,8 @@ public static class IntegrationsEndpoints
         // was always empty and the endpoint returned 404 for
         // every call. The fix is to read the boardId from a
         // query string parameter — the operator dashboard and
-        // swagger "Try it out" use this directly, and the MCP
-        // tool is updated separately to pass it through.
+        // Scalar's "Try it out" panel use this directly, and
+        // the MCP tool is updated separately to pass it through.
         group.MapGet("/pulls", async (
             [FromQuery] Guid boardId,
             [FromQuery] string repoFullName,

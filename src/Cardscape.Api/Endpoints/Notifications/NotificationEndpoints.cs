@@ -24,8 +24,8 @@ public static class NotificationEndpoints
         // the page at 200 entries per the same constant
         // the SCIM list endpoint uses.
         // All three query parameters are optional. Forcing every consumer
-        // (including future MCP clients, scripts, and Swagger's "Try it out"
-        // pane) to know the exact query string contract produces 500s from
+        // (including future MCP clients, scripts, and Scalar's "Try it out"
+        // panel) to know the exact query string contract produces 500s from
         // the model binder when any of them is missing — see the BUG #8
         // entry in test-results/BETA-TEST-REPORT.md. Defaults match the
         // ListNotificationsQuery record.
@@ -55,8 +55,9 @@ public static class NotificationEndpoints
         // Wrapped in a DTO (rather than a raw int) so the response shape is
         // self-describing and easy to extend with extra counters (e.g. by kind)
         // without breaking the contract.
-        // Pinned to the public Cardscape.Api namespace so Swashbuckle
-        // surfaces it under the "Notifications" tag in the OpenAPI document.
+        // Pinned to the public Cardscape.Api namespace so the native
+        // .NET 10+ OpenAPI generator surfaces it under the
+        // "Notifications" tag in the document Scalar renders.
 
         group.MapPost("/mark-all-read", async (IMessageBus bus, CancellationToken ct) =>
         {

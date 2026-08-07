@@ -29,7 +29,16 @@
     <PackageReference Include="Serilog.Sinks.Debug" />
     <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
-    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <!--
+      Native .NET 10+ OpenAPI document generation. The OpenAPI
+      document is served at /openapi/v1.json (Development) via
+      MapOpenApi() and the Scalar reference UI is mounted at
+      /scalar via Scalar.AspNetCore. No third-party Swagger UI
+      or document generators — the whole pipeline is built on
+      the Microsoft.AspNetCore.OpenApi + Scalar.AspNetCore pair.
+    -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

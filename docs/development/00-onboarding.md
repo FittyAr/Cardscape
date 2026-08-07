@@ -45,7 +45,8 @@ By default, the API:
   to the API binary if it doesn't exist).
 - Exposes the health endpoints at `/health/live` and
   `/health/ready`.
-- Exposes the OpenAPI spec at `/swagger` (Development environment
+- Exposes the OpenAPI spec at `/openapi/v1.json` and the
+  Scalar reference UI at `/scalar` (Development environment
   only).
 
 To smoke-test:
@@ -192,7 +193,7 @@ Some transitive advisories still surface under
 transitive dependency won't fail the build, only
 `nuget audit` will. The transitive overrides in
 `Directory.Packages.props` keep the known issues at bay
-(SQLitePCLRaw 2.1.12, Swashbuckle 10.2.3, etc.).
+(SQLitePCLRaw 2.1.12, Scalar.AspNetCore 2.12.50, etc.).
 
 ### `Cardscape.Web` fails to build with "the type 'Components' is not found"
 

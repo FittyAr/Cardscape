@@ -71,6 +71,14 @@ public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Progr
     /// mutated; the only thing that can race inside it is
     /// another factory's <c>CreateHost</c> call, which is
     /// serialised within the xUnit scheduler per test method.
+    ///
+    /// <para>The <c>ASPNETCORE_ENVIRONMENT</c> swap kept for
+    /// symmetry with the other env-var settings is a no-op for
+    /// the new minimal-hosting model (the env is captured by
+    /// <c>WebApplication.CreateBuilder()</c> before
+    /// <c>CreateHost</c> runs). The actual environment pin
+    /// lives in <c>ConfigureWebHost</c> via
+    /// <c>builder.UseEnvironment("Development")</c>.</para>
     /// </summary>
     protected override IHost CreateHost(IHostBuilder builder)
     {
@@ -103,6 +111,19 @@ public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Progr
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // Pin the host to Development for every test class. The
+        // API gates /openapi/v1.json and /scalar behind
+        // app.Environment.IsDevelopment(); the original
+        // CreateHost-based env-var swap in this factory was a
+        // no-op for the new minimal-hosting model
+        // (WebApplication.CreateBuilder() captures the env
+        // before the IHostBuilder is exposed to the factory),
+        // so we use UseEnvironment here instead. The CI matrix
+        // also sets ASPNETCORE_ENVIRONMENT=Testing, but that
+        // value is the process env — UseEnvironment wins for
+        // the in-process test server.
+        builder.UseEnvironment("Development");
+
         // The API's AddApiAuthentication already registers both
         // the JWT bearer scheme and the API-token scheme behind a
         // "BearerPolicy" wrapper. Tests just use the production

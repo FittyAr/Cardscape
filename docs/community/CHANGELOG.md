@@ -47,6 +47,49 @@ matrix in [`docs/roadmap/05-plan-v1.2.0.md`](../roadmap/05-plan-v1.2.0.md)
   third-party pen test + SOC 2 Type II audit are explicit
   v3.0+ work.
 
+### Changed (this commit — OpenAPI tooling migration)
+
+- **Swashbuckle.AspNetCore is fully removed.** The API
+  reference surface is now built on the native .NET 10+
+  `Microsoft.AspNetCore.OpenApi` generator plus
+  `Scalar.AspNetCore` 2.12.50. The OpenAPI document is
+  served at **`/openapi/v1.json`** (was
+  `/swagger/v1/swagger.json`); the Scalar reference UI is
+  served at **`/scalar`** (was `/swagger`). The CI release
+  job, the integration test, the rate-limit exemption list,
+  and the docs in `docs/api/` and `docs/architecture/` are
+  all updated to the new routes.
+- **New** `src/Cardscape.Api/OpenApi/BearerSecuritySchemeTransformer.cs`
+  — adds the `Bearer` security scheme to the document so
+  Scalar renders the "Authorize" button and the padlock on
+  every endpoint that goes through `RequireAuthorization()`.
+  Replaces the implicit scheme registration Swashbuckle
+  used to do for `[Authorize]`-decorated endpoints.
+- **New** integration test
+  `tests/Cardscape.IntegrationTests/Endpoints/OpenApiTests.cs`
+  (renamed from `SwaggerTests.cs`) — pins the document
+  contract (200 + JSON + `openapi`/`paths` keys) and the
+  `Bearer` security scheme registration. The old
+  `Swagger_Document_Builds_And_Is_Served_As_Valid_Json`
+  regression test is gone; the new test owns the same
+  contract against the new path.
+- **Removed** the `CustomSchemaIds` workaround that was
+  needed because Swashbuckle's default schema-id generator
+  collided on the nested `private record class RenameBody`
+  body types. The native generator uses the type's full
+  name as the schema id, so the workaround is unnecessary
+  and the equivalent fix is the framework's default
+  behaviour. (See
+  `## Fixed — Swashbuckle schemaId collision` in the
+  v1.1.0 section below for the original bug.)
+- **Override** `Microsoft.OpenApi` 2.7.5 added to
+  `Directory.Packages.props` to dodge CVE-2026-49451
+  (uncontrolled recursion on circular schema references)
+  in the 2.0.0 default that ships transitively with
+  `Microsoft.AspNetCore.OpenApi` 10.0.10 and
+  `Scalar.AspNetCore` 2.12.50. The override is centralised
+  through CPM so we don't repeat it per project.
+
 ### Added (this commit — pen test + SOC 2 / GDPR prep)
 
 - `docs/security/06-asvs-controls.md` — OWASP ASVS v4.0.3

@@ -28,7 +28,8 @@ APIs**:
 1. **REST API** (`/api/...`) — the same endpoints the Blazor
    WASM client consumes. Documented in
    `docs/api/00-conventions.md` and the live OpenAPI document
-   at `/swagger/v1/swagger.json` (Development environment).
+   at `/openapi/v1.json` (Development environment); the Scalar
+   reference UI is at `/scalar`.
 2. **Model Context Protocol server** (stdio or HTTP+SSE) —
    the AI integration pillar. Documented in
    `docs/architecture/03-mcp-server.md` and

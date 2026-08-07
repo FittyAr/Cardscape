@@ -7,8 +7,9 @@
 
 ## 1. Where to find it
 
-- **In-process (Development)**: `GET /swagger/v1/swagger.json`
-  on the running API. The same JSON the Swagger UI renders.
+- **In-process (Development)**: `GET /openapi/v1.json` on the
+  running API. The same JSON the Scalar reference UI
+  (`GET /scalar`) renders.
 - **At every tagged release**: the
   [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
   `release` job boots the API, captures the spec into
@@ -112,8 +113,8 @@ endpoints ship in minor / patch releases.
 ## 6. Local development
 
 The `dev` Compose (`docker-compose.dev.yml`) starts the API
-on `http://localhost:8080`. The Swagger UI is at
-`/swagger`. The raw JSON is at `/swagger/v1/swagger.json`.
+on `http://localhost:8080`. The Scalar reference UI is at
+`/scalar`. The raw JSON is at `/openapi/v1.json`.
 The CI's `release` job captures the same JSON at every
 release; if you see a discrepancy between the local UI and
 the published spec, the local API is running a preview /
