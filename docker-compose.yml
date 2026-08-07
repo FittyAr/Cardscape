@@ -42,7 +42,14 @@ services:
       - cardscape.data:/app/Data
       - cardscape.uploads:/app/Storage
     healthcheck:
-      test: ["CMD", "dotnet", "Cardscape.Api.dll", "--health"]
+      # BETA-8-ENV-#1 — see test-results/r8/r8-report.md.
+      # The previous `dotnet Cardscape.Api.dll --health` command spawned
+      # a SECOND Kestrel instance on :8080 (address-in-use, exit 134),
+      # which made the container report unhealthy forever even though
+      # the primary API answered 200 on /health. Probe the live endpoint
+      # with curl instead; curl is installed in the Dockerfile runtime
+      # stage specifically for this.
+      test: ["CMD-SHELL", "curl --silent --fail --max-time 4 http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5

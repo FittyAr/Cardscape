@@ -28,6 +28,20 @@ RUN dotnet publish src/Cardscape.Api/Cardscape.Api.csproj \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
+# Install curl for the docker healthcheck. The .NET 10 aspnet image is
+# debian-slim without curl; we add it here so the compose healthcheck
+# can probe /health without spawning a second dotnet process (which
+# would race the primary one for port 8080).
+#
+# BETA-8-ENV-#1 — see test-results/r8/r8-report.md. The previous
+# `dotnet Cardscape.Api.dll --health` command tried to start a *second*
+# Kestrel instance on :8080, which always exited with address-in-use
+# and made the container report unhealthy forever even though the
+# real API was answering 200 on /health.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 # Non-root for safety; UID 1000 matches the .NET base image convention.
 RUN groupadd --system --gid 1001 cardscape \
     && useradd  --system --uid 1001 --gid cardscape cardscape \
