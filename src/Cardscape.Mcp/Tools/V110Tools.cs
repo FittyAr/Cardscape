@@ -4,6 +4,8 @@ using Cardscape.Application.Dashboards.Commands;
 using Cardscape.Application.Dashboards.DTOs;
 using Cardscape.Application.Dashboards.Queries;
 using Cardscape.Application.Lists;
+using Cardscape.Application.OAuth.Commands;
+using Cardscape.Application.OAuth.Queries;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Import;
 using Microsoft.Extensions.DependencyInjection;
@@ -121,4 +123,39 @@ public sealed class V110Tools
         // Real import: persist + return ids + preview summary.
         return await import.ImportTrelloJsonAsync(stream, targetWorkspaceId, previewOnly: false, ct);
     }
+
+    // ── OAuth 3rd-party apps (P3.11) ───────────────────────
+    // BETA-8-MCP-#3 - see test-results/r8/r8-report.md.
+    // The application layer has had RegisterOAuthAppCommand,
+    // ListOAuthAppsForOwnerQuery, and RevokeOAuthAppCommand
+    // since v1.0.0 (the REST endpoints in /api/oauth/apps were
+    // already there) but the MCP server never surfaced them as
+    // tools. An AI client had to drop down to HTTP to manage
+    // its own OAuth app registration. We delegate straight
+    // through to those existing commands / queries so the
+    // auth + audit + cleartext-secret-only-once rules all
+    // stay in one place.
+    [McpServerTool(Name = "oauth_apps_list")]
+    public async Task<Result<IReadOnlyList<OAuthAppSummaryDto>>> ListOAuthApps(
+        IMessageBus bus, CancellationToken ct) =>
+        await bus.InvokeAsync<Result<IReadOnlyList<OAuthAppSummaryDto>>>(
+            new ListOAuthAppsForOwnerQuery(), ct);
+
+    [McpServerTool(Name = "oauth_apps_create")]
+    public async Task<Result<OAuthAppRegistrationDto>> CreateOAuthApp(
+        string name,
+        string[]? allowedScopes,
+        string[]? redirectUris,
+        IMessageBus bus,
+        CancellationToken ct) =>
+        await bus.InvokeAsync<Result<OAuthAppRegistrationDto>>(
+            new RegisterOAuthAppCommand(
+                name,
+                (IReadOnlyCollection<string>)(allowedScopes ?? Array.Empty<string>()),
+                (IReadOnlyCollection<string>)(redirectUris ?? Array.Empty<string>())),
+            ct);
+
+    [McpServerTool(Name = "oauth_apps_revoke")]
+    public async Task<Result> RevokeOAuthApp(Guid appId, IMessageBus bus, CancellationToken ct) =>
+        await bus.InvokeAsync<Result>(new RevokeOAuthAppCommand(appId), ct);
 }
