@@ -135,7 +135,7 @@ else
                         tabindex="0"
                         draggable="true"
                         @ondragstart="@(() => OnCardDragStart(card))"
-                        @onclick="@(() => Nav.NavigateTo($"cards/{card.Id}"))">
+                        @onclick="@(() => Nav.NavigateTo($"cards/{card.Id}/{BoardId}"))">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
                     <RadzenText Text="@card.Title" TextStyle="TextStyle.Body2"
                                 Class="@(card.IsCompleted ? "rz-color-text-disabled" : null)"
