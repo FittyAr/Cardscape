@@ -45,6 +45,14 @@ public sealed class ChecklistTests
     [Fact]
     public async Task Add_Item_Then_Toggle_Updates_Progress()
     {
+        // BETA-8-API-#3 — see test-results/r8/r8-report.md.
+        // The endpoint POST /api/checklists/{id}/items now
+        // returns the single ChecklistItemDto (the resource
+        // that was just created), not the parent ChecklistDto.
+        // To assert on the parent's CompletedCount /
+        // TotalCount after the toggle, we re-read the
+        // checklist via the GET (which still returns the
+        // full ChecklistDto).
         HttpClient client = await CreateAuthenticatedClientAsync();
         Seed seed = await CreateSeedAsync(client, "add+toggle");
 
@@ -54,15 +62,24 @@ public sealed class ChecklistTests
 
         HttpResponseMessage withItem = await client.PostAsJsonAsync(
             $"api/checklists/{cl!.Id}/items/", new { text = "first" }, TestContext.Current.CancellationToken);
-        ChecklistDto? updated = await withItem.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
-        Guid itemId = updated!.Items[0].Id;
+        ChecklistItemDto? addedItem = await withItem.Content.ReadFromJsonAsync<ChecklistItemDto>(TestContext.Current.CancellationToken);
+        Guid itemId = addedItem!.Id;
 
         HttpResponseMessage toggled = await client.PatchAsync(
             $"api/checklists/{cl.Id}/items/{itemId}/toggle", content: null, TestContext.Current.CancellationToken);
-        ChecklistDto? after = await toggled.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
-        after!.CompletedCount.Should().Be(1);
+        toggled.IsSuccessStatusCode.Should().BeTrue();
+
+        // Re-read the checklist to assert the parent's
+        // progress counters reflect the toggle.
+        HttpResponseMessage listed = await client.GetAsync(
+            $"api/cards/{seed.CardId}/checklists/", TestContext.Current.CancellationToken);
+        ChecklistDto[]? arr =
+            (await listed.Content.ReadFromJsonAsync<ChecklistDto[]>(TestContext.Current.CancellationToken))!;
+        ChecklistDto after = arr.Should().ContainSingle().Subject;
+        after.CompletedCount.Should().Be(1);
         after.TotalCount.Should().Be(1);
         after.Items[0].IsCompleted.Should().BeTrue();
+        after.Items[0].Id.Should().Be(itemId);
     }
 
     [Fact]
@@ -89,6 +106,12 @@ public sealed class ChecklistTests
     [Fact]
     public async Task Delete_Item_Removes_Single_Item()
     {
+        // BETA-8-API-#3 — see test-results/r8/r8-report.md.
+        // The endpoint POST /api/checklists/{id}/items now
+        // returns the single ChecklistItemDto. The DELETE
+        // endpoint returns the parent ChecklistDto (no
+        // shape change there). This test re-reads via the
+        // GET to assert the parent is now empty.
         HttpClient client = await CreateAuthenticatedClientAsync();
         Seed seed = await CreateSeedAsync(client, "delete item");
 
@@ -97,12 +120,18 @@ public sealed class ChecklistTests
         ChecklistDto? cl = await created.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
         HttpResponseMessage withItem = await client.PostAsJsonAsync(
             $"api/checklists/{cl!.Id}/items/", new { text = "x" }, TestContext.Current.CancellationToken);
-        ChecklistDto? with = await withItem.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
+        ChecklistItemDto? addedItem = await withItem.Content.ReadFromJsonAsync<ChecklistItemDto>(TestContext.Current.CancellationToken);
 
         HttpResponseMessage delItem = await client.DeleteAsync(
-            $"api/checklists/{cl.Id}/items/{with!.Items[0].Id}", TestContext.Current.CancellationToken);
-        ChecklistDto? after = await delItem.Content.ReadFromJsonAsync<ChecklistDto>(TestContext.Current.CancellationToken);
-        after!.Items.Should().BeEmpty();
+            $"api/checklists/{cl.Id}/items/{addedItem!.Id}", TestContext.Current.CancellationToken);
+        delItem.IsSuccessStatusCode.Should().BeTrue();
+
+        HttpResponseMessage listed = await client.GetAsync(
+            $"api/cards/{seed.CardId}/checklists/", TestContext.Current.CancellationToken);
+        ChecklistDto[]? arr =
+            (await listed.Content.ReadFromJsonAsync<ChecklistDto[]>(TestContext.Current.CancellationToken))!;
+        ChecklistDto after = arr.Should().ContainSingle().Subject;
+        after.Items.Should().BeEmpty();
         after.TotalCount.Should().Be(0);
     }
 

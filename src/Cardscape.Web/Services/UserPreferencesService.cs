@@ -81,10 +81,23 @@ public sealed class UserPreferencesService
     public string? CurrentCssPath { get; private set; }
 
     /// <summary>User's chosen appearance mode (Light / Dark /
-    /// System). Stored server-side; the runtime mode
-    /// resolver (SystemAppearanceWatcher) is added in a
-    /// follow-up — for now System defaults to Light.</summary>
+    /// System). Stored server-side. The runtime resolver
+    /// for the <c>System</c> mode is a small
+    /// <c>&lt;RadzenMediaQuery Query="(prefers-color-scheme: dark)"&gt;</c>
+    /// in <c>App.razor</c> that updates
+    /// <see cref="SystemPrefersDark"/> when the OS theme
+    /// flips. The service then re-applies the matching
+    /// sibling of the user's chosen theme name.</summary>
     public string CurrentMode { get; private set; } = "System";
+
+    /// <summary>True when the OS <c>prefers-color-scheme: dark</c>
+    /// media query matches. Updated by the
+    /// <c>&lt;RadzenMediaQuery&gt;</c> in <c>App.razor</c>.
+    /// Defaults to <c>false</c> (the historical
+    /// "Radzen default" before this workstream) so the
+    /// first render with a fresh user does not flash a
+    /// dark theme on a light-OS user.</summary>
+    public bool SystemPrefersDark { get; private set; }
 
     /// <summary>Raised after every successful state change
     /// (init or set). UI consumers subscribe to re-render
@@ -158,13 +171,20 @@ public sealed class UserPreferencesService
     /// Apply a new theme + mode. The flow is:
     ///
     /// 1. Update the local state.
-    /// 2. Apply the theme via <c>ThemeService.SetTheme</c>
-    ///    (writes the cookie) and compute the CssPath.
-    /// 3. If logged in, PUT /api/users/me/preferences
+    /// 2. If the mode is <c>System</c>, resolve the matching
+    ///    sibling of the chosen theme for the current OS
+    ///    preference (set by <see cref="NotifySystemDarkChanged"/>).
+    ///    The user's *intent* (the theme name) is preserved
+    ///    on the server, but the locally-applied theme
+    ///    (and the cookie) reflects the OS-driven choice.
+    /// 3. Apply the resolved theme via
+    ///    <c>ThemeService.SetTheme</c> and compute the
+    ///    CssPath.
+    /// 4. If logged in, PUT /api/users/me/preferences
     ///    (best effort; a failure logs but does not roll
     ///    back the local change — the cookie still holds
     ///    the user's choice, and the next mutation retries).
-    /// 4. Raise Changed.
+    /// 5. Raise Changed.
     /// </summary>
     public async Task SetAsync(string themeName, string mode)
     {
@@ -176,7 +196,16 @@ public sealed class UserPreferencesService
 
         CurrentThemeName = themeName;
         CurrentMode = mode;
-        ApplyThemeName(themeName);
+
+        // For System mode, resolve the OS-driven sibling
+        // first; the cookie + the bound RadzenTheme reflect
+        // the sibling, not the user's intent. The server
+        // still stores the intent.
+        string appliedThemeName = mode == "System"
+            ? ResolveSiblingForSystem(themeName, SystemPrefersDark)
+            : themeName;
+
+        ApplyThemeName(appliedThemeName);
         Changed?.Invoke();
 
         try
@@ -264,6 +293,74 @@ public sealed class UserPreferencesService
             CardscapeThemes.ClassicName => ClassicCssPath,
             CardscapeThemes.ClassicDarkName => ClassicDarkCssPath,
             _ => null,
+        };
+    }
+
+    /// <summary>Called by the <c>&lt;RadzenMediaQuery&gt;</c>
+    /// in <c>App.razor</c> when the OS
+    /// <c>prefers-color-scheme: dark</c> media query
+    /// matches or stops matching. The service re-applies
+    /// the matching sibling of the user's currently
+    /// chosen theme (only when the mode is <c>System</c>;
+    /// for explicit <c>Light</c> / <c>Dark</c> the OS
+    /// preference is ignored). The new theme is a local
+    /// cookie write only — we do not PUT to the server
+    /// because the user's *intent* (the theme name) has
+    /// not changed, only the OS-derived sibling.</summary>
+    public void NotifySystemDarkChanged(bool prefersDark)
+    {
+        if (SystemPrefersDark == prefersDark)
+        {
+            return;
+        }
+
+        SystemPrefersDark = prefersDark;
+        if (CurrentMode == "System" && !string.IsNullOrEmpty(CurrentThemeName))
+        {
+            string sibling = ResolveSiblingForSystem(CurrentThemeName, prefersDark);
+            if (sibling != CurrentThemeName)
+            {
+                ApplyThemeName(sibling);
+                Changed?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>Pick the matching sibling of a theme name
+    /// for the given <c>prefersDark</c> value. For Light
+    /// sibling of an entry that has both (e.g. "humanistic"
+    /// vs "humanistic-dark"), returns the light or dark
+    /// variant. For entries that only exist in one variant
+    /// (e.g. "dark" — the dark variant of "default"), the
+    /// choice flips to the available sibling. For the 2
+    /// custom themes, the same flip applies.
+    /// <para>Public so the unit tests in
+    /// <c>Cardscape.UnitTests.Theming.SystemAppearanceWatcherTests</c>
+    /// can pin the resolution rules down without
+    /// reflection. The method is pure (no side effects),
+    /// so the public surface is safe.</para></summary>
+    public static string ResolveSiblingForSystem(string themeName, bool prefersDark)
+    {
+        return themeName switch
+        {
+            // The "default" theme's dark sibling is named
+            // "dark" (not "default-dark") in the Radzen
+            // free-themes whitelist. Handle the asymmetry.
+            "default" => prefersDark ? "dark" : "default",
+            "dark" => prefersDark ? "dark" : "default",
+            // The 4 light/dark pairs follow the "{name}"
+            // / "{name}-dark" naming.
+            "humanistic" or "material" or "software" or "standard"
+                => prefersDark ? themeName + "-dark" : themeName,
+            "humanistic-dark" or "material-dark" or "software-dark" or "standard-dark"
+                => prefersDark ? themeName : themeName[..^"-dark".Length],
+            // The 2 custom themes follow the same pattern.
+            CardscapeThemes.ClassicName
+                => prefersDark ? CardscapeThemes.ClassicDarkName : CardscapeThemes.ClassicName,
+            CardscapeThemes.ClassicDarkName
+                => prefersDark ? CardscapeThemes.ClassicDarkName : CardscapeThemes.ClassicName,
+            // Unknown: leave as-is.
+            _ => themeName,
         };
     }
 }

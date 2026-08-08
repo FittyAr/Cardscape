@@ -35,6 +35,16 @@
 <RadzenTheme Theme="@UserPreferences.CurrentThemeName"
              CssPath="@UserPreferences.CurrentCssPath" />
 
+@*
+  SystemAppearanceWatcher — listens to the OS
+  prefers-color-scheme media query. When the user picks
+  the "System" mode, the service re-applies the
+  matching sibling of their chosen theme. Documented
+  Radzen component (no custom JS interop needed).
+*@
+<RadzenMediaQuery Query="(prefers-color-scheme: dark)"
+                   Change="@OnSystemDarkChanged" />
+
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
         <Found Context="routeData">
@@ -92,6 +102,17 @@
             await Task.Yield();
             Console.Error.WriteLine($"[App] UserPreferences.InitializeAsync threw: {ex.Message}");
         }
+    }
+
+    /// <summary>Called by <c>&lt;RadzenMediaQuery&gt;</c>
+    /// when the OS <c>prefers-color-scheme: dark</c>
+    /// media query flips. The service re-applies the
+    /// matching sibling of the user's chosen theme
+    /// (only when the mode is "System"; explicit Light /
+    /// Dark ignores the OS preference).</summary>
+    private void OnSystemDarkChanged(bool prefersDark)
+    {
+        UserPreferences.NotifySystemDarkChanged(prefersDark);
     }
 
     private void OnUserPreferencesChanged() => InvokeAsync(StateHasChanged);
