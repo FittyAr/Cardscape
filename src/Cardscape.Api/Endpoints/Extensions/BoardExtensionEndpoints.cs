@@ -49,6 +49,44 @@ public static class BoardExtensionEndpoints
             return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
         });
 
+        // BETA-9-#3 — see test-results/r9/r9-report.md.
+        // The list endpoint returns rows with both an `id` (UUID,
+        // the row's primary key) and a `kind` (the small int the
+        // rest of the API uses as the extension identifier). The
+        // PUT/DELETE routes only accept the int, so a caller who
+        // grabs the `id` from the GET response and tries to use
+        // it as the path segment gets a confusing 404. Accept the
+        // UUID here too: look the row up, resolve its kind, and
+        // delegate to the integer-route command handler.
+        group.MapDelete("/{extensionId:guid}", async (
+            Guid boardId,
+            Guid extensionId,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var lookup = await bus.InvokeAsync<Result<IReadOnlyList<BoardExtensionDto>>>(
+                new ListBoardExtensionsQuery(boardId), ct);
+            if (lookup.IsFailure)
+            {
+                return MapError(lookup.Error);
+            }
+
+            BoardExtensionDto? row = lookup.Value
+                .FirstOrDefault(e => e.Id == extensionId);
+            if (row is null)
+            {
+                return Results.NotFound(new
+                {
+                    error = "extensions.not_found",
+                    message = "No board extension with that id is enabled on this board."
+                });
+            }
+
+            var disable = await bus.InvokeAsync<Result>(
+                new DisableBoardExtensionCommand(boardId, row.Kind), ct);
+            return disable.IsSuccess ? Results.NoContent() : MapError(disable.Error);
+        });
+
         group.MapPut("/{kind:int}/config", async (
             Guid boardId,
             int kind,
