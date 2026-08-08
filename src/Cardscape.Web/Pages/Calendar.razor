@@ -20,14 +20,13 @@
     </Actions>
 </PageHeader>
 
-<RadzenScheduler TItem="CalendarSchedulerItem"
+<RadzenScheduler @key="@schedulerKey"
+                 TItem="CalendarSchedulerItem"
                  Data="@SchedulerItems"
                  StartProperty="Start"
                  EndProperty="End"
                  TextProperty="Title"
-                 SelectedView="SchedulerView.Month"
-                 CurrentDate="@schedulerCurrentDate"
-                 CurrentDateChanged="@OnSchedulerDateChanged"
+                 Date="@schedulerCurrentDate"
                  AppointmentSelect="@OnAppointmentSelect"
                  Style="height: 700px">
     <RadzenMonthView />
@@ -39,18 +38,23 @@
     // the RadzenScheduler's own built-in nav (◀ / ▶ in the
     // scheduler toolbar) were stepping over each other: the
     // header updated but the scheduler kept showing the original
-    // month, and vice-versa. The fix binds the scheduler's
-    // CurrentDate to a DateTime that mirrors `firstOfMonth` and
-    // listens to CurrentDateChanged so the two stay in sync
-    // regardless of which control the user clicks.
+    // month. The Radzen component does not expose a
+    // CurrentDateChanged event, so we cannot two-way bind. Every
+    // time `firstOfMonth` changes we re-key the RadzenScheduler
+    // so Blazor tears it down and rebuilds it with the new
+    // `Date` value, and the data array also refreshes.
     private DateTimeOffset firstOfMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
     private IReadOnlyList<CalendarEntryDto> entries = [];
     private string monthLabel = string.Empty;
 
     // The RadzenScheduler takes a plain DateTime (not DateTimeOffset)
-    // for CurrentDate; we project to / from UTC at the boundary so
-    // the scheduler never sees a kind it can't handle.
+    // for Date; we project at the boundary so the scheduler
+    // never sees a kind it can't handle.
     private DateTime schedulerCurrentDate => firstOfMonth.UtcDateTime.Date;
+
+    // Bump this every time firstOfMonth changes so Blazor
+    // re-instantiates the RadzenScheduler with the new `Date`.
+    private int schedulerKey;
 
     protected override async Task OnInitializedAsync()
     {
@@ -68,6 +72,7 @@
             : (IReadOnlyList<CalendarEntryDto>)Array.Empty<CalendarEntryDto>();
 
         monthLabel = firstOfMonth.ToString("MMMM yyyy");
+        schedulerKey++;
     }
 
     private async Task PrevMonth()
@@ -86,23 +91,6 @@
     {
         DateTime utcNow = DateTime.UtcNow;
         firstOfMonth = new DateTimeOffset(utcNow.Year, utcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
-        await ReloadAsync();
-    }
-
-    // BUG-A6-002 — sync the other direction. When the user clicks
-    // the scheduler's own ◀ / ▶ / Today, the scheduler tells us the
-    // new CurrentDate via this callback; we re-anchor firstOfMonth
-    // to the first of that month and reload so the page header and
-    // the data both follow.
-    private async Task OnSchedulerDateChanged(DateTime newDate)
-    {
-        DateTime anchor = new DateTime(newDate.Year, newDate.Month, 1);
-        DateTimeOffset proposed = new(anchor, TimeSpan.Zero);
-        if (proposed == firstOfMonth)
-        {
-            return;
-        }
-        firstOfMonth = proposed;
         await ReloadAsync();
     }
 
