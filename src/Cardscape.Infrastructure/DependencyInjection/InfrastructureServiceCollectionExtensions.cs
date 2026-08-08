@@ -150,6 +150,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRepository<ApiToken, ApiTokenId>, ApiTokenRepository>(sp => sp.GetRequiredService<ApiTokenRepository>());
         services.AddScoped<IApiTokenRepository, ApiTokenRepository>(sp => sp.GetRequiredService<ApiTokenRepository>());
 
+        services.AddScoped<UserPreferencesRepository>();
+        services.AddScoped<IRepository<Cardscape.Domain.UserPreferences.UserPreferences, UserId>, UserPreferencesRepository>(sp => sp.GetRequiredService<UserPreferencesRepository>());
+        services.AddScoped<IUserPreferencesRepository, UserPreferencesRepository>(sp => sp.GetRequiredService<UserPreferencesRepository>());
+
         services.AddScoped<WorkspaceInvitationRepository>();
         services.AddScoped<IRepository<WorkspaceInvitation, WorkspaceInvitationId>, WorkspaceInvitationRepository>(sp => sp.GetRequiredService<WorkspaceInvitationRepository>());
         services.AddScoped<IWorkspaceInvitationRepository, WorkspaceInvitationRepository>(sp => sp.GetRequiredService<WorkspaceInvitationRepository>());

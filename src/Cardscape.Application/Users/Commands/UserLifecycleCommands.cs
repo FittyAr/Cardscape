@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
+using Cardscape.Domain.UserPreferences;
 using Cardscape.Domain.Workspaces;
 using Wolverine;
 
@@ -23,6 +24,7 @@ public static class SoftDeleteUserCommandHandler
         SoftDeleteUserCommand command,
         IUserRepository users,
         IWorkspaceRepository workspaces,
+        IUserPreferencesRepository userPreferences,
         IUnitOfWork unitOfWork,
         IClock clock,
         CancellationToken cancellation)
@@ -60,6 +62,14 @@ public static class SoftDeleteUserCommandHandler
             }
             ws.RemoveMember(user.Id.Value, clock.UtcNow);
         }
+
+        // v1.2.0 plan §3 commit 2 — drop the user's
+        // appearance preferences row too. The cookie on
+        // the browser may still hold the old theme, but
+        // the server-side authority is gone, and the
+        // reaper below will hard-delete the user itself
+        // after 30 days.
+        await userPreferences.DeleteByUserIdAsync(user.Id.Value, cancellation);
 
         user.SoftDelete(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellation);
@@ -110,6 +120,7 @@ public static class AnonymiseUserCommandHandler
         AnonymiseUserCommand command,
         IUserRepository users,
         IWorkspaceRepository workspaces,
+        IUserPreferencesRepository userPreferences,
         IUnitOfWork unitOfWork,
         IClock clock,
         CancellationToken cancellation)
@@ -144,6 +155,12 @@ public static class AnonymiseUserCommandHandler
             }
             ws.RemoveMember(user.Id.Value, clock.UtcNow);
         }
+
+        // v1.2.0 plan §3 commit 2 — drop the preferences
+        // row too. The user is being anonymised; the
+        // (theme, mode) pair is a per-user preference that
+        // no longer has a person behind it.
+        await userPreferences.DeleteByUserIdAsync(user.Id.Value, cancellation);
 
         user.Anonymise(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellation);
