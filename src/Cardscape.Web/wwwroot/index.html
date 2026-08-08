@@ -7,6 +7,19 @@
     <title>Cardscape</title>
     <base href="/" />
     <link rel="stylesheet" href="css/barlow.css" />
+    <!--
+        BETA-9-#6 — see test-results/r9/r9-report.md. wwwroot/css/app.css
+        carries the `display: none` rule for #blazor-error-ui plus the
+        .loading-progress spinner styling. Without this <link>, the
+        framework's red error banner is visible on every page load
+        (the default <div> `display: block` wins because the override
+        never reaches the cascade) and the WASM boot spinner renders
+        without its rotation animation. The file was orphaned when
+        the Radzen migration dropped the per-page `cs-*` rules in
+        favour of Radzen primitives, but the framework's two template
+        elements still need the styles.
+    -->
+    <link rel="stylesheet" href="css/app.css" />
     <link rel="stylesheet" href="_content/Radzen.Blazor/css/default.css" />
     <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
