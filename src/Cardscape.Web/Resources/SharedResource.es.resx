@@ -316,6 +316,14 @@
   <data name="AppearanceTheme" xml:space="preserve"><value>Tema</value></data>
   <data name="AppearanceMode" xml:space="preserve"><value>Modo</value></data>
   <data name="AppearanceSystem" xml:space="preserve"><value>Seguir al sistema</value></data>
+  <data name="AppearanceModeLight" xml:space="preserve"><value>Claro</value></data>
+  <data name="AppearanceModeDark" xml:space="preserve"><value>Oscuro</value></data>
+  <data name="SettingsAppearanceTitle" xml:space="preserve"><value>Apariencia</value></data>
+  <data name="SettingsAppearanceLead" xml:space="preserve"><value>Elegí un tema y un modo Claro/Oscuro/Sistema. La elección se guarda en el servidor cuando iniciás sesión, así que te sigue entre dispositivos.</value></data>
+  <data name="SettingsAppearanceApply" xml:space="preserve"><value>Aplicar</value></data>
+  <data name="SettingsAppearanceCurrent" xml:space="preserve"><value>Actual</value></data>
+  <data name="SettingsAppearanceLivePreview" xml:space="preserve"><value>Vista previa</value></data>
+  <data name="SettingsAppearance" xml:space="preserve"><value>Apariencia</value></data>
   <data name="CommonLanguageEnglish" xml:space="preserve"><value>InglÃ©s</value></data>
   <data name="CommonLanguageSpanish" xml:space="preserve"><value>EspaÃ±ol</value></data>
   <data name="Loading" xml:space="preserve"><value>Cargandoâ€¦</value></data>

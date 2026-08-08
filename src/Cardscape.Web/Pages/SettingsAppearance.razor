@@ -1,0 +1,150 @@
+@page "/settings/appearance"
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Cardscape.Web.Theming
+@using Microsoft.Extensions.Localization
+@inject UserPreferencesService UserPreferences
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["SettingsAppearanceTitle"] — Cardscape</PageTitle>
+
+<RadzenStack Class="rz-mx-auto" Style="max-width: 60rem;" Gap="1.5rem">
+    <RadzenText Text="@L["SettingsAppearanceTitle"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
+    <RadzenText Text="@L["SettingsAppearanceLead"]" TextStyle="TextStyle.Body1" Class="rz-color-text-secondary" />
+
+    @*
+      Mode picker. Light / Dark / System. The "System"
+      option follows the OS prefers-color-scheme media
+      query; today the service treats System as Light
+      (the SystemAppearanceWatcher is a follow-up).
+    *@
+    <RadzenCard>
+        <RadzenStack Gap="0.75rem">
+            <RadzenText Text="@L["AppearanceMode"]" TextStyle="TextStyle.H6" TagName="TagName.H2" />
+            <RadzenRadioButtonList TValue="string"
+                                   Value="@UserPreferences.CurrentMode"
+                                   Change="@OnModeChanged">
+                <Items>
+                    <RadzenRadioButtonListItem Text="@L["AppearanceModeLight"]" Value="@("Light")" />
+                    <RadzenRadioButtonListItem Text="@L["AppearanceModeDark"]" Value="@("Dark")" />
+                    <RadzenRadioButtonListItem Text="@L["AppearanceSystem"]" Value="@("System")" />
+                </Items>
+            </RadzenRadioButtonList>
+        </RadzenStack>
+    </RadzenCard>
+
+    @*
+      Theme grid. One card per catalog entry. The card
+      shows the theme's display name, a row of 5
+      RadzenBadge color swatches (primary, secondary,
+      success, warning, danger), a "Custom" badge for
+      the 2 Cardscape Classic variants, and an Apply
+      button that switches the theme via the service.
+
+      The grid is built from RadzenCard + RadzenStack +
+      RadzenBadge + RadzenButton only — no custom CSS.
+      The swatches use the same Radzen CSS variables
+      that the theme's components read, so the swatch
+      color IS the color the user will see on
+      RadzenButton/Primary etc. for that theme.
+    *@
+    <RadzenCard>
+        <RadzenStack Gap="0.75rem">
+            <RadzenText Text="@L["AppearanceTheme"]" TextStyle="TextStyle.H6" TagName="TagName.H2" />
+
+            <RadzenRow Gap="1rem">
+                @foreach (ThemeEntry theme in _themes)
+                {
+                    bool isCurrent = theme.Name == UserPreferences.CurrentThemeName;
+                    <RadzenColumn Size="12" Medium="6" Large="4">
+                        <RadzenCard Class="@($"rz-p-4 {(isCurrent ? "rz-border-primary" : string.Empty)}")">
+                            <RadzenStack Gap="0.5rem">
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                                    <RadzenText Text="@theme.DisplayName" TextStyle="TextStyle.Subtitle1" />
+                                    @if (theme.IsCustom)
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="Cardscape" />
+                                    }
+                                </RadzenStack>
+
+                                @*
+                                  Swatches. We show the 5 base
+                                  theme colours as RadzenBadge
+                                  with a small width so the
+                                  row reads as a swatch strip.
+                                  Radzen's --rz-primary etc.
+                                  are read at render time, so
+                                  the user sees the actual
+                                  values that the theme's
+                                  components will use.
+                                *@
+                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Primary" Text="P" />
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="S" />
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="✓" />
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="!" />
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="✕" />
+                                </RadzenStack>
+
+                                <RadzenButton Text="@(isCurrent ? L["SettingsAppearanceCurrent"] : L["SettingsAppearanceApply"])"
+                                              ButtonStyle="@(isCurrent ? ButtonStyle.Light : ButtonStyle.Primary)"
+                                              Disabled="@isCurrent"
+                                              Click="@(() => OnApplyThemeAsync(theme.Name))"
+                                              Style="width: 100%;" />
+                            </RadzenStack>
+                        </RadzenCard>
+                    </RadzenColumn>
+                }
+            </RadzenRow>
+        </RadzenStack>
+    </RadzenCard>
+
+    @*
+      Live preview pane. Re-themes instantly on apply
+      because Radzen reads its CSS variables at render
+      time — no need to swap any in-page state. The
+      preview shows a representative slice of the UI:
+      a button (primary/secondary), a text input, a
+      DataGrid row, a badge.
+    *@
+    <RadzenCard>
+        <RadzenStack Gap="0.75rem">
+            <RadzenText Text="@L["SettingsAppearanceLivePreview"]" TextStyle="TextStyle.H6" TagName="TagName.H2" />
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                <RadzenButton Text="Primary" ButtonStyle="ButtonStyle.Primary" />
+                <RadzenButton Text="Secondary" ButtonStyle="ButtonStyle.Secondary" />
+                <RadzenButton Text="Success" ButtonStyle="ButtonStyle.Success" />
+                <RadzenButton Text="Warning" ButtonStyle="ButtonStyle.Warning" />
+                <RadzenButton Text="Danger" ButtonStyle="ButtonStyle.Danger" />
+            </RadzenStack>
+            <RadzenTextBox Placeholder="Sample input" Style="max-width: 20rem;" />
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <RadzenBadge BadgeStyle="BadgeStyle.Primary" Text="Primary badge" />
+                <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="Secondary badge" />
+                <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Success" />
+                <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Warning" />
+                <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="Danger" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    private IReadOnlyList<ThemeEntry> _themes = ThemeCatalog.All;
+
+    private async Task OnApplyThemeAsync(string themeName)
+    {
+        await UserPreferences.SetAsync(themeName, UserPreferences.CurrentMode);
+    }
+
+    private async Task OnModeChanged()
+    {
+        string? themeName = UserPreferences.CurrentThemeName;
+        if (string.IsNullOrEmpty(themeName))
+        {
+            return;
+        }
+
+        await UserPreferences.SetAsync(themeName, UserPreferences.CurrentMode);
+    }
+}

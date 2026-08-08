@@ -1,4 +1,4 @@
-ï»¿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @implements IDisposable
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
@@ -13,7 +13,7 @@
 <RadzenComponents />
 
 @*
-  BETA-3-UI-#14 â€” see test-results/BETA-TEST-REPORT.md.
+  BETA-3-UI-#14 — see test-results/BETA-TEST-REPORT.md.
   Skip-link is the single highest-impact a11y fix on a
   SPA: keyboard / screen-reader users hit Tab once and
   jump straight past the sidebar / header chrome to the
@@ -39,6 +39,7 @@
                                 <ChildContent>
                                     <RadzenProfileMenuItem Path="account/api-tokens" Icon="key" Text="@L["NavApiTokens"]" />
                                     <RadzenProfileMenuItem Path="settings/two-factor" Icon="security" Text="@L["SettingsTwoFactor"]" />
+                                    <RadzenProfileMenuItem Path="settings/appearance" Icon="palette" Text="@L["SettingsAppearance"]" />
                                     <RadzenProfileMenuItem Text="@L["AuthLogOut"]" Value="logout" Icon="power_settings_new" />
                                 </ChildContent>
                                 <Template>
@@ -71,14 +72,14 @@
                 </RadzenPanelMenu>
                 <RadzenStack AlignItems="AlignItems.Center" Gap="0" Class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding);">
                     <RadzenText Text="Cardscape v1.0.0" TextStyle="TextStyle.Caption" Class="rz-color-text-disabled" TagName="TagName.P" TextAlign="TextAlign.Center" />
-                    <RadzenText Text="Copyright â’¸ 2026" TextStyle="TextStyle.Caption" Class="rz-mb-0 rz-color-text-disabled" TagName="TagName.P" TextAlign="TextAlign.Center" />
+                    <RadzenText Text="Copyright ? 2026" TextStyle="TextStyle.Caption" Class="rz-mb-0 rz-color-text-disabled" TagName="TagName.P" TextAlign="TextAlign.Center" />
                 </RadzenStack>
             </RadzenSidebar>
 
             <RadzenBody Expanded="@sidebarExpanded">
                 <RadzenRow Class="rz-mx-auto rz-px-4 rz-pt-2 rz-pt-md-4 rz-pt-lg-6 rz-pt-xl-12 rz-pb-2 rz-pb-lg-12" Style="max-width: 1440px;">
                     <RadzenColumn Size="12">
-                        @* BETA-3-UI-#14 â€” see test-results/BETA-TEST-REPORT.md.
+                        @* BETA-3-UI-#14 — see test-results/BETA-TEST-REPORT.md.
                            id="main-content" is the target of the
                            skip-link above. Keyboard / screen-reader
                            users land here on the first Tab press. *@
@@ -142,7 +143,7 @@
         // Re-render the layout (and its children) so the
         // HttpBackedStringLocalizer picks up the new
         // translations. The Blazor diff renderer is
-        // efficient â€” only the @L["â€¦"] expressions re-evaluate.
+        // efficient — only the @L["…"] expressions re-evaluate.
         InvokeAsync(StateHasChanged);
     }
 
@@ -167,3 +168,4 @@
         Nav.NavigateTo("login", forceLoad: true);
     }
 }
+
