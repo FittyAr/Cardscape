@@ -112,6 +112,20 @@ builder.Services.AddHttpClient("Cardscape.Resources", client =>
     // production static-asset path both resolve.
     client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 });
+// BETA-9-UI-#1 — see test-results/r9/r9-report.md.
+// The R8-#3 fix removed the underlying `StringLocalizer<SharedResource>`
+// registration and the wrapper's constructor still asks for
+// `IStringLocalizer<SharedResource>`, which is now mapped to the wrapper
+// itself. DI throws a circular-dependency error at start-up and every
+// Blazor page renders the "An unhandled error has occurred" overlay
+// before the user sees anything.
+//
+// Fix: register the framework's `StringLocalizer<SharedResource>` as
+// its concrete type (NOT under the IStringLocalizer<SharedResource>
+// interface) and inject the concrete type into the wrapper. The
+// interface registrations below then map the public surface to the
+// wrapper without the cycle.
+builder.Services.AddSingleton<Microsoft.Extensions.Localization.StringLocalizer<SharedResource>>();
 builder.Services.AddSingleton<Cardscape.Web.Services.HttpBackedStringLocalizer<SharedResource>>();
 builder.Services.AddSingleton<Microsoft.Extensions.Localization.IStringLocalizer<SharedResource>>(sp =>
     sp.GetRequiredService<Cardscape.Web.Services.HttpBackedStringLocalizer<SharedResource>>());

@@ -57,16 +57,24 @@ namespace Cardscape.Web.Services;
 /// </summary>
 public sealed class HttpBackedStringLocalizer<TResource> : IStringLocalizer<TResource>, IStringLocalizer
 {
-    private readonly IStringLocalizer<TResource> _fallback;
+    private readonly StringLocalizer<TResource> _fallback;
     private readonly CultureSwitcher _switcher;
 
-    public HttpBackedStringLocalizer(IStringLocalizer<TResource> fallback, CultureSwitcher switcher)
+    public HttpBackedStringLocalizer(StringLocalizer<TResource> fallback, CultureSwitcher switcher)
     {
-        // The generic localizer is the standard
-        // StringLocalizer<SharedResource> that reads the
-        // embedded SharedResource.resx (English). It is the
-        // fallback for the first render before the picker
-        // has loaded the static .resx.
+        // BETA-9-UI-#1 — see test-results/r9/r9-report.md.
+        // The fallback is the framework's StringLocalizer<TResource>
+        // (the standard resource manager-backed localizer that reads
+        // the embedded SharedResource.resx). The previous
+        // IStringLocalizer<TResource> parameter created a circular
+        // DI dependency: every IStringLocalizer<SharedResource> was
+        // mapped to this wrapper, so resolving the constructor
+        // parameter would re-resolve the same wrapper indefinitely.
+        // DI throws at start-up and the Blazor app shows the
+        // unhandled-error overlay on every page. We depend on the
+        // concrete type instead; Program.cs registers it under the
+        // concrete name so the wrapper can take it as a dependency
+        // without looping.
         _fallback = fallback;
         _switcher = switcher;
     }
