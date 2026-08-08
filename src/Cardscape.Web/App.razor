@@ -1,8 +1,39 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 @using Cardscape.Web.Layout
+@using Cardscape.Web.Services
+@using Radzen
 @implements IDisposable
 @inject NavigationManager Nav
+@inject UserPreferencesService UserPreferences
+
+<!--
+  v1.2.0 theming — the RadzenTheme tag replaces the two static
+  <link rel="stylesheet" href="_content/Radzen.Blazor/css/..." />
+  tags that used to live in wwwroot/index.html. The
+  UserPreferencesService decides what to bind:
+
+  - For a Radzen free theme (default, humanistic, material,
+    software, standard and their -dark siblings), the
+    bound Theme is the theme name (string, cookie value) and
+    CssPath is null. The Radzen cookie service + RadzenTheme
+    component read the cookie value and emit the matching
+    <link> automatically (from the default Radzen CSS path).
+
+  - For one of the two custom Cardscape Classic variants,
+    the bound Theme is the custom theme name
+    ("cardscape-classic" / "cardscape-classic-dark") and
+    CssPath is the matching wwwroot/css/cardscape-classic*.css
+    file. The RadzenTheme component reads CssPath and emits
+    the matching <link>; the file declares the brand
+    colour overrides on top of Radzen's Software base.
+
+  The service is a singleton and is initialised in
+  OnInitializedAsync; the Changed event re-renders this
+  tag whenever the user picks a different theme.
+-->
+<RadzenTheme Theme="@UserPreferences.CurrentThemeName"
+             CssPath="@UserPreferences.CurrentCssPath" />
 
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
@@ -37,10 +68,33 @@
     // it only ever reflects a CURRENT-page error.
     [Inject] private IJSRuntime Js { get; set; } = default!;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         Nav.LocationChanged += OnLocationChanged;
+        UserPreferences.Changed += OnUserPreferencesChanged;
+
+        // Hydrate the theme from the server (if logged in)
+        // or the cookie (if anonymous). The service is
+        // best-effort: any failure falls through to the
+        // Radzen default ("default" + light), which is
+        // the same as today's behaviour when no cookie
+        // is set.
+        try
+        {
+            await UserPreferences.InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            // Defensive: InitializeAsync already swallows
+            // network failures, but a synchronous throw
+            // (e.g. from ThemeService.SetTheme) should not
+            // crash the app on startup. Log and continue.
+            await Task.Yield();
+            Console.Error.WriteLine($"[App] UserPreferences.InitializeAsync threw: {ex.Message}");
+        }
     }
+
+    private void OnUserPreferencesChanged() => InvokeAsync(StateHasChanged);
 
     private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
@@ -65,5 +119,6 @@
     public void Dispose()
     {
         Nav.LocationChanged -= OnLocationChanged;
+        UserPreferences.Changed -= OnUserPreferencesChanged;
     }
 }

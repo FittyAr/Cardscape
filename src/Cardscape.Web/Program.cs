@@ -53,6 +53,15 @@ builder.Services.AddRadzenCookieThemeService(options =>
     options.Duration = TimeSpan.FromDays(365);
 });
 
+// ── Appearance preferences (v1.2.0 theming) ──────────────────────────
+// UserPreferencesService is the single source of truth for the
+// chosen (theme, mode) pair on the Blazor side. It coordinates
+// between the Radzen cookie service (anonymous users + write-
+// through cache) and the server-side API (logged-in users).
+// Singleton because the theme is global state, not per-circuit.
+builder.Services.AddScoped<IUserPreferencesApiClient, UserPreferencesApiClient>();
+builder.Services.AddSingleton<UserPreferencesService>();
+
 // ── Localization (i18n) ──────────────────────────────────────────────
 // Resources live under src/Cardscape.Web/Resources (SharedResource.resx
 // and per-culture variants like SharedResource.es.resx).

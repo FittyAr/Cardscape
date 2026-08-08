@@ -20,8 +20,19 @@
         elements still need the styles.
     -->
     <link rel="stylesheet" href="css/app.css" />
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/default.css" />
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
+    <!--
+        v1.2.0 theming (docs/roadmap/06-plan-radzen-themes.md commit 3):
+        the two static Radzen CSS <link> tags that used to live here
+        are gone. The <RadzenTheme> component in App.razor emits the
+        matching <link> at runtime based on the user's choice —
+        Radzen.ThemeService (via the cookie service) resolves the
+        10 free themes (default, humanistic, material, software,
+        standard, and their -dark siblings) to the matching
+        _content/Radzen.Blazor/css/{name}.css file, and
+        UserPreferencesService binds the Radzen.Theme POCO for the
+        two Cardscape Classic custom themes (which override the
+        --rz-* CSS variables inline).
+    -->
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0f3d3e" />

@@ -1,0 +1,86 @@
+/*
+  Cardscape Classic (light) — v1.2.0 brand theme.
+  See docs/roadmap/06-plan-radzen-themes.md §4.2.
+
+  This file is loaded by the <RadzenTheme> component when
+  the user picks the "cardscape-classic" theme; the cookie
+  is set to "cardscape-classic" and the CssPath is set to
+  /css/cardscape-classic.css. The file declares the brand
+  teal and warm-sand palette as --rz-* CSS variable
+  overrides on :root, layered on top of Radzen's Software
+  base (the closest of the 5 free themes to a
+  "serious tool" look, per maintainer direction).
+
+  The full Radzen Software CSS file is 750 KB; the
+  ThemeBuilder-generated override for a custom theme is the
+  same size, which is impractical to ship in a commit.
+  This file declares only the colour slots we change.
+  The shape, font scale, focus ring, button radius, etc.
+  fall through to the Radzen Software base — that is the
+  documented "theme override on top of a base" pattern.
+
+  The brand slots (per plan §4.4):
+    - Primary: #0f3d3e (the brand teal — pulled from
+      <meta name="theme-color"> in index.html:14).
+    - Primary-light: #1a5a5b (+1 HSL step toward white).
+    - Primary-darker: #082627 (-1 HSL step toward black).
+    - Secondary: #d4a574 (warm sand; complementary on the
+      HSL wheel — 150° apart from the primary teal).
+    - Secondary-light: #e2bd8d (+1 step).
+    - Secondary-darker: #a87e4f (-1 step).
+*/
+
+:root
+{
+    /* Primary scale (brand teal). */
+    --rz-primary: #0f3d3e;
+    --rz-primary-light: #1a5a5b;
+    --rz-primary-lighter: rgba(15, 61, 62, 0.16);
+    --rz-primary-dark: #0a3031;
+    --rz-primary-darker: #082627;
+    --rz-on-primary: #ffffff;
+    --rz-on-primary-light: #ffffff;
+    --rz-on-primary-lighter: #0f3d3e;
+    --rz-on-primary-dark: #ffffff;
+    --rz-on-primary-darker: #ffffff;
+    --rz-border-primary: rgba(15, 61, 62, 0.16);
+    --rz-border-primary-light: rgba(15, 61, 62, 0.24);
+    --rz-border-primary-lighter: rgba(15, 61, 62, 0.16);
+    --rz-border-primary-dark: rgba(15, 61, 62, 0.32);
+    --rz-border-primary-darker: rgba(15, 61, 62, 0.40);
+
+    /* Secondary scale (warm sand). */
+    --rz-secondary: #d4a574;
+    --rz-secondary-light: #e2bd8d;
+    --rz-secondary-lighter: rgba(212, 165, 116, 0.16);
+    --rz-secondary-dark: #c19662;
+    --rz-secondary-darker: #a87e4f;
+    --rz-on-secondary: #1a1d1e;
+    --rz-on-secondary-light: #1a1d1e;
+    --rz-on-secondary-lighter: #1a1d1e;
+    --rz-on-secondary-dark: #ffffff;
+    --rz-on-secondary-darker: #ffffff;
+    --rz-border-secondary: rgba(212, 165, 116, 0.20);
+    --rz-border-secondary-light: rgba(212, 165, 116, 0.28);
+    --rz-border-secondary-lighter: rgba(212, 165, 116, 0.16);
+    --rz-border-secondary-dark: rgba(212, 165, 116, 0.36);
+    --rz-border-secondary-darker: rgba(212, 165, 116, 0.44);
+
+    /* Page background — one shade off pure white to reduce
+       eye fatigue in long sessions (per plan §4.2). */
+    --rz-base-background-color: #f7f8f8;
+    --rz-base-50: #ffffff;
+    --rz-base-100: #fafbfb;
+    --rz-base-200: #f0f2f3;
+    --rz-base-300: #e0e2e3;
+
+    /* Tighter border radius (4px) than the Software default
+       (6px) — reads as "serious tool", not "consumer app"
+       (per plan §4.2 and the ADR 0011 acceptance criterion). */
+    --rz-border-radius: 4px;
+    --rz-border-radius-4: 4px;
+    --rz-border-radius-6: 4px;
+    --rz-button-border-radius: 4px;
+    --rz-card-border-radius: 4px;
+    --rz-input-border-radius: 4px;
+}

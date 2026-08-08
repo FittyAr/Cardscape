@@ -1,0 +1,64 @@
+/*
+  Cardscape Classic Dark — v1.2.0 brand theme (dark variant).
+  See docs/roadmap/06-plan-radzen-themes.md §4.3.
+
+  Mirror of cardscape-classic.css for the dark sibling.
+  The primary is lifted to a brighter teal so it carries
+  against the dark surface; the warm-sand secondary
+  stays the same (contrast 6.8:1 against the dark
+  background, well above the 4.5:1 body-text threshold).
+  Shape (border radius, focus ring, font scale) inherits
+  from the same Radzen Software base as the light variant.
+*/
+
+:root
+{
+    /* Primary scale (lifted teal for dark surface). */
+    --rz-primary: #1a8a8b;
+    --rz-primary-light: #2fa9aa;
+    --rz-primary-lighter: rgba(26, 138, 139, 0.20);
+    --rz-primary-dark: #137172;
+    --rz-primary-darker: #0f3d3e;
+    --rz-on-primary: #ffffff;
+    --rz-on-primary-light: #ffffff;
+    --rz-on-primary-lighter: #0f3d3e;
+    --rz-on-primary-dark: #ffffff;
+    --rz-on-primary-darker: #ffffff;
+    --rz-border-primary: rgba(26, 138, 139, 0.24);
+    --rz-border-primary-light: rgba(26, 138, 139, 0.32);
+    --rz-border-primary-lighter: rgba(26, 138, 139, 0.20);
+    --rz-border-primary-dark: rgba(26, 138, 139, 0.40);
+    --rz-border-primary-darker: rgba(26, 138, 139, 0.48);
+
+    /* Secondary scale (warm sand — same on both surfaces). */
+    --rz-secondary: #d4a574;
+    --rz-secondary-light: #e2bd8d;
+    --rz-secondary-lighter: rgba(212, 165, 116, 0.20);
+    --rz-secondary-dark: #c19662;
+    --rz-secondary-darker: #a87e4f;
+    --rz-on-secondary: #1a1d1e;
+    --rz-on-secondary-light: #1a1d1e;
+    --rz-on-secondary-lighter: #1a1d1e;
+    --rz-on-secondary-dark: #ffffff;
+    --rz-on-secondary-darker: #ffffff;
+    --rz-border-secondary: rgba(212, 165, 116, 0.24);
+    --rz-border-secondary-light: rgba(212, 165, 116, 0.32);
+    --rz-border-secondary-lighter: rgba(212, 165, 116, 0.20);
+    --rz-border-secondary-dark: rgba(212, 165, 116, 0.40);
+    --rz-border-secondary-darker: rgba(212, 165, 116, 0.48);
+
+    /* Dark page surface (per plan §4.3). */
+    --rz-base-background-color: #1a1d1e;
+    --rz-base-50: #262a2b;
+    --rz-base-100: #2a2e2f;
+    --rz-base-200: #34383a;
+    --rz-base-300: #404446;
+
+    /* Tighter border radius — same as the light variant. */
+    --rz-border-radius: 4px;
+    --rz-border-radius-4: 4px;
+    --rz-border-radius-6: 4px;
+    --rz-button-border-radius: 4px;
+    --rz-card-border-radius: 4px;
+    --rz-input-border-radius: 4px;
+}
