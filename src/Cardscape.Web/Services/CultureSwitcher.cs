@@ -117,7 +117,21 @@ public sealed class HttpBackedStringLocalizer<TResource> : IStringLocalizer<TRes
         {
             return new LocalizedString(name, value, resourceNotFound: false);
         }
-        return _fallback[name, arguments ?? Array.Empty<object>()];
+
+        // R10-UI-#2 — see test-results/r10/r10-report.md.
+        // The resource manager's `this[string, params object[]]` overload
+        // does `string.Format(value, arguments)` internally. When the
+        // dictionary misses AND the caller did not pass args (e.g.
+        // `L["HomeGreeting"]`), passing an empty `object[]` makes the
+        // fallback throw `Format_IndexOutOfRange` on any value that has
+        // a `{0}` placeholder — which is most of the greetings and
+        // "Welcome back, {0}" messages. The dictionary hit path
+        // returns the raw value (caller formats), so the fallback must
+        // also return raw when no args were supplied, otherwise the two
+        // paths disagree.
+        return arguments is null
+            ? _fallback[name]
+            : _fallback[name, arguments];
     }
 }
 

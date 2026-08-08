@@ -66,8 +66,14 @@ public sealed class UserPreferencesService
     /// <summary>User's chosen theme name (one of the 12
     /// entries in <see cref="ThemeCatalog.All"/>). Bound to
     /// the <c>Theme</c> parameter of <c>&lt;RadzenTheme&gt;</c>
-    /// in <c>App.razor</c>.</summary>
-    public string? CurrentThemeName { get; private set; }
+    /// in <c>App.razor</c>. Defaults to <c>"default"</c> so
+    /// the first render — before <see cref="InitializeAsync"/>
+    /// has awaited the server / read the cookie — still emits
+    /// a valid <c>href="css/default-base.css"</c> link instead
+    /// of <c>css/-base.css</c> (which 404s and prints
+    /// "Refused to apply style ... strict MIME checking" in
+    /// the browser console). See R10-UI-#3.</summary>
+    public string? CurrentThemeName { get; private set; } = "default";
 
     /// <summary>CSS path to load for the current theme, or
     /// <c>null</c> for Radzen's default CSS path. The 10
