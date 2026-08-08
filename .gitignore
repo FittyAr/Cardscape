@@ -296,6 +296,9 @@ node_modules/
 # Visual Studio 6 build log
 *.plg
 
+# Local build artifact (token replacement data, see scripts/menu.ps1)
+replacetokens.xml
+
 # Visual Studio 6 workspace options file
 *.opt
 

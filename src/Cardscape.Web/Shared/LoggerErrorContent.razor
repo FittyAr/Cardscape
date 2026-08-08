@@ -1,0 +1,9 @@
+@* BETA-9-#6 — see test-results/r9/r9-report.md.
+   File kept as a placeholder after reverting the ErrorBoundary
+   experiment. The root cause was a missing <link rel="stylesheet"
+   href="css/app.css" /> in wwwroot/index.html, not a render
+   exception. The blazor-error-ui element was visible on every page
+   because the CSS rule that sets it to display:none never reached
+   the cascade. With that <link> in place the framework's red banner
+   stays hidden until something actually throws, and when it does
+   throw the banner is meaningful rather than permanent. *@

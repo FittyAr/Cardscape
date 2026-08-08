@@ -1,14 +1,14 @@
 # =============================================================================
-# run.ps1 — Interactive dev menu for Cardscape.
+# menu.ps1 — Interactive dev menu for Cardscape.
 #
 # A no-memory launcher: every task the project supports is one menu pick
 # away. Each pick dispatches to scripts/cardscape.ps1, which in turn runs
 # the matching scripts/<command>.ps1 with the right flags.
 #
 # Usage:
-#   pwsh run.ps1                  # interactive menu (this is the default)
-#   pwsh run.ps1 -NonInteractive  # print the menu once and exit (CI / docs)
-#   pwsh run.ps1 -SkipWelcome     # skip the intro screen on first paint
+#   pwsh scripts/menu.ps1                  # interactive menu (default)
+#   pwsh scripts/menu.ps1 -NonInteractive  # print the menu once and exit (CI / docs)
+#   pwsh scripts/menu.ps1 -SkipWelcome     # skip the intro screen on first paint
 #
 # Conventions:
 #   - Returns to the top menu after an action (except 0 = Exit, h = Help).
@@ -29,8 +29,12 @@ $ErrorActionPreference = 'Stop'
 
 # -----------------------------------------------------------------------------
 # Paths and dispatcher resolution.
+#
+# The menu lives in scripts/ (alongside the other PowerShell entry points)
+# so $PSScriptRoot points to scripts/, not the repo root. Walk up one
+# level to find the repo root, then locate the dispatcher.
 # -----------------------------------------------------------------------------
-$RepoRoot   = (Resolve-Path $PSScriptRoot).Path
+$RepoRoot   = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $Dispatcher = Join-Path $RepoRoot 'scripts/cardscape.ps1'
 if (-not (Test-Path $Dispatcher)) {
     Write-Host "Could not find scripts/cardscape.ps1 at $Dispatcher" -ForegroundColor Red
@@ -397,7 +401,7 @@ function Show-Top-Menu {
 
 if ($NonInteractive) {
     Show-Top-Menu
-    Muted '  (non-interactive mode — exiting. Run `pwsh run.ps1` for the menu.)'
+    Muted '  (non-interactive mode — exiting. Run `pwsh scripts/menu.ps1` for the menu.)'
     exit 0
 }
 
