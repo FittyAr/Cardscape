@@ -50,6 +50,32 @@ RUN groupadd --system --gid 1001 cardscape \
 
 COPY --from=build --chown=cardscape:cardscape /app/publish ./
 
+# BETA-9-#5 — see test-results/r9/r9-report.md.
+# The Blazor WebAssembly SDK generates the PWA service-worker files
+# (service-worker.js, service-worker-assets.js + their .gz
+# variants) into Cardscape.Web/bin/Release/net10.0/wwwroot/ as
+# BUILD OUTPUTS of the <ServiceWorker> item. The dotnet publish
+# step on the API does NOT copy them into /app/wwwroot/ — the
+# static-web-assets manifest is generated before the Web's
+# <ServiceWorker> target runs, so the runtime
+# Cardscape.Api.staticwebassets.endpoints.json does not list the
+# service-worker routes, and UseBlazorFrameworkFiles + UseStaticFiles
+# therefore never serve /service-worker.js. The browser's PWA
+# registration 404s, the rejected promise surfaces the Blazor
+# "An unhandled error has occurred" overlay on every page load.
+#
+# Pull the four files out of the build stage and drop them into
+# the runtime wwwroot. We tolerate an individual file being
+# missing (the .gz variants are not produced in every config)
+# by using `|| true` so a missing variant does not break the
+# build. chown to the non-root cardscape user so the static-
+# files middleware can read them.
+COPY --from=build /src/src/Cardscape.Web/bin/Release/net10.0/wwwroot/service-worker.js /app/wwwroot/service-worker.js
+COPY --from=build /src/src/Cardscape.Web/bin/Release/net10.0/wwwroot/service-worker-assets.js /app/wwwroot/service-worker-assets.js
+COPY --from=build /src/src/Cardscape.Web/bin/Release/net10.0/wwwroot/service-worker.js.gz /app/wwwroot/service-worker.js.gz
+COPY --from=build /src/src/Cardscape.Web/bin/Release/net10.0/wwwroot/service-worker-assets.js.gz /app/wwwroot/service-worker-assets.js.gz
+RUN chown cardscape:cardscape /app/wwwroot/service-worker*.js /app/wwwroot/service-worker*.gz 2>/dev/null || true
+
 USER cardscape
 
 ENV ASPNETCORE_URLS=http://+:8080
