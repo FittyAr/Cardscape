@@ -303,6 +303,7 @@ public sealed record CreateRuleRequestDto(
 public sealed record CalendarEntryDto(
     Guid CardId,
     Guid ListId,
+    string ListName,
     Guid BoardId,
     string BoardName,
     string Title,

@@ -1,0 +1,153 @@
+@using System.Text.Json
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@inject ISearchApiClient Search
+@inject Microsoft.AspNetCore.Components.NavigationManager Nav
+@implements IDisposable
+
+<div class="topbar-search rz-display-flex rz-align-items-center" style="position: relative;">
+    <RadzenTextBox @bind-Value="query"
+                   @oninput="@OnInputChanged"
+                   @onkeydown="@OnKeyDown"
+                   @onfocus="@ShowResults"
+                   @onblur="@HideResults"
+                   Placeholder="@Placeholder"
+                   aria-label="Search"
+                   Style="width: 240px;" />
+    @if (resultsVisible && results is not null && results.Count > 0)
+    {
+        <RadzenCard Variant="Variant.Outlined"
+                    class="rz-position-absolute"
+                    Style="top: 38px; left: 0; right: 0; z-index: 1000; max-height: 360px; overflow-y: auto; min-width: 320px;">
+            <RadzenStack Gap="0.25rem">
+                @foreach (SearchHitDto hit in results)
+                {
+                    <a href="@hit.Url" @onclick="@(() => NavigateTo(hit))" @onclick:preventDefault="true"
+                       style="text-decoration: none; color: inherit;">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Class="rz-p-2">
+                            <RadzenBadge Text="@KindLabel(hit.Kind)" BadgeStyle="BadgeStyle.Info" />
+                            <RadzenStack Gap="0">
+                                <RadzenText Text="@hit.Title" TextStyle="TextStyle.Body2" />
+                                @if (!string.IsNullOrWhiteSpace(hit.Snippet))
+                                {
+                                    <RadzenText Text="@hit.Snippet" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
+                                }
+                            </RadzenStack>
+                        </RadzenStack>
+                    </a>
+                }
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else if (resultsVisible && results is not null && results.Count == 0 && !string.IsNullOrWhiteSpace(query) && searched)
+    {
+        <RadzenCard Variant="Variant.Outlined"
+                    class="rz-position-absolute"
+                    Style="top: 38px; left: 0; right: 0; z-index: 1000; min-width: 320px;">
+            <RadzenText Text="No matches." TextStyle="TextStyle.Body2" class="rz-color-text-secondary rz-p-2" />
+        </RadzenCard>
+    }
+</div>
+
+@code {
+    // BUG-A6-001 — see test-results/beta/reports/A6-views.md.
+    // The task expected a topbar search input that called
+    // /api/search and let the user jump to cards / comments /
+    // checklist items. The endpoint existed; the Web side had
+    // no client. This component is the missing glue: it
+    // debounces, calls the existing ISearchApiClient (now
+    // added next to this file), and renders the results as a
+    // dropdown that navigates to the hit's URL on click.
+
+    [Parameter] public string Placeholder { get; set; } = "Search…";
+
+    private string query = string.Empty;
+    private List<SearchHitDto>? results;
+    private bool resultsVisible;
+    private bool searched;
+    private System.Timers.Timer? debounceTimer;
+
+    protected override void OnInitialized()
+    {
+        debounceTimer = new System.Timers.Timer(250) { AutoReset = false };
+        debounceTimer.Elapsed += async (_, _) => await InvokeAsync(RunSearchAsync);
+    }
+
+    private void OnInputChanged(ChangeEventArgs args)
+    {
+        query = args.Value?.ToString() ?? string.Empty;
+        if (debounceTimer is not null)
+        {
+            debounceTimer.Stop();
+            debounceTimer.Start();
+        }
+    }
+
+    private async Task RunSearchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            results = null;
+            searched = false;
+            resultsVisible = false;
+            return;
+        }
+
+        ApiResult<SearchPageDto> result = await Search.SearchAsync(query, pageSize: 8);
+        if (result.IsSuccess && result.Value is not null)
+        {
+            results = result.Value.Items.ToList();
+        }
+        else
+        {
+            results = [];
+        }
+        searched = true;
+        resultsVisible = true;
+        StateHasChanged();
+    }
+
+    private void OnKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            resultsVisible = false;
+        }
+    }
+
+    private void ShowResults()
+    {
+        if (!string.IsNullOrWhiteSpace(query) && results is not null)
+        {
+            resultsVisible = true;
+        }
+    }
+
+    private void HideResults()
+    {
+        // Small delay so a click on a result still fires.
+        System.Threading.Tasks.Task.Delay(200).ContinueWith(_ => InvokeAsync(() => resultsVisible = false));
+    }
+
+    private void NavigateTo(SearchHitDto hit)
+    {
+        resultsVisible = false;
+        query = string.Empty;
+        results = null;
+        string url = hit.Url.StartsWith('/') ? hit.Url[1..] : hit.Url;
+        Nav.NavigateTo(url);
+    }
+
+    private static string KindLabel(string kind) => kind switch
+    {
+        "card" => "Card",
+        "comment" => "Comment",
+        "checklistItem" => "Checklist",
+        _ => kind
+    };
+
+    public void Dispose()
+    {
+        debounceTimer?.Dispose();
+    }
+}

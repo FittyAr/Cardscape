@@ -13,6 +13,8 @@
     <Actions>
         <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth"
                       aria-label="@($"Previous month ({firstOfMonth.AddMonths(-1):MMMM yyyy})")" />
+        <RadzenButton Text="Today" ButtonStyle="ButtonStyle.Light" Click="@GoToCurrentMonth"
+                      aria-label="Jump to current month" />
         <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth"
                       aria-label="@($"Next month ({firstOfMonth.AddMonths(1):MMMM yyyy})")" />
     </Actions>
@@ -23,20 +25,32 @@
                  StartProperty="Start"
                  EndProperty="End"
                  TextProperty="Title"
+                 SelectedView="SchedulerView.Month"
+                 CurrentDate="@schedulerCurrentDate"
+                 CurrentDateChanged="@OnSchedulerDateChanged"
                  AppointmentSelect="@OnAppointmentSelect"
                  Style="height: 700px">
     <RadzenMonthView />
 </RadzenScheduler>
 
 @code {
+    // BUG-A6-002 — see test-results/beta/reports/A6-views.md. The
+    // page-level prev/next buttons (◀ / ▶ in the page header) and
+    // the RadzenScheduler's own built-in nav (◀ / ▶ in the
+    // scheduler toolbar) were stepping over each other: the
+    // header updated but the scheduler kept showing the original
+    // month, and vice-versa. The fix binds the scheduler's
+    // CurrentDate to a DateTime that mirrors `firstOfMonth` and
+    // listens to CurrentDateChanged so the two stay in sync
+    // regardless of which control the user clicks.
     private DateTimeOffset firstOfMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
     private IReadOnlyList<CalendarEntryDto> entries = [];
-    private Dictionary<int, IReadOnlyList<CalendarEntryDto>> entriesByDay = new();
-    private int leadingBlanks;
-    private int daysInMonth;
     private string monthLabel = string.Empty;
 
-    private static readonly string[] DayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    // The RadzenScheduler takes a plain DateTime (not DateTimeOffset)
+    // for CurrentDate; we project to / from UTC at the boundary so
+    // the scheduler never sees a kind it can't handle.
+    private DateTime schedulerCurrentDate => firstOfMonth.UtcDateTime.Date;
 
     protected override async Task OnInitializedAsync()
     {
@@ -45,26 +59,15 @@
 
     private async Task ReloadAsync()
     {
-        daysInMonth = DateTime.DaysInMonth(firstOfMonth.Year, firstOfMonth.Month);
-        // Monday-first: DayOfWeek.Sunday (0) → 6, Monday (1) → 0, etc.
-        int dow = ((int)firstOfMonth.DayOfWeek + 6) % 7;
-        leadingBlanks = dow;
-
         DateTimeOffset from = firstOfMonth;
-        DateTimeOffset to = firstOfMonth.AddDays(daysInMonth);
-        monthLabel = firstOfMonth.ToString("MMMM yyyy");
+        DateTimeOffset to = firstOfMonth.AddMonths(1);
 
         ApiResult<IReadOnlyList<CalendarEntryDto>> result = await Cards.CalendarAsync(from, to, boardId: null);
-        IReadOnlyList<CalendarEntryDto> rows = result.IsSuccess && result.Value is not null
+        entries = result.IsSuccess && result.Value is not null
             ? result.Value
             : (IReadOnlyList<CalendarEntryDto>)Array.Empty<CalendarEntryDto>();
-        entries = rows;
 
-        entriesByDay = (entries ?? Enumerable.Empty<CalendarEntryDto>())
-            .GroupBy(e => e.DueDate.UtcDateTime.Date)
-            .ToDictionary(
-                g => (firstOfMonth.UtcDateTime.Date.AddDays((g.Key - firstOfMonth.UtcDateTime.Date).Days)).Day,
-                g => (IReadOnlyList<CalendarEntryDto>)g.OrderBy(e => e.Title).ToList());
+        monthLabel = firstOfMonth.ToString("MMMM yyyy");
     }
 
     private async Task PrevMonth()
@@ -76,6 +79,30 @@
     private async Task NextMonth()
     {
         firstOfMonth = firstOfMonth.AddMonths(1);
+        await ReloadAsync();
+    }
+
+    private async Task GoToCurrentMonth()
+    {
+        DateTime utcNow = DateTime.UtcNow;
+        firstOfMonth = new DateTimeOffset(utcNow.Year, utcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
+        await ReloadAsync();
+    }
+
+    // BUG-A6-002 — sync the other direction. When the user clicks
+    // the scheduler's own ◀ / ▶ / Today, the scheduler tells us the
+    // new CurrentDate via this callback; we re-anchor firstOfMonth
+    // to the first of that month and reload so the page header and
+    // the data both follow.
+    private async Task OnSchedulerDateChanged(DateTime newDate)
+    {
+        DateTime anchor = new DateTime(newDate.Year, newDate.Month, 1);
+        DateTimeOffset proposed = new(anchor, TimeSpan.Zero);
+        if (proposed == firstOfMonth)
+        {
+            return;
+        }
+        firstOfMonth = proposed;
         await ReloadAsync();
     }
 

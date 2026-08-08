@@ -78,7 +78,7 @@ else
                              Wrap="FlexWrap.Wrap">
                     <RadzenButton Text="Back to board" Icon="arrow_back"
                                   ButtonStyle="ButtonStyle.Light"
-                                  Click="@(() => Nav.NavigateTo(BackToBoardHref))" />
+                                  Click="@GoBackToBoard" />
                     @if (card.IsCompleted)
                     {
                         <RadzenButton Text="Reopen" ButtonStyle="ButtonStyle.Light" Click="@Reopen" />
@@ -427,6 +427,8 @@ else
     // safe to render.
     private string BackToBoardHref =>
         BoardId == Guid.Empty ? "workspaces" : $"boards/{BoardId}";
+
+    private void GoBackToBoard() => Nav.NavigateTo(BackToBoardHref);
 
     private CardDto? card;
     private bool notFound;

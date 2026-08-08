@@ -20,6 +20,7 @@ public sealed record ListCardsDueInRangeQuery(DateTimeOffset From, DateTimeOffse
 public sealed record CalendarEntryDto(
     Guid CardId,
     Guid ListId,
+    string ListName,
     Guid BoardId,
     string BoardName,
     string Title,
@@ -82,10 +83,17 @@ public static class ListCardsDueInRangeQueryHandler
             return Result.Success<IReadOnlyList<CalendarEntryDto>>([]);
         }
 
-        // Resolve the (listId -> boardId) and (boardId -> name) maps
-        // in one pass each. This is the single-hot path for the
-        // calendar; avoid an N+1 lookup per card.
+        // Resolve the (listId -> boardId), (listId -> listName) and
+        // (boardId -> name) maps in one pass each. This is the
+        // single-hot path for the calendar; avoid an N+1 lookup
+        // per card.
         var listToBoard = await lists.ListBoardIdsByListIdAsync(cancellationToken);
+        // BUG-A6-007 — see test-results/beta/reports/A6-views.md.
+        // The Planner swimlane header used to render "List 2a33ae28"
+        // because the DTO did not carry the human-readable list
+        // name. We now resolve it once, here, and project it on
+        // every row.
+        var listNames = await lists.ListNamesByIdAsync(cancellationToken);
         var boardNames = (await Task.WhenAll(
                 accessibleBoardIds.Select(async id => new { Id = id, Board = await boards.GetByIdAsync(id, cancellationToken) })))
             .Where(x => x.Board is not null)
@@ -118,9 +126,19 @@ public static class ListCardsDueInRangeQueryHandler
                 continue;
             }
 
+            // BUG-A6-007 — fall back to a short id label only when
+            // the list really has no name (e.g. a list that was
+            // renamed to an empty string in an older release).
+            // The empty-string case used to silently leak
+            // "List " with no suffix.
+            string listName = listNames.TryGetValue(c.ListId.Value, out var resolved) && !string.IsNullOrWhiteSpace(resolved)
+                ? resolved
+                : $"List {c.ListId.Value.ToString()[..8]}";
+
             rows.Add(new CalendarEntryDto(
                 CardId: c.Id.Value,
                 ListId: c.ListId.Value,
+                ListName: listName,
                 BoardId: parentBoardId,
                 BoardName: boardName,
                 Title: c.Title.Value,

@@ -39,23 +39,23 @@
   </resheader>
 
   <data name="AppName" xml:space="preserve"><value>Cardscape</value></data>
-  <data name="AppTagline" xml:space="preserve"><value>Kanban autoalojable para equipos que quieren recuperar sus tableros â€” boards, listas, tarjetas y un servidor MCP para clientes de IA.</value></data>
+  <data name="AppTagline" xml:space="preserve"><value>Kanban autoalojable para equipos que quieren recuperar sus tableros — boards, listas, tarjetas y un servidor MCP para clientes de IA.</value></data>
   <data name="HomeTitle" xml:space="preserve"><value>Bienvenido a Cardscape</value></data>
   <data name="HomeGreeting" xml:space="preserve"><value>Bienvenido de nuevo, {0}</value></data>
-  <data name="HomeLandingEyebrow" xml:space="preserve"><value>Kanban de cÃ³digo abierto</value></data>
-  <data name="HomeLeadAuthorized" xml:space="preserve"><value>EntrÃ¡ a un tablero destacado o abrÃ­ un espacio de trabajo para seguir.</value></data>
+  <data name="HomeLandingEyebrow" xml:space="preserve"><value>Kanban de código abierto</value></data>
+  <data name="HomeLeadAuthorized" xml:space="preserve"><value>Entrá a un tablero destacado o abrí un espacio de trabajo para seguir.</value></data>
   <data name="HomeWorkspacesHeading" xml:space="preserve"><value>Tus espacios de trabajo</value></data>
-  <data name="HomeWorkspacesBlurb" xml:space="preserve"><value>ElegÃ­ un espacio de trabajo para ver sus tableros.</value></data>
-  <data name="HomeWorkspacesEmpty" xml:space="preserve"><value>TodavÃ­a no hay espacios. CreÃ¡ uno para empezar a organizar tableros.</value></data>
+  <data name="HomeWorkspacesBlurb" xml:space="preserve"><value>Elegí un espacio de trabajo para ver sus tableros.</value></data>
+  <data name="HomeWorkspacesEmpty" xml:space="preserve"><value>Todavía no hay espacios. Creá uno para empezar a organizar tableros.</value></data>
   <data name="HomeWorkspaceMembers" xml:space="preserve"><value>{0} miembros</value></data>
   <data name="HomeStarredHeading" xml:space="preserve"><value>Tableros destacados</value></data>
-  <data name="HomeStarredBlurb" xml:space="preserve"><value>SaltÃ¡ rÃ¡pidamente a los tableros que destacaste.</value></data>
-  <data name="HomeStarredEmpty" xml:space="preserve"><value>DestacÃ¡ un tablero desde su encabezado para fijarlo acÃ¡.</value></data>
+  <data name="HomeStarredBlurb" xml:space="preserve"><value>Saltá rápidamente a los tableros que destacaste.</value></data>
+  <data name="HomeStarredEmpty" xml:space="preserve"><value>Destacá un tablero desde su encabezado para fijarlo acá.</value></data>
   <data name="HomeOpenWorkspaces" xml:space="preserve"><value>Abrir espacios de trabajo</value></data>
   <data name="HomeSeeStarred" xml:space="preserve"><value>Ver destacados</value></data>
-  <data name="HomeShortcuts" xml:space="preserve"><value>Accesos rÃ¡pidos</value></data>
+  <data name="HomeShortcuts" xml:space="preserve"><value>Accesos rápidos</value></data>
   <data name="HomePointBoardsTitle" xml:space="preserve"><value>Tableros hechos para trabajar</value></data>
-  <data name="HomePointBoardsBody" xml:space="preserve"><value>Espacios, listas, tarjetas, calendario y planificador â€” la superficie que ya conocÃ©s, sin el candado del hosting.</value></data>
+  <data name="HomePointBoardsBody" xml:space="preserve"><value>Espacios, listas, tarjetas, calendario y planificador — la superficie que ya conocés, sin el candado del hosting.</value></data>
   <data name="HomePointSelfHostTitle" xml:space="preserve"><value>Tuyo para correr</value></data>
   <data name="HomePointSelfHostBody" xml:space="preserve"><value>SQLite, PostgreSQL o MariaDB. Un build, tu infraestructura, tus datos.</value></data>
   <data name="HomePointMcpTitle" xml:space="preserve"><value>IA que puede manejar el tablero</value></data>
@@ -67,37 +67,37 @@
   <data name="NavCalendar" xml:space="preserve"><value>Calendario</value></data>
   <data name="NavPlanner" xml:space="preserve"><value>Planificador</value></data>
   <data name="NavApiTokens" xml:space="preserve"><value>Tokens de API</value></data>
-  <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesiÃ³n</value></data>
+  <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>
-  <data name="AuthSignInTitle" xml:space="preserve"><value>Iniciar sesiÃ³n</value></data>
-  <data name="AuthSignInSubtitle" xml:space="preserve"><value>ContinuÃ¡ con un proveedor o usÃ¡ tu email.</value></data>
-  <data name="AuthSignIn" xml:space="preserve"><value>Iniciar sesiÃ³n</value></data>
+  <data name="AuthSignInTitle" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="AuthSignInSubtitle" xml:space="preserve"><value>Continuá con un proveedor o usá tu email.</value></data>
+  <data name="AuthSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="AuthSigningIn" xml:space="preserve"><value>Ingresando...</value></data>
-  <data name="AuthLogOut" xml:space="preserve"><value>Cerrar sesiÃ³n</value></data>
-  <data name="AuthBackToSignIn" xml:space="preserve"><value>Volver al inicio de sesiÃ³n</value></data>
-  <data name="AuthNoAccount" xml:space="preserve"><value>Â¿No tenÃ©s cuenta?</value></data>
+  <data name="AuthLogOut" xml:space="preserve"><value>Cerrar sesión</value></data>
+  <data name="AuthBackToSignIn" xml:space="preserve"><value>Volver al inicio de sesión</value></data>
+  <data name="AuthNoAccount" xml:space="preserve"><value>¿No tenés cuenta?</value></data>
   <data name="AuthCreateOne" xml:space="preserve"><value>Crear una</value></data>
-  <data name="AuthAlreadyAccount" xml:space="preserve"><value>Â¿Ya tenÃ©s una cuenta?</value></data>
-  <data name="AuthCreateAccountTitle" xml:space="preserve"><value>CreÃ¡ tu cuenta</value></data>
-  <data name="AuthCreateAccountSubtitle" xml:space="preserve"><value>Unos pocos datos y ya podÃ©s abrir tu primer tablero.</value></data>
+  <data name="AuthAlreadyAccount" xml:space="preserve"><value>¿Ya tenés una cuenta?</value></data>
+  <data name="AuthCreateAccountTitle" xml:space="preserve"><value>Creá tu cuenta</value></data>
+  <data name="AuthCreateAccountSubtitle" xml:space="preserve"><value>Unos pocos datos y ya podés abrir tu primer tablero.</value></data>
   <data name="AuthCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>
   <data name="AuthCreating" xml:space="preserve"><value>Creando...</value></data>
   <data name="AuthEmail" xml:space="preserve"><value>Email</value></data>
-  <data name="AuthPassword" xml:space="preserve"><value>ContraseÃ±a</value></data>
+  <data name="AuthPassword" xml:space="preserve"><value>Contraseña</value></data>
   <data name="AuthDisplayName" xml:space="preserve"><value>Nombre</value></data>
-  <data name="AuthDisplayNamePlaceholder" xml:space="preserve"><value>Â¿CÃ³mo te llamamos?</value></data>
+  <data name="AuthDisplayNamePlaceholder" xml:space="preserve"><value>¿Cómo te llamamos?</value></data>
   <data name="AuthPasswordHint" xml:space="preserve"><value>Al menos 8 caracteres.</value></data>
-  <data name="AuthSignInWithGoogle" xml:space="preserve"><value>Iniciar sesiÃ³n con Google</value></data>
-  <data name="AuthSignInWithMicrosoft" xml:space="preserve"><value>Iniciar sesiÃ³n con Microsoft</value></data>
-  <data name="AuthSignInWithApple" xml:space="preserve"><value>Iniciar sesiÃ³n con Apple</value></data>
-  <data name="AuthSignInWithAppleSoon" xml:space="preserve"><value>Iniciar sesiÃ³n con Apple (prÃ³ximamente)</value></data>
-  <data name="AuthAppleSoon" xml:space="preserve"><value>El inicio de sesiÃ³n con Apple estÃ¡ en la hoja de ruta</value></data>
+  <data name="AuthSignInWithGoogle" xml:space="preserve"><value>Iniciar sesión con Google</value></data>
+  <data name="AuthSignInWithMicrosoft" xml:space="preserve"><value>Iniciar sesión con Microsoft</value></data>
+  <data name="AuthSignInWithApple" xml:space="preserve"><value>Iniciar sesión con Apple</value></data>
+  <data name="AuthSignInWithAppleSoon" xml:space="preserve"><value>Iniciar sesión con Apple (próximamente)</value></data>
+  <data name="AuthAppleSoon" xml:space="preserve"><value>El inicio de sesión con Apple está en la hoja de ruta</value></data>
   <data name="AuthOr" xml:space="preserve"><value>o</value></data>
-  <data name="AuthOauthTitle" xml:space="preserve"><value>Iniciando sesiÃ³n</value></data>
-  <data name="AuthOauthWorking" xml:space="preserve"><value>Te estamos ingresandoâ€¦</value></data>
-  <data name="AuthOauthFailed" xml:space="preserve"><value>FallÃ³ el inicio de sesiÃ³n</value></data>
-  <data name="AuthOauthHoldOn" xml:space="preserve"><value>AguantÃ¡ un momento mientras terminamos el ingreso.</value></data>
-  <data name="AuthOauthMissingFragment" xml:space="preserve"><value>El callback de ingreso no incluyÃ³ un fragmento de token.</value></data>
+  <data name="AuthOauthTitle" xml:space="preserve"><value>Iniciando sesión</value></data>
+  <data name="AuthOauthWorking" xml:space="preserve"><value>Te estamos ingresando…</value></data>
+  <data name="AuthOauthFailed" xml:space="preserve"><value>Falló el inicio de sesión</value></data>
+  <data name="AuthOauthHoldOn" xml:space="preserve"><value>Aguantá un momento mientras terminamos el ingreso.</value></data>
+  <data name="AuthOauthMissingFragment" xml:space="preserve"><value>El callback de ingreso no incluyó un fragmento de token.</value></data>
   <data name="AuthOauthMissingToken" xml:space="preserve"><value>Al callback le falta un access o refresh token.</value></data>
   <data name="AuthOauthError" xml:space="preserve"><value>No se pudo terminar el ingreso: {0}</value></data>
   <data name="ActionSave" xml:space="preserve"><value>Guardar</value></data>
@@ -105,58 +105,58 @@
   <data name="ActionCreate" xml:space="preserve"><value>Crear</value></data>
   <data name="ActionDelete" xml:space="preserve"><value>Eliminar</value></data>
   <data name="ActionClose" xml:space="preserve"><value>Cerrar</value></data>
-  <data name="ActionLoading" xml:space="preserve"><value>Cargandoâ€¦</value></data>
+  <data name="ActionLoading" xml:space="preserve"><value>Cargando…</value></data>
   <data name="ActionArchived" xml:space="preserve"><value>Archivado</value></data>
   <data name="WorkspacesTitle" xml:space="preserve"><value>Espacios de trabajo</value></data>
   <data name="WorkspacesNew" xml:space="preserve"><value>Nuevo espacio</value></data>
   <data name="WorkspacesName" xml:space="preserve"><value>Nombre</value></data>
-  <data name="WorkspacesEmpty" xml:space="preserve"><value>AÃºn no tenÃ©s espacios de trabajo. CreÃ¡ el primero arriba.</value></data>
-  <data name="WorkspacesRegion" xml:space="preserve"><value>RegiÃ³n de residencia de datos</value></data>
-  <data name="WorkspacesRegionPlaceholder" xml:space="preserve"><value>ElegÃ­ una regiÃ³n (por defecto, la del despliegue)</value></data>
+  <data name="WorkspacesEmpty" xml:space="preserve"><value>Aún no tenés espacios de trabajo. Creá el primero arriba.</value></data>
+  <data name="WorkspacesRegion" xml:space="preserve"><value>Región de residencia de datos</value></data>
+  <data name="WorkspacesRegionPlaceholder" xml:space="preserve"><value>Elegí una región (por defecto, la del despliegue)</value></data>
   <data name="GoogleCalendarTitle" xml:space="preserve"><value>Google Calendar</value></data>
-  <data name="GoogleCalendarBlurb" xml:space="preserve"><value>SincronizaciÃ³n bidireccional entre fechas de vencimiento de tarjetas y tu calendario principal de Google.</value></data>
-  <data name="GoogleCalendarNotConnected" xml:space="preserve"><value>Tu cuenta no estÃ¡ conectada a Google Calendar.</value></data>
+  <data name="GoogleCalendarBlurb" xml:space="preserve"><value>Sincronización bidireccional entre fechas de vencimiento de tarjetas y tu calendario principal de Google.</value></data>
+  <data name="GoogleCalendarNotConnected" xml:space="preserve"><value>Tu cuenta no está conectada a Google Calendar.</value></data>
   <data name="GoogleCalendarConnect" xml:space="preserve"><value>Conectar Google Calendar</value></data>
   <data name="GoogleCalendarRevoke" xml:space="preserve"><value>Desconectar</value></data>
   <data name="GoogleCalendarConnectedAs" xml:space="preserve"><value>Conectado como</value></data>
   <data name="GoogleCalendarCalendarId" xml:space="preserve"><value>Calendario</value></data>
-  <data name="GoogleCalendarLastSync" xml:space="preserve"><value>Ãšltima sincronizaciÃ³n</value></data>
+  <data name="GoogleCalendarLastSync" xml:space="preserve"><value>Última sincronización</value></data>
   <data name="ScimTitle" xml:space="preserve"><value>Aprovisionamiento SCIM</value></data>
-  <data name="ScimBlurb" xml:space="preserve"><value>AprovisionÃ¡ usuarios desde tu IdP (Okta, Azure AD, Google Workspace) mediante SCIM v2. La URL del endpoint se muestra arriba; creÃ¡ un token a continuaciÃ³n y pegalo en el IdP.</value></data>
+  <data name="ScimBlurb" xml:space="preserve"><value>Aprovisioná usuarios desde tu IdP (Okta, Azure AD, Google Workspace) mediante SCIM v2. La URL del endpoint se muestra arriba; creá un token a continuación y pegalo en el IdP.</value></data>
   <data name="ScimIssueToken" xml:space="preserve"><value>Emitir un nuevo token</value></data>
   <data name="ScimTokenName" xml:space="preserve"><value>Nombre del token (para tu referencia)</value></data>
   <data name="ScimTokenShownOnce" xml:space="preserve"><value>Este token se muestra una sola vez. Guardalo ahora.</value></data>
   <data name="ScimExistingTokens" xml:space="preserve"><value>Tokens existentes</value></data>
-  <data name="ScimNoTokens" xml:space="preserve"><value>No hay tokens. EmitÃ­ uno arriba.</value></data>
+  <data name="ScimNoTokens" xml:space="preserve"><value>No hay tokens. Emití uno arriba.</value></data>
   <data name="ScimPrefix" xml:space="preserve"><value>Prefijo</value></data>
-  <data name="ScimLastUsed" xml:space="preserve"><value>Ãšltimo uso</value></data>
+  <data name="ScimLastUsed" xml:space="preserve"><value>Último uso</value></data>
   <data name="ScimRevoked" xml:space="preserve"><value>Revocado</value></data>
   <data name="ScimRevoke" xml:space="preserve"><value>Revocar</value></data>
   <data name="ScimNever" xml:space="preserve"><value>Nunca</value></data>
   <data name="DashboardTitle" xml:space="preserve"><value>Tablero de control</value></data>
   <data name="DashboardAddCard" xml:space="preserve"><value>Agregar dashcard</value></data>
   <data name="DashboardKind" xml:space="preserve"><value>Tipo</value></data>
-  <data name="DashboardTitle_Label" xml:space="preserve"><value>TÃ­tulo</value></data>
-  <data name="DashboardConfig" xml:space="preserve"><value>ConfiguraciÃ³n (JSON)</value></data>
-  <data name="DashboardEmpty" xml:space="preserve"><value>Este tablero no tiene dashcards todavÃ­a.</value></data>
+  <data name="DashboardTitle_Label" xml:space="preserve"><value>Título</value></data>
+  <data name="DashboardConfig" xml:space="preserve"><value>Configuración (JSON)</value></data>
+  <data name="DashboardEmpty" xml:space="preserve"><value>Este tablero no tiene dashcards todavía.</value></data>
   <data name="IntegrationsTitle" xml:space="preserve"><value>Integraciones</value></data>
-  <data name="IntegrationsBlurb" xml:space="preserve"><value>ConectÃ¡ Cardscape con las herramientas de tu equipo.</value></data>
-  <data name="SlackBlurb" xml:space="preserve"><value>MandÃ¡ eventos de tarjetas a canales de Slack.</value></data>
-  <data name="GoogleDriveBlurb" xml:space="preserve"><value>AdjuntÃ¡ archivos de Google Drive a tarjetas.</value></data>
-  <data name="GitHubBlurb" xml:space="preserve"><value>VinculÃ¡ pull requests y creÃ¡ issues desde tarjetas.</value></data>
-  <data name="EmailToBoardBlurb" xml:space="preserve"><value>ReenviÃ¡ emails a una lista como tarjetas nuevas.</value></data>
-  <data name="SamlBlurb" xml:space="preserve"><value>Single sign-on vÃ­a tu IdP SAML 2.0.</value></data>
+  <data name="IntegrationsBlurb" xml:space="preserve"><value>Conectá Cardscape con las herramientas de tu equipo.</value></data>
+  <data name="SlackBlurb" xml:space="preserve"><value>Mandá eventos de tarjetas a canales de Slack.</value></data>
+  <data name="GoogleDriveBlurb" xml:space="preserve"><value>Adjuntá archivos de Google Drive a tarjetas.</value></data>
+  <data name="GitHubBlurb" xml:space="preserve"><value>Vinculá pull requests y creá issues desde tarjetas.</value></data>
+  <data name="EmailToBoardBlurb" xml:space="preserve"><value>Reenviá emails a una lista como tarjetas nuevas.</value></data>
+  <data name="SamlBlurb" xml:space="preserve"><value>Single sign-on vía tu IdP SAML 2.0.</value></data>
   <data name="ActionConfigure" xml:space="preserve"><value>Configurar</value></data>
-  <data name="ExternalLoginsTitle" xml:space="preserve"><value>Inicios de sesiÃ³n externos</value></data>
-  <data name="ExternalLoginsBlurb" xml:space="preserve"><value>Los inicios de sesiÃ³n externos se vinculan a tu cuenta la primera vez que iniciÃ¡s sesiÃ³n con un proveedor.</value></data>
+  <data name="ExternalLoginsTitle" xml:space="preserve"><value>Inicios de sesión externos</value></data>
+  <data name="ExternalLoginsBlurb" xml:space="preserve"><value>Los inicios de sesión externos se vinculan a tu cuenta la primera vez que iniciás sesión con un proveedor.</value></data>
   <data name="ExternalLoginsLinkAnother" xml:space="preserve"><value>Vincular otro proveedor</value></data>
-  <data name="ExternalLoginsLinkAnotherBlurb" xml:space="preserve"><value>ElegÃ­ un proveedor para vincular a esta cuenta. Vas a poder iniciar sesiÃ³n con cualquiera de ellos la prÃ³xima vez.</value></data>
+  <data name="ExternalLoginsLinkAnotherBlurb" xml:space="preserve"><value>Elegí un proveedor para vincular a esta cuenta. Vas a poder iniciar sesión con cualquiera de ellos la próxima vez.</value></data>
   <data name="OAuthAppsTitle" xml:space="preserve"><value>Apps OAuth</value></data>
-  <data name="OAuthAppsBlurb" xml:space="preserve"><value>RegistrÃ¡ clientes OAuth personales para acceder a Cardscape desde tus propios scripts e integraciones.</value></data>
+  <data name="OAuthAppsBlurb" xml:space="preserve"><value>Registrá clientes OAuth personales para acceder a Cardscape desde tus propios scripts e integraciones.</value></data>
   <data name="OAuthAppsRegister" xml:space="preserve"><value>Registrar una nueva app OAuth</value></data>
-  <data name="OAuthAppsRegisterBlurb" xml:space="preserve"><value>El flujo completo de OAuth 2.0 authorization-code estÃ¡ implementado en los cuatro endpoints de abajo.</value></data>
+  <data name="OAuthAppsRegisterBlurb" xml:space="preserve"><value>El flujo completo de OAuth 2.0 authorization-code está implementado en los cuatro endpoints de abajo.</value></data>
   <data name="OAuthAppsScopes" xml:space="preserve"><value>Scopes que se pueden otorgar:</value></data>
-  <data name="OAuthAppsDocsHint" xml:space="preserve"><value>MirÃ¡ el handshake completo en</value></data>
+  <data name="OAuthAppsDocsHint" xml:space="preserve"><value>Mirá el handshake completo en</value></data>
   <data name="SamlTitle" xml:space="preserve"><value>SAML SSO</value></data>
   <data name="SamlConfigure" xml:space="preserve"><value>Configurar SAML</value></data>
   <data name="SamlSlug" xml:space="preserve"><value>Slug de URL</value></data>
@@ -170,36 +170,36 @@
   <data name="SamlDisable" xml:space="preserve"><value>Desactivar</value></data>
   <data name="BoardsTitle" xml:space="preserve"><value>Tableros</value></data>
   <data name="BoardsNew" xml:space="preserve"><value>Nuevo tablero</value></data>
-  <data name="BoardsEmpty" xml:space="preserve"><value>AÃºn no hay tableros.</value></data>
-  <data name="PageTitleSuffix" xml:space="preserve"><value>â€” Cardscape</value></data>
+  <data name="BoardsEmpty" xml:space="preserve"><value>Aún no hay tableros.</value></data>
+  <data name="PageTitleSuffix" xml:space="preserve"><value>— Cardscape</value></data>
   <data name="NotFoundTitle" xml:space="preserve"><value>No encontrado</value></data>
   <data name="NotFoundBackHome" xml:space="preserve"><value>Volver al inicio</value></data>
-  <data name="NotFoundBlurb" xml:space="preserve"><value>La pÃ¡gina que buscÃ¡s no existe.</value></data>
-  <data name="CommonLoading" xml:space="preserve"><value>Cargandoâ€¦</value></data>
+  <data name="NotFoundBlurb" xml:space="preserve"><value>La página que buscás no existe.</value></data>
+  <data name="CommonLoading" xml:space="preserve"><value>Cargando…</value></data>
   <data name="OAuthAppsProtocol" xml:space="preserve"><value>Endpoints del protocolo OAuth 2.0</value></data>
   <data name="CommonRetry" xml:space="preserve"><value>Reintentar</value></data>
   <data name="McpSubscriptionsTitle" xml:space="preserve"><value>Suscripciones MCP</value></data>
-  <data name="McpSubscriptionsBlurb" xml:space="preserve"><value>Vista en tiempo real de las suscripciones de recursos del servidor MCP: quÃ© clientes de IA estÃ¡n suscriptos a quÃ© recursos de tablero, y el log de eventos de cada subscribe, unsubscribe y broadcast.</value></data>
+  <data name="McpSubscriptionsBlurb" xml:space="preserve"><value>Vista en tiempo real de las suscripciones de recursos del servidor MCP: qué clientes de IA están suscriptos a qué recursos de tablero, y el log de eventos de cada subscribe, unsubscribe y broadcast.</value></data>
   <data name="McpSubscriptionsLoadError" xml:space="preserve"><value>No se pudo cargar el snapshot de suscripciones MCP</value></data>
-  <data name="McpSubscriptionsEmpty" xml:space="preserve"><value>AÃºn no hay datos de suscripciÃ³n. Los clientes de IA se suscriben a los recursos del tablero bajo demanda; el snapshot se completa despuÃ©s del primer subscribe o broadcast.</value></data>
+  <data name="McpSubscriptionsEmpty" xml:space="preserve"><value>Aún no hay datos de suscripción. Los clientes de IA se suscriben a los recursos del tablero bajo demanda; el snapshot se completa después del primer subscribe o broadcast.</value></data>
   <data name="McpSubscriptionsCurrentHeader" xml:space="preserve"><value>Suscriptores actuales</value></data>
   <data name="McpSubscriptionsCapturedAt" xml:space="preserve"><value>Snapshot capturado a las</value></data>
   <data name="McpSubscriptionsUriColumn" xml:space="preserve"><value>URI</value></data>
   <data name="McpSubscriptionsSessionsColumn" xml:space="preserve"><value>Sesiones</value></data>
   <data name="McpSubscriptionsNoSessions" xml:space="preserve"><value>sin sesiones</value></data>
   <data name="McpSubscriptionsEventLogHeader" xml:space="preserve"><value>Log de eventos</value></data>
-  <data name="McpSubscriptionsEventLogHint" xml:space="preserve"><value>Los Ãºltimos eventos registrados por el broadcaster, mÃ¡s recientes primero. La lista estÃ¡ limitada a 1.000 entradas; los eventos mÃ¡s viejos se descartan silenciosamente. Refresca cada 5 segundos.</value></data>
+  <data name="McpSubscriptionsEventLogHint" xml:space="preserve"><value>Los últimos eventos registrados por el broadcaster, más recientes primero. La lista está limitada a 1.000 entradas; los eventos más viejos se descartan silenciosamente. Refresca cada 5 segundos.</value></data>
   <data name="McpSubscriptionsEventTimeColumn" xml:space="preserve"><value>Hora (UTC)</value></data>
   <data name="McpSubscriptionsEventKindColumn" xml:space="preserve"><value>Tipo</value></data>
-  <data name="McpSubscriptionsSessionColumn" xml:space="preserve"><value>SesiÃ³n</value></data>
+  <data name="McpSubscriptionsSessionColumn" xml:space="preserve"><value>Sesión</value></data>
   <data name="McpSubscriptionsEventDetailColumn" xml:space="preserve"><value>Detalle</value></data>
   <data name="McpSubscriptionsFilterKind" xml:space="preserve"><value>Filtrar por tipo</value></data>
   <data name="McpSubscriptionsFilterKindAll" xml:space="preserve"><value>Todos los tipos</value></data>
   <data name="McpSubscriptionsFilterUri" xml:space="preserve"><value>Filtrar por URI (subcadena)</value></data>
   <data name="McpSubscriptionsFilterRange" xml:space="preserve"><value>Rango temporal</value></data>
-  <data name="McpSubscriptionsFilterRangeLastHour" xml:space="preserve"><value>Ãšltima hora</value></data>
-  <data name="McpSubscriptionsFilterRangeLastDay" xml:space="preserve"><value>Ãšltimo dÃ­a</value></data>
-  <data name="McpSubscriptionsFilterRangeAll" xml:space="preserve"><value>Todos (1.000 mÃ¡s recientes)</value></data>
+  <data name="McpSubscriptionsFilterRangeLastHour" xml:space="preserve"><value>Última hora</value></data>
+  <data name="McpSubscriptionsFilterRangeLastDay" xml:space="preserve"><value>Último día</value></data>
+  <data name="McpSubscriptionsFilterRangeAll" xml:space="preserve"><value>Todos (1.000 más recientes)</value></data>
   <data name="McpSubscriptionsFilterMatched" xml:space="preserve"><value>{0} de {1} eventos coinciden con el filtro actual</value></data>
   <data name="McpSubscriptionsExportCsv" xml:space="preserve"><value>Exportar CSV</value></data>
   <data name="McpSubscriptionsExportJson" xml:space="preserve"><value>Exportar JSON</value></data>
@@ -208,19 +208,19 @@
   <data name="McpSubscriptionsRefresh5s" xml:space="preserve"><value>Cada 5s</value></data>
   <data name="McpSubscriptionsRefresh15s" xml:space="preserve"><value>Cada 15s</value></data>
   <data name="McpSubscriptionsRefresh30s" xml:space="preserve"><value>Cada 30s</value></data>
-  <data name="OAuthAppsNameLabel" xml:space="preserve"><value>Nombre de la aplicaciÃ³n</value></data>
-  <data name="OAuthAppsRedirectLabel" xml:space="preserve"><value>URI de redirecciÃ³n</value></data>
-  <data name="OAuthAppsRedirectHint" xml:space="preserve"><value>A dÃ³nde vuelve el navegador despuÃ©s del consentimiento. Debe coincidir exactamente.</value></data>
+  <data name="OAuthAppsNameLabel" xml:space="preserve"><value>Nombre de la aplicación</value></data>
+  <data name="OAuthAppsRedirectLabel" xml:space="preserve"><value>URI de redirección</value></data>
+  <data name="OAuthAppsRedirectHint" xml:space="preserve"><value>A dónde vuelve el navegador después del consentimiento. Debe coincidir exactamente.</value></data>
   <data name="OAuthAppsScopesLabel" xml:space="preserve"><value>Scopes (separados por espacio)</value></data>
-  <data name="OAuthAppsScopesHint" xml:space="preserve"><value>ElegÃ­ el mÃ­nimo que la app necesite.</value></data>
-  <data name="OAuthAppsRegisterButton" xml:space="preserve"><value>Registrar aplicaciÃ³n</value></data>
-  <data name="OAuthAppsOneTimeTitle" xml:space="preserve"><value>Tu client secret â€” se muestra una sola vez</value></data>
-  <data name="OAuthAppsOneTimeWarning" xml:space="preserve"><value>CopiÃ¡ ambos valores ahora. El servidor sÃ³lo guarda el hash; el secret no se puede recuperar.</value></data>
+  <data name="OAuthAppsScopesHint" xml:space="preserve"><value>Elegí el mínimo que la app necesite.</value></data>
+  <data name="OAuthAppsRegisterButton" xml:space="preserve"><value>Registrar aplicación</value></data>
+  <data name="OAuthAppsOneTimeTitle" xml:space="preserve"><value>Tu client secret — se muestra una sola vez</value></data>
+  <data name="OAuthAppsOneTimeWarning" xml:space="preserve"><value>Copiá ambos valores ahora. El servidor sólo guarda el hash; el secret no se puede recuperar.</value></data>
   <data name="OAuthAppsClientId" xml:space="preserve"><value>Client ID</value></data>
   <data name="OAuthAppsClientSecret" xml:space="preserve"><value>Client secret</value></data>
-  <data name="OAuthAppsDismissButton" xml:space="preserve"><value>Ya lo guardÃ©</value></data>
+  <data name="OAuthAppsDismissButton" xml:space="preserve"><value>Ya lo guardé</value></data>
   <data name="OAuthAppsYourApps" xml:space="preserve"><value>Tus aplicaciones registradas</value></data>
-  <data name="OAuthAppsNoneRegistered" xml:space="preserve"><value>AÃºn no hay aplicaciones registradas.</value></data>
+  <data name="OAuthAppsNoneRegistered" xml:space="preserve"><value>Aún no hay aplicaciones registradas.</value></data>
   <data name="OAuthAppsTableName" xml:space="preserve"><value>Nombre</value></data>
   <data name="OAuthAppsTableClientId" xml:space="preserve"><value>Client ID</value></data>
   <data name="OAuthAppsTableScopes" xml:space="preserve"><value>Scopes</value></data>
@@ -228,89 +228,89 @@
   <data name="OAuthAppsStatusActive" xml:space="preserve"><value>Activa</value></data>
   <data name="OAuthAppsStatusRevoked" xml:space="preserve"><value>Revocada</value></data>
   <data name="OAuthAppsRevokeButton" xml:space="preserve"><value>Revocar</value></data>
-  <data name="OAuthAppsRegisterNewBlurb" xml:space="preserve"><value>RegistrÃ¡ una app de terceros que actÃºe en tu nombre. Vas a obtener un clientId y un client secret que se muestra una sola vez.</value></data>
-  <data name="AiGenerateDescription" xml:space="preserve"><value>Generar descripciÃ³n</value></data>
+  <data name="OAuthAppsRegisterNewBlurb" xml:space="preserve"><value>Registrá una app de terceros que actúe en tu nombre. Vas a obtener un clientId y un client secret que se muestra una sola vez.</value></data>
+  <data name="AiGenerateDescription" xml:space="preserve"><value>Generar descripción</value></data>
   <data name="AiSummarizeComments" xml:space="preserve"><value>Resumir hilo</value></data>
   <data name="AiSummaryTitle" xml:space="preserve"><value>Resumen IA</value></data>
   <data name="AiGenerateChecklist" xml:space="preserve"><value>Hacer checklist</value></data>
-  <data name="AiSuggestOwners" xml:space="preserve"><value>AsignaciÃ³n inteligente</value></data>
-  <data name="Login_TotpCode_Label" xml:space="preserve"><value>CÃ³digo de dos factores</value></data>
-  <data name="Login_TotpCode_Required" xml:space="preserve"><value>IngresÃ¡ el cÃ³digo de 6 dÃ­gitos de tu app autenticadora</value></data>
-  <data name="Login_TotpCode_Invalid" xml:space="preserve"><value>El cÃ³digo es invÃ¡lido o expirÃ³</value></data>
-  <data name="SlackTitle" xml:space="preserve"><value>IntegraciÃ³n con Slack</value></data>
-  <data name="SlackConnectBlurb" xml:space="preserve"><value>ConectÃ¡ tu workspace de Slack para que Cardscape pueda publicar eventos de tarjetas. PegÃ¡ el team id, el team name y un bot token (xoxb-â€¦) abajo.</value></data>
+  <data name="AiSuggestOwners" xml:space="preserve"><value>Asignación inteligente</value></data>
+  <data name="Login_TotpCode_Label" xml:space="preserve"><value>Código de dos factores</value></data>
+  <data name="Login_TotpCode_Required" xml:space="preserve"><value>Ingresá el código de 6 dígitos de tu app autenticadora</value></data>
+  <data name="Login_TotpCode_Invalid" xml:space="preserve"><value>El código es inválido o expiró</value></data>
+  <data name="SlackTitle" xml:space="preserve"><value>Integración con Slack</value></data>
+  <data name="SlackConnectBlurb" xml:space="preserve"><value>Conectá tu workspace de Slack para que Cardscape pueda publicar eventos de tarjetas. Pegá el team id, el team name y un bot token (xoxb-…) abajo.</value></data>
   <data name="SlackConnect" xml:space="preserve"><value>Conectar Slack</value></data>
   <data name="SlackConnectMissingFields" xml:space="preserve"><value>Team id, team name y bot token son obligatorios.</value></data>
-  <data name="SlackNotConnected" xml:space="preserve"><value>Slack todavÃ­a no estÃ¡ conectado a este workspace.</value></data>
+  <data name="SlackNotConnected" xml:space="preserve"><value>Slack todavía no está conectado a este workspace.</value></data>
   <data name="SlackTeamId" xml:space="preserve"><value>Team id</value></data>
   <data name="SlackTeamName" xml:space="preserve"><value>Team name</value></data>
-  <data name="SlackBotToken" xml:space="preserve"><value>Bot token (xoxb-â€¦)</value></data>
+  <data name="SlackBotToken" xml:space="preserve"><value>Bot token (xoxb-…)</value></data>
   <data name="SlackBotTokenPrefix" xml:space="preserve"><value>Prefijo del token</value></data>
-  <data name="SlackLastUsed" xml:space="preserve"><value>Ãšltimo uso</value></data>
+  <data name="SlackLastUsed" xml:space="preserve"><value>Último uso</value></data>
   <data name="SlackConnectedAs" xml:space="preserve"><value>Conectado como</value></data>
   <data name="SlackDisconnect" xml:space="preserve"><value>Refrescar</value></data>
   <data name="GoogleDriveTitle" xml:space="preserve"><value>Google Drive</value></data>
-  <data name="GoogleDriveConnectBlurb" xml:space="preserve"><value>AutorizÃ¡ a Cardscape a leer archivos de tu Google Drive para poder adjuntarlos a las tarjetas. El handshake OAuth estÃ¡ cableado como placeholder hasta que aterrice el handler de redirecciÃ³n.</value></data>
+  <data name="GoogleDriveConnectBlurb" xml:space="preserve"><value>Autorizá a Cardscape a leer archivos de tu Google Drive para poder adjuntarlos a las tarjetas. El handshake OAuth está cableado como placeholder hasta que aterrice el handler de redirección.</value></data>
   <data name="GoogleDriveConnect" xml:space="preserve"><value>Conectar Google Drive</value></data>
   <data name="GoogleDrivePicker" xml:space="preserve"><value>Selector de archivos</value></data>
-  <data name="GoogleDrivePickerBlurb" xml:space="preserve"><value>AbrÃ­ el selector de Google Drive en una pestaÃ±a nueva. La URL del selector se construye del lado del servidor; el navegador es redirigido a la pantalla de consentimiento de Google.</value></data>
+  <data name="GoogleDrivePickerBlurb" xml:space="preserve"><value>Abrí el selector de Google Drive en una pestaña nueva. La URL del selector se construye del lado del servidor; el navegador es redirigido a la pantalla de consentimiento de Google.</value></data>
   <data name="GoogleDrivePickerOpen" xml:space="preserve"><value>Abrir selector</value></data>
   <data name="GoogleDriveWorkspace" xml:space="preserve"><value>Workspace</value></data>
   <data name="GoogleDriveWorkspaceLabel" xml:space="preserve"><value>Workspace para el selector</value></data>
-  <data name="GoogleDriveSelectWorkspace" xml:space="preserve"><value>SeleccionÃ¡ un workspace</value></data>
-  <data name="GoogleDriveSelectWorkspaceFirst" xml:space="preserve"><value>ElegÃ­ primero un workspace.</value></data>
-  <data name="GoogleDrivePickerEmpty" xml:space="preserve"><value>El servidor devolviÃ³ una URL de selector vacÃ­a.</value></data>
-  <data name="GitHubTitle" xml:space="preserve"><value>IntegraciÃ³n con GitHub</value></data>
+  <data name="GoogleDriveSelectWorkspace" xml:space="preserve"><value>Seleccioná un workspace</value></data>
+  <data name="GoogleDriveSelectWorkspaceFirst" xml:space="preserve"><value>Elegí primero un workspace.</value></data>
+  <data name="GoogleDrivePickerEmpty" xml:space="preserve"><value>El servidor devolvió una URL de selector vacía.</value></data>
+  <data name="GitHubTitle" xml:space="preserve"><value>Integración con GitHub</value></data>
   <data name="GitHubLinkRepo" xml:space="preserve"><value>Vincular un repositorio</value></data>
-  <data name="GitHubLinkRepoMissing" xml:space="preserve"><value>ElegÃ­ un tablero e ingresÃ¡ el nombre completo del repo (owner/name).</value></data>
+  <data name="GitHubLinkRepoMissing" xml:space="preserve"><value>Elegí un tablero e ingresá el nombre completo del repo (owner/name).</value></data>
   <data name="GitHubBoard" xml:space="preserve"><value>Tablero</value></data>
-  <data name="GitHubSelectBoard" xml:space="preserve"><value>SeleccionÃ¡ un tablero</value></data>
+  <data name="GitHubSelectBoard" xml:space="preserve"><value>Seleccioná un tablero</value></data>
   <data name="GitHubRepoFullName" xml:space="preserve"><value>Repo (owner/name)</value></data>
   <data name="GitHubEvents" xml:space="preserve"><value>Eventos (separados por coma)</value></data>
   <data name="GitHubListPulls" xml:space="preserve"><value>Listar pull requests</value></data>
-  <data name="GitHubPullsHint" xml:space="preserve"><value>HacÃ© clic en "Listar pull requests" para consultar los PRs abiertos del repo en GitHub.</value></data>
+  <data name="GitHubPullsHint" xml:space="preserve"><value>Hacé clic en "Listar pull requests" para consultar los PRs abiertos del repo en GitHub.</value></data>
   <data name="GitHubNoPulls" xml:space="preserve"><value>No hay pull requests abiertos para ese repo.</value></data>
-  <data name="GitHubPullTitle" xml:space="preserve"><value>TÃ­tulo</value></data>
+  <data name="GitHubPullTitle" xml:space="preserve"><value>Título</value></data>
   <data name="GitHubPullState" xml:space="preserve"><value>Estado</value></data>
   <data name="GitHubOpen" xml:space="preserve"><value>Abrir</value></data>
   <data name="GitHubRepoRequired" xml:space="preserve"><value>El nombre completo del repo es obligatorio.</value></data>
   <data name="GitHubCreateIssue" xml:space="preserve"><value>Crear issue desde tarjeta</value></data>
   <data name="GitHubCardId" xml:space="preserve"><value>Id de la tarjeta</value></data>
-  <data name="GitHubIssueTitle" xml:space="preserve"><value>Override de tÃ­tulo (opcional)</value></data>
+  <data name="GitHubIssueTitle" xml:space="preserve"><value>Override de título (opcional)</value></data>
   <data name="GitHubIssueBody" xml:space="preserve"><value>Override de cuerpo (opcional)</value></data>
   <data name="GitHubCreateIssueMissing" xml:space="preserve"><value>El id de la tarjeta y el nombre del repo son obligatorios.</value></data>
   <data name="GitHubIssueCreated" xml:space="preserve"><value>Issue creado:</value></data>
   <data name="EmailTitle" xml:space="preserve"><value>Email a tablero</value></data>
-  <data name="EmailBlurb" xml:space="preserve"><value>RegistrÃ¡ una direcciÃ³n de email abajo. Los emails entrantes a esa direcciÃ³n se convierten en tarjetas en la lista destino. ConfigurÃ¡ tu proveedor de mail para que postee la URL del webhook cuando llegue un mensaje.</value></data>
+  <data name="EmailBlurb" xml:space="preserve"><value>Registrá una dirección de email abajo. Los emails entrantes a esa dirección se convierten en tarjetas en la lista destino. Configurá tu proveedor de mail para que postee la URL del webhook cuando llegue un mensaje.</value></data>
   <data name="EmailWebhook" xml:space="preserve"><value>URL del webhook</value></data>
-  <data name="EmailWebhookBlurb" xml:space="preserve"><value>ApuntÃ¡ SendGrid, Mailgun o Postmark Inbound Parse a esta URL. El body se parsea y se crea una tarjeta en la lista correspondiente.</value></data>
-  <data name="EmailWebhookSecretHint" xml:space="preserve"><value>AgregÃ¡ un secret de firma en el panel del proveedor para que el handler de entrada pueda verificar la firma del request.</value></data>
-  <data name="EmailAddAddress" xml:space="preserve"><value>Agregar direcciÃ³n de email</value></data>
-  <data name="EmailAddMissing" xml:space="preserve"><value>La direcciÃ³n de email y el id de la lista destino son obligatorios.</value></data>
-  <data name="EmailAddressLabel" xml:space="preserve"><value>DirecciÃ³n de email</value></data>
+  <data name="EmailWebhookBlurb" xml:space="preserve"><value>Apuntá SendGrid, Mailgun o Postmark Inbound Parse a esta URL. El body se parsea y se crea una tarjeta en la lista correspondiente.</value></data>
+  <data name="EmailWebhookSecretHint" xml:space="preserve"><value>Agregá un secret de firma en el panel del proveedor para que el handler de entrada pueda verificar la firma del request.</value></data>
+  <data name="EmailAddAddress" xml:space="preserve"><value>Agregar dirección de email</value></data>
+  <data name="EmailAddMissing" xml:space="preserve"><value>La dirección de email y el id de la lista destino son obligatorios.</value></data>
+  <data name="EmailAddressLabel" xml:space="preserve"><value>Dirección de email</value></data>
   <data name="EmailLabelLabel" xml:space="preserve"><value>Etiqueta</value></data>
   <data name="EmailTargetListId" xml:space="preserve"><value>Id de la lista destino</value></data>
   <data name="EmailAddresses" xml:space="preserve"><value>Direcciones de email registradas</value></data>
-  <data name="EmailNoAddresses" xml:space="preserve"><value>AÃºn no hay direcciones de email registradas para este workspace.</value></data>
+  <data name="EmailNoAddresses" xml:space="preserve"><value>Aún no hay direcciones de email registradas para este workspace.</value></data>
   <data name="EmailRemove" xml:space="preserve"><value>Quitar</value></data>
   <data name="ExtensionsTitle" xml:space="preserve"><value>Extensiones del tablero</value></data>
-  <data name="ExtensionsBlurb" xml:space="preserve"><value>Las extensiones son toggles por tablero. Al activar una se guarda su configuraciÃ³n acÃ¡; la feature real (campos personalizados, votaciÃ³n, repetidor de tarjetas, envejecimiento) lee el JSON en tiempo de ejecuciÃ³n.</value></data>
+  <data name="ExtensionsBlurb" xml:space="preserve"><value>Las extensiones son toggles por tablero. Al activar una se guarda su configuración acá; la feature real (campos personalizados, votación, repetidor de tarjetas, envejecimiento) lee el JSON en tiempo de ejecución.</value></data>
   <data name="ExtensionEnable" xml:space="preserve"><value>Activar</value></data>
   <data name="ExtensionDisable" xml:space="preserve"><value>Desactivar</value></data>
   <data name="ExtensionCustomFieldsName" xml:space="preserve"><value>Campos personalizados</value></data>
-  <data name="ExtensionCustomFieldsDescription" xml:space="preserve"><value>Campos estructurados por tarjeta (Prioridad, EstimaciÃ³n, etc.).</value></data>
-  <data name="ExtensionVotingName" xml:space="preserve"><value>VotaciÃ³n</value></data>
-  <data name="ExtensionVotingDescription" xml:space="preserve"><value>Votos a favor / en contra en las tarjetas con resÃºmenes.</value></data>
+  <data name="ExtensionCustomFieldsDescription" xml:space="preserve"><value>Campos estructurados por tarjeta (Prioridad, Estimación, etc.).</value></data>
+  <data name="ExtensionVotingName" xml:space="preserve"><value>Votación</value></data>
+  <data name="ExtensionVotingDescription" xml:space="preserve"><value>Votos a favor / en contra en las tarjetas con resúmenes.</value></data>
   <data name="ExtensionCardRepeaterName" xml:space="preserve"><value>Repetidor de tarjetas</value></data>
-  <data name="ExtensionCardRepeaterDescription" xml:space="preserve"><value>Recrea automÃ¡ticamente una tarjeta al completarla.</value></data>
+  <data name="ExtensionCardRepeaterDescription" xml:space="preserve"><value>Recrea automáticamente una tarjeta al completarla.</value></data>
   <data name="ExtensionCardAgingName" xml:space="preserve"><value>Envejecimiento de tarjetas</value></data>
-  <data name="ExtensionCardAgingDescription" xml:space="preserve"><value>AtenÃºa las tarjetas inactivas para que se destaquen las activas.</value></data>
+  <data name="ExtensionCardAgingDescription" xml:space="preserve"><value>Atenúa las tarjetas inactivas para que se destaquen las activas.</value></data>
   <data name="CardAgingModeDisabled" xml:space="preserve"><value>Desactivado</value></data>
   <data name="CardAgingModeByActivity" xml:space="preserve"><value>Por actividad</value></data>
   <data name="GoogleCalendarWorkspace" xml:space="preserve"><value>Workspace</value></data>
-  <data name="GoogleCalendarSelectWorkspace" xml:space="preserve"><value>ElegÃ­ un workspace</value></data>
-  <data name="GoogleCalendarSelectWorkspaceFirst" xml:space="preserve"><value>ElegÃ­ un workspace antes de conectar.</value></data>
-  <data name="GoogleCalendarPickWorkspace" xml:space="preserve"><value>NecesitÃ¡s al menos un workspace para conectar Google Calendar.</value></data>
+  <data name="GoogleCalendarSelectWorkspace" xml:space="preserve"><value>Elegí un workspace</value></data>
+  <data name="GoogleCalendarSelectWorkspaceFirst" xml:space="preserve"><value>Elegí un workspace antes de conectar.</value></data>
+  <data name="GoogleCalendarPickWorkspace" xml:space="preserve"><value>Necesitás al menos un workspace para conectar Google Calendar.</value></data>
   <data name="CommonCancel" xml:space="preserve"><value>Cancelar</value></data>
   <data name="CommonLanguage" xml:space="preserve"><value>Idioma</value></data>
   <data name="AppearanceTitle" xml:space="preserve"><value>Apariencia</value></data>
@@ -320,25 +320,25 @@
   <data name="AppearanceModeLight" xml:space="preserve"><value>Claro</value></data>
   <data name="AppearanceModeDark" xml:space="preserve"><value>Oscuro</value></data>
   <data name="SettingsAppearanceTitle" xml:space="preserve"><value>Apariencia</value></data>
-  <data name="SettingsAppearanceLead" xml:space="preserve"><value>Elegí un tema y un modo Claro/Oscuro/Sistema. La elección se guarda en el servidor cuando iniciás sesión, así que te sigue entre dispositivos.</value></data>
+  <data name="SettingsAppearanceLead" xml:space="preserve"><value>Eleg� un tema y un modo Claro/Oscuro/Sistema. La elecci�n se guarda en el servidor cuando inici�s sesi�n, as� que te sigue entre dispositivos.</value></data>
   <data name="SettingsAppearanceApply" xml:space="preserve"><value>Aplicar</value></data>
   <data name="SettingsAppearanceCurrent" xml:space="preserve"><value>Actual</value></data>
   <data name="SettingsAppearanceLivePreview" xml:space="preserve"><value>Vista previa</value></data>
   <data name="SettingsAppearance" xml:space="preserve"><value>Apariencia</value></data>
-  <data name="CommonLanguageEnglish" xml:space="preserve"><value>InglÃ©s</value></data>
-  <data name="CommonLanguageSpanish" xml:space="preserve"><value>EspaÃ±ol</value></data>
-  <data name="Loading" xml:space="preserve"><value>Cargandoâ€¦</value></data>
-  <data name="MirrorToButton" xml:space="preserve"><value>Espejar aâ€¦</value></data>
-  <data name="MirrorToTitle" xml:space="preserve"><value>Espejar aâ€¦</value></data>
-  <data name="MirrorToBlurb" xml:space="preserve"><value>ElegÃ­ el tablero y la lista que van a recibir una copia de esta tarjeta.</value></data>
+  <data name="CommonLanguageEnglish" xml:space="preserve"><value>Inglés</value></data>
+  <data name="CommonLanguageSpanish" xml:space="preserve"><value>Español</value></data>
+  <data name="Loading" xml:space="preserve"><value>Cargando…</value></data>
+  <data name="MirrorToButton" xml:space="preserve"><value>Espejar a…</value></data>
+  <data name="MirrorToTitle" xml:space="preserve"><value>Espejar a…</value></data>
+  <data name="MirrorToBlurb" xml:space="preserve"><value>Elegí el tablero y la lista que van a recibir una copia de esta tarjeta.</value></data>
   <data name="MirrorToBoard" xml:space="preserve"><value>Tablero</value></data>
   <data name="MirrorToList" xml:space="preserve"><value>Lista</value></data>
-  <data name="MirrorToSelectBoard" xml:space="preserve"><value>SeleccionÃ¡ un tablero</value></data>
-  <data name="MirrorToSelectList" xml:space="preserve"><value>SeleccionÃ¡ una lista</value></data>
+  <data name="MirrorToSelectBoard" xml:space="preserve"><value>Seleccioná un tablero</value></data>
+  <data name="MirrorToSelectList" xml:space="preserve"><value>Seleccioná una lista</value></data>
   <data name="MirrorToConfirm" xml:space="preserve"><value>Espejar</value></data>
   <data name="MirrorToSuccess" xml:space="preserve"><value>Tarjeta espejada.</value></data>
   <data name="MirrorToFailed" xml:space="preserve"><value>No se pudo espejar la tarjeta.</value></data>
-  <data name="MirrorToLoadFailed" xml:space="preserve"><value>No se pudo cargar el diÃ¡logo de espejado.</value></data>
+  <data name="MirrorToLoadFailed" xml:space="preserve"><value>No se pudo cargar el diálogo de espejado.</value></data>
   <data name="MirrorToNoBoards" xml:space="preserve"><value>Este workspace no tiene tableros disponibles para espejar.</value></data>
   <data name="SettingsTwoFactor" xml:space="preserve"><value>Autenticación de dos factores</value></data>
   <data name="SettingsTwoFactorProtectTitle" xml:space="preserve"><value>Protegé tu cuenta con 2FA</value></data>
@@ -362,42 +362,42 @@
   <data name="SettingsTwoFactorLoadError" xml:space="preserve"><value>No se pudo cargar el estado de 2FA: {0}</value></data>
   <data name="SettingsTwoFactorEnrolError" xml:space="preserve"><value>Falló la activación: {0}</value></data>
   <data name="SettingsTwoFactorDisableError" xml:space="preserve"><value>No se pudo desactivar 2FA: {0}</value></data>
-  <data name="ImportBlurb" xml:space="preserve"><value>Subí un export JSON de Trello para crear un tablero nuevo con listas y tarjetas.</value></data>
+  <data name="ImportBlurb" xml:space="preserve"><value>Sub� un export JSON de Trello para crear un tablero nuevo con listas y tarjetas.</value></data>
   <data name="ImportTrelloFile" xml:space="preserve"><value>Archivo JSON de Trello</value></data>
   <data name="ImportTitle" xml:space="preserve"><value>Importar un tablero de Trello</value></data>
-<data name="NavToggleSidebar" xml:space="preserve"><value>Mostrar/ocultar panel de navegación</value></data>  <data name="CardNotFoundTitle" xml:space="preserve"><value>No se encontró esta tarjeta</value></data>
-  <data name="CardNotFoundBody" xml:space="preserve"><value>Puede haber sido eliminada, archivada o no tenés acceso. El id de la tarjeta se conserva en la URL — volvé a la lista de espacios de trabajo y elegí otra tarjeta de un tablero donde seas miembro.</value></data>
+<data name="NavToggleSidebar" xml:space="preserve"><value>Mostrar/ocultar panel de navegaci�n</value></data>  <data name="CardNotFoundTitle" xml:space="preserve"><value>No se encontr� esta tarjeta</value></data>
+  <data name="CardNotFoundBody" xml:space="preserve"><value>Puede haber sido eliminada, archivada o no ten�s acceso. El id de la tarjeta se conserva en la URL � volv� a la lista de espacios de trabajo y eleg� otra tarjeta de un tablero donde seas miembro.</value></data>
   <data name="CardNotFoundBack" xml:space="preserve"><value>Volver a los espacios de trabajo</value></data>
-  <data name="CardEditTitle" xml:space="preserve"><value>Editar título</value></data>
+  <data name="CardEditTitle" xml:space="preserve"><value>Editar t�tulo</value></data>
   <data name="BoardAddList" xml:space="preserve"><value>Agregar lista</value></data>
   <data name="BoardAddCard" xml:space="preserve"><value>Agregar tarjeta</value></data>
   <data name="BoardAddItem" xml:space="preserve"><value>Agregar</value></data>
   <data name="WebhooksTitle" xml:space="preserve"><value>Webhooks</value></data>
-  <data name="WebhooksBlurb" xml:space="preserve"><value>Enviá eventos de tarjetas a una URL que controles. Cada webhook recibe un POST firmado por cada evento al que te suscribiste.</value></data>
+  <data name="WebhooksBlurb" xml:space="preserve"><value>Envi� eventos de tarjetas a una URL que controles. Cada webhook recibe un POST firmado por cada evento al que te suscribiste.</value></data>
   <data name="WebhooksNew" xml:space="preserve"><value>Nuevo webhook</value></data>
   <data name="WebhooksUrl" xml:space="preserve"><value>URL</value></data>
   <data name="WebhooksEvents" xml:space="preserve"><value>Eventos (separados por coma)</value></data>
   <data name="WebhooksActive" xml:space="preserve"><value>Activo</value></data>
-  <data name="WebhooksNoWebhooks" xml:space="preserve"><value>Aún no hay webhooks.</value></data>
-  <data name="WebhooksCreated" xml:space="preserve"><value>Webhook creado. Tu secreto se muestra abajo — copialo ahora, el servidor solo guarda el hash.</value></data>
+  <data name="WebhooksNoWebhooks" xml:space="preserve"><value>A�n no hay webhooks.</value></data>
+  <data name="WebhooksCreated" xml:space="preserve"><value>Webhook creado. Tu secreto se muestra abajo � copialo ahora, el servidor solo guarda el hash.</value></data>
   <data name="WebhooksSecretLabel" xml:space="preserve"><value>Secreto (una vez)</value></data>
   <data name="WebhooksDeliveries" xml:space="preserve"><value>Entregas recientes</value></data>
   <data name="WebhooksDeliveryStatus" xml:space="preserve"><value>Estado</value></data>
   <data name="WebhooksDeliveryUrl" xml:space="preserve"><value>URL</value></data>
   <data name="WebhooksDeliveryTimestamp" xml:space="preserve"><value>Marca de tiempo</value></data>
-  <data name="WebhooksDeliveryNoDeliveries" xml:space="preserve"><value>Aún no hay entregas.</value></data>
+  <data name="WebhooksDeliveryNoDeliveries" xml:space="preserve"><value>A�n no hay entregas.</value></data>
   <data name="WebhooksCreatedAt" xml:space="preserve"><value>Creado</value></data>
   <data name="WebhooksDisable" xml:space="preserve"><value>Desactivar</value></data>
   <data name="WebhooksEnable" xml:space="preserve"><value>Activar</value></data>
   <data name="WebhooksDelete" xml:space="preserve"><value>Eliminar</value></data>
   <data name="WebhooksCreate" xml:space="preserve"><value>Crear</value></data>
   <data name="DeleteCardDialogTitle" xml:space="preserve"><value>Eliminar tarjeta</value></data>
-  <data name="DeleteCardDialogBody" xml:space="preserve"><value>¿Eliminar la tarjeta \"{0}\"? Esta acción no se puede deshacer.</value></data>
+  <data name="DeleteCardDialogBody" xml:space="preserve"><value>�Eliminar la tarjeta \"{0}\"? Esta acci�n no se puede deshacer.</value></data>
   <data name="DeleteCardDialogConfirm" xml:space="preserve"><value>Eliminar</value></data>
   <data name="DeleteCardDialogCancel" xml:space="preserve"><value>Cancelar</value></data>
   <data name="DescriptionEdit" xml:space="preserve"><value>Editar</value></data>
   <data name="DescriptionSave" xml:space="preserve"><value>Guardar</value></data>
   <data name="DescriptionCancel" xml:space="preserve"><value>Cancelar</value></data>
-  <data name="DescriptionEmpty" xml:space="preserve"><value>Agregar descripción</value></data>
+  <data name="DescriptionEmpty" xml:space="preserve"><value>Agregar descripci�n</value></data>
   <data name="ChecklistProgress" xml:space="preserve"><value>{0}% hecho</value></data>
 </root>

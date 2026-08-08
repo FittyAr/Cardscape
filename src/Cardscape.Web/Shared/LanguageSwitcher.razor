@@ -39,6 +39,33 @@
     // re-loaded English from the empty default. The signature
     // here accepts the new `value` RadzenDropDown passes to Change
     // and forwards it to the picker.
+    //
+    // BETA-8-I18N-#2 — see test-results/r8/A8-settings.md.
+    //
+    // The previous one-way `Value="@Culture.CurrentCulture"`
+    // binding meant that when Culture.InitializeAsync loaded
+    // "es" from localStorage on first render, the layout
+    // re-rendered the menu in Spanish (Inicio / Espacios / …) but
+    // RadzenDropDown kept showing "English" because its internal
+    // selection is set by the first render and the
+    // parameter-driven setter only fires when the diff-renderer
+    // sees a primitive change. We force a re-render whenever the
+    // culture changes by hooking Culture.Changed in OnInitialized
+    // and calling StateHasChanged; combined with @bind-Value
+    // (below) the dropdown's internal state stays in lock-step
+    // with the singleton.
+    protected override void OnInitialized()
+    {
+        Culture.Changed += OnCultureChanged;
+    }
+
+    public void Dispose()
+    {
+        Culture.Changed -= OnCultureChanged;
+    }
+
+    private void OnCultureChanged() => InvokeAsync(StateHasChanged);
+
     private async void OnChange(object value)
     {
         string newCulture = value?.ToString() ?? "en";

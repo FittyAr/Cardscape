@@ -204,6 +204,11 @@ builder.Services.AddScoped<IGitHubApiClient, GitHubApiClient>();
 builder.Services.AddScoped<IWebhooksApiClient, WebhooksApiClient>();
 builder.Services.AddScoped<IEmailIntegrationApiClient, EmailIntegrationApiClient>();
 builder.Services.AddScoped<IMcpSubscriptionsApiClient, McpSubscriptionsApiClient>();
+// BUG-A6-001 — see test-results/beta/reports/A6-views.md. The
+// topbar search input in Shared/TopbarSearch.razor needs an API
+// client to call /api/search. The endpoint existed on the
+// server; the Web side just never bound a client to it.
+builder.Services.AddScoped<ISearchApiClient, SearchApiClient>();
 
 // ── Real-time (SignalR client) ──────────────────────────────
 builder.Services.AddScoped<BoardHubClient>();

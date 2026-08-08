@@ -13,6 +13,8 @@
     <Actions>
         <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth"
                       aria-label="Previous month" title="Previous month" />
+        <RadzenButton Text="Today" ButtonStyle="ButtonStyle.Light" Click="@GoToCurrentMonth"
+                      aria-label="Jump to current month" title="Jump to current month" />
         <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth"
                       aria-label="Next month" title="Next month" />
     </Actions>
@@ -51,11 +53,15 @@ else
 }
 
 @code {
+    // BUG-A6-007 — see test-results/beta/reports/A6-views.md. The
+    // swimlane header used to read "List 2a33ae28" (a truncated
+    // GUID) because the API DTO didn't carry the list's human
+    // name. CalendarEntryDto now exposes `ListName`; we use it
+    // here, falling back to the truncated id only if the API
+    // ever returns an empty string.
     private DateTimeOffset firstOfMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
     private IReadOnlyList<CalendarEntryDto> entries = [];
     private List<Swimlane> swimlanes = [];
-    private int daysInMonth;
-    private int weeksInMonth;
     private string monthLabel = string.Empty;
 
     private sealed record Swimlane(Guid ListId, string Title, string BoardName, List<CalendarEntryDto> Entries);
@@ -67,24 +73,21 @@ else
 
     private async Task ReloadAsync()
     {
-        daysInMonth = DateTime.DaysInMonth(firstOfMonth.Year, firstOfMonth.Month);
-        weeksInMonth = (int)Math.Ceiling(daysInMonth / 7.0);
-        monthLabel = firstOfMonth.ToString("MMMM yyyy");
-
         DateTimeOffset from = firstOfMonth;
-        DateTimeOffset to = firstOfMonth.AddDays(daysInMonth);
+        DateTimeOffset to = firstOfMonth.AddMonths(1);
 
         ApiResult<IReadOnlyList<CalendarEntryDto>> result = await Cards.CalendarAsync(from, to, boardId: null);
-        IReadOnlyList<CalendarEntryDto> rows = result.IsSuccess && result.Value is not null
+        entries = result.IsSuccess && result.Value is not null
             ? result.Value
             : (IReadOnlyList<CalendarEntryDto>)Array.Empty<CalendarEntryDto>();
-        entries = rows;
+
+        monthLabel = firstOfMonth.ToString("MMMM yyyy");
 
         swimlanes = entries
             .GroupBy(e => e.ListId)
             .Select(g => new Swimlane(
                 g.Key,
-                $"List {g.Key.ToString()[..8]}",
+                string.IsNullOrWhiteSpace(g.First().ListName) ? $"List {g.Key.ToString()[..8]}" : g.First().ListName,
                 g.First().BoardName,
                 g.OrderBy(e => e.DueDate).ToList()))
             .OrderBy(s => s.BoardName)
@@ -104,9 +107,10 @@ else
         await ReloadAsync();
     }
 
-    private static string WeekLabel(DateTimeOffset monthStart, int weekIndex)
+    private async Task GoToCurrentMonth()
     {
-        DateTimeOffset monday = monthStart.AddDays(weekIndex * 7);
-        return monday.ToString("MMM d");
+        DateTime utcNow = DateTime.UtcNow;
+        firstOfMonth = new DateTimeOffset(utcNow.Year, utcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
+        await ReloadAsync();
     }
 }

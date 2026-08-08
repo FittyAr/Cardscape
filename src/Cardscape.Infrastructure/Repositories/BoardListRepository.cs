@@ -41,4 +41,15 @@ public sealed class BoardListRepository(CardscapeDbContext db) : RepositoryBase<
 
         return map;
     }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> ListNamesByIdAsync(CancellationToken ct = default)
+    {
+        var map = new Dictionary<Guid, string>();
+        await foreach (var l in Db.Set<BoardList>().AsAsyncEnumerable().WithCancellation(ct))
+        {
+            map[l.Id.Value] = l.Name.Value;
+        }
+
+        return map;
+    }
 }
