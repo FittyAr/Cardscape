@@ -142,7 +142,25 @@ builder.Services.AddSingleton<Microsoft.Extensions.Localization.IStringLocalizer
     sp.GetRequiredService<Cardscape.Web.Services.HttpBackedStringLocalizer<SharedResource>>());
 
 // ── Auth + state providers ───────────────────────────────────────────
-builder.Services.AddAuthorizationCore();
+builder.Services.AddAuthorizationCore(options =>
+{
+    // BETA-A7-007 — see test-results/beta/reports/A7-advanced.md.
+    // The Blazor WASM side mirrors the API's AdminOnly policy:
+    // the requirement reads the `is_admin` claim surfaced by
+    // AuthStateProvider.DecodeJwtClaims and accepts only when
+    // the value is the string "true". Without this, the admin
+    // pages were protected only by `[Authorize]` and any
+    // authenticated user could navigate to /admin/mcp-subscriptions.
+    options.AddPolicy("AdminOnly", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireAssertion(ctx =>
+        {
+            System.Security.Claims.Claim? claim = ctx.User.FindFirst("is_admin");
+            return claim is not null && string.Equals(claim.Value, "true", StringComparison.Ordinal);
+        });
+    });
+});
 builder.Services.AddSingleton<TokenStore>();
 builder.Services.AddSingleton<AuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthStateProvider>());

@@ -1,5 +1,5 @@
 @page "/admin/mcp-subscriptions"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
 @using System.Globalization
 @using System.Text
 @using System.Text.Json

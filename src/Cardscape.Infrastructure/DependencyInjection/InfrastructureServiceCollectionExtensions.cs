@@ -210,6 +210,16 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IBackgroundJobScheduler, BackgroundJobScheduler>();
         services.AddSingleton<IBackgroundJobHandlerRegistry, BackgroundJobHandlerRegistry>();
         services.AddSingleton<IBackgroundJobHandler, CloneCardHandler>();
+        // BETA-A7-009 — see test-results/beta/reports/A7-advanced.md.
+        // The webhook delivery handler is responsible for POSTing the
+        // queued payload to the user's endpoint with the HMAC-SHA256
+        // signature, and for marking the WebhookDelivery row as
+        // Success / Failed / DeadLettered. Without this DI line the
+        // BackgroundJobDispatcherService claims the job, the
+        // ExecuteBackgroundJobCommandHandler tries to resolve the
+        // handler by type from the registry, gets null, and the
+        // delivery stays Pending forever (status=0, attemptCount=0).
+        services.AddSingleton<IBackgroundJobHandler, WebhookDeliveryHandler>();
         services.AddScoped<IUserDataExportService, UserDataExportService>();
 
         // GDPR retention sweeper (Art. 5(1)(e), Art. 17).

@@ -113,6 +113,19 @@ public sealed class AuthStateProvider(TokenStore tokens) : AuthenticationStatePr
                 }
             }
 
+            // BETA-A7-007 — see test-results/beta/reports/A7-advanced.md.
+            // The admin pages need a stable "is_admin" claim so
+            // the Blazor `[Authorize(Policy = "AdminOnly")]`
+            // attribute can decide whether the user is allowed
+            // to see the page. The JWT already carries
+            // `is_admin` as a string ("true" / "false") — surface
+            // it verbatim so the policy requirement can compare
+            // against "true" exactly.
+            if (root.TryGetProperty("is_admin", out JsonElement isAdmin))
+            {
+                claims.Add(new("is_admin", isAdmin.ToString(), ClaimValueTypes.String));
+            }
+
             return claims;
         }
         catch
