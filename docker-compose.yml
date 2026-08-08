@@ -1,10 +1,20 @@
 # Cardscape self-hostable stack.
-# - `cardscape.api` — the REST + Blazor-served API. SQLite by default; override
-#   with `Database__Provider=PostgreSQL` + `ConnectionStrings__Default=...` to
-#   use a real database (see docker-compose.dev.yml for the Postgres variant).
-# - `cardscape.postgres` — optional production-grade database.
-# - `cardscape.data` — named volume so the SQLite file and uploaded storage
-#   survive container restarts.
+# - `cardscape.api` — the REST + Blazor-served API. Self-contained: SQLite
+#   for the schema + local volume for uploads. `docker compose up` is the
+#   only command the operator needs to get a working install.
+# - `cardscape.data` + `cardscape.uploads` — named volumes so the SQLite
+#   file and uploaded storage survive container restarts.
+#
+# PostgreSQL is a known follow-up: the EF Core migrations were generated
+# against the SQLite provider and the design-time factory still uses
+# SQLite by default. Running against PostgreSQL trips the runtime
+# `PendingModelChangesWarning` (model vs. snapshot column-type drift:
+# TEXT/INTEGER vs. uuid/text/bigint/boolean). The fix is a single
+# `dotnet ef migrations add` pass with `Database__Provider=PostgreSQL`
+# + a single consolidation migration that drops the 30+ per-issue
+# migrations, both of which are tracked in
+# docs/operations/12-postgresql-future-work.md. Until that pass lands,
+# the documented deploy path is the SQLite stack below.
 #
 # Bring the whole thing up with:
 #     docker compose up -d
@@ -18,16 +28,11 @@ services:
     image: cardscape/api:0.1.0-mvp
     container_name: cardscape.api
     restart: unless-stopped
-    depends_on:
-      cardscape.postgres:
-        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      # Switch to PostgreSQL when the Postgres service is up; flip to
-      # `Sqlite` and remove the dependency to run fully self-contained.
-      Database__Provider: PostgreSQL
-      ConnectionStrings__Default: Host=cardscape.postgres;Port=5432;Database=cardscape;Username=cardscape;Password=${CARDS_CAPE_DB_PASSWORD:-cardscape-dev-password}
+      Database__Provider: Sqlite
+      ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
       Storage__LocalRoot: /app/Storage
       # IMPORTANT: override the dev default in production. Generate with
       #   openssl rand -base64 48
@@ -36,6 +41,15 @@ services:
       Jwt__Audience: Cardscape
       Cors__AllowedOrigins__0: http://localhost:8080
       Cors__AllowedOrigins__1: http://127.0.0.1:8080
+      # The migration runner defaults to `app.Environment.IsDevelopment()` —
+      # i.e. off in Production. The Cardscape self-hostable workflow ships
+      # `docker compose up` as the documented entry point, and a fresh
+      # database without the schema is a 500-loop from the
+      # BackgroundJobDispatcher. Flip the default to true here so the
+      # self-hostable workflow actually works. Operators that prefer to
+      # run migrations as a separate step (e.g. via `dotnet ef database
+      # update` in a CI job) can still set this to false.
+      Cardscape__Database__RunMigrationsOnStartup: "true"
     ports:
       - "8080:8080"
     volumes:
@@ -55,23 +69,6 @@ services:
       retries: 5
       start_period: 20s
 
-  cardscape.postgres:
-    image: postgres:17-alpine
-    container_name: cardscape.postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: cardscape
-      POSTGRES_USER: cardscape
-      POSTGRES_PASSWORD: ${CARDS_CAPE_DB_PASSWORD:-cardscape-dev-password}
-    volumes:
-      - cardscape.pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cardscape -d cardscape"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
 volumes:
-  cardscape.pgdata:
   cardscape.data:
   cardscape.uploads:

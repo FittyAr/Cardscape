@@ -283,8 +283,17 @@ volumes:
 The `Database__Provider` switch triggers the EF Core
 configuration in
 [`src/Cardscape.Infrastructure/Persistence/`](../../src/Cardscape.Infrastructure/Persistence/)
-to call `UseNpgsql` instead of `UseSqlite`. The migration
-set used is the PostgreSQL one (see ADR 0001).
+to call `UseNpgsql` instead of `UseSqlite`.
+
+> **Known follow-up.** The current EF Core migrations were
+> generated with the SQLite design-time factory, so the
+> snapshot is SQLite-typed. Switching the runtime provider
+> to PostgreSQL trips `PendingModelChangesWarning` at
+> startup. The full root cause + one-pass fix are documented
+> in
+> [`12-postgresql-future-work.md`](12-postgresql-future-work.md).
+> Until that pass lands, the documented self-hostable stack
+> is SQLite-only.
 
 ---
 
