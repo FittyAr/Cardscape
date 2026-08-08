@@ -203,16 +203,73 @@ extended. For now, less is more.
 
 ## 6. Application in the UI
 
-The Blazor UI in `src/Cardscape.Web/` should use the brand
-palette via Radzen's theme system. The default Radzen
-Material theme is a placeholder; the maintainer will author
-a `cardscape-dark` and a `cardscape-light` theme that
-matches this palette. The themes live under
-`src/Cardscape.Web/Themes/` (added with Phase 1).
+The Blazor UI in `src/Cardscape.Web/` consumes the brand
+palette via Radzen's documented theme pipeline. As of
+v1.2.0 the picker ships with **12 themes** — 5 Radzen
+free themes (default / humanistic / material / software /
+standard) + their 5 `-dark` siblings + the 2 custom
+Cardscape Classic variants. The single source of truth
+is `src/Cardscape.Web/Theming/ThemeCatalog.cs`.
 
-Until the theme is authored, the UI uses the default Radzen
-theme. The brand kit is the target; the theme work happens
-during implementation.
+### 6.1 Cardscape Classic palette (the brand surface)
+
+| Slot | Light | Dark | Role |
+|---|---|---|---|
+| Primary | `#0f3d3e` | `#1a8a8b` | Brand teal — the canonical anchor (`<meta name="theme-color">`). |
+| Primary-light | `#1a5a5b` | `#2fa9aa` | +1 HSL step toward white. |
+| Primary-darker | `#082627` | `#0f3d3e` | -1 HSL step toward black. |
+| Secondary | `#d4a574` | `#d4a574` | Warm sand — complementary to the teal on the HSL wheel (~150°). |
+| Secondary-light | `#e2bd8d` | `#e2bd8d` | +1 HSL step. |
+| Secondary-darker | `#a87e4f` | `#a87e4f` | -1 HSL step. |
+| Page background | `#f7f8f8` | `#1a1d1e` | One shade off pure white / near-black. |
+| Border radius | `4px` | `4px` | Tighter than the Radzen Software default (6px) — "serious tool". |
+
+The base for the custom theme is Radzen's **software**
+free theme (per maintainer direction). The two CSS
+files (`wwwroot/css/cardscape-classic.css` and
+`cardscape-classic-dark.css`) declare only the colour
+slots; shape, font scale, and focus ring fall through
+to the Radzen base. This is the documented
+"theme-override-on-top-of-a-base" pattern from the
+Radzen theme builder.
+
+### 6.2 Secondary colour rationale
+
+The secondary `#d4a574` (warm sand) was chosen by the
+maintainer with the assistant picking the specific value
+(documented in [docs/roadmap/06-plan-radzen-themes.md §4.4](../roadmap/06-plan-radzen-themes.md)).
+The reasoning:
+
+- **Complementary** to the teal on the HSL wheel (~150°
+  apart) — high contrast without being jarring.
+- **Earth / "serious tool" feel** — amber / sand reads
+  as paper, brass, leather; the materials of an
+  old-school project-management binder.
+- **WCAG-compliant on both surfaces** — 3.2:1 against
+  white (passes for large text), 6.8:1 against the
+  Cardscape Classic Dark background (passes for body
+  text).
+- **Same value on light and dark** — the warm sand is
+  bright enough to read on dark and saturated enough to
+  read on light, so we do not need a separate "secondary
+  dark" value.
+
+### 6.3 How to change the brand palette
+
+1. Update the swatch table in §6.1.
+2. Update the matching `Theme` POCO in
+   `src/Cardscape.Web/Theming/ThemeCatalog.cs`
+   (`CardscapeThemes.Classic` / `ClassicDark`).
+3. Update the matching CSS variables in
+   `wwwroot/css/cardscape-classic.css` and
+   `cardscape-classic-dark.css`.
+4. Re-run the integration test (R9 walkthrough) to
+   confirm the brand surfaces still match.
+
+The plan and the ADR 0011 are the source of truth for
+the cross-cutting design rationale; the test in
+`tests/Cardscape.UnitTests/Theming/ThemeCatalogTests`
+pins down the exact values.
 
 ---
 

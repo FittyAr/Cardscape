@@ -879,3 +879,35 @@ Sesi√≥n 7 (PR-2.1 a PR-2.6): Polish + ADR
 arrancar la Oleada 0. Cada PR se puede revisar y mergear en
 paralelo a otras features si se quiere, siempre que no
 toquen los mismos archivos.
+
+
+---
+
+## Closing note (v1.2.0)
+
+The v1.2.0 plan ([`../roadmap/06-plan-radzen-themes.md`](../roadmap/06-plan-radzen-themes.md))
+adds the theming surface on top of the Radzen-only
+foundation this document established. The plan landed
+6 commits on master (commits 1bbd431, b6a2f7c, aac0d39,
+6cdedeb, d2919d3, and the docs commit). The follow-through
+on ADR 0009:
+
+- `app.css` stayed under 100 lines. No new `wwwroot/css/*.css`
+  files were added for the free themes. The 2 custom theme
+  CSS files (`cardscape-classic.css` and
+  `cardscape-classic-dark.css`) are the documented
+  Radzen-theme-builder-output exception per plan ß2.1 ó
+  Radzen's own theme builder generates a CSS file by the
+  same mechanism.
+- `IJSRuntime.InvokeAsync` count in `Pages/` is still 0.
+  The one `eval()` call left in `App.razor` is the
+  pre-existing BETA-2-UI-#11 fix for the blazor-error-ui
+  banner; the v1.2.0 theming commits do not add new
+  JSRuntime calls.
+- No new `<button>`, `<input>`, or `<form>` elements in
+  `Pages/`. The `AppearanceToggle` and `/settings/appearance`
+  use `RadzenDropDown` / `RadzenButton` / `RadzenCard` /
+  `RadzenRadioButtonList` / `RadzenBadge` etc. throughout.
+
+ADR 0011 documents the design decision and the acceptance
+checklist.

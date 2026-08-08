@@ -696,3 +696,10 @@ sustained focus rather than a single PR:
 - [`../AGENTS.md` §8](../AGENTS.md#8-available-agent-skills-project-local) —
   the `radzen-blazor` skill that any v1.2.0 PR
   touching UI must consult first.
+
+
+## Next chunk -- v1.2.0 theming
+
+The follow-up workstream is [ 6-plan-radzen-themes.md](06-plan-radzen-themes.md): the Radzen free themes + the Cardscape Classic custom theme, persisted server-side per user via a new UserPreferences aggregate.
+
+That plan landed on master in 6 commits. See [ADR 0011](../adr/0011-radzen-themes-and-cardscape-classic.md) for the design decision and the acceptance checklist.

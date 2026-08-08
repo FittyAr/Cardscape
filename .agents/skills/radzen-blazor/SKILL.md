@@ -820,3 +820,44 @@ Components with events require interactive render mode:
 - **Official Docs**: https://blazor.radzen.com/
 - **GitHub**: https://github.com/radzenhq/radzen-blazor
 - **NuGet**: https://www.nuget.org/packages/Radzen.Blazor
+
+
+## 11. Theming (added by v1.2.0 plan)
+
+The Cardscape.Web client ships with 12 themes — 5 Radzen
+free themes (default, humanistic, material, software,
+standard) + their 5 `-dark` siblings + 2 custom Cardscape
+Classic variants (Light + Dark). The single source of
+truth is `src/Cardscape.Web/Theming/ThemeCatalog.cs`;
+the application-layer validator
+(`Cardscape.Application.UserPreferences.Commands.UpdateUserPreferencesCommandHandler.ValidThemeNames`)
+mirrors the same names and rejects unknown values with 400.
+
+The runtime is the standard Radzen pipeline: the
+`AddRadzenCookieThemeService` (wired in `Program.cs:50-54`)
+persists the choice in a cookie, and `<RadzenTheme
+Theme="@name" CssPath="@path" />` in `App.razor` emits
+the matching `<link>`. The 10 free themes use the default
+Radzen CSS path (no CssPath needed); the 2 custom
+variants use `CssPath="/css/cardscape-classic*.css"` and
+the brand-colour override files in `wwwroot/css/`.
+
+When touching any of the following, the v1.2.0 plan
+([docs/roadmap/06-plan-radzen-themes.md](../../docs/roadmap/06-plan-radzen-themes.md))
+and ADR 0011 are the source of truth:
+
+- The 12-entry catalog (`ThemeCatalog.All`).
+- The 2 brand CSS files (`cardscape-classic.css`,
+  `cardscape-classic-dark.css`).
+- The `UserPreferencesService` (singleton, Web-side).
+- The `UserPreferences` aggregate (Domain).
+- The `GET / POST / PUT /api/users/me/preferences` endpoints.
+- The `AppearanceToggle` and `/settings/appearance` UI.
+
+Adding a 13th theme is a coordinated change: add the
+name to `ThemeCatalog.All`, add it to
+`UpdateUserPreferencesCommandHandler.ValidThemeNames`,
+add a `Theme POCO` factory if it's custom, and (if
+custom) add a `wwwroot/css/cardscape-{name}.css`. The
+`ThemeCatalogTests` will fail loudly if the Web side
+and the Application side drift apart.
