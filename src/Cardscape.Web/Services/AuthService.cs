@@ -17,17 +17,24 @@ public readonly record struct LoginChallenge(
     UserSummaryDto User);
 
 /// <summary>Result wrapper used by all API calls so the UI can show messages.</summary>
-public readonly record struct ApiResult<T>(bool IsSuccess, T? Value, string? Error, LoginChallenge? Challenge = null)
+public readonly record struct ApiResult<T>(
+    bool IsSuccess,
+    T? Value,
+    string? Error,
+    int StatusCode = 0,
+    LoginChallenge? Challenge = null)
 {
-    public static ApiResult<T> Ok(T value) => new(true, value, null, null);
-    public static ApiResult<T> Fail(string error) => new(false, default, error, null);
-    public static ApiResult<T> NeedsTotp(LoginChallenge challenge) => new(false, default, null, challenge);
+    public static ApiResult<T> Ok(T value) => new(true, value, null, 200, null);
+    public static ApiResult<T> Fail(string error, int statusCode = 0) =>
+        new(false, default, error, statusCode, null);
+    public static ApiResult<T> NeedsTotp(LoginChallenge challenge) =>
+        new(false, default, null, 0, challenge);
 }
 
-public readonly record struct ApiResult(bool IsSuccess, string? Error)
+public readonly record struct ApiResult(bool IsSuccess, string? Error, int StatusCode = 0)
 {
-    public static ApiResult Ok() => new(true, null);
-    public static ApiResult Fail(string error) => new(false, error);
+    public static ApiResult Ok() => new(true, null, 200);
+    public static ApiResult Fail(string error, int statusCode = 0) => new(false, error, statusCode);
 }
 
 /// <summary>

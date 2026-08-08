@@ -208,9 +208,26 @@ public sealed class UserPreferencesService
         ApplyThemeName(appliedThemeName);
         Changed?.Invoke();
 
+        // R10-UI-#1 — beta test r10. For a user who has not
+        // yet had their preferences row created (e.g. a brand-new
+        // account that picked a theme before any page triggered
+        // the GET-then-Create flow), the PUT endpoint returns
+        // 404 with code `members.user_preferences.not_found`.
+        // Create the row first, then retry the PUT so the
+        // local theme change is actually persisted on the server.
         try
         {
             var update = await _api.UpdateAsync(themeName, mode);
+            if (!update.IsSuccess && update.StatusCode == 404)
+            {
+                _log.LogDebug("Preferences row missing; POSTing default before retrying PUT.");
+                var create = await _api.CreateDefaultAsync();
+                if (create.IsSuccess)
+                {
+                    update = await _api.UpdateAsync(themeName, mode);
+                }
+            }
+
             if (!update.IsSuccess)
             {
                 _log.LogWarning("PUT /api/users/me/preferences failed: {Error}", update.Error);

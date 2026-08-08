@@ -35,7 +35,7 @@ public abstract class ApiClientBase(IHttpClientFactory httpClientFactory)
         if (!response.IsSuccessStatusCode)
         {
             string? error = await AuthService.ExtractErrorAsync(response, ct);
-            return ApiResult<T>.Fail(error ?? $"HTTP {(int)response.StatusCode}");
+            return ApiResult<T>.Fail(error ?? $"HTTP {(int)response.StatusCode}", (int)response.StatusCode);
         }
 
         if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
@@ -45,7 +45,7 @@ public abstract class ApiClientBase(IHttpClientFactory httpClientFactory)
 
         T? payload = await response.Content.ReadFromJsonAsync<T>(JsonOptions, ct);
         return payload is null
-            ? ApiResult<T>.Fail("Empty response from server.")
+            ? ApiResult<T>.Fail("Empty response from server.", (int)response.StatusCode)
             : ApiResult<T>.Ok(payload);
     }
 
@@ -54,7 +54,7 @@ public abstract class ApiClientBase(IHttpClientFactory httpClientFactory)
         if (!response.IsSuccessStatusCode)
         {
             string? error = await AuthService.ExtractErrorAsync(response, ct);
-            return ApiResult.Fail(error ?? $"HTTP {(int)response.StatusCode}");
+            return ApiResult.Fail(error ?? $"HTTP {(int)response.StatusCode}", (int)response.StatusCode);
         }
 
         return ApiResult.Ok();
