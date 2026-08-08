@@ -149,9 +149,21 @@ else
 
     private static string FormatPayload(NotificationDto n)
     {
+        // BUG-A6-010 — see test-results/beta/reports/A6-views.md.
+        // The Inbox used to dump the raw payload as
+        // "cardId: 91779688-… · cardTitle: Card 2 · assignedBy:
+        // 98009fca-… · boardId: 94bba263-…" which is unreadable
+        // for a human. We now build a one-line summary per kind,
+        // and only fall back to the raw dump if the payload
+        // shape is unknown (forward-compat with new notification
+        // kinds that haven't been styled yet).
         if (string.IsNullOrEmpty(n.PayloadJson) || n.PayloadJson == "{}")
         {
-            return n.Kind;
+            return n.Kind switch
+            {
+                "AddedAsMember" => "You were added to a workspace.",
+                _ => n.Kind
+            };
         }
 
         try
@@ -159,13 +171,15 @@ else
             using JsonDocument doc = JsonDocument.Parse(n.PayloadJson);
             if (doc.RootElement.ValueKind == JsonValueKind.Object)
             {
-                List<string> parts = [];
-                foreach (JsonProperty p in doc.RootElement.EnumerateObject())
+                return n.Kind switch
                 {
-                    parts.Add($"{p.Name}: {p.Value}");
-                }
-
-                return string.Join(" · ", parts);
+                    "AssignedToCard" => FormatAssignedToCard(doc.RootElement),
+                    "AddedAsMember" => FormatAddedAsMember(doc.RootElement),
+                    "Mentioned" => FormatMentioned(doc.RootElement),
+                    "DueSoon" => FormatDueSoon(doc.RootElement),
+                    "Overdue" => FormatOverdue(doc.RootElement),
+                    _ => FormatGeneric(doc.RootElement)
+                };
             }
         }
         catch
@@ -174,6 +188,71 @@ else
         }
 
         return n.PayloadJson;
+    }
+
+    private static string FormatAssignedToCard(JsonElement root)
+    {
+        // The payload is { cardId, cardTitle, assignedBy, boardId }.
+        // We render the human-facing message; the IDs stay accessible
+        // via the "Open card" button rather than the body text.
+        string cardTitle = TryGetString(root, "cardTitle") ?? "a card";
+        string assignedBy = TryGetString(root, "assignedBy") ?? "Someone";
+        return $"You were assigned to {cardTitle} by {ShortenId(assignedBy)}.";
+    }
+
+    private static string FormatAddedAsMember(JsonElement root)
+    {
+        string workspace = TryGetString(root, "workspaceName") ?? TryGetString(root, "workspaceId") ?? "a workspace";
+        string role = TryGetString(root, "role");
+        return string.IsNullOrWhiteSpace(role)
+            ? $"You were added to {workspace}."
+            : $"You were added to {workspace} as {role}.";
+    }
+
+    private static string FormatMentioned(JsonElement root)
+    {
+        string where = TryGetString(root, "cardTitle") ?? TryGetString(root, "commentId") ?? "a card";
+        return $"You were mentioned in {where}.";
+    }
+
+    private static string FormatDueSoon(JsonElement root)
+    {
+        string cardTitle = TryGetString(root, "cardTitle") ?? "a card";
+        return $"{cardTitle} is due soon.";
+    }
+
+    private static string FormatOverdue(JsonElement root)
+    {
+        string cardTitle = TryGetString(root, "cardTitle") ?? "a card";
+        return $"{cardTitle} is overdue.";
+    }
+
+    private static string FormatGeneric(JsonElement root)
+    {
+        List<string> parts = [];
+        foreach (JsonProperty p in root.EnumerateObject())
+        {
+            parts.Add($"{p.Name}: {p.Value}");
+        }
+        return string.Join(" · ", parts);
+    }
+
+    private static string? TryGetString(JsonElement root, string name)
+    {
+        if (root.TryGetProperty(name, out JsonElement el))
+        {
+            return el.ValueKind == JsonValueKind.String ? el.GetString() : el.ToString();
+        }
+        return null;
+    }
+
+    private static string ShortenId(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id) || id.Length < 8)
+        {
+            return id;
+        }
+        return id[..8];
     }
 
     private static bool TryGetCardId(NotificationDto n, out Guid cardId)

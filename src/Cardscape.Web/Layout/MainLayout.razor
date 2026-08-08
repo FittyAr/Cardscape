@@ -32,6 +32,9 @@
                     </RadzenColumn>
                     <RadzenColumn Size="9">
                         <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                            <div class="rz-grow-1" style="max-width: 320px;">
+                                <TopbarSearch />
+                            </div>
                             <InboxBell />
                             <AppearanceToggle />
                             <LanguageSwitcher />
@@ -100,6 +103,9 @@
                     </RadzenColumn>
                     <RadzenColumn Size="6">
                         <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                            <div class="rz-grow-1" style="max-width: 320px;">
+                                <TopbarSearch />
+                            </div>
                             <LanguageSwitcher />
                             <RadzenButton Text="@L["AuthSignIn"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Nav.NavigateTo("login"))" />
                             <RadzenButton Text="@L["AuthCreateAccount"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" Click="@(() => Nav.NavigateTo("register"))" />
