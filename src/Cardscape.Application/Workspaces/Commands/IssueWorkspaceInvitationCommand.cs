@@ -36,6 +36,18 @@ public static class IssueWorkspaceInvitationCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
+        // BETA-A2-002 / BETA-A2-003: validate the email shape here
+        // so the call doesn't blow up with a 500 further down the
+        // pipeline. Empty string and a string without an `@` are
+        // both rejected; the `System.Net.Mail.MailAddress` ctor
+        // throws on anything else.
+        if (string.IsNullOrWhiteSpace(command.Email) || !command.Email.Contains('@'))
+        {
+            return Result.Failure<WorkspaceInvitationIssuanceDto>(DomainError.Validation(
+                "workspaces.invitation.email_invalid",
+                "Invite email must be a valid address."));
+        }
+
         var workspace = await workspaces.GetWithMembersAsync(
             new WorkspaceId(command.WorkspaceId), cancellationToken);
         if (workspace is null)

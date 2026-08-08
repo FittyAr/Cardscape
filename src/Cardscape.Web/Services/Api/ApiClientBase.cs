@@ -43,6 +43,19 @@ public abstract class ApiClientBase(IHttpClientFactory httpClientFactory)
             return ApiResult<T>.Ok(default!);
         }
 
+        // BETA-A2-004: the Slack and SAML GET endpoints return
+        // `Results.Ok(null)` when no connection exists. ASP.NET
+        // serialises that to an EMPTY body (not the JSON token
+        // `null`), which makes `ReadFromJsonAsync<T>` throw
+        // `JsonException: ExpectedJsonTokens`. Treat an empty
+        // body as a deserialised null so a nullable T (e.g.
+        // `SlackWorkspaceDto?`) returns Ok(null) instead of
+        // blowing up the page.
+        if (response.Content.Headers.ContentLength is 0L)
+        {
+            return ApiResult<T>.Ok(default!);
+        }
+
         T? payload = await response.Content.ReadFromJsonAsync<T>(JsonOptions, ct);
         return payload is null
             ? ApiResult<T>.Fail("Empty response from server.", (int)response.StatusCode)

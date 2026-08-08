@@ -3,6 +3,7 @@ using Cardscape.Application.Authentication.Commands;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
@@ -63,6 +64,37 @@ public static class DevOnlyEndpoints
             });
         });
 
+        // BETA-A4 — dev-only bootstrap for the beta-test agent.
+        // The agent landed in the test environment with the
+        // beta-tester account already enrolled in 2FA but
+        // without the recovery codes; the TOTP secret is
+        // stored encrypted and the agent has no way to ask
+        // the user. This endpoint soft-deletes the TOTP
+        // credential for the named email so the next login
+        // skips 2FA. Production deploys do not register the
+        // endpoint (see MapDevOnly's IsDevelopment guard).
+        group.MapPost("/disable-totp", async (
+            [FromBody] DevDisableTotpRequest body,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<DevDisableTotpResult>>(
+                new DevDisableTotpCommand(body.Email), ct);
+            if (result.IsFailure)
+            {
+                return Results.BadRequest(new { error = result.Error.Code, message = result.Error.Message });
+            }
+
+            return Results.Ok(new
+            {
+                userId = result.Value.UserId,
+                hadCredential = result.Value.HadCredential
+            });
+        });
+
         return app;
     }
 }
+
+/// <summary>Body for <c>POST /api/dev/disable-totp</c>.</summary>
+public sealed record DevDisableTotpRequest(string Email);

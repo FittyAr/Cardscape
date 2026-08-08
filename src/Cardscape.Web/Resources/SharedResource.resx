@@ -172,6 +172,7 @@
   <data name="BoardsEmpty" xml:space="preserve"><value>No boards yet.</value></data>
   <data name="PageTitleSuffix" xml:space="preserve"><value>— Cardscape</value></data>
   <data name="NotFoundTitle" xml:space="preserve"><value>Not found</value></data>
+  <data name="NotFoundBackHome" xml:space="preserve"><value>Back to home</value></data>
   <data name="CommonLoading" xml:space="preserve"><value>Loading…</value></data>
   <data name="OAuthAppsProtocol" xml:space="preserve"><value>OAuth 2.0 protocol endpoints</value></data>
   <data name="CommonRetry" xml:space="preserve"><value>Retry</value></data>
@@ -341,6 +342,27 @@
   <data name="MirrorToNoBoards" xml:space="preserve"><value>This workspace has no boards to mirror to.</value></data>
   <data name="MirrorToNoOtherBoards" xml:space="preserve"><value>The only board in this workspace is the source card's own board. Create another board first.</value></data>
   <data name="SettingsTwoFactor" xml:space="preserve"><value>Two-factor authentication</value></data>
+  <data name="SettingsTwoFactorProtectTitle" xml:space="preserve"><value>Protect your account with 2FA</value></data>
+  <data name="SettingsTwoFactorProtectBlurb" xml:space="preserve"><value>Scan a QR code with your authenticator app (Authy, 1Password, Google Authenticator, …) and confirm a code to enable two-factor authentication.</value></data>
+  <data name="SettingsTwoFactorEnrol" xml:space="preserve"><value>Enrol</value></data>
+  <data name="SettingsTwoFactorScanTitle" xml:space="preserve"><value>1. Scan this QR code with your authenticator</value></data>
+  <data name="SettingsTwoFactorOpenUri" xml:space="preserve"><value>Open the otpauth:// URI</value></data>
+  <data name="SettingsTwoFactorOrCopy" xml:space="preserve"><value> or copy the secret below and enter it manually:</value></data>
+  <data name="SettingsTwoFactorSecretAria" xml:space="preserve"><value>2FA enrollment secret</value></data>
+  <data name="SettingsTwoFactorRecoveryTitle" xml:space="preserve"><value>2. Save your recovery codes</value></data>
+  <data name="SettingsTwoFactorRecoveryBlurb" xml:space="preserve"><value>Each code can be used once if you lose access to your authenticator. They are not shown again.</value></data>
+  <data name="SettingsTwoFactorRecoveryAria" xml:space="preserve"><value>Recovery code</value></data>
+  <data name="SettingsTwoFactorOn" xml:space="preserve"><value>2FA is on</value></data>
+  <data name="SettingsTwoFactorEnrolledAt" xml:space="preserve"><value>Enrolled {0}.</value></data>
+  <data name="SettingsTwoFactorRecoveryCodesRemaining" xml:space="preserve"><value>{0} recovery codes remaining.</value></data>
+  <data name="SettingsTwoFactorDisable" xml:space="preserve"><value>Disable 2FA</value></data>
+  <data name="SettingsTwoFactorConfirmTitle" xml:space="preserve"><value>Confirm 2FA code</value></data>
+  <data name="SettingsTwoFactorCurrentCode" xml:space="preserve"><value>Current 2FA code</value></data>
+  <data name="SettingsTwoFactorConfirmBlurb" xml:space="preserve"><value>Enter your current 2FA code to disable 2FA:</value></data>
+  <data name="SettingsTwoFactorDisableInvalidCode" xml:space="preserve"><value>Could not disable 2FA: invalid code.</value></data>
+  <data name="SettingsTwoFactorLoadError" xml:space="preserve"><value>Could not load 2FA status: {0}</value></data>
+  <data name="SettingsTwoFactorEnrolError" xml:space="preserve"><value>Enrolment failed: {0}</value></data>
+  <data name="SettingsTwoFactorDisableError" xml:space="preserve"><value>Could not disable 2FA: {0}</value></data>
   <data name="ImportTitle" xml:space="preserve"><value>Import a Trello board</value></data>
   <data name="ImportBlurb" xml:space="preserve"><value>Upload a Trello JSON export to create a new board with lists and cards.</value></data>
   <data name="ImportTrelloFile" xml:space="preserve"><value>Trello JSON file</value></data>

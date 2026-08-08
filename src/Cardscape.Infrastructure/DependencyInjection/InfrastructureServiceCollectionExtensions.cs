@@ -110,6 +110,20 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<
             IDomainEventBroadcaster,
             Cardscape.Application.Integrations.Slack.SlackEventBroadcaster>();
+        // BETA-A7-001 — see test-results/beta/reports/A7-advanced.md.
+        // The previous AutomationDispatcher sat in the API
+        // project as a static class whose four `Handle` methods
+        // were meant to be discovered by Wolverine. They never
+        // ran: the card events do not implement IMessage, so
+        // Wolverine's static-handler discovery skips them, and
+        // there is no manual subscription in Program.cs. The
+        // rules created via the API persisted correctly but
+        // were never executed. Converted to a proper
+        // IDomainEventBroadcaster so the existing
+        // WolverineDomainEventDispatcher fan-out picks it up.
+        services.AddSingleton<
+            IDomainEventBroadcaster,
+            Cardscape.Application.Automation.AutomationEventBroadcaster>();
 
         services.AddScoped<IRepository<User, UserId>, UserRepository>();
         services.AddScoped<IUserRepository, UserRepository>();

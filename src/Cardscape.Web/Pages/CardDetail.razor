@@ -406,6 +406,15 @@ else
 @code {
     [Parameter] public Guid CardId { get; set; }
 
+    // BETA-A2-005: the second `@page` template
+    // `/cards/{CardId:guid}/{BoardId:guid}` is used by BoardDetail.razor
+    // to scope the deep link to the originating board. The parameter
+    // is routing context only — the page does not branch on it — but
+    // the route template requires a matching `[Parameter]` property
+    // or Blazor's router throws "Object of type 'Cardscape.Web.Pages.
+    // CardDetail' does not have a property matching the name 'BoardId'."
+    [Parameter] public Guid BoardId { get; set; }
+
     private CardDto? card;
     private bool notFound;
     private bool editingTitle;

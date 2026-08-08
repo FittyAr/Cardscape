@@ -173,6 +173,7 @@
   <data name="BoardsEmpty" xml:space="preserve"><value>AÃºn no hay tableros.</value></data>
   <data name="PageTitleSuffix" xml:space="preserve"><value>â€” Cardscape</value></data>
   <data name="NotFoundTitle" xml:space="preserve"><value>No encontrado</value></data>
+  <data name="NotFoundBackHome" xml:space="preserve"><value>Volver al inicio</value></data>
   <data name="NotFoundBlurb" xml:space="preserve"><value>La pÃ¡gina que buscÃ¡s no existe.</value></data>
   <data name="CommonLoading" xml:space="preserve"><value>Cargandoâ€¦</value></data>
   <data name="OAuthAppsProtocol" xml:space="preserve"><value>Endpoints del protocolo OAuth 2.0</value></data>
@@ -340,6 +341,27 @@
   <data name="MirrorToLoadFailed" xml:space="preserve"><value>No se pudo cargar el diÃ¡logo de espejado.</value></data>
   <data name="MirrorToNoBoards" xml:space="preserve"><value>Este workspace no tiene tableros disponibles para espejar.</value></data>
   <data name="SettingsTwoFactor" xml:space="preserve"><value>Autenticación de dos factores</value></data>
+  <data name="SettingsTwoFactorProtectTitle" xml:space="preserve"><value>Protegé tu cuenta con 2FA</value></data>
+  <data name="SettingsTwoFactorProtectBlurb" xml:space="preserve"><value>Escaneá un código QR con tu app autenticadora (Authy, 1Password, Google Authenticator, …) y confirmá un código para activar la autenticación de dos factores.</value></data>
+  <data name="SettingsTwoFactorEnrol" xml:space="preserve"><value>Activar</value></data>
+  <data name="SettingsTwoFactorScanTitle" xml:space="preserve"><value>1. Escaneá este código QR con tu autenticador</value></data>
+  <data name="SettingsTwoFactorOpenUri" xml:space="preserve"><value>Abrí el URI otpauth://</value></data>
+  <data name="SettingsTwoFactorOrCopy" xml:space="preserve"><value> o copiá el secreto de abajo y cargalo manualmente:</value></data>
+  <data name="SettingsTwoFactorSecretAria" xml:space="preserve"><value>Secreto de activación de 2FA</value></data>
+  <data name="SettingsTwoFactorRecoveryTitle" xml:space="preserve"><value>2. Guardá tus códigos de recuperación</value></data>
+  <data name="SettingsTwoFactorRecoveryBlurb" xml:space="preserve"><value>Cada código se puede usar una sola vez si perdés acceso a tu autenticador. No se vuelven a mostrar.</value></data>
+  <data name="SettingsTwoFactorRecoveryAria" xml:space="preserve"><value>Código de recuperación</value></data>
+  <data name="SettingsTwoFactorOn" xml:space="preserve"><value>2FA está activado</value></data>
+  <data name="SettingsTwoFactorEnrolledAt" xml:space="preserve"><value>Activado el {0}.</value></data>
+  <data name="SettingsTwoFactorRecoveryCodesRemaining" xml:space="preserve"><value>Quedan {0} códigos de recuperación.</value></data>
+  <data name="SettingsTwoFactorDisable" xml:space="preserve"><value>Desactivar 2FA</value></data>
+  <data name="SettingsTwoFactorConfirmTitle" xml:space="preserve"><value>Confirmar código de 2FA</value></data>
+  <data name="SettingsTwoFactorCurrentCode" xml:space="preserve"><value>Código actual de 2FA</value></data>
+  <data name="SettingsTwoFactorConfirmBlurb" xml:space="preserve"><value>Ingresá tu código actual de 2FA para desactivar 2FA:</value></data>
+  <data name="SettingsTwoFactorDisableInvalidCode" xml:space="preserve"><value>No se pudo desactivar 2FA: código inválido.</value></data>
+  <data name="SettingsTwoFactorLoadError" xml:space="preserve"><value>No se pudo cargar el estado de 2FA: {0}</value></data>
+  <data name="SettingsTwoFactorEnrolError" xml:space="preserve"><value>Falló la activación: {0}</value></data>
+  <data name="SettingsTwoFactorDisableError" xml:space="preserve"><value>No se pudo desactivar 2FA: {0}</value></data>
   <data name="ImportBlurb" xml:space="preserve"><value>Subí un export JSON de Trello para crear un tablero nuevo con listas y tarjetas.</value></data>
   <data name="ImportTrelloFile" xml:space="preserve"><value>Archivo JSON de Trello</value></data>
   <data name="ImportTitle" xml:space="preserve"><value>Importar un tablero de Trello</value></data>
