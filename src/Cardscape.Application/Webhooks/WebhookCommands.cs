@@ -109,6 +109,29 @@ public static class CreateWebhookEndpointCommandHandler
             }
         }
 
+        // BETA-9-#1 — see test-results/r9/r9-report.md.
+        // The previous order checked the secret length BEFORE the
+        // SSRF guard, so a request to `http://localhost:9999/evil`
+        // with a one-character secret returned `webhooks.secret_too_short`
+        // instead of the SSRF error. The SSRF guard is the security-
+        // critical check and must be the first validation, so an
+        // attacker probing the endpoint learns nothing about the
+        // secret-length policy from a blocked SSRF attempt.
+        // We do a defensive URL/SSRF validation here (the factory
+        // runs the same checks again — they are idempotent and free).
+        if (!Uri.TryCreate(command.Url, UriKind.Absolute, out Uri? parsedUrl)
+            || (parsedUrl.Scheme != Uri.UriSchemeHttp && parsedUrl.Scheme != Uri.UriSchemeHttps))
+        {
+            return Result.Failure<WebhookEndpointIssuance>(DomainError.Validation(
+                "webhooks.url_invalid", "Webhook URL must be an absolute http or https URL."));
+        }
+        if (WebhookUrlValidator.IsInternalHost(parsedUrl))
+        {
+            return Result.Failure<WebhookEndpointIssuance>(DomainError.Validation(
+                "webhooks.url_internal",
+                "Webhook URL must not resolve to a private, loopback, link-local, or otherwise non-routable address."));
+        }
+
         // BETA-6-#1 — see test-results/BETA-TEST-REPORT.md.
         // If the caller did not provide a secret, the server
         // generates one and returns it in the issuance payload.

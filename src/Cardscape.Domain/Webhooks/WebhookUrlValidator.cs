@@ -23,6 +23,16 @@ namespace Cardscape.Domain.Webhooks;
 /// </summary>
 public static class WebhookUrlValidator
 {
+    /// <summary>
+    /// BETA-9-#1 — see test-results/r9/r9-report.md.
+    /// Returns true if the URL resolves to a local / internal address.
+    /// Used by the application-layer command handlers that want the
+    /// security-critical SSRF check to run BEFORE any other validation
+    /// (e.g. secret length) so a misconfigured request never gets a
+    /// more specific error than "URL is internal".
+    /// </summary>
+    public static bool IsInternalHost(Uri parsed) => ValidateNotInternalHost(parsed).IsFailure;
+
     public static Result ValidateNotInternalHost(Uri parsed)
     {
         string host = parsed.Host;
