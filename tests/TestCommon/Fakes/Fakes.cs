@@ -332,6 +332,17 @@ public sealed class InMemoryBoardListRepository : InMemoryRepositoryBase<BoardLi
             .ToDictionary(l => l.Id.Value, l => l.BoardId.Value);
         return Task.FromResult(map);
     }
+
+    // BUG-A6-007 — the in-memory fakes must implement the new
+    // list-name lookup the planner now uses (see
+    // IBoardListRepository.ListNamesByIdAsync). Mirrors the
+    // SQL-backed implementation in BoardListRepository.
+    public Task<IReadOnlyDictionary<Guid, string>> ListNamesByIdAsync(CancellationToken ct = default)
+    {
+        IReadOnlyDictionary<Guid, string> map = Store.Values
+            .ToDictionary(l => l.Id.Value, l => l.Name.Value);
+        return Task.FromResult(map);
+    }
 }
 
 /// <summary>In-memory <see cref="ILabelRepository"/>.</summary>

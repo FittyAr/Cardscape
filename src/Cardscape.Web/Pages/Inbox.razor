@@ -203,7 +203,7 @@ else
     private static string FormatAddedAsMember(JsonElement root)
     {
         string workspace = TryGetString(root, "workspaceName") ?? TryGetString(root, "workspaceId") ?? "a workspace";
-        string role = TryGetString(root, "role");
+        string? role = TryGetString(root, "role");
         return string.IsNullOrWhiteSpace(role)
             ? $"You were added to {workspace}."
             : $"You were added to {workspace} as {role}.";
