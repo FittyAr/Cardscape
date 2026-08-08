@@ -1,0 +1,71 @@
+@*
+  AppearanceToggle — compact dropdown in the header
+  (next to <LanguageSwitcher />) that lets the user
+  pick a theme. Bound to UserPreferencesService — the
+  same singleton App.razor reads for the <RadzenTheme>
+  tag, so a change here re-themes the entire app
+  without a reload.
+
+  Built entirely from Radzen primitives (RadzenDropDown
+  + RadzenStack + RadzenIcon). Zero custom CSS / JS.
+  ADR 0009 compliance.
+
+  The 12 entries are listed in catalog order: 5 free
+  light + 5 free dark + 2 Cardscape Classic. The
+  dropdown is intentionally minimal — no theme preview
+  swatches, no group headers. The /settings/appearance
+  page (commit 5) is the rich surface for picking; the
+  header toggle is the fast path for "I just want to
+  flip the theme quickly".
+*@
+
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Cardscape.Web.Theming
+@using Microsoft.Extensions.Localization
+@inject UserPreferencesService UserPreferences
+@inject IStringLocalizer<SharedResource> L
+
+<RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" Gap="0.25rem">
+    <RadzenIcon Icon="palette" Style="color: var(--rz-text-secondary-color);" />
+    <RadzenDropDown TValue="string"
+                    Value="@UserPreferences.CurrentThemeName"
+                    Change="@OnThemeChanged"
+                    Data="@(_themes)"
+                    TextProperty="DisplayName"
+                    ValueProperty="Name"
+                    Placeholder="@L["AppearanceTheme"]"
+                    Style="width: 12rem;"
+                    aria-label="@L["AppearanceTitle"]" />
+</RadzenStack>
+
+@code {
+    /// <summary>Local snapshot of the 12-entry catalog. The
+    /// service exposes the same list via
+    /// <see cref="ThemeCatalog.All"/>; we copy it into a
+    /// field so the component re-renders only on its own
+    /// state changes, not on every service-property read.</summary>
+    private IReadOnlyList<ThemeEntry> _themes = ThemeCatalog.All;
+
+    private async void OnThemeChanged()
+    {
+        // RadzenDropDown<TValue>.Change is a non-generic
+        // Action; the bound Value is already updated to
+        // the new selection. We forward that to the
+        // service, which writes the cookie, the
+        // /api/users/me/preferences PUT (if logged in),
+        // and raises Changed so App.razor re-renders the
+        // <RadzenTheme> tag.
+        string? themeName = UserPreferences.CurrentThemeName;
+        if (string.IsNullOrEmpty(themeName))
+        {
+            return;
+        }
+
+        // Mode is unchanged by a theme picker; the
+        // settings page is where the Light / Dark / System
+        // radio lives. The service keeps the current
+        // mode as-is.
+        await UserPreferences.SetAsync(themeName, UserPreferences.CurrentMode);
+    }
+}
