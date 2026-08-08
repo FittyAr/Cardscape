@@ -63,6 +63,17 @@
 
     private async Task ReloadAsync()
     {
+        // BUG-A6-002 — set the label and scheduler key BEFORE the
+        // await so the page header updates in lock-step with the
+        // scheduler grid. Without this, the scheduler re-mounts
+        // (Date=newValue) the moment the await completes and
+        // schedulerKey++ runs, but monthLabel was only assigned
+        // later in the same method so a transient mid-render
+        // would show the new month in the grid and the old month
+        // in the header for ~50 ms.
+        monthLabel = firstOfMonth.ToString("MMMM yyyy");
+        schedulerKey++;
+
         DateTimeOffset from = firstOfMonth;
         DateTimeOffset to = firstOfMonth.AddMonths(1);
 
@@ -70,9 +81,6 @@
         entries = result.IsSuccess && result.Value is not null
             ? result.Value
             : (IReadOnlyList<CalendarEntryDto>)Array.Empty<CalendarEntryDto>();
-
-        monthLabel = firstOfMonth.ToString("MMMM yyyy");
-        schedulerKey++;
     }
 
     private async Task PrevMonth()
