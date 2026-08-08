@@ -19,36 +19,51 @@ namespace Cardscape.Application.Authentication.Commands;
 /// </summary>
 public sealed record PromoteSelfToAdminCommand;
 
+/// <summary>
+/// Output of the promote command. BETA-9-#2 — see
+/// test-results/r9/r9-report.md. Carries the user id and
+/// a freshly-issued access token so the caller can hit
+/// <c>/api/admin/*</c> without a re-login round-trip.
+/// </summary>
+public sealed record PromoteSelfToAdminResult(Guid UserId, string AccessToken);
+
 public static class PromoteSelfToAdminCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result<PromoteSelfToAdminResult>> Handle(
         PromoteSelfToAdminCommand command,
         IUserRepository users,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        ITokenService tokens,
         CancellationToken cancellation)
     {
         if (currentUser.Id is null)
         {
-            return Result.Failure(DomainError.Unauthenticated(
+            return Result.Failure<PromoteSelfToAdminResult>(DomainError.Unauthenticated(
                 "auth.required", "Authentication is required."));
         }
 
         User? user = await users.GetByIdAsync(currentUser.Id, cancellation);
         if (user is null)
         {
-            return Result.Failure(DomainError.NotFound(
+            return Result.Failure<PromoteSelfToAdminResult>(DomainError.NotFound(
                 "members.user.not_found", "User not found."));
         }
 
-        if (user.IsAdmin)
+        if (!user.IsAdmin)
         {
-            return Result.Success();
+            user.SetAdmin(true, clock.UtcNow);
+            await unitOfWork.SaveChangesAsync(cancellation);
         }
 
-        user.SetAdmin(true, clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(cancellation);
-        return Result.Success();
+        // Re-issue the access token so the cached `is_admin`
+        // claim is in sync with the database row. The previous
+        // implementation left the caller with their old token,
+        // and the AdminOnly handler trusts the cached claim by
+        // default — so the promote "succeeded" but the admin
+        // surface still returned 403 until the next login.
+        string accessToken = tokens.IssueAccessToken(user, roles: new[] { "admin" });
+        return Result.Success(new PromoteSelfToAdminResult(user.Id.Value, accessToken));
     }
 }
