@@ -39,6 +39,15 @@
       the Web types.
     -->
     <ProjectReference Include="..\..\src\Cardscape.Api\Cardscape.Api.csproj" />
+    <!--
+      Cardscape.Web: needed for the in-process unit tests of
+      src/Cardscape.Web/Theming/ThemeCatalog.cs (added by
+      docs/roadmap/06-plan-radzen-themes.md, commit 1). The
+      Blazor WASM runtime types are never instantiated by
+      these tests — they only touch the static catalog and
+      the Radzen.Theme POCO.
+    -->
+    <ProjectReference Include="..\..\src\Cardscape.Web\Cardscape.Web.csproj" />
   </ItemGroup>
 
 </Project>

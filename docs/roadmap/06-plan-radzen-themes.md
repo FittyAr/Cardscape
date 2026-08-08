@@ -416,12 +416,17 @@ one leaves the build green and the UI in a usable state.
 3. `src/Cardscape.Web/_Imports.razor` — no change. The
    catalog is a plain C# class, not a component.
 4. `src/Cardscape.Web/wwwroot/index.html:10-11` —
-   **remove** the two `<link>` lines for `default.css` and
-   `material-base.css`. The Radzen cookie service emits
-   the right `<link>` at runtime via the
-   `<RadzenTheme>` component (which we add in Commit 3).
-   This change is invisible to the user if the cookie is unset
-   (default is "default" + light, same as today).
+   **leave the two static `<link>` lines in place** for
+   commit 1. The Radzen cookie service does not emit a
+   `<link>` on its own — that emission is the job of the
+   `<RadzenTheme>` component, which lives in `App.razor`
+   and is added in commit 3. Trimming the static links
+   before commit 3 lands would leave the app with no
+   Radzen CSS between commits 1 and 3, which is a
+   visible regression. The trim moves to commit 3, right
+   next to the `<RadzenTheme>` addition, so the two
+   changes ship together as one atomic "the runtime
+   theme service now owns the link" change.
 5. `src/Cardscape.Web/Program.cs:50-54` — **no change** to
    the existing `AddRadzenCookieThemeService` call. The
    cookie service already knows the 5 free themes by name.
@@ -433,7 +438,11 @@ one leaves the build green and the UI in a usable state.
 
 - `dotnet build` green.
 - `dotnet test` green, including the new bUnit test.
-- `index.html` is 5 lines shorter.
+- `index.html` is **unchanged** in this commit (the
+  static `<link>` lines stay until commit 3, which adds
+  the `<RadzenTheme>` tag that replaces them — see the
+  "leave the two static `<link>` lines in place" note in
+  step 4 above).
 - App still renders in `default` light (the default state)
   when the cookie is absent.
 
@@ -603,6 +612,17 @@ exists. No Blazor UI changes here.
    - The `<RadzenTheme>` tag binds to `Prefs.CurrentTheme`
      (a `Theme?`) — null means "use the Radzen default
      (the `default` free theme)".
+2. `src/Cardscape.Web/wwwroot/index.html:10-11` —
+   **now** (in this commit, not commit 1) remove the two
+   static `<link>` lines for `default.css` and
+   `material-base.css`. The `<RadzenTheme>` tag added in
+   step 1 emits the matching `<link>` for the current
+   theme at runtime, so the static lines are now redundant.
+   The trim ships in the same commit as the `<RadzenTheme>`
+   addition so the two changes land atomically — no
+   window of "no Radzen CSS" between commits.
+3. `src/Cardscape.Web/Services/UserPreferencesService.cs`
+   (**new**) — singleton. See §2.2 for the public surface.
 
 2. `src/Cardscape.Web/Services/UserPreferencesService.cs`
    (**new**) — singleton. See §2.2 for the public surface.
@@ -623,17 +643,17 @@ exists. No Blazor UI changes here.
        logged in. On failure, log + show a
        `NotificationService` warning.
      - Raise a `Changed` event so the UI re-renders.
-3. `src/Cardscape.Web/Services/Api/IUserPreferencesApiClient.cs`
+4. `src/Cardscape.Web/Services/Api/IUserPreferencesApiClient.cs`
    + `UserPreferencesApiClient.cs` (**new**) — thin
    HTTP wrapper; uses the existing `"Cardscape.Api"`
    named HttpClient + `AuthTokenHandler`.
-4. `src/Cardscape.Web/Program.cs` — register the new
+5. `src/Cardscape.Web/Program.cs` — register the new
    services:
    ```csharp
    builder.Services.AddScoped<IUserPreferencesApiClient, UserPreferencesApiClient>();
    builder.Services.AddSingleton<UserPreferencesService>();
    ```
-5. `src/Cardscape.Web/Services/AuthStateProvider.cs` —
+6. `src/Cardscape.Web/Services/AuthStateProvider.cs` —
    **extended** (no new file): expose a public
    `IsAuthenticated` (or `CurrentUser` /
    `GetAuthenticationStateAsync()`) so the
@@ -814,12 +834,12 @@ the first login only.
    to this plan as the v1.2.0 follow-up.
 7. `docs/refactoring/02-plan.md` — add a closing note
    that the `app.css` file stayed under 100 lines after
-   Commit 1's `index.html` trim, and that no custom CSS was
+   Commit 3's `index.html` trim, and that no custom CSS was
    added (the custom theme is C# code, not CSS).
 
 **Acceptance:**
 
-- `app.css` is still < 100 lines (Commit 1 removed 2 `<link>`
+- `app.css` is still < 100 lines (Commit 3 removed 2 `<link>`
   lines, no `.css` was added).
 - ADR 0011 is merged and cross-linked from
   `docs/AGENTS.md` and `docs/brand/00-brand-kit.md`.
@@ -1083,7 +1103,7 @@ new row; the existing `radzen-blazor` row covers theming.
 |---|---|---:|---|
 | `src/Cardscape.Web/Theming/ThemeCatalog.cs` | **new** | 110 | 1 |
 | `src/Cardscape.Web/Theming/ThemeCatalog.Tests.cs` | **new** | 50 | 1 |
-| `src/Cardscape.Web/wwwroot/index.html` | edit | -2 | 1 |
+| `src/Cardscape.Web/wwwroot/index.html` | edit | -2 | 3 |
 | `src/Cardscape.Domain/UserPreferences/UserPreferences.cs` | **new** | 60 | 2 |
 | `src/Cardscape.Domain/UserPreferences/AppearanceMode.cs` | **new** | 20 | 2 |
 | `src/Cardscape.Domain/UserPreferences/IUserPreferencesRepository.cs` | **new** | 30 | 2 |
