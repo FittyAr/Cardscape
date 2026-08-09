@@ -67,6 +67,19 @@
                     </RadzenStack>
                 </RadzenCard>
             }
+
+            @* BUG-A1-005 — see test-results/beta/round-2/reports/A1-auth.md.
+               The previous handler ignored the !IsSuccess branch, so a
+               400 (e.g. invalid redirect URI) silently failed and the
+               user could not tell why the form did nothing. The
+               shared alert at the top of the card surfaces the error
+               from either the registration or the revoke path. *@
+            @if (!string.IsNullOrEmpty(message))
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" Class="rz-mt-3">
+                    @message
+                </RadzenAlert>
+            }
         </RadzenStack>
     </RadzenCard>
 
@@ -131,6 +144,7 @@
     private IReadOnlyList<OAuthAppSummaryDto> apps = [];
     private bool loading = true;
     private bool busy;
+    private string? message;
 
     protected override async Task OnInitializedAsync() => await ReloadAsync();
 
@@ -156,8 +170,19 @@
             {
                 registration = result.Value;
                 form.Reset();
+                // BUG-A1-005 — see test-results/beta/round-2/reports/A1-auth.md.
+                // Clear the stale error from any previous attempt
+                // so the success state is unambiguous.
+                message = null;
                 await ReloadAsync();
+                return;
             }
+
+            // BUG-A1-005 — surface validation / server errors to
+            // the user. The previous implementation silently
+            // ignored !IsSuccess, leaving the user on a form
+            // that "did nothing" with no feedback.
+            message = result.Error ?? L["OAuthAppsRegisterFailed"];
         }
         finally
         {

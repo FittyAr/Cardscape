@@ -244,6 +244,7 @@
   <data name="OAuthAppsStatusActive" xml:space="preserve"><value>Active</value></data>
   <data name="OAuthAppsStatusRevoked" xml:space="preserve"><value>Revoked</value></data>
   <data name="OAuthAppsRevokeButton" xml:space="preserve"><value>Revoke</value></data>
+  <data name="OAuthAppsRegisterFailed" xml:space="preserve"><value>Could not register the application. Check the redirect URI and the application name, then try again.</value></data>
   <data name="OAuthAppsDocsHint" xml:space="preserve"><value>For the full handshake walkthrough see</value></data>
   <data name="OAuthAppsRegisterNewBlurb" xml:space="preserve"><value>Register a third-party app that will act on your behalf. You'll get a clientId and a one-time client secret.</value></data>
   <data name="AiGenerateDescription" xml:space="preserve"><value>Generate description</value></data>
