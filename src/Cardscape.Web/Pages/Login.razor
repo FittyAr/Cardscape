@@ -107,6 +107,14 @@
         <RadzenText Text="@L["AuthNoAccount"]" />
         <RadzenLink Path="register" Text="@L["AuthCreateOne"]" />
     </RadzenStack>
+    @* BUG-A8-014 — see test-results/beta/reports/A8-settings.md.
+       The login page used to have no "Forgot password" link,
+       so the only recovery path was to contact an operator.
+       The new flow is `/login` → `/forgot-password` →
+       `/reset-password?token=…`. *@
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" JustifyContent="JustifyContent.Center">
+        <RadzenLink Path="forgot-password" Text="@L["AuthForgotPassword"]" />
+    </RadzenStack>
 </RadzenStack>
 
 @code {

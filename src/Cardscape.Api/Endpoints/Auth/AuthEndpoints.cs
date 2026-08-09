@@ -38,6 +38,40 @@ public static class AuthEndpoints
                 : Results.Problem(result.Error.Message, statusCode: StatusCodes.Status401Unauthorized, title: result.Error.Code);
         });
 
+        // BUG-A8-014 — see test-results/beta/reports/A8-settings.md.
+        // Self-serve password reset. The endpoint is
+        // anonymous (no JWT) and returns the same shape
+        // whether or not the email exists so the API cannot
+        // be used to enumerate accounts. The cleartext
+        // token is included in the response only when
+        // `ASPNETCORE_ENVIRONMENT=Development` is set, so
+        // the QA flow can run without an SMTP provider.
+        // In production the email pipeline (out of scope
+        // for this pass) is responsible for shipping the
+        // token to the user.
+        group.MapPost("/forgot-password", async (
+            ForgotPasswordRequest request,
+            HttpContext http,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            string? ip = http.Connection.RemoteIpAddress?.ToString();
+            var result = await bus.InvokeAsync<Result<PasswordResetRequestResult>>(
+                new RequestPasswordResetCommand(request.Email, ip), ct);
+            return result.IsSuccess
+                ? Results.Ok(result.Value)
+                : Results.Problem(result.Error.Message, statusCode: StatusCodes.Status400BadRequest, title: result.Error.Code);
+        });
+
+        group.MapPost("/reset-password", async (ResetPasswordRequest request, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<bool>>(
+                new ResetPasswordCommand(request.Token, request.NewPassword), ct);
+            return result.IsSuccess
+                ? Results.NoContent()
+                : Results.Problem(result.Error.Message, statusCode: StatusCodes.Status400BadRequest, title: result.Error.Code);
+        });
+
         // Second step of a 2FA-protected login. The browser hands
         // over the PendingTotpToken it received from POST /api/auth/login
         // (where RequiresTotp was true) plus the 6-digit code. On
@@ -237,4 +271,10 @@ public static class AuthEndpoints
         DateTimeOffset? AccessTokenExpiresAt,
         DateTimeOffset? RefreshTokenExpiresAt);
 }
+
+/// <summary>Body for <c>POST /api/auth/forgot-password</c>.</summary>
+public sealed record ForgotPasswordRequest(string Email);
+
+/// <summary>Body for <c>POST /api/auth/reset-password</c>.</summary>
+public sealed record ResetPasswordRequest(string Token, string NewPassword);
 
