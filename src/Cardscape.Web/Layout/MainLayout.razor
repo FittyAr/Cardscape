@@ -87,7 +87,20 @@
                            skip-link above. Keyboard / screen-reader
                            users land here on the first Tab press. *@
                         <main id="main-content" role="main">
-                            @Body
+                            @* BETA-8-I18N-#3 — see test-results/r8/A8-settings.md.
+                               The router-provided @Body is a RenderFragment
+                               that is NOT re-invoked when the layout
+                               re-renders. We mount the wrapper with a
+                               key that we bump on every culture change;
+                               the new wrapper receives a fresh @Body
+                               and renders the page with the now-Spanish
+                               dictionary. *@
+                            @if (_bodyKey is not null)
+                            {
+                                <CultureReactiveBody @key="@_bodyKey">
+                                    @Body
+                                </CultureReactiveBody>
+                            }
                         </main>
                     </RadzenColumn>
                 </RadzenRow>
@@ -127,6 +140,14 @@
 @code {
     private bool sidebarExpanded = true;
 
+    // BETA-8-I18N-#3 — see test-results/r8/A8-settings.md.
+    // The @Body RenderFragment isn't re-invoked when the layout
+    // re-renders. We toggle a key field whenever the culture
+    // changes; the @if/_bodyKey below mounts a new wrapper, which
+    // receives a fresh @Body and renders the page with the
+    // current dictionary.
+    private string? _bodyKey;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -136,6 +157,7 @@
             // changes are driven by LanguageSwitcher via
             // Culture.Changed.
             await Culture.InitializeAsync();
+            _bodyKey = $"body-{Culture.CurrentCulture}-{Guid.NewGuid():N}";
         }
     }
 
@@ -146,10 +168,12 @@
 
     private void OnCultureChanged()
     {
-        // Re-render the layout (and its children) so the
-        // HttpBackedStringLocalizer picks up the new
-        // translations. The Blazor diff renderer is
-        // efficient � only the @L["�"] expressions re-evaluate.
+        // Re-create the body wrapper on every culture change. We
+        // bump the key with a fresh GUID so Blazor's diff renderer
+        // destroys the old CultureReactiveBody and mounts a new
+        // one, which in turn re-invokes the @Body RenderFragment
+        // with the now-Spanish dictionary.
+        _bodyKey = $"body-{Culture.CurrentCulture}-{Guid.NewGuid():N}";
         InvokeAsync(StateHasChanged);
     }
 

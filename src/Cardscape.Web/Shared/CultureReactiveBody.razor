@@ -1,2 +1,42 @@
-@* CultureReactiveBody — unused draft (replaced by per-page base class).
-   See CultureReactiveComponentBase for the in-use approach. *@
+@* CultureReactiveBody — BETA-8-I18N-#4 (see test-results/r8/A8-settings.md).
+
+   A thin wrapper that hosts a single RenderFragment and re-renders
+   whenever the @key (typically the current culture) changes.
+   Used by the layouts' @Body slot so the child page is force-remounted
+   on every culture change — without this, the page text stays in
+   the language it was first rendered in, even after the user picks
+   a new language in the topbar.
+
+   Blazor's layout → @Body cascade only re-invokes the @Body
+   RenderFragment when the route changes. A culture change re-renders
+   the layout (so the topbar, sidebar, and profile menu re-localise)
+   but the @Body is not re-invoked. The @key attribute is the only
+   way to force a remount from outside the child component. *@
+
+@implements IDisposable
+@using Cardscape.Web.Services
+@inject CultureSwitcher Culture
+
+@ChildContent
+
+@code {
+    /// <summary>The child fragment to render. The layout passes its
+    /// own @Body here.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Subscribes to culture changes so the wrapping
+    /// fragment re-renders (and any keyed children are diffed
+    /// against the new key).</summary>
+    protected override void OnInitialized()
+    {
+        Culture.Changed += OnCultureChanged;
+    }
+
+    public void Dispose()
+    {
+        Culture.Changed -= OnCultureChanged;
+        GC.SuppressFinalize(this);
+    }
+
+    private void OnCultureChanged() => InvokeAsync(StateHasChanged);
+}

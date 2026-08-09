@@ -1,7 +1,10 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @using Cardscape.Web.Resources
+@using Cardscape.Web.Services
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> L
+@inject CultureSwitcher Culture
 
 @*
     Auth / marketing chrome — brand panel + form stage.
@@ -13,6 +16,14 @@
     the no-padding card override all live in
     `EmptyLayout.razor.css` (Blazor scoped CSS) so this file
     stays markup-only.
+
+    BETA-8-I18N-#4 — see test-results/r8/A8-settings.md.
+    MainLayout calls Culture.InitializeAsync() in
+    OnAfterRenderAsync so the saved locale is loaded on every
+    authed page. EmptyLayout must do the same, otherwise the
+    auth screens (login, register, OAuth callback) always
+    render in English even after the user has chosen Spanish
+    in a previous session.
 *@
 
 <RadzenComponents />
@@ -29,7 +40,21 @@
                         </RadzenText>
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeSM="6" class="rz-p-12 cs-form-column">
-                        @Body
+                        @* BETA-8-I18N-#4 — see test-results/r8/A8-settings.md.
+                           The @Body RenderFragment below is not re-invoked
+                           when the layout re-renders (a Blazor quirk
+                           that also bites the MainLayout's @Body). We
+                           wrap it in a wrapper component and re-create
+                           the wrapper via an @if that flips whenever
+                           the culture changes. The new wrapper gets
+                           the @Body RenderFragment, which then renders
+                           the page with the now-Spanish dictionary. *@
+                        @if (_bodyKey is not null)
+                        {
+                            <CultureReactiveBody @key="@_bodyKey">
+                                @Body
+                            </CultureReactiveBody>
+                        }
                     </RadzenColumn>
                 </RadzenRow>
             </RadzenCard>
@@ -37,3 +62,45 @@
         </RadzenStack>
     </RadzenBody>
 </RadzenLayout>
+
+@code {
+    // BETA-8-I18N-#4 — see test-results/r8/A8-settings.md.
+    // The @Body RenderFragment isn't re-invoked when the layout
+    // re-renders. We toggle a key field whenever the culture
+    // changes; the @if/_bodyKey below mounts a new wrapper, which
+    // receives a fresh @Body and renders the page with the
+    // current dictionary.
+    private string? _bodyKey;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load the saved culture from localStorage. Without this
+            // call the auth screens (login, register, OAuth callback)
+            // always render in English even after the user has chosen
+            // a different language in a previous session — see
+            // BETA-8-I18N-#4 in test-results/r8/A8-settings.md.
+            await Culture.InitializeAsync();
+            _bodyKey = $"body-{Culture.CurrentCulture}-{Guid.NewGuid():N}";
+            Culture.Changed += OnCultureChanged;
+        }
+    }
+
+    public void Dispose()
+    {
+        Culture.Changed -= OnCultureChanged;
+        GC.SuppressFinalize(this);
+    }
+
+    private void OnCultureChanged()
+    {
+        // Re-create the body wrapper on every culture change. We
+        // bump the key with a fresh GUID so Blazor's diff renderer
+        // destroys the old CultureReactiveBody and mounts a new
+        // one, which in turn re-invokes the @Body RenderFragment
+        // with the now-Spanish dictionary.
+        _bodyKey = $"body-{Culture.CurrentCulture}-{Guid.NewGuid():N}";
+        InvokeAsync(StateHasChanged);
+    }
+}
