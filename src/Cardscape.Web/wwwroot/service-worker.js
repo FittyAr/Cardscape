@@ -13,7 +13,7 @@ self.importScripts('./service-worker-assets.js');
 
 self.addEventListener('install', event => event.waitUntil(onInstall(event)));
 self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
-self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
+self.addEventListener('fetch', event => event.waitUntil(onFetch(event)));
 
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
@@ -44,15 +44,66 @@ async function onActivate(event) {
 }
 
 async function onFetch(event) {
-    let cachedResponse = null;
-    if (event.request.method === 'GET') {
-        // For navigation requests, serve the cached index.html so the
-        // Blazor client-side router can take over. Everything else is
-        // served from cache when offline, or falls back to the network.
-        const shouldServeIndexHtml = event.request.mode === 'navigate';
-        const request = shouldServeIndexHtml ? 'index.html' : event.request;
-        const cache = await caches.open(cacheName);
-        cachedResponse = await cache.match(request);
+    // BETA-SW-001 — see test-results/beta/round-2/console-errors.md.
+    // The previous handler did `return cachedResponse || fetch(event.request)`
+    // inside the respondWith callback. When the network call failed
+    // (offline, the API host unreachable, or the request was a
+    // navigation to a path the server couldn't answer because the
+    // service worker is serving the SPA shell) the rejection
+    // bubbled up as `Uncaught (in promise) TypeError: Failed to
+    // fetch` and printed
+    // `The FetchEvent for "http://localhost:8080/" resulted in a
+    // network error response: the promise was rejected.` on every
+    // navigation. The fix is to:
+    //
+    //   1. Try cache.
+    //   2. Try network.
+    //   3. On network failure for a navigation request, fall back to
+    //      the cached index.html (so the Blazor router can still
+    //      handle the URL).
+    //   4. On any other failure, return a synthetic 408 so the
+    //      browser does not see an unhandled promise rejection.
+    //
+    // We also switched the respondWith to waitUntil so a
+    // navigation that started before the SW activated still
+    // gets answered (and so the SW lifecycle events stay
+    // ordered relative to the fetch).
+    if (event.request.method !== 'GET') {
+        return;
     }
-    return cachedResponse || fetch(event.request);
+
+    const shouldServeIndexHtml = event.request.mode === 'navigate';
+    const cacheKey = shouldServeIndexHtml ? 'index.html' : event.request;
+    const cache = await caches.open(cacheName);
+    const cachedResponse = await cache.match(cacheKey);
+
+    if (cachedResponse) {
+        event.respondWith(cachedResponse);
+        return;
+    }
+
+    try {
+        const networkResponse = await fetch(event.request);
+        event.respondWith(networkResponse);
+    } catch (err) {
+        // Network failed. For navigations, fall back to the cached
+        // index.html so the SPA can take over. For other requests,
+        // return a synthetic 408 Request Timeout so the page can
+        // handle the failure gracefully (instead of seeing an
+        // unhandled promise rejection).
+        if (shouldServeIndexHtml) {
+            const indexFallback = await cache.match('index.html');
+            if (indexFallback) {
+                event.respondWith(indexFallback);
+                return;
+            }
+        }
+
+        console.warn('Service worker: fetch failed for', event.request.url, err);
+        event.respondWith(new Response('Network error', {
+            status: 408,
+            statusText: 'Request Timeout',
+            headers: { 'Content-Type': 'text/plain' }
+        }));
+    }
 }
