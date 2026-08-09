@@ -16,6 +16,29 @@
     </Actions>
 </PageHeader>
 
+@* BUG-A6-013 — see test-results/beta/reports/A6-views.md.
+   The activity page only had a "Back to board" button; the
+   user could not scope the feed to a specific card or a
+   subset of event kinds. This filter row lets the user
+   pick a kind and a card id fragment; both are applied
+   client-side over the already-loaded activity items, so
+   the API surface does not need a new endpoint. The board
+   scope is implicit in the route (BoardId) — that filter
+   would just open a different page. *@
+<RadzenCard class="rz-mb-3">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
+                 Wrap="FlexWrap.Wrap">
+        <RadzenText Text="Filter by kind" TextStyle="TextStyle.Body2" />
+        <RadzenDropDown TValue="string" @bind-Value="kindFilter"
+                        Data="@kindOptions" Style="width:14rem"
+                        Placeholder="All kinds" AllowClear="true" />
+        <RadzenText Text="Card id" TextStyle="TextStyle.Body2" />
+        <RadzenTextBox @bind-Value="cardIdFilter" Placeholder="any card…" Style="width:18rem" />
+        <RadzenButton Text="Reset" Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                      Click="@ResetFilters" Disabled="@(string.IsNullOrEmpty(kindFilter) && string.IsNullOrEmpty(cardIdFilter))" />
+    </RadzenStack>
+</RadzenCard>
+
 @if (loading && items is null)
 {
     <RadzenText Text="Loading activity…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
@@ -26,8 +49,14 @@ else if (items is null || items.Count == 0)
 }
 else
 {
+    var filtered = FilteredItems();
+    @if (filtered.Count == 0)
+    {
+        <RadzenText Text="No activity matches the current filter." TextStyle="TextStyle.Body2"
+                    class="rz-color-text-secondary" />
+    }
     <RadzenStack Gap="0.75rem">
-        @foreach (ActivityDto a in items)
+        @foreach (ActivityDto a in filtered)
         {
             <RadzenCard>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
@@ -76,6 +105,50 @@ else
     private string? nextCursor;
     private bool loading;
     private string? error;
+
+    // BUG-A6-013 — kind + card-id filter state. Both feed
+    // `FilteredItems()`; the API surface is unchanged because
+    // the filters run over the already-loaded `items` list.
+    private string? kindFilter;
+    private string? cardIdFilter;
+    private readonly IReadOnlyList<string> kindOptions = new[]
+    {
+        "BoardCreated",
+        "CardCreated",
+        "CardMoved",
+        "CardCompleted",
+        "CardReopened",
+        "CardRenamed",
+        "CardArchived",
+        "CardRestored",
+        "CommentAdded"
+    };
+
+    private List<ActivityDto> FilteredItems()
+    {
+        if (items is null)
+        {
+            return [];
+        }
+
+        IEnumerable<ActivityDto> query = items;
+        if (!string.IsNullOrEmpty(kindFilter))
+        {
+            query = query.Where(a => string.Equals(a.KindName, kindFilter, StringComparison.Ordinal));
+        }
+        if (!string.IsNullOrEmpty(cardIdFilter))
+        {
+            string needle = cardIdFilter.Trim();
+            query = query.Where(a => a.CardId is Guid id && id.ToString().Contains(needle, StringComparison.OrdinalIgnoreCase));
+        }
+        return query.ToList();
+    }
+
+    private void ResetFilters()
+    {
+        kindFilter = null;
+        cardIdFilter = string.Empty;
+    }
 
     protected override async Task OnParametersSetAsync() => await ReloadAsync();
 
