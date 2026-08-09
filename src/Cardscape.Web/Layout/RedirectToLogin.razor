@@ -1,11 +1,52 @@
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
 
 @code {
     [Inject] private NavigationManager Nav { get; set; } = default!;
+    [Inject] private AuthenticationStateProvider Auth { get; set; } = default!;
 
-    protected override void OnInitialized()
+    // BUG-A6-008 — see test-results/beta/reports/A6-views.md.
+    //
+    // The previous version redirected on `OnInitialized`,
+    // which fires during the first render. When the
+    // `AuthorizeRouteView` reaches the `<NotAuthorized>` branch
+    // while the auth state is still resolving (i.e. the token
+    // is in localStorage but the `AuthenticationStateProvider`
+    // hasn't surfaced it yet), the immediate `Nav.NavigateTo`
+    // races with the in-flight route commit. On a deep link
+    // like `/boards/{id}/activity` the router sometimes
+    // substitutes the wrong literal segment in the
+    // returnUrl, sending the user to
+    // `/boards/{id}/extensions` once the session does
+    // resolve.
+    //
+    // The fix: wait for the auth state to settle before
+    // reading the URI, and run the redirect on
+    // `OnAfterRenderAsync` so the framework has already
+    // committed the current route. `forceLoad: true` is
+    // still required (it clears any stale state and re-runs
+    // the auth pipeline), but it now happens once and only
+    // once per page load.
+    private bool redirected;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (redirected)
+        {
+            return;
+        }
+
+        // Force the auth provider to load before we read
+        // the URI. The provider is async; calling
+        // `GetAuthenticationStateAsync` here blocks until
+        // the first evaluation completes (token lookup +
+        // identity build).
+        _ = await Auth.GetAuthenticationStateAsync();
+
+        redirected = true;
         string returnUrl = Nav.Uri;
-        Nav.NavigateTo($"login?returnUrl={Uri.EscapeDataString(Nav.ToBaseRelativePath(returnUrl))}", forceLoad: true);
+        Nav.NavigateTo(
+            $"login?returnUrl={Uri.EscapeDataString(Nav.ToBaseRelativePath(returnUrl))}",
+            forceLoad: true);
     }
 }
