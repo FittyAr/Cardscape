@@ -25,9 +25,15 @@ public static class BoardEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
-        group.MapGet("/", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
+        group.MapGet("/", async (Guid workspaceId, [FromQuery] bool? includeArchived, IMessageBus bus, CancellationToken ct) =>
         {
-            var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(new ListBoardsForWorkspaceQuery(workspaceId), ct);
+            // BETA-A3-R2-005 — the default list excludes
+            // archived boards. Pass includeArchived=true to
+            // see them (used by the board settings page and
+            // the "show archived" toggle on the workspace
+            // landing).
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(
+                new ListBoardsForWorkspaceQuery(workspaceId, includeArchived ?? false), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 

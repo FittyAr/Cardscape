@@ -49,7 +49,7 @@ public static class GetBoardQueryHandler
     }
 }
 
-public sealed record ListBoardsForWorkspaceQuery(Guid WorkspaceId) : IMessage;
+public sealed record ListBoardsForWorkspaceQuery(Guid WorkspaceId, bool IncludeArchived = false) : IMessage;
 
 public static class ListBoardsForWorkspaceQueryHandler
 {
@@ -79,7 +79,25 @@ public static class ListBoardsForWorkspaceQueryHandler
                 "workspaces.not_member", "You are not a member of this workspace."));
         }
 
+        // BETA-A3-R2-005 — see
+        // test-results/beta/round-2/reports/A3-boards.md.
+        // The default `/api/boards?workspaceId=...` query
+        // returned archived boards alongside active ones,
+        // so the workspace landing page showed a mix of
+        // "Open" and "Archived" tiles without a way to
+        // filter. The fix is a single IncludeArchived
+        // boolean on the query; the default is `false` so
+        // the existing callers (the workspace landing
+        // page, the recent-boards list, the search drop)
+        // all get the cleaned-up list for free. The board
+        // settings page already loads the board directly
+        // and the archive toggle renders from there.
         var items = await boards.ListForWorkspaceAsync(new WorkspaceId(query.WorkspaceId), cancellationToken);
+        if (!query.IncludeArchived)
+        {
+            items = items.Where(b => !b.IsArchived).ToList();
+        }
+
         var rows = items
             .Select(b => new BoardSummaryDto(
                 b.Id.Value,
