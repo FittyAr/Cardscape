@@ -7,7 +7,17 @@
 
    The visual styling is in `KanbanBoard.razor.css` (Blazor scoped
    CSS) so it can be tweaked per-deployment without polluting
-   the global `app.css`. *@
+   the global `app.css`.
+
+   BUG-A4-002 — see test-results/beta/reports/A4-cards-lists.md.
+   The board API has supported rename / move / archive / restore
+   on lists since v1.0.0 but the Web never exposed a per-column
+   context menu. `ColumnHeaderTemplate` lets the parent page
+   (BoardDetail) render a custom header that includes the
+   RadzenMenu with those actions. When the parameter is null
+   the component falls back to the original "title + count" so
+   other consumers (calendar / planner tiles if any) keep
+   working unchanged. *@
 
 @typeparam TItem
 
@@ -21,14 +31,21 @@ else
         @foreach (KanbanColumn<TItem> column in Columns)
         {
             <div class="cs-kanban-column">
-                <RadzenStack Orientation="Orientation.Horizontal"
-                             AlignItems="AlignItems.Center"
-                             JustifyContent="JustifyContent.SpaceBetween">
-                    <RadzenText Text="@column.Title" TextStyle="TextStyle.Subtitle1" TagName="TagName.Span" />
-                    <RadzenText Text="@column.Cards.Count.ToString()"
-                                TextStyle="TextStyle.Caption"
-                                class="rz-color-text-secondary" />
-                </RadzenStack>
+                @if (ColumnHeaderTemplate is not null)
+                {
+                    @ColumnHeaderTemplate(column)
+                }
+                else
+                {
+                    <RadzenStack Orientation="Orientation.Horizontal"
+                                 AlignItems="AlignItems.Center"
+                                 JustifyContent="JustifyContent.SpaceBetween">
+                        <RadzenText Text="@column.Title" TextStyle="TextStyle.Subtitle1" TagName="TagName.Span" />
+                        <RadzenText Text="@column.Cards.Count.ToString()"
+                                    TextStyle="TextStyle.Caption"
+                                    class="rz-color-text-secondary" />
+                    </RadzenStack>
+                }
                 <div class="cs-kanban-column-cards">
                     @foreach (TItem card in column.Cards)
                     {
@@ -48,4 +65,5 @@ else
     [Parameter, EditorRequired] public IReadOnlyList<KanbanColumn<TItem>>? Columns { get; set; }
     [Parameter] public RenderFragment<TItem>? CardTemplate { get; set; }
     [Parameter] public RenderFragment<KanbanColumn<TItem>>? ChildContent { get; set; }
+    [Parameter] public RenderFragment<KanbanColumn<TItem>>? ColumnHeaderTemplate { get; set; }
 }

@@ -9,6 +9,7 @@
 @inject ICardsApiClient CardsApi
 @inject IBoardExtensionsApiClient ExtensionsApi
 @inject BoardHubClient HubClient
+@inject DialogService DialogService
 @implements IAsyncDisposable
 
 <PageTitle>@(board?.Name ?? "Board") — Cardscape</PageTitle>
@@ -28,7 +29,7 @@ else
                           ButtonStyle="ButtonStyle.Secondary"
                           Click="@ToggleStar" />
             <RadzenButton Text="Add list" Icon="add" ButtonStyle="ButtonStyle.Light"
-                          Click="@(() => showAddList = !showAddList)" />
+                          Click="@ToggleAddList" />
             <RadzenButton Text="Custom fields" Icon="list" ButtonStyle="ButtonStyle.Light"
                           Click="@(() => Nav.NavigateTo($"boards/{BoardId}/custom-fields"))" />
             <RadzenButton Text="Extensions" Icon="extension" ButtonStyle="ButtonStyle.Light"
@@ -122,6 +123,51 @@ else
     }
 
     <KanbanBoard TItem="CardSummaryDto" Columns="@KanbanColumns">
+        <ColumnHeaderTemplate>
+            @{
+                var column = context;
+                Guid listId = Guid.Parse(column.Id);
+                BoardListDto? listDto = lists?.FirstOrDefault(l => l.Id == listId);
+            }
+            @* BUG-A4-002 — see test-results/beta/reports/A4-cards-lists.md.
+               The list API has supported rename / move / archive /
+               restore since v1.0.0 but the Web never had a per-column
+               menu. Rendered via KanbanBoard.ColumnHeaderTemplate so
+               the menu lives next to the title in the same row. *@
+            <RadzenStack Orientation="Orientation.Horizontal"
+                         AlignItems="AlignItems.Center"
+                         JustifyContent="JustifyContent.SpaceBetween">
+                <RadzenText Text="@column.Title" TextStyle="TextStyle.Subtitle1" TagName="TagName.Span" />
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                    <RadzenText Text="@column.Cards.Count.ToString()"
+                                TextStyle="TextStyle.Caption"
+                                class="rz-color-text-secondary" />
+                    @if (listDto is not null)
+                    {
+                        <RadzenMenu>
+                            <RadzenMenuItem Text="…" Icon="more_horiz">
+                                <RadzenMenuItem Text="Rename" Icon="edit"
+                                                Click="@(() => PromptRenameList(listId, listDto.Name))" />
+                                <RadzenMenuItem Text="Move to start" Icon="first_page"
+                                                Click="@(() => MoveListToPosition(listId, 0.0d))" />
+                                <RadzenMenuItem Text="Move to end" Icon="last_page"
+                                                Click="@(() => MoveListToPosition(listId, double.MaxValue / 2))" />
+                                @if (listDto.IsArchived)
+                                {
+                                    <RadzenMenuItem Text="Restore" Icon="unarchive"
+                                                    Click="@(() => RestoreList(listId))" />
+                                }
+                                else
+                                {
+                                    <RadzenMenuItem Text="Archive" Icon="archive"
+                                                    Click="@(() => ArchiveList(listId))" />
+                                }
+                            </RadzenMenuItem>
+                        </RadzenMenu>
+                    }
+                </RadzenStack>
+            </RadzenStack>
+        </ColumnHeaderTemplate>
         <CardTemplate>
             @{
                 var card = context;
@@ -471,6 +517,23 @@ else
         }
     }
 
+    // BUG-A4-004 — see test-results/beta/reports/A4-cards-lists.md.
+    // The `readonly AddListModel` was initialised once and only
+    // cleared on a *successful* submit. If the user opened the
+    // form, typed something, and cancelled (or the previous
+    // submit failed), the next open would surface the stale
+    // value because the same object is bound. Toggle resets the
+    // model whenever the form transitions from hidden to visible
+    // so the user always starts from a clean textbox.
+    private void ToggleAddList()
+    {
+        if (!showAddList)
+        {
+            addListModel.Name = string.Empty;
+        }
+        showAddList = !showAddList;
+    }
+
     private async Task ConfirmAddCard(Guid listId)
     {
         if (string.IsNullOrWhiteSpace(newCardTitle)) return;
@@ -479,6 +542,59 @@ else
         {
             newCardTitle = string.Empty;
             openAddCardFor = null;
+            await ReloadListsAndCardsAsync();
+        }
+    }
+
+    // BUG-A4-002 — per-column context menu handlers. Each calls
+    // the corresponding IListsApiClient method (added in this
+    // pass) and re-fetches the board so the column reorder /
+    // archive state stays in lockstep with the SignalR hub.
+    private async Task PromptRenameList(Guid listId, string currentName)
+    {
+        object? result = await DialogService.OpenAsync<RenameListDialog>(
+            "Rename list",
+            new Dictionary<string, object?> { { "CurrentName", currentName } },
+            new DialogOptions { Width = "420px", Height = "auto", CloseDialogOnOverlayClick = true });
+
+        if (result is string newName && !string.IsNullOrWhiteSpace(newName))
+        {
+            await RenameList(listId, newName);
+        }
+    }
+
+    private async Task RenameList(Guid listId, string newName)
+    {
+        ApiResult<BoardListDto> result = await ListsApi.RenameAsync(listId, newName);
+        if (result.IsSuccess)
+        {
+            await ReloadListsAndCardsAsync();
+        }
+    }
+
+    private async Task MoveListToPosition(Guid listId, double newPosition)
+    {
+        ApiResult<BoardListDto> result = await ListsApi.MoveAsync(listId, newPosition);
+        if (result.IsSuccess)
+        {
+            await ReloadListsAndCardsAsync();
+        }
+    }
+
+    private async Task ArchiveList(Guid listId)
+    {
+        ApiResult<BoardListDto> result = await ListsApi.ArchiveAsync(listId);
+        if (result.IsSuccess)
+        {
+            await ReloadListsAndCardsAsync();
+        }
+    }
+
+    private async Task RestoreList(Guid listId)
+    {
+        ApiResult<BoardListDto> result = await ListsApi.RestoreAsync(listId);
+        if (result.IsSuccess)
+        {
             await ReloadListsAndCardsAsync();
         }
     }

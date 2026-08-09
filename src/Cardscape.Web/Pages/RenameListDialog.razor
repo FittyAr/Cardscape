@@ -1,0 +1,52 @@
+@* BUG-A4-002 — see test-results/beta/reports/A4-cards-lists.md.
+   Modal dialog for the per-column "Rename" action. Returns
+   the new list name on confirm, or null on cancel. Mirrors
+   the lifecycle / parameter pattern used by MirrorCardDialog.razor
+   so the menu hook in BoardDetail.razor can stay short. *@
+
+@using Cardscape.Web.Resources
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Localization
+@using Radzen
+@using Radzen.Blazor
+@inject IStringLocalizer<SharedResource> L
+@inject DialogService Dialog
+
+<RadzenStack Gap="1rem">
+    <RadzenText Text="@L["ListRenameTitle"]" TextStyle="TextStyle.H5" TagName="TagName.H2" />
+    <RadzenText Text="@L["ListRenameBlurb"]" TextStyle="TextStyle.Body2"
+                class="rz-color-text-secondary" />
+
+    <RadzenTextBox @bind-Value="newName" Name="rename-list-name"
+                   Placeholder="@L["ListRenamePlaceholder"]"
+                   Style="width:100%" @ref="input" />
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+        <RadzenButton Text="@L["CommonCancel"]" ButtonStyle="ButtonStyle.Light" Click="@Cancel" />
+        <RadzenButton Text="@L["CommonSave"]" ButtonStyle="ButtonStyle.Primary"
+                      Click="@Save" Disabled="@(string.IsNullOrWhiteSpace(newName))" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter] public string CurrentName { get; set; } = string.Empty;
+
+    private string newName = string.Empty;
+    private RadzenTextBox? input;
+
+    protected override void OnInitialized()
+    {
+        newName = CurrentName;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && input is not null)
+        {
+            await input.FocusAsync();
+        }
+    }
+
+    private void Save() => Dialog.Close(newName.Trim());
+    private void Cancel() => Dialog.Close(null);
+}

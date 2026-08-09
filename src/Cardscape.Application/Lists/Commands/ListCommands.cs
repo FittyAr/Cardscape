@@ -169,7 +169,32 @@ public static class MoveListCommandHandler
 
         var list = guard.Value.List;
 
-        var moveResult = list.Move(Position.From(command.NewPosition), clock.UtcNow);
+        // BUG-A4-003 — see test-results/beta/reports/A4-cards-lists.md.
+        // `Move` was a no-op-against-collisions: when the UI sent a
+        // discrete `position` (1, 2, 3) and the board already had a
+        // list at that slot, both ended up with the same
+        // `position` value and the sort-by-(position, createdAt)
+        // tiebreaker decided the visual order — not the user. The
+        // fix: before assigning the new position, look for any
+        // sibling that already occupies that exact slot and shift
+        // it (and every later sibling) by +1 so the moved list
+        // owns the slot unambiguously. Siblings with a different
+        // `position` are left alone, so the "between" semantics
+        // (e.g. 0.5 between 0 and 1) keep working.
+        Position newPosition = Position.From(command.NewPosition);
+        IReadOnlyList<BoardList> siblings = await lists.ListForBoardAsync(
+            list.BoardId, includeArchived: false, cancellationToken);
+        foreach (BoardList sibling in siblings
+                     .Where(s => s.Id.Value != list.Id.Value
+                                 && !s.IsArchived
+                                 && Math.Abs(s.Position.Value - newPosition.Value) < double.Epsilon)
+                     .OrderBy(s => s.Position.Value)
+                     .ThenBy(s => s.CreatedAt))
+        {
+            sibling.Move(Position.From(sibling.Position.Value + 1.0d), clock.UtcNow);
+        }
+
+        var moveResult = list.Move(newPosition, clock.UtcNow);
         if (moveResult.IsFailure)
         {
             return Result.Failure<BoardListDto>(moveResult.Error);
