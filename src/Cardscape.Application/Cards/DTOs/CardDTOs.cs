@@ -13,6 +13,9 @@ public sealed record CardDto(
     DateTimeOffset CreatedAt,
     int MemberCount,
     int LabelCount,
+    int CommentCount = 0,
+    int AttachmentCount = 0,
+    int ChecklistCount = 0,
     bool IsSnoozed = false,
     DateTimeOffset? SnoozeUntil = null,
     Guid? MirrorOfCardId = null);

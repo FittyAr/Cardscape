@@ -21,6 +21,9 @@ public static class GetCardQueryHandler
         ICardRepository cards,
         ICardSnoozeRepository snoozes,
         ICardMirrorRepository mirrors,
+        ICommentRepository comments,
+        IChecklistRepository checklists,
+        IAttachmentRepository attachments,
         IBoardListRepository lists,
         IBoardRepository boards,
         ICurrentUser currentUser,
@@ -60,7 +63,26 @@ public static class GetCardQueryHandler
         // apart.
         CardMirror? mirror = await mirrors.GetByMirroredCardIdAsync(card.Id, cancellationToken);
 
-        return Result.Success(card.MapToDto(snooze, clock.UtcNow, mirror?.SourceCardId.Value));
+        // BUG-A5-003 — see test-results/beta/reports/A5-card-extras.md.
+        // The card detail header wants the comment / attachment /
+        // checklist counts so it can render the badge row next to
+        // the existing member / label counts. Loading them
+        // alongside the card itself saves a second round-trip;
+        // the repositories expose ListForCard* / CountForCard*
+        // that are already batched.
+        int commentCount = (await comments.ListForCardAsync(card.Id, cancellationToken))
+            .Count(c => !c.IsDeleted);
+        int attachmentCount = await attachments.CountForCardAsync(card.Id.Value, cancellationToken);
+        int checklistCount = (await checklists.ListForCardAsync(card.Id.Value, cancellationToken))
+            .Count(c => !c.IsDeleted);
+
+        CardDto baseDto = card.MapToDto(snooze, clock.UtcNow, mirror?.SourceCardId.Value);
+        return Result.Success(baseDto with
+        {
+            CommentCount = commentCount,
+            AttachmentCount = attachmentCount,
+            ChecklistCount = checklistCount
+        });
     }
 }
 
