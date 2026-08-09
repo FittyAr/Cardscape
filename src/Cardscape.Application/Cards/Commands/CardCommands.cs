@@ -295,9 +295,42 @@ public static class MoveCardCommandHandler
             }
         }
 
+        // BETA-A4-007 — see test-results/beta/round-2/reports/A4-cards-lists.md.
+        // The handler previously assigned the new position
+        // directly, with no collision handling. The UI sends
+        // discrete positions (1, 2, 3) for the destination
+        // list; if the destination list already has a card at
+        // the new position, both end up at the same slot and
+        // the visual order is decided by the (position,
+        // createdAt) tiebreaker — not the user. The fix is the
+        // same shape as MoveListCommandHandler: list the
+        // cards in the destination list, find the ones at the
+        // exact collision slot, and shift them in ascending
+        // (position, createdAt) order so the moved card owns
+        // the slot unambiguously.
+        Position newPosition = Position.From(command.NewPosition);
+        IReadOnlyList<Card> destinationCards = await cards.ListForListAsync(
+            new BoardListId(command.NewListId), includeArchived: false, cancellationToken);
+        List<Card> colliding = destinationCards
+            .Where(c => c.Id.Value != card.Id.Value
+                        && !c.IsArchived
+                        && Math.Abs(c.Position.Value - newPosition.Value) < double.Epsilon)
+            .OrderBy(c => c.Position.Value)
+            .ThenBy(c => c.CreatedAt)
+            .ToList();
+        double cursor = newPosition.Value;
+        foreach (Card sibling in colliding)
+        {
+            cursor = Math.Max(cursor + 1.0d, sibling.Position.Value + 1.0d);
+            sibling.Move(
+                sibling.ListId,
+                Position.From(cursor),
+                clock.UtcNow);
+        }
+
         var moveResult = card.Move(
             new BoardListId(command.NewListId),
-            Position.From(command.NewPosition),
+            newPosition,
             clock.UtcNow);
 
         if (moveResult.IsFailure)
