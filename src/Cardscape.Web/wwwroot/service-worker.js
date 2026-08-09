@@ -2,12 +2,8 @@
 // `ServiceWorkerAssetsManifest`. The cache name uses
 // `self.assetsManifest.version` (the build's content hash) so every
 // build gets a unique cache. Old caches are purged in `onActivate`
-// and the new build's pre-cached assets take over without a hard
-// reload.
-//
-// This replaces the previous hand-rolled SW (which used a hardcoded
-// `cardscape-v1` cache name and therefore masked new builds behind
-// the old cache until the user did Ctrl+Shift+R).
+// and the new build's pre-cached assets take over on the next page
+// load.
 
 self.importScripts('./service-worker-assets.js');
 
@@ -20,51 +16,44 @@ const offlineAssetsInclude = [
 ];
 const offlineAssetsExclude = [/^service-worker\.js$/];
 
-// BETA-SW-003 — see test-results/beta/round-2/sw-caching.md.
+// BETA-SW-005 — see test-results/beta/round-2/sw-caching.md.
 //
-// Strategy by request type:
+// Strategy: stale-while-revalidate.
 //
-//   - Navigation (HTML /index.html):
-//     Network-first. Always try the network; on success,
-//     cache the response and return it. On failure (offline,
-//     API host unreachable), fall back to the cached
-//     index.html so the SPA can still boot. This is the
-//     fix for the "first load shows the wrong theme
-//     until I press Ctrl+Shift+R" regression: the old SW
-//     served the cached index.html (with the previous
-//     build's behavior) until the user hard-reloaded.
-//     Network-first guarantees the user always sees the
-//     latest build without a manual cache bust.
+//   - Navigation (HTML /index.html) and static assets:
+//     Serve from cache immediately (no blank screen, no
+//     network round trip on every page). In the background,
+//     revalidate against the network: if the server returns
+//     a different response, refresh the cache so the next
+//     page load picks it up. This keeps the user on the
+//     fastest path while ensuring the cached version never
+//     drifts more than one visit behind the server.
 //
-//   - Static assets (CSS / JS / WASM / fonts / images):
-//     Cache-first, fall back to the network. Their URLs
-//     carry the build's content hash (e.g.
-//     `_framework/dotnet.runtime.AB12CD34.js`), so a new
-//     build changes the URL and the cache misses
-//     automatically — no stale-asset problem here. Cache-
-//     first is the right choice for the hot path: the
-//     browser doesn't pay a network round trip on every
-//     navigation.
+//   - Offline fallback:
+//     If the cache is empty (first visit, before the SW
+//     has finished pre-caching the assets in onInstall) or
+//     the network fails, fall back to the network. The user
+//     pays one network round trip but still gets a working
+//     page.
 //
-//   - Cross-origin (the API on the same host but a
-//     different path is not cross-origin; this is for
-//     third-party requests like Radzen CDN fonts):
-//     Pass through to the network. The Radzen static
-//     web assets are listed in the assets manifest and
-//     served from the cache for our own host; cross-
-//     origin requests always go to the network.
+//   - The previous "cache-first, no revalidate" approach
+//     (round 1 fix) masked new builds behind the old
+//     cache until a hard reload. The "network-first"
+//     approach (round 2 fix) solved that but introduced a
+//     blank screen on every navigation because the SW
+//     waited for the network before responding. Stale-while-
+//     revalidate is the middle ground: the user always sees
+//     a page instantly, and the cache catches up in the
+//     background.
+//
+// The new SW does NOT call skipWaiting() or clients.claim().
+// The browser's natural install/activate cycle is enough:
+// when a new SW is installed, the user sees the new
+// behaviour on their next navigation (the new SW serves
+// the new cache; the old SW is replaced). The user does
+// not see a blank screen in the meantime.
 
 self.addEventListener('install', event => {
-    // BETA-SW-003 — see test-results/beta/round-2/sw-caching.md.
-    // The previous SW did not call skipWaiting(). The new SW
-    // installed in the background but did not activate until
-    // every open tab closed, so the user kept seeing the
-    // old behaviour (cached assets, old theme logic) until
-    // a hard reload. skipWaiting() forces activation
-    // immediately; clients.claim() (in onActivate) takes
-    // over the open tabs.
-    self.skipWaiting();
-
     event.waitUntil(onInstall(event));
 });
 
@@ -85,15 +74,6 @@ async function onInstall(event) {
 
 async function onActivate(event) {
     console.info('Service worker: Activate');
-
-    // Take over the open tabs so the new SW's fetch
-    // handler takes effect on the very next request —
-    // without this, the old SW would still answer until
-    // the user navigated hard.
-    if (self.clients && typeof self.clients.claim === 'function') {
-        await self.clients.claim();
-    }
-
     const cacheKeys = await caches.keys();
     await Promise.all(
         cacheKeys
@@ -114,63 +94,69 @@ async function onFetch(event) {
         return fetch(event.request);
     }
 
-    const isNavigation = event.request.mode === 'navigate';
     const cache = await caches.open(cacheName);
+    const isNavigation = event.request.mode === 'navigate';
+    const cacheKey = isNavigation ? 'index.html' : event.request;
 
-    if (isNavigation) {
-        // Network-first. On success, refresh the cached
-        // index.html with the freshly-served one so
-        // subsequent offline navigations use the latest
-        // build. On failure, serve the cached index.html
-        // (which the SW just installed in onInstall) so
-        // the SPA can still boot offline.
-        try {
-            const networkResponse = await fetch(event.request);
-            // Only cache successful, basic responses. Don't
-            // cache 404s, 500s, redirects, etc.
-            if (networkResponse && networkResponse.ok) {
-                const responseToCache = networkResponse.clone();
-                // The URL is the navigation target (e.g. /login);
-                // we cache the *content* as index.html so the
-                // next offline navigation reuses it.
-                event.waitUntil(cache.put('index.html', responseToCache));
-            }
-            return networkResponse;
-        } catch (err) {
-            console.warn('Service worker: navigation network failed, falling back to cache for', event.request.url, err);
-            const cachedIndex = await cache.match('index.html');
-            if (cachedIndex) {
-                return cachedIndex;
-            }
-            return new Response('Offline and no cached shell available.', {
-                status: 503,
-                statusText: 'Service Unavailable',
-                headers: { 'Content-Type': 'text/plain' }
-            });
-        }
-    }
-
-    // Static asset: cache-first, fall back to network.
-    // The asset URL carries the build's content hash, so a
-    // new build's assets have new URLs and the cache
-    // misses automatically.
-    const cachedResponse = await cache.match(event.request);
+    // 1. Serve from cache immediately. If we have a cached
+    //    response, return it right away — the user gets a
+    //    page render without waiting for the network.
+    const cachedResponse = await cache.match(cacheKey);
     if (cachedResponse) {
+        // 2. In the background, revalidate. If the network
+        //    returns a different response, replace the
+        //    cache entry. The next page load uses the
+        //    updated cache. If the network is unreachable
+        //    (offline), the cache serves forever and the
+        //    revalidation promise is just left pending.
+        const revalidate = async () => {
+            try {
+                const networkResponse = await fetch(event.request);
+                if (networkResponse && networkResponse.ok) {
+                    const responseToCache = networkResponse.clone();
+                    await cache.put(cacheKey, responseToCache);
+                }
+            } catch (err) {
+                // Network is unreachable. The cached
+                // version is good enough; do nothing.
+            }
+        };
+        event.waitUntil(revalidate());
         return cachedResponse;
     }
 
+    // 3. Cache miss. The SW is freshly installed and the
+    //    pre-cache hasn't filled this slot yet, or this is
+    //    a never-seen URL. Fetch from the network and
+    //    populate the cache so subsequent navigations are
+    //    instant.
     try {
         const networkResponse = await fetch(event.request);
         if (networkResponse && networkResponse.ok) {
             const responseToCache = networkResponse.clone();
-            event.waitUntil(cache.put(event.request, responseToCache));
+            // Put the cache write in the background; we
+            // return the network response to the page
+            // immediately.
+            event.waitUntil(cache.put(cacheKey, responseToCache));
         }
         return networkResponse;
     } catch (err) {
-        console.warn('Service worker: asset fetch failed for', event.request.url, err);
-        return new Response('Network error', {
-            status: 408,
-            statusText: 'Request Timeout',
+        // 4. Network failure + cache miss = the user is
+        //    offline and this URL was never cached. For a
+        //    navigation request, fall back to the cached
+        //    index.html (which the SW just installed in
+        //    onInstall) so the SPA can still boot and
+        //    route to a useful page. For other requests,
+        //    return a synthetic 408.
+        if (isNavigation) {
+            const indexFallback = await cache.match('index.html');
+            if (indexFallback) {
+                return indexFallback;
+            }
+        }
+        return new Response('Offline and no cached shell available.', {
+            status: 503,
+            statusText: 'Service Unavailable',
             headers: { 'Content-Type': 'text/plain' }
         });
     }
