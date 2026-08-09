@@ -29,13 +29,7 @@ services:
     container_name: cardscape.api
     restart: unless-stopped
     environment:
-      # BETA-A7-R2 — see test-results/beta/round-2/reports/A7-advanced.md.
-      # The webhook SSRF guard skips the private-IP check when
-      # both ASPNETCORE_ENVIRONMENT=Development AND
-      # CARDS_TESTING_ALLOW_PRIVATE_WEBHOOKS=1 are set. Revert
-      # to Production before tagging v1.1.0-rc.
-      ASPNETCORE_ENVIRONMENT: Development
-      CARDS_TESTING_ALLOW_PRIVATE_WEBHOOKS: "1"
+      ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
       Database__Provider: Sqlite
       ConnectionStrings__Default: Data Source=/app/Data/cardscape.db

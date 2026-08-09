@@ -100,11 +100,22 @@ public sealed class TrelloImportService(
         }
         buffer.Position = 0;
 
+        // BETA-A3-R2-008 — see test-results/beta/round-2/reports/A3-boards.md.
+        // The previous code buffered the inbound stream into
+        // `buffer` and then deserialised from the ORIGINAL
+        // `json` stream. `CopyToAsync` had already drained the
+        // source, so the deserialiser saw an empty body and
+        // every import returned 400
+        // `imports.invalid_json` ("The input does not contain
+        // any JSON tokens"). Deserialise from `buffer`
+        // instead — the comment above the buffer creation
+        // already explains the buffering is for the
+        // non-seekable-stream cap; this is the matching fix.
         TrelloBoard[]? trelloBoards;
         try
         {
             trelloBoards = await JsonSerializer.DeserializeAsync<TrelloBoard[]>(
-                json, JsonOptions, ct);
+                buffer, JsonOptions, ct);
         }
         catch (JsonException ex)
         {
