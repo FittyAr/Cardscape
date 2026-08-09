@@ -16,10 +16,12 @@
 @inject IChecklistsApiClient Checklists
 @inject IRecurrenceApiClient Recurrence
 @inject IAiApiClient Ai
+@inject IAttachmentsApiClient Attachments
 @inject IStringLocalizer<SharedResource> L
 @inject DialogService DialogService
 @inject NotificationService Notify
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <PageTitle>@(card?.Title ?? "Card") — Cardscape</PageTitle>
 
@@ -176,16 +178,27 @@ else
                    an AI round-trip. *@
                 @if (editingDescription)
                 {
-                    <RadzenTextArea @bind-Value="editingDescriptionValue" Rows="4"
-                                    Style="width:100%" Placeholder="@L["DescriptionEmpty"]" />
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                        <RadzenButton Text="@L["DescriptionSave"]" Icon="check"
-                                      ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
-                                      Click="@SaveDescriptionAsync" IsBusy="@savingDescription" />
-                        <RadzenButton Text="@L["DescriptionCancel"]" ButtonStyle="ButtonStyle.Light"
-                                      Size="ButtonSize.Small"
-                                      Click="@(() => editingDescription = false)" />
-                    </RadzenStack>
+                    @* BUG-A4-005 — see test-results/beta/reports/A4-cards-lists.md.
+                       Radzen's TextArea @bind-Value uses oninput semantics, so
+                       the C# field does not always reflect the latest text
+                       when the user clicks Save without first blurring the
+                       field. Wrapping the editor in a RadzenTemplateForm
+                       with an explicit Submit button guarantees the value
+                       is committed before the handler runs, the same way
+                       the BETA-8-UI-#17 add-list / add-card forms do. *@
+                    <RadzenTemplateForm TItem="string" Data="@editingDescriptionValue" Submit="@SaveDescriptionAsync">
+                        <RadzenTextArea @bind-Value="editingDescriptionValue" Name="description-editor"
+                                        Rows="4" Style="width:100%" Placeholder="@L["DescriptionEmpty"]" />
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Class="rz-mt-2">
+                            <RadzenButton Text="@L["DescriptionSave"]" Icon="check"
+                                          ButtonType="ButtonType.Submit"
+                                          ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                          IsBusy="@savingDescription" />
+                            <RadzenButton Text="@L["DescriptionCancel"]" ButtonStyle="ButtonStyle.Light"
+                                          Size="ButtonSize.Small"
+                                          Click="@(() => editingDescription = false)" />
+                        </RadzenStack>
+                    </RadzenTemplateForm>
                 }
                 else
                 {
@@ -204,6 +217,54 @@ else
                         <RadzenText Text="@aiGeneratedDescription" TextStyle="TextStyle.Body2"
                                     TagName="TagName.Span" class="rz-color-text-secondary" />
                     }
+                    </RadzenStack>
+                }
+            </RadzenStack>
+
+            @* BUG-A5-002 — see test-results/beta/reports/A5-card-extras.md.
+               Direct file upload / list / download / delete. The
+               endpoints are new in this pass; before, the only way
+               to attach a file to a card was through the Google
+               Drive picker. Now any user with write access to the
+               card can attach a file via the standard file picker
+               and download / delete it from the list. *@
+            <RadzenStack Gap="0.5rem">
+                <RadzenText Text="Attachments" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
+                             Wrap="FlexWrap.Wrap">
+                    <InputFile OnChange="@OnAttachmentSelected" accept="*/*" disabled="@uploadingAttachment" />
+                    @if (uploadingAttachment)
+                    {
+                        <RadzenProgressBarCircular ProgressBarType="ProgressBarType.Indeterminate"
+                                                   Size="ProgressBarCircularSize.Small" />
+                    }
+                </RadzenStack>
+                @if (attachments is null)
+                {
+                    <RadzenText Text="Loading…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+                }
+                else if (attachments.Count == 0)
+                {
+                    <RadzenText Text="No attachments yet." TextStyle="TextStyle.Body2"
+                                class="rz-color-text-secondary" />
+                }
+                else
+                {
+                    <RadzenStack Gap="0.25rem">
+                        @foreach (AttachmentDto attachment in attachments)
+                        {
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                                         Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                                <RadzenIcon Icon="attach_file" />
+                                <RadzenText Text="@attachment.FileName" TextStyle="TextStyle.Body2" />
+                                <RadzenText Text="@FormatSize(attachment.SizeBytes)"
+                                            TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
+                                <RadzenButton Text="Download" Icon="download" ButtonStyle="ButtonStyle.Light"
+                                              Size="ButtonSize.ExtraSmall" Click="@(() => DownloadAttachmentAsync(attachment))" />
+                                <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger"
+                                              Size="ButtonSize.ExtraSmall" Click="@(() => DeleteAttachmentAsync(attachment))" />
+                            </RadzenStack>
+                        }
                     </RadzenStack>
                 }
             </RadzenStack>
@@ -450,6 +511,9 @@ else
     private bool snoozing;
     private string? aiGeneratedDescription;
     private string? aiSummary;
+    // BUG-A5-002 — attachments list / upload / download state.
+    private IReadOnlyList<AttachmentDto>? attachments;
+    private bool uploadingAttachment;
     private IReadOnlyList<AiOwnerSuggestionDto>? aiSuggestedOwners;
     private readonly AddCommentModel addCommentModel = new();
 
@@ -478,7 +542,15 @@ else
                     ? "none"
                     : card.DueDate.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm")),
             new("Members", MakeMembersValueFragment(card)),
-            MetadataListItem.Text("Labels", card.LabelCount.ToString())
+            MetadataListItem.Text("Labels", card.LabelCount.ToString()),
+            // BUG-A5-003 — see test-results/beta/reports/A5-card-extras.md.
+            // The header now surfaces comment / attachment /
+            // checklist counts alongside the existing member /
+            // label counts so the user can see at a glance which
+            // cards carry attachments or open discussions.
+            MetadataListItem.Text("Comments", card.CommentCount.ToString()),
+            MetadataListItem.Text("Attachments", card.AttachmentCount.ToString()),
+            MetadataListItem.Text("Checklists", card.ChecklistCount.ToString())
         };
 
     private IReadOnlyList<MetadataListItem> CustomFieldItems => fieldValues is null
@@ -684,6 +756,12 @@ else
 
         ApiResult<CardRecurrenceDto?> recurrenceResult = await Recurrence.GetAsync(CardId);
         recurrence = recurrenceResult.IsSuccess ? recurrenceResult.Value : null;
+
+        // BUG-A5-002 — fetch the attachments list alongside the
+        // rest of the card data so the section is ready when
+        // the user scrolls to it.
+        ApiResult<IReadOnlyList<AttachmentDto>> attachmentsResult = await Attachments.ListAsync(CardId);
+        attachments = attachmentsResult.IsSuccess ? attachmentsResult.Value : [];
     }
 
     private void StartEditingTitle()
@@ -722,8 +800,15 @@ else
         savingDescription = true;
         try
         {
+            // BUG-A4-005 — read the value through the form's
+            // Data slot instead of the @bind-Value field. The form
+            // commits the value on submit, so by the time this
+            // handler runs the Data parameter is guaranteed to
+            // reflect what the user typed, even if the click
+            // happened before the textarea blurred.
+            string value = editingDescriptionValue ?? string.Empty;
             ApiResult<CardDto> result = await Cards.ChangeDescriptionAsync(
-                CardId, editingDescriptionValue);
+                CardId, value);
             if (result.IsSuccess && result.Value is not null)
             {
                 card = result.Value;
@@ -1135,5 +1220,62 @@ else
         }
 
         return a.PayloadJson;
+    }
+
+    // BUG-A5-002 — attachment handlers. The upload goes through
+    // IAttachmentsApiClient.UploadAsync with a streamed file; the
+    // download triggers a browser save via JS interop. Both
+    // re-fetch the list on success so the UI stays in lockstep
+    // with the server.
+    private async Task OnAttachmentSelected(InputFileChangeEventArgs e)
+    {
+        if (uploadingAttachment) return;
+        IBrowserFile file = e.File;
+        if (file.Size <= 0) return;
+        uploadingAttachment = true;
+        try
+        {
+            await using Stream stream = file.OpenReadStream(maxAllowedSize: 25L * 1024L * 1024L);
+            ApiResult<AttachmentDto> result = await Attachments.UploadAsync(
+                CardId, stream, file.Name, file.ContentType ?? "application/octet-stream");
+            if (result.IsSuccess && attachments is not null)
+            {
+                attachments = [.. attachments, result.Value!];
+            }
+        }
+        finally
+        {
+            uploadingAttachment = false;
+        }
+    }
+
+    private async Task DownloadAttachmentAsync(AttachmentDto attachment)
+    {
+        ApiResult<byte[]> result = await Attachments.DownloadAsync(CardId, attachment.Id);
+        if (!result.IsSuccess || result.Value is null)
+        {
+            return;
+        }
+        await JS.InvokeVoidAsync(
+            "downloadFromBytes",
+            attachment.FileName,
+            "application/octet-stream",
+            Convert.ToBase64String(result.Value));
+    }
+
+    private async Task DeleteAttachmentAsync(AttachmentDto attachment)
+    {
+        ApiResult<bool> result = await Attachments.DeleteAsync(CardId, attachment.Id);
+        if (result.IsSuccess && attachments is not null)
+        {
+            attachments = attachments.Where(a => a.Id != attachment.Id).ToList();
+        }
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:0.0} KB";
+        return $"{bytes / (1024.0 * 1024.0):0.0} MB";
     }
 }

@@ -2,6 +2,7 @@ using Cardscape.Api.BackgroundJobs;
 using Cardscape.Api.Endpoints.Activities;
 using Cardscape.Api.Endpoints.Admin;
 using Cardscape.Api.Endpoints.Ai;
+using Cardscape.Api.Endpoints.Attachments;
 using Cardscape.Api.Endpoints.Auth;
 using Cardscape.Api.Endpoints.Automation;
 using Cardscape.Api.Endpoints.BackgroundJobs;
@@ -263,6 +264,13 @@ app.MapCustomFieldEndpoints();
 app.MapCustomFieldValueEndpoints();
 app.MapVotingEndpoints();
 app.MapChecklistEndpoints();
+// BUG-A5-002 — see test-results/beta/reports/A5-card-extras.md.
+// Wires the new /api/cards/{id}/attachments/* surface that the
+// domain already had but the API never exposed. The
+// multipart upload is bounded to 30 MB at the framework
+// level (DisableRequestSizeLimit stays off; the per-card
+// upload goes through ReadFormAsync).
+app.MapAttachmentEndpoints();
 app.MapRecurrenceEndpoints();
 app.MapBoardExtensionEndpoints();
 app.MapBackgroundJobEndpoints();

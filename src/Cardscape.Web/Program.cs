@@ -210,6 +210,11 @@ builder.Services.AddScoped<IMcpSubscriptionsApiClient, McpSubscriptionsApiClient
 // server; the Web side just never bound a client to it.
 builder.Services.AddScoped<ISearchApiClient, SearchApiClient>();
 
+// BUG-A5-002 — the attachments surface is new in this pass;
+// the client fronts the multipart upload, list, download and
+// delete endpoints.
+builder.Services.AddScoped<IAttachmentsApiClient, AttachmentsApiClient>();
+
 // ── Real-time (SignalR client) ──────────────────────────────
 builder.Services.AddScoped<BoardHubClient>();
 

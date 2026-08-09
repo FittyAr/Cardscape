@@ -1,5 +1,15 @@
 namespace Cardscape.Web.Shared;
 
+// ── Attachments (BUG-A5-002) ────────────────────────────
+public sealed record AttachmentDto(
+    Guid Id,
+    Guid CardId,
+    string FileName,
+    string MimeType,
+    long SizeBytes,
+    Guid UploaderId,
+    DateTimeOffset CreatedAt);
+
 // ── Auth ────────────────────────────────────────────────
 public sealed record RegisterRequestDto(string Email, string DisplayName, string Password);
 
@@ -149,6 +159,9 @@ public sealed record CardDto(
     DateTimeOffset CreatedAt,
     int MemberCount,
     int LabelCount,
+    int CommentCount = 0,
+    int AttachmentCount = 0,
+    int ChecklistCount = 0,
     bool IsSnoozed = false,
     DateTimeOffset? SnoozeUntil = null,
     Guid? MirrorOfCardId = null);

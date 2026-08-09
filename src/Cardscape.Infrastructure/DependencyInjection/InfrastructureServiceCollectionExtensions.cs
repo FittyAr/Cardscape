@@ -11,7 +11,9 @@ using Cardscape.Application.Authentication.Abstractions;
 using Cardscape.Application.Realtime;
 using Cardscape.Application.Webhooks;
 using Cardscape.Domain.Activities;
+using Cardscape.Domain.Attachments;
 using Cardscape.Domain.Authentication.ExternalLogins;
+using Cardscape.Domain.Authentication.PasswordResets;
 using Cardscape.Domain.Authentication.Totp;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Boards;
@@ -264,6 +266,14 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRepository<ChecklistItem, ChecklistItemId>, ChecklistItemRepository>(sp => sp.GetRequiredService<ChecklistItemRepository>());
         services.AddScoped<IChecklistItemRepository, ChecklistItemRepository>(sp => sp.GetRequiredService<ChecklistItemRepository>());
 
+        // BUG-A5-002 — the attachments table was defined only on
+        // the domain side before this pass; the repository and
+        // DbSet mapping are added in the same commit so the new
+        // direct-upload endpoints can persist their metadata.
+        services.AddScoped<AttachmentRepository>();
+        services.AddScoped<IRepository<Attachment, AttachmentId>, AttachmentRepository>(sp => sp.GetRequiredService<AttachmentRepository>());
+        services.AddScoped<IAttachmentRepository, AttachmentRepository>(sp => sp.GetRequiredService<AttachmentRepository>());
+
         services.AddScoped<CardRecurrenceRepository>();
         services.AddScoped<IRepository<CardRecurrence, CardRecurrenceId>, CardRecurrenceRepository>(sp => sp.GetRequiredService<CardRecurrenceRepository>());
         services.AddScoped<ICardRecurrenceRepository, CardRecurrenceRepository>(sp => sp.GetRequiredService<CardRecurrenceRepository>());
@@ -284,6 +294,16 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<TotpCredentialRepository>();
         services.AddScoped<IRepository<TotpCredential, TotpCredentialId>, TotpCredentialRepository>(sp => sp.GetRequiredService<TotpCredentialRepository>());
         services.AddScoped<ITotpCredentialRepository, TotpCredentialRepository>(sp => sp.GetRequiredService<TotpCredentialRepository>());
+
+        // BUG-A8-014 — backing store for the new password
+        // reset tokens issued by POST /api/auth/forgot-password
+        // and consumed by POST /api/auth/reset-password. The
+        // token hash is stored in the cleartext, not the
+        // token itself, so a leaked DB row still cannot be
+        // used to log in.
+        services.AddScoped<PasswordResetRepository>();
+        services.AddScoped<IRepository<PasswordReset, PasswordResetId>, PasswordResetRepository>(sp => sp.GetRequiredService<PasswordResetRepository>());
+        services.AddScoped<IPasswordResetRepository, PasswordResetRepository>(sp => sp.GetRequiredService<PasswordResetRepository>());
         services.AddScoped<ITotpService, TotpService>();
 
         // Two-step 2FA login: the password check mints a one-shot

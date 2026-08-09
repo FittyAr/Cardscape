@@ -1,6 +1,8 @@
 using System.Reflection;
 using Cardscape.Domain.Activities;
+using Cardscape.Domain.Attachments;
 using Cardscape.Domain.Authentication.ExternalLogins;
+using Cardscape.Domain.Authentication.PasswordResets;
 using Cardscape.Domain.Authentication.Saml;
 using Cardscape.Domain.Authentication.Scim;
 using Cardscape.Domain.Authentication.Totp;
@@ -62,6 +64,20 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<OAuthAuthorizationCode> OAuthAuthorizationCodes => Set<OAuthAuthorizationCode>();
     public DbSet<OAuthAccessToken> OAuthAccessTokens => Set<OAuthAccessToken>();
     public DbSet<Domain.Authentication.RevokedTokens.RevokedToken> RevokedTokens => Set<Domain.Authentication.RevokedTokens.RevokedToken>();
+    // BUG-A5-002 — the `attachments` table was defined only on
+    // the domain side before this pass. Mapping it here makes the
+    // Google Drive integration write its row on SaveChanges and
+    // lets the new direct-upload endpoints persist their
+    // metadata.
+    public DbSet<Attachment> Attachments => Set<Attachment>();
+
+    // BUG-A8-014 — backing store for the new password-reset
+    // tokens. Same pattern as `Attachments`: the domain
+    // aggregate is new in this pass and the DbSet + EF
+    // configuration are added in the same commit so the
+    // /api/auth/forgot-password and /api/auth/reset-password
+    // endpoints can persist their rows.
+    public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     // BETA-5-#1 — see test-results/BETA-TEST-REPORT.md. Exposed as a
     // standalone DbSet (not via OwnsMany) so the star-toggle path
     // can issue a direct INSERT/DELETE on board_stars without going
