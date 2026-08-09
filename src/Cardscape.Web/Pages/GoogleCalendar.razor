@@ -1,4 +1,12 @@
 @page "/settings/integrations/google-calendar"
+@* BUG-A8-011 — see test-results/beta/reports/A8-settings.md.
+   The env file and external docs reference
+   `/settings/google-calendar` but the canonical route was
+   `/settings/integrations/google-calendar` (the same
+   shape as `/settings/integrations/google-drive`). The
+   second `@page` directive adds the shorter alias so a
+   bookmarked link to either form still loads the page. *@
+@page "/settings/google-calendar"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inherits Cardscape.Web.Shared.CultureReactiveComponentBase
 @using Cardscape.Web.Resources
