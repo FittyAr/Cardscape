@@ -80,9 +80,18 @@
       so we copy the Spanish resx into the API's output directory
       under Resources/. CopyToOutputDirectory=PreserveNewest ensures
       a fresh build ships the file.
+      BUG-A1-003 — also copy the invariant SharedResource.resx so
+      the /api/internal/translate/en endpoint can fall back to it.
+      Without this, the `en` request returned 0 keys and the
+      Blazor client's CultureSwitcher rendered raw resource keys
+      for every label.
     -->
     <Content Include="..\Cardscape.Web\Resources\SharedResource.es.resx"
              Link="Resources\SharedResource.es.resx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Cardscape.Web\Resources\SharedResource.resx"
+             Link="Resources\SharedResource.resx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

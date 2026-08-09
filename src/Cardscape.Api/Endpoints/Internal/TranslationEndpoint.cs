@@ -124,11 +124,34 @@ public static class TranslationEndpoint
     private static Dictionary<string, string> LoadFromDisk(string culture)
     {
         string path = Path.Combine(AppContext.BaseDirectory, "Resources", $"SharedResource.{culture}.resx");
-        if (!File.Exists(path))
+        if (File.Exists(path))
         {
-            return new Dictionary<string, string>(StringComparer.Ordinal);
+            return ParseResx(path);
         }
 
+        // BUG-A1-003 — see test-results/beta/round-2/reports/A1-auth.md.
+        // The `en` culture is the invariant fallback in .NET
+        // resource resolution, so the on-disk file is
+        // `SharedResource.resx` (no culture suffix). Returning
+        // an empty dictionary for `en` left the Blazor client
+        // with a translation map that had no entries; every
+        // label rendered as the raw resource key. The fix is
+        // to fall back to the invariant file when the
+        // culture-specific one is absent.
+        if (culture == "en")
+        {
+            string invariantPath = Path.Combine(AppContext.BaseDirectory, "Resources", "SharedResource.resx");
+            if (File.Exists(invariantPath))
+            {
+                return ParseResx(invariantPath);
+            }
+        }
+
+        return new Dictionary<string, string>(StringComparer.Ordinal);
+    }
+
+    private static Dictionary<string, string> ParseResx(string path)
+    {
         XDocument doc = XDocument.Load(path);
         XNamespace ns = doc.Root?.GetDefaultNamespace() ?? XNamespace.None;
         Dictionary<string, string> dict = new(StringComparer.Ordinal);
