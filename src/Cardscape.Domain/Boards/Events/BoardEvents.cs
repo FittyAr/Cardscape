@@ -62,3 +62,17 @@ public sealed record BoardUnstarred(
     BoardId BoardId,
     Guid UserId,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
+/// <summary>
+/// Raised when a board is hard-deleted. The handler is
+/// responsible for cascading the delete to lists, cards,
+/// labels, comments, votes, and attachments. The event is
+/// raised after the aggregate is removed from the change
+/// tracker so handlers can't re-add the board through the
+/// domain surface.
+/// </summary>
+public sealed record BoardDeleted(
+    BoardId BoardId,
+    Guid DeletedBy,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+

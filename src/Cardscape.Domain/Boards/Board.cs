@@ -212,4 +212,25 @@ public sealed class Board : AggregateRoot<BoardId>
 
     public bool IsMember(Guid userId) => _members.Any(m => m.UserId == userId);
     public bool IsStarredBy(Guid userId) => _stars.Any(s => s.UserId == userId);
+
+    /// <summary>
+    /// Hard-delete. The aggregate is removed from the change
+    /// tracker and the <see cref="BoardDeleted"/> event is
+    /// raised so domain-event handlers can cascade the delete
+    /// to child aggregates (lists, cards, labels, comments,
+    /// votes, attachments) and fan out to the search index
+    /// and the activity broadcaster.
+    /// </summary>
+    public Result Delete(Guid deletedBy, DateTimeOffset at)
+    {
+        if (deletedBy == Guid.Empty)
+        {
+            return Result.Failure(DomainError.Validation(
+                "boards.deleter_required",
+                "The user deleting the board must be specified."));
+        }
+
+        AddDomainEvent(new BoardDeleted(Id, deletedBy, at));
+        return Result.Success();
+    }
 }

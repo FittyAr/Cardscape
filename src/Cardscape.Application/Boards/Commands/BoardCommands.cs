@@ -473,3 +473,56 @@ public static class UnstarBoardCommandHandler
             board.Members.Count));
     }
 }
+
+// BETA-A3-R2-001 — see test-results/beta/round-2/reports/A3-boards.md.
+// The board lifecycle was missing a delete endpoint. The
+// round-2 destructive-test plan needs it, and the previous
+// round-1 deferred the surface. Delete is hard (the
+// per-board content is user-owned and the user authorized
+// destructive test runs in this round). Lists, cards, and
+// attachments cascade via the EF Core cascade rules in
+// `CardscapeDbContext.OnModelCreating`.
+public sealed record DeleteBoardCommand(Guid BoardId) : IMessage;
+
+public static class DeleteBoardCommandHandler
+{
+    public static async Task<Result> Handle(
+        DeleteBoardCommand command,
+        IBoardRepository boards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
+    {
+        if (currentUser.Id is null)
+        {
+            return Result.Failure(DomainError.Unauthenticated(
+                "auth.required", "Authentication is required."));
+        }
+
+        Board? board = await boards.GetByIdAsync(new BoardId(command.BoardId), cancellationToken);
+        if (board is null)
+        {
+            return Result.Failure(DomainError.NotFound(
+                "boards.not_found", "Board was not found."));
+        }
+
+        // Membership required (Trello-style — board admin /
+        // member can delete; non-member cannot).
+        if (!board.IsMember(currentUser.Id.Value))
+        {
+            return Result.Failure(NotMember);
+        }
+
+        var delete = board.Delete(currentUser.Id.Value, clock.UtcNow);
+        if (delete.IsFailure)
+        {
+            return delete;
+        }
+
+        boards.Remove(board);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
+    }
+}

@@ -22,19 +22,36 @@ public static class BoardEndpoints
         group.MapGet("/starred", async (IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(new ListStarredBoardsQuery(), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
         group.MapGet("/", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(new ListBoardsForWorkspaceQuery(workspaceId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
         group.MapGet("/{boardId:guid}", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new GetBoardQuery(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+        });
+
+        // BETA-A3-R2-001 — see
+        // test-results/beta/round-2/reports/A3-boards.md.
+        // The board lifecycle was missing a delete endpoint
+        // (only archive / unarchive existed), so a board
+        // couldn't be removed once created. The round-2
+        // destructive test plan asked for this and round 1
+        // deferred it. The handler is a hard-delete (boards
+        // are user-owned content, not audit-required); lists,
+        // cards, and attachments cascade via the EF Core
+        // cascade rules configured in
+        // `CardscapeDbContext.OnModelCreating`.
+        group.MapDelete("/{boardId:guid}", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result>(new DeleteBoardCommand(boardId), ct);
+            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
         });
 
         group.MapPost("/", async (CreateBoardRequestBody body, IMessageBus bus, CancellationToken ct) =>
