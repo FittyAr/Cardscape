@@ -71,8 +71,20 @@ public static class SamlEndpoints
         {
             var result = await bus.InvokeAsync<Result<SamlConnectionDto?>>(
                 new GetSamlConnectionQuery(workspaceId), ct);
+            // BETA-A2-004 — see test-results/beta/00-FINAL-SUMMARY.md.
+            // When the workspace has no SAML connection the
+            // handler returns `SamlConnectionDto?` null. The
+            // previous `Results.Ok(result.Value)` serialised a
+            // 0-byte body and the WASM client's
+            // `ReadFromJsonAsync` threw `JsonException`. Bounce
+            // null to `Results.NoContent()` so the client sees
+            // the canonical "not configured" response (the
+            // existing `ApiClientBase.ReadAsync` handles a 204
+            // and returns Ok(default) for nullable T).
             return result.IsSuccess
-                ? Results.Ok(result.Value)
+                ? result.Value is null
+                    ? Results.NoContent()
+                    : Results.Ok(result.Value)
                 : MapError(result.Error);
         });
 

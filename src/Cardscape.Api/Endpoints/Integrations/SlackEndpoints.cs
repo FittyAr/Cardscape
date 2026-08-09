@@ -30,7 +30,21 @@ public static class SlackEndpoints
         {
             var result = await bus.InvokeAsync<Result<SlackWorkspaceDto?>>(
                 new GetSlackWorkspaceForWorkspaceQuery(workspaceId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            // BETA-A2-004 — see test-results/beta/00-FINAL-SUMMARY.md.
+            // When the user has not connected Slack, the
+            // handler returns `SlackWorkspaceDto?` null. The
+            // previous `Results.Ok(result.Value)` serialised a
+            // 0-byte body which made the WASM client's
+            // `ReadFromJsonAsync` throw `JsonException`. Bounce
+            // null to `Results.NoContent()` so the client sees
+            // the canonical "no connection" path (the existing
+            // `ApiClientBase.ReadAsync` already handles a 204
+            // and returns Ok(default) for nullable T).
+            return result.IsSuccess
+                ? result.Value is null
+                    ? Results.NoContent()
+                    : Results.Ok(result.Value)
+                : MapError(result.Error);
         });
 
         group.MapPost("/connect", async (Guid workspaceId, [FromBody] ConnectSlackRequest body, IMessageBus bus, CancellationToken ct) =>
