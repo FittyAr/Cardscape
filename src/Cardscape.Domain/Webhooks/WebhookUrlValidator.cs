@@ -35,6 +35,23 @@ public static class WebhookUrlValidator
 
     public static Result ValidateNotInternalHost(Uri parsed)
     {
+        // BETA-A7-R2 — see test-results/beta/round-2/reports/A7-advanced.md.
+        // The SSRF guard is security-critical in production. The
+        // beta-2 test passes the env var `CARDS_TESTING_ALLOW_PRIVATE_WEBHOOKS=1`
+        // to validate webhook deliveries against a local listener at
+        // host.docker.internal. Without this opt-in escape hatch, the
+        // SSRF guard would block every local-listener test scenario
+        // including any integration test that posts a hook to a
+        // dev-only URL. The escape hatch is off by default and the
+        // production build sets ASPNETCORE_ENVIRONMENT=Production so
+        // a leaked env var in prod still has to override both this
+        // variable AND set the env to Development.
+        if (Environment.GetEnvironmentVariable("CARDS_TESTING_ALLOW_PRIVATE_WEBHOOKS") == "1"
+            && Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+        {
+            return Result.Success();
+        }
+
         string host = parsed.Host;
         if (string.IsNullOrEmpty(host))
         {

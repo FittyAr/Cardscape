@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Domain.Activities;
@@ -71,6 +73,25 @@ public sealed class InMemorySearchIndex : ISearchIndex
             Kind: SearchHitKind.ChecklistItem,
             Title: item.Text.Value,
             Snippet: string.Empty,
+            BoardId: boardId,
+            CardId: checklist.CardId.Value,
+            Url: $"/cards/{checklist.CardId.Value}",
+            Score: 0);
+
+        // BUG-A6-R2-005 — see test-results/beta/round-2/reports/A6-views.md.
+        // The original implementation only indexed the items. A
+        // user searching for the checklist's own name (e.g.
+        // "Definition of Done") had zero hits even though the
+        // title was on the checklist itself. We now also surface
+        // the checklist as a searchable hit so the title shows up
+        // in the search results. The item still owns the
+        // (line-level) granularity — clicking a checklist hit
+        // jumps to the card, just like the item hit.
+        _hits[$"checklist:{checklist.Id.Value}"] = new SearchHit(
+            Id: checklist.Id.Value.ToString(),
+            Kind: SearchHitKind.ChecklistItem,
+            Title: checklist.Title.Value,
+            Snippet: $"Checklist · {item.Text.Value}",
             BoardId: boardId,
             CardId: checklist.CardId.Value,
             Url: $"/cards/{checklist.CardId.Value}",
@@ -166,7 +187,15 @@ public sealed class InMemorySearchIndex : ISearchIndex
                 continue;
             }
 
-            string haystack = $"{hit.Title} {hit.Snippet}".ToLowerInvariant();
+            // BUG-A6-R2-001 — see test-results/beta/round-2/reports/A6-views.md.
+            // Strip diacritics from both the haystack and the query
+            // tokens so "camion" matches "Camión" (and any other
+            // normalised pair — ñ/ñ, é/e, ü/u, …). We normalise to
+            // FormD, drop the combining marks, and re-compose to
+            // FormC. The Unicode category check is the canonical
+            // way to do this; it does not allocate per-character
+            // beyond a single ToString().
+            string haystack = StripDiacritics($"{hit.Title} {hit.Snippet}");
             int matched = tokens.Count(t => haystack.Contains(t, StringComparison.OrdinalIgnoreCase));
             if (matched > 0)
             {
@@ -186,8 +215,35 @@ public sealed class InMemorySearchIndex : ISearchIndex
     }
 
     private HashSet<string> Tokenize(string text) =>
-        new(_tokenizer.Matches(text.ToLowerInvariant()).Select(m => m.Value));
+        new(_tokenizer.Matches(StripDiacritics(text)).Select(m => m.Value));
 
     private static string Truncate(string text, int max) =>
         text.Length <= max ? text : text[..max] + "…";
+
+    // BUG-A6-R2-001 — see test-results/beta/round-2/reports/A6-views.md.
+    // Strips diacritics from a string: "Camión" → "Camion",
+    // "señor" → "senor", "über" → "uber". The normalised form
+    // is what the search index tokenises and compares against, so
+    // every indexed hit is searchable with or without accents.
+    private static string StripDiacritics(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return text;
+        }
+
+        // FormD splits accented characters into the base letter +
+        // the combining mark (U+0301 etc.); the category check
+        // identifies the marks; FormC re-composes without them.
+        string normalised = text.Normalize(NormalizationForm.FormD);
+        StringBuilder builder = new(normalised.Length);
+        foreach (char c in normalised)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+            {
+                builder.Append(c);
+            }
+        }
+        return builder.ToString().Normalize(NormalizationForm.FormC);
+    }
 }

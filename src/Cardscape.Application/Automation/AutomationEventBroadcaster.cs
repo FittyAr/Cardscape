@@ -56,12 +56,41 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
     public Task BroadcastAsync(IDomainEvent @event, CancellationToken ct = default) =>
         @event switch
         {
+            // BETA-A7-R2-001 — see test-results/beta/round-2/reports/A7-advanced.md.
+            // The automation broadcaster must ignore events
+            // that ITS OWN action raised. Otherwise a rule
+            // like `CardMoved + MoveCardToList(B)` fires,
+            // the action mutates the card to list B, that
+            // mutation re-emits `CardMoved`, the rule fires
+            // again, and the system enters a chain reaction
+            // (verified: 4 fires per single user move).
+            // We track the "we are already inside an
+            // automation broadcast" flag via AsyncLocal so
+            // the self-trigger is dropped without having to
+            // thread an actor id through every Card method.
+            var e when InAutomationBroadcast => Task.CompletedTask,
             CardCreated e => HandleCardCreated(e, ct),
             CardMoved e => HandleCardMoved(e, ct),
             CardCompleted e => HandleCardCompleted(e, ct),
             CardReopened e => HandleCardReopened(e, ct),
             _ => Task.CompletedTask
         };
+
+    /// <summary>
+    /// BETA-A7-R2-001 — see test-results/beta/round-2/reports/A7-advanced.md.
+    /// AsyncLocal flag the broadcaster flips on while it
+    /// is processing an event. The Card mutations the
+    /// action runs (Move / SetDueDate / Complete / Assign)
+    /// go through the SaveChanges interceptor and dispatch
+    /// a new event; that new event hits BroadcastAsync
+    /// again, sees the flag is set, and returns. The flag
+    /// is reset by the `using` block below, so the
+    /// re-entry is contained to the synchronous call
+    /// tree of the original user action.
+    /// </summary>
+    private static readonly AsyncLocal<bool> _inAutomationBroadcast = new();
+
+    private static bool InAutomationBroadcast => _inAutomationBroadcast.Value;
 
     private async Task HandleCardCreated(CardCreated @event, CancellationToken ct)
     {
@@ -112,6 +141,14 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
         CancellationToken ct,
         bool resolveListIdFromCard = false)
     {
+        // BETA-A7-R2-001 — see test-results/beta/round-2/reports/A7-advanced.md.
+        // Set the AsyncLocal flag so the broadcaster drops
+        // the events the action is about to raise. The flag
+        // is reset when this method returns (after the
+        // matching rule's SaveChanges), so a subsequent
+        // user-originated event flows normally.
+        bool previous = _inAutomationBroadcast.Value;
+        _inAutomationBroadcast.Value = true;
         try
         {
             using IServiceScope scope = _scopeFactory.CreateScope();
@@ -151,6 +188,13 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
                 ex,
                 "AutomationEventBroadcaster failed while processing {Trigger} for card {CardId}",
                 trigger, cardId);
+        }
+        finally
+        {
+            // BETA-A7-R2-001 — restore the prior flag so a
+            // sibling call from a different request isn't
+            // poisoned by our re-entry.
+            _inAutomationBroadcast.Value = previous;
         }
     }
 
