@@ -463,6 +463,25 @@ public static class SetWorkspaceRegionCommandHandler
             return Result.Failure<WorkspaceDto>(NotFound);
         }
 
+        // BETA-A2-010 — see
+        // test-results/beta/round-2/reports/A2-workspaces.md.
+        // The JSON parser happily casts any integer into a
+        // C# enum value, including ones outside the defined
+        // members. The previous handler accepted `{"region":
+        // 99}` and persisted Region = 99 in the DB, which
+        // then corrupted every UI render that read the row
+        // back (the `RegionLabel(...)` switch hits the
+        // default "Unspecified" branch). The fix is a single
+        // `Enum.IsDefined` check before the cross-region
+        // guard so an out-of-range value is rejected with a
+        // friendly 400 instead of being silently coerced.
+        if (!Enum.IsDefined(typeof(Region), command.Region))
+        {
+            return Result.Failure<WorkspaceDto>(DomainError.Validation(
+                "workspaces.region_invalid",
+                $"Region value '{(int)command.Region}' is not a defined Region member."));
+        }
+
         // Reject when the new region doesn't match the deployment's
         // configured region (mirrors the cross-region write guard
         // on create).
