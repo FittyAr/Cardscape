@@ -25,7 +25,7 @@ public static class GetWorkspaceQueryHandler
         }
 
         var workspace = await workspaces.GetWithMembersAsync(new WorkspaceId(query.WorkspaceId), cancellationToken);
-        if (workspace is null)
+        if (workspace is null || workspace.IsDeleted)
         {
             return Result.Failure<WorkspaceDto>(NotFound);
         }
@@ -96,7 +96,7 @@ public static class ListWorkspaceMembersQueryHandler
         }
 
         var workspace = await workspaces.GetWithMembersAsync(new WorkspaceId(query.WorkspaceId), cancellationToken);
-        if (workspace is null)
+        if (workspace is null || workspace.IsDeleted)
         {
             return Result.Failure<IReadOnlyList<WorkspaceMemberDto>>(NotFound);
         }

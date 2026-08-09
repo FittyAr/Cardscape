@@ -314,4 +314,31 @@ public class WorkspaceTests
 
         result.IsSuccess.Should().BeTrue();
     }
+
+    // BETA-R2-A2-009 — soft-delete the workspace.
+
+    [Fact]
+    public void Delete_SetsIsDeletedAndRaisesEvent()
+    {
+        var workspace = NewWorkspace();
+        workspace.ClearDomainEvents();
+
+        workspace.Delete(At);
+
+        workspace.IsDeleted.Should().BeTrue();
+        workspace.DomainEvents.Should().ContainSingle()
+            .Which.Should().BeOfType<WorkspaceDeleted>();
+    }
+
+    [Fact]
+    public void Delete_IsIdempotent()
+    {
+        var workspace = NewWorkspace();
+        workspace.Delete(At);
+        workspace.Delete(At);
+        workspace.Delete(At);
+
+        workspace.IsDeleted.Should().BeTrue();
+        workspace.DomainEvents.OfType<WorkspaceDeleted>().Should().HaveCount(1);
+    }
 }

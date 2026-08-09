@@ -64,8 +64,13 @@ public sealed class WebhookEventBroadcaster : IDomainEventBroadcaster
         _logger = logger;
     }
 
-    public Task BroadcastAsync(IDomainEvent @event, CancellationToken ct = default) =>
-        @event switch
+    public Task BroadcastAsync(IDomainEvent @event, CancellationToken ct = default)
+    {
+        _logger.LogInformation(
+            "WebhookEventBroadcaster.BroadcastAsync event type {EventType}",
+            @event.GetType().Name);
+
+        return @event switch
         {
             CardCreated e => HandleCardCreated(e, ct),
             CardMoved e => HandleCardMoved(e, ct),
@@ -73,6 +78,7 @@ public sealed class WebhookEventBroadcaster : IDomainEventBroadcaster
             CommentAdded e => HandleCommentAdded(e, ct),
             _ => Task.CompletedTask
         };
+    }
 
     private async Task HandleCardCreated(CardCreated @event, CancellationToken ct)
     {
@@ -164,6 +170,7 @@ public sealed class WebhookEventBroadcaster : IDomainEventBroadcaster
 
     private async Task HandleCommentAdded(CommentAdded @event, CancellationToken ct)
     {
+        _logger.LogInformation("WebhookEventBroadcaster.HandleCommentAdded called for {CardId}", @event.CardId);
         using IServiceScope scope = _scopeFactory.CreateScope();
         ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
         IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
@@ -263,3 +270,5 @@ public sealed class WebhookEventBroadcaster : IDomainEventBroadcaster
         }
     }
 }
+
+

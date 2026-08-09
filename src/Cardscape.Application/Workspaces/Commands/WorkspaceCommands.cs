@@ -182,6 +182,46 @@ public static class ArchiveWorkspaceCommandHandler
 
 public sealed record UnarchiveWorkspaceCommand(Guid WorkspaceId) : IMessage;
 
+public sealed record DeleteWorkspaceCommand(Guid WorkspaceId) : IMessage;
+
+public static class DeleteWorkspaceCommandHandler
+{
+    public static async Task<Result> Handle(
+        DeleteWorkspaceCommand command,
+        IRepository<Workspace, WorkspaceId> workspaces,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
+    {
+        if (currentUser.Id is null)
+        {
+            return Result.Failure(DomainError.Unauthenticated(
+                "auth.required", "Authentication is required."));
+        }
+
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(command.WorkspaceId), cancellationToken);
+        if (workspace is null)
+        {
+            return Result.Failure(NotFound);
+        }
+
+        // Owner-only delete (matches the rest of the write surface).
+        // Soft-delete keeps the row in the table for audit and the
+        // existing ListForUserAsync filter hides it from default
+        // queries — see BETA-R2-A2-009.
+        if (workspace.OwnerId != currentUser.Id.Value)
+        {
+            return Result.Failure(InsufficientPermissions);
+        }
+
+        workspace.Delete(clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
+    }
+}
+
 public static class UnarchiveWorkspaceCommandHandler
 {
     public static async Task<Result<WorkspaceDto>> Handle(
@@ -295,6 +335,61 @@ public static class AddWorkspaceMemberCommandHandler
 
 public sealed record RemoveWorkspaceMemberCommand(Guid WorkspaceId, Guid UserId)
     : IMessage;
+
+public sealed record ChangeWorkspaceMemberRoleCommand(
+    Guid WorkspaceId, Guid UserId, WorkspaceRole NewRole) : IMessage;
+
+public static class ChangeWorkspaceMemberRoleCommandHandler
+{
+    public static async Task<Result<WorkspaceDto>> Handle(
+        ChangeWorkspaceMemberRoleCommand command,
+        IRepository<Workspace, WorkspaceId> workspaces,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
+    {
+        if (currentUser.Id is null)
+        {
+            return Result.Failure<WorkspaceDto>(DomainError.Unauthenticated(
+                "auth.required", "Authentication is required."));
+        }
+
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(command.WorkspaceId), cancellationToken);
+        if (workspace is null || workspace.IsDeleted)
+        {
+            return Result.Failure<WorkspaceDto>(NotFound);
+        }
+
+        // BETA-R2-A2-011 — only the owner can change roles. Admins
+        // cannot promote/demote other admins (least-privilege for
+        // self-hosted). If the need for admin-driven role changes
+        // comes up later, the same LastAdmin invariant in
+        // WorkspaceMember.ChangeRole will keep the workspace from
+        // becoming ungovernable.
+        if (workspace.OwnerId != currentUser.Id.Value)
+        {
+            return Result.Failure<WorkspaceDto>(InsufficientPermissions);
+        }
+
+        var changeResult = workspace.ChangeMemberRole(command.UserId, command.NewRole, clock.UtcNow);
+        if (changeResult.IsFailure)
+        {
+            return Result.Failure<WorkspaceDto>(changeResult.Error);
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success(new WorkspaceDto(
+            workspace.Id.Value,
+            workspace.Name.Value,
+            workspace.OwnerId,
+            workspace.Region,
+            workspace.IsArchived,
+            workspace.CreatedAt,
+            workspace.Members.Count));
+    }
+}
 
 public static class RemoveWorkspaceMemberCommandHandler
 {

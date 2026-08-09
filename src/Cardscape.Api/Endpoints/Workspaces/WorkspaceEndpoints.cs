@@ -73,6 +73,18 @@ public static class WorkspaceEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
+        // BETA-R2-A2-009 — see test-results/beta/round-2/reports/A2-workspaces.md.
+        // The round-1 surface shipped only archive/unarchive; there
+        // was no path to actually delete a workspace. This is the
+        // soft-delete endpoint (the row is hidden from default
+        // queries, kept in the table for audit) and completes the
+        // workspace lifecycle.
+        group.MapDelete("/{workspaceId:guid}", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result>(new DeleteWorkspaceCommand(workspaceId), ct);
+            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+        });
+
         group.MapGet("/{workspaceId:guid}/members", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceMemberDto>>>(new ListWorkspaceMembersQuery(workspaceId), ct);
@@ -82,6 +94,23 @@ public static class WorkspaceEndpoints
         group.MapPost("/{workspaceId:guid}/members", async (Guid workspaceId, AddWorkspaceMemberRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(new AddWorkspaceMemberCommand(workspaceId, body.UserId, body.Role), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+        });
+
+        // BETA-R2-A2-011 — see test-results/beta/round-2/reports/A2-workspaces.md.
+        // The DTO `ChangeWorkspaceMemberRoleRequest` was already
+        // declared but there was no command, no handler and no
+        // endpoint wired up to it. Owner-only, mirrors the
+        // RemoveWorkspaceMemberCommand authz model.
+        group.MapPatch("/{workspaceId:guid}/members/{userId:guid}", async (
+            Guid workspaceId,
+            Guid userId,
+            ChangeWorkspaceMemberRoleRequest body,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
+                new ChangeWorkspaceMemberRoleCommand(workspaceId, userId, body.Role), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 

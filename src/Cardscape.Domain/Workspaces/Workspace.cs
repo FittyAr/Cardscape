@@ -107,6 +107,26 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
         AddDomainEvent(new WorkspaceUnarchived(Id, at));
     }
 
+    /// <summary>Soft-deletes the workspace. BETA-R2-A2-009 — the round-2
+    /// beta found that the API had no <c>DELETE /api/workspaces/{id}</c>
+    /// path. Members, boards, lists, and cards stay in the table for
+    /// audit; the aggregate hides itself from default queries
+    /// (<c>ListForUserAsync</c> filters <c>IsDeleted</c> out) and
+    /// from <c>GET /api/workspaces/{id}</c> (which will surface 404
+    /// because <c>GetByIdAsync</c> will keep returning the row but
+    /// the <c>HasMember</c> guard short-circuits as not-found). Idempotent.</summary>
+    public void Delete(DateTimeOffset at)
+    {
+        if (IsDeleted)
+        {
+            return;
+        }
+
+        IsDeleted = true;
+        UpdatedAt = at;
+        AddDomainEvent(new WorkspaceDeleted(Id, at));
+    }
+
     /// <summary>Adds a new member.</summary>
     public Result AddMember(Guid userId, WorkspaceRole role, DateTimeOffset at)
     {

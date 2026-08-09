@@ -25,6 +25,13 @@ public sealed record WorkspaceUnarchived(
     WorkspaceId WorkspaceId,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
 
+/// <summary>Raised when a workspace is soft-deleted (BETA-R2-A2-009). The
+/// aggregate hides itself from default queries and any subsequent
+/// read returns 404; members and boards are left in place for audit.</summary>
+public sealed record WorkspaceDeleted(
+    WorkspaceId WorkspaceId,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
 /// <summary>Raised when a member is added to a workspace.</summary>
 public sealed record WorkspaceMemberAdded(
     WorkspaceId WorkspaceId,
