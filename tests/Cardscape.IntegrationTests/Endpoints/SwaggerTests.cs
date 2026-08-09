@@ -1,4 +1,4 @@
-// Stub file. The Swashbuckle-based test has been replaced by
+﻿// Stub file. The Swashbuckle-based test has been replaced by
 // Cardscape.IntegrationTests.Endpoints.OpenApiTests (same
 // coverage, new path). This file is kept only to make the
 // rename migration auditable in git history; it contains no

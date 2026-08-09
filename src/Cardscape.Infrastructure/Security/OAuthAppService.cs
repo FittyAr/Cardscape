@@ -40,7 +40,7 @@ public sealed class OAuthAppService(
     /// high-entropy bearer credential.</summary>
     public const int SecretByteLength = 32;
 
-    public async Task<OAuthAppRegistration> RegisterAsync(
+    public async Task<Result<OAuthAppRegistration>> RegisterAsync(
         UserId ownerId,
         string name,
         IReadOnlyCollection<string> allowedScopes,
@@ -73,17 +73,23 @@ public sealed class OAuthAppService(
 
         if (app.IsFailure)
         {
-            throw new InvalidOperationException(
-                $"OAuthApp.Register invariant failed unexpectedly: {app.Error.Code} {app.Error.Message}");
+            // BUG-A1-002: validation errors (e.g. invalid redirect
+            // URI) used to be thrown as InvalidOperationException →
+            // 500. They are expected failures (4xx), so return
+            // the Result and let the endpoint map it to 400.
+            logger.LogWarning(
+                "OAuth app registration rejected: {Code} {Message}",
+                app.Error.Code, app.Error.Message);
+            return Result.Failure<OAuthAppRegistration>(app.Error);
         }
 
         await apps.AddAsync(app.Value, ct);
         await unitOfWork.SaveChangesAsync(ct);
-        return new OAuthAppRegistration(
+        return Result.Success(new OAuthAppRegistration(
             app.Value.Id,
             clientId,
             clientSecret,
-            prefix);
+            prefix));
     }
 
     public async Task<Result> RevokeAppAsync(

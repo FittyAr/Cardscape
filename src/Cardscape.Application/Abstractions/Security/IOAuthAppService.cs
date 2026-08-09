@@ -19,8 +19,11 @@ public interface IOAuthAppService
     /// The cleartext <c>clientSecret</c> is returned to the
     /// caller exactly once (the server only persists its
     /// SHA-256 hash + an 8-char prefix for display).
+    /// Returns a failure Result for validation errors such as
+    /// an invalid redirect URI; the endpoint maps the failure
+    /// to a 400.
     /// </summary>
-    Task<OAuthAppRegistration> RegisterAsync(
+    Task<Result<OAuthAppRegistration>> RegisterAsync(
         UserId ownerId,
         string name,
         IReadOnlyCollection<string> allowedScopes,

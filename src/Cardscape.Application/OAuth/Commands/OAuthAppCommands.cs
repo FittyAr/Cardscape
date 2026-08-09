@@ -51,11 +51,16 @@ public static class RegisterOAuthAppCommandHandler
             command.RedirectUris,
             cancellationToken);
 
+        if (registration.IsFailure)
+        {
+            return Result.Failure<OAuthAppRegistrationDto>(registration.Error);
+        }
+
         return Result.Success(new OAuthAppRegistrationDto(
-            registration.Id.Value,
-            registration.ClientId,
-            registration.ClientSecret,
-            registration.SecretPrefix));
+            registration.Value.Id.Value,
+            registration.Value.ClientId,
+            registration.Value.ClientSecret,
+            registration.Value.SecretPrefix));
     }
 }
 
