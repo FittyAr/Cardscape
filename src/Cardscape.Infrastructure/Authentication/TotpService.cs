@@ -37,6 +37,23 @@ public sealed class TotpService(
             return Result.Failure<TotpEnrollment>(TotpErrors.AlreadyEnrolled);
         }
 
+        // BUG-A8-005 — see test-results/beta/reports/A8-settings.md.
+        // The previous pre-check only branched on `!IsDeleted`,
+        // so a soft-deleted "orphan" row would slip through and
+        // the subsequent insert would hit `UNIQUE constraint
+        // failed: totp_credentials.UserId` → 500. The
+        // `IsDeleted = true` row still owns the unique index,
+        // so a follow-up enroll can never co-exist with it. We
+        // hard-delete the orphan before re-enrolling so the
+        // next insert lands cleanly. The `status` endpoint
+        // already reports `isEnrolled:false` for this state, so
+        // the user-visible behaviour is unchanged.
+        if (existing is not null && existing.IsDeleted)
+        {
+            credentials.Remove(existing);
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+
         // Generate a fresh 20-byte (160-bit) base32 secret.
         byte[] secretBytes = KeyGeneration.GenerateRandomKey(20);
         string base32Secret = Base32Encoding.ToString(secretBytes);
