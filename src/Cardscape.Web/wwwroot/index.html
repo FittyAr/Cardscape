@@ -40,13 +40,13 @@
     <script src="cardscape-helpers.js"></script>
 </head>
 
-<body style="background-color: #1a1d1e; color: #e0e0e0;">
+<body>
     <div id="app">
         <svg class="loading-progress">
             <circle r="40%" cx="50%" cy="50%" />
             <circle r="40%" cx="50%" cy="50%" />
         </svg>
-        <div class="loading-progress-text">Loading Cardscape…</div>
+        <div class="loading-progress-text"></div>
     </div>
 
     <div id="blazor-error-ui">
@@ -56,7 +56,7 @@
     </div>
 
     <script src="_framework/blazor.webassembly.js"></script>
-    @*
+    <!--
         BETA-SW-006 — see test-results/beta/round-2/sw-caching.md.
         The service worker registration is intentionally
         disabled. Two rounds of SW work (network-first,
@@ -74,14 +74,18 @@
         can bring the SW back with a battle-tested wrapper
         (Workbox, VitePWA, etc.) that handles the install
         / activate / revalidate dance correctly.
-    *@
-    <!--
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js')
-            .catch((err) => console.warn('Service worker registration failed:', err));
-    }
+
+        Previously this block was a Razor @*…*@ comment
+        (carried over from the .razor comment style in
+        App.razor and MainLayout.razor). In a static
+        .html file the Razor parser is NOT invoked, so
+        @* and *@ are literal text and the browser was
+        rendering the whole rationale as a paragraph at
+        the top of the <body>. The comment is now a real
+        HTML comment so the page ships clean markup.
     -->
     <script>
+        // BETA-SW-006 — see test-results/beta/round-2/sw-caching.md.
         // Unregister any pre-existing service worker left over
         // from an earlier deploy. Without this, the user keeps
         // seeing the old behaviour (cached assets, old
