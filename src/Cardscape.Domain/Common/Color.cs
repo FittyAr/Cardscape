@@ -51,5 +51,34 @@ public sealed record Color : IValueObject
         public static readonly Color Lime = Create("#51e898").Value;
         public static readonly Color Pink = Create("#ff78cb").Value;
         public static readonly Color Gray = Create("#b3bac5").Value;
+
+        // BETA-A4-009 — see
+        // test-results/beta/round-2/reports/A4-cards-lists.md.
+        // The cover API accepts a colour name
+        // ("yellow", "blue", …) and looks it up here; an
+        // unknown name surfaces as 400 instead of being
+        // silently dropped on the floor. Case-insensitive
+        // — the palette names are the same Trello uses.
+        private static readonly System.Collections.Generic.Dictionary<string, Color> ByNameLookup =
+            new(System.StringComparer.OrdinalIgnoreCase)
+            {
+                ["yellow"] = Yellow,
+                ["purple"] = Purple,
+                ["blue"] = Blue,
+                ["red"] = Red,
+                ["green"] = Green,
+                ["orange"] = Orange,
+                ["black"] = Black,
+                ["sky"] = Sky,
+                ["lime"] = Lime,
+                ["pink"] = Pink,
+                ["gray"] = Gray,
+                ["grey"] = Gray,
+            };
+
+        public static Color? ByName(string? name) =>
+            !string.IsNullOrWhiteSpace(name) && ByNameLookup.TryGetValue(name, out Color? c)
+                ? c
+                : null;
     }
 }

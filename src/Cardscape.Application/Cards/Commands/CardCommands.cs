@@ -17,6 +17,7 @@ using Cardscape.Domain.Members;
 using Cardscape.Domain.Notifications;
 using Wolverine;
 using static Cardscape.Domain.Cards.Errors.CardErrors;
+using Color = Cardscape.Domain.Common.Color;
 
 namespace Cardscape.Application.Cards.Commands;
 
@@ -435,6 +436,75 @@ public static class ClearCardDueDateCommandHandler
         }
 
         var result = card.ClearDueDate(clock.UtcNow);
+        if (result.IsFailure)
+        {
+            return Result.Failure<CardDto>(result.Error);
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Success(card.MapToDto());
+    }
+}
+
+// BETA-A4-009 — see test-results/beta/round-2/reports/A4-cards-lists.md.
+// The Card aggregate has supported SetCoverColor(Color?) since the
+// initial release, but the API surface never exposed the
+// corresponding command / endpoint. The card detail UI and the
+// drag-handle "Cover" picker both relied on a /cover route that
+// 404'd. Add the two endpoints now so the existing domain method
+// is reachable.
+public sealed record SetCardCoverCommand(Guid CardId, string? ColorName) : IMessage;
+
+public static class SetCardCoverCommandHandler
+{
+    public static async Task<Result<CardDto>> Handle(
+        SetCardCoverCommand command,
+        ICardRepository cards,
+        IBoardListRepository lists,
+        IBoardRepository boards,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
+    {
+        if (currentUser.Id is null)
+        {
+            return Result.Failure<CardDto>(DomainError.Unauthenticated(
+                "auth.required", "Authentication is required."));
+        }
+
+        var card = await cards.GetByIdAsync(new CardId(command.CardId), cancellationToken);
+        if (card is null)
+        {
+            return Result.Failure<CardDto>(NotFound);
+        }
+
+        var guard = await MembershipGuards.EnsureCanMutateCardAsync(
+            card, lists, boards, currentUser.Id.Value, cancellationToken);
+        if (guard.IsFailure)
+        {
+            return Result.Failure<CardDto>(guard.Error);
+        }
+
+        // null / empty / "none" all clear the cover (one
+        // operation covers set + clear). Otherwise look up the
+        // Color by name in the palette and set it; an unknown
+        // name is a 400 instead of a silent miss.
+        Color? cover = null;
+        if (!string.IsNullOrWhiteSpace(command.ColorName)
+            && !string.Equals(command.ColorName, "none", StringComparison.OrdinalIgnoreCase))
+        {
+            var parsed = Cardscape.Domain.Common.Color.Palette.ByName(command.ColorName);
+            if (parsed is null)
+            {
+                return Result.Failure<CardDto>(DomainError.Validation(
+                    "cards.cover_invalid",
+                    $"Cover color '{command.ColorName}' is not a known palette colour."));
+            }
+            cover = parsed;
+        }
+
+        var result = card.SetCoverColor(cover, clock.UtcNow);
         if (result.IsFailure)
         {
             return Result.Failure<CardDto>(result.Error);

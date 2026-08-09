@@ -120,6 +120,28 @@ public static class CardEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
+        // BETA-A4-009 — see
+        // test-results/beta/round-2/reports/A4-cards-lists.md.
+        // The Card aggregate supported SetCoverColor from
+        // day 1; the API surface never exposed it. POST
+        // sets the cover (body = palette name, "none", or
+        // omitted = clear). DELETE clears the cover. Both
+        // endpoints require the same membership as a card
+        // mutation (delegated to the command handler).
+        group.MapPost("/{cardId:guid}/cover", async (Guid cardId, CoverBody body, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<CardDto>>(
+                new SetCardCoverCommand(cardId, body.Color), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+        });
+
+        group.MapDelete("/{cardId:guid}/cover", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<CardDto>>(
+                new SetCardCoverCommand(cardId, null), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+        });
+
         group.MapPost("/{cardId:guid}/complete", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new CompleteCardCommand(cardId), ct);
@@ -225,6 +247,7 @@ public static class CardEndpoints
     public sealed record DueDateBody(DateTimeOffset DueDate);
     public sealed record MirrorBody(Guid TargetListId);
     public sealed record SnoozeBody(DateTimeOffset Until);
+    public sealed record CoverBody(string? Color);
 
     private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
     {
