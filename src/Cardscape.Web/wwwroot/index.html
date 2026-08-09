@@ -40,13 +40,13 @@
     <script src="cardscape-helpers.js"></script>
 </head>
 
-<body>
+<body style="background-color: #1a1d1e; color: #e0e0e0;">
     <div id="app">
         <svg class="loading-progress">
             <circle r="40%" cx="50%" cy="50%" />
             <circle r="40%" cx="50%" cy="50%" />
         </svg>
-        <div class="loading-progress-text"></div>
+        <div class="loading-progress-text">Loading Cardscape…</div>
     </div>
 
     <div id="blazor-error-ui">
@@ -56,16 +56,40 @@
     </div>
 
     <script src="_framework/blazor.webassembly.js"></script>
+    @*
+        BETA-SW-006 — see test-results/beta/round-2/sw-caching.md.
+        The service worker registration is intentionally
+        disabled. Two rounds of SW work (network-first,
+        stale-while-revalidate) were tried and both produced
+        a visible mismatch between the first load and a
+        hard reload: the SW either served stale assets
+        (round 1 cache-first) or added a network round-trip
+        that left the loading spinner on a white background
+        for too long (round 2 variants). The cleanest fix
+        for the kanban use case — teams that want to log
+        in and get to their boards quickly — is to skip the
+        SW entirely. The browser's HTTP cache already gives
+        us most of the perf wins (assets are content-hashed
+        in the Blazor boot.json), and a future PWA round
+        can bring the SW back with a battle-tested wrapper
+        (Workbox, VitePWA, etc.) that handles the install
+        / activate / revalidate dance correctly.
+    *@
+    <!--
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js')
+            .catch((err) => console.warn('Service worker registration failed:', err));
+    }
+    -->
     <script>
-        // Register the PWA service worker. Done as the last
-        // script so the Blazor boot is not blocked by the
-        // registration handshake.
+        // Unregister any pre-existing service worker left over
+        // from an earlier deploy. Without this, the user keeps
+        // seeing the old behaviour (cached assets, old
+        // loading flow) until they manually clear site data.
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker
-                    .register('service-worker.js')
-                    .catch((err) => console.warn('Service worker registration failed:', err));
-            });
+            navigator.serviceWorker.getRegistrations()
+                .then((regs) => regs.forEach((r) => r.unregister()))
+                .catch(() => { /* best effort */ });
         }
     </script>
 </body>
