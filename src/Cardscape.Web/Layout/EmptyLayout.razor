@@ -72,6 +72,19 @@
     // current dictionary.
     private string? _bodyKey;
 
+    protected override void OnInitialized()
+    {
+        // BETA-SW-004 — see test-results/beta/round-2/sw-caching.md.
+        // The first render needs _bodyKey non-null so the
+        // @Body wrapper mounts immediately. The default
+        // culture is "en" (CultureSwitcher.DefaultCulture),
+        // so we seed with a "default" key; InitializeAsync
+        // may replace it with the saved culture once JS
+        // interop is available.
+        _bodyKey = $"body-default-{Guid.NewGuid():N}";
+        Culture.Changed += OnCultureChanged;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -83,7 +96,6 @@
             // BETA-8-I18N-#4 in test-results/r8/A8-settings.md.
             await Culture.InitializeAsync();
             _bodyKey = $"body-{Culture.CurrentCulture}-{Guid.NewGuid():N}";
-            Culture.Changed += OnCultureChanged;
         }
     }
 

@@ -148,6 +148,18 @@
     // current dictionary.
     private string? _bodyKey;
 
+    protected override void OnInitialized()
+    {
+        // BETA-SW-004 — see test-results/beta/round-2/sw-caching.md.
+        // Seed _bodyKey in OnInitialized so the @Body
+        // wrapper mounts on the first render. The
+        // InitializeAsync step in OnAfterRenderAsync may
+        // replace it with the saved culture once JS
+        // interop is available.
+        _bodyKey = $"body-default-{Guid.NewGuid():N}";
+        Culture.Changed += OnCultureChanged;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -159,11 +171,6 @@
             await Culture.InitializeAsync();
             _bodyKey = $"body-{Culture.CurrentCulture}-{Guid.NewGuid():N}";
         }
-    }
-
-    protected override void OnInitialized()
-    {
-        Culture.Changed += OnCultureChanged;
     }
 
     private void OnCultureChanged()

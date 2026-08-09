@@ -11,10 +11,6 @@
 
 self.importScripts('./service-worker-assets.js');
 
-self.addEventListener('install', event => event.waitUntil(onInstall(event)));
-self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
-self.addEventListener('fetch', event => event.waitUntil(onFetch(event)));
-
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
 const offlineAssetsInclude = [
@@ -23,6 +19,60 @@ const offlineAssetsInclude = [
     /\.blat$/, /\.dat$/
 ];
 const offlineAssetsExclude = [/^service-worker\.js$/];
+
+// BETA-SW-003 — see test-results/beta/round-2/sw-caching.md.
+//
+// Strategy by request type:
+//
+//   - Navigation (HTML /index.html):
+//     Network-first. Always try the network; on success,
+//     cache the response and return it. On failure (offline,
+//     API host unreachable), fall back to the cached
+//     index.html so the SPA can still boot. This is the
+//     fix for the "first load shows the wrong theme
+//     until I press Ctrl+Shift+R" regression: the old SW
+//     served the cached index.html (with the previous
+//     build's behavior) until the user hard-reloaded.
+//     Network-first guarantees the user always sees the
+//     latest build without a manual cache bust.
+//
+//   - Static assets (CSS / JS / WASM / fonts / images):
+//     Cache-first, fall back to the network. Their URLs
+//     carry the build's content hash (e.g.
+//     `_framework/dotnet.runtime.AB12CD34.js`), so a new
+//     build changes the URL and the cache misses
+//     automatically — no stale-asset problem here. Cache-
+//     first is the right choice for the hot path: the
+//     browser doesn't pay a network round trip on every
+//     navigation.
+//
+//   - Cross-origin (the API on the same host but a
+//     different path is not cross-origin; this is for
+//     third-party requests like Radzen CDN fonts):
+//     Pass through to the network. The Radzen static
+//     web assets are listed in the assets manifest and
+//     served from the cache for our own host; cross-
+//     origin requests always go to the network.
+
+self.addEventListener('install', event => {
+    // BETA-SW-003 — see test-results/beta/round-2/sw-caching.md.
+    // The previous SW did not call skipWaiting(). The new SW
+    // installed in the background but did not activate until
+    // every open tab closed, so the user kept seeing the
+    // old behaviour (cached assets, old theme logic) until
+    // a hard reload. skipWaiting() forces activation
+    // immediately; clients.claim() (in onActivate) takes
+    // over the open tabs.
+    self.skipWaiting();
+
+    event.waitUntil(onInstall(event));
+});
+
+self.addEventListener('activate', event => {
+    event.waitUntil(onActivate(event));
+});
+
+self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
 
 async function onInstall(event) {
     console.info('Service worker: Install');
@@ -35,6 +85,15 @@ async function onInstall(event) {
 
 async function onActivate(event) {
     console.info('Service worker: Activate');
+
+    // Take over the open tabs so the new SW's fetch
+    // handler takes effect on the very next request —
+    // without this, the old SW would still answer until
+    // the user navigated hard.
+    if (self.clients && typeof self.clients.claim === 'function') {
+        await self.clients.claim();
+    }
+
     const cacheKeys = await caches.keys();
     await Promise.all(
         cacheKeys
@@ -44,66 +103,75 @@ async function onActivate(event) {
 }
 
 async function onFetch(event) {
-    // BETA-SW-001 — see test-results/beta/round-2/console-errors.md.
-    // The previous handler did `return cachedResponse || fetch(event.request)`
-    // inside the respondWith callback. When the network call failed
-    // (offline, the API host unreachable, or the request was a
-    // navigation to a path the server couldn't answer because the
-    // service worker is serving the SPA shell) the rejection
-    // bubbled up as `Uncaught (in promise) TypeError: Failed to
-    // fetch` and printed
-    // `The FetchEvent for "http://localhost:8080/" resulted in a
-    // network error response: the promise was rejected.` on every
-    // navigation. The fix is to:
-    //
-    //   1. Try cache.
-    //   2. Try network.
-    //   3. On network failure for a navigation request, fall back to
-    //      the cached index.html (so the Blazor router can still
-    //      handle the URL).
-    //   4. On any other failure, return a synthetic 408 so the
-    //      browser does not see an unhandled promise rejection.
-    //
-    // We also switched the respondWith to waitUntil so a
-    // navigation that started before the SW activated still
-    // gets answered (and so the SW lifecycle events stay
-    // ordered relative to the fetch).
     if (event.request.method !== 'GET') {
-        return;
+        return fetch(event.request);
     }
 
-    const shouldServeIndexHtml = event.request.mode === 'navigate';
-    const cacheKey = shouldServeIndexHtml ? 'index.html' : event.request;
-    const cache = await caches.open(cacheName);
-    const cachedResponse = await cache.match(cacheKey);
+    // Cross-origin requests bypass the cache. We only cache
+    // assets from our own host.
+    const url = new URL(event.request.url);
+    if (url.origin !== self.location.origin) {
+        return fetch(event.request);
+    }
 
+    const isNavigation = event.request.mode === 'navigate';
+    const cache = await caches.open(cacheName);
+
+    if (isNavigation) {
+        // Network-first. On success, refresh the cached
+        // index.html with the freshly-served one so
+        // subsequent offline navigations use the latest
+        // build. On failure, serve the cached index.html
+        // (which the SW just installed in onInstall) so
+        // the SPA can still boot offline.
+        try {
+            const networkResponse = await fetch(event.request);
+            // Only cache successful, basic responses. Don't
+            // cache 404s, 500s, redirects, etc.
+            if (networkResponse && networkResponse.ok) {
+                const responseToCache = networkResponse.clone();
+                // The URL is the navigation target (e.g. /login);
+                // we cache the *content* as index.html so the
+                // next offline navigation reuses it.
+                event.waitUntil(cache.put('index.html', responseToCache));
+            }
+            return networkResponse;
+        } catch (err) {
+            console.warn('Service worker: navigation network failed, falling back to cache for', event.request.url, err);
+            const cachedIndex = await cache.match('index.html');
+            if (cachedIndex) {
+                return cachedIndex;
+            }
+            return new Response('Offline and no cached shell available.', {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: { 'Content-Type': 'text/plain' }
+            });
+        }
+    }
+
+    // Static asset: cache-first, fall back to network.
+    // The asset URL carries the build's content hash, so a
+    // new build's assets have new URLs and the cache
+    // misses automatically.
+    const cachedResponse = await cache.match(event.request);
     if (cachedResponse) {
-        event.respondWith(cachedResponse);
-        return;
+        return cachedResponse;
     }
 
     try {
         const networkResponse = await fetch(event.request);
-        event.respondWith(networkResponse);
-    } catch (err) {
-        // Network failed. For navigations, fall back to the cached
-        // index.html so the SPA can take over. For other requests,
-        // return a synthetic 408 Request Timeout so the page can
-        // handle the failure gracefully (instead of seeing an
-        // unhandled promise rejection).
-        if (shouldServeIndexHtml) {
-            const indexFallback = await cache.match('index.html');
-            if (indexFallback) {
-                event.respondWith(indexFallback);
-                return;
-            }
+        if (networkResponse && networkResponse.ok) {
+            const responseToCache = networkResponse.clone();
+            event.waitUntil(cache.put(event.request, responseToCache));
         }
-
-        console.warn('Service worker: fetch failed for', event.request.url, err);
-        event.respondWith(new Response('Network error', {
+        return networkResponse;
+    } catch (err) {
+        console.warn('Service worker: asset fetch failed for', event.request.url, err);
+        return new Response('Network error', {
             status: 408,
             statusText: 'Request Timeout',
             headers: { 'Content-Type': 'text/plain' }
-        }));
+        });
     }
 }
