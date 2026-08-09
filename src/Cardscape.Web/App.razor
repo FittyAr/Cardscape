@@ -78,17 +78,38 @@
     // it only ever reflects a CURRENT-page error.
     [Inject] private IJSRuntime Js { get; set; } = default!;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         Nav.LocationChanged += OnLocationChanged;
         UserPreferences.Changed += OnUserPreferencesChanged;
 
-        // Hydrate the theme from the server (if logged in)
-        // or the cookie (if anonymous). The service is
-        // best-effort: any failure falls through to the
-        // Radzen default ("default" + light), which is
-        // the same as today's behaviour when no cookie
-        // is set.
+        // BETA-SW-008 — see test-results/beta/round-2/sw-caching.md.
+        // The original code awaited UserPreferences.InitializeAsync()
+        // here, which fires an HTTP call to /api/users/me/preferences.
+        // Blazor awaits OnInitializedAsync before the first render,
+        // so the page sat on a white loading screen for 10-20s
+        // in dev mode while the .NET runtime JIT'd the C# code
+        // and the round-trip to the API returned 401. Hot reload
+        // 'fixed' the symptom because the re-render fired AFTER
+        // the WASM was warm and the await had long since
+        // completed — it skipped the slow path entirely.
+        //
+        // Move the hydration off the render path. The RadzenTheme
+        // tag above binds to UserPreferences.CurrentThemeName /
+        // CurrentCssPath, both of which default to 'default' +
+        // light (Radzen's default). The first render uses those
+        // defaults; once InitializeAsync completes the
+        // Changed event fires StateHasChanged, the theme flips
+        // to the user's saved choice if any. An anonymous user
+        // (no saved preference) gets 'default' either way, so
+        // there is no visible flash. A logged-in user with a
+        // dark theme saved may see a one-frame light→dark flip
+        // — vastly preferable to a 10-20s blank page.
+        _ = HydratePreferencesInBackgroundAsync();
+    }
+
+    private async Task HydratePreferencesInBackgroundAsync()
+    {
         try
         {
             await UserPreferences.InitializeAsync();
@@ -98,8 +119,10 @@
             // Defensive: InitializeAsync already swallows
             // network failures, but a synchronous throw
             // (e.g. from ThemeService.SetTheme) should not
-            // crash the app on startup. Log and continue.
-            await Task.Yield();
+            // crash the app. The catch lives off the render
+            // path now, so a throw here just leaves the
+            // Radzen default in place — same outcome as the
+            // original OnInitializedAsync catch block.
             Console.Error.WriteLine($"[App] UserPreferences.InitializeAsync threw: {ex.Message}");
         }
     }
