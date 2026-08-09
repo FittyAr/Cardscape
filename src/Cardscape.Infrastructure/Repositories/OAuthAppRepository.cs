@@ -3,6 +3,8 @@ using Cardscape.Domain.Integrations.OAuthApps;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
+
+
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class OAuthAppRepository(CardscapeDbContext db)

@@ -3,6 +3,8 @@ using Cardscape.Domain.Notifications;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
+
+
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class NotificationRepository(CardscapeDbContext db) : RepositoryBase<Notification, NotificationId>(db), INotificationRepository

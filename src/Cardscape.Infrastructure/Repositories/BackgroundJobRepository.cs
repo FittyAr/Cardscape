@@ -3,6 +3,8 @@ using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
+
+
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class BackgroundJobRepository(CardscapeDbContext db)

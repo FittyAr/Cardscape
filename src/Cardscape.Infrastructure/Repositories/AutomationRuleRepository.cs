@@ -3,6 +3,8 @@ using Cardscape.Domain.Boards;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
+
+
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class AutomationRuleRepository(CardscapeDbContext db)

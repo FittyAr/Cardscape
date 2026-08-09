@@ -3,6 +3,8 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Integrations.Slack;
 using Cardscape.Infrastructure.Persistence;
 
+
+
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class SlackChannelRepository(CardscapeDbContext db)

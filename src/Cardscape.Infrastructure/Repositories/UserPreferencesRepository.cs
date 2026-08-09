@@ -4,6 +4,8 @@ using Cardscape.Domain.UserPreferences;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
+
+
 namespace Cardscape.Infrastructure.Repositories;
 
 /// <summary>EF Core implementation of <see cref="IUserPreferencesRepository"/>.

@@ -3,6 +3,8 @@ using Cardscape.Domain.Authentication.Saml;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
+
+
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class SamlConnectionRepository(CardscapeDbContext db) : ISamlConnectionRepository

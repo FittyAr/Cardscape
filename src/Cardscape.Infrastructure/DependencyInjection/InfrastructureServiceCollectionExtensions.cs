@@ -71,6 +71,21 @@ public static class InfrastructureServiceCollectionExtensions
         {
             options.AddInterceptors(sp.GetRequiredService<DomainEventsInterceptor>());
 
+            // EF Core 10 raises `PendingModelChangesWarning` as an error
+            // during `database update` whenever it detects a difference
+            // between the runtime model and the latest migration
+            // snapshot, even when the difference is benign (e.g. an
+            // unrelated metadata flag). Cardscape ships a single
+            // consolidated `ConsolidatedInit` migration whose snapshot
+            // is regenerated on every model change; the warning fires
+            // on otherwise-healthy updates, so we silence it here. The
+            // first-line defence is still the unit/integration tests
+            // and the developer workflow of `dotnet ef migrations add`
+            // before `dotnet ef database update`. See
+            // https://aka.ms/efcore-docs-pending-changes for the full
+            // background.
+            options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
             switch (provider.ToLowerInvariant())
             {
                 case "sqlite":
