@@ -94,6 +94,19 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
         AddDomainEvent(new WorkspaceArchived(Id, at));
     }
 
+    /// <summary>Restores an archived workspace. BETA-A2-001 — see test-results/beta/00-FINAL-SUMMARY.md.</summary>
+    public void Unarchive(DateTimeOffset at)
+    {
+        if (!IsArchived)
+        {
+            return;
+        }
+
+        IsArchived = false;
+        UpdatedAt = at;
+        AddDomainEvent(new WorkspaceUnarchived(Id, at));
+    }
+
     /// <summary>Adds a new member.</summary>
     public Result AddMember(Guid userId, WorkspaceRole role, DateTimeOffset at)
     {

@@ -64,6 +64,15 @@ public static class WorkspaceEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
+        // BETA-A2-001 — see test-results/beta/00-FINAL-SUMMARY.md.
+        // Restores a previously archived workspace. Pairs with the
+        // /archive endpoint. Owner-only, same authz model.
+        group.MapPost("/{workspaceId:guid}/unarchive", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<WorkspaceDto>>(new UnarchiveWorkspaceCommand(workspaceId), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+        });
+
         group.MapGet("/{workspaceId:guid}/members", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceMemberDto>>>(new ListWorkspaceMembersQuery(workspaceId), ct);

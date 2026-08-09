@@ -20,6 +20,11 @@ public sealed record WorkspaceArchived(
     WorkspaceId WorkspaceId,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
 
+/// <summary>Raised when a workspace is unarchived (BETA-A2-001).</summary>
+public sealed record WorkspaceUnarchived(
+    WorkspaceId WorkspaceId,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
 /// <summary>Raised when a member is added to a workspace.</summary>
 public sealed record WorkspaceMemberAdded(
     WorkspaceId WorkspaceId,

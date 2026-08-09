@@ -180,6 +180,49 @@ public static class ArchiveWorkspaceCommandHandler
     }
 }
 
+public sealed record UnarchiveWorkspaceCommand(Guid WorkspaceId) : IMessage;
+
+public static class UnarchiveWorkspaceCommandHandler
+{
+    public static async Task<Result<WorkspaceDto>> Handle(
+        UnarchiveWorkspaceCommand command,
+        IRepository<Workspace, WorkspaceId> workspaces,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
+    {
+        if (currentUser.Id is null)
+        {
+            return Result.Failure<WorkspaceDto>(DomainError.Unauthenticated(
+                "auth.required", "Authentication is required."));
+        }
+
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(command.WorkspaceId), cancellationToken);
+        if (workspace is null)
+        {
+            return Result.Failure<WorkspaceDto>(NotFound);
+        }
+
+        if (workspace.OwnerId != currentUser.Id.Value)
+        {
+            return Result.Failure<WorkspaceDto>(InsufficientPermissions);
+        }
+
+        workspace.Unarchive(clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success(new WorkspaceDto(
+            workspace.Id.Value,
+            workspace.Name.Value,
+            workspace.OwnerId,
+            workspace.Region,
+            workspace.IsArchived,
+            workspace.CreatedAt,
+            workspace.Members.Count));
+    }
+}
+
 public sealed record AddWorkspaceMemberCommand(Guid WorkspaceId, Guid UserId, WorkspaceRole Role)
     : IMessage;
 

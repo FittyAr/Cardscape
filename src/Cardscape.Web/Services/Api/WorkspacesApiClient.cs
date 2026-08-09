@@ -9,6 +9,8 @@ public interface IWorkspacesApiClient
     Task<ApiResult<WorkspaceDto>> GetAsync(Guid workspaceId, CancellationToken ct = default);
     Task<ApiResult<WorkspaceDto>> CreateAsync(string name, Region? region = null, CancellationToken ct = default);
     Task<ApiResult<WorkspaceDto>> SetRegionAsync(Guid workspaceId, Region region, CancellationToken ct = default);
+    Task<ApiResult<WorkspaceDto>> ArchiveAsync(Guid workspaceId, CancellationToken ct = default);
+    Task<ApiResult<WorkspaceDto>> UnarchiveAsync(Guid workspaceId, CancellationToken ct = default);
     Task<ApiResult<IReadOnlyList<WorkspaceMemberDto>>> ListMembersAsync(Guid workspaceId, CancellationToken ct = default);
 }
 
@@ -42,6 +44,24 @@ public sealed class WorkspacesApiClient(IHttpClientFactory http) : ApiClientBase
             $"api/workspaces/{workspaceId}/region",
             new SetWorkspaceRegionRequestDto(region),
             JsonOptions,
+            ct);
+        return await ReadAsync<WorkspaceDto>(response, ct);
+    }
+
+    public async Task<ApiResult<WorkspaceDto>> ArchiveAsync(Guid workspaceId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsync(
+            $"api/workspaces/{workspaceId}/archive",
+            content: null,
+            ct);
+        return await ReadAsync<WorkspaceDto>(response, ct);
+    }
+
+    public async Task<ApiResult<WorkspaceDto>> UnarchiveAsync(Guid workspaceId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsync(
+            $"api/workspaces/{workspaceId}/unarchive",
+            content: null,
             ct);
         return await ReadAsync<WorkspaceDto>(response, ct);
     }
