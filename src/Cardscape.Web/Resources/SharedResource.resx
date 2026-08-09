@@ -87,6 +87,24 @@
   <data name="AuthDisplayName" xml:space="preserve"><value>Display name</value></data>
   <data name="AuthDisplayNamePlaceholder" xml:space="preserve"><value>How should we call you?</value></data>
   <data name="AuthPasswordHint" xml:space="preserve"><value>At least 8 characters.</value></data>
+  <data name="AuthConfirmPassword" xml:space="preserve"><value>Confirm password</value></data>
+  <data name="AuthPasswordsDoNotMatch" xml:space="preserve"><value>Passwords do not match.</value></data>
+  <data name="AuthForgotPassword" xml:space="preserve"><value>Forgot password?</value></data>
+  <data name="AuthForgotPasswordBlurb" xml:space="preserve"><value>Enter your account email and we will send a reset link.</value></data>
+  <data name="AuthForgotPasswordSubmit" xml:space="preserve"><value>Send reset link</value></data>
+  <data name="AuthSending" xml:space="preserve"><value>Sending...</value></data>
+  <data name="AuthForgotPasswordSuccess" xml:space="preserve"><value>If an account exists for that email, a reset link has been sent. Check your inbox.</value></data>
+  <data name="AuthForgotPasswordDevTokenLabel" xml:space="preserve"><value>Dev-only token (production would email this):</value></data>
+  <data name="AuthGoToReset" xml:space="preserve"><value>Continue to reset form</value></data>
+  <data name="AuthResetPassword" xml:space="preserve"><value>Reset password</value></data>
+  <data name="AuthResetPasswordBlurb" xml:space="preserve"><value>Paste the token from your email and choose a new password.</value></data>
+  <data name="AuthResetToken" xml:space="preserve"><value>Reset token</value></data>
+  <data name="AuthNewPassword" xml:space="preserve"><value>New password</value></data>
+  <data name="AuthResetPasswordSubmit" xml:space="preserve"><value>Set new password</value></data>
+  <data name="AuthResetting" xml:space="preserve"><value>Resetting...</value></data>
+  <data name="AuthResetPasswordSuccess" xml:space="preserve"><value>Your password has been reset. You can now sign in with the new password.</value></data>
+  <data name="AuthRemembered" xml:space="preserve"><value>Remembered it?</value></data>
+  <data name="AuthEmailRequired" xml:space="preserve"><value>Email is required.</value></data>
   <data name="AuthSignInWithGoogle" xml:space="preserve"><value>Sign in with Google</value></data>
   <data name="AuthSignInWithMicrosoft" xml:space="preserve"><value>Sign in with Microsoft</value></data>
   <data name="AuthSignInWithApple" xml:space="preserve"><value>Sign in with Apple</value></data>

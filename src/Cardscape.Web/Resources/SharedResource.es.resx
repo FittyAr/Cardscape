@@ -87,6 +87,24 @@
   <data name="AuthDisplayName" xml:space="preserve"><value>Nombre</value></data>
   <data name="AuthDisplayNamePlaceholder" xml:space="preserve"><value>¿Cómo te llamamos?</value></data>
   <data name="AuthPasswordHint" xml:space="preserve"><value>Al menos 8 caracteres.</value></data>
+  <data name="AuthConfirmPassword" xml:space="preserve"><value>Confirmar contraseña</value></data>
+  <data name="AuthPasswordsDoNotMatch" xml:space="preserve"><value>Las contraseñas no coinciden.</value></data>
+  <data name="AuthForgotPassword" xml:space="preserve"><value>¿Olvidaste tu contraseña?</value></data>
+  <data name="AuthForgotPasswordBlurb" xml:space="preserve"><value>Ingresá el email de tu cuenta y te enviaremos un enlace para restablecerla.</value></data>
+  <data name="AuthForgotPasswordSubmit" xml:space="preserve"><value>Enviar enlace</value></data>
+  <data name="AuthSending" xml:space="preserve"><value>Enviando...</value></data>
+  <data name="AuthForgotPasswordSuccess" xml:space="preserve"><value>Si existe una cuenta con ese email, enviamos un enlace de recuperación. Revisá tu bandeja.</value></data>
+  <data name="AuthForgotPasswordDevTokenLabel" xml:space="preserve"><value>Token solo para desarrollo (en producción se enviaría por email):</value></data>
+  <data name="AuthGoToReset" xml:space="preserve"><value>Continuar al formulario de reset</value></data>
+  <data name="AuthResetPassword" xml:space="preserve"><value>Restablecer contraseña</value></data>
+  <data name="AuthResetPasswordBlurb" xml:space="preserve"><value>Pegá el token del email y elegí una nueva contraseña.</value></data>
+  <data name="AuthResetToken" xml:space="preserve"><value>Token de reset</value></data>
+  <data name="AuthNewPassword" xml:space="preserve"><value>Nueva contraseña</value></data>
+  <data name="AuthResetPasswordSubmit" xml:space="preserve"><value>Guardar nueva contraseña</value></data>
+  <data name="AuthResetting" xml:space="preserve"><value>Restableciendo...</value></data>
+  <data name="AuthResetPasswordSuccess" xml:space="preserve"><value>Tu contraseña fue restablecida. Ya podés iniciar sesión con la nueva.</value></data>
+  <data name="AuthRemembered" xml:space="preserve"><value>¿La recordaste?</value></data>
+  <data name="AuthEmailRequired" xml:space="preserve"><value>El email es obligatorio.</value></data>
   <data name="AuthSignInWithGoogle" xml:space="preserve"><value>Iniciar sesión con Google</value></data>
   <data name="AuthSignInWithMicrosoft" xml:space="preserve"><value>Iniciar sesión con Microsoft</value></data>
   <data name="AuthSignInWithApple" xml:space="preserve"><value>Iniciar sesión con Apple</value></data>
@@ -320,7 +338,7 @@
   <data name="AppearanceModeLight" xml:space="preserve"><value>Claro</value></data>
   <data name="AppearanceModeDark" xml:space="preserve"><value>Oscuro</value></data>
   <data name="SettingsAppearanceTitle" xml:space="preserve"><value>Apariencia</value></data>
-  <data name="SettingsAppearanceLead" xml:space="preserve"><value>Eleg� un tema y un modo Claro/Oscuro/Sistema. La elecci�n se guarda en el servidor cuando inici�s sesi�n, as� que te sigue entre dispositivos.</value></data>
+  <data name="SettingsAppearanceLead" xml:space="preserve"><value>Elegí un tema y un modo Claro/Oscuro/Sistema. La elección se guarda en el servidor cuando iniciás sesión, así que te sigue entre dispositivos.</value></data>
   <data name="SettingsAppearanceApply" xml:space="preserve"><value>Aplicar</value></data>
   <data name="SettingsAppearanceCurrent" xml:space="preserve"><value>Actual</value></data>
   <data name="SettingsAppearanceLivePreview" xml:space="preserve"><value>Vista previa</value></data>
@@ -362,42 +380,42 @@
   <data name="SettingsTwoFactorLoadError" xml:space="preserve"><value>No se pudo cargar el estado de 2FA: {0}</value></data>
   <data name="SettingsTwoFactorEnrolError" xml:space="preserve"><value>Falló la activación: {0}</value></data>
   <data name="SettingsTwoFactorDisableError" xml:space="preserve"><value>No se pudo desactivar 2FA: {0}</value></data>
-  <data name="ImportBlurb" xml:space="preserve"><value>Sub� un export JSON de Trello para crear un tablero nuevo con listas y tarjetas.</value></data>
+  <data name="ImportBlurb" xml:space="preserve"><value>Subí un export JSON de Trello para crear un tablero nuevo con listas y tarjetas.</value></data>
   <data name="ImportTrelloFile" xml:space="preserve"><value>Archivo JSON de Trello</value></data>
   <data name="ImportTitle" xml:space="preserve"><value>Importar un tablero de Trello</value></data>
-<data name="NavToggleSidebar" xml:space="preserve"><value>Mostrar/ocultar panel de navegaci�n</value></data>  <data name="CardNotFoundTitle" xml:space="preserve"><value>No se encontr� esta tarjeta</value></data>
-  <data name="CardNotFoundBody" xml:space="preserve"><value>Puede haber sido eliminada, archivada o no ten�s acceso. El id de la tarjeta se conserva en la URL � volv� a la lista de espacios de trabajo y eleg� otra tarjeta de un tablero donde seas miembro.</value></data>
+<data name="NavToggleSidebar" xml:space="preserve"><value>Mostrar/ocultar panel de navegación</value></data>  <data name="CardNotFoundTitle" xml:space="preserve"><value>No se encontró esta tarjeta</value></data>
+  <data name="CardNotFoundBody" xml:space="preserve"><value>Puede haber sido eliminada, archivada o no tenés acceso. El id de la tarjeta se conserva en la URL — volvé a la lista de espacios de trabajo y elegí otra tarjeta de un tablero donde seas miembro.</value></data>
   <data name="CardNotFoundBack" xml:space="preserve"><value>Volver a los espacios de trabajo</value></data>
-  <data name="CardEditTitle" xml:space="preserve"><value>Editar t�tulo</value></data>
+  <data name="CardEditTitle" xml:space="preserve"><value>Editar título</value></data>
   <data name="BoardAddList" xml:space="preserve"><value>Agregar lista</value></data>
   <data name="BoardAddCard" xml:space="preserve"><value>Agregar tarjeta</value></data>
   <data name="BoardAddItem" xml:space="preserve"><value>Agregar</value></data>
   <data name="WebhooksTitle" xml:space="preserve"><value>Webhooks</value></data>
-  <data name="WebhooksBlurb" xml:space="preserve"><value>Envi� eventos de tarjetas a una URL que controles. Cada webhook recibe un POST firmado por cada evento al que te suscribiste.</value></data>
+  <data name="WebhooksBlurb" xml:space="preserve"><value>Enviá eventos de tarjetas a una URL que controles. Cada webhook recibe un POST firmado por cada evento al que te suscribiste.</value></data>
   <data name="WebhooksNew" xml:space="preserve"><value>Nuevo webhook</value></data>
   <data name="WebhooksUrl" xml:space="preserve"><value>URL</value></data>
   <data name="WebhooksEvents" xml:space="preserve"><value>Eventos (separados por coma)</value></data>
   <data name="WebhooksActive" xml:space="preserve"><value>Activo</value></data>
-  <data name="WebhooksNoWebhooks" xml:space="preserve"><value>A�n no hay webhooks.</value></data>
-  <data name="WebhooksCreated" xml:space="preserve"><value>Webhook creado. Tu secreto se muestra abajo � copialo ahora, el servidor solo guarda el hash.</value></data>
+  <data name="WebhooksNoWebhooks" xml:space="preserve"><value>Aún no hay webhooks.</value></data>
+  <data name="WebhooksCreated" xml:space="preserve"><value>Webhook creado. Tu secreto se muestra abajo — copialo ahora, el servidor solo guarda el hash.</value></data>
   <data name="WebhooksSecretLabel" xml:space="preserve"><value>Secreto (una vez)</value></data>
   <data name="WebhooksDeliveries" xml:space="preserve"><value>Entregas recientes</value></data>
   <data name="WebhooksDeliveryStatus" xml:space="preserve"><value>Estado</value></data>
   <data name="WebhooksDeliveryUrl" xml:space="preserve"><value>URL</value></data>
   <data name="WebhooksDeliveryTimestamp" xml:space="preserve"><value>Marca de tiempo</value></data>
-  <data name="WebhooksDeliveryNoDeliveries" xml:space="preserve"><value>A�n no hay entregas.</value></data>
+  <data name="WebhooksDeliveryNoDeliveries" xml:space="preserve"><value>Aún no hay entregas.</value></data>
   <data name="WebhooksCreatedAt" xml:space="preserve"><value>Creado</value></data>
   <data name="WebhooksDisable" xml:space="preserve"><value>Desactivar</value></data>
   <data name="WebhooksEnable" xml:space="preserve"><value>Activar</value></data>
   <data name="WebhooksDelete" xml:space="preserve"><value>Eliminar</value></data>
   <data name="WebhooksCreate" xml:space="preserve"><value>Crear</value></data>
   <data name="DeleteCardDialogTitle" xml:space="preserve"><value>Eliminar tarjeta</value></data>
-  <data name="DeleteCardDialogBody" xml:space="preserve"><value>�Eliminar la tarjeta \"{0}\"? Esta acci�n no se puede deshacer.</value></data>
+  <data name="DeleteCardDialogBody" xml:space="preserve"><value>¿Eliminar la tarjeta \"{0}\"? Esta acción no se puede deshacer.</value></data>
   <data name="DeleteCardDialogConfirm" xml:space="preserve"><value>Eliminar</value></data>
   <data name="DeleteCardDialogCancel" xml:space="preserve"><value>Cancelar</value></data>
   <data name="DescriptionEdit" xml:space="preserve"><value>Editar</value></data>
   <data name="DescriptionSave" xml:space="preserve"><value>Guardar</value></data>
   <data name="DescriptionCancel" xml:space="preserve"><value>Cancelar</value></data>
-  <data name="DescriptionEmpty" xml:space="preserve"><value>Agregar descripci�n</value></data>
+  <data name="DescriptionEmpty" xml:space="preserve"><value>Agregar descripción</value></data>
   <data name="ChecklistProgress" xml:space="preserve"><value>{0}% hecho</value></data>
 </root>

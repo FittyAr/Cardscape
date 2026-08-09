@@ -37,6 +37,25 @@
                 <RadzenText Text="@L["AuthPasswordHint"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
             </RadzenFormField>
 
+            @* BUG-A8-012 — see test-results/beta/reports/A8-settings.md.
+               The form previously only collected the password
+               once, so a typo at signup time would silently
+               ship an unrecoverable password to the API. The
+               confirm field is matched against the password
+               client-side before the request goes out; the
+               server already enforces its own length and
+               dictionary checks on the single value, this is
+               a UX safety net only. *@
+            <RadzenFormField Text="@L["AuthConfirmPassword"]" Component="confirmPassword">
+                <RadzenPassword @bind-Value="model.ConfirmPassword" Name="confirmPassword" Style="width:100%"
+                                autocomplete="new-password" />
+                @if (!string.IsNullOrEmpty(model.ConfirmPassword) && model.Password != model.ConfirmPassword)
+                {
+                    <RadzenText Text="@L["AuthPasswordsDoNotMatch"]" TextStyle="TextStyle.Caption"
+                                Style="color: var(--rz-danger);" />
+                }
+            </RadzenFormField>
+
             @if (error is not null)
             {
                 <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
@@ -50,6 +69,7 @@
                           Size="@ButtonSize.Large"
                           IsBusy="@busy"
                           BusyText="@L["AuthCreating"]"
+                          Disabled="@(!CanSubmit())"
                           Style="width:100%" />
         </RadzenStack>
     </RadzenTemplateForm>
@@ -76,6 +96,14 @@
 
     private async Task HandleSubmit()
     {
+        if (!CanSubmit())
+        {
+            // BUG-A8-012 — belt-and-braces: if the disabled
+            // state somehow fails to fire, refuse the request.
+            error = L["AuthPasswordsDoNotMatch"];
+            return;
+        }
+
         busy = true;
         error = null;
         try
@@ -96,10 +124,18 @@
         }
     }
 
+    private bool CanSubmit() =>
+        !string.IsNullOrWhiteSpace(model.Email) &&
+        !string.IsNullOrWhiteSpace(model.DisplayName) &&
+        !string.IsNullOrWhiteSpace(model.Password) &&
+        model.Password.Length >= 8 &&
+        model.Password == model.ConfirmPassword;
+
     private sealed class RegisterModel
     {
         public string Email { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }
