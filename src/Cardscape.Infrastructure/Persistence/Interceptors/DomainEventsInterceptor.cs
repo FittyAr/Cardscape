@@ -121,9 +121,11 @@ public sealed class DomainEventsInterceptor(
             var events = aggregateEntries
                 .SelectMany(e => ((IAggregateRoot)e.Entity).DomainEvents)
                 .ToList();
+            logger.LogInformation("DomainEventsInterceptor.SavedChanges: {Count} events from {Aggregates} aggregates", events.Count, aggregateEntries.Count);
 
             if (events.Count > 0)
             {
+                foreach (var ev in events) { logger.LogInformation("Event type: {EventType}", ev.GetType().Name); }
                 try
                 {
                     await dispatcher.DispatchAsync(events, cancellationToken);
@@ -143,3 +145,4 @@ public sealed class DomainEventsInterceptor(
         return await base.SavedChangesAsync(eventData, result, cancellationToken);
     }
 }
+
