@@ -20,43 +20,10 @@
         elements still need the styles.
     -->
     <link rel="stylesheet" href="css/app.css" />
-    <!--
-        BETA-SW-009 — see test-results/beta/round-2/sw-caching.md.
-        Preload the default Radzen themes in the <head> so the page
-        is styled from the very first parse, BEFORE the .NET WASM
-        runtime has finished loading and the <RadzenTheme> component
-        in App.razor can emit its dynamic <link>.
-
-        Without these preloads, the body has no Radzen styles for
-        the 5-15s it takes the dev-mode JIT to compile the C# code
-        and the App component to mount, which is what the user has
-        been seeing as a 'blank white page with a spinner'. Once
-        the App mounts, the dynamic <RadzenTheme> component emits
-        a <link> for the user's actual saved theme (e.g. humanistic,
-        cardscape-classic-dark, etc.) and replaces the static
-        preload — so users with a non-default theme still see a
-        brief default-theme flash, but the body is no longer
-        unstyled during the WASM load.
-
-        The two links use `media="(prefers-color-scheme: …)"` so
-        the browser auto-picks the right one for the OS preference
-        (Radzen's 'dark' is the dark sibling of the 'default'
-        theme, not 'default-dark' — a documented quirk in the
-        free-themes whitelist). The dynamic <RadzenTheme> still
-        wins for users who picked a different theme, but the
-        preloads cover the most common case (anonymous, default
-        theme) so the first load is no longer a white flash.
-
-        Cache-bust with the same `?v=…` trick the dynamic
-        <RadzenTheme> uses, so a Radzen package upgrade invalidates
-        the cached CSS automatically.
-    -->
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/default-base.css?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)" media="(prefers-color-scheme: light)" />
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/dark-base.css?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0f3d3e" />
-    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
     <script src="cardscape-helpers.js"></script>
 </head>
 

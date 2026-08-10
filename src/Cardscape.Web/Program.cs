@@ -60,7 +60,7 @@ builder.Services.AddRadzenCookieThemeService(options =>
 // through cache) and the server-side API (logged-in users).
 // Singleton because the theme is global state, not per-circuit.
 builder.Services.AddScoped<IUserPreferencesApiClient, UserPreferencesApiClient>();
-builder.Services.AddSingleton<UserPreferencesService>();
+builder.Services.AddScoped<UserPreferencesService>();
 
 // ── Localization (i18n) ──────────────────────────────────────────────
 // Resources live under src/Cardscape.Web/Resources (SharedResource.resx

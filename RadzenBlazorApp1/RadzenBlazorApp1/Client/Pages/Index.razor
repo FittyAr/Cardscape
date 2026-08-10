@@ -1,0 +1,138 @@
+@page "/"
+@attribute [Authorize]
+
+@using RadzenBlazorApp1.Server.Models
+@using RadzenBlazorApp1.Server.Models.CrmDB
+
+<PageTitle>Dashboard</PageTitle>
+<RadzenStack Gap="1rem">
+    <RadzenRow AlignItems="AlignItems.Center">
+        <RadzenColumn Size="12">
+            <RadzenText Text="Dashboard" TextStyle="TextStyle.H3" TagName="TagName.H1" style="margin: 0" />
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenRow>
+        <RadzenColumn SizeLG="6" SizeXL="3">
+            <RadzenCard Variant="Radzen.Variant.Outlined">
+                <RadzenStack Orientation="Radzen.Orientation.Horizontal" Gap="1rem" AlignItems="Radzen.AlignItems.Start">
+                    <RadzenIcon Icon="attach_money" class="rz-background-color-success-light rz-color-on-success-light rz-border-radius-2" Style="font-size: 32px; min-width: 64px; min-height: 64px" />
+                    <RadzenStack Gap="0">
+                        <RadzenText Text="Revenue" TextStyle="Radzen.Blazor.TextStyle.Subtitle1" TagName="Radzen.Blazor.TagName.H4" />
+                        <RadzenText Text="@monthlyStats?.Revenue.ToString("C")" TagName="Radzen.Blazor.TagName.P" TextStyle="Radzen.Blazor.TextStyle.H3" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn SizeLG="6" SizeXL="3">
+            <RadzenCard Variant="Radzen.Variant.Outlined">
+                <RadzenStack Orientation="Radzen.Orientation.Horizontal" Gap="1rem" AlignItems="Radzen.AlignItems.Start">
+                    <RadzenIcon Icon="shopping_cart" class="rz-background-color-primary-light rz-color-on-primary-light rz-border-radius-2" Style="font-size: 32px; min-width: 64px; min-height: 64px" />
+                    <RadzenStack Gap="0">
+                        <RadzenText Text="Opportunities" TextStyle="Radzen.Blazor.TextStyle.Subtitle1" TagName="Radzen.Blazor.TagName.H4" />
+                        <RadzenText Text="@monthlyStats?.Opportunities.ToString("C")" TagName="Radzen.Blazor.TagName.P" TextStyle="Radzen.Blazor.TextStyle.H3" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn SizeLG="6" SizeXL="3">
+            <RadzenCard Variant="Radzen.Variant.Outlined">
+                <RadzenStack Orientation="Radzen.Orientation.Horizontal" Gap="1rem" AlignItems="Radzen.AlignItems.Start">
+                    <RadzenIcon Icon="account_balance_wallet" class="rz-background-color-warning-light rz-color-on-warning-light rz-border-radius-2" Style="font-size: 32px; min-width: 64px; min-height: 64px" />
+                    <RadzenStack Gap="0">
+                        <RadzenText Text="Average Deal Size" TextStyle="Radzen.Blazor.TextStyle.Subtitle1" TagName="Radzen.Blazor.TagName.H4" />
+                        <RadzenText Text="@monthlyStats?.AverageDealSize.ToString("C")" TagName="Radzen.Blazor.TagName.P" TextStyle="Radzen.Blazor.TextStyle.H3" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn SizeLG="6" SizeXL="3">
+            <RadzenCard Variant="Radzen.Variant.Outlined">
+                <RadzenStack Orientation="Radzen.Orientation.Horizontal" Gap="1rem" AlignItems="Radzen.AlignItems.Start">
+                    <RadzenIcon Icon="thumb_up" class="rz-background-color-primary-light rz-color-on-primary-light rz-border-radius-2" Style="font-size: 32px; min-width: 64px; min-height: 64px" />
+                    <RadzenStack Gap="0">
+                        <RadzenText Text="Win Rate" TextStyle="Radzen.Blazor.TextStyle.Subtitle1" TagName="Radzen.Blazor.TagName.H4" />
+                        <RadzenText Text="@monthlyStats?.Ratio.ToString("P")" TagName="Radzen.Blazor.TagName.P" TextStyle="Radzen.Blazor.TextStyle.H3" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenRow>
+        <RadzenColumn Size="12">
+            <RadzenCard Variant="Radzen.Variant.Flat">
+                <RadzenText Text="Customer Lifetime Value" TextStyle="Radzen.Blazor.TextStyle.H5" TagName="Radzen.Blazor.TagName.H4" />
+                <RadzenChart Style="width: 100%">
+                    <RadzenColumnSeries TItem="RevenueByCompany" Data="@revenueByCompany" ValueProperty="Revenue" CategoryProperty="Company"></RadzenColumnSeries>
+                </RadzenChart>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeLG="6">
+            <RadzenCard Variant="Radzen.Variant.Flat">
+                <RadzenText Text="Revenue" TextStyle="Radzen.Blazor.TextStyle.H5" TagName="Radzen.Blazor.TagName.H4" />
+                <RadzenChart Style="width: 100%">
+                    <RadzenAreaSeries TItem="RevenueByMonth" Data="@revenueByMonth" ValueProperty="Revenue" CategoryProperty="Month"></RadzenAreaSeries>
+                </RadzenChart>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeLG="6">
+            <RadzenCard Variant="Radzen.Variant.Flat">
+                <RadzenText Text="Revenue by Employee" TextStyle="Radzen.Blazor.TextStyle.H5" TagName="Radzen.Blazor.TagName.H4" />
+                <RadzenChart Style="width: 100%">
+                    <RadzenBarSeries TItem="RevenueByEmployee" Data="@revenueByEmployee" ValueProperty="Revenue" CategoryProperty="Employee"></RadzenBarSeries>
+                </RadzenChart>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenCard Variant="Radzen.Variant.Flat">
+                <RadzenText Text="Opportunities" TextStyle="Radzen.Blazor.TextStyle.H5" TagName="Radzen.Blazor.TagName.H4" />
+                <RadzenDataGrid TItem="Opportunity" Data="@getOpportunitiesResult" AllowSorting="true" AllowPaging="true" LoadData="@getOpportunitiesResultLoadData" Count="@getOpportunitiesResultCount">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="Opportunity" Title="Contact" SortProperty="Contact.FirstName">
+                            <Template>
+                                <RadzenLabel Text="@context.Contact.FirstName" />
+                                <RadzenLabel Text="@context.Contact.LastName" />
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="Opportunity" Title="Amount" Property="Amount">
+                            <Template>
+                                <RadzenLabel Text="@context.Amount.ToString("C")" />
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="Opportunity" Title="Status" Property="OpportunityStatus.Name" />
+                        <RadzenDataGridColumn TItem="Opportunity" Title="CloseDate" Property="CloseDate" />
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenCard Variant="Radzen.Variant.Flat">
+                <RadzenText Text="Active Tasks" TextStyle="Radzen.Blazor.TextStyle.H5" TagName="Radzen.Blazor.TagName.H4" />
+                <RadzenDataGrid TItem="CrmTask" Data="@getTasksResult" AllowSorting="true" AllowPaging="true" LoadData="@getTasksResultLoadData" Count="@getTasksResultCount">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="CrmTask" Title="Employee" SortProperty="Opportunity.User.FirstName">
+                            <Template>
+                                <RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="Radzen.AlignItems.Center" Gap="1rem">
+                                    <RadzenImage Path="@context.Opportunity.User.Picture" style="width:32px; height:32px;" class="rz-border-radius-4" />
+                                    <RadzenText>
+                                        @context.Opportunity.User.FirstName @context.Opportunity.User.LastName
+                                    </RadzenText>
+                                </RadzenStack>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="CrmTask" Title="Title" Property="Title" SortProperty="Opportunity.Name">
+                            <Template>
+                                <RadzenStack Orientation="Radzen.Orientation.Vertical" Gap="0" AlignItems="Radzen.AlignItems.Start">
+                                    <RadzenText Text="@context.Opportunity.Name" />
+                                    <RadzenText TextStyle="Radzen.Blazor.TextStyle.Body2">
+                                       @context.Opportunity.Contact.FirstName @context.Opportunity.Contact.LastName
+                                    </RadzenText>
+                                </RadzenStack>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="CrmTask" Title="DueDate" Property="DueDate" />
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenStack>

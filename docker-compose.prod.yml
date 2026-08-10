@@ -1,0 +1,107 @@
+# Production-mirror of the dev stack — same image, but
+# `ASPNETCORE_ENVIRONMENT=Production` and a separate port / volume
+# set so you can run BOTH side by side and compare the
+# loading-screen behaviour (the JIT-vs-precompiled race that
+# started the SW saga).
+#
+# Dev (hot reload, slow first load):
+#     docker compose -f docker-compose.dev.yml up -d
+#     -> http://localhost:8080
+#
+# Prod (pre-compiled WASM, fast first load):
+#     docker compose -f docker-compose.prod.yml up -d
+#     -> http://localhost:8081
+#
+# Both compose files use the same `cardscape/api:0.1.0-mvp`
+# image. The only thing that changes is the env override on the
+# container, which flips the .NET runtime from "JIT in the
+# browser" (Development) to "pre-compiled to .wasm" (Production).
+# That single switch collapses the 5-15s blank-page window on
+# first load to ~2s, which is the only way to make the
+# "first render shows light, then re-renders to dark"
+# race in the system-color scheme detection (see BETA-SW-009
+# in test-results/beta/round-2/sw-caching.md) stop being
+# user-visible.
+#
+# IMPORTANT: this stack uses the docker compose project name
+# `cardscape-prod` (see the top-level `name:` field below).
+# Without it, both this and docker-compose.dev.yml resolve to
+# the same project name (`cardscape`, the directory name) and
+# end up sharing the default network. Sharing the network
+# makes `up -d` on one compose file recreate the other
+# stack's container, which makes "run both side by side"
+# impossible. The `name:` field gives the prod stack its own
+# network (`cardscape-prod_default`) and its own volume
+# prefix (`cardscape-prod_*`).
+#
+# Note on the JWT key: the dev compose falls back to a
+# hard-coded insecure key when CARDS_CAPE_JWT_KEY is unset.
+# This prod compose does NOT — it requires you to provide one
+# in a .env file or your shell, matching the self-hostable
+# docker-compose.yml convention. Generate with:
+#     openssl rand -base64 48
+#
+# Note on the data volumes: the volumes are named
+# `cardscape.prod.data` / `cardscape.prod.uploads` so the prod
+# stack does not clobber the dev stack's SQLite / upload
+# directories. Both are independent.
+
+# The `name:` at the top level sets the docker compose PROJECT
+# NAME (which prefixes networks, volumes, and the implicit
+# container name). Setting it to `cardscape-prod` keeps the
+# prod stack in its own namespace so it can run side by side
+# with the dev stack.
+name: cardscape-prod
+
+services:
+  cardscape.api:
+    build:
+      context: .
+      dockerfile: src/Cardscape.Api/Dockerfile
+    image: cardscape/api:0.1.0-mvp
+    container_name: cardscape.api.prod
+    restart: unless-stopped
+    environment:
+      # The whole point of this compose: flip Development to
+      # Production so the .NET runtime ships pre-compiled .wasm
+      # to the browser instead of JIT'ing on first load. See
+      # BETA-SW-009 in test-results/beta/round-2/sw-caching.md
+      # for the full race-condition writeup.
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      Database__Provider: Sqlite
+      ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
+      Storage__LocalRoot: /app/Storage
+      # Same insecure dev key fallback as the dev compose.
+      # Override with `CARDS_CAPE_JWT_KEY=...` in your .env
+      # for any non-toy use.
+      Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:-dev-only-insecure-signing-key-please-override-in-production-32+chars}
+      Jwt__Issuer: Cardscape
+      Jwt__Audience: Cardscape
+      Cors__AllowedOrigins__0: http://localhost:8080
+      Cors__AllowedOrigins__1: http://127.0.0.1:8080
+      # The migration runner defaults to off in Production. The
+      # self-hostable docker-compose.yml flips this on; we
+      # mirror that here so a fresh prod stack works out of
+      # the box.
+      Cardscape__Database__RunMigrationsOnStartup: "true"
+    # Different port from the dev stack (8080). With both
+    # compose files running, dev is on :8080 and prod is
+    # on :8081 — open both in different tabs to A/B the
+    # loading behaviour.
+    ports:
+      - "8081:8080"
+    volumes:
+      - cardscape.prod.data:/app/Data
+      - cardscape.prod.uploads:/app/Storage
+    healthcheck:
+      # Same healthcheck as the dev compose — see BETA-8-ENV-#1.
+      test: ["CMD-SHELL", "curl --silent --fail --max-time 4 http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  cardscape.prod.data:
+  cardscape.prod.uploads:
