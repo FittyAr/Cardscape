@@ -25,6 +25,13 @@ services:
       Jwt__Audience: Cardscape
       Cors__AllowedOrigins__0: http://localhost:8080
       Cors__AllowedOrigins__1: http://127.0.0.1:8080
+      # The seeder is on by default in Development but we set
+      # the env var explicitly so a future operator who flips
+      # ASPNETCORE_ENVIRONMENT=Production (for a closer-to-prod
+      # smoke test) doesn't have to remember to also flip the
+      # seeder toggle. Compose dev = seeder on, always.
+      Cardscape__Seeder__Enabled: "true"
+      Cardscape__Seeder__WipeBeforeSeed: "false"
     ports:
       - "8080:8080"
     volumes:

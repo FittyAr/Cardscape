@@ -13,8 +13,19 @@ COPY src/Cardscape.Application/Cardscape.Application.csproj src/Cardscape.Applic
 COPY src/Cardscape.Infrastructure/Cardscape.Infrastructure.csproj src/Cardscape.Infrastructure/
 COPY src/Cardscape.Web/Cardscape.Web.csproj                 src/Cardscape.Web/
 COPY src/Cardscape.Api/Cardscape.Api.csproj                 src/Cardscape.Api/
+# Seeder ships in its own project (added in the seeder
+# pass). It must be in the restore layer or the
+# subsequent publish will hit NETSDK1004 ("assets
+# file not found") for Cardscape.Seeder's
+# project.assets.json. The restore is project-scoped
+# rather than solution-wide so we don't pull in the
+# test projects, which have their own restore context
+# and would slow the layer for no benefit at image
+# build time.
+COPY src/Cardscape.Seeder/Cardscape.Seeder.csproj           src/Cardscape.Seeder/
 
 RUN dotnet restore src/Cardscape.Api/Cardscape.Api.csproj
+RUN dotnet restore src/Cardscape.Seeder/Cardscape.Seeder.csproj
 
 # Copy the rest of the source and publish.
 COPY src/ src/
