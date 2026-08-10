@@ -7,6 +7,7 @@
 @using Microsoft.Extensions.Localization
 @inject IWorkspacesApiClient WorkspacesApi
 @inject IStringLocalizer<SharedResource> L
+@inject IConfiguration Config
 
 <PageTitle>@L["WorkspacesTitle"] @L["PageTitleSuffix"]</PageTitle>
 
@@ -25,11 +26,23 @@
                 <RadzenTextBox @bind-Value="createModel.Name" Name="ws-name" Style="width:100%" />
             </LabeledField>
 
-            <LabeledField Text="@L["WorkspacesRegion"]" Component="ws-region">
-                <RadzenDropDown @bind-Value="createModel.Region" Data="@availableRegions"
-                                TextProperty="Label" ValueProperty="Value" Name="ws-region"
-                                Placeholder="@L["WorkspacesRegionPlaceholder"]" Style="width:100%" />
-            </LabeledField>
+            @* Data residency is an opt-in feature. The dropdown only
+               appears when `Features:DataResidencyEnabled` is true in
+               wwwroot/appsettings.json; otherwise the workspace is
+               created with `Region.Unspecified` and the deployment's
+               configured region (see `Cardscape:Deployment:Region`)
+               becomes the implicit choice. The server-side domain,
+               migration, and `RegionGuardEndpointFilter` remain
+               available; flipping the flag back on restores the UI
+               without any other change. *@
+            @if (dataResidencyEnabled)
+            {
+                <LabeledField Text="@L["WorkspacesRegion"]" Component="ws-region">
+                    <RadzenDropDown @bind-Value="createModel.Region" Data="@availableRegions"
+                                    TextProperty="Label" ValueProperty="Value" Name="ws-region"
+                                    Placeholder="@L["WorkspacesRegionPlaceholder"]" Style="width:100%" />
+                </LabeledField>
+            }
 
             @if (error is not null)
             {
@@ -65,7 +78,7 @@ else
                     <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
                         @ws.MemberCount members · created @ws.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")
                     </RadzenText>
-                    @if (ws.Region != Region.Unspecified)
+                    @if (dataResidencyEnabled && ws.Region != Region.Unspecified)
                     {
                         <div class="rz-mt-2">
                             <RadzenBadge Text="@RegionLabel(ws.Region)" BadgeStyle="BadgeStyle.Info" />
@@ -92,6 +105,15 @@ else
     private string? error;
     private readonly CreateModel createModel = new();
 
+    // Read once on first render. The flag is a deployment-time
+    // choice, not a per-user toggle, so re-evaluating it on every
+    // render would only add noise. Toggling the value in
+    // appsettings.json requires a WASM host restart to take effect
+    // (consistent with every other IConfiguration-driven knob in
+    // the Web host). Instance-injected, so it cannot be read in a
+    // field initializer — see OnInitializedAsync below.
+    private bool dataResidencyEnabled;
+
     private record RegionOption(Region Value, string Label);
 
     private IReadOnlyList<RegionOption> availableRegions = new[]
@@ -105,6 +127,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        dataResidencyEnabled = Config.GetValue<bool>(
+            "Features:DataResidencyEnabled", false);
+
         ApiResult<IReadOnlyList<WorkspaceDto>> result = await WorkspacesApi.ListAsync();
         workspaces = result.IsSuccess ? result.Value : [];
         if (!result.IsSuccess)

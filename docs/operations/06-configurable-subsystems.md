@@ -14,6 +14,13 @@ section of `appsettings.json` (or the equivalent
 `Infrastructure:PendingTotpStore`, and
 `Infrastructure:Redis`.
 
+The Blazor WebAssembly client has its own configuration file at
+`src/Cardscape.Web/wwwroot/appsettings.json` and its own
+feature-toggle section called `Features:` (see
+[§ Experimental features](#experimental-features-web-ui-gates)
+below). The two configuration trees are intentionally separate:
+the WASM client does not share configuration with the API host.
+
 ```json
 {
   "Cardscape": {
@@ -217,6 +224,83 @@ key names.
 `cardscape:totp-pending:` respectively. The prefix lets multiple
 Cardscape deployments share a single Redis instance — set
 distinct prefixes per deployment.
+
+---
+
+## Experimental features (Web UI gates)
+
+**Key**: `Features:DataResidencyEnabled` (and siblings)
+**Scope**: the Blazor WebAssembly client only
+(`src/Cardscape.Web/wwwroot/appsettings.json`). These are
+**client-side** toggles — they do not live under `Cardscape:`
+because the WASM host loads them from its own `appsettings.json`,
+not from the API's configuration tree. The override
+mechanism is the same: the WASM configuration provider reads
+`appsettings.json` plus environment variables (`Features__…`).
+
+These flags are **opt-in** by design. Each one hides a slice
+of the Web UI that wraps a server-side capability that is
+already in place but not yet considered "done" — the
+implementation is fully alive, just relegated to operators
+who actively want to expose it. The default is **off** and the
+corresponding UI affordances do not render at all (the page
+behaves as if the feature did not exist).
+
+### `DataResidencyEnabled = false` (default)
+
+Data residency (§4.5 of the v1.1.0 plan) is implemented end to
+end on the server side: the `Region` enum, the
+`Workspace.Region` / `SetRegion` / `GuardRegion` aggregate
+methods, the `IDeploymentRegion` / `ConfigurationDeploymentRegion`
+abstraction, the `RegionGuardEndpointFilter` wired into the
+workspace endpoint group, the migration that adds the column,
+and the API endpoints to set the region on an existing
+workspace are all in place. The cross-region write rejection
+is the only piece of the spec that is enforced today.
+
+The **UI** exposure of all of the above is gated by this
+flag. With the default value:
+
+- The region selector does not appear in the workspace
+  creation form (`Pages/Workspaces.razor`).
+- The region badge does not appear on the workspace cards.
+- A workspace created through the UI is stored with
+  `Region.Unspecified`, which the domain treats as
+  "accept any deployment region" (see
+  `Workspace.GuardRegion(Region)` — `Unspecified` short-circuits
+  to success). This is the same behaviour every
+  single-instance self-host has always had; the flag merely
+  stops the UI from inviting the user to pick a region that
+  the rest of the stack does not act on.
+
+Set the flag to `true` to surface the dropdown and the badge
+again. **No restart of the API is required for the Web to
+pick the new value up** — the WASM host reads
+`wwwroot/appsettings.json` at startup, and the Web reload
+(on next page navigation) reads the new value. The server-side
+behaviour is unaffected in both directions: toggling the flag
+changes the UI surface, not the policy.
+
+The rationale for defaulting to off is recorded in
+[`docs/roadmap/07-trello-enterprise-parity.md`](../roadmap/07-trello-enterprise-parity.md#data-residency);
+the short version is that data residency as a user-facing
+concept only makes sense on a multi-region deployment with
+real cross-region enforcement, and the only currently shipped
+cross-region enforcement is the single check in
+`RegionGuardEndpointFilter`. Until the rest of the
+cross-region story (per-resource storage backend pinning,
+per-region read replicas, the GDPR Article 30 narrative that
+ties the deployment's region to a documented sub-processor
+list) is built, the selector is a foot-gun, not a feature.
+
+The flag is **not** a feature flag in the
+`docs/design/06-feature-flags.md` sense — it is a static
+configuration value read once at component construction, not
+a runtime-evaluated per-user / per-workspace gate. Future
+client-side flags will live in the same `Features:` section
+of `wwwroot/appsettings.json` and follow the same shape:
+declared, defaulted to `false`, surfaced in the Blazor markup
+with an `@if` block around the gated control(s).
 
 ---
 
