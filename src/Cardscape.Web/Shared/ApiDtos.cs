@@ -338,8 +338,33 @@ public sealed record NotificationDto(
 
 public sealed record UnreadCountDto(int Count);
 
-// ── Error envelope (matches Results.Problem shape) ──────
+// ── Error envelopes ─────────────────────────────────────
+// The API has three different error shapes in the wild
+// (a real refactor would unify them; the Web's parser
+// supports all three so every error renders as a single
+// user-facing string):
+//
+//   1. RFC 7807 ProblemDetails (from Results.Problem(...))
+//      ── { "title": "...", "detail": "...", "status": ... }
+//      ── Auth, ExternalLogin, Totp, Integrations
+//      ── read by ApiErrorDto
+//
+//   2. Flat projection (from `new { error.Code, error.Message }`)
+//      ── { "code": "...", "message": "..." }
+//      ── Activity, Ai, Slack, Automation, McpSubscriptions, UserDsr
+//      ── read by ApiErrorBody
+//
+//   3. Wrapped envelope (from `new { error = new { code, message } }`)
+//      ── { "error": { "code": "...", "message": "..." } }
+//      ── Workspaces
+//      ── read by ApiErrorEnvelope
+//
+// The comment in AuthService.ExtractErrorAsync originally said
+// the API returns shape #1; that was wrong, and is the bug
+// that surfaced as "raw JSON in the alert" in dev/prod.
 public sealed record ApiErrorDto(string? Title, string? Detail, int? Status);
+public sealed record ApiErrorBody(string? Code, string? Message);
+public sealed record ApiErrorEnvelope(ApiErrorBody? Error);
 
 // v0.6.4: Board extensions
 public sealed record BoardExtensionDto(

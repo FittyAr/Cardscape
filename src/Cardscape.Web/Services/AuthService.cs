@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Cardscape.Web.Shared;
 
 namespace Cardscape.Web.Services;
@@ -35,6 +36,28 @@ public readonly record struct ApiResult(bool IsSuccess, string? Error, int Statu
 {
     public static ApiResult Ok() => new(true, null, 200);
     public static ApiResult Fail(string error, int statusCode = 0) => new(false, error, statusCode);
+}
+
+/// <summary>
+/// Cached <see cref="JsonSerializerOptions"/> for the error-shape
+/// probes in <see cref="AuthService.ExtractErrorAsync"/>. Created
+/// once per process — CA1869 (do not allocate a new
+/// <c>JsonSerializerOptions</c> per call) means the
+/// <see cref="JsonSerializer.Deserialize{T}(string, JsonSerializerOptions?)"/>
+/// overload that takes options must use a shared instance. The
+/// options here are deliberately minimal: case-insensitive
+/// matching, no naming policy, no converters. The three error
+/// shapes (<see cref="ApiErrorDto"/>, <see cref="ApiErrorBody"/>,
+/// <see cref="ApiErrorEnvelope"/>) are all simple records with
+/// nullable strings; the default serializer handles them with
+/// no special setup.
+/// </summary>
+internal static class AuthServiceJson
+{
+    public static readonly JsonSerializerOptions ErrorOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
 }
 
 /// <summary>
@@ -138,34 +161,99 @@ public sealed class AuthService(
         return ApiResult<UserSummaryDto>.Ok(payload.User);
     }
 
-    internal static async Task<string?> ExtractErrorAsync(HttpResponseMessage response, CancellationToken ct)
+    /// <summary>Public so integration tests can pin the three error
+    /// shapes the API ships — see
+    /// <c>tests/Cardscape.IntegrationTests/Services/ErrorEnvelopeExtractionTests.cs</c>.
+    /// The method is a pure parser and has no side effects, so the
+    /// visibility bump does not widen the attack surface.</summary>
+    public static async Task<string?> ExtractErrorAsync(HttpResponseMessage response, CancellationToken ct)
     {
-        // The API returns RFC 7807 ProblemDetails with "title" being the error code.
-        ApiErrorDto? problem = null;
+        // The API returns one of three error shapes depending on
+        // the endpoint group. We try them in order — the first
+        // that matches and yields a non-empty message wins. See
+        // ApiDtos.cs for the shape catalog and the endpoint list.
+        string? body = null;
         try
         {
-            problem = await response.Content.ReadFromJsonAsync<ApiErrorDto>(cancellationToken: ct);
+            body = await response.Content.ReadAsStringAsync(ct);
         }
         catch
         {
-            // body is not JSON — fall through to the raw text below
+            return null;
         }
 
-        if (!string.IsNullOrWhiteSpace(problem?.Title))
+        if (string.IsNullOrWhiteSpace(body))
         {
-            // BETA-7-#15 — see test-results/BETA-TEST-REPORT.md.
-            // The previous concatenation surfaced the
-            // machine code (e.g. `members.user.invalid_credentials: …`)
-            // alongside the user-facing message. Beta users
-            // don't need the code; the message is enough.
-            // We still log the code via the problem.Title so
-            // support can correlate a screenshot with the
-            // server log (we only have the message at
-            // display time).
-            return problem.Detail ?? problem.Title;
+            return null;
         }
 
-        string? raw = await response.Content.ReadAsStringAsync(ct);
-        return string.IsNullOrWhiteSpace(raw) ? null : raw;
+        // Shape #1 — RFC 7807 ProblemDetails.
+        // Title carries the machine-readable code, Detail carries
+        // the user-facing message. AuthService.ExtractErrorAsync
+        // was originally written for this shape; the comment
+        // claimed "the API returns RFC 7807" which was the bug
+        // that surfaced as raw JSON in the alert (the comment
+        // is now correct, but only for the Auth/External/TOTP
+        // endpoint groups — everywhere else uses shape #2 or
+        // #3, and the old code fell through to the raw body).
+        try
+        {
+            ApiErrorDto? problem = JsonSerializer.Deserialize<ApiErrorDto>(body, AuthServiceJson.ErrorOptions);
+            if (!string.IsNullOrWhiteSpace(problem?.Title))
+            {
+                // BETA-7-#15 — see test-results/BETA-TEST-REPORT.md.
+                // The previous concatenation surfaced the machine
+                // code (e.g. `members.user.invalid_credentials: …`)
+                // alongside the user-facing message. Beta users
+                // don't need the code; the message is enough. We
+                // still log the code via the problem.Title so
+                // support can correlate a screenshot with the
+                // server log.
+                return problem.Detail ?? problem.Title;
+            }
+        }
+        catch (JsonException)
+        {
+            // not shape #1 — fall through
+        }
+
+        // Shape #3 — wrapped envelope: { "error": { "code", "message" } }.
+        // Workspaces uses this shape. Try before shape #2 because
+        // shape #2 would also match the inner object if we asked
+        // it to (we don't, but the wrapping is the distinguishing
+        // signal: a "code" at the top level of shape #2 vs. an
+        // "error" object at the top of shape #3).
+        try
+        {
+            ApiErrorEnvelope? envelope = JsonSerializer.Deserialize<ApiErrorEnvelope>(body, AuthServiceJson.ErrorOptions);
+            if (!string.IsNullOrWhiteSpace(envelope?.Error?.Message))
+            {
+                return envelope.Error.Message;
+            }
+        }
+        catch (JsonException)
+        {
+            // not shape #3 — fall through
+        }
+
+        // Shape #2 — flat projection: { "code", "message" }.
+        // The default MapError across most endpoint groups.
+        try
+        {
+            ApiErrorBody? flat = JsonSerializer.Deserialize<ApiErrorBody>(body, AuthServiceJson.ErrorOptions);
+            if (!string.IsNullOrWhiteSpace(flat?.Message))
+            {
+                return flat.Message;
+            }
+        }
+        catch (JsonException)
+        {
+            // not shape #2 — fall through
+        }
+
+        // None of the three matched. Surface the raw body so the
+        // user sees something instead of nothing, and so the
+        // server log + browser console can be cross-referenced.
+        return body;
     }
 }
