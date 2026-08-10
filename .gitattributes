@@ -1,0 +1,68 @@
+# ── File-level git attributes ─────────────────────────────────
+# Forces LF line endings on every source file and the BOM-less
+# UTF-8 encoding. Two reasons:
+#
+#   1. The .editorconfig at the repo root says end_of_line = lf
+#      and charset = utf-8 for every C# file. The Husky
+#      pre-commit hook rejects any new file that violates that
+#      rule (the `pre-commit` task in .husky/). `dotnet ef
+#      migrations add` on Windows writes new migration files
+#      with CRLF + a UTF-8 BOM by default, which is rejected
+#      on every commit. Setting `* text=auto eol=lf` here means
+#      the files git stores on disk are normalised to LF
+#      regardless of the tool that wrote them, so the
+#      pre-commit hook stops rejecting them.
+#
+#   2. The repo has a single global default (LF). Per-file
+#      overrides are listed below for the formats that have
+#      to ship with CRLF or a BOM in order to be usable on
+#      the platforms that consume them (Windows .cmd/.bat,
+#      PowerShell scripts in some CI hosts). The list is
+#      intentionally short: if you are adding a new file
+#      type, you almost certainly want LF, not an exception.
+#
+# Patterns are evaluated top-to-bottom; the last match wins.
+# `binary` is set explicitly so git does not try to do line-
+# ending conversion on assets that would be corrupted by it.
+
+# Source — LF, no BOM.
+*.cs        text eol=lf
+*.csproj    text eol=lf
+*.props     text eol=lf
+*.targets   text eol=lf
+*.sln       text eol=lf
+*.slnx      text eol=lf
+*.json      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.xml       text eol=lf
+*.config    text eol=lf
+*.md        text eol=lf
+*.razor     text eol=lf
+*.cshtml    text eol=lf
+.editorconfig   text eol=lf
+.gitignore      text eol=lf
+.gitattributes  text eol=lf
+
+# Default for anything not listed above.
+* text=auto eol=lf
+
+# Binary — never convert.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.svg   binary
+*.pdf   binary
+*.zip   binary
+*.tar   binary
+*.gz    binary
+*.7z    binary
+*.exe   binary
+*.dll   binary
+*.pdb   binary
+*.wasm  binary
+*.dat   binary
+*.db    binary

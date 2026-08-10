@@ -42,6 +42,7 @@
     <ProjectReference Include="..\TestCommon\TestCommon.csproj" />
     <ProjectReference Include="..\..\src\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Cardscape.Api\Cardscape.Api.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Web\Cardscape.Web.csproj" />
   </ItemGroup>
 
 </Project>

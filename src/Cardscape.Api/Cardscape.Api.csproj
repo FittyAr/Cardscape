@@ -58,6 +58,13 @@
     <ProjectReference Include="..\Cardscape.Application\Cardscape.Application.csproj" />
     <ProjectReference Include="..\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
     <ProjectReference Include="..\Cardscape.Web\Cardscape.Web.csproj" />
+    <!--
+      Optional, feature-gated seeder. Scaffolds a demo dataset
+      on demand. The whole pipeline returns 404 when the
+      Cardscape:Seeder:Enabled toggle is false, so this
+      reference has no effect outside the admin surface.
+    -->
+    <ProjectReference Include="..\Cardscape.Seeder\Cardscape.Seeder.csproj" />
   </ItemGroup>
 
   <ItemGroup>

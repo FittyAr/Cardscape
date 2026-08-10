@@ -1,6 +1,4 @@
 using System.Globalization;
-using System.Reflection;
-using System.Resources;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -65,59 +63,31 @@ public static class TranslationEndpoint
         culture is "en" or "es";
 
     /// <summary>
-    /// Reads the embedded <c>SharedResource.{culture}.resx</c>
-    /// from the Cardscape.Web assembly and parses the
+    /// Reads the per-culture <c>SharedResource.{culture}.resx</c>
+    /// from the API's output directory and parses the
     /// <c>&lt;data name="…" /&gt;</c> elements into a
-    /// dictionary. The .resx files are embedded by the SDK
-    /// because the <c>.resx</c> siblings of
-    /// <c>SharedResource.cs</c> are marked as
-    /// <c>EmbeddedResource</c> in the Blazor project's
-    /// default item group.
+    /// dictionary. The .resx files are copied into the output
+    /// directory by two <c>&lt;Content Include="..\Cardscape.Web\
+    /// Resources\SharedResource.*.resx"&gt;</c> entries in the
+    /// API csproj, so the loader does not need (and must not
+    /// have) a project reference on the Web project — see the
+    /// <c>Api_DependsOn_ApplicationInfrastructureDomain_Only</c>
+    /// architecture test for the rule. The previous version
+    /// tried the embedded-resource path first as a safety net
+    /// for the invariant culture, but the embed was a side
+    /// effect of the Blazor SDK's default item group and the
+    /// disk path has been the canonical source since the
+    /// <c>Content</c> entries landed (BETA-8-UI-#3 / #9 +
+    /// BUG-A1-003).
     /// </summary>
     private static Dictionary<string, string> LoadEmbeddedTranslations(string culture)
     {
-        // BETA-8-UI-#3 + BETA-8-UI-#9 — see test-results/r8/r8-report.md.
-        // The SDK only auto-embeds the *invariant* resx (the neutral
-        // SharedResource.resources used by the IStringLocalizer fallback
-        // path). Per-culture resx files (SharedResource.es.resx, …) are
-        // NOT embedded in the assembly by default; the API csproj
-        // copies them to the output directory as <Content> instead, and
-        // the disk path below is the one that actually loads the
-        // translations. We still try the embedded path first as a
-        // fallback for the invariant culture, and as a safety net for
-        // builds where someone did mark the culture-specific resx as
-        // EmbeddedResource.
-        string resourceName = $"Cardscape.Web.Resources.SharedResource.{culture}.resources";
-        Assembly assembly = typeof(Cardscape.Web.Resources.SharedResource).Assembly;
-
-        try
-        {
-            using Stream? stream = assembly.GetManifestResourceStream(resourceName);
-            if (stream is not null)
-            {
-                using ResourceReader reader = new(stream);
-                Dictionary<string, string> embedded = new(StringComparer.Ordinal);
-                foreach (System.Collections.DictionaryEntry entry in reader)
-                {
-                    string? key = entry.Key as string;
-                    string? value = entry.Value as string;
-                    if (!string.IsNullOrEmpty(key) && value is not null)
-                    {
-                        embedded[key] = value;
-                    }
-                }
-                if (embedded.Count > 0)
-                {
-                    return embedded;
-                }
-            }
-        }
-        catch
-        {
-            // Fall through to the disk path. The disk path is the
-            // canonical source for non-invariant cultures today.
-        }
-
+        // The name is historical — the method used to read the
+        // embedded resource first; the disk path is now the
+        // only path. Renaming the method would touch every
+        // call site for no behavioural change, so the name
+        // stays and the body is one line.
+        _ = culture;
         return LoadFromDisk(culture);
     }
 
