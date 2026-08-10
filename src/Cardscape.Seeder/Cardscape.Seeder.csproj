@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Cardscape.Seeder</AssemblyName>
+    <RootNamespace>Cardscape.Seeder</RootNamespace>
+    <Description>
+      Optional, feature-gated database seeder for development and demo
+      environments. Scaffolds a representative slice of every persisted
+      aggregate so the Web client, REST API, and MCP server all have
+      realistic data to render. Mounted under /admin/seeder.
+    </Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cardscape.Domain\Cardscape.Domain.csproj" />
+    <ProjectReference Include="..\Cardscape.Application\Cardscape.Application.csproj" />
+    <ProjectReference Include="..\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+  </ItemGroup>
+
+</Project>

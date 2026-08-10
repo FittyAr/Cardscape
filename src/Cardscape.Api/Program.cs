@@ -26,6 +26,7 @@ using Cardscape.Api.Endpoints.Saml;
 using Cardscape.Api.Endpoints.Scim;
 using Cardscape.Api.Endpoints.Search;
 using Cardscape.Api.Endpoints.Security;
+using Cardscape.Api.Endpoints.Seeder;
 using Cardscape.Api.Endpoints.UserPreferences;
 using Cardscape.Api.Endpoints.Users;
 using Cardscape.Api.Endpoints.Voting;
@@ -41,6 +42,7 @@ using Cardscape.Application.Realtime;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Logging;
 using Cardscape.Infrastructure.Persistence;
+using Cardscape.Seeder.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -117,6 +119,20 @@ builder.Services.Configure<Microsoft.AspNetCore.Builder.RequestLocalizationOptio
 builder.Services.AddCardscapeApplication(typeof(Program).Assembly);
 builder.Services.AddCardscapeInfrastructure(builder.Configuration);
 builder.Services.AddApiAuthentication(builder.Configuration);
+
+// ── Seeder (optional, feature-gated) ────────────────────────
+// Registered unconditionally so the lifetime graph
+// (singleton SeedRunner, singleton SeedReport, transient
+// steps) is consistent across runs. The toggle
+// (Cardscape:Seeder:Enabled) is read at request time so
+// flipping it requires only a config reload / restart.
+builder.Services.AddCardscapeSeeder(builder.Configuration);
+
+// Razor Pages is host to the /admin/seeder page. The page
+// is gated on Cardscape:Seeder:Enabled inside
+// SeederModel.OnGet — when the flag is off the page
+// returns 404 — so the AddRazorPages call is unconditional.
+builder.Services.AddRazorPages();
 
 // ── Real-time (SignalR + MCP) ──────────────────────────────────
 // Subscribed clients join board:{boardId} on demand. The
@@ -295,6 +311,17 @@ app.MapMcpSubscriptionsAdminEndpoints();
 app.MapUserDsrAdminEndpoints();
 app.MapUserSelfEndpoints();
 
+// ── Seeder (REST + Razor Page) ───────────────────────────────
+// The endpoints and the page self-gate on
+// Cardscape:Seeder:Enabled. When the flag is off, every
+// route returns 404, the Razor Page returns 404, and the
+// UI is invisible. When the flag is on, the page lives at
+// /admin/seeder and the JSON surface under
+// /api/admin/seeder/{status,options,run,wipe} backs the
+// JavaScript-driven live view.
+app.MapSeederEndpoints();
+app.MapRazorPages();
+
 // Companion endpoint for Serilog.Sinks.BrowserHttp on the
 // Blazor WASM client. Browser-side log events (e.g. uncaught
 // exceptions, navigation failures) are POSTed here in CLEF
@@ -348,7 +375,8 @@ app.MapHub<BoardHub>("/hubs/board");
 app.MapWhen(
     context => !context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
         && !context.Request.Path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase)
-        && !context.Request.Path.StartsWithSegments("/scalar", StringComparison.OrdinalIgnoreCase),
+        && !context.Request.Path.StartsWithSegments("/scalar", StringComparison.OrdinalIgnoreCase)
+        && !context.Request.Path.StartsWithSegments("/admin/seeder", StringComparison.OrdinalIgnoreCase),
     branch => branch.UseStaticFiles().UseRouting().UseEndpoints(endpoints =>
     {
         endpoints.MapFallbackToFile("index.html");

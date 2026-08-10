@@ -1,0 +1,254 @@
+@page "/admin/seeder"
+@using Cardscape.Api.Pages
+@using Cardscape.Seeder.Reporting
+@model Cardscape.Api.Pages.SeederModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Cardscape seeder";
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardscape seeder</title>
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/default.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" />
+    <style>
+        :root { color-scheme: light dark; }
+        body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #f6f7f9; color: #1f2533; }
+        @@media (prefers-color-scheme: dark) { body { background: #161a23; color: #e6e8ef; } }
+        .page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+        .card { background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 12px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+        @@media (prefers-color-scheme: dark) { .card { background: #1c2030; border-color: rgba(255,255,255,.08); } }
+        .card h2 { margin: 0 0 12px 0; font-size: 1.05rem; font-weight: 600; }
+        .grid { display: grid; gap: 20px; }
+        .row-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
+        @@media (max-width: 920px) { .row-2 { grid-template-columns: 1fr; } }
+        .log { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem;
+               background: #0d1019; color: #d8dce5; border-radius: 8px; padding: 12px; max-height: 420px; overflow: auto; }
+        .log-line { display: grid; grid-template-columns: 80px 60px 180px 1fr; gap: 8px; align-items: baseline; padding: 2px 0; }
+        .log-line .ts { color: #8a93a6; }
+        .log-line .step { color: #6ea8ff; }
+        .log-line .level { font-weight: 600; }
+        .log-line .ok { color: #57d685; }
+        .log-line .warn { color: #f0b400; }
+        .log-line .err { color: #ff6464; }
+        .log-line .msg { color: #e6e8ef; white-space: pre-wrap; }
+        table.tables { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        table.tables th, table.tables td { padding: 8px 10px; border-bottom: 1px solid rgba(0,0,0,.06); text-align: left; }
+        @@media (prefers-color-scheme: dark) { table.tables th, table.tables td { border-color: rgba(255,255,255,.06); } }
+        table.tables td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+        .status-pill { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
+        .pill-idle { background: rgba(110, 168, 255, 0.12); color: #2f80ed; }
+        .pill-running { background: rgba(240, 180, 0, 0.15); color: #b07d00; }
+        .pill-ok { background: rgba(87, 214, 133, 0.15); color: #1c8a3a; }
+        .pill-err { background: rgba(255, 100, 100, 0.15); color: #b71c1c; }
+        .progress { height: 8px; background: rgba(0,0,0,.06); border-radius: 4px; overflow: hidden; }
+        @@media (prefers-color-scheme: dark) { .progress { background: rgba(255,255,255,.08); } }
+        .progress > div { height: 100%; background: #2f80ed; transition: width 0.4s ease; }
+        .muted { color: #6b7280; font-size: 0.85rem; }
+        @@media (prefers-color-scheme: dark) { .muted { color: #98a0b3; } }
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
+               border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;
+               border: 1px solid transparent; background: #2f80ed; color: #fff; }
+        .btn:hover { background: #2169c8; }
+        .btn:disabled { background: #b8c2d1; cursor: not-allowed; }
+        .btn-secondary { background: #fff; color: #1f2533; border-color: rgba(0,0,0,.15); }
+        .btn-secondary:hover { background: #eef0f4; }
+        @@media (prefers-color-scheme: dark) { .btn-secondary { background: #2a2f3e; color: #e6e8ef; border-color: rgba(255,255,255,.12); } .btn-secondary:hover { background: #353b4d; } }
+        .btn-danger { background: #d24040; }
+        .btn-danger:hover { background: #b13030; }
+        label.toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="toolbar">
+            <h1 style="margin:0; font-size: 1.4rem;">Cardscape seeder</h1>
+            <span class="muted">development-only</span>
+            <span class="status-pill @Model.StatusCssClass" id="status-pill">@Model.Status</span>
+            <span style="flex:1"></span>
+            <button class="btn" id="run-btn" disabled="@Model.IsRunning" onclick="onRun(false)">Run seed</button>
+            <button class="btn btn-secondary" id="wipe-btn" disabled="@Model.IsRunning" onclick="onWipe()">Wipe only</button>
+            <button class="btn btn-danger" id="force-btn" disabled="@Model.IsRunning" onclick="onRun(true)">Force re-seed</button>
+        </div>
+
+        <div class="row-2">
+            <div class="card">
+                <h2>Live log</h2>
+                <div class="muted" id="step-line">Step 0 of 0</div>
+                <div class="progress" style="margin: 8px 0 12px 0;"><div id="progress-bar" style="width:0%"></div></div>
+                <div class="log" id="log">
+                    @foreach (var entry in Model.Entries)
+                    {
+                        <div class="log-line">
+                            <span class="ts">@entry.At.ToString("HH:mm:ss")</span>
+                            <span class="level @(entry.Level == SeedLogLevel.Success ? "ok" : entry.Level == SeedLogLevel.Warning ? "warn" : entry.Level == SeedLogLevel.Error ? "err" : "")">@entry.LevelBadge</span>
+                            <span class="step">@entry.Step</span>
+                            <span class="msg">@entry.Message</span>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="card">
+                <h2>Table status</h2>
+                <div class="muted" id="table-summary">@Model.TableSummary</div>
+                <table class="tables" style="margin-top: 8px;">
+                    <thead>
+                        <tr>
+                            <th>Aggregate</th>
+                            <th style="width: 30%;">Table</th>
+                            <th class="num" style="width: 80px;">Rows</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tables-body">
+                        @foreach (var table in Model.Tables)
+                        {
+                            <tr>
+                                <td>@table.AggregateName</td>
+                                <td><code>@table.Table</code></td>
+                                <td class="num">@table.RowCount</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            let running = @Model.IsRunning.ToString().ToLowerInvariant();
+            const pill = document.getElementById('status-pill');
+            const stepLine = document.getElementById('step-line');
+            const progress = document.getElementById('progress-bar');
+            const log = document.getElementById('log');
+            const tablesBody = document.getElementById('tables-body');
+            const tableSummary = document.getElementById('table-summary');
+            const runBtn = document.getElementById('run-btn');
+            const wipeBtn = document.getElementById('wipe-btn');
+            const forceBtn = document.getElementById('force-btn');
+
+            function setStatus(status) {
+                pill.className = 'status-pill ' + (
+                    status === 'Succeeded' ? 'pill-ok' :
+                    status.startsWith('Failed') ? 'pill-err' :
+                    status === 'Running' ? 'pill-running' :
+                    'pill-idle');
+                pill.textContent = status;
+            }
+
+            function setRunning(value) {
+                running = value;
+                runBtn.disabled = value;
+                wipeBtn.disabled = value;
+                forceBtn.disabled = value;
+            }
+
+            async function refresh() {
+                if (running) {
+                    try {
+                        const res = await fetch('/api/admin/seeder/status', { cache: 'no-store' });
+                        if (res.ok) {
+                            const data = await res.json();
+                            render(data);
+                            return;
+                        }
+                    } catch (e) { /* network blip */ }
+                }
+                setTimeout(refresh, 2000);
+            }
+
+            function render(data) {
+                if (!data || !data.report) { return; }
+                const r = data.report;
+                setStatus(r.status);
+                if (r.status === 'Running') {
+                    setRunning(true);
+                } else if (r.status && r.status !== 'Idle') {
+                    setRunning(false);
+                }
+
+                if (r.totalSteps > 0) {
+                    const pct = Math.min(100, Math.round((r.currentStep / r.totalSteps) * 100));
+                    progress.style.width = pct + '%';
+                    stepLine.textContent = 'Step ' + r.currentStep + ' of ' + r.totalSteps + (r.currentStepName ? ' — ' + r.currentStepName : '');
+                } else {
+                    progress.style.width = '0%';
+                    stepLine.textContent = 'No run in progress';
+                }
+
+                if (Array.isArray(r.entries)) {
+                    log.innerHTML = r.entries.map(entry => {
+                        const cls = entry.level === 'Success' ? 'ok' : entry.level === 'Warning' ? 'warn' : entry.level === 'Error' ? 'err' : '';
+                        const ts = new Date(entry.at).toISOString().substr(11, 8);
+                        return '<div class="log-line"><span class="ts">' + ts + '</span>' +
+                            '<span class="level ' + cls + '">' + entry.level.toUpperCase() + '</span>' +
+                            '<span class="step">' + (entry.step || '') + '</span>' +
+                            '<span class="msg">' + escapeHtml(entry.message || '') + '</span></div>';
+                    }).join('');
+                    log.scrollTop = log.scrollHeight;
+                }
+
+                if (Array.isArray(r.tables)) {
+                    tablesBody.innerHTML = r.tables.map(t =>
+                        '<tr><td>' + escapeHtml(t.aggregate) + '</td><td><code>' + escapeHtml(t.key) + '</code></td><td class="num">' + t.rows + '</td></tr>'
+                    ).join('');
+                    const total = r.tables.reduce((a, t) => a + t.rows, 0);
+                    tableSummary.textContent = r.tables.length + ' tables, ' + total + ' rows total';
+                }
+            }
+
+            function escapeHtml(value) {
+                return value.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+            }
+
+            window.onRun = async function (wipe) {
+                setRunning(true);
+                setStatus('Running');
+                try {
+                    const res = await fetch('/api/admin/seeder/run', {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({ wipe: !!wipe })
+                    });
+                    if (res.status === 409) {
+                        alert('A seed run is already in progress.');
+                        return;
+                    }
+                    if (res.status === 404) {
+                        alert('The seeder is disabled. Set Cardscape:Seeder:Enabled=true and restart the API.');
+                        return;
+                    }
+                    if (!res.ok) {
+                        alert('Seed run failed: HTTP ' + res.status);
+                    }
+                } finally {
+                    setRunning(false);
+                }
+            };
+
+            window.onWipe = async function () {
+                if (!confirm('Wipe every row in the seeder-owned tables? The schema stays intact.')) {
+                    return;
+                }
+                setRunning(true);
+                setStatus('Running');
+                try {
+                    const res = await fetch('/api/admin/seeder/wipe', { method: 'POST' });
+                    if (!res.ok) {
+                        alert('Wipe failed: HTTP ' + res.status);
+                    }
+                } finally {
+                    setRunning(false);
+                }
+            };
+
+            setTimeout(refresh, 1500);
+        })();
+    </script>
+</body>
+</html>
