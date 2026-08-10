@@ -42,6 +42,7 @@ public sealed record WorkspaceDto(
     Guid OwnerId,
     Region Region,
     bool IsArchived,
+    bool RequireTwoFactor,
     DateTimeOffset CreatedAt,
     int MemberCount);
 
@@ -54,6 +55,7 @@ public sealed record WorkspaceMemberDto(
 
 public sealed record CreateWorkspaceRequestDto(string Name, Region? Region = null);
 public sealed record SetWorkspaceRegionRequestDto(Region Region);
+public sealed record SetWorkspaceRequireTwoFactorRequestDto(bool Require);
 public sealed record AddWorkspaceMemberRequestDto(Guid UserId, WorkspaceRole Role);
 public sealed record ChangeWorkspaceMemberRoleRequestDto(WorkspaceRole Role);
 

@@ -131,6 +131,15 @@
   <data name="WorkspacesEmpty" xml:space="preserve"><value>You have no workspaces yet. Create your first one above.</value></data>
   <data name="WorkspacesRegion" xml:space="preserve"><value>Data residency region</value></data>
   <data name="WorkspacesRegionPlaceholder" xml:space="preserve"><value>Pick a region (defaults to the deployment's region)</value></data>
+  <data name="WorkspaceSecurityTitle" xml:space="preserve"><value>Security</value></data>
+  <data name="WorkspaceSecurityNotLoaded" xml:space="preserve"><value>Could not load this workspace.</value></data>
+  <data name="WorkspaceSecurityRequireTwoFactorTitle" xml:space="preserve"><value>Require two-factor authentication</value></data>
+  <data name="WorkspaceSecurityRequireTwoFactorBlurb" xml:space="preserve"><value>When this is on, every member of this workspace has to enrol in a TOTP authenticator app (Google Authenticator, 1Password, Authy, etc.) before they can sign in. The enforcement kicks in on the next login for users who do not already have 2FA set up.</value></data>
+  <data name="WorkspaceSecurityRequireTwoFactorReadonlyBlurb" xml:space="preserve"><value>Only the workspace owner can change this policy. Ask them to flip the switch if you want 2FA enforced for everyone in this workspace.</value></data>
+  <data name="WorkspaceSecurityRequireTwoFactorOn" xml:space="preserve"><value>Required for every member</value></data>
+  <data name="WorkspaceSecurityRequireTwoFactorOff" xml:space="preserve"><value>Off — 2FA is optional for this workspace</value></data>
+  <data name="WorkspaceSecurityRequireTwoFactorInfo" xml:space="preserve"><value>Heads up: members without 2FA will be asked to enrol the next time they try to log in. Until they do, they cannot sign in.</value></data>
+  <data name="WorkspaceSecurityToggleError" xml:space="preserve"><value>The policy could not be updated. Please try again.</value></data>
   <data name="GoogleCalendarTitle" xml:space="preserve"><value>Google Calendar</value></data>
   <data name="GoogleCalendarBlurb" xml:space="preserve"><value>Two-way sync between card due dates and your primary Google Calendar.</value></data>
   <data name="GoogleCalendarNotConnected" xml:space="preserve"><value>Your account is not connected to Google Calendar.</value></data>

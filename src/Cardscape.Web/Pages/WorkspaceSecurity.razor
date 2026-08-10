@@ -1,0 +1,165 @@
+@page "/workspaces/{WorkspaceId:guid}/security"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Security.Claims
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Localization
+@inject IWorkspacesApiClient WorkspacesApi
+@inject AuthenticationStateProvider Auth
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["WorkspaceSecurityTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 64rem;">
+    <PageHeader Title="@L["WorkspaceSecurityTitle"]"
+                Subtitle="@(workspace?.Name ?? string.Empty)" />
+
+    @if (loading)
+    {
+        <RadzenText Text="@L["ActionLoading"]" />
+    }
+    else if (workspace is null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" AllowClose="false">
+            @L["WorkspaceSecurityNotLoaded"]
+        </RadzenAlert>
+    }
+    else
+    {
+        @* Only the workspace owner can flip the 2FA policy. Admins
+           and members see the read-only view so they know whether
+           the workspace is in 2FA-required mode (and that they
+           have to enrol in TOTP before the enforcement lands in
+           the follow-up commit). The owner check is computed
+           client-side from the JWT subject claim and the DTO's
+           OwnerId; the server enforces the same rule in the
+           command handler and returns 403 if a non-owner POSTs. *@
+        @if (isOwner)
+        {
+            <RadzenCard>
+                <RadzenStack Gap="0.75rem">
+                    <RadzenText Text="@L["WorkspaceSecurityRequireTwoFactorTitle"]"
+                                TextStyle="TextStyle.H5" TagName="TagName.H2" />
+                    <RadzenText TextStyle="TextStyle.Body2">
+                        @L["WorkspaceSecurityRequireTwoFactorBlurb"]
+                    </RadzenText>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenSwitch @bind-Value="requireTwoFactor" Change="@OnToggleChanged" Disabled="@busy" />
+                        <RadzenText TextStyle="TextStyle.Body1">
+                            @(requireTwoFactor
+                                ? L["WorkspaceSecurityRequireTwoFactorOn"]
+                                : L["WorkspaceSecurityRequireTwoFactorOff"])
+                        </RadzenText>
+                    </RadzenStack>
+                    @if (requireTwoFactor)
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" AllowClose="false">
+                            @L["WorkspaceSecurityRequireTwoFactorInfo"]
+                        </RadzenAlert>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        }
+        else
+        {
+            <RadzenCard>
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText Text="@L["WorkspaceSecurityRequireTwoFactorTitle"]"
+                                TextStyle="TextStyle.H5" TagName="TagName.H2" />
+                    <RadzenText TextStyle="TextStyle.Body2">
+                        @L["WorkspaceSecurityRequireTwoFactorReadonlyBlurb"]
+                    </RadzenText>
+                    <RadzenBadge Text="@(workspace.RequireTwoFactor
+                                            ? L["WorkspaceSecurityRequireTwoFactorOn"]
+                                            : L["WorkspaceSecurityRequireTwoFactorOff"])"
+                                 BadgeStyle="@(workspace.RequireTwoFactor
+                                                  ? BadgeStyle.Success
+                                                  : BadgeStyle.Light)" />
+                </RadzenStack>
+            </RadzenCard>
+        }
+    }
+
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
+            @error
+        </RadzenAlert>
+    }
+</RadzenStack>
+
+@code {
+    [Parameter] public Guid WorkspaceId { get; set; }
+
+    private WorkspaceDto? workspace;
+    private bool requireTwoFactor;
+    private bool isOwner;
+    private bool loading = true;
+    private bool busy;
+    private string? error;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        loading = true;
+        error = null;
+        try
+        {
+            ApiResult<WorkspaceDto> result = await WorkspacesApi.GetAsync(WorkspaceId);
+            if (!result.IsSuccess || result.Value is null)
+            {
+                workspace = null;
+                error = result.Error ?? L["WorkspaceSecurityNotLoaded"].Value;
+                return;
+            }
+
+            workspace = result.Value;
+            requireTwoFactor = workspace.RequireTwoFactor;
+
+            AuthenticationState auth = await Auth.GetAuthenticationStateAsync();
+            string? sub = auth.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            isOwner = Guid.TryParse(sub, out Guid currentUserId)
+                      && currentUserId == workspace.OwnerId;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task OnToggleChanged(bool newValue)
+    {
+        if (workspace is null)
+        {
+            return;
+        }
+
+        busy = true;
+        error = null;
+        try
+        {
+            ApiResult<WorkspaceDto> result = await WorkspacesApi.SetRequireTwoFactorAsync(WorkspaceId, newValue);
+            if (!result.IsSuccess || result.Value is null)
+            {
+                // Roll back the optimistic toggle so the UI does
+                // not lie about the persisted state.
+                requireTwoFactor = workspace.RequireTwoFactor;
+                error = result.Error ?? L["WorkspaceSecurityToggleError"].Value;
+                return;
+            }
+
+            workspace = result.Value;
+            requireTwoFactor = workspace.RequireTwoFactor;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

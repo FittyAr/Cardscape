@@ -9,6 +9,7 @@ public interface IWorkspacesApiClient
     Task<ApiResult<WorkspaceDto>> GetAsync(Guid workspaceId, CancellationToken ct = default);
     Task<ApiResult<WorkspaceDto>> CreateAsync(string name, Region? region = null, CancellationToken ct = default);
     Task<ApiResult<WorkspaceDto>> SetRegionAsync(Guid workspaceId, Region region, CancellationToken ct = default);
+    Task<ApiResult<WorkspaceDto>> SetRequireTwoFactorAsync(Guid workspaceId, bool require, CancellationToken ct = default);
     Task<ApiResult<WorkspaceDto>> ArchiveAsync(Guid workspaceId, CancellationToken ct = default);
     Task<ApiResult<WorkspaceDto>> UnarchiveAsync(Guid workspaceId, CancellationToken ct = default);
     Task<ApiResult> DeleteAsync(Guid workspaceId, CancellationToken ct = default);
@@ -50,6 +51,16 @@ public sealed class WorkspacesApiClient(IHttpClientFactory http) : ApiClientBase
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             $"api/workspaces/{workspaceId}/region",
             new SetWorkspaceRegionRequestDto(region),
+            JsonOptions,
+            ct);
+        return await ReadAsync<WorkspaceDto>(response, ct);
+    }
+
+    public async Task<ApiResult<WorkspaceDto>> SetRequireTwoFactorAsync(Guid workspaceId, bool require, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
+            $"api/workspaces/{workspaceId}/security/require-2fa",
+            new SetWorkspaceRequireTwoFactorRequestDto(require),
             JsonOptions,
             ct);
         return await ReadAsync<WorkspaceDto>(response, ct);

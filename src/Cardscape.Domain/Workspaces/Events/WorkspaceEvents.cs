@@ -59,3 +59,15 @@ public sealed record WorkspaceRegionChanged(
     WorkspaceId WorkspaceId,
     Region NewRegion,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
+/// <summary>Raised when the workspace's two-factor authentication
+/// requirement is toggled by its owner. Compliance teams track
+/// these as "policy changes" — flipping this flag on forces every
+/// member of the workspace to enroll in TOTP before they can log
+/// in (see the enforcement path in <c>LoginUserQuery</c>). The
+/// <c>ActingUserId</c> is the owner who issued the change.</summary>
+public sealed record WorkspaceTwoFactorRequirementChanged(
+    WorkspaceId WorkspaceId,
+    bool Required,
+    Guid ActingUserId,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);

@@ -78,6 +78,7 @@ public static class CreateWorkspaceCommandHandler
             workspaceResult.Value.OwnerId,
             workspaceResult.Value.Region,
             workspaceResult.Value.IsArchived,
+            workspaceResult.Value.RequireTwoFactor,
             workspaceResult.Value.CreatedAt,
             workspaceResult.Value.Members.Count));
     }
@@ -132,6 +133,7 @@ public static class RenameWorkspaceCommandHandler
             workspace.OwnerId,
             workspace.Region,
             workspace.IsArchived,
+            workspace.RequireTwoFactor,
             workspace.CreatedAt,
             workspace.Members.Count));
     }
@@ -175,6 +177,7 @@ public static class ArchiveWorkspaceCommandHandler
             workspace.OwnerId,
             workspace.Region,
             workspace.IsArchived,
+            workspace.RequireTwoFactor,
             workspace.CreatedAt,
             workspace.Members.Count));
     }
@@ -258,6 +261,7 @@ public static class UnarchiveWorkspaceCommandHandler
             workspace.OwnerId,
             workspace.Region,
             workspace.IsArchived,
+            workspace.RequireTwoFactor,
             workspace.CreatedAt,
             workspace.Members.Count));
     }
@@ -328,6 +332,7 @@ public static class AddWorkspaceMemberCommandHandler
             workspace.OwnerId,
             workspace.Region,
             workspace.IsArchived,
+            workspace.RequireTwoFactor,
             workspace.CreatedAt,
             workspace.Members.Count));
     }
@@ -386,6 +391,7 @@ public static class ChangeWorkspaceMemberRoleCommandHandler
             workspace.OwnerId,
             workspace.Region,
             workspace.IsArchived,
+            workspace.RequireTwoFactor,
             workspace.CreatedAt,
             workspace.Members.Count));
     }
@@ -432,6 +438,7 @@ public static class RemoveWorkspaceMemberCommandHandler
             workspace.OwnerId,
             workspace.Region,
             workspace.IsArchived,
+            workspace.RequireTwoFactor,
             workspace.CreatedAt,
             workspace.Members.Count));
     }
@@ -439,6 +446,67 @@ public static class RemoveWorkspaceMemberCommandHandler
 
 /// <summary>Owner-only: change a workspace's data-residency region.</summary>
 public sealed record SetWorkspaceRegionCommand(Guid WorkspaceId, Region Region) : IMessage;
+
+/// <summary>Owner-only: toggle the workspace's two-factor
+/// authentication requirement. Storage-only in this slice;
+/// the actual login enforcement (refusing to issue a JWT for
+/// any user that belongs to a workspace that requires 2FA and
+/// has no TOTP) lands in a follow-up commit. See
+/// <c>docs/roadmap/07-trello-enterprise-parity.md</c> §2.1
+/// for the roadmap context.</summary>
+public sealed record SetWorkspaceRequireTwoFactorCommand(Guid WorkspaceId, bool Require) : IMessage;
+
+public static class SetWorkspaceRequireTwoFactorCommandHandler
+{
+    public static async Task<Result<WorkspaceDto>> Handle(
+        SetWorkspaceRequireTwoFactorCommand command,
+        IRepository<Workspace, WorkspaceId> workspaces,
+        IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
+        IClock clock,
+        CancellationToken cancellationToken)
+    {
+        if (currentUser.Id is null)
+        {
+            return Result.Failure<WorkspaceDto>(DomainError.Unauthenticated(
+                "auth.required", "Authentication is required."));
+        }
+
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(command.WorkspaceId), cancellationToken);
+        if (workspace is null || workspace.IsDeleted)
+        {
+            return Result.Failure<WorkspaceDto>(NotFound);
+        }
+
+        // Owner-only. The aggregate enforces the same check
+        // (returns InsufficientPermissions), but doing it here
+        // too short-circuits the call before the domain method
+        // runs and keeps the error code consistent with the
+        // rest of the admin surface.
+        if (workspace.OwnerId != currentUser.Id.Value)
+        {
+            return Result.Failure<WorkspaceDto>(InsufficientPermissions);
+        }
+
+        var setResult = workspace.SetRequireTwoFactor(command.Require, currentUser.Id.Value, clock.UtcNow);
+        if (setResult.IsFailure)
+        {
+            return Result.Failure<WorkspaceDto>(setResult.Error);
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success(new WorkspaceDto(
+            workspace.Id.Value,
+            workspace.Name.Value,
+            workspace.OwnerId,
+            workspace.Region,
+            workspace.IsArchived,
+            workspace.RequireTwoFactor,
+            workspace.CreatedAt,
+            workspace.Members.Count));
+    }
+}
 
 public static class SetWorkspaceRegionCommandHandler
 {
@@ -507,6 +575,7 @@ public static class SetWorkspaceRegionCommandHandler
             workspace.OwnerId,
             workspace.Region,
             workspace.IsArchived,
+            workspace.RequireTwoFactor,
             workspace.CreatedAt,
             workspace.Members.Count));
     }

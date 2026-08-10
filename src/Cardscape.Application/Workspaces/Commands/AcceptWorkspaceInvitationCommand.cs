@@ -112,6 +112,7 @@ public static class AcceptWorkspaceInvitationCommandHandler
         workspace.OwnerId,
         workspace.Region,
         workspace.IsArchived,
+        workspace.RequireTwoFactor,
         workspace.CreatedAt,
         workspace.Members.Count);
 }

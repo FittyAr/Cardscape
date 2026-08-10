@@ -24,6 +24,18 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
     /// <see cref="Errors.WorkspaceErrors.RegionMismatch"/>.</summary>
     public Region Region { get; private set; } = Region.Unspecified;
 
+    /// <summary>
+    /// Whether the workspace requires every member to enroll
+    /// in two-factor authentication (TOTP). When <c>true</c>,
+    /// the login flow refuses to issue a JWT for any user that
+    /// does not have an active <c>TotpCredential</c> and is a
+    /// member of at least one workspace with this flag set
+    /// (enforcement lives in <c>LoginUserQuery</c>; this
+    /// aggregate is the storage). Default is <c>false</c> —
+    /// the policy is opt-in, set by the workspace owner.
+    /// </summary>
+    public bool RequireTwoFactor { get; private set; }
+
     private readonly List<WorkspaceMember> _members = [];
     public IReadOnlyCollection<WorkspaceMember> Members => _members.AsReadOnly();
 
@@ -210,6 +222,35 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
         Region = newRegion;
         UpdatedAt = at;
         AddDomainEvent(new WorkspaceRegionChanged(Id, newRegion, at));
+        return Result.Success();
+    }
+
+    /// <summary>Owner-only: toggle the workspace's two-factor
+    /// authentication requirement. When <paramref name="require"/>
+    /// is <c>true</c>, every member of the workspace must have an
+    /// active TOTP credential; the login flow refuses to issue a
+    /// JWT for any member that does not (the enforcement lives in
+    /// <c>LoginUserQuery</c>). When <paramref name="require"/> is
+    /// <c>false</c>, 2FA is optional again.
+    /// <para>Idempotent: a no-op call (the flag is already in the
+    /// requested state) does not emit a domain event or bump
+    /// <c>UpdatedAt</c>.</para>
+    /// </summary>
+    public Result SetRequireTwoFactor(bool require, Guid actingUserId, DateTimeOffset at)
+    {
+        if (actingUserId != OwnerId)
+        {
+            return Result.Failure(InsufficientPermissions);
+        }
+
+        if (RequireTwoFactor == require)
+        {
+            return Result.Success();
+        }
+
+        RequireTwoFactor = require;
+        UpdatedAt = at;
+        AddDomainEvent(new WorkspaceTwoFactorRequirementChanged(Id, require, actingUserId, at));
         return Result.Success();
     }
 

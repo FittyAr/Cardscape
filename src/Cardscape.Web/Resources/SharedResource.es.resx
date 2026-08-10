@@ -131,6 +131,15 @@
   <data name="WorkspacesEmpty" xml:space="preserve"><value>Aún no tenés espacios de trabajo. Creá el primero arriba.</value></data>
   <data name="WorkspacesRegion" xml:space="preserve"><value>Región de residencia de datos</value></data>
   <data name="WorkspacesRegionPlaceholder" xml:space="preserve"><value>Elegí una región (por defecto, la del despliegue)</value></data>
+  <data name="WorkspaceSecurityTitle" xml:space="preserve"><value>Seguridad</value></data>
+  <data name="WorkspaceSecurityNotLoaded" xml:space="preserve"><value>No se pudo cargar este espacio de trabajo.</value></data>
+  <data name="WorkspaceSecurityRequireTwoFactorTitle" xml:space="preserve"><value>Requerir autenticación de dos factores</value></data>
+  <data name="WorkspaceSecurityRequireTwoFactorBlurb" xml:space="preserve"><value>Cuando está activo, cada miembro de este espacio de trabajo tiene que registrar una app autenticadora TOTP (Google Authenticator, 1Password, Authy, etc.) antes de poder iniciar sesión. El bloqueo se aplica en el próximo login de los usuarios que aún no tengan 2FA configurada.</value></data>
+  <data name="WorkspaceSecurityRequireTwoFactorReadonlyBlurb" xml:space="preserve"><value>Solo el dueño del espacio de trabajo puede cambiar esta política. Pedile que la active si querés que 2FA sea obligatoria para todos los miembros.</value></data>
+  <data name="WorkspaceSecurityRequireTwoFactorOn" xml:space="preserve"><value>Obligatoria para todos los miembros</value></data>
+  <data name="WorkspaceSecurityRequireTwoFactorOff" xml:space="preserve"><value>Apagada — 2FA es opcional en este espacio de trabajo</value></data>
+  <data name="WorkspaceSecurityRequireTwoFactorInfo" xml:space="preserve"><value>Atención: a los miembros sin 2FA se les va a pedir que se registren la próxima vez que intenten iniciar sesión. Hasta que lo hagan, no van a poder entrar.</value></data>
+  <data name="WorkspaceSecurityToggleError" xml:space="preserve"><value>No se pudo actualizar la política. Probá de nuevo.</value></data>
   <data name="GoogleCalendarTitle" xml:space="preserve"><value>Google Calendar</value></data>
   <data name="GoogleCalendarBlurb" xml:space="preserve"><value>Sincronización bidireccional entre fechas de vencimiento de tarjetas y tu calendario principal de Google.</value></data>
   <data name="GoogleCalendarNotConnected" xml:space="preserve"><value>Tu cuenta no está conectada a Google Calendar.</value></data>

@@ -267,6 +267,77 @@ public class WorkspaceTests
     }
 
     [Fact]
+    public void NewWorkspace_HasRequireTwoFactorFalse()
+    {
+        var workspace = NewWorkspace();
+
+        workspace.RequireTwoFactor.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SetRequireTwoFactor_ByOwner_TogglesAndRaisesEvent()
+    {
+        var ownerId = Guid.NewGuid();
+        var workspace = NewWorkspace(ownerId);
+        workspace.ClearDomainEvents();
+
+        var result = workspace.SetRequireTwoFactor(true, ownerId, At);
+
+        result.IsSuccess.Should().BeTrue();
+        workspace.RequireTwoFactor.Should().BeTrue();
+        workspace.DomainEvents.Should().ContainSingle()
+            .Which.Should().BeOfType<WorkspaceTwoFactorRequirementChanged>();
+    }
+
+    [Fact]
+    public void SetRequireTwoFactor_ByOwnerToFalse_TogglesAndRaisesEvent()
+    {
+        var ownerId = Guid.NewGuid();
+        var workspace = NewWorkspace(ownerId);
+        workspace.SetRequireTwoFactor(true, ownerId, At);
+        workspace.ClearDomainEvents();
+
+        var result = workspace.SetRequireTwoFactor(false, ownerId, At);
+
+        result.IsSuccess.Should().BeTrue();
+        workspace.RequireTwoFactor.Should().BeFalse();
+        workspace.DomainEvents.Should().ContainSingle()
+            .Which.Should().BeOfType<WorkspaceTwoFactorRequirementChanged>();
+    }
+
+    [Fact]
+    public void SetRequireTwoFactor_ByNonOwner_ReturnsForbiddenFailure()
+    {
+        var ownerId = Guid.NewGuid();
+        var otherUser = Guid.NewGuid();
+        var workspace = NewWorkspace(ownerId);
+
+        var result = workspace.SetRequireTwoFactor(true, otherUser, At);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be(WorkspaceErrors.InsufficientPermissions.Code);
+        workspace.RequireTwoFactor.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SetRequireTwoFactor_ToSameValue_IsIdempotent()
+    {
+        // A no-op call must NOT emit a domain event and must NOT
+        // bump UpdatedAt. The audit log would otherwise fill up
+        // with redundant entries every time a UI re-renders the
+        // toggle without actually changing the value.
+        var ownerId = Guid.NewGuid();
+        var workspace = NewWorkspace(ownerId);
+        workspace.SetRequireTwoFactor(false, ownerId, At);
+        workspace.ClearDomainEvents();
+
+        var result = workspace.SetRequireTwoFactor(false, ownerId, At);
+
+        result.IsSuccess.Should().BeTrue();
+        workspace.DomainEvents.Should().BeEmpty();
+    }
+
+    [Fact]
     public void GuardRegion_WithUnspecifiedDeployment_AllowsAnyRegion()
     {
         var workspace = NewWorkspace();

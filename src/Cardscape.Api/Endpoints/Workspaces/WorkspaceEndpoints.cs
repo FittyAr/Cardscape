@@ -52,6 +52,23 @@ public static class WorkspaceEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
+        // Owner-only: toggle the workspace's two-factor
+        // authentication requirement. The endpoint is a plain
+        // POST that accepts the new state in the body; the
+        // aggregate method is idempotent, so re-POSTing the
+        // current value is a no-op (no event, no UpdatedAt
+        // bump).
+        group.MapPost("/{workspaceId:guid}/security/require-2fa", async (
+            Guid workspaceId,
+            [FromBody] SetWorkspaceRequireTwoFactorRequest body,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
+                new SetWorkspaceRequireTwoFactorCommand(workspaceId, body.Require), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+        });
+
         group.MapPost("/{workspaceId:guid}/rename", async (Guid workspaceId, RenameWorkspaceRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(new RenameWorkspaceCommand(workspaceId, body.Name), ct);

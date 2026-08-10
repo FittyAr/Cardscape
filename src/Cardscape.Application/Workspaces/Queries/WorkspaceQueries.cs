@@ -41,6 +41,7 @@ public static class GetWorkspaceQueryHandler
             workspace.OwnerId,
             workspace.Region,
             workspace.IsArchived,
+            workspace.RequireTwoFactor,
             workspace.CreatedAt,
             workspace.Members.Count));
     }
@@ -70,6 +71,7 @@ public static class ListWorkspacesForUserQueryHandler
                 w.OwnerId,
                 w.Region,
                 w.IsArchived,
+                w.RequireTwoFactor,
                 w.CreatedAt,
                 w.Members.Count))
             .ToList();
