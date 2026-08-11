@@ -93,6 +93,19 @@ public sealed class SeedRunner : IDisposable
                 try
                 {
                     await step.ExecuteAsync(context, report, cancellationToken);
+
+                    // Publish a live "staged rows" snapshot so the
+                    // admin UI's Table status panel fills up as
+                    // the run progresses. SaveChanges is still
+                    // owned by the runner below — these counts
+                    // reflect the in-memory accumulators, not
+                    // the DB. The final PopulateTableSnapshotAsync
+                    // after SaveChanges replaces them with the
+                    // authoritative DB counts.
+                    foreach ((string key, long count) in context.RecordedCounts())
+                    {
+                        report.RecordTable(key, count, key);
+                    }
                 }
                 catch (Exception ex)
                 {

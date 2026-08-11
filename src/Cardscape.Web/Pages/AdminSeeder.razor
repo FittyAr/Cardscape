@@ -273,11 +273,11 @@
     {
         if (_busy) { return; }
 
-        bool confirmed = await DialogService.Confirm(
+        bool? confirmed = await DialogService.Confirm(
             L["SeederWipeConfirm"],
             L["SeederWipeConfirmTitle"],
             new ConfirmOptions { OkButtonText = L["SeederWipe"], CancelButtonText = L["CommonCancel"] });
-        if (!confirmed) { return; }
+        if (confirmed != true) { return; }
 
         _busy = true;
         _error = null;
