@@ -1,3 +1,4 @@
+using System.Xml.Linq;
 using FluentAssertions;
 using NetArchTest.Rules;
 using Xunit;
@@ -19,6 +20,67 @@ public sealed class ArchitectureTests
     private const string Api = "Cardscape.Api";
     private const string Web = "Cardscape.Web";
     private const string Mcp = "Cardscape.Mcp";
+
+    [Fact]
+    public void SourceProjects_HaveOnlyTheApprovedDirectProjectReferences()
+    {
+        // Api -> Web is the deliberate exception to the inward-only graph: the
+        // ASP.NET Core host serves the Blazor WebAssembly client. Reading the
+        // project files catches reference drift even before code uses a type.
+        IReadOnlyDictionary<string, string[]> approvedReferences =
+            new Dictionary<string, string[]>(StringComparer.Ordinal)
+            {
+                ["Cardscape.Domain"] = [],
+                ["Cardscape.Application"] = ["Cardscape.Domain"],
+                ["Cardscape.Infrastructure"] = ["Cardscape.Application"],
+                ["Cardscape.Web"] = [],
+                ["Cardscape.Seeder"] = ["Cardscape.Application", "Cardscape.Domain", "Cardscape.Infrastructure"],
+                ["Cardscape.Mcp"] = ["Cardscape.Application", "Cardscape.Infrastructure"],
+                ["Cardscape.Api"] = ["Cardscape.Application", "Cardscape.Infrastructure", "Cardscape.Seeder", "Cardscape.Web"],
+            };
+
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string[] projectFiles = Directory.GetFiles(
+            Path.Combine(repositoryRoot.FullName, "src"),
+            "*.csproj",
+            SearchOption.AllDirectories);
+
+        var actualReferences = projectFiles.ToDictionary(
+            projectFile => Path.GetFileNameWithoutExtension(projectFile),
+            ReadDirectProjectReferences,
+            StringComparer.Ordinal);
+
+        actualReferences.Keys.Should().BeEquivalentTo(approvedReferences.Keys);
+        foreach ((string project, string[] expectedReferences) in approvedReferences)
+        {
+            actualReferences[project].Should().BeEquivalentTo(
+                expectedReferences,
+                $"{project} may only reference its approved direct dependencies");
+        }
+    }
+
+    private static string[] ReadDirectProjectReferences(string projectFile)
+    {
+        XDocument project = XDocument.Load(projectFile);
+        return project.Descendants("ProjectReference")
+            .Select(reference => reference.Attribute("Include")?.Value)
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(path => Path.GetFileNameWithoutExtension(path!))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static DirectoryInfo FindRepositoryRoot()
+    {
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
+        while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "src")))
+        {
+            directory = directory.Parent;
+        }
+
+        return directory ?? throw new DirectoryNotFoundException(
+            $"Could not find the repository root from {AppContext.BaseDirectory}.");
+    }
 
     [Fact]
     public void Domain_DoesNotDependOn_AnyOuterLayer()
@@ -69,12 +131,13 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void Api_DependsOn_ApplicationInfrastructureDomain_Only()
+    public void Api_WebProjectReference_IsUsedForHostingOnly()
     {
         // The API project is a Microsoft.NET.Sdk.Web top-level program; the
         // generated `Program` type is internal to the assembly. We anchor
         // the assembly lookup on a real public type (ServiceCollectionExtensions)
-        // and assert that none of its public surface depends on Web.
+        // and assert that application code does not couple to Web types. The
+        // ProjectReference itself is intentional and separately guarded above.
         var apiAssembly = typeof(Cardscape.Api.Extensions.ServiceCollectionExtensions).Assembly;
 
         TestResult result = Types.InAssembly(apiAssembly)
@@ -83,7 +146,7 @@ public sealed class ArchitectureTests
             .GetResult();
 
         result.IsSuccessful.Should().BeTrue(
-            $"Api is the server host. The Web client talks to it over HTTP, never via a project reference. Offenders: {string.Join(", ", result.FailingTypeNames ?? [])}");
+            $"Api may host Web assets but must not depend on Web types. Offenders: {string.Join(", ", result.FailingTypeNames ?? [])}");
     }
 
     [Fact]

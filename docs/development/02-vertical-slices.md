@@ -137,10 +137,8 @@ public sealed class RenameBoardCommandValidator
 }
 ```
 
-- The validator is a regular FluentValidation class, registered
-  in DI, and run automatically by the
-  `ValidationBehavior<TRequest, TResponse>` MediatR pipeline
-  behavior.
+- The validator is a regular FluentValidation class registered
+  in DI and invoked by the corresponding Wolverine handler.
 - Validators check **input shape** (length, format, presence).
   Domain rules (e.g. "you can't rename an archived board") live
   in the entity method.
@@ -416,7 +414,7 @@ exercises.
 
 ## 4. Anti-patterns
 
-- **Don't add a service layer on top of MediatR.** Handlers
+- **Don't add a service layer on top of Wolverine.** Handlers
   already are the application services. A `BoardService` that
   calls handlers is two layers for one job.
 - **Don't put business logic in the endpoint.** Endpoints are

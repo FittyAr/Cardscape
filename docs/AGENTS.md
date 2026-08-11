@@ -36,11 +36,11 @@ MCP server decision.
 | Runtime | .NET | 10.0 (LTS, SDK 10.0.302) |
 | Web framework | ASP.NET Core minimal APIs | 10.0.10 |
 | Client | Blazor WebAssembly | 10.0.10 |
-| UI components | Radzen.Blazor | 11.1.8 |
+| UI components | Radzen.Blazor | 11.2.1 |
 | ORM | Entity Framework Core | 10.0.10 LTS |
-| DB providers (runtime) | Sqlite, Npgsql, MySql.EntityFrameworkCore | 10.0.10 / 10.0.3 / 10.0.7 |
-| Validation | FluentValidation | 11.11.0 |
-| CQRS / Mediator | MediatR | 12.4.1 |
+| DB providers (runtime) | Sqlite, Npgsql, MySql.EntityFrameworkCore | 10.0.10 / 10.0.3 / 10.0.9 |
+| Validation | FluentValidation | 12.1.1 |
+| CQRS / Mediator | Wolverine | 6.24.5 |
 | API docs | Microsoft.AspNetCore.OpenApi + Scalar.AspNetCore | 10.0.10 / 2.12.50 |
 | AI integration | ModelContextProtocol (MCP) | latest stable (>= 0.3) |
 | Tests | xUnit + FluentAssertions + Moq + NetArchTest | 2.9.2 / 6.12.2 / 4.20.72 / 1.3.2 |
@@ -48,8 +48,8 @@ MCP server decision.
 
 ## 3. Architecture
 
-Clean Architecture, **six source projects** + one client + one
-AI server + **five test projects**. The dependency graph is
+Clean Architecture, **seven source projects**, one public SDK and
+**seven test suites plus TestCommon**. The dependency graph is
 strict and one-directional:
 
 ```
@@ -69,7 +69,7 @@ strict and one-directional:
    ┌────────────────────┐          ┌────────────────────────┐
    │   Application      │  ←────   │    Infrastructure     │  ← technical
    │   use cases        │          │    EF Core, Identity,  │
-   │   (MediatR + FV)   │          │    Storage, Email     │
+   │   (Wolverine + FV) │          │    Storage, Email     │
    └────────┬───────────┘          └────────────────────────┘
             ▲                                   ▲
             │                                   │
@@ -88,18 +88,20 @@ Key rules:
   `IEmailService`, …).
 - **Infrastructure** depends on Application and Domain. It
   provides the concrete implementations.
-- **Api** depends on Application and Infrastructure. It composes
-  the DI container for the public REST API.
+- **Api** depends on Application and Infrastructure. Its
+  build-time references to Web and Seeder exist only to host
+  Blazor static assets and compose the optional seeder.
 - **Web** depends on nothing server-side. It is a Blazor WASM
   client that calls the API over HTTP.
-- **Mcp** depends on Application and Domain. It composes the
-  same DI container as the API plus an `ICurrentUser` resolver
+- **Mcp** depends on Application and Infrastructure. It composes
+  the same persistence/application registrations as the API plus
+  an `ICurrentUser` resolver
   from the API token. The MCP server is a separate process
   (stdio or HTTP+SSE) and shares the entire Application layer
   with the REST API.
 
-The dependency direction is enforced by the
-`Cardscape.ArchitectureTests` project via NetArchTest.
+Type dependencies and project references are enforced by the
+`Cardscape.ArchitectureTests` project.
 
 ## 4. The AI integration pillar
 

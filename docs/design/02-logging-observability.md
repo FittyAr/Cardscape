@@ -152,8 +152,8 @@ A span is a unit of work. The project emits a span for:
 - Every database query (the EF Core instrumentation).
 - Every MCP tool call (the `McpServerInstrumentation` and a
   custom span per tool).
-- Every `MediatR` command and query (a custom behavior in
-  the MediatR pipeline).
+- Every Wolverine command and query through its configured
+  handler instrumentation.
 - Every long-running domain operation (e.g. board import).
 
 ### Span attributes
@@ -177,7 +177,7 @@ identifier.
 
 The W3C `traceparent` is the only context propagation
 format. It is generated at the edge, propagated through
-HTTP, MediatR, and EF Core, and exported at the end.
+HTTP, Wolverine, and EF Core, and exported at the end.
 
 Custom propagation to non-HTTP services (e.g. email
 delivery, webhook delivery) uses the same `traceparent`
@@ -227,8 +227,8 @@ call:
    `Error` on unhandled exceptions.
 
 The MCP server's `ICurrentUser` resolver sets the user
-context on the span. The MediatR pipeline behavior propagates
-the user to the `Application` layer.
+context on the span. Wolverine resolves the scoped current-user
+abstraction for the `Application` handler.
 
 ---
 

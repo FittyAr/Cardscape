@@ -293,8 +293,8 @@ public interface ICurrentUser
 ```
 
 The implementation is set at the edge (the API host, the
-MCP host, the test host) and propagated through the
-MediatR pipeline. The `Application` layer does not know
+MCP host, the test host) and supplied to Wolverine handlers
+through DI. The `Application` layer does not know
 about cookies, JWTs, or API tokens; it only knows about
 `ICurrentUser`.
 

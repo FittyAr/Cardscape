@@ -56,7 +56,7 @@ Cardscape.Mcp  →  Cardscape.Application  →  Cardscape.Domain
 ```
 
 - `Cardscape.Mcp` references `Cardscape.Application` (for
-  MediatR handlers, validators, and DTOs) and `Cardscape.Domain`
+  Wolverine handlers, validators, and DTOs) and `Cardscape.Domain`
   (for shared error types and primitives).
 - `Cardscape.Mcp` does **not** reference `Cardscape.Api`,
   `Cardscape.Infrastructure`, or `Cardscape.Web`.

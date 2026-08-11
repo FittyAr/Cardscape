@@ -6,8 +6,10 @@
 ## 1. The Clean Architecture stack
 
 Cardscape follows a Clean Architecture with **seven source
-projects** and **five test projects**. The dependency graph is
-strict and one-directional:
+projects**, one public SDK and **seven test suites plus
+TestCommon**. Runtime dependencies remain inward-facing; the
+API also has build-time references to the Web and Seeder
+projects for hosting and composition:
 
 ```
                     ┌────────────────────────┐
@@ -26,7 +28,7 @@ strict and one-directional:
    ┌────────────────────┐          ┌────────────────────────┐
    │   Application      │  ←────   │    Infrastructure     │  ← technical
    │   use cases        │          │    EF Core, Identity,  │
-   │   (MediatR + FV)   │          │    Storage, Email     │
+   │   (Wolverine + FV) │          │    Storage, Email     │
    └────────┬───────────┘          └────────────────────────┘
             ▲                                   ▲
             │                                   │
@@ -47,18 +49,22 @@ Key rules:
 - **Infrastructure** depends on Application and Domain. It
   provides the concrete implementations: `CardscapeDbContext`
   for EF Core, `AspNetIdentityService` for Identity, etc.
-- **Api** depends on Application and Infrastructure. It composes
-  the DI container and exposes HTTP endpoints.
-- **Mcp** depends on Application and Domain. It composes the
-  same DI container as the API, plus an `ICurrentUser` resolver
+- **Api** depends on Application and Infrastructure. It also
+  references Web so the Blazor static-web-assets pipeline can
+  merge the WASM client into the host, and Seeder to compose the
+  optional development/demo data feature. Neither reference lets
+  server code call client code at runtime.
+- **Mcp** depends on Application and Infrastructure. It composes
+  the same persistence and application registrations as the API,
+  plus an `ICurrentUser` resolver
   from the API token, and exposes the MCP server. It is
   **independent** of the REST API: a deployment can run the
   MCP server without exposing the REST API, and vice versa.
 - **Web** depends on nothing server-side. It is a Blazor WASM
   client that calls the API over HTTP.
 
-The dependency direction is enforced by the
-`Cardscape.ArchitectureTests` project via NetArchTest.
+Type dependencies and project references are enforced by the
+`Cardscape.ArchitectureTests` project.
 
 ## 2. Directory layout
 
@@ -188,8 +194,8 @@ full catalog and the context map.
   (cookie-based JWT for the web client) and `Cardscape.Mcp`
   (API-token-based for the AI client). Both share the same
   `ICurrentUser` abstraction in the Application layer.
-- **Validation** is implemented with **FluentValidation** as
-  MediatR pipeline behaviors.
+- **Validation** is implemented with **FluentValidation** and
+  invoked by the corresponding Wolverine handlers.
 - **Logging** is `ILogger<T>` everywhere, structured logging only.
 - **Exception handling** is a single middleware in `Cardscape.Api`
   and a single filter in `Cardscape.Mcp` that maps domain
@@ -245,14 +251,14 @@ for the recipe. The short version:
 
 - **No shared contracts project** between Api and Web. We
   duplicate DTOs intentionally until the surface stabilizes.
-- **No MediatR on the client.** The Blazor WASM client uses
-  typed `HttpClient` (Refit) to call the API.
+- **No command bus on the client.** The Blazor WASM client uses
+  typed `HttpClient` services to call the API.
 - **No gRPC / GraphQL.** REST + JSON over HTTP only.
-- **No event bus / message broker.** Domain events are
-  dispatched in-process via MediatR.
-- **No MCP subscription support yet** (Phase 2 deliverable).
-  Resources are read-only for now; live subscriptions are
-  scheduled for Phase 5 (RealTime) when SignalR is wired in.
+- **No external message broker.** Wolverine dispatches commands,
+  queries and domain events in process; persisted background jobs
+  provide deferred execution.
+- **MCP resource subscriptions are supported** through the MCP
+  broadcaster and the API/MCP internal notification endpoints.
 
 ## 8. References
 

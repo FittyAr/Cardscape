@@ -74,7 +74,7 @@ the gap visible.
   - All `*Handler` classes are in `Application/.../Commands/` or
     `Application/.../Queries/`.
   - No class in `Domain` has a `using` for
-    `Microsoft.EntityFrameworkCore` or `MediatR`.
+    `Microsoft.EntityFrameworkCore` or `Wolverine`.
 - These run in milliseconds and are part of every CI build.
 
 ## 3. The `Database` trait convention

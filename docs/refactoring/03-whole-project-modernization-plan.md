@@ -37,7 +37,7 @@ Reglas permanentes:
 ### 2.2 Riesgos y deuda confirmados
 
 - [x] `Cardscape.Seeder` era una dependencia de API pero no figuraba en `Cardscape.slnx`; esto permitió que un build Release de la solución lo produjera en Debug.
-- [ ] La documentación arquitectónica está desincronizada: todavía describe MediatR aunque ADR 0003 y el código usan Wolverine; también contiene versiones antiguas y referencias `net11.0` incorrectas.
+- [x] La documentación normativa principal fue reconciliada con Wolverine, .NET 10 y las versiones centrales instaladas. Los ADR y auditorías históricas se preservan sin reescritura.
 - [ ] `Directory.Build.props` suprime una lista extraordinariamente amplia y duplicada de analizadores. Esto reduce el valor de `TreatWarningsAsErrors`; debe reducirse gradualmente con justificación por regla.
 - [ ] Existen archivos con demasiadas responsabilidades: `CardDetail.razor` (~58 KB), `BoardDetail.razor` (~34 KB), `CardCommands.cs` (~40 KB), el registro DI de Infrastructure (~32 KB), `BoardsTools.cs` (~31 KB) y `Api/Program.cs` (~18 KB).
 - [ ] La migración documentada por proveedor contradice la estructura actual de migraciones consolidadas; debe decidirse y comprobarse una única estrategia multi-provider.
@@ -58,13 +58,13 @@ Reglas permanentes:
 
 ### Fase 1 — Arquitectura y estructura
 
-- [ ] Generar el grafo efectivo de referencias entre proyectos y reforzar sus invariantes con architecture tests.
+- [x] Generar el grafo efectivo de referencias entre proyectos y reforzar sus invariantes con architecture tests.
 - [ ] Revisar ubicación y dependencia de cada abstracción; Domain no debe depender de frameworks y Application sólo de Domain/abstracciones necesarias.
 - [ ] Auditar composición DI de API, MCP y Seeder: lifetimes, duplicación, validación al arranque y opciones tipadas.
 - [ ] Revisar boundaries y vertical slices; dividir archivos monolíticos por caso de uso sin crear capas adicionales.
 - [ ] Revisar el rol del SDK público y evitar duplicación de contratos con Web/API.
 - [ ] Alinear solución, Docker, CI, scripts y documentación con el mismo conjunto de proyectos.
-- [ ] Reconciliar documentación normativa con Wolverine, .NET 10 y versiones instaladas.
+- [x] Reconciliar documentación normativa con Wolverine, .NET 10 y versiones instaladas.
 
 ### Fase 2 — Superficies críticas
 
@@ -113,8 +113,9 @@ Reglas permanentes:
 
 | Fecha | Bloque | Resultado | Verificación | Commit |
 |---|---|---|---|---|
-| 2026-08-11 | Línea base + lifetime MCP | Eliminado `McpToolContext`; prompts, resources y AI tools usan DI scoped | Suite: 712 pass, 0 fail, 1 skip | Pendiente |
-| 2026-08-11 | Estructura de solución | Seeder agregado explícitamente a `Cardscape.slnx` | Build Release: 0 warnings, 0 errors; Seeder en Release | Pendiente |
+| 2026-08-11 | Línea base + lifetime MCP | Eliminado `McpToolContext`; prompts, resources y AI tools usan DI scoped | Suite: 712 pass, 0 fail, 1 skip | `8d923fe` |
+| 2026-08-11 | Estructura de solución | Seeder agregado explícitamente a `Cardscape.slnx` | Build Release: 0 warnings, 0 errors; Seeder en Release | `8d923fe` |
+| 2026-08-11 | Grafo + background jobs | ProjectReference validado desde MSBuild; registry inmutable construido por DI; documentación normativa reconciliada | Build 0/0; suite 721 pass, 0 fail, 1 skip | Pendiente |
 
 ## 5. Criterio de completitud
 

@@ -574,16 +574,16 @@ Full layout and dependency rules:
 |---|---|---|
 | Runtime | .NET 10 (LTS) | SDK `10.0.302` (latest 10.0.x feature band) |
 | Web framework | ASP.NET Core minimal APIs | 10.0.10 |
-| Client | Blazor WebAssembly | 11.0 preview 6, Radzen components |
-| UI components | Radzen.Blazor | 11.1.8 |
+| Client | Blazor WebAssembly | 10.0.10, Radzen components |
+| UI components | Radzen.Blazor | 11.2.1 |
 | ORM | Entity Framework Core | 10.0.10 LTS (third-party providers trail .NET) |
 | DB providers | Sqlite, Npgsql, MySql.EntityFrameworkCore | runtime, all switchable via config |
-| Validation | FluentValidation | 11.11.0 |
-| CQRS / Mediator | Wolverine | 6.23.1 (JasperFx), source-generator |
+| Validation | FluentValidation | 12.1.1 |
+| CQRS / Mediator | Wolverine | 6.24.5 (JasperFx), source-generator |
 | Mapping | Mapperly | 4.3.1 (Riok), source-generator |
-| Auth | JWT bearer + Pbkdf2 password hasher | built-in + `System.IdentityModel.Tokens.Jwt` 8.2.1 |
-| AI integration | Model Context Protocol | .NET SDK `1.4.1`, stdio today |
-| Tests | xUnit + FluentAssertions + `WebApplicationFactory` | 2.9.2 / 6.12.2 / 11.0 preview 6 |
+| Auth | JWT bearer + Pbkdf2 password hasher | built-in + `System.IdentityModel.Tokens.Jwt` 8.22.0 |
+| AI integration | Model Context Protocol | .NET SDK `2.0.0`, stdio + HTTP endpoints |
+| Tests | xUnit + FluentAssertions + `WebApplicationFactory` | 3.2.2 / 8.10.0 / ASP.NET Core 10.0.10 |
 | Containers | Docker + docker compose | multi-stage Dockerfile, Postgres + API |
 | License | Reciprocal Public License 1.5 | RPL-1.5 |
 
@@ -608,8 +608,8 @@ Cardscape/
 │   ├── api/                      # public API conventions
 │   ├── roadmap/                  # where the project is going
 │   └── community/                # community-facing reference docs (changelog, roadmap, governance, maintainers, launch)
-├── src/                          # 6 source projects (Domain, Application, Infrastructure, Api, Web, Mcp)
-├── tests/                        # 5 test projects (xUnit)
+├── src/                          # 7 source projects (Domain, Application, Infrastructure, Api, Web, Mcp, Seeder)
+├── tests/                        # 7 test suites + TestCommon (xUnit)
 ├── tools/                        # developer tooling
 ├── samples/                      # sample clients
 ├── Directory.Build.props         # shared MSBuild properties

@@ -169,11 +169,6 @@ builder.Services.AddCardscapeBackgroundJobDispatcher(o =>
 
 var app = builder.Build();
 
-// Resolve the registry and pull every IBackgroundJobHandler out
-// of DI so the dispatcher can find them by type at runtime. This
-// is a no-op until at least one handler is registered.
-app.Services.UseCardscapeBackgroundJobHandlers();
-
 // ── Middleware pipeline ─────────────────────────────────
 app.UseMiddleware<GlobalExceptionMiddleware>();
 

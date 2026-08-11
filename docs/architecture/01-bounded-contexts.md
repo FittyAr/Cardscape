@@ -151,7 +151,7 @@ Example: `Boards` raises `BoardArchived`. `Cards` handles it
 by archiving all cards on the board. `Activities` handles it
 by writing an entry to the board's activity log.
 
-Domain events are dispatched in-process by MediatR after
+Domain events are dispatched in-process by Wolverine after
 `SaveChangesAsync` succeeds. In Phase 5 we may add an external
 event bus (RabbitMQ / Service Bus) for cross-process
 communication, but the API stays the same: handlers are

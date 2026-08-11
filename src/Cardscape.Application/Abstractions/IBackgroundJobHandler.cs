@@ -21,13 +21,11 @@ public interface IBackgroundJobHandler
 /// <summary>
 /// Registry that maps a job <c>type</c> string to its handler. The
 /// dispatcher uses it to dispatch each claim to the right
-/// implementation. The infrastructure registration code
-/// (<c>BackgroundJobServiceCollectionExtensions</c>) populates the
-/// registry from DI at startup.
+/// implementation. Infrastructure builds the registry from the
+/// handlers registered in DI.
 /// </summary>
 public interface IBackgroundJobHandlerRegistry
 {
     IBackgroundJobHandler? Resolve(string type);
     IReadOnlyCollection<string> RegisteredTypes { get; }
-    void Register(IBackgroundJobHandler handler);
 }
