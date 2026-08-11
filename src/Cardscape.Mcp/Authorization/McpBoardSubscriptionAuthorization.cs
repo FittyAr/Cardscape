@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Common;
 using Cardscape.Domain.Common;
+using Cardscape.Mcp.Resources;
 using ModelContextProtocol;
 
 namespace Cardscape.Mcp.Authorization;
@@ -37,23 +38,22 @@ public static class McpBoardSubscriptionAuthorization
     public static Guid ParseBoardId(string? rawUri)
     {
         if (string.IsNullOrWhiteSpace(rawUri)
-            || !Uri.TryCreate(rawUri, UriKind.Absolute, out Uri? uri)
-            || !string.Equals(uri.Scheme, "board", StringComparison.Ordinal))
+            || !Uri.TryCreate(rawUri, UriKind.Absolute, out Uri? uri))
         {
             throw new McpException(
                 $"{InvalidResourceErrorCode}: Only board://{{boardId}} resources can be subscribed.");
         }
 
-        string candidate = !string.IsNullOrWhiteSpace(uri.Host)
-            ? uri.Host
-            : uri.AbsolutePath.Trim('/');
-        if (!Guid.TryParse(candidate, out Guid boardId) || boardId == Guid.Empty)
+        try
+        {
+            return McpResourceUriParser.ParseBoardId(uri);
+        }
+        catch (ArgumentException exception)
         {
             throw new McpException(
-                $"{InvalidResourceErrorCode}: Board resource URI must contain a non-empty GUID.");
+                $"{InvalidResourceErrorCode}: Board resource URI must contain a non-empty GUID.",
+                exception);
         }
-
-        return boardId;
     }
 
     public static string ToCanonicalUri(Guid boardId) => $"board://{boardId:N}";

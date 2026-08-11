@@ -137,7 +137,8 @@ Reglas permanentes:
 | 2026-08-11 | Current user MCP | Mapping duplicado eliminado; accessor MCP registrado en producción; workaround E2E removido; invariant agregado | Build 0/0; suite 745 pass, 0 fail, 1 skip | `9052126` |
 | 2026-08-11 | Scopes MCP | Filtro central deny-by-default; catálogo explícito read/write; invariant contra herramientas sin clasificar | Build 0/0; suite 757 pass, 0 fail, 1 skip | `5899713` |
 | 2026-08-11 | Superficies de lectura MCP | Política reutilizable; recursos, prompts, completion y suscripciones exigen read; composición SDK fijada por test | Build 0/0; suite 763 pass, 0 fail, 1 skip | `57b6d04` |
-| 2026-08-11 | Identidad en suscripciones MCP | URI board canónico; membresía validada al suscribir y antes de fan-out; identidad no expuesta | Build 0/0; suite 772 pass, 0 fail, 1 skip | Pendiente |
+| 2026-08-11 | Identidad en suscripciones MCP | URI board canónico; membresía validada al suscribir y antes de fan-out; identidad no expuesta | Build 0/0; suite 772 pass, 0 fail, 1 skip | `d1403d2` |
+| 2026-08-11 | Contratos URI de recursos MCP | Parser compartido respeta autoridad/path de los cinco templates; suscripciones reutilizan el mismo contrato board | Build 0/0; suite 785 pass, 0 fail, 1 skip | Pendiente |
 
 ## 5. Criterio de completitud
 

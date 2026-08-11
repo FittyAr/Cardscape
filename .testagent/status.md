@@ -112,3 +112,16 @@
 - Assertion review: no assertion-free/trivial cases; exact canonical output, exception codes,
   snapshot state and repository invocation count are asserted.
 - Full validation: Release build 0 warnings / 0 errors; suite 772 passed / 0 failed / 1 skipped.
+
+## MCP resource URI parsing
+
+- Status: complete.
+- Confirmed defect: three of five advertised resource templates cannot pass the current parser.
+- Narrow validation before the final fragment case: 20/20 covering all five advertised templates,
+  malformed/cross-contract inputs and shared board-subscription parsing.
+- Pseudo-mutation review: authority-vs-path extraction, scheme, authority, empty GUID, extra segment,
+  query and fragment checks are each killed by focused data rows.
+- Assertion review: both theories use behavioral assertions (exact GUID or typed exception plus
+  contract message); there are no assertion-free or truthiness-only cases.
+- Final narrow validation: 21/21 after adding explicit fragment rejection.
+- Full validation: Release build 0 warnings / 0 errors; suite 785 passed / 0 failed / 1 skipped.

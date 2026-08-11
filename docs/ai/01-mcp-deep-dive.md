@@ -495,6 +495,13 @@ notification fan-out the broadcaster reuses Application's board-read
 guard; revoked private-board access removes the subscription before any
 notification is sent. Administrative snapshots expose session ids only.
 
+Resource URI parsing follows the advertised templates exactly. Workspace,
+board and card resources carry their GUID in the URI authority
+(`board://{boardId}`), while board collections carry it in the path
+(`cards://board/{boardId}` and `lists://board/{boardId}`). A shared parser
+rejects cross-template schemes, empty GUIDs, extra segments, queries and
+fragments; subscription authorization reuses the same board contract.
+
 The MCP server does **not** support cookie auth or JWT
 auth. The AI client is not a browser; the bearer token is
 the right auth method for an AI client.

@@ -214,3 +214,21 @@
 - [x] Revalidate each distinct subscriber identity before every broadcast and remove unauthorized subscriptions.
 - [x] Preserve public-board read semantics from Application.
 - [x] Prove URI parsing, allowed/denied membership and revocation behavior; run full validation.
+
+## Phase 2 follow-up: MCP resource URI contract
+
+### Bounded target inventory
+
+- `McpResources.ExtractGuid` always reads the final path segment.
+- `workspace://{id}`, `board://{id}` and `card://{id}` store the GUID in `Uri.Host`; their path is `/`.
+- `cards://board/{id}` and `lists://board/{id}` store `board` in Host and the GUID in the path.
+- Subscription authorization already parses the board authority independently, creating two URI interpretations.
+
+### Acceptance checklist
+
+- [x] Centralize URI parsing for authority-based and collection resource templates.
+- [x] Validate exact scheme/authority shape, GUID, query and fragment.
+- [x] Route all five resource methods through the shared parser.
+- [x] Reuse the same board parser for subscription authorization.
+- [x] Prove all five valid contracts and malformed/cross-scheme rejection.
+- [x] Run narrow and full validation with assertion/gap review.

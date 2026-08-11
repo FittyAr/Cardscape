@@ -36,7 +36,7 @@ public sealed class McpResources(IMessageBus bus)
     [McpServerResource(Name = "workspace", UriTemplate = "workspace://{workspaceId}")]
     public async Task<string> GetWorkspace(Uri uri, CancellationToken ct = default)
     {
-        Guid workspaceId = ExtractGuid(uri, "workspaceId");
+        Guid workspaceId = McpResourceUriParser.ParseWorkspaceId(uri);
         Result<WorkspaceDto> result = await bus.InvokeAsync<Result<WorkspaceDto>>(
             new GetWorkspaceQuery(workspaceId), ct);
         return ToJson(uri, result);
@@ -45,7 +45,7 @@ public sealed class McpResources(IMessageBus bus)
     [McpServerResource(Name = "board", UriTemplate = "board://{boardId}")]
     public async Task<string> GetBoard(Uri uri, CancellationToken ct = default)
     {
-        Guid boardId = ExtractGuid(uri, "boardId");
+        Guid boardId = McpResourceUriParser.ParseBoardId(uri);
         Result<BoardDto> result = await bus.InvokeAsync<Result<BoardDto>>(
             new GetBoardQuery(boardId), ct);
         return ToJson(uri, result);
@@ -54,7 +54,7 @@ public sealed class McpResources(IMessageBus bus)
     [McpServerResource(Name = "card", UriTemplate = "card://{cardId}")]
     public async Task<string> GetCard(Uri uri, CancellationToken ct = default)
     {
-        Guid cardId = ExtractGuid(uri, "cardId");
+        Guid cardId = McpResourceUriParser.ParseCardId(uri);
         Result<CardDto> result = await bus.InvokeAsync<Result<CardDto>>(
             new GetCardQuery(cardId), ct);
         return ToJson(uri, result);
@@ -63,7 +63,7 @@ public sealed class McpResources(IMessageBus bus)
     [McpServerResource(Name = "cards-on-board", UriTemplate = "cards://board/{boardId}")]
     public async Task<string> ListCardsOnBoard(Uri uri, CancellationToken ct = default)
     {
-        Guid boardId = ExtractGuid(uri, "boardId");
+        Guid boardId = McpResourceUriParser.ParseCardsBoardId(uri);
         Result<IReadOnlyList<CardSummaryDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
             new ListCardsForBoardQuery(boardId, IncludeArchived: false), ct);
         return ToJson(uri, result);
@@ -72,21 +72,10 @@ public sealed class McpResources(IMessageBus bus)
     [McpServerResource(Name = "lists-on-board", UriTemplate = "lists://board/{boardId}")]
     public async Task<string> ListListsOnBoard(Uri uri, CancellationToken ct = default)
     {
-        Guid boardId = ExtractGuid(uri, "boardId");
+        Guid boardId = McpResourceUriParser.ParseListsBoardId(uri);
         Result<IReadOnlyList<BoardListDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<BoardListDto>>>(
             new ListListsForBoardQuery(boardId, IncludeArchived: false), ct);
         return ToJson(uri, result);
-    }
-
-    private static Guid ExtractGuid(Uri uri, string paramName)
-    {
-        string last = uri.Segments[^1].TrimEnd('/');
-        if (!Guid.TryParse(last, out Guid id))
-        {
-            throw new ArgumentException(
-                $"URI '{uri}' does not contain a valid {paramName} (expected a GUID).");
-        }
-        return id;
     }
 
     private static string ToJson<T>(Uri uri, Result<T> result)

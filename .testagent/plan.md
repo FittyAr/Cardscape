@@ -87,3 +87,10 @@
 - [x] Capture user identity in broadcaster subscriptions and revalidate on fan-out.
 - [x] Add focused tests for parsing, membership and revoked-access pruning.
 - [x] Review assertions/gaps, run full validation, update plan and publish.
+
+## MCP resource URI parsing
+
+- [x] Reproduce .NET Uri host/path behavior for all five templates.
+- [x] Add one strict shared parser and migrate resources/subscriptions.
+- [x] Add data-driven valid and invalid contract tests.
+- [x] Review assertions/gaps, run full validation, update plan and publish.
