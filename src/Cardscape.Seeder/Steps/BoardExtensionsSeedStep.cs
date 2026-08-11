@@ -9,7 +9,7 @@ namespace Cardscape.Seeder.Steps;
 /// aging. The aggregate's <c>Enable</c> factory validates
 /// the config JSON so a malformed blob never reaches the
 /// table.</summary>
-public sealed class BoardExtensionsSeedStep : SeedStepBase
+internal sealed class BoardExtensionsSeedStep : SeedStepBase
 {
     public override string Name => "Board extensions + automation + custom fields";
     public override int Order => 40;

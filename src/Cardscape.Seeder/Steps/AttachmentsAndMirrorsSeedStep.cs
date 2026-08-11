@@ -11,7 +11,7 @@ namespace Cardscape.Seeder.Steps;
 /// because the local-filesystem <c>IStorageService</c> is
 /// never called during a seed; we only plant the metadata
 /// row.</summary>
-public sealed class AttachmentsAndMirrorsSeedStep : SeedStepBase
+internal sealed class AttachmentsAndMirrorsSeedStep : SeedStepBase
 {
     private static readonly (string FileName, string Mime, long Size)[] SampleFiles =
     {

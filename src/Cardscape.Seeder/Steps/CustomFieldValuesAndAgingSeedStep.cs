@@ -11,7 +11,7 @@ namespace Cardscape.Seeder.Steps;
 /// randomly picked to match the field's kind) and a per-card
 /// aging setting on a handful of cards so the fade effect has
 /// something to operate on.</summary>
-public sealed class CustomFieldValuesAndAgingSeedStep : SeedStepBase
+internal sealed class CustomFieldValuesAndAgingSeedStep : SeedStepBase
 {
     public override string Name => "Custom field values + card aging";
     public override int Order => 90;

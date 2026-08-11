@@ -47,6 +47,7 @@ Reglas permanentes:
 - [x] Retention y Revocation aceptaban configuración inválida hasta fallar dentro de hosted services; ahora validan al arrancar.
 - [x] `CardsPerBoard` y `UserCount` eran opciones ficticias del Seeder sin consumidores reales; fueron eliminadas de configuración, API y UI.
 - [x] `IRetentionSettings` era una abstracción propiedad de Infrastructure que sólo duplicaba `IOptions<T>`; se eliminó junto con su adaptador y se corrigió la regla arquitectónica que no podía detectarla.
+- [x] Seeder publicaba su pipeline interno completo y un provider de una sola propiedad; los pasos ahora son internos, el reporte se inyecta directamente y una regla protege la superficie pública.
 
 ## 3. Plan de ejecución
 
@@ -121,7 +122,8 @@ Reglas permanentes:
 | 2026-08-11 | Estructura de solución | Seeder agregado explícitamente a `Cardscape.slnx` | Build Release: 0 warnings, 0 errors; Seeder en Release | `8d923fe` |
 | 2026-08-11 | Grafo + background jobs | ProjectReference validado desde MSBuild; registry inmutable construido por DI; documentación normativa reconciliada | Build 0/0; suite 721 pass, 0 fail, 1 skip | `2702468` |
 | 2026-08-11 | Seeder + options | Seeder protegido con AdminOnly; opciones ficticias eliminadas; Retention/Revocation validan al arranque | Build 0/0; suite 735 pass, 0 fail, 1 skip | `af539f4` |
-| 2026-08-11 | Ownership de abstracciones | Retention consume Options directamente; reloj inyectado consistente; regla contra interfaces públicas de Infrastructure corregida | Build 0/0; suite 735 pass, 0 fail, 1 skip | Pendiente |
+| 2026-08-11 | Ownership de abstracciones | Retention consume Options directamente; reloj inyectado consistente; regla contra interfaces públicas de Infrastructure corregida | Build 0/0; suite 735 pass, 0 fail, 1 skip | `adb2a8c` |
+| 2026-08-11 | Superficie pública Seeder | Pipeline internalizado; provider ceremonial eliminado; construcción encapsulada; invariant de arquitectura agregado | Build 0/0; suite 736 pass, 0 fail, 1 skip | Pendiente |
 
 ## 5. Criterio de completitud
 

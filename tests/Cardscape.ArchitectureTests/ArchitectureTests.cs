@@ -277,4 +277,22 @@ public sealed class ArchitectureTests
         orphanNames.Should().BeEmpty(
             $"Infrastructure must not introduce new public interfaces — they belong in Application/Abstractions. Offenders: {string.Join(", ", orphanNames)}");
     }
+
+    [Fact]
+    public void Seeder_DeclaresNoPublicInterfaces()
+    {
+        // Seeder is an optional implementation module composed by the API.
+        // Its pipeline steps are internal details, while the small concrete
+        // surface consumed by the API (runner, options and report) stays public.
+        var publicInterfaces = Types.InAssembly(typeof(Cardscape.Seeder.SeedRunner).Assembly)
+            .That()
+            .AreInterfaces()
+            .GetTypes()
+            .Where(type => type.IsPublic)
+            .Select(type => type.FullName)
+            .ToList();
+
+        publicInterfaces.Should().BeEmpty(
+            $"Seeder must not expose implementation interfaces. Offenders: {string.Join(", ", publicInterfaces)}");
+    }
 }

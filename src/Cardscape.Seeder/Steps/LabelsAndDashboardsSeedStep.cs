@@ -11,7 +11,7 @@ namespace Cardscape.Seeder.Steps;
 /// Chore) on every board plus a single dashcard that aggregates
 /// overdue cards. Uses the Radzen palette so the labels look at
 /// home in the Web UI.</summary>
-public sealed class LabelsAndDashboardsSeedStep : SeedStepBase
+internal sealed class LabelsAndDashboardsSeedStep : SeedStepBase
 {
     private static readonly (string Name, Color Color)[] StandardLabels =
     {

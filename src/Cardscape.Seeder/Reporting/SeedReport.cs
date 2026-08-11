@@ -4,9 +4,8 @@ namespace Cardscape.Seeder.Reporting;
 
 /// <summary>
 /// In-memory, thread-safe accumulator for everything the seeder
-/// emits. The Razor Page reads it through
-/// <see cref="ISeedReportProvider"/>; the HTTP endpoints read the
-/// same instance to satisfy the polling clients. The log stream
+/// emits. The runner and HTTP endpoints receive the same singleton
+/// instance through dependency injection. The log stream
 /// is exposed to consumers in insertion order via
 /// <see cref="Entries"/>.
 /// </summary>
@@ -97,12 +96,4 @@ public sealed class SeedReport
         _tableCounts[tableKey] = rowCount;
         _tableMeta[tableKey] = (aggregateName, highlight);
     }
-}
-
-/// <summary>DI surface for the singleton report. The same instance
-/// is shared between the runner and the HTTP / Razor Page
-/// consumers.</summary>
-public interface ISeedReportProvider
-{
-    SeedReport Report { get; }
 }

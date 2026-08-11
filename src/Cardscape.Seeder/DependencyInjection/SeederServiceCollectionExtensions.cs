@@ -1,8 +1,11 @@
+using Cardscape.Application.Abstractions.Security;
 using Cardscape.Seeder.Configuration;
 using Cardscape.Seeder.Reporting;
 using Cardscape.Seeder.Steps;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Cardscape.Seeder.DependencyInjection;
 
@@ -21,8 +24,6 @@ public static class SeederServiceCollectionExtensions
             .Bind(configuration.GetSection(SeederOptions.SectionName));
 
         services.AddSingleton<SeedReport>();
-        services.AddSingleton<ISeedReportProvider>(sp => new StaticSeedReportProvider(sp.GetRequiredService<SeedReport>()));
-        services.AddSingleton<SeedRunner>();
 
         // Every step is singleton. They are stateless and the only
         // injected collaborator, IPasswordHasher, is also singleton.
@@ -43,12 +44,14 @@ public static class SeederServiceCollectionExtensions
         services.AddSingleton<ISeedStep, IntegrationsSeedStep>();
         services.AddSingleton<ISeedStep, EnterpriseAuthSeedStep>();
         services.AddSingleton<ISeedStep, WebhooksAndBackgroundSeedStep>();
+        services.AddSingleton<SeedRunner>(sp => new SeedRunner(
+            sp.GetRequiredService<IServiceScopeFactory>(),
+            sp.GetRequiredService<IOptionsMonitor<SeederOptions>>(),
+            sp.GetRequiredService<IPasswordHasher>(),
+            sp.GetServices<ISeedStep>(),
+            sp.GetRequiredService<SeedReport>(),
+            sp.GetRequiredService<ILogger<SeedRunner>>()));
 
         return services;
-    }
-
-    private sealed class StaticSeedReportProvider(SeedReport report) : ISeedReportProvider
-    {
-        public SeedReport Report => report;
     }
 }

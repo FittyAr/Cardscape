@@ -12,7 +12,7 @@ namespace Cardscape.Seeder.Steps;
 /// representative slice of every card so the Web UI's card
 /// detail page has the full social context (3-5 comments,
 /// 1-4 votes, a few activity entries).</summary>
-public sealed class EngagementSeedStep : SeedStepBase
+internal sealed class EngagementSeedStep : SeedStepBase
 {
     public override string Name => "Votes + comments + activity";
     public override int Order => 70;

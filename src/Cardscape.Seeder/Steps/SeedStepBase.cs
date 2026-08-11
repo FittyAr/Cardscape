@@ -6,7 +6,7 @@ namespace Cardscape.Seeder.Steps;
 /// <summary>Common helpers every <see cref="ISeedStep"/>
 /// implementation can lean on. Keeps the per-step classes
 /// short.</summary>
-public abstract class SeedStepBase : ISeedStep
+internal abstract class SeedStepBase : ISeedStep
 {
     public abstract string Name { get; }
     public abstract int Order { get; }

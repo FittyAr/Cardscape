@@ -9,7 +9,7 @@ namespace Cardscape.Seeder.Steps;
 /// workspace, plus board members and stars. The aggregate
 /// factories are used for every row so board creation
 /// fires <c>BoardCreated</c> and the audit log picks it up.</summary>
-public sealed class BoardsSeedStep : SeedStepBase
+internal sealed class BoardsSeedStep : SeedStepBase
 {
     public override string Name => "Boards + members + stars";
     public override int Order => 30;

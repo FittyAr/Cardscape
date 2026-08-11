@@ -9,7 +9,7 @@ namespace Cardscape.Seeder.Steps;
 /// <summary>Webhook endpoints + deliveries, plus a handful of
 /// background-job and idempotency-key rows so the ops views
 /// have something to display.</summary>
-public sealed class WebhooksAndBackgroundSeedStep : SeedStepBase
+internal sealed class WebhooksAndBackgroundSeedStep : SeedStepBase
 {
     public override string Name => "Webhooks + background jobs + idempotency";
     public override int Order => 130;

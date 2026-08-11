@@ -8,7 +8,7 @@ namespace Cardscape.Seeder.Steps;
 /// (users, boards, cards, etc.) using the domain's public
 /// factory methods so the persisted state respects every
 /// invariant the aggregate enforces.</summary>
-public interface ISeedStep
+internal interface ISeedStep
 {
     /// <summary>Human-friendly name. Surfaced in the UI's
     /// step-progress column and used as the

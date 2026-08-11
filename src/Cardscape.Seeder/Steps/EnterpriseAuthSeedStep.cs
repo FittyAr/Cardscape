@@ -15,7 +15,7 @@ namespace Cardscape.Seeder.Steps;
 /// auth tables have something to display. The SCIM and
 /// password-reset tokens are generated randomly; the
 /// cleartexts are dropped after the SHA-256 is computed.</summary>
-public sealed class EnterpriseAuthSeedStep : SeedStepBase
+internal sealed class EnterpriseAuthSeedStep : SeedStepBase
 {
     public override string Name => "Enterprise auth (SCIM, SAML, TOTP, external logins)";
     public override int Order => 120;

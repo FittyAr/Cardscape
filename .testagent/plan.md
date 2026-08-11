@@ -19,3 +19,12 @@
 3. [x] Correct `Infrastructure_HasNoOrphanInterfaces` so conventional `I*` names are not accidentally excluded.
 4. [x] Run the two narrow test classes and perform assertion/gap review.
 5. [x] Run full Release build and suite.
+
+## Phase 1 follow-up: Seeder public surface
+
+1. [x] Internalize `ISeedStep`, `SeedStepBase` and all concrete steps.
+2. [x] Remove `ISeedReportProvider` and inject the singleton report directly.
+3. [x] Encapsulate `SeedRunner` construction in `AddCardscapeSeeder`.
+4. [x] Add `Seeder_DeclaresNoPublicInterfaces`.
+5. [x] Run architecture and Seeder endpoint tests narrowly.
+6. [x] Run full Release build and suite.

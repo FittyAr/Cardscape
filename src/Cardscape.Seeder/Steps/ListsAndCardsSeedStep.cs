@@ -14,7 +14,7 @@ namespace Cardscape.Seeder.Steps;
 /// <see cref="NexoraStudios.CardTitlesByBoard"/>. Every card
 /// gets a due date, a label, and a member assignment; a
 /// handful get a checklist and / or a recurrence rule.</summary>
-public sealed class ListsAndCardsSeedStep : SeedStepBase
+internal sealed class ListsAndCardsSeedStep : SeedStepBase
 {
     private static readonly (string Name, double Position)[] StandardLists =
     {

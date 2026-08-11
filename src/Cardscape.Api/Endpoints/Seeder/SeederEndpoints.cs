@@ -38,13 +38,13 @@ public static class SeederEndpoints
             .WithTags("Seeder")
             .RequireAuthorization(AdminOnlyPolicy.Name);
 
-        group.MapGet("/status", (ISeedReportProvider provider, SeedRunner runner) =>
+        group.MapGet("/status", (SeedReport report, SeedRunner runner) =>
         {
             return Results.Ok(new
             {
                 enabled = runner.IsEnabled,
                 running = runner.IsRunning,
-                report = ToStatus(provider.Report)
+                report = ToStatus(report)
             });
         });
 
@@ -66,9 +66,9 @@ public static class SeederEndpoints
         // counts. Keeping the endpoint non-blocking means
         // a long seed (3-6 s) does not freeze the admin
         // page.
-        group.MapPost("/run", async (SeedRunner runner,
-                                     ISeedReportProvider provider,
-                                     SeederRunRequest? request) =>
+        group.MapPost("/run", (SeedRunner runner,
+                               SeedReport report,
+                               SeederRunRequest? request) =>
         {
             if (!runner.IsEnabled)
             {
@@ -111,11 +111,11 @@ public static class SeederEndpoints
             {
                 running = true,
                 wipe,
-                startedAt = provider.Report.StartedAt
+                startedAt = report.StartedAt
             });
         });
 
-        group.MapPost("/wipe", async (SeedRunner runner) =>
+        group.MapPost("/wipe", (SeedRunner runner) =>
         {
             if (!runner.IsEnabled)
             {

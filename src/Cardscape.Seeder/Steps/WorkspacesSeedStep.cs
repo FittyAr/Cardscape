@@ -10,7 +10,7 @@ namespace Cardscape.Seeder.Steps;
 /// rows. Memberships are added through the aggregate's
 /// <c>AddMember</c> method so the <c>WorkspaceMemberAdded</c>
 /// domain event fires and the audit log picks it up.</summary>
-public sealed class WorkspacesSeedStep : SeedStepBase
+internal sealed class WorkspacesSeedStep : SeedStepBase
 {
     public override string Name => "Workspace + members";
     public override int Order => 20;

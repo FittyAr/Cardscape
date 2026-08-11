@@ -15,7 +15,7 @@ namespace Cardscape.Seeder.Steps;
 /// domain's public factory so the integration-specific
 /// validations (URL shape, repo full name, event kinds) all
 /// run.</summary>
-public sealed class IntegrationsSeedStep : SeedStepBase
+internal sealed class IntegrationsSeedStep : SeedStepBase
 {
     public override string Name => "Integrations (Slack, GitHub, Google, inbound email)";
     public override int Order => 110;

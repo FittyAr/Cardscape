@@ -9,7 +9,7 @@ namespace Cardscape.Seeder.Steps;
 /// to a card, mentioned in a comment, due soon) and five
 /// demo API tokens so the Web UI's "API tokens" page has
 /// something to list.</summary>
-public sealed class NotificationsAndTokensSeedStep : SeedStepBase
+internal sealed class NotificationsAndTokensSeedStep : SeedStepBase
 {
     public override string Name => "Notifications + API tokens";
     public override int Order => 100;

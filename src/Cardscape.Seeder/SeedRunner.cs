@@ -24,24 +24,24 @@ public sealed class SeedRunner : IDisposable
     private readonly IOptionsMonitor<SeederOptions> _options;
     private readonly IPasswordHasher _hasher;
     private readonly IEnumerable<ISeedStep> _steps;
-    private readonly ISeedReportProvider _reportProvider;
+    private readonly SeedReport _report;
     private readonly ILogger<SeedRunner> _logger;
     private readonly SemaphoreSlim _runLock = new(1, 1);
     private bool _disposed;
 
-    public SeedRunner(
+    internal SeedRunner(
         IServiceScopeFactory scopeFactory,
         IOptionsMonitor<SeederOptions> options,
         IPasswordHasher hasher,
         IEnumerable<ISeedStep> steps,
-        ISeedReportProvider reportProvider,
+        SeedReport report,
         ILogger<SeedRunner> logger)
     {
         _scopeFactory = scopeFactory;
         _options = options;
         _hasher = hasher;
         _steps = steps;
-        _reportProvider = reportProvider;
+        _report = report;
         _logger = logger;
     }
 
@@ -58,7 +58,7 @@ public sealed class SeedRunner : IDisposable
             throw new InvalidOperationException("A seed run is already in progress.");
         }
 
-        SeedReport report = _reportProvider.Report;
+        SeedReport report = _report;
         report.Reset();
         List<ISeedStep> orderedSteps = _steps.OrderBy(s => s.Order).ToList();
         report.MarkStarted(orderedSteps.Count);
@@ -152,7 +152,7 @@ public sealed class SeedRunner : IDisposable
             throw new InvalidOperationException("A wipe is already in progress.");
         }
 
-        SeedReport report = _reportProvider.Report;
+        SeedReport report = _report;
         report.Reset();
         report.MarkStarted(1);
         try

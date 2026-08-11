@@ -12,7 +12,7 @@ namespace Cardscape.Seeder.Steps;
 /// password is hashed via the configured <c>IPasswordHasher</c>
 /// so the seeded accounts are real, sign-in-able users in
 /// Development.</summary>
-public sealed class UsersSeedStep : SeedStepBase
+internal sealed class UsersSeedStep : SeedStepBase
 {
     private readonly IPasswordHasher _hasher;
 

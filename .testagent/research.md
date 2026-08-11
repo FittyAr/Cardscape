@@ -67,3 +67,21 @@
 - [x] Make the architecture rule reject every public interface declared by Infrastructure.
 - [x] Preserve anonymisation and empty-database behavior with strong assertions.
 - [x] Run narrow architecture and retention tests, then the full solution.
+
+## Phase 1 follow-up: Seeder public surface
+
+### Bounded target inventory
+
+- `src/Cardscape.Seeder/Steps`: `ISeedStep`, its base class and thirteen implementations were public despite having no consumers outside the Seeder assembly.
+- `src/Cardscape.Seeder/Reporting/SeedReport.cs`: `ISeedReportProvider` only exposed the already-registered singleton `SeedReport`.
+- `src/Cardscape.Seeder/SeedRunner.cs` and DI registration: the public constructor leaked the internal pipeline type.
+- `src/Cardscape.Api/Endpoints/Seeder/SeederEndpoints.cs`: consumed the provider wrapper rather than the concrete report state it reads.
+
+### Acceptance checklist
+
+- [x] Keep pipeline interfaces and implementations internal to Seeder.
+- [x] Remove the one-property report-provider wrapper and inject `SeedReport` directly.
+- [x] Keep `SeedRunner` resolvable without exposing its internal constructor dependencies.
+- [x] Add an architecture invariant rejecting public Seeder interfaces.
+- [x] Preserve Seeder endpoint authorization and success behavior.
+- [x] Run full Release validation and review assertions.

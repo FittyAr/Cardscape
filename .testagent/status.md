@@ -26,3 +26,12 @@
 - Narrow validation: completed — Architecture 11/11; RetentionSweeper 2/2.
 - Assertion/gap review: the architecture assertion now examines all public Infrastructure interfaces instead of filtering out `I*` types. The two retention tests retain exact state assertions for eligible, ineligible, already-anonymised and non-deleted users, plus the empty database path.
 - Full validation: completed — Release build 0 warnings/0 errors; suite 735 passed, 0 failed, 1 skipped.
+
+## Phase 1 follow-up: Seeder public surface
+
+- Research: completed.
+- Plan: completed.
+- Implementation: completed.
+- Narrow validation: Architecture 12/12; Seeder endpoints 5/5.
+- Assertion/gap review: `Seeder_DeclaresNoPublicInterfaces` enumerates the compiled assembly and reports every offender. Existing endpoint tests retain exact 401/403/200/202 assertions across all routes, so direct report injection cannot silently change authorization or success semantics.
+- Full validation: Release build 0 warnings/0 errors; suite 736 passed, 0 failed, 1 skipped.
