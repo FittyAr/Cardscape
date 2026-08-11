@@ -154,3 +154,20 @@
 - [x] Prove exact RFC 5545 timestamp and all-day date fields for a due card.
 - [x] Preserve endpoint integration behavior.
 - [x] Run narrow and full Release validation with assertion review.
+
+## Phase 2: MCP API-token scope enforcement
+
+### Bounded target inventory
+
+- `ApiTokenAuthenticationHandler` emits one canonical `scope` claim per token grant.
+- `ApiTokenScopes` supports independent `read` and `write` grants, and the Web UI permits either combination.
+- All MCP tools were callable after authentication without consuming those claims; read-only tokens could mutate data.
+- ModelContextProtocol 2.0 exposes one `AddCallToolFilter` entry point before matched tool invocation.
+
+### Acceptance checklist
+
+- [x] Enforce scopes once in the MCP request pipeline, not in individual tools.
+- [x] Require exact `read` or `write` grants; neither grant implicitly includes the other.
+- [x] Deny anonymous, insufficient-scope and unclassified calls before tool execution.
+- [x] Keep an explicit closed catalog and prove it exactly matches the advertised MCP tools.
+- [x] Run narrow and full Release validation with assertion/gap review.

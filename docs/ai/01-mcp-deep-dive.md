@@ -478,10 +478,11 @@ sent in the `Authorization: Bearer <secret>` header. The
 secret is hashed with PBKDF2 (Phase 1) or Argon2id
 (Phase 4) and looked up in the `ApiToken` entity.
 
-The token's scopes are checked against the tool's required
-scope. A tool called without the required scope returns
-`mcp.scope.forbidden` (the same error code as the REST
-API).
+The call-tool request filter checks the token's exact `read` or
+`write` grant against the closed tool catalog before invoking the
+tool. Neither scope implies the other. Missing grants return
+`mcp.scope.forbidden`; tools missing from the catalog are denied
+with `mcp.scope.unclassified` until explicitly reviewed.
 
 The MCP server does **not** support cookie auth or JWT
 auth. The AI client is not a browser; the bearer token is

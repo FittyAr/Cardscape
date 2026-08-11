@@ -71,3 +71,18 @@
 - Narrow validation: Architecture 14/14; MCP E2E 5/5.
 - Assertion/gap review: `Mcp_DoesNotReimplementCurrentUser` inspects the compiled MCP assembly for any concrete `ICurrentUser` implementation. The E2E suite now boots both real composition roots without injecting an accessor and exercises authenticated tools plus cross-process notifications.
 - Full validation: Release build 0 warnings/0 errors; suite 745 passed, 0 failed, 1 skipped.
+
+## MCP API-token scope enforcement
+
+- Status: complete.
+- Root cause: authentication emitted scope claims, but no MCP invocation path consumed them.
+- Design: one SDK call-tool filter plus an explicit deny-by-default catalog.
+- Narrow validation: policy 11/11; closed-catalog invariant 1/1.
+- Pseudo-mutation review: cross-scope, anonymous/null identity, case changes, unknown tools,
+  removed denial and invoking `next` before authorization are killed. The filter-registration
+  line itself remains covered structurally by build/composition rather than a synthetic SDK host.
+- Assertion review: 12 discovered cases, no assertion-free or trivial-only tests; exception/message,
+  return value, invocation count, negative side effect and deep catalog equality are all asserted.
+- The referenced `.NET` extension file was absent from the installed skill package; framework
+  classification used the repository's xUnit/FluentAssertions conventions directly.
+- Full validation: Release build 0 warnings / 0 errors; suite 757 passed / 0 failed / 1 skipped.

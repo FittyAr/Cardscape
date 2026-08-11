@@ -5,9 +5,8 @@ namespace Cardscape.Domain.Security;
 /// <summary>
 /// A non-empty set of <see cref="Scope"/> values granted to an
 /// <see cref="ApiToken"/>. The standard set in v0.3 is
-/// <see cref="Scope.Read"/> and <see cref="Scope.Write"/>, both
-/// of which are checked by the MCP server's tools before any
-/// domain mutation runs.
+/// <see cref="Scope.Read"/> and <see cref="Scope.Write"/>. The MCP host
+/// enforces the appropriate scope centrally before invoking a tool.
 /// </summary>
 public sealed record ApiTokenScopes : IValueObject
 {

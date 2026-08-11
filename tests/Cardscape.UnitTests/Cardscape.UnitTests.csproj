@@ -48,6 +48,7 @@
       the Radzen.Theme POCO.
     -->
     <ProjectReference Include="..\..\src\Cardscape.Web\Cardscape.Web.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Mcp\Cardscape.Mcp.csproj" />
   </ItemGroup>
 
 </Project>

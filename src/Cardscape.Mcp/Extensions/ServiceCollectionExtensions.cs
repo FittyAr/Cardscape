@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.DependencyInjection;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Mcp.Authentication;
+using Cardscape.Mcp.Authorization;
 using Cardscape.Mcp.Realtime;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
@@ -80,6 +81,15 @@ public static class ServiceCollectionExtensions
             .WithToolsFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
             .WithResourcesFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
             .WithPromptsFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
+            .WithRequestFilters(filters => filters.AddCallToolFilter(next => async (request, cancellationToken) =>
+            {
+                ICurrentUserAccessor accessor = request.Services!
+                    .GetRequiredService<ICurrentUserAccessor>();
+                return await McpToolScopePolicy.AuthorizeAndInvokeAsync(
+                    request.Params?.Name,
+                    accessor.GetCurrentPrincipal(),
+                    () => next(request, cancellationToken));
+            }))
             // The .NET MCP SDK 1.4+ routes the
             // resources/subscribe and resources/unsubscribe
             // requests through the request handler pipeline.

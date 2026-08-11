@@ -62,3 +62,12 @@
 4. [x] Add `Application_RealtimeExposesOnlyTransportNeutralContracts`.
 5. [x] Run architecture and cross-process E2E tests narrowly.
 6. [x] Run full Release build and suite.
+
+## MCP API-token scope enforcement
+
+- [x] Research SDK filter support and inventory every advertised tool.
+- [x] Add a centralized closed scope policy and wire it through `AddCallToolFilter`.
+- [x] Add behavioral tests for allowed, cross-scope, anonymous, case-sensitive and unknown calls.
+- [x] Add an architecture test comparing the catalog with reflection-discovered tools.
+- [x] Run narrow tests and pseudo-mutation/assertion review.
+- [x] Run full build and full suite.

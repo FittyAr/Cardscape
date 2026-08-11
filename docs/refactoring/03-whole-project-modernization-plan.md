@@ -52,6 +52,7 @@ Reglas permanentes:
 - [x] `IPendingTotpLoginStore` se confirmó como puerto real con backends memoria/Redis; su implementación en memoria ahora usa el reloj inyectado y permite validar exactamente el TTL.
 - [x] El puerto calendario tenía el nombre ambiguo `IIcalendarService` y generaba `DTSTAMP` con tiempo global; ahora expresa la capacidad `ICalendarFeedRenderer` y usa `IClock`.
 - [x] MCP duplicaba `CurrentUser` y no registraba su accessor real; ahora reutiliza el mapping de Application, registra sólo el adaptador de transporte y E2E ya no parchea la composición.
+- [x] Los API tokens MCP emitían scopes pero ninguna herramienta los consumía; un filtro central ahora exige `read` o `write`, deniega herramientas sin clasificar y un invariant mantiene completo el catálogo.
 
 ## 3. Plan de ejecución
 
@@ -82,7 +83,7 @@ Reglas permanentes:
 - [ ] Gestión de secretos, cifrado, datos personales, borrado/anominización y retención.
 - [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia.
 - [ ] Wolverine/background jobs: scopes, retries, outbox/inbox, cancelación y consistencia de eventos.
-- [ ] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia.
+- [ ] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia. Scopes de herramientas y lifetime/composición ya corregidos; quedan aislamiento contextual, suscripciones e idempotencia.
 - [ ] Observabilidad: logs estructurados, correlación, trazas, métricas, health checks y ausencia de PII/secrets.
 
 ### Fase 3 — API y contratos
@@ -131,7 +132,8 @@ Reglas permanentes:
 | 2026-08-11 | Ownership realtime | Contrato API→MCP retirado de Application; notifier concreto encapsulado en API; whitelist arquitectónica de puertos realtime | Build 0/0; suite 737 pass, 0 fail, 1 skip | `2451611` |
 | 2026-08-11 | Lifetime TOTP pendiente | Puerto preservado por tener dos backends; memoria usa IClock; expiración y single-use fijados con tests | Build 0/0; suite 743 pass, 0 fail, 1 skip | `e6cd876` |
 | 2026-08-11 | Contrato calendario | Puerto renombrado por capacidad; DTSTAMP determinista mediante IClock; RFC 5545 fijado con tests | Build 0/0; suite 744 pass, 0 fail, 1 skip | `9b1cf16` |
-| 2026-08-11 | Current user MCP | Mapping duplicado eliminado; accessor MCP registrado en producción; workaround E2E removido; invariant agregado | Build 0/0; suite 745 pass, 0 fail, 1 skip | Pendiente |
+| 2026-08-11 | Current user MCP | Mapping duplicado eliminado; accessor MCP registrado en producción; workaround E2E removido; invariant agregado | Build 0/0; suite 745 pass, 0 fail, 1 skip | `9052126` |
+| 2026-08-11 | Scopes MCP | Filtro central deny-by-default; catálogo explícito read/write; invariant contra herramientas sin clasificar | Build 0/0; suite 757 pass, 0 fail, 1 skip | Pendiente |
 
 ## 5. Criterio de completitud
 

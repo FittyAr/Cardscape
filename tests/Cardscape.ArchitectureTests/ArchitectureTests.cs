@@ -212,6 +212,30 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void Mcp_EveryToolHasExactlyOneExplicitScopeClassification()
+    {
+        var mcpAssembly = typeof(Cardscape.Mcp.Extensions.ServiceCollectionExtensions).Assembly;
+
+        string[] advertisedTools = mcpAssembly.GetTypes()
+            .SelectMany(type => type.GetMethods())
+            .Select(method => method.GetCustomAttributes(typeof(ModelContextProtocol.Server.McpServerToolAttribute), false)
+                .Cast<ModelContextProtocol.Server.McpServerToolAttribute>()
+                .SingleOrDefault()?.Name)
+            .Where(name => name is not null)
+            .Cast<string>()
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        string[] classifiedTools = Cardscape.Mcp.Authorization.McpToolScopePolicy.RequiredScopes.Keys
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        classifiedTools.Should().Equal(
+            advertisedTools,
+            "the closed MCP scope catalog must classify every advertised tool and contain no stale entries");
+    }
+
+    [Fact]
     public void Domain_Entities_AreSealed()
     {
         // Aggregates and entities are sealed unless polymorphism is required.
