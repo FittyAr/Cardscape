@@ -376,7 +376,7 @@ public sealed class IntegrationsEndpointTests
     {
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/boards/",
-            new { workspaceId, name, description = (string?)null, visibility = 0 });
+            new { workspaceId, name, description = (string?)null, visibility = "private" });
         resp.IsSuccessStatusCode.Should().BeTrue();
         BoardDto board = (await resp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
         return board.Id;

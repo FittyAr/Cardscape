@@ -440,8 +440,7 @@ public sealed record ActivityDto(
     Guid? CardId,
     Guid ActorId,
     string? ActorDisplayName,
-    int Kind,
-    string KindName,
+    ActivityKind Kind,
     string PayloadJson,
     DateTimeOffset OccurredAt);
 

@@ -72,7 +72,7 @@ public static class McpToolScopePolicy
             "custom_fields_set_value", "imports_trello_apply", "inbox_mark_all_read", "inbox_mark_read",
             "integrations_github_create_issue", "integrations_github_link_pr", "integrations_google_drive_attach",
             "integrations_slack_connect", "integrations_slack_unlink_channel", "invitations_accept", "labels_create",
-            "lists_create", "lists_set_limit", "members_assign", "oauth_apps_create", "oauth_apps_revoke",
+            "lists_create", "lists_set_limit", "oauth_apps_create", "oauth_apps_revoke",
             "workspaces_invite", "workspaces_revoke_invitation",
         ];
 

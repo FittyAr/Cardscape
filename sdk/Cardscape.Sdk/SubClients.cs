@@ -1,5 +1,4 @@
 using System.Net.Http;
-using System.Net.Http.Json;
 
 namespace Cardscape.Sdk;
 
@@ -17,7 +16,7 @@ public sealed class WorkspacesClient
 
     public Task<WorkspaceDto> CreateAsync(CreateWorkspaceRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Post, "api/workspaces/") { Content = JsonContent.Create(body) };
+        HttpRequestMessage req = new(HttpMethod.Post, "api/workspaces/") { Content = _parent.CreateJsonContent(body) };
         return _parent.SendAsync<WorkspaceDto>(req, ct);
     }
 
@@ -25,7 +24,7 @@ public sealed class WorkspacesClient
     {
         HttpRequestMessage req = new(HttpMethod.Post, $"api/workspaces/{workspaceId}/region")
         {
-            Content = JsonContent.Create(new SetWorkspaceRegionRequest(region))
+            Content = _parent.CreateJsonContent(new SetWorkspaceRegionRequest(region))
         };
         return _parent.SendAsync<WorkspaceDto>(req, ct);
     }
@@ -54,7 +53,7 @@ public sealed class BoardsClient
 
     public Task<BoardDto> CreateAsync(CreateBoardRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Post, "api/boards/") { Content = JsonContent.Create(body) };
+        HttpRequestMessage req = new(HttpMethod.Post, "api/boards/") { Content = _parent.CreateJsonContent(body) };
         return _parent.SendAsync<BoardDto>(req, ct);
     }
 
@@ -62,7 +61,7 @@ public sealed class BoardsClient
     {
         HttpRequestMessage req = new(HttpMethod.Post, $"api/boards/{boardId}/rename")
         {
-            Content = JsonContent.Create(new RenameBoardRequest(newName))
+            Content = _parent.CreateJsonContent(new RenameBoardRequest(newName))
         };
         return _parent.SendAsync<BoardDto>(req, ct);
     }
@@ -119,7 +118,7 @@ public sealed class ListsClient
 
     public Task<BoardListDto> CreateAsync(CreateListRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Post, "api/lists/") { Content = JsonContent.Create(body) };
+        HttpRequestMessage req = new(HttpMethod.Post, "api/lists/") { Content = _parent.CreateJsonContent(body) };
         return _parent.SendAsync<BoardListDto>(req, ct);
     }
 }
@@ -139,19 +138,19 @@ public sealed class CardsClient
 
     public Task<CardDto> CreateAsync(CreateCardRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Post, "api/cards/") { Content = JsonContent.Create(body) };
+        HttpRequestMessage req = new(HttpMethod.Post, "api/cards/") { Content = _parent.CreateJsonContent(body) };
         return _parent.SendAsync<CardDto>(req, ct);
     }
 
     public Task<CardDto> UpdateAsync(Guid cardId, UpdateCardRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Put, $"api/cards/{cardId}") { Content = JsonContent.Create(body) };
+        HttpRequestMessage req = new(HttpMethod.Put, $"api/cards/{cardId}") { Content = _parent.CreateJsonContent(body) };
         return _parent.SendAsync<CardDto>(req, ct);
     }
 
     public Task<CardDto> MoveAsync(Guid cardId, MoveCardRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Post, $"api/cards/{cardId}/move") { Content = JsonContent.Create(body) };
+        HttpRequestMessage req = new(HttpMethod.Post, $"api/cards/{cardId}/move") { Content = _parent.CreateJsonContent(body) };
         return _parent.SendAsync<CardDto>(req, ct);
     }
 
@@ -171,7 +170,7 @@ public sealed class CardsClient
     {
         HttpRequestMessage req = new(HttpMethod.Post, $"api/cards/{cardId}/assign")
         {
-            Content = JsonContent.Create(new { userId })
+            Content = _parent.CreateJsonContent(new { userId })
         };
         return _parent.SendAsync<object>(req, ct);
     }
@@ -180,7 +179,7 @@ public sealed class CardsClient
     {
         HttpRequestMessage req = new(HttpMethod.Post, $"api/cards/{cardId}/labels")
         {
-            Content = JsonContent.Create(new { labelId })
+            Content = _parent.CreateJsonContent(new { labelId })
         };
         return _parent.SendAsync<object>(req, ct);
     }
@@ -198,7 +197,7 @@ public sealed class LabelsClient
 
     public Task<LabelDto> CreateAsync(CreateLabelRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Post, "api/labels/") { Content = JsonContent.Create(body) };
+        HttpRequestMessage req = new(HttpMethod.Post, "api/labels/") { Content = _parent.CreateJsonContent(body) };
         return _parent.SendAsync<LabelDto>(req, ct);
     }
 }
@@ -215,7 +214,7 @@ public sealed class CommentsClient
 
     public Task<CommentDto> AddAsync(Guid cardId, AddCommentRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Post, $"api/cards/{cardId}/comments") { Content = JsonContent.Create(body) };
+        HttpRequestMessage req = new(HttpMethod.Post, $"api/cards/{cardId}/comments") { Content = _parent.CreateJsonContent(body) };
         return _parent.SendAsync<CommentDto>(req, ct);
     }
 }

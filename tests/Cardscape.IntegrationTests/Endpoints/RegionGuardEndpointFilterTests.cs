@@ -71,7 +71,7 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         HttpResponseMessage createWs = await ownerClient.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("Acme EU", Region: Domain.Workspaces.Region.Europe), TestContext.Current.CancellationToken);
+            "api/workspaces/", new CreateWorkspaceRequest("Acme EU", Region: Domain.Workspaces.Region.Europe), TestJson.Options, TestContext.Current.CancellationToken);
         createWs.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         workspace.Region.Should().Be(Domain.Workspaces.Region.Europe);
@@ -149,7 +149,7 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         HttpResponseMessage createWs = await ownerClient.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("Acme EU 2", Region: Domain.Workspaces.Region.Europe), TestContext.Current.CancellationToken);
+            "api/workspaces/", new CreateWorkspaceRequest("Acme EU 2", Region: Domain.Workspaces.Region.Europe), TestJson.Options, TestContext.Current.CancellationToken);
         createWs.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
@@ -207,7 +207,7 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         HttpResponseMessage createWs = await ownerClient.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("Acme APAC", Region: Domain.Workspaces.Region.AsiaPacific), TestContext.Current.CancellationToken);
+            "api/workspaces/", new CreateWorkspaceRequest("Acme APAC", Region: Domain.Workspaces.Region.AsiaPacific), TestJson.Options, TestContext.Current.CancellationToken);
         createWs.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
@@ -252,7 +252,7 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         HttpResponseMessage createWs = await ownerClient.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("ConfigInjection Probe", Region: Domain.Workspaces.Region.Europe), TestContext.Current.CancellationToken);
+            "api/workspaces/", new CreateWorkspaceRequest("ConfigInjection Probe", Region: Domain.Workspaces.Region.Europe), TestJson.Options, TestContext.Current.CancellationToken);
         createWs.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceDto workspace = (await createWs.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 

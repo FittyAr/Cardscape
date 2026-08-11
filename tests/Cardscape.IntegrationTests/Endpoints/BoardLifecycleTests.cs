@@ -33,7 +33,7 @@ public sealed class BoardLifecycleTests
 
         // Board
         HttpResponseMessage createBoard = await client.PostAsJsonAsync(
-            "api/boards/", new { workspaceId = ws.Id, name = "Smoke board", description = (string?)null, visibility = 0 }, TestContext.Current.CancellationToken);
+            "api/boards/", new { workspaceId = ws.Id, name = "Smoke board", description = (string?)null, visibility = "private" }, TestContext.Current.CancellationToken);
         createBoard.IsSuccessStatusCode.Should().BeTrue();
         BoardDto? board = await createBoard.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options, TestContext.Current.CancellationToken);
         board.Should().NotBeNull();
@@ -151,7 +151,7 @@ public sealed class BoardLifecycleTests
         WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
 
         HttpResponseMessage bdResp = await client.PostAsJsonAsync(
-            "api/boards/", new { workspaceId = ws.Id, name = "Board", description = (string?)null, visibility = 0 });
+            "api/boards/", new { workspaceId = ws.Id, name = "Board", description = (string?)null, visibility = "private" });
         bdResp.IsSuccessStatusCode.Should().BeTrue();
         BoardDto board = (await bdResp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
 

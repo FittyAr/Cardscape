@@ -40,10 +40,8 @@ public sealed class BoardExtensionsApiClient(IHttpClientFactory http)
     public async Task<ApiResult> DisableAsync(
         Guid boardId, BoardExtensionKind kind, CancellationToken ct = default)
     {
-        // The API route uses the numeric kind value
-        // ({kind:int} constraint in BoardExtensionEndpoints.cs).
         HttpResponseMessage response = await CreateClient().DeleteAsync(
-            $"api/boards/{boardId}/extensions/{kind:D}", ct);
+            $"api/boards/{boardId}/extensions/{ToRouteValue(kind)}", ct);
         return await ReadAsync(response, ct);
     }
 
@@ -51,7 +49,13 @@ public sealed class BoardExtensionsApiClient(IHttpClientFactory http)
         Guid boardId, BoardExtensionKind kind, UpdateExtensionConfigRequestDto body, CancellationToken ct = default)
     {
         HttpResponseMessage response = await CreateClient().PutAsJsonAsync(
-            $"api/boards/{boardId}/extensions/{kind:D}/config", body, JsonOptions, ct);
+            $"api/boards/{boardId}/extensions/{ToRouteValue(kind)}/config", body, JsonOptions, ct);
         return await ReadAsync<BoardExtensionDto>(response, ct);
+    }
+
+    private static string ToRouteValue(BoardExtensionKind kind)
+    {
+        string name = kind.ToString();
+        return char.ToLowerInvariant(name[0]) + name[1..];
     }
 }

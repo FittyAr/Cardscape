@@ -288,3 +288,11 @@
 - Confirmed duplication: mutation DTOs accepted both canonical fields and `new*` aliases; Comments mapped canonical nested and legacy flat edit/delete routes; `IssueIdempotencyKeyCommand` and `IIdempotencyKeyStore.AddAsync` had no production consumer after atomic reservations landed.
 - Acceptance checklist: one request field per mutation; no `/api/comments/{id}` mapping; Web sends only canonical shapes; obsolete idempotency command/store method and their isolated tests are removed; focused API tests and full Release validation pass.
 - Conventions: xUnit v3 + FluentAssertions on VSTest under SDK 10.0.302.
+
+## Canonical wire contract (2026-08-11)
+
+- Bounded target: JSON enum configuration in API/Web/SDK, Search kind parsing, Board Extension route/body kinds, REST logout alias, MCP assignment alias, and the Google Calendar page route.
+- Confirmed duplication: integer and named enums were both accepted; Search accepted `kind=0`; Board Extensions used numeric route segments; `/auth/logout`, `members_assign`, and `/settings/google-calendar` duplicated canonical surfaces.
+- SDK defect found during the audit: subclients used `JsonContent.Create` without the configured `JsonOptions`, so enum request bodies remained numeric even after response options were strict.
+- Acceptance checklist: camel-case enum names only; numeric JSON/query/route values rejected; SDK applies configured JSON options to every body; all four aliases absent; canonical alternatives remain tested.
+- Static pairing automation was attempted once as required, but the installed skill package does not contain its documented analyzer script; established xUnit integration/architecture/SDK suites were paired directly.

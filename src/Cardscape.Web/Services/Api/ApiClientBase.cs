@@ -13,18 +13,16 @@ public abstract class ApiClientBase(IHttpClientFactory httpClientFactory)
 
     // BETA-2-UI-#1/#2/#3 fix. The API serialises every enum as a
     // camelCase string (e.g. "private", "member", "customFields")
-    // via `JsonStringEnumConverter(CamelCase, allowIntegerValues: true)`
+    // via `JsonStringEnumConverter(CamelCase, allowIntegerValues: false)`
     // in src/Cardscape.Api/Program.cs:53-58. Without a matching
     // converter on the Web side, every DTO with an enum field
     // blows up with JsonException: "DeserializeUnableToConvertValue".
-    // `allowIntegerValues: true` keeps the round-trip tolerant of
-    // any caller that still posts the legacy int shape.
     internal static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true,
         Converters =
         {
-            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: true)
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false)
         }
     };
 

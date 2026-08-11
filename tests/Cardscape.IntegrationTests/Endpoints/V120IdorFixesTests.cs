@@ -204,7 +204,7 @@ public sealed class V120IdorFixesTests
         HttpClient outsider = await CreateAuthenticatedClientAsync();
         HttpResponseMessage create = await outsider.PostAsJsonAsync(
             $"api/boards/{board.Id}/dashcards/",
-            new { boardId = board.Id, kind = 0, title = "hostile", configurationJson = (string?)null, position = 0 },
+            new { boardId = board.Id, kind = "overdueCount", title = "hostile", configurationJson = (string?)null, position = 0 },
             TestContext.Current.CancellationToken);
         create.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
@@ -287,7 +287,7 @@ public sealed class V120IdorFixesTests
                 workspaceId,
                 name,
                 description = (string?)null,
-                visibility = 0
+                visibility = "private"
             });
         response.IsSuccessStatusCode.Should().BeTrue();
         return (await response.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
@@ -337,7 +337,7 @@ public sealed class V120IdorFixesTests
     {
         HttpResponseMessage response = await client.PostAsJsonAsync(
             $"api/boards/{boardId}/custom-fields/",
-            new { boardId, name, kind = 0, dropdownOptions = (string[]?)null, position = 0 });
+            new { boardId, name, kind = "text", dropdownOptions = (string[]?)null, position = 0 });
         response.IsSuccessStatusCode.Should().BeTrue();
         using System.Text.Json.JsonDocument doc = System.Text.Json.JsonDocument.Parse(
             await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));

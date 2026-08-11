@@ -31,7 +31,7 @@ public class ScimEndpointTests
 
         // Create a workspace.
         HttpResponseMessage wsResp = await client.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("SCIM WS"), TestContext.Current.CancellationToken);
+            "api/workspaces/", new CreateWorkspaceRequest("SCIM WS"), TestJson.Options, TestContext.Current.CancellationToken);
         wsResp.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 

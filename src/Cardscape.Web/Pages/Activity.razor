@@ -60,8 +60,8 @@ else
         {
             <RadzenCard>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                    <RadzenBadge Text="@KindLabel(a.KindName)" BadgeStyle="@KindBadgeStyle(a.KindName)" />
-                    <RadzenText Text="@a.KindName" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
+                    <RadzenBadge Text="@KindLabel(a.Kind.ToString())" BadgeStyle="@KindBadgeStyle(a.Kind.ToString())" />
+                    <RadzenText Text="@a.Kind.ToString()" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
                     <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
                         · @a.OccurredAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")
                     </RadzenText>
@@ -134,7 +134,7 @@ else
         IEnumerable<ActivityDto> query = items;
         if (!string.IsNullOrEmpty(kindFilter))
         {
-            query = query.Where(a => string.Equals(a.KindName, kindFilter, StringComparison.Ordinal));
+            query = query.Where(a => string.Equals(a.Kind.ToString(), kindFilter, StringComparison.Ordinal));
         }
         if (!string.IsNullOrEmpty(cardIdFilter))
         {

@@ -140,8 +140,7 @@ public class ActivityTests
         dto.BoardId.Should().Be(source.BoardId.Value);
         dto.CardId.Should().Be(source.CardId);
         dto.ActorId.Should().Be(source.ActorId);
-        dto.Kind.Should().Be((int)ActivityKind.CardMoved);
-        dto.KindName.Should().Be(nameof(ActivityKind.CardMoved));
+        dto.Kind.Should().Be(ActivityKind.CardMoved);
         dto.PayloadJson.Should().Be("{\"from\":\"a\"}");
         dto.OccurredAt.Should().Be(at);
     }

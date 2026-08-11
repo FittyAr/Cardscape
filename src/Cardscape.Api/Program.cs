@@ -49,20 +49,14 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // ── JSON options ───────────────────────────────────────────
-// Accept enum values as their string name in BOTH directions
-// (request body deserialisation + response body serialisation).
-// Without this, every endpoint that takes an `enum` body
-// parameter (BoardVisibility, WorkspaceRole, etc.) returns a
-// 500 from the model binder the moment a human types
-// `"Private"` instead of `0` — see BUG #9 in
-// test-results/BETA-TEST-REPORT.md. The Blazor WASM client
-// always sends ints, so this only opens the door for external
-// consumers (MCP, scripts, the Scalar "Try it out" panel).
+// Enums have one wire representation: camel-case names. Numeric
+// enum values are an implementation detail and are rejected so
+// reordering a CLR enum cannot silently change the API contract.
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(
         new System.Text.Json.Serialization.JsonStringEnumConverter(
-            System.Text.Json.JsonNamingPolicy.CamelCase, allowIntegerValues: true));
+            System.Text.Json.JsonNamingPolicy.CamelCase, allowIntegerValues: false));
 });
 
 // ── Logging ────────────────────────────────────────────────

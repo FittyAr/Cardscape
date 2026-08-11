@@ -136,3 +136,12 @@
 - [x] Add a regression proving the flat Comment route is not mapped.
 - [x] Delete the unused issue-idempotency command and non-atomic store insertion method.
 - [x] Run focused and full Release validation, review assertions, update documentation and publish.
+
+## Canonical wire contract
+
+- [x] Configure API, Web, tests and SDK for named enums with numeric values disabled.
+- [x] Centralize SDK request JSON content on its configured serializer options.
+- [x] Replace numeric Search and Board Extension kinds with canonical names.
+- [x] Remove REST logout, MCP assignment and Google Calendar navigation aliases.
+- [x] Add exact positive/negative contract and architecture regressions.
+- [x] Run focused/full Release validation, assertion/gap review, document and publish.

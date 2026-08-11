@@ -193,3 +193,13 @@
 - Pseudo-mutation/assertion review: remapping the flat route, changing canonical property names, or restoring aliases is killed by exact path/value/negative-property assertions; no generated test is assertion-free, trivial-only, tautological or unawaited. The advertised `.NET` analysis extension is absent from the installed skill package, so xUnit/FluentAssertions classification used repository conventions.
 - Focused validation: SDK 7/7; API route/access tests 16/16.
 - Full validation: Release build 0 warnings / 0 errors; suite 806 passed / 0 failed / 1 skipped.
+
+## Canonical wire contract
+
+- Status: complete.
+- Added strict enum, removed-alias, canonical SDK serialization, MCP catalog and Blazor route regressions.
+- Removed the duplicated `ActivityDto.KindName`; `Kind` is now a named enum across Application and Web.
+- Focused evidence: SDK 8/8; integration contract/extensions/revocation 15/15; architecture 6/6; residual enum consumers 48/48.
+- Pseudo-mutation review: enabling numeric enum values, accepting numeric Search/Extension kinds, remapping REST/MCP/Blazor aliases, bypassing SDK options, or restoring `KindName` is killed by exact status/body/path/catalog/route/value assertions and compilation of the typed consumers.
+- Assertion review: generated tests cover equality, string content, negative collection membership, JSON value kind and exact cardinality; none is assertion-free, trivial-only, tautological or unawaited. The advertised `.NET` analysis extension is absent from the installed package, so xUnit/FluentAssertions classification used repository conventions.
+- Full validation: Release build 0 warnings / 0 errors; suite 814 passed / 0 failed / 1 skipped.

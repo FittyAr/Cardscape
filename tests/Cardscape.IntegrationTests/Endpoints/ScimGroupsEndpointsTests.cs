@@ -35,7 +35,7 @@ public class ScimGroupsEndpointsTests
 
         // Create a fresh workspace for this test.
         HttpResponseMessage wsResp = await admin.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("SCIM Groups List WS"), TestContext.Current.CancellationToken);
+            "api/workspaces/", new CreateWorkspaceRequest("SCIM Groups List WS"), TestJson.Options, TestContext.Current.CancellationToken);
         wsResp.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
@@ -78,7 +78,7 @@ public class ScimGroupsEndpointsTests
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         HttpResponseMessage wsResp = await admin.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("SCIM Groups Create WS"), TestContext.Current.CancellationToken);
+            "api/workspaces/", new CreateWorkspaceRequest("SCIM Groups Create WS"), TestJson.Options, TestContext.Current.CancellationToken);
         wsResp.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 

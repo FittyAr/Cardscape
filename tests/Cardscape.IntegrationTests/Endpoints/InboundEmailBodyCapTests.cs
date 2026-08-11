@@ -173,7 +173,7 @@ public sealed class InboundEmailBodyCapTests
     private static async Task<Guid> CreateBoardAsync(HttpClient client, Guid workspaceId, string name)
     {
         HttpResponseMessage resp = await client.PostAsJsonAsync(
-            "api/boards/", new { workspaceId, name, description = (string?)null, visibility = 0 });
+            "api/boards/", new { workspaceId, name, description = (string?)null, visibility = "private" });
         resp.IsSuccessStatusCode.Should().BeTrue();
         var dto = (await resp.Content.ReadFromJsonAsync<BoardDto>(TestContext.Current.CancellationToken))!;
         return dto.Id;

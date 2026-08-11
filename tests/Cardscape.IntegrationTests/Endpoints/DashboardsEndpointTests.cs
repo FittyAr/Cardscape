@@ -34,7 +34,7 @@ public sealed class DashboardsEndpointTests
             new
             {
                 boardId = seed.BoardId,
-                kind = 0,
+                kind = "overdueCount",
                 title = "Overdue",
                 configurationJson = (string?)null,
                 position = 0
@@ -60,7 +60,7 @@ public sealed class DashboardsEndpointTests
             new
             {
                 boardId = seed.BoardId,
-                kind = 0,
+                kind = "overdueCount",
                 title = "Count",
                 configurationJson = (string?)null,
                 position = 0
@@ -87,7 +87,7 @@ public sealed class DashboardsEndpointTests
             new
             {
                 boardId = seed.BoardId,
-                kind = 1,
+                kind = "byMember",
                 title = "By Member",
                 configurationJson = (string?)null,
                 position = 0
@@ -140,7 +140,7 @@ public sealed class DashboardsEndpointTests
         WorkspaceDto ws = (await wsResp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
         HttpResponseMessage boardResp = await client.PostAsJsonAsync(
             "api/boards/",
-            new { workspaceId = ws.Id, name, description = (string?)null, visibility = 0 });
+            new { workspaceId = ws.Id, name, description = (string?)null, visibility = "private" });
         boardResp.IsSuccessStatusCode.Should().BeTrue();
         BoardDto board = (await boardResp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
         return new Seed(board.Id);

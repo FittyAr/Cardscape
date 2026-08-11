@@ -39,7 +39,7 @@ public class RegionEndpointTests : IClassFixture<CardscapeWebApplicationFactory>
 
         HttpResponseMessage response = await client.PostAsJsonAsync(
             "api/workspaces/",
-            new CreateWorkspaceRequest("Acme EU", Region: Domain.Workspaces.Region.NorthAmerica), TestContext.Current.CancellationToken);
+            new CreateWorkspaceRequest("Acme EU", Region: Domain.Workspaces.Region.NorthAmerica), TestJson.Options, TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
         string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
@@ -55,7 +55,7 @@ public class RegionEndpointTests : IClassFixture<CardscapeWebApplicationFactory>
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
 
         HttpResponseMessage response = await client.PostAsJsonAsync(
-            "api/workspaces/", new CreateWorkspaceRequest("Acme Default"), TestContext.Current.CancellationToken);
+            "api/workspaces/", new CreateWorkspaceRequest("Acme Default"), TestJson.Options, TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         WorkspaceDto? workspace = await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken);

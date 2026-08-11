@@ -59,18 +59,8 @@ public static class CreateBoardCommandHandler
             return Result.Failure<BoardDto>(descResult.Error);
         }
 
-        // BETA-2-#4 — see test-results/BETA-TEST-REPORT.md.
-        //
-        // The JSON binding accepts any int for the
-        // BoardVisibility field because the
-        // JsonStringEnumConverter is configured with
-        // `allowIntegerValues: true` (so the Blazor WASM
-        // client can keep sending ints). That same
-        // permissiveness lets the caller pass
-        // `{"visibility": 99}` and have a board created
-        // with an out-of-range enum value. Reject unknown
-        // values explicitly so the storage layer never
-        // sees a Visibility the domain doesn't recognise.
+        // Internal callers can construct an out-of-range enum even though
+        // the HTTP contract rejects numeric values, so keep the domain guard.
         if (!Enum.IsDefined(command.Visibility))
         {
             return Result.Failure<BoardDto>(DomainError.Validation(

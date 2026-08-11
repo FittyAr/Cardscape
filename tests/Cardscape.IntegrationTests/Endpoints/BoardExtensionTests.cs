@@ -29,7 +29,7 @@ public sealed class BoardExtensionTests
 
         HttpResponseMessage enable = await client.PostAsJsonAsync(
             $"api/boards/{board.Id}/extensions/",
-            new { kind = 0, configJson = (string?)null }, TestContext.Current.CancellationToken);
+            new { kind = "customFields", configJson = (string?)null }, TestContext.Current.CancellationToken);
         enable.IsSuccessStatusCode.Should().BeTrue();
         BoardExtensionDto enabled = (await enable.Content.ReadFromJsonAsync<BoardExtensionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         enabled.IsEnabled.Should().BeTrue();
@@ -41,7 +41,7 @@ public sealed class BoardExtensionTests
         rows.Should().NotBeNull().And.HaveCount(1);
 
         HttpResponseMessage disable = await client.DeleteAsync(
-            $"api/boards/{board.Id}/extensions/0", TestContext.Current.CancellationToken);
+            $"api/boards/{board.Id}/extensions/customFields", TestContext.Current.CancellationToken);
         disable.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         HttpResponseMessage listAfter = await client.GetAsync(
@@ -60,13 +60,13 @@ public sealed class BoardExtensionTests
 
         HttpResponseMessage first = await client.PostAsJsonAsync(
             $"api/boards/{board.Id}/extensions/",
-            new { kind = 1, configJson = (string?)null }, TestContext.Current.CancellationToken);
+            new { kind = "voting", configJson = (string?)null }, TestContext.Current.CancellationToken);
         first.IsSuccessStatusCode.Should().BeTrue();
 
         // Second call with the same kind must not create a duplicate row.
         HttpResponseMessage second = await client.PostAsJsonAsync(
             $"api/boards/{board.Id}/extensions/",
-            new { kind = 1, configJson = (string?)null }, TestContext.Current.CancellationToken);
+            new { kind = "voting", configJson = (string?)null }, TestContext.Current.CancellationToken);
         second.IsSuccessStatusCode.Should().BeTrue();
 
         HttpResponseMessage list = await client.GetAsync(
@@ -83,10 +83,10 @@ public sealed class BoardExtensionTests
 
         await client.PostAsJsonAsync(
             $"api/boards/{board.Id}/extensions/",
-            new { kind = 0, configJson = """{"theme":"dark"}""" }, TestContext.Current.CancellationToken);
+            new { kind = "customFields", configJson = """{"theme":"dark"}""" }, TestContext.Current.CancellationToken);
 
         HttpResponseMessage put = await client.PutAsJsonAsync(
-            $"api/boards/{board.Id}/extensions/0/config",
+            $"api/boards/{board.Id}/extensions/customFields/config",
             new { configJson = """{"theme":"light"}""" }, TestContext.Current.CancellationToken);
         put.IsSuccessStatusCode.Should().BeTrue();
         BoardExtensionDto updated = (await put.Content.ReadFromJsonAsync<BoardExtensionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
@@ -100,8 +100,22 @@ public sealed class BoardExtensionTests
         BoardDto board = await CreateBoardAsync(client, "Disable missing");
 
         HttpResponseMessage resp = await client.DeleteAsync(
-            $"api/boards/{board.Id}/extensions/2", TestContext.Current.CancellationToken);
+            $"api/boards/{board.Id}/extensions/cardRepeater", TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Numeric_Kind_Route_Is_Rejected()
+    {
+        HttpClient client = await CreateAuthenticatedClientAsync();
+        BoardDto board = await CreateBoardAsync(client, "Numeric route");
+
+        HttpResponseMessage response = await client.DeleteAsync(
+            $"api/boards/{board.Id}/extensions/0", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        body.Should().Contain("extensions.kind_invalid");
     }
 
     [Fact]
@@ -124,7 +138,7 @@ public sealed class BoardExtensionTests
 
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             $"api/boards/{board.Id}/extensions/",
-            new { kind = 999, configJson = (string?)null }, TestContext.Current.CancellationToken);
+            new { kind = "notAnExtension", configJson = (string?)null }, TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
@@ -161,7 +175,7 @@ public sealed class BoardExtensionTests
 
         HttpResponseMessage boardResp = await client.PostAsJsonAsync(
             "api/boards/",
-            new { workspaceId = ws.Id, name, description = (string?)null, visibility = 0 });
+            new { workspaceId = ws.Id, name, description = (string?)null, visibility = "private" });
         boardResp.IsSuccessStatusCode.Should().BeTrue();
         return (await boardResp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
     }

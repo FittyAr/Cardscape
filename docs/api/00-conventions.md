@@ -27,6 +27,12 @@ production there is one canonical, unversioned route surface.
 
 - The API uses **JWT bearer tokens** issued by
   `POST /api/auth/login`.
+
+### Wire enums
+
+Enum values are camel-case names in JSON bodies, responses, and route/query
+segments (for example `"private"`, `customFields`, `kind=card`). Numeric CLR
+values are not part of the API contract and are rejected.
 - The token is sent in the `Authorization: Bearer <token>`
   header on every request.
 - Tokens expire after 60 minutes; refresh via

@@ -151,7 +151,8 @@ public class SamlEndpointsTests
         string workspaceSlug = $"ws-{Guid.NewGuid():N}";
         HttpResponseMessage createWorkspace = await client.PostAsJsonAsync(
             "api/workspaces/",
-            new CreateWorkspaceRequest($"SAML Workspace {workspaceSlug}"));
+            new CreateWorkspaceRequest($"SAML Workspace {workspaceSlug}"),
+            TestJson.Options);
         createWorkspace.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceDto workspace = (await createWorkspace.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
 
@@ -216,7 +217,8 @@ public class SamlEndpointsTests
         string workspaceSlug = $"ws-{Guid.NewGuid():N}";
         HttpResponseMessage createWorkspace = await client.PostAsJsonAsync(
             "api/workspaces/",
-            new CreateWorkspaceRequest($"SAML Workspace {workspaceSlug}"));
+            new CreateWorkspaceRequest($"SAML Workspace {workspaceSlug}"),
+            TestJson.Options);
         createWorkspace.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceDto workspace = (await createWorkspace.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
 

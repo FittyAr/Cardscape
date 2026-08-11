@@ -110,7 +110,7 @@ public sealed class CalendarQueryTests
     private static async Task<BoardDto> CreateBoardAsync(HttpClient client, Guid workspaceId, string name)
     {
         HttpResponseMessage resp = await client.PostAsJsonAsync(
-            "api/boards/", new { workspaceId, name, description = (string?)null, visibility = 0 });
+            "api/boards/", new { workspaceId, name, description = (string?)null, visibility = "private" });
         resp.IsSuccessStatusCode.Should().BeTrue();
         return (await resp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
     }

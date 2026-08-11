@@ -15,8 +15,7 @@ public sealed record ActivityDto(
     Guid? CardId,
     Guid ActorId,
     string? ActorDisplayName,
-    int Kind,
-    string KindName,
+    ActivityKind Kind,
     string PayloadJson,
     DateTimeOffset OccurredAt)
 {
@@ -26,8 +25,7 @@ public sealed record ActivityDto(
         a.CardId,
         a.ActorId,
         actorDisplayNames.GetValueOrDefault(a.ActorId, string.Empty),
-        (int)a.Kind,
-        a.Kind.ToString(),
+        a.Kind,
         a.PayloadJson,
         a.OccurredAt);
 }

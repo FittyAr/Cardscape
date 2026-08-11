@@ -332,7 +332,7 @@ public sealed class McpSubscriptionsCrossProcessTests
                 workspaceId,
                 name = $"Board-E2E-{Guid.NewGuid():N}",
                 description = (string?)null,
-                visibility = 0
+                visibility = "private"
             },
             TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();

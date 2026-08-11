@@ -115,7 +115,7 @@ public sealed class ActivityTests
 
         HttpResponseMessage boardResp = await client.PostAsJsonAsync(
             "api/boards/",
-            new { workspaceId = ws.Id, name, description = (string?)null, visibility = 0 });
+            new { workspaceId = ws.Id, name, description = (string?)null, visibility = "private" });
         boardResp.IsSuccessStatusCode.Should().BeTrue();
         BoardDto board = (await boardResp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
 
@@ -147,7 +147,6 @@ public sealed class ActivityTests
         Guid? CardId,
         Guid ActorId,
         ActivityKind Kind,
-        string KindName,
         string PayloadJson,
         DateTimeOffset OccurredAt);
 

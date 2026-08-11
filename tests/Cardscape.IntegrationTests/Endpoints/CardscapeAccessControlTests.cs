@@ -96,7 +96,7 @@ public sealed class CardscapeAccessControlTests
                 workspaceId = (await SeedWorkspaceAsync(owner)).Id,
                 name = "Public",
                 description = (string?)null,
-                visibility = 2 // BoardVisibility.Public
+                visibility = "public"
             }, TestContext.Current.CancellationToken);
         createBoard.IsSuccessStatusCode.Should().BeTrue();
         BoardDto board = (await createBoard.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
@@ -149,7 +149,7 @@ public sealed class CardscapeAccessControlTests
                 workspaceId = workspace.Id,
                 name = "Private",
                 description = (string?)null,
-                visibility = 0 // BoardVisibility.Private
+                visibility = "private"
             });
         createBoard.IsSuccessStatusCode.Should().BeTrue();
         BoardDto board = (await createBoard.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;

@@ -22,7 +22,11 @@ public sealed class CardscapeClientOptions
     public static readonly JsonSerializerOptions DefaultJsonOptions = new(JsonSerializerDefaults.Web)
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        Converters =
+        {
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false)
+        }
     };
 }
 
@@ -79,6 +83,9 @@ public sealed class CardscapeClient : IAsyncDisposable
     /// typed sub-clients don't cover.</summary>
     public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct = default)
         => SendCoreAsync(request, ct);
+
+    internal JsonContent CreateJsonContent<T>(T value) =>
+        JsonContent.Create(value, options: _options.JsonOptions);
 
     /// <summary>Lower-level: send a request and deserialize the
     /// JSON body to <typeparamref name="TResult"/>. Throws

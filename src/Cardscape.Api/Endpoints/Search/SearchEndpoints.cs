@@ -14,18 +14,8 @@ public static class SearchEndpoints
     {
         var group = app.MapGroup("/api/search").RequireAuthorization().WithTags("Search");
 
-        // BETA-7-#14 — see test-results/BETA-TEST-REPORT.md.
-        // The query binder doesn't run the
-        // `JsonStringEnumConverter` (that only applies to
-        // JSON bodies), so `?kind=card` returned 400. The
-        // endpoint now accepts BOTH the integer form
-        // (`?kind=0`, kept for back-compat) and the name
-        // form (`?kind=card`, the new friendly surface).
-        // We take `kind` as a raw `string?` and parse it
-        // inside the handler — declaring it as `int?` would
-        // make ASP.NET's binder reject the request with 400
-        // before the handler ever runs, which is exactly the
-        // bug we are fixing.
+        // Query-string binding does not use the JSON enum converter,
+        // so parse names explicitly and reject numeric CLR values.
         group.MapGet("/", async (
             string? q,
             Guid? boardId,
@@ -38,10 +28,11 @@ public static class SearchEndpoints
             SearchHitKind? resolvedKind = null;
             if (!string.IsNullOrWhiteSpace(kind))
             {
-                if (Enum.TryParse<SearchHitKind>(kind, ignoreCase: true, out SearchHitKind parsed) &&
-                    Enum.IsDefined(typeof(SearchHitKind), parsed))
+                string? definedName = Enum.GetNames<SearchHitKind>()
+                    .FirstOrDefault(name => string.Equals(name, kind, StringComparison.OrdinalIgnoreCase));
+                if (definedName is not null)
                 {
-                    resolvedKind = parsed;
+                    resolvedKind = Enum.Parse<SearchHitKind>(definedName);
                 }
                 else
                 {

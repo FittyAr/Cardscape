@@ -139,7 +139,7 @@ public sealed class CloneCardHandlerArchiveTests
 
         HttpResponseMessage boardResp = await client.PostAsJsonAsync(
             "api/boards/",
-            new { workspaceId = ws.Id, name, description = (string?)null, visibility = 0 });
+            new { workspaceId = ws.Id, name, description = (string?)null, visibility = "private" });
         boardResp.IsSuccessStatusCode.Should().BeTrue();
         BoardDto board = (await boardResp.Content.ReadFromJsonAsync<BoardDto>())!;
 

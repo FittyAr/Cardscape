@@ -464,14 +464,6 @@ public sealed class BoardsTools(
         }
     }
 
-    /// <summary>
-    /// Alias of <c>cards_assign</c> for callers that prefer the
-    /// "members" verb. Both names return the same DTO.
-    /// </summary>
-    [McpServerTool(Name = "members_assign")]
-    public Task<CardDto> AssignMember(Guid cardId, Guid userId, CancellationToken ct) =>
-        AssignCard(cardId, userId, ct);
-
     [McpServerTool(Name = "cards_attach_label")]
     public async Task<CardDto> AttachLabel(Guid cardId, Guid labelId, CancellationToken ct)
     {

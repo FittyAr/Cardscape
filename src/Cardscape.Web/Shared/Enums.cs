@@ -18,7 +18,7 @@ namespace Cardscape.Web.Shared;
 //
 // The API serialises every enum as a camelCase string
 // (e.g. "private", "member", "customFields") via the
-// `JsonStringEnumConverter(CamelCase, allowIntegerValues: true)`
+// `JsonStringEnumConverter(CamelCase, allowIntegerValues: false)`
 // configured in `src/Cardscape.Api/Program.cs:53-58`. The matching
 // Web-side options live on `Cardscape.Web.Services.Api.ApiClientBase.JsonOptions`
 // so the same strings round-trip cleanly.
@@ -92,4 +92,33 @@ public enum DashcardKind
     ByLabel = 2,
     ByList = 3,
     DueThisWeek = 4
+}
+
+public enum ActivityKind
+{
+    BoardCreated = 0,
+    BoardRenamed = 1,
+    BoardArchived = 2,
+    BoardUnarchived = 3,
+    ListCreated = 4,
+    ListRenamed = 5,
+    ListMoved = 6,
+    ListArchived = 7,
+    CardCreated = 8,
+    CardRenamed = 9,
+    CardMoved = 10,
+    CardArchived = 11,
+    CardRestored = 12,
+    CardAssigned = 13,
+    CardUnassigned = 14,
+    CardDueDateSet = 15,
+    CardDueDateCleared = 16,
+    LabelAdded = 17,
+    LabelRemoved = 18,
+    CommentAdded = 19,
+    ChecklistCreated = 20,
+    ChecklistItemCompleted = 21,
+    ChecklistItemUncompleted = 22,
+    AttachmentAdded = 23,
+    AttachmentRemoved = 24
 }

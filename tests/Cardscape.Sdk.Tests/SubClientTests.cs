@@ -30,7 +30,7 @@ public sealed class SubClientTests
                     id = Guid.NewGuid(),
                     name = "Board",
                     description = (string?)null,
-                    visibility = 0
+                    visibility = "private"
                 })
             };
         });
@@ -62,7 +62,7 @@ public sealed class SubClientTests
                     id = Guid.NewGuid(),
                     name = "Renamed",
                     description = (string?)null,
-                    visibility = 0
+                    visibility = "private"
                 })
             };
         });
@@ -80,6 +80,39 @@ public sealed class SubClientTests
         JsonElement body = JsonDocument.Parse(capture.Body).RootElement;
         body.GetProperty("name").GetString().Should().Be("Renamed");
         body.TryGetProperty("newName", out _).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Boards_Create_Async_Serializes_Visibility_As_A_Canonical_Name()
+    {
+        RequestCapture capture = new();
+        using HttpMessageHandlerStub handler = new(req =>
+        {
+            capture.CaptureSync(req);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new
+                {
+                    id = Guid.NewGuid(),
+                    name = "Board",
+                    description = (string?)null,
+                    visibility = "workspace"
+                })
+            };
+        });
+        using HttpClient http = new(handler) { BaseAddress = new("https://api.example.test/") };
+        await using CardscapeClient client = new(http, new CardscapeClientOptions
+        {
+            BaseAddress = new("https://api.example.test/")
+        });
+
+        await client.Boards.CreateAsync(
+            new CreateBoardRequest(Guid.NewGuid(), "Board", Visibility: BoardVisibility.Workspace),
+            TestContext.Current.CancellationToken);
+
+        JsonElement body = JsonDocument.Parse(capture.Body).RootElement;
+        body.GetProperty("visibility").ValueKind.Should().Be(JsonValueKind.String);
+        body.GetProperty("visibility").GetString().Should().Be("workspace");
     }
 
     [Fact]
@@ -233,7 +266,7 @@ public sealed class SubClientTests
                 {
                     id = Guid.NewGuid(),
                     name = "WS",
-                    region = (int)Region.Europe
+                    region = "europe"
                 })
             };
         });
@@ -251,7 +284,8 @@ public sealed class SubClientTests
         capture.Path.Should().Be("/api/workspaces/");
         JsonElement body = JsonDocument.Parse(capture.Body).RootElement;
         body.GetProperty("name").GetString().Should().Be("WS");
-        body.GetProperty("region").GetInt32().Should().Be((int)Region.Europe);
+        body.GetProperty("region").ValueKind.Should().Be(JsonValueKind.String);
+        body.GetProperty("region").GetString().Should().Be("europe");
     }
 
     private sealed class RequestCapture

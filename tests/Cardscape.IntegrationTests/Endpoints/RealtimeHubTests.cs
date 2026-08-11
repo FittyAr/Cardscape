@@ -95,7 +95,7 @@ public sealed class RealtimeHubTests
         WorkspaceDto workspace = (await ws.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
 
         HttpResponseMessage bd = await client.PostAsJsonAsync(
-            "api/boards/", new { workspaceId = workspace.Id, name = "Hub board", description = (string?)null, visibility = 0 });
+            "api/boards/", new { workspaceId = workspace.Id, name = "Hub board", description = (string?)null, visibility = "private" });
         bd.IsSuccessStatusCode.Should().BeTrue();
         BoardDto board = (await bd.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
 

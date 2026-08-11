@@ -6,7 +6,7 @@ namespace Cardscape.Tests.Common;
 /// <summary>
 /// Centralised <see cref="JsonSerializerOptions"/> for the integration test
 /// suite. The API emits enums as camelCase strings (the server configures
-/// <c>JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: true)</c>
+/// <c>JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false)</c>
 /// so the wire format is human-readable for MCP, Scalar, and any other
 /// non-JSON-aware consumer), so the test <c>HttpClient</c> has to use the
 /// same converter on the way back in. The default
@@ -39,7 +39,7 @@ public static class TestJson
         PropertyNameCaseInsensitive = true,
         Converters =
         {
-            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: true)
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false)
         }
     };
 }

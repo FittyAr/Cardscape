@@ -29,7 +29,7 @@ public sealed class CustomFieldTests
         // Create
         HttpResponseMessage create = await client.PostAsJsonAsync(
             $"api/boards/{seed.BoardId}/custom-fields/",
-            new { name = "Priority", kind = 0, dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
+            new { name = "Priority", kind = "text", dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
         create.IsSuccessStatusCode.Should().BeTrue();
         CustomFieldDefinitionDto created =
             (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
@@ -74,7 +74,7 @@ public sealed class CustomFieldTests
 
         HttpResponseMessage create = await client.PostAsJsonAsync(
             $"api/boards/{seed.BoardId}/custom-fields/",
-            new { name = "Severity", kind = 3, dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
+            new { name = "Severity", kind = "dropdown", dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
         create.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
@@ -87,7 +87,7 @@ public sealed class CustomFieldTests
         // Text field
         HttpResponseMessage create = await client.PostAsJsonAsync(
             $"api/boards/{seed.BoardId}/custom-fields/",
-            new { name = "Priority", kind = 0, dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
+            new { name = "Priority", kind = "text", dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
         CustomFieldDefinitionDto field =
             (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
@@ -131,7 +131,7 @@ public sealed class CustomFieldTests
 
         HttpResponseMessage create = await client.PostAsJsonAsync(
             $"api/boards/{seed.BoardId}/custom-fields/",
-            new { name = "Severity", kind = 3, dropdownOptions = new[] { "Low", "High" }, position = 0 }, TestContext.Current.CancellationToken);
+            new { name = "Severity", kind = "dropdown", dropdownOptions = new[] { "Low", "High" }, position = 0 }, TestContext.Current.CancellationToken);
         CustomFieldDefinitionDto field =
             (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
@@ -149,7 +149,7 @@ public sealed class CustomFieldTests
 
         HttpResponseMessage create = await client.PostAsJsonAsync(
             $"api/boards/{seed.BoardId}/custom-fields/",
-            new { name = "Priority", kind = 0, dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
+            new { name = "Priority", kind = "text", dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
         CustomFieldDefinitionDto field =
             (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
@@ -177,7 +177,7 @@ public sealed class CustomFieldTests
         HttpClient stranger = await CreateAuthenticatedClientAsync();
         HttpResponseMessage create = await stranger.PostAsJsonAsync(
             $"api/boards/{seed.BoardId}/custom-fields/",
-            new { name = "X", kind = 0, dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
+            new { name = "X", kind = "text", dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
         create.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
@@ -214,7 +214,7 @@ public sealed class CustomFieldTests
 
         HttpResponseMessage boardResp = await client.PostAsJsonAsync(
             "api/boards/",
-            new { workspaceId = ws.Id, name, description = (string?)null, visibility = 0 });
+            new { workspaceId = ws.Id, name, description = (string?)null, visibility = "private" });
         boardResp.IsSuccessStatusCode.Should().BeTrue();
         BoardDto board = (await boardResp.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
 

@@ -1,4 +1,5 @@
 using Cardscape.Application.Extensions;
+using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -34,18 +35,22 @@ public static class BoardExtensionEndpoints
             CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardExtensionDto>>(
-                new EnableBoardExtensionCommand(boardId, body.Kind, body.ConfigJson), ct);
+                new EnableBoardExtensionCommand(boardId, (int)body.Kind, body.ConfigJson), ct);
             return result.IsSuccess
                 ? Results.Created(
-                    $"/api/boards/{boardId}/extensions/{body.Kind}",
+                    $"/api/boards/{boardId}/extensions/{ToRouteValue(body.Kind)}",
                     result.Value)
                 : MapError(result.Error);
         });
 
-        group.MapDelete("/{kind:int}", async (Guid boardId, int kind, IMessageBus bus, CancellationToken ct) =>
+        group.MapDelete("/{kind}", async (Guid boardId, string kind, IMessageBus bus, CancellationToken ct) =>
         {
+            if (!TryParseKind(kind, out ExtensionKind parsedKind))
+            {
+                return InvalidKind(kind);
+            }
             var result = await bus.InvokeAsync<Result>(
-                new DisableBoardExtensionCommand(boardId, kind), ct);
+                new DisableBoardExtensionCommand(boardId, (int)parsedKind), ct);
             return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
         });
 
@@ -87,23 +92,43 @@ public static class BoardExtensionEndpoints
             return disable.IsSuccess ? Results.NoContent() : MapError(disable.Error);
         });
 
-        group.MapPut("/{kind:int}/config", async (
+        group.MapPut("/{kind}/config", async (
             Guid boardId,
-            int kind,
+            string kind,
             UpdateConfigBody body,
             IMessageBus bus,
             CancellationToken ct) =>
         {
+            if (!TryParseKind(kind, out ExtensionKind parsedKind))
+            {
+                return InvalidKind(kind);
+            }
             var result = await bus.InvokeAsync<Result<BoardExtensionDto>>(
-                new UpdateBoardExtensionConfigCommand(boardId, kind, body.ConfigJson), ct);
+                new UpdateBoardExtensionConfigCommand(boardId, (int)parsedKind, body.ConfigJson), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
         return app;
     }
 
-    public sealed record EnableExtensionBody(int Kind, string? ConfigJson);
+    public sealed record EnableExtensionBody(ExtensionKind Kind, string? ConfigJson);
     public sealed record UpdateConfigBody(string? ConfigJson);
+
+    private static bool TryParseKind(string value, out ExtensionKind kind)
+    {
+        string? name = Enum.GetNames<ExtensionKind>()
+            .FirstOrDefault(candidate => string.Equals(candidate, value, StringComparison.OrdinalIgnoreCase));
+        return Enum.TryParse(name, out kind);
+    }
+
+    private static string ToRouteValue(ExtensionKind kind) =>
+        char.ToLowerInvariant(kind.ToString()[0]) + kind.ToString()[1..];
+
+    private static IResult InvalidKind(string kind) => Results.BadRequest(new
+    {
+        code = "extensions.kind_invalid",
+        message = $"Unknown extension kind '{kind}'. Valid values: {string.Join(", ", Enum.GetValues<ExtensionKind>().Select(ToRouteValue))}."
+    });
 
     private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
     {

@@ -63,7 +63,7 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
             WorkspaceId = workspace.Id,
             Name = $"Golden Board {suffix}",
             Description = "Smoke test board",
-            Visibility = BoardVisibility.Private
+            Visibility = "private"
         };
         HttpResponseMessage boardResponse = await client.PostAsJsonAsync("api/boards/", boardRequest, TestContext.Current.CancellationToken);
         boardResponse.IsSuccessStatusCode.Should().BeTrue(

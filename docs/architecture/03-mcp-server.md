@@ -302,7 +302,7 @@ Every tool follows these rules:
 | `cards_move` | `CardsWrite` | Move a card to a list, optionally at a position. |
 | `cards_archive` | `CardsWrite` | Archive a card. |
 | `comments_add` | `CommentsWrite` | Add a comment to a card. |
-| `members_assign` | `BoardsWrite` | Assign / unassign a member to / from a card. |
+| `cards_assign` | `BoardsWrite` | Assign a member to a card. |
 | `search` | `Search` | Full-text search across the caller's boards. |
 | `labels_add` | `CardsWrite` | Add / remove a label on a card. |
 | `checklist_add` | `CardsWrite` | Add a checklist item to a card. |

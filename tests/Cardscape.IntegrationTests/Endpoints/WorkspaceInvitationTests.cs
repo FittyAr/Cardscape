@@ -32,7 +32,7 @@ public sealed class WorkspaceInvitationTests
 
         HttpResponseMessage issueResp = await owner.PostAsJsonAsync(
             $"api/workspaces/{ws.Id}/invitations/",
-            new { email = inviteeEmail, role = 1 }, TestContext.Current.CancellationToken);
+            new { email = inviteeEmail, role = "member" }, TestContext.Current.CancellationToken);
         issueResp.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceInvitationIssuanceDto issued = (await issueResp.Content.ReadFromJsonAsync<WorkspaceInvitationIssuanceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         issued.CleartextToken.Should().NotBeNullOrWhiteSpace();
@@ -69,7 +69,7 @@ public sealed class WorkspaceInvitationTests
 
         HttpResponseMessage issueResp = await owner.PostAsJsonAsync(
             $"api/workspaces/{ws.Id}/invitations/",
-            new { email = $"target-{Guid.NewGuid():N}@cardscape.local", role = 1 }, TestContext.Current.CancellationToken);
+            new { email = $"target-{Guid.NewGuid():N}@cardscape.local", role = "member" }, TestContext.Current.CancellationToken);
         WorkspaceInvitationIssuanceDto issued = (await issueResp.Content.ReadFromJsonAsync<WorkspaceInvitationIssuanceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         // A different user (different email) tries to redeem it.
@@ -88,7 +88,7 @@ public sealed class WorkspaceInvitationTests
         string targetEmail = $"target-{Guid.NewGuid():N}@cardscape.local";
         await owner.PostAsJsonAsync(
             $"api/workspaces/{ws.Id}/invitations/",
-            new { email = targetEmail, role = 1 }, TestContext.Current.CancellationToken);
+            new { email = targetEmail, role = "member" }, TestContext.Current.CancellationToken);
 
         // A second, unrelated user shouldn't see anything.
         HttpClient stranger = await CreateAuthenticatedClientAsync("Stranger", $"stranger-{Guid.NewGuid():N}@cardscape.local");
@@ -118,7 +118,7 @@ public sealed class WorkspaceInvitationTests
         HttpClient other = await CreateAuthenticatedClientAsync("Other", $"other-{Guid.NewGuid():N}@cardscape.local");
         HttpResponseMessage issue = await other.PostAsJsonAsync(
             $"api/workspaces/{ws.Id}/invitations/",
-            new { email = $"x-{Guid.NewGuid():N}@cardscape.local", role = 1 }, TestContext.Current.CancellationToken);
+            new { email = $"x-{Guid.NewGuid():N}@cardscape.local", role = "member" }, TestContext.Current.CancellationToken);
         issue.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
@@ -131,7 +131,7 @@ public sealed class WorkspaceInvitationTests
         string targetEmail = $"target-{Guid.NewGuid():N}@cardscape.local";
         HttpResponseMessage issueResp = await owner.PostAsJsonAsync(
             $"api/workspaces/{ws.Id}/invitations/",
-            new { email = targetEmail, role = 1 }, TestContext.Current.CancellationToken);
+            new { email = targetEmail, role = "member" }, TestContext.Current.CancellationToken);
         WorkspaceInvitationIssuanceDto issued = (await issueResp.Content.ReadFromJsonAsync<WorkspaceInvitationIssuanceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
 
         HttpResponseMessage revoke = await owner.DeleteAsync(
@@ -150,7 +150,7 @@ public sealed class WorkspaceInvitationTests
         HttpClient client = _factory.CreateApiClient();
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             $"api/workspaces/{Guid.NewGuid()}/invitations/",
-            new { email = "x@example.com", role = 1 }, TestContext.Current.CancellationToken);
+            new { email = "x@example.com", role = "member" }, TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 

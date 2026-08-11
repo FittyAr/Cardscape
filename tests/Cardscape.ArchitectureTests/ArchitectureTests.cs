@@ -236,6 +236,45 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void Mcp_DoesNotAdvertiseRemovedCompatibilityAliases()
+    {
+        string[] advertisedTools = typeof(Cardscape.Mcp.Extensions.ServiceCollectionExtensions).Assembly
+            .GetTypes()
+            .SelectMany(type => type.GetMethods())
+            .SelectMany(method => method
+                .GetCustomAttributes(typeof(ModelContextProtocol.Server.McpServerToolAttribute), false)
+                .Cast<ModelContextProtocol.Server.McpServerToolAttribute>())
+            .Select(attribute => attribute.Name)
+            .Where(name => name is not null)
+            .Cast<string>()
+            .ToArray();
+
+        advertisedTools.Should().NotContain("members_assign");
+        advertisedTools.Should().ContainSingle(name => name == "cards_assign");
+    }
+
+    [Fact]
+    public void GoogleCalendarPage_ExposesOnlyCanonicalIntegrationRoute()
+    {
+        string[] routes = typeof(Cardscape.Web.Pages.GoogleCalendar)
+            .GetCustomAttributes(typeof(Microsoft.AspNetCore.Components.RouteAttribute), inherit: false)
+            .Cast<Microsoft.AspNetCore.Components.RouteAttribute>()
+            .Select(attribute => attribute.Template)
+            .ToArray();
+
+        routes.Should().Equal("/settings/integrations/google-calendar");
+    }
+
+    [Fact]
+    public void WebActivityKind_MatchesDomainWireEnumExactly()
+    {
+        Enum.GetNames<Cardscape.Web.Shared.ActivityKind>()
+            .Should().Equal(Enum.GetNames<Cardscape.Domain.Activities.ActivityKind>());
+        Enum.GetValues<Cardscape.Web.Shared.ActivityKind>().Select(value => (int)value)
+            .Should().Equal(Enum.GetValues<Cardscape.Domain.Activities.ActivityKind>().Select(value => (int)value));
+    }
+
+    [Fact]
     public void Domain_Entities_AreSealed()
     {
         // Aggregates and entities are sealed unless polymorphism is required.

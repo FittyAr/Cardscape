@@ -450,7 +450,7 @@ else
                                 : a.ActorId.ToString();
                             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
                                          Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                                <RadzenText Text="@a.KindName" TextStyle="TextStyle.Body2"
+                                <RadzenText Text="@a.Kind.ToString()" TextStyle="TextStyle.Body2"
                                             TagName="TagName.Span" />
                                 <RadzenText Text="@actorLabel" TextStyle="TextStyle.Body2"
                                             TagName="TagName.Span" class="rz-color-text-secondary" />

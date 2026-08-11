@@ -124,6 +124,17 @@ public sealed class JwtRevocationEndpointTests
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
+    [Fact]
+    public async Task Legacy_Logout_Alias_Is_Not_Mapped()
+    {
+        HttpClient client = await CreateAuthenticatedClientAsync();
+
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "api/auth/logout", new { reason = "obsolete alias" }, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
     private async Task<HttpClient> CreateAuthenticatedClientAsync()
     {
         HttpClient client = _factory.CreateApiClient();
