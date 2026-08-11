@@ -10,7 +10,6 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
-using Cardscape.Mcp.Tools;
 using ModelContextProtocol.Server;
 using Wolverine;
 
@@ -33,7 +32,7 @@ namespace Cardscape.Mcp.Prompts;
 ///     activity in N days (the Card Aging feature backs this).
 /// </summary>
 [McpServerPromptType]
-public sealed class McpPrompts
+public sealed class McpPrompts(IMessageBus bus)
 {
     [McpServerPrompt(Name = "standup-summary")]
     public async Task<string> StandupSummary(
@@ -41,7 +40,6 @@ public sealed class McpPrompts
         int lookaheadDays = 7,
         CancellationToken ct = default)
     {
-        var bus = McpToolContext.Bus;
         DateTimeOffset from = DateTimeOffset.UtcNow;
         DateTimeOffset to = from.AddDays(lookaheadDays);
         Result<IReadOnlyList<CardSummaryDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
@@ -73,7 +71,6 @@ public sealed class McpPrompts
     [McpServerPrompt(Name = "triage-inbox")]
     public async Task<string> TriageInbox(int maxCards = 20, CancellationToken ct = default)
     {
-        var bus = McpToolContext.Bus;
         Result<IReadOnlyList<NotificationDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<NotificationDto>>>(
             new ListNotificationsQuery(UnreadOnly: true, Skip: 0, Take: maxCards), ct);
 
@@ -105,7 +102,6 @@ public sealed class McpPrompts
         int maxCards = 10,
         CancellationToken ct = default)
     {
-        var bus = McpToolContext.Bus;
         Result<IReadOnlyList<BoardListDto>> listsResult = await bus.InvokeAsync<Result<IReadOnlyList<BoardListDto>>>(
             new ListListsForBoardQuery(boardId, IncludeArchived: false), ct);
 
@@ -156,7 +152,6 @@ public sealed class McpPrompts
     [McpServerPrompt(Name = "weekly-review")]
     public async Task<string> WeeklyReview(CancellationToken ct = default)
     {
-        var bus = McpToolContext.Bus;
         DateTimeOffset from = DateTimeOffset.UtcNow.AddDays(-7);
         DateTimeOffset to = DateTimeOffset.UtcNow;
         Result<IReadOnlyList<CardSummaryDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(

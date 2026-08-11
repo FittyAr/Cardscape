@@ -1,0 +1,121 @@
+# Plan de modernización integral de Cardscape
+
+> **Estado**: En ejecución  
+> **Inicio**: 2026-08-11  
+> **Stack objetivo**: .NET 10, ASP.NET Core 10, Blazor WebAssembly 10, EF Core 10 y Radzen.Blazor  
+> **Rama de entrega**: `master` (rama principal real del repositorio; `origin/HEAD` apunta a `origin/master`)  
+> **Compatibilidad**: no se preservará compatibilidad hacia atrás mientras el producto no esté en producción.
+
+## 1. Objetivo y reglas de decisión
+
+El objetivo es llevar todo el repositorio a un estándar profesional, verificable y mantenible. La revisión cubre arquitectura, dominio, casos de uso, persistencia, API, MCP, Blazor, seguridad, observabilidad, pruebas, automatización y documentación.
+
+Reglas permanentes:
+
+- Favorecer APIs y patrones modernos soportados por .NET 10; no introducir previews ni actualizar `global.json` sin autorización explícita.
+- Mantener Clean Architecture sólo donde los límites aporten independencia real. Eliminar abstracciones, service locators y capas ceremoniales que no protejan una frontera.
+- Organizar Application/API/Web por capacidad o bounded context y evitar archivos monolíticos.
+- Diseñar persistencia para SQLite, PostgreSQL y MariaDB; validar automáticamente en SQLite hasta ampliar la matriz.
+- Usar exclusivamente componentes Radzen en la UI. CSS isolation se acepta sólo para interacciones sin equivalente Radzen, como un kanban; cualquier otra excepción deberá quedar justificada.
+- No mantener rutas, contratos, migraciones o adaptadores obsoletos por compatibilidad. Los cambios incompatibles deben actualizar en el mismo bloque código, pruebas y documentación.
+- Cada bloque termina con build Release sin warnings, pruebas pertinentes verdes, actualización de este checklist, commit pequeño y push a `origin/master`.
+
+## 2. Línea base y hallazgos iniciales
+
+### 2.1 Estado comprobado
+
+- [x] SDK fijado y disponible: .NET SDK `10.0.302`; proyectos de producto en `net10.0`.
+- [x] Gestión central de paquetes mediante `Directory.Packages.props`.
+- [x] Warnings tratados como errores y análisis Roslyn habilitado.
+- [x] Proyectos principales separados en Domain, Application, Infrastructure, Api, Web y Mcp.
+- [x] Pruebas de arquitectura existentes: 10/10 verdes.
+- [x] Build Release: 0 warnings y 0 errores al deshabilitar el compilador compartido bloqueado por el entorno.
+- [x] Línea base de tests ejecutada: 707 pass, 5 E2E fail, 1 skip.
+- [x] Causa de las 5 E2E: `IMessageBus` scoped resuelto desde el provider raíz y almacenado en estado global.
+- [x] Corrección aplicada: inyección DI normal en MCP; service locator estático eliminado; 5/5 E2E verdes.
+
+### 2.2 Riesgos y deuda confirmados
+
+- [x] `Cardscape.Seeder` era una dependencia de API pero no figuraba en `Cardscape.slnx`; esto permitió que un build Release de la solución lo produjera en Debug.
+- [ ] La documentación arquitectónica está desincronizada: todavía describe MediatR aunque ADR 0003 y el código usan Wolverine; también contiene versiones antiguas y referencias `net11.0` incorrectas.
+- [ ] `Directory.Build.props` suprime una lista extraordinariamente amplia y duplicada de analizadores. Esto reduce el valor de `TreatWarningsAsErrors`; debe reducirse gradualmente con justificación por regla.
+- [ ] Existen archivos con demasiadas responsabilidades: `CardDetail.razor` (~58 KB), `BoardDetail.razor` (~34 KB), `CardCommands.cs` (~40 KB), el registro DI de Infrastructure (~32 KB), `BoardsTools.cs` (~31 KB) y `Api/Program.cs` (~18 KB).
+- [ ] La migración documentada por proveedor contradice la estructura actual de migraciones consolidadas; debe decidirse y comprobarse una única estrategia multi-provider.
+- [ ] Hay comentarios y descripciones de proyecto que siguen llamando “scaffold/placeholder” a código activo; pueden ocultar funcionalidad incompleta real.
+- [ ] La solución contiene documentación histórica extensa y contradictoria con el estado actual. Los ADR se preservan, pero la documentación normativa debe reconciliarse.
+
+## 3. Plan de ejecución
+
+### Fase 0 — Higiene y línea base
+
+- [x] Inventariar repositorio, proyectos, dependencias, ramas e instrucciones.
+- [x] Leer README, ADR y contrato operativo.
+- [x] Ejecutar build Release y suite completa.
+- [x] Corregir el fallo de arranque MCP que rompía toda la suite E2E.
+- [x] Incluir `Cardscape.Seeder` explícitamente en la solución.
+- [x] Ejecutar nuevamente la suite completa: 712 pass, 0 fail, 1 skip.
+- [x] Confirmar que `.env` está ignorado y no está versionado.
+
+### Fase 1 — Arquitectura y estructura
+
+- [ ] Generar el grafo efectivo de referencias entre proyectos y reforzar sus invariantes con architecture tests.
+- [ ] Revisar ubicación y dependencia de cada abstracción; Domain no debe depender de frameworks y Application sólo de Domain/abstracciones necesarias.
+- [ ] Auditar composición DI de API, MCP y Seeder: lifetimes, duplicación, validación al arranque y opciones tipadas.
+- [ ] Revisar boundaries y vertical slices; dividir archivos monolíticos por caso de uso sin crear capas adicionales.
+- [ ] Revisar el rol del SDK público y evitar duplicación de contratos con Web/API.
+- [ ] Alinear solución, Docker, CI, scripts y documentación con el mismo conjunto de proyectos.
+- [ ] Reconciliar documentación normativa con Wolverine, .NET 10 y versiones instaladas.
+
+### Fase 2 — Superficies críticas
+
+- [ ] Autenticación/autorización: JWT, API tokens, OAuth/OIDC, SAML, SCIM, 2FA, políticas y aislamiento multi-tenant.
+- [ ] Persistencia: modelo EF, transacciones, concurrencia, índices, consultas N+1, tracking y compatibilidad de los tres providers.
+- [ ] Gestión de secretos, cifrado, datos personales, borrado/anominización y retención.
+- [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia.
+- [ ] Wolverine/background jobs: scopes, retries, outbox/inbox, cancelación y consistencia de eventos.
+- [ ] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia.
+- [ ] Observabilidad: logs estructurados, correlación, trazas, métricas, health checks y ausencia de PII/secrets.
+
+### Fase 3 — API y contratos
+
+- [ ] Revisar semántica HTTP, Problem Details, validación, cancelación y códigos de estado de todos los endpoints.
+- [ ] Eliminar endpoints legacy y contratos duplicados porque no se exige retrocompatibilidad.
+- [ ] Verificar OpenAPI/Scalar y sincronía con SDK/Web.
+- [ ] Normalizar paginación, filtros, límites y errores.
+
+### Fase 4 — Blazor WebAssembly y UI Radzen
+
+- [ ] Leer la skill local `radzen-blazor` antes del primer cambio UI.
+- [ ] Auditar todas las páginas por componente, estado, accesibilidad, responsive, loading/empty/error y navegación.
+- [ ] Dividir `CardDetail.razor` y `BoardDetail.razor` en componentes cohesionados y testeables.
+- [ ] Eliminar HTML/CSS/JS custom no autorizado cuando Radzen ofrezca equivalente.
+- [ ] Revisar formularios, validadores, dialogs, grids, virtualización y renderizado para evitar trabajo innecesario.
+- [ ] Validar temas, contraste, teclado, foco y localización.
+
+### Fase 5 — Calidad y pruebas
+
+- [ ] Auditar calidad de assertions, anti-patterns, gaps y cobertura de rutas críticas.
+- [ ] Incorporar tests sólo mediante el pipeline `code-testing-agent` exigido por el repositorio.
+- [ ] Resolver el test omitido o documentar técnicamente por qué no puede ejecutarse.
+- [ ] Reducir supresiones globales de analyzers y mover excepciones inevitables al scope mínimo.
+- [ ] Añadir validaciones de arquitectura para los defectos encontrados (lifetimes cuando sea comprobable, referencias y convenciones).
+- [ ] Revisar tests funcionales/E2E para que validen comportamiento y no detalles internos.
+
+### Fase 6 — Operación y cierre
+
+- [ ] Auditar Docker/Compose, configuración por ambiente, health checks, graceful shutdown y despliegue reproducible.
+- [ ] Revisar CI, supply chain, dependencias vulnerables y actualizaciones compatibles con .NET 10.
+- [ ] Consolidar documentación operativa y eliminar contradicciones sin reescribir ADR históricos.
+- [ ] Ejecutar build, tests, análisis y smoke tests finales.
+- [ ] Publicar informe final de arquitectura, deuda residual justificada y siguientes decisiones.
+
+## 4. Registro de bloques entregados
+
+| Fecha | Bloque | Resultado | Verificación | Commit |
+|---|---|---|---|---|
+| 2026-08-11 | Línea base + lifetime MCP | Eliminado `McpToolContext`; prompts, resources y AI tools usan DI scoped | Suite: 712 pass, 0 fail, 1 skip | Pendiente |
+| 2026-08-11 | Estructura de solución | Seeder agregado explícitamente a `Cardscape.slnx` | Build Release: 0 warnings, 0 errors; Seeder en Release | Pendiente |
+
+## 5. Criterio de completitud
+
+El plan estará completo cuando todas las fases estén verificadas o cada excepción restante tenga una decisión explícita, evidencia y responsable. “Compila” no es suficiente: la arquitectura declarada, el código, las pruebas, la UI Radzen y la documentación deben describir el mismo sistema.

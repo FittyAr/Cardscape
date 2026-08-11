@@ -13,7 +13,7 @@ namespace Cardscape.Mcp.Tools;
 /// (either <c>RuleBased</c> or <c>OpenAiCompatible</c>).
 /// </summary>
 [McpServerToolType]
-public sealed class AiTools(ICurrentUser currentUser)
+public sealed class AiTools(IMessageBus bus, ICurrentUser currentUser)
 {
     [McpServerTool(Name = "ai_generate_card_description")]
     public async Task<AiFeatures.AiGeneratedText> GenerateCardDescription(
@@ -25,7 +25,6 @@ public sealed class AiTools(ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            var bus = McpToolContext.Bus;
             var result = await bus.InvokeAsync<Result<AiFeatures.AiGeneratedText>>(
                 new AiFeatures.GenerateCardDescriptionCommand(cardId, extraContext), ct);
             if (result.IsFailure)
@@ -52,7 +51,6 @@ public sealed class AiTools(ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            var bus = McpToolContext.Bus;
             var result = await bus.InvokeAsync<Result<AiFeatures.AiGeneratedText>>(
                 new AiFeatures.SummarizeCommentThreadCommand(commentIds), ct);
             if (result.IsFailure)
@@ -79,7 +77,6 @@ public sealed class AiTools(ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            var bus = McpToolContext.Bus;
             var result = await bus.InvokeAsync<Result<AiFeatures.AiGeneratedChecklist>>(
                 new AiFeatures.GenerateChecklistFromDescriptionCommand(cardId), ct);
             if (result.IsFailure)
@@ -107,7 +104,6 @@ public sealed class AiTools(ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            var bus = McpToolContext.Bus;
             var result = await bus.InvokeAsync<Result<AiFeatures.AiOwnerSuggestions>>(
                 new AiFeatures.SuggestCardOwnersCommand(cardId, maxSuggestions), ct);
             if (result.IsFailure)

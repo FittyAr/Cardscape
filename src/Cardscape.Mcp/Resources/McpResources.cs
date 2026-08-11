@@ -8,7 +8,6 @@ using Cardscape.Application.Lists.Queries;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Application.Workspaces.Queries;
 using Cardscape.Domain.Common;
-using Cardscape.Mcp.Tools;
 using ModelContextProtocol.Server;
 using Wolverine;
 
@@ -30,14 +29,13 @@ namespace Cardscape.Mcp.Resources;
 /// JSON envelope with <c>error</c> and <c>message</c> fields.
 /// </summary>
 [McpServerResourceType]
-public sealed class McpResources
+public sealed class McpResources(IMessageBus bus)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     [McpServerResource(Name = "workspace", UriTemplate = "workspace://{workspaceId}")]
     public async Task<string> GetWorkspace(Uri uri, CancellationToken ct = default)
     {
-        var bus = McpToolContext.Bus;
         Guid workspaceId = ExtractGuid(uri, "workspaceId");
         Result<WorkspaceDto> result = await bus.InvokeAsync<Result<WorkspaceDto>>(
             new GetWorkspaceQuery(workspaceId), ct);
@@ -47,7 +45,6 @@ public sealed class McpResources
     [McpServerResource(Name = "board", UriTemplate = "board://{boardId}")]
     public async Task<string> GetBoard(Uri uri, CancellationToken ct = default)
     {
-        var bus = McpToolContext.Bus;
         Guid boardId = ExtractGuid(uri, "boardId");
         Result<BoardDto> result = await bus.InvokeAsync<Result<BoardDto>>(
             new GetBoardQuery(boardId), ct);
@@ -57,7 +54,6 @@ public sealed class McpResources
     [McpServerResource(Name = "card", UriTemplate = "card://{cardId}")]
     public async Task<string> GetCard(Uri uri, CancellationToken ct = default)
     {
-        var bus = McpToolContext.Bus;
         Guid cardId = ExtractGuid(uri, "cardId");
         Result<CardDto> result = await bus.InvokeAsync<Result<CardDto>>(
             new GetCardQuery(cardId), ct);
@@ -67,7 +63,6 @@ public sealed class McpResources
     [McpServerResource(Name = "cards-on-board", UriTemplate = "cards://board/{boardId}")]
     public async Task<string> ListCardsOnBoard(Uri uri, CancellationToken ct = default)
     {
-        var bus = McpToolContext.Bus;
         Guid boardId = ExtractGuid(uri, "boardId");
         Result<IReadOnlyList<CardSummaryDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
             new ListCardsForBoardQuery(boardId, IncludeArchived: false), ct);
@@ -77,7 +72,6 @@ public sealed class McpResources
     [McpServerResource(Name = "lists-on-board", UriTemplate = "lists://board/{boardId}")]
     public async Task<string> ListListsOnBoard(Uri uri, CancellationToken ct = default)
     {
-        var bus = McpToolContext.Bus;
         Guid boardId = ExtractGuid(uri, "boardId");
         Result<IReadOnlyList<BoardListDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<BoardListDto>>>(
             new ListListsForBoardQuery(boardId, IncludeArchived: false), ct);

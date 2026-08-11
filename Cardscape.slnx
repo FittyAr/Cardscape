@@ -6,6 +6,7 @@
     <Project Path="src/Cardscape.Api/Cardscape.Api.csproj" />
     <Project Path="src/Cardscape.Web/Cardscape.Web.csproj" />
     <Project Path="src/Cardscape.Mcp/Cardscape.Mcp.csproj" />
+    <Project Path="src/Cardscape.Seeder/Cardscape.Seeder.csproj" />
   </Folder>
   <Folder Name="/sdk/">
     <Project Path="sdk/Cardscape.Sdk/Cardscape.Sdk.csproj" />

@@ -2,8 +2,6 @@ using Cardscape.Infrastructure.Logging;
 using Cardscape.Mcp.Endpoints.Internal;
 using Cardscape.Mcp.Extensions;
 using Cardscape.Mcp.Observability;
-using Cardscape.Mcp.Tools;
-using Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,16 +39,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 var app = builder.Build();
-
-// ── Ambient bus for MCP tools ──────────────────────────────
-// The MCP tools (decorated with [McpServerTool]) need a
-// Wolverine IMessageBus to dispatch commands. The bus is
-// a singleton on the root provider (Wolverine registers it
-// there as part of the AddCardscapeMcp composition), so
-// resolving it from the root is the right lifetime - no
-// short-lived scope, no risk of the captured reference
-// racing against a half-disposed host (BETA-8-MCP-#8).
-McpToolContext.Bus = app.Services.GetRequiredService<IMessageBus>();
 
 // ── Pipeline ─────────────────────────────────────────────
 app.UseCardscapeMcp();
