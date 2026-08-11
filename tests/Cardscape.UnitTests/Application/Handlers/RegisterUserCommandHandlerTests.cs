@@ -21,7 +21,6 @@ public class RegisterUserCommandHandlerTests
         ctx.Users.All.Should().HaveCount(1);
         ctx.UnitOfWork.SaveChangesCallCount.Should().Be(1);
         ctx.Tokens.AccessTokensIssued.Should().HaveCount(1);
-        ctx.Tokens.RefreshTokensIssued.Should().HaveCount(1);
         result.Value.User.Email.Should().Be("alice@example.com");
         result.Value.User.DisplayName.Should().Be("Alice");
     }

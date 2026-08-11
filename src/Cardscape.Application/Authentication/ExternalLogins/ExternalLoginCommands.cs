@@ -60,17 +60,13 @@ public static class ResolveExternalLoginCommandHandler
         user.RecordLogin(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(ct);
 
-        var refresh = tokens.IssueRefreshToken();
         var access = tokens.IssueAccessToken(user, ["user"]);
         return Result.Success(new AuthResponse(
             access,
-            refresh.Token,
             clock.UtcNow.AddHours(1),
-            refresh.ExpiresAt,
             new UserSummary(
                 user.Id.Value,
                 user.Email.Value,
                 user.DisplayName.Value)));
     }
 }
-

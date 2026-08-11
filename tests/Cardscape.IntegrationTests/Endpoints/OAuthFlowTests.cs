@@ -88,6 +88,7 @@ public sealed class OAuthFlowTests
         token.TokenType.Should().Be("Bearer");
         token.ExpiresIn.Should().BeGreaterThan(0);
         token.Scope.Should().Be("cards.read");
+        token.ExtensionData.Should().NotContainKey("refresh_token");
 
         // 4. Call /oauth/userinfo with the access token.
         UserInfoResponse info = await GetUserInfo(client, token.AccessToken);
@@ -280,12 +281,23 @@ public sealed class OAuthFlowTests
         string ClientSecret,
         string SecretPrefix);
 
-    private sealed record TokenResponse(
-        [property: JsonPropertyName("access_token")] string AccessToken,
-        [property: JsonPropertyName("token_type")] string TokenType,
-        [property: JsonPropertyName("expires_in")] int ExpiresIn,
-        [property: JsonPropertyName("scope")] string Scope,
-        [property: JsonPropertyName("refresh_token")] string? RefreshToken);
+    private sealed class TokenResponse
+    {
+        [JsonPropertyName("access_token")]
+        public string AccessToken { get; init; } = string.Empty;
+
+        [JsonPropertyName("token_type")]
+        public string TokenType { get; init; } = string.Empty;
+
+        [JsonPropertyName("expires_in")]
+        public int ExpiresIn { get; init; }
+
+        [JsonPropertyName("scope")]
+        public string Scope { get; init; } = string.Empty;
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement> ExtensionData { get; init; } = [];
+    }
 
     private sealed record UserInfoResponse(
         [property: JsonPropertyName("sub")] Guid Sub,

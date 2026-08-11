@@ -56,8 +56,7 @@ else
         {
             var query = HttpUtility.ParseQueryString(fragment);
             string? access = query["access_token"];
-            string? refresh = query["refresh_token"];
-            if (string.IsNullOrWhiteSpace(access) || string.IsNullOrWhiteSpace(refresh))
+            if (string.IsNullOrWhiteSpace(access))
             {
                 error = L["AuthOauthMissingToken"];
                 return;
@@ -69,10 +68,10 @@ else
                 Email: query["user_email"] ?? string.Empty,
                 DisplayName: query["user_name"] ?? string.Empty);
 
-            // Persist the tokens and notify the auth state provider. The
+            // Persist the token and notify the auth state provider. The
             // token store is in-memory + cookie-backed; we don't await
             // here because the navigation away happens right after.
-            _ = Tokens.SetAsync(access, refresh, user);
+            _ = Tokens.SetAsync(access, user);
             Auth.Notify();
             Nav.NavigateTo("/", forceLoad: true);
         }

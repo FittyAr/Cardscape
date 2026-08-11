@@ -64,7 +64,7 @@ auth-method change.
 | **The session is invalidated on privilege change.** | A role change (e.g. demoting from admin to member) invalidates the user's active sessions. |
 | **The session cookie has the right flags.** | The cookie is `Secure`, `HttpOnly`, `SameSite=Lax`. The `__Host-` prefix is used (Phase 4+). |
 | **The JWT is signed with a strong algorithm.** | The algorithm is HS256 with a 256-bit secret (Phase 1) or RS256 with a 2048-bit key (Phase 4). The `alg` is enforced; `alg=none` is rejected. |
-| **The JWT has a short lifetime.** | The access token is 1 hour; the refresh token is 7 days, rotating. |
+| **The JWT has a short lifetime.** | The access token lifetime is configurable and defaults to 1 hour. No refresh-session bearer is issued. |
 | **The API token is hashed at rest.** | The `ApiToken.SecretHash` field is the only place the secret is stored; the field is set by the API token service, not by a plain assignment. |
 | **The API token is shown to the user only once.** | The plain-text secret is returned in the response of the create endpoint; it is not in the database; it cannot be retrieved later. |
 

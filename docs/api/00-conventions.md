@@ -35,8 +35,8 @@ segments (for example `"private"`, `customFields`, `kind=card`). Numeric CLR
 values are not part of the API contract and are rejected.
 - The token is sent in the `Authorization: Bearer <token>`
   header on every request.
-- Tokens expire after 60 minutes; refresh via
-  `POST /api/auth/refresh`.
+- Tokens expire after the configured access-token lifetime. Cardscape does not
+  expose a refresh-session contract; clients re-authenticate after expiration.
 - The OpenAPI spec is annotated with the `Bearer` security
   scheme (contributed by `BearerSecuritySchemeTransformer` in
   `src/Cardscape.Api/OpenApi`); Scalar surfaces the

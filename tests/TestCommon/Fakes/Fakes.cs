@@ -71,13 +71,11 @@ public sealed class FakePasswordHasher : IPasswordHasher
 }
 
 /// <summary>Predictable token service. Tokens are the user id encoded
-/// as base64; refresh tokens are GUIDs. Tracks issued tokens for
+/// as base64. Tracks issued tokens for
 /// assertions.</summary>
 public sealed class FakeTokenService : ITokenService
 {
     public List<(User User, IReadOnlyCollection<string> Roles)> AccessTokensIssued { get; } = [];
-
-    public List<RefreshToken> RefreshTokensIssued { get; } = [];
 
     public string IssueAccessToken(User user, IReadOnlyCollection<string> roles)
     {
@@ -85,24 +83,6 @@ public sealed class FakeTokenService : ITokenService
         return Convert.ToBase64String(user.Id.Value.ToByteArray());
     }
 
-    public RefreshToken IssueRefreshToken()
-    {
-        var token = new RefreshToken(Guid.NewGuid().ToString("N"), DateTimeOffset.UtcNow.AddDays(30));
-        RefreshTokensIssued.Add(token);
-        return token;
-    }
-
-    public Guid? GetUserIdFromToken(string token)
-    {
-        try
-        {
-            return new Guid(Convert.FromBase64String(token));
-        }
-        catch
-        {
-            return null;
-        }
-    }
 }
 
 /// <summary>Settable current user. The handler reads from this in

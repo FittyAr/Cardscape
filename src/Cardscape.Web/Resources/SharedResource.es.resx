@@ -116,7 +116,7 @@
   <data name="AuthOauthFailed" xml:space="preserve"><value>Falló el inicio de sesión</value></data>
   <data name="AuthOauthHoldOn" xml:space="preserve"><value>Aguantá un momento mientras terminamos el ingreso.</value></data>
   <data name="AuthOauthMissingFragment" xml:space="preserve"><value>El callback de ingreso no incluyó un fragmento de token.</value></data>
-  <data name="AuthOauthMissingToken" xml:space="preserve"><value>Al callback le falta un access o refresh token.</value></data>
+  <data name="AuthOauthMissingToken" xml:space="preserve"><value>Al callback le falta el token de acceso.</value></data>
   <data name="AuthOauthError" xml:space="preserve"><value>No se pudo terminar el ingreso: {0}</value></data>
   <data name="ActionSave" xml:space="preserve"><value>Guardar</value></data>
   <data name="ActionCancel" xml:space="preserve"><value>Cancelar</value></data>

@@ -126,14 +126,12 @@ public sealed record OAuthAuthorizationCodeIssuance(
 
 /// <summary>Returned by <see cref="IOAuthAppService.ExchangeCodeAsync"/>.
 /// <c>AccessToken</c> is the cleartext bearer the third-party
-/// app uses on subsequent API calls; <c>RefreshToken</c> is
-/// <c>null</c> for v1.1.0 (we don't ship refresh tokens yet).</summary>
+/// app uses on subsequent API calls.</summary>
 public sealed record OAuthAccessTokenIssuance(
     string AccessToken,
     string TokenType,
     int ExpiresInSeconds,
-    IReadOnlyCollection<string> Scopes,
-    string? RefreshToken);
+    IReadOnlyCollection<string> Scopes);
 
 /// <summary>Result of <see cref="IOAuthAppService.ValidateAccessTokenAsync"/>.</summary>
 public sealed record OAuthAccessTokenValidation(

@@ -282,8 +282,7 @@ public sealed class OAuthAppService(
             cleartextToken,
             "Bearer",
             (int)AccessTokenLifetime.TotalSeconds,
-            authCode.Scopes,
-            RefreshToken: null));
+            authCode.Scopes));
     }
 
     public async Task<Result<OAuthAccessTokenValidation>> ValidateAccessTokenAsync(

@@ -153,3 +153,12 @@
 - [x] Remove unreachable SAML protocol fallback mappings while preserving the handler and admin endpoints.
 - [x] Reconcile operational and ASVS documentation with the strict contract.
 - [x] Run focused/full Release validation, assertion/gap review, update the modernization plan and publish.
+
+## Remove fictitious refresh sessions
+
+- [x] Collapse `ITokenService` and `AuthResponse` to the real signed access-token contract.
+- [x] Remove refresh issuance from password, TOTP, external OAuth and SAML flows.
+- [x] Remove `/api/auth/refresh`, its unverified JWT decoder and obsolete configuration.
+- [x] Remove refresh-token parsing and localStorage persistence from Blazor Web.
+- [x] Add exact HTTP regressions for response shape and removed route.
+- [x] Run focused/full Release validation, assertion/gap review, update documentation and publish.

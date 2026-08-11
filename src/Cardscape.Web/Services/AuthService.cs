@@ -149,14 +149,13 @@ public sealed class AuthService(
                 User: payload.User));
         }
 
-        if (string.IsNullOrWhiteSpace(payload.AccessToken)
-            || string.IsNullOrWhiteSpace(payload.RefreshToken))
+        if (string.IsNullOrWhiteSpace(payload.AccessToken))
         {
             return ApiResult<UserSummaryDto>.Fail(
                 "Server returned an empty access token.");
         }
 
-        await tokens.SetAsync(payload.AccessToken, payload.RefreshToken, payload.User);
+        await tokens.SetAsync(payload.AccessToken, payload.User);
         stateProvider.Notify();
         return ApiResult<UserSummaryDto>.Ok(payload.User);
     }

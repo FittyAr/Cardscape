@@ -56,13 +56,10 @@ public static class ConsumePendingTotpLoginQueryHandler
         user.RecordLogin(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var refresh = tokens.IssueRefreshToken();
         var access = tokens.IssueAccessToken(user, ["user"]);
         return Result.Success(new AuthResponse(
             AccessToken: access,
-            RefreshToken: refresh.Token,
             AccessTokenExpiresAt: clock.UtcNow.AddHours(1),
-            RefreshTokenExpiresAt: refresh.ExpiresAt,
             User: new UserSummary(user.Id.Value, user.Email.Value, user.DisplayName.Value)));
     }
 }

@@ -175,8 +175,7 @@ public static class OAuthFlowEndpoints
                 access_token = exchange.Value.AccessToken,
                 token_type = exchange.Value.TokenType,
                 expires_in = exchange.Value.ExpiresInSeconds,
-                scope = string.Join(' ', exchange.Value.Scopes),
-                refresh_token = exchange.Value.RefreshToken
+                scope = string.Join(' ', exchange.Value.Scopes)
             });
         });
 

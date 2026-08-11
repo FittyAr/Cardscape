@@ -91,14 +91,11 @@ public static class RegisterUserCommandHandler
         await users.AddAsync(userResult.Value, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var refresh = tokens.IssueRefreshToken();
         var access = tokens.IssueAccessToken(userResult.Value, ["user"]);
 
         return Result.Success(new AuthResponse(
             access,
-            refresh.Token,
             clock.UtcNow.AddHours(1),
-            refresh.ExpiresAt,
             new UserSummary(
                 userResult.Value.Id.Value,
                 userResult.Value.Email.Value,

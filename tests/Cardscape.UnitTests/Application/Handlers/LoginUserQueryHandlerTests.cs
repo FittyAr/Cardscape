@@ -21,7 +21,6 @@ public class LoginUserQueryHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.User.Email.Should().Be("alice@example.com");
         result.Value.AccessToken.Should().NotBeNullOrWhiteSpace();
-        result.Value.RefreshToken.Should().NotBeNullOrWhiteSpace();
         result.Value.RequiresTotp.Should().BeFalse();
         result.Value.PendingTotpToken.Should().BeNull();
         ctx.UnitOfWork.SaveChangesCallCount.Should().Be(1);
@@ -94,9 +93,7 @@ public class LoginUserQueryHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.RequiresTotp.Should().BeTrue();
         result.Value.AccessToken.Should().BeNull();
-        result.Value.RefreshToken.Should().BeNull();
         result.Value.AccessTokenExpiresAt.Should().BeNull();
-        result.Value.RefreshTokenExpiresAt.Should().BeNull();
         result.Value.PendingTotpToken.Should().NotBeNullOrWhiteSpace();
         result.Value.User.Email.Should().Be("alice@example.com");
         ctx.Tokens.AccessTokensIssued.Should().BeEmpty();
@@ -124,7 +121,6 @@ public class LoginUserQueryHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.RequiresTotp.Should().BeFalse();
         result.Value.AccessToken.Should().NotBeNullOrWhiteSpace();
-        result.Value.RefreshToken.Should().NotBeNullOrWhiteSpace();
         ctx.Tokens.AccessTokensIssued.Should().HaveCount(1);
         var stored = await ctx.TotpCredentials.FindForUserAsync(user.Id, TestContext.Current.CancellationToken);
         stored!.LastUsedCounter.Should().BeGreaterThan(0);

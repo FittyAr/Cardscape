@@ -304,3 +304,12 @@
 - Confirmed dead surface: four minimal API SAML protocol routes returned a fallback 501 but were always intercepted by the unconditionally registered `SamlAuthenticationHandler`; only the administration routes in that endpoint module are dispatchable.
 - Acceptance checklist: cached mode fails closed when the claim is absent; live-database mode remains available only when explicitly configured; the four unreachable SAML fallback mappings are removed; the actual SAML handler and administration endpoints remain; focused and full Release validation pass.
 - Conventions: xUnit v3 + FluentAssertions on VSTest under SDK 10.0.302.
+
+## Remove fictitious refresh sessions (2026-08-11)
+
+- Bounded target: Cardscape authentication token abstraction, register/login/TOTP/external-login responses, REST auth routes, OAuth/SAML callback fragments, Web token persistence and focused unit/integration tests.
+- Confirmed security defect: `/api/auth/refresh` checked only that an opaque string was present, decoded an unverified access token for identity, returned that same access token and minted another unpersisted opaque value. No server-side session, hash, rotation, replay detection or revocation existed.
+- Confirmed dead client behavior: Web stored the opaque value in localStorage but had no refresh call path; expiration already required a new login.
+- Decision: because backward compatibility is explicitly unnecessary, remove the fictitious feature rather than preserve an insecure contract. A future refresh-session feature must start with a persisted, hashed, single-use rotating session aggregate.
+- Acceptance checklist: no `/api/auth/refresh`; auth JSON and external callback fragments expose access tokens only; `ITokenService` only issues signed access tokens; Web never stores a Cardscape refresh token; Google integration refresh tokens remain untouched; focused and full Release validation pass.
+- Static pairing analyzer attempt: the skill's documented Roslyn file is not runnable under the repository's SDK 10 invocation (`dotnet run` found no project); established xUnit handler and endpoint suites are used directly.

@@ -214,3 +214,14 @@
 - Pseudo-mutation review: restoring the missing-claim DB lookup is killed by `CacheEnabled_ClaimMissing_FailsClosedEvenWhenDatabaseGrantsAdmin`; claim true/false and explicitly configured live lookup remain independently covered.
 - Assertion review: the changed regression asserts the authorization outcome against an intentionally contradictory admin row; it is neither assertion-free, tautological nor dependent on implementation details.
 - Full validation: Release suite 814 passed / 0 failed / 1 skipped.
+
+## Remove fictitious refresh sessions
+
+- Status: complete.
+- Root cause: a generated opaque value was never associated with a user or persisted, so the endpoint substituted an unverified access-token payload for server-side session identity.
+- Chosen boundary: access-token-only authentication with explicit re-login; no compatibility DTO, endpoint, callback field or browser storage remains.
+- Focused validation: authentication handlers 15/15; Auth/OAuth/SAML integration flows 13/13; Release build 0 warnings / 0 errors.
+- Regression evidence: `Register_Then_Login_Returns_Token_For_Same_User` asserts both register and login JSON omit the two refresh fields; `Refresh_Route_Is_Not_Mapped` asserts exact 404; `FullHandshake_Issue_Exchange_UserInfo_Revoke` rejects an OAuth `refresh_token` extension field.
+- Pseudo-mutation review: restoring the route, either auth response property, or the OAuth placeholder is killed by exact negative route/property assertions. Removing access-token issuance remains covered by positive non-empty token and full handshake assertions.
+- Assertion review: the new checks use exact HTTP status, negative JSON property membership and positive protocol behavior; none is assertion-free, tautological or truthiness-only.
+- Full validation: Release suite 815 passed / 0 failed / 1 skipped.

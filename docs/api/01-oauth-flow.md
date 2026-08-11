@@ -223,9 +223,8 @@ OAuth error responses use the standard `error` +
 ## What's NOT in v1.1.0
 
 - **Refresh tokens** — re-authorize when the 30-day
-  access token expires. Adding refresh tokens is tracked
-  separately; the response carries `refresh_token: null`
-  for now.
+  access token expires. Unsupported response fields are omitted rather than
+  emitted with placeholder `null` values.
 - **PKCE** — the redirect URI list is the protection
   against code interception today. PKCE is planned once
   public clients (mobile apps, CLIs without a secret)

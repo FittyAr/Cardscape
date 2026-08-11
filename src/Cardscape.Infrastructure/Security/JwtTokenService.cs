@@ -1,6 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Security;
@@ -17,7 +16,6 @@ public sealed class JwtOptions
     public string Audience { get; set; } = "Cardscape";
     public string SigningKey { get; set; } = string.Empty;
     public int AccessTokenMinutes { get; set; } = 60;
-    public int RefreshTokenDays { get; set; } = 30;
 }
 
 public sealed class JwtTokenService(
@@ -62,25 +60,4 @@ public sealed class JwtTokenService(
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public RefreshToken IssueRefreshToken()
-    {
-        var random = RandomNumberGenerator.GetBytes(48);
-        var token = Convert.ToBase64String(random);
-        return new RefreshToken(token, clock.UtcNow.AddDays(_options.RefreshTokenDays));
-    }
-
-    public Guid? GetUserIdFromToken(string token)
-    {
-        try
-        {
-            var handler = new JwtSecurityTokenHandler();
-            var jwt = handler.ReadJwtToken(token);
-            var sub = jwt.Subject;
-            return Guid.TryParse(sub, out var id) ? id : null;
-        }
-        catch
-        {
-            return null;
-        }
-    }
 }

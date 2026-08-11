@@ -16,7 +16,11 @@ public sealed class AuthEndpointTests
         RegisterRequest register = new(email, "Integration User", "Password123!");
         HttpResponseMessage registerResponse = await client.PostAsJsonAsync("api/auth/register", register, TestContext.Current.CancellationToken);
         registerResponse.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse? registered = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(TestContext.Current.CancellationToken);
+        string registerJson = await registerResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        using JsonDocument registerDocument = JsonDocument.Parse(registerJson);
+        registerDocument.RootElement.TryGetProperty("refreshToken", out _).Should().BeFalse();
+        registerDocument.RootElement.TryGetProperty("refreshTokenExpiresAt", out _).Should().BeFalse();
+        AuthResponse? registered = JsonSerializer.Deserialize<AuthResponse>(registerJson, TestJson.Options);
         registered.Should().NotBeNull();
         registered!.User.Email.Should().Be(email);
         registered.AccessToken.Should().NotBeNullOrWhiteSpace();
@@ -24,9 +28,26 @@ public sealed class AuthEndpointTests
         LoginRequest login = new(email, "Password123!");
         HttpResponseMessage loginResponse = await client.PostAsJsonAsync("api/auth/login", login, TestContext.Current.CancellationToken);
         loginResponse.IsSuccessStatusCode.Should().BeTrue();
-        AuthResponse? logged = await loginResponse.Content.ReadFromJsonAsync<AuthResponse>(TestContext.Current.CancellationToken);
+        string loginJson = await loginResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        using JsonDocument loginDocument = JsonDocument.Parse(loginJson);
+        loginDocument.RootElement.TryGetProperty("refreshToken", out _).Should().BeFalse();
+        loginDocument.RootElement.TryGetProperty("refreshTokenExpiresAt", out _).Should().BeFalse();
+        AuthResponse? logged = JsonSerializer.Deserialize<AuthResponse>(loginJson, TestJson.Options);
         logged.Should().NotBeNull();
         logged!.AccessToken.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task Refresh_Route_Is_Not_Mapped()
+    {
+        HttpClient client = _factory.CreateApiClient();
+
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "api/auth/refresh",
+            new { refreshToken = "unused", accessToken = "unsigned.jwt.payload" },
+            TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]

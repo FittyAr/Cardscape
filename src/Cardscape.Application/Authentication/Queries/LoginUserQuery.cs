@@ -105,22 +105,17 @@ public static class LoginUserQueryHandler
 
     private static AuthResponse BuildTokens(User user, ITokenService tokens, IClock clock)
     {
-        var refresh = tokens.IssueRefreshToken();
         var access = tokens.IssueAccessToken(user, ["user"]);
         return new AuthResponse(
             AccessToken: access,
-            RefreshToken: refresh.Token,
             AccessTokenExpiresAt: clock.UtcNow.AddHours(1),
-            RefreshTokenExpiresAt: refresh.ExpiresAt,
             User: new UserSummary(user.Id.Value, user.Email.Value, user.DisplayName.Value));
     }
 
     private static AuthResponse BuildChallenge(User user, string pendingToken) =>
         new(
             AccessToken: null,
-            RefreshToken: null,
             AccessTokenExpiresAt: null,
-            RefreshTokenExpiresAt: null,
             User: new UserSummary(user.Id.Value, user.Email.Value, user.DisplayName.Value),
             RequiresTotp: true,
             PendingTotpToken: pendingToken);

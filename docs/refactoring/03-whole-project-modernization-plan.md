@@ -80,7 +80,7 @@ Reglas permanentes:
 
 ### Fase 2 — Superficies críticas
 
-- [ ] Autenticación/autorización: JWT, API tokens, OAuth/OIDC, SAML, SCIM, 2FA, políticas y aislamiento multi-tenant. La autorización admin con claim cacheado ya falla cerrada y SAML tiene un único dueño para sus rutas de protocolo; continúa la auditoría de refresh tokens y proveedores externos.
+- [ ] Autenticación/autorización: JWT, API tokens, OAuth/OIDC, SAML, SCIM, 2FA, políticas y aislamiento multi-tenant. La autorización admin falla cerrada, SAML tiene un único dueño y la sesión refresh ficticia fue eliminada; continúa la auditoría de expiración JWT y proveedores externos.
 - [ ] Persistencia: modelo EF, transacciones, concurrencia, índices, consultas N+1, tracking y compatibilidad de los tres providers.
 - [ ] Gestión de secretos, cifrado, datos personales, borrado/anominización y retención.
 - [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia.
@@ -144,7 +144,8 @@ Reglas permanentes:
 | 2026-08-11 | Transporte e identidad MCP | stdio ficticio reemplazado por Streamable HTTP stateful autenticado; principal MCP propagado entre scopes del SDK | Build 0/0; suite 802 pass, 0 fail, 1 skip | `46dd323` |
 | 2026-08-11 | Reservas idempotentes atómicas | REST y MCP reservan antes del efecto; contendientes cross-process esperan/reproducen; errores y leases permiten recuperación | Build 0/0; suite 808 pass, 0 fail, 1 skip | Pendiente |
 | 2026-08-11 | Contratos preproducción canónicos | Eliminados aliases de mutaciones/comentarios, enums numéricos y superficies REST/MCP/Blazor duplicadas; SDK serializa con sus opciones configuradas | Build 0/0; suite 814 pass, 0 fail, 1 skip | `d136775` |
-| 2026-08-11 | Autorización fail-closed + ownership SAML | JWT sin `is_admin` ya no usa fallback de BD; handler SAML es dueño único de las rutas de protocolo | Build 0/0; suite 814 pass, 0 fail, 1 skip | Pendiente |
+| 2026-08-11 | Autorización fail-closed + ownership SAML | JWT sin `is_admin` ya no usa fallback de BD; handler SAML es dueño único de las rutas de protocolo | Build 0/0; suite 814 pass, 0 fail, 1 skip | `ea54435` |
+| 2026-08-11 | Sesión refresh ficticia | Eliminados endpoint, parser JWT sin validar, emisión opaca, DTOs, callbacks, placeholder OAuth y almacenamiento Web sin consumidor | Build 0/0; suite 815 pass, 0 fail, 1 skip | Pendiente |
 
 ## 5. Criterio de completitud
 

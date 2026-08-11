@@ -142,7 +142,7 @@ schemes, in increasing order of privilege:
 |---|---|---|---|---|
 | **Session cookie** | the API on successful login | 30 days, sliding | yes (logout, password change) | the Web UI |
 | **API token** | the user via the Web UI | 90 days, no sliding; rotates on use | yes (Web UI revoke) | scripts, CI, AI clients |
-| **OAuth 2.0 access token** | the API on successful auth-code exchange | 1 hour | yes (refresh-token revocation) | third-party apps |
+| **OAuth 2.0 access token** | the API on successful auth-code exchange | 30 days | yes (RFC 7009 access-token revocation) | third-party apps |
 | **OAuth 2.0 client credentials** | the API on successful client_credentials grant | 1 hour | yes (app revocation) | service-to-service |
 
 Every scheme mints a `principal` the

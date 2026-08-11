@@ -241,14 +241,11 @@ public sealed class SamlAuthenticationHandler
                 $"External login {resolved.Value.LoginId.Value} resolved to a missing user.");
 
         string access = _tokens.IssueAccessToken(user, new[] { "user" });
-        RefreshToken refresh = _tokens.IssueRefreshToken();
-
         string redirect = _configuration["Cardscape:Web:ExternalLoginRedirectUrl"]
             ?? _configuration["Web:ExternalLoginRedirectUrl"]
             ?? "/saml/callback";
         string fragment =
             $"access_token={Uri.EscapeDataString(access)}"
-            + $"&refresh_token={Uri.EscapeDataString(refresh.Token)}"
             + $"&expires_at={Uri.EscapeDataString(at.AddHours(1).ToString("O"))}"
             + $"&user_id={Uri.EscapeDataString(user.Id.Value.ToString())}"
             + $"&user_email={Uri.EscapeDataString(user.Email.Value)}"

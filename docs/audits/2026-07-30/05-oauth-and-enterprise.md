@@ -47,7 +47,7 @@ Wired in `src/Cardscape.Api/Program.cs:201-202`:
 
 ### Notes
 - Plan §3.11 also lists the MCP `ApiToken` as a grantable scope; the flow doc at `01-oauth-flow.md:66-69` mentions `api_token` as a grantable credential — the actual scope catalog in code should be cross-checked when the MCP server gains OAuth scope support.
-- Refresh tokens are returned as `null` per the "What's NOT in v1.1.0" section; the endpoint does still emit a `refresh_token` key (`OAuthFlowEndpoints.cs:160`).
+- Refresh tokens were originally returned as `null`; the pre-production modernization removed that placeholder field because the grant is unsupported.
 
 ---
 

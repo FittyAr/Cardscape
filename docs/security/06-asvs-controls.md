@@ -66,7 +66,7 @@
 
 | Section | Control | Status | Evidence |
 |---|---|---|---|
-| V3.1 | Session management foundation | Implemented | JWT access tokens (60-minute TTL) + refresh tokens (30-day TTL); `JwtOptions` enforces lifetimes; `JwtRevocationValidator` rejects revoked tokens; `RevocationSweeper` purges expired rows. |
+| V3.1 | Session management foundation | Implemented | JWT access tokens use a configurable 60-minute default TTL; no fictitious refresh session is exposed. `JwtRevocationValidator` rejects revoked tokens and `RevocationSweeper` purges expired rows. |
 | V3.2 | Session binding | Implemented | Bearer tokens over TLS; `Authorization: Bearer` header is the only transport. |
 | V3.3 | Session termination | Implemented | `POST /api/auth/revoke` self-service; `DeleteApiToken` admin; `User.SoftDelete` kills all sessions. |
 | V3.4 | Cookie-based session management | N/A | The API is bearer-only. The Web client uses Blazor WASM; no server-side session. |

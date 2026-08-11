@@ -116,7 +116,7 @@
   <data name="AuthOauthFailed" xml:space="preserve"><value>Sign-in failed</value></data>
   <data name="AuthOauthHoldOn" xml:space="preserve"><value>Hold on while we finish your sign-in.</value></data>
   <data name="AuthOauthMissingFragment" xml:space="preserve"><value>The sign-in callback did not include a token fragment.</value></data>
-  <data name="AuthOauthMissingToken" xml:space="preserve"><value>The sign-in callback is missing an access or refresh token.</value></data>
+  <data name="AuthOauthMissingToken" xml:space="preserve"><value>The sign-in callback is missing an access token.</value></data>
   <data name="AuthOauthError" xml:space="preserve"><value>Could not finish signing in: {0}</value></data>
   <data name="ActionSave" xml:space="preserve"><value>Save</value></data>
   <data name="ActionCancel" xml:space="preserve"><value>Cancel</value></data>

@@ -21,16 +21,14 @@ public sealed record LoginWithTotpRequestDto(string PendingTotpToken, string Cod
 public sealed record UserSummaryDto(Guid Id, string Email, string DisplayName);
 
 /// <summary>
-/// Mirrors the server-side <c>AuthResponse</c>. The token fields
-/// are <c>null</c> when <see cref="RequiresTotp"/> is <c>true</c>:
+/// Mirrors the server-side <c>AuthResponse</c>. The access token is
+/// <c>null</c> when <see cref="RequiresTotp"/> is <c>true</c>:
 /// the caller must POST the <see cref="PendingTotpToken"/> + a
 /// 6-digit code to <c>api/auth/login/totp</c>.
 /// </summary>
 public sealed record AuthResponseDto(
     string? AccessToken,
-    string? RefreshToken,
     DateTimeOffset? AccessTokenExpiresAt,
-    DateTimeOffset? RefreshTokenExpiresAt,
     UserSummaryDto User,
     bool RequiresTotp = false,
     string? PendingTotpToken = null);
