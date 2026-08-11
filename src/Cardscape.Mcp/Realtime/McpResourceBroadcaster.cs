@@ -12,7 +12,7 @@ namespace Cardscape.Mcp.Realtime;
 /// resource URI; the <c>resources/unsubscribe</c> handler
 /// calls <see cref="Unsubscribe"/>. The API's
 /// <c>DomainEventBroadcaster</c> (via
-/// <c>IMcpResourceNotifier</c>) calls
+/// <c>HttpMcpResourceNotifier</c>) calls
 /// <see cref="BroadcastAsync"/> on every board change; the
 /// broadcaster walks the per-URI subscriber list and emits
 /// the standard MCP

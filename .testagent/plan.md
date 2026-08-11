@@ -28,3 +28,12 @@
 4. [x] Add `Seeder_DeclaresNoPublicInterfaces`.
 5. [x] Run architecture and Seeder endpoint tests narrowly.
 6. [x] Run full Release build and suite.
+
+## Phase 1 follow-up: realtime boundary ownership
+
+1. [x] Delete `IMcpResourceNotifier` from Application.
+2. [x] Make `HttpMcpResourceNotifier` an API-owned concrete collaborator.
+3. [x] Update API composition, composite notifier and E2E resolution.
+4. [x] Add `Application_RealtimeExposesOnlyTransportNeutralContracts`.
+5. [x] Run architecture and cross-process E2E tests narrowly.
+6. [x] Run full Release build and suite.

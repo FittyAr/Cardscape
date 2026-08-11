@@ -1,12 +1,11 @@
 using System.Net.Http.Json;
 using System.Text.Json;
-using Cardscape.Application.Realtime;
 
 namespace Cardscape.Api.Realtime;
 
 /// <summary>
-/// HTTP implementation of <see cref="IMcpResourceNotifier"/>.
-/// Targets the MCP's <c>POST /api/internal/board-event</c>
+/// Best-effort HTTP notifier that targets the MCP's
+/// <c>POST /api/internal/board-event</c>
 /// endpoint with the same shared secret the MCP uses when
 /// it calls the API's <c>/api/internal/broadcast</c> webhook.
 /// Best-effort: a transient network failure (MCP restart,
@@ -15,7 +14,7 @@ namespace Cardscape.Api.Realtime;
 /// database — AI clients can re-fetch the resource on
 /// their next poll if they miss the push.
 /// </summary>
-public sealed class HttpMcpResourceNotifier : IMcpResourceNotifier
+public sealed class HttpMcpResourceNotifier
 {
     public const string SecretHeader = "X-Internal-Secret";
 

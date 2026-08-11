@@ -18,11 +18,11 @@ namespace Cardscape.Api.Realtime;
 public sealed class CompositeBoardNotifier : IBoardNotifier
 {
     private readonly IHubContext<BoardHub, IBoardClient> hub;
-    private readonly IMcpResourceNotifier mcpNotifier;
+    private readonly HttpMcpResourceNotifier mcpNotifier;
 
     public CompositeBoardNotifier(
         IHubContext<BoardHub, IBoardClient> hub,
-        IMcpResourceNotifier mcpNotifier)
+        HttpMcpResourceNotifier mcpNotifier)
     {
         this.hub = hub;
         this.mcpNotifier = mcpNotifier;

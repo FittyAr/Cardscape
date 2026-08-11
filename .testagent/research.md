@@ -85,3 +85,20 @@
 - [x] Add an architecture invariant rejecting public Seeder interfaces.
 - [x] Preserve Seeder endpoint authorization and success behavior.
 - [x] Run full Release validation and review assertions.
+
+## Phase 1 follow-up: realtime boundary ownership
+
+### Bounded target inventory
+
+- `src/Cardscape.Application/Realtime/IMcpResourceNotifier.cs`: process-specific API-to-MCP HTTP notification port with no Application consumer.
+- `src/Cardscape.Api/Realtime/HttpMcpResourceNotifier.cs`: sole implementation, configured and consumed only by the API composition.
+- `src/Cardscape.Api/Realtime/CompositeBoardNotifier.cs`: combines the legitimate Application `IBoardNotifier` port with the API-owned MCP HTTP side effect.
+- `tests/Cardscape.E2ETests/McpSubscriptionsCrossProcessTests.cs`: resolves the notifier to prove the cross-process call.
+
+### Acceptance checklist
+
+- [x] Remove the API-to-MCP process contract from Application.
+- [x] Register and consume the concrete notifier within the API host.
+- [x] Preserve the cross-process notification behavior.
+- [x] Guard the exact transport-neutral public contracts allowed in `Application.Realtime`.
+- [x] Run narrow architecture/E2E validation, assertion review and the full suite.

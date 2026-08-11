@@ -35,3 +35,12 @@
 - Narrow validation: Architecture 12/12; Seeder endpoints 5/5.
 - Assertion/gap review: `Seeder_DeclaresNoPublicInterfaces` enumerates the compiled assembly and reports every offender. Existing endpoint tests retain exact 401/403/200/202 assertions across all routes, so direct report injection cannot silently change authorization or success semantics.
 - Full validation: Release build 0 warnings/0 errors; suite 736 passed, 0 failed, 1 skipped.
+
+## Phase 1 follow-up: realtime boundary ownership
+
+- Research: completed.
+- Plan: completed.
+- Implementation: completed.
+- Narrow validation: Architecture 13/13; MCP cross-process E2E 5/5.
+- Assertion/gap review: the new test compares the complete public interface set, so additions, removals and process-specific contracts all fail with explicit differences. `Api_Notifier_Can_Call_Mcp_Directly_Across_Processes` still asserts the recorded HTTP method, path, secret and board payload through the concrete API notifier.
+- Full validation: Release build 0 warnings/0 errors; suite 737 passed, 0 failed, 1 skipped.

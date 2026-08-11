@@ -145,7 +145,7 @@ builder.Services.AddCardscapeSeeder(builder.Configuration);
 // (Cardscape:Mcp:BaseUrl + Internal:Secret).
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IBoardNotifier, CompositeBoardNotifier>();
-builder.Services.AddSingleton<IMcpResourceNotifier, HttpMcpResourceNotifier>();
+builder.Services.AddSingleton<HttpMcpResourceNotifier>();
 builder.Services.AddSingleton<McpSubscriptionsClient>();
 builder.Services.AddHttpClient("Cardscape.Mcp", client =>
 {

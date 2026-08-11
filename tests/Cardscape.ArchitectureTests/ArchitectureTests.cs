@@ -258,6 +258,32 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void Application_RealtimeExposesOnlyTransportNeutralContracts()
+    {
+        string[] approvedContracts =
+        [
+            "Cardscape.Application.Realtime.IBoardClient",
+            "Cardscape.Application.Realtime.IBoardNotifier",
+            "Cardscape.Application.Realtime.IDomainEventBroadcaster",
+        ];
+
+        string[] actualContracts = Types.InAssembly(typeof(Cardscape.Application.Abstractions.IClock).Assembly)
+            .That()
+            .ResideInNamespace("Cardscape.Application.Realtime")
+            .And()
+            .AreInterfaces()
+            .GetTypes()
+            .Where(type => type.IsPublic)
+            .Select(type => type.FullName!)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        actualContracts.Should().BeEquivalentTo(
+            approvedContracts,
+            "process- or transport-specific notification clients belong to their host layer");
+    }
+
+    [Fact]
     public void Infrastructure_DeclaresNoPublicInterfaces()
     {
         // Infrastructure implements ports owned by Application. Public interfaces

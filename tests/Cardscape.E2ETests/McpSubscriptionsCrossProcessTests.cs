@@ -114,7 +114,7 @@ public sealed class McpSubscriptionsCrossProcessTests
         // right base URL and secret.
         using IServiceScope scope = _factory.Api.Services.CreateScope();
         var notifier = scope.ServiceProvider
-            .GetRequiredService<Cardscape.Application.Realtime.IMcpResourceNotifier>();
+            .GetRequiredService<Cardscape.Api.Realtime.HttpMcpResourceNotifier>();
 
         // Reset the recording sink so we only see the
         // call we are about to make.
