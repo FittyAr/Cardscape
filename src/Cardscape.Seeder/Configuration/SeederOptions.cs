@@ -22,17 +22,6 @@ public sealed class SeederOptions
     /// call from the UI ("force re-seed" toggle).</summary>
     public bool WipeBeforeSeed { get; set; }
 
-    /// <summary>How many cards to generate per board. Defaults to a
-    /// representative number that exercises every UI surface
-    /// (cards, comments, votes, checklists) without ballooning the
-    /// SQLite file past a few MB.</summary>
-    public int CardsPerBoard { get; set; } = 12;
-
-    /// <summary>How many users to create in the demo workspace. The
-    /// minimum is 5 (one per persona); the upper bound is what
-    /// fits in the demo data set without copy-pasted quirks.</summary>
-    public int UserCount { get; set; } = 10;
-
     /// <summary>Fixed clock for the seed run. Lets us back-date the
     /// demo data to a coherent timeline (activities, due dates,
     /// notifications all line up). Defaults to "now" if null.</summary>

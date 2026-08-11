@@ -17,20 +17,16 @@ public static class SeederServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.Configure<SeederOptions>(options =>
-        {
-            // Pull the section; bind() leaves defaults in place
-            // for any field the operator didn't override.
-            configuration.GetSection(SeederOptions.SectionName).Bind(options);
-        });
+        services.AddOptions<SeederOptions>()
+            .Bind(configuration.GetSection(SeederOptions.SectionName));
 
         services.AddSingleton<SeedReport>();
         services.AddSingleton<ISeedReportProvider>(sp => new StaticSeedReportProvider(sp.GetRequiredService<SeedReport>()));
         services.AddSingleton<SeedRunner>();
 
-        // Every step is singleton — they're stateless except
-        // for the IPasswordHasher dependency, which DI resolves
-        // per scope. Singleton steps share the lifetime of the
+        // Every step is singleton. They are stateless and the only
+        // injected collaborator, IPasswordHasher, is also singleton.
+        // Singleton steps share the lifetime of the
         // SeedRunner (also singleton) and the SeedReport
         // (singleton), so the seeder is safe to invoke from
         // multiple HTTP requests in sequence.

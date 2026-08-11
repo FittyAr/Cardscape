@@ -39,8 +39,6 @@ public sealed record SeederTableStatusDto(
 public sealed record SeederOptionsDto(
     bool Enabled,
     bool WipeBeforeSeed,
-    int CardsPerBoard,
-    int UserCount,
     DateTimeOffset? FixedNow);
 
 /// <summary>JSON shape returned by <c>POST /api/admin/seeder/run</c>.</summary>

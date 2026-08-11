@@ -24,3 +24,29 @@
 - [ ] Registry rejects duplicate types and uses ordinal discriminator identity.
 - [ ] Build and run the two narrow test projects.
 - [ ] Review assertion strength and behavior gaps.
+
+## Phase 1 follow-up: Seeder authorization and hosted options validation
+
+### Bounded target inventory
+
+- `src/Cardscape.Api/Endpoints/Seeder/SeederEndpoints.cs`: four routes under an `AdminOnly` route group, additionally gated by `Cardscape:Seeder:Enabled`.
+- `tests/Cardscape.IntegrationTests/Fixtures/CardscapeWebApplicationFactory.cs`: real API/JWT/SQLite test host and `WithWebHostBuilder` configuration seam.
+- `src/Cardscape.Infrastructure/Hosting/RetentionSweeper.cs`: five retention settings and their safe defaults.
+- `src/Cardscape.Infrastructure/Hosting/RevocationSweeper.cs`: sweep interval, initial delay, enabled switch and defaults.
+- `src/Cardscape.Infrastructure/DependencyInjection/InfrastructureServiceCollectionExtensions.cs`: real bind/validate/`ValidateOnStart` registrations.
+
+### Existing conventions
+
+- xUnit v3 `[Fact]`/`[Theory]`, FluentAssertions, and `Member_Condition_ExpectedResult` names.
+- Authorization integration tests register a user through the public API; admin tests promote the user in Development and re-login so the JWT has `is_admin=true`.
+- Host option tests exercise the public composition extension and assert `OptionsValidationException.OptionsType`.
+
+### Acceptance checklist
+
+- [x] All four Seeder routes return 401 to anonymous callers while enabled.
+- [x] All four Seeder routes return 403 to authenticated non-admin callers while enabled.
+- [x] Admin can access status/options and receives 202 from run/wipe while enabled.
+- [x] Retention invalid interval, negative grace period, invalid retention days, and invalid batch size fail startup validation.
+- [x] Revocation sweeper zero/negative interval and negative initial delay fail startup validation.
+- [x] Defaults pass startup validation and retain their exact safe values.
+- [x] Narrow tests compile and pass; assertions and gaps are reviewed.

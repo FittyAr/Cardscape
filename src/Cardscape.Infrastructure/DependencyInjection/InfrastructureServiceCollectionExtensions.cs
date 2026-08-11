@@ -245,8 +245,16 @@ public static class InfrastructureServiceCollectionExtensions
         // grace period and purges the activity feed +
         // audit log per the configured retention. The
         // host picks it up via AddHostedService.
-        services.Configure<Cardscape.Infrastructure.Hosting.RetentionSettingsOptions>(
-            configuration.GetSection(Cardscape.Infrastructure.Hosting.RetentionSettingsOptions.SectionName));
+        services.AddOptions<Cardscape.Infrastructure.Hosting.RetentionSettingsOptions>()
+            .Bind(configuration.GetSection(Cardscape.Infrastructure.Hosting.RetentionSettingsOptions.SectionName))
+            .Validate(
+                options => options.SweepIntervalSeconds > 0
+                    && options.UserGracePeriodDays >= 0
+                    && options.ActivityRetentionDays > 0
+                    && options.AuditRetentionDays > 0
+                    && options.BatchSize > 0,
+                "Retention settings require a positive sweep interval, retention periods and batch size; the user grace period cannot be negative.")
+            .ValidateOnStart();
         services.AddSingleton<Cardscape.Infrastructure.Hosting.IRetentionSettings,
             Cardscape.Infrastructure.Hosting.RetentionSettings>();
         services.AddHostedService<Cardscape.Infrastructure.Hosting.RetentionSweeper>();
@@ -257,8 +265,13 @@ public static class InfrastructureServiceCollectionExtensions
         // (JwtRevocationValidator) stays sub-millisecond
         // regardless of how many revocations the
         // system has ever recorded.
-        services.Configure<Cardscape.Infrastructure.Hosting.RevocationSweeperOptions>(
-            configuration.GetSection(Cardscape.Infrastructure.Hosting.RevocationSweeperOptions.SectionName));
+        services.AddOptions<Cardscape.Infrastructure.Hosting.RevocationSweeperOptions>()
+            .Bind(configuration.GetSection(Cardscape.Infrastructure.Hosting.RevocationSweeperOptions.SectionName))
+            .Validate(
+                options => options.SweepInterval > TimeSpan.Zero
+                    && options.InitialDelay >= TimeSpan.Zero,
+                "Revocation sweeper requires a positive sweep interval and a non-negative initial delay.")
+            .ValidateOnStart();
         services.AddHostedService<Cardscape.Infrastructure.Hosting.RevocationSweeper>();
 
         services.AddScoped<CustomFieldDefinitionRepository>();

@@ -43,6 +43,9 @@ Reglas permanentes:
 - [ ] La migración documentada por proveedor contradice la estructura actual de migraciones consolidadas; debe decidirse y comprobarse una única estrategia multi-provider.
 - [ ] Hay comentarios y descripciones de proyecto que siguen llamando “scaffold/placeholder” a código activo; pueden ocultar funcionalidad incompleta real.
 - [ ] La solución contiene documentación histórica extensa y contradictoria con el estado actual. Los ADR se preservan, pero la documentación normativa debe reconciliarse.
+- [x] Las rutas destructivas del Seeder estaban expuestas con `AllowAnonymous`; el grupo completo ahora exige `AdminOnly` y tiene cobertura 401/403/admin.
+- [x] Retention y Revocation aceptaban configuración inválida hasta fallar dentro de hosted services; ahora validan al arrancar.
+- [x] `CardsPerBoard` y `UserCount` eran opciones ficticias del Seeder sin consumidores reales; fueron eliminadas de configuración, API y UI.
 
 ## 3. Plan de ejecución
 
@@ -60,7 +63,7 @@ Reglas permanentes:
 
 - [x] Generar el grafo efectivo de referencias entre proyectos y reforzar sus invariantes con architecture tests.
 - [ ] Revisar ubicación y dependencia de cada abstracción; Domain no debe depender de frameworks y Application sólo de Domain/abstracciones necesarias.
-- [ ] Auditar composición DI de API, MCP y Seeder: lifetimes, duplicación, validación al arranque y opciones tipadas.
+- [x] Auditar composición DI de API, MCP y Seeder: lifetimes, duplicación, validación al arranque y opciones tipadas.
 - [ ] Revisar boundaries y vertical slices; dividir archivos monolíticos por caso de uso sin crear capas adicionales.
 - [ ] Revisar el rol del SDK público y evitar duplicación de contratos con Web/API.
 - [ ] Alinear solución, Docker, CI, scripts y documentación con el mismo conjunto de proyectos.
@@ -115,7 +118,8 @@ Reglas permanentes:
 |---|---|---|---|---|
 | 2026-08-11 | Línea base + lifetime MCP | Eliminado `McpToolContext`; prompts, resources y AI tools usan DI scoped | Suite: 712 pass, 0 fail, 1 skip | `8d923fe` |
 | 2026-08-11 | Estructura de solución | Seeder agregado explícitamente a `Cardscape.slnx` | Build Release: 0 warnings, 0 errors; Seeder en Release | `8d923fe` |
-| 2026-08-11 | Grafo + background jobs | ProjectReference validado desde MSBuild; registry inmutable construido por DI; documentación normativa reconciliada | Build 0/0; suite 721 pass, 0 fail, 1 skip | Pendiente |
+| 2026-08-11 | Grafo + background jobs | ProjectReference validado desde MSBuild; registry inmutable construido por DI; documentación normativa reconciliada | Build 0/0; suite 721 pass, 0 fail, 1 skip | `2702468` |
+| 2026-08-11 | Seeder + options | Seeder protegido con AdminOnly; opciones ficticias eliminadas; Retention/Revocation validan al arranque | Build 0/0; suite 735 pass, 0 fail, 1 skip | Pendiente |
 
 ## 5. Criterio de completitud
 

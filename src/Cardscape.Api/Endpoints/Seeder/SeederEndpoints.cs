@@ -1,3 +1,4 @@
+using Cardscape.Api.Extensions;
 using Cardscape.Seeder;
 using Cardscape.Seeder.Configuration;
 using Cardscape.Seeder.Reporting;
@@ -26,10 +27,8 @@ namespace Cardscape.Api.Endpoints.Seeder;
 ///   row the seeder owns (no seed follow-up). 202 + 409
 ///   semantics match the run endpoint.</item>
 /// </list>
-/// All endpoints are <c>AllowAnonymous</c> because the
-/// surface is intended for local development. A future
-/// hardening pass can add the same <c>AdminOnly</c> policy
-/// that protects the rest of <c>/api/admin/*</c>.
+/// All endpoints require the <c>AdminOnly</c> policy. The feature
+/// flag controls availability; it is not an authorization boundary.
 /// </summary>
 public static class SeederEndpoints
 {
@@ -37,7 +36,7 @@ public static class SeederEndpoints
     {
         RouteGroupBuilder group = app.MapGroup("/api/admin/seeder")
             .WithTags("Seeder")
-            .AllowAnonymous();
+            .RequireAuthorization(AdminOnlyPolicy.Name);
 
         group.MapGet("/status", (ISeedReportProvider provider, SeedRunner runner) =>
         {
@@ -56,8 +55,6 @@ public static class SeederEndpoints
             {
                 enabled = snapshot.Enabled,
                 wipeBeforeSeed = snapshot.WipeBeforeSeed,
-                cardsPerBoard = snapshot.CardsPerBoard,
-                userCount = snapshot.UserCount,
                 fixedNow = snapshot.FixedNow
             });
         });

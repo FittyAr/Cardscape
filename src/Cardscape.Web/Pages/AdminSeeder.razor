@@ -20,8 +20,6 @@
             <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@StatusBadge" />
             @if (_options is not null)
             {
-                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@($"{_options.CardsPerBoard} cards/board")" />
-                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@($"{_options.UserCount} users")" />
                 @if (_options.WipeBeforeSeed)
                 {
                     <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="wipe on seed" />
