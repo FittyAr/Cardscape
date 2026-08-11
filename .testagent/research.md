@@ -252,3 +252,24 @@
 - [x] Remove the two per-tool shims and their duplicated DI dependencies.
 - [x] Prove replay short-circuit, payload/tool conflict, owner isolation, key validation and read bypass.
 - [x] Add a composition invariant, review gaps/assertions and run narrow plus full validation.
+
+## Phase 2 follow-up: atomic background-job claims
+
+### Bounded target inventory
+
+- `BackgroundJobRepository.ClaimBatchAsync` reads tracked pending rows, mutates them in memory and calls `SaveChangesAsync` inside a default deferred transaction.
+- `BackgroundJob.TryClaim` changes status/attempts but does not increment the configured `RowVersion` concurrency token.
+- Two dispatchers can therefore read the same candidates; completion by one scope makes the other's batch throw `DbUpdateConcurrencyException`, while simultaneous claims are not excluded by RowVersion.
+- EF Core 10 `ExecuteUpdateAsync` can atomically update by converted `Id`, `Status` and original `RowVersion` across the installed SQLite/PostgreSQL/MySQL providers.
+- Existing dispatcher integration tests cover lifecycle behavior but not competing repository instances.
+- Static pairing automation was unavailable: the Roslyn engine requires SDK 11 file-based apps while the repo pins SDK 10, and the installed skill package omits its documented polyglot script.
+
+### Acceptance checklist
+
+- [x] Claim each candidate with one SQL update guarded by id, pending status and original RowVersion.
+- [x] Increment attempts and RowVersion and stamp StartedAt/UpdatedAt atomically.
+- [x] Return only rows whose guarded update affected exactly one record.
+- [x] Preserve due-time ordering, batch size and future-job exclusion.
+- [x] Prove two repositories can compete without exceptions or duplicate claims.
+- [x] Prove persisted status, attempt and concurrency-token state after claim.
+- [x] Review gaps/assertions, run focused repetition and full Release validation.

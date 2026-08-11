@@ -123,6 +123,7 @@ public sealed class BackgroundJob : AggregateRoot<BackgroundJobId>
         Attempts++;
         StartedAt = now;
         LastError = null;
+        StampChanged(by: null, at: now);
         return true;
     }
 

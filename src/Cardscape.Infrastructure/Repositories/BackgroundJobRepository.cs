@@ -13,43 +13,19 @@ public sealed class BackgroundJobRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<BackgroundJob>> ClaimBatchAsync(
         int batchSize, DateTimeOffset now, CancellationToken ct = default)
     {
-        // Use a serialized transaction so two workers can't claim the
-        // same row. SQLite uses the BEGIN IMMEDIATE write lock for that.
-        // The transaction is short-lived (only the UPDATE+SELECT in this
-        // method) and the per-row TryClaim work is pure memory.
-        //
-        // MULTI-REPLICA CAVEAT: the v1.2.0 audit (pass 10)
-        // observed that the in-memory read + TryClaim
-        // pattern is correct on a single replica (the
-        // RowVersion concurrency token in EF Core
-        // catches the second writer) but is NOT correct
-        // when multiple API replicas run in parallel.
-        // Two replicas would each read the same Pending
-        // rows, each call TryClaim (which is a pure
-        // in-memory check), each call SaveChangesAsync,
-        // and each commit because the RowVersion is
-        // scoped to the local DbContext. The proper fix
-        // is a SQL-level atomic UPDATE that filters on
-        // Status = Pending in the WHERE clause; the
-        // existing BackgroundJobDispatcherTests pin
-        // the in-memory contract, so a follow-up PR
-        // with both a schema change (e.g. a
-        // ClaimToken column) and the matching tests is
-        // the safe path. The race window in single-
-        // replica deploys (the project's default per
-        // the v0.7 docs) is closed by the RowVersion
-        // token + the surrounding transaction.
-        await using var tx = await Db.Database.BeginTransactionAsync(ct);
-
-        // The HasConversion<int> on Status blocks the LINQ translator
-        // from composing `j.Status == BackgroundJobStatus.Pending` into
-        // a SQL predicate, and ScheduledFor is a DateTimeOffset that
-        // SQLite cannot compare as-is. Filter client-side via
-        // AsAsyncEnumerable; bounded by the number of due jobs.
+        // Status translates through its int conversion, so exclude terminal
+        // rows in SQL. ScheduledFor is DateTimeOffset, which SQLite cannot
+        // order server-side; apply only that due-time check client-side.
+        // Rows are intentionally not tracked: the actual claim is the guarded
+        // ExecuteUpdate below.
         var due = new List<BackgroundJob>();
-        await foreach (BackgroundJob job in Db.Set<BackgroundJob>().AsAsyncEnumerable().WithCancellation(ct))
+        await foreach (BackgroundJob job in Db.Set<BackgroundJob>()
+            .Where(job => job.Status == BackgroundJobStatus.Pending)
+            .AsNoTracking()
+            .AsAsyncEnumerable()
+            .WithCancellation(ct))
         {
-            if (job.Status == BackgroundJobStatus.Pending && job.ScheduledFor <= now)
+            if (job.ScheduledFor <= now)
             {
                 due.Add(job);
             }
@@ -64,18 +40,26 @@ public sealed class BackgroundJobRepository(CardscapeDbContext db)
         List<BackgroundJob> claimed = [];
         foreach (BackgroundJob job in due)
         {
-            if (job.TryClaim(now))
+            int affected = await Db.Set<BackgroundJob>()
+                .Where(candidate =>
+                    candidate.Id == job.Id
+                    && candidate.Status == BackgroundJobStatus.Pending
+                    && candidate.RowVersion == job.RowVersion)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(candidate => candidate.Status, BackgroundJobStatus.Running)
+                    .SetProperty(candidate => candidate.Attempts, candidate => candidate.Attempts + 1)
+                    .SetProperty(candidate => candidate.StartedAt, now)
+                    .SetProperty(candidate => candidate.LastError, (string?)null)
+                    .SetProperty(candidate => candidate.UpdatedAt, now)
+                    .SetProperty(candidate => candidate.UpdatedBy, (Guid?)null)
+                    .SetProperty(candidate => candidate.RowVersion, candidate => candidate.RowVersion + 1),
+                    ct);
+
+            if (affected == 1 && job.TryClaim(now))
             {
                 claimed.Add(job);
             }
         }
-
-        if (claimed.Count > 0)
-        {
-            await Db.SaveChangesAsync(ct);
-        }
-
-        await tx.CommitAsync(ct);
         return claimed;
     }
 

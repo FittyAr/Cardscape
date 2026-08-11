@@ -145,3 +145,21 @@
 - The first full run exposed a transient `DbUpdateConcurrencyException` in
   `BackgroundJobRepository.ClaimBatchAsync`; the failed test passed alone and the complete rerun passed.
   This unrelated claim race is recorded for the next background-jobs block rather than hidden.
+
+## Atomic background-job claims
+
+- Status: complete.
+- Evidence: full-suite `DbUpdateConcurrencyException` at `BackgroundJobRepository.ClaimBatchAsync` line 75; isolated lifecycle test passes because no competing claimant remains.
+- Root cause: default transactions do not serialize the read/mutate/save sequence, and `TryClaim` leaves RowVersion unchanged.
+- Focused validation: 6/6 repository + dispatcher lifecycle tests; the three new claim tests pass.
+- Stability validation: the concurrent repository class passed 5 consecutive runs (10/10 test executions).
+- Pseudo-mutation review: ordering/batch/future boundaries, persisted increments, `affected == 1`,
+  RowVersion stale-snapshot rejection and duplicate claim mutations are killed. The status predicate is
+  defensive redundancy when every state transition increments RowVersion.
+- Assertion review: no assertion-free, trivial-only or self-referential tests. Assertions cover exact id/time,
+  persisted state, collection cardinality/uniqueness, negative future-job state and stale-claim emptiness.
+- The installed analysis extension package again lacks its advertised `.NET` reference; xUnit and
+  FluentAssertions were classified from repository conventions.
+- Full validation: Release build 0 warnings / 0 errors; suite 799 passed / 0 failed / 1 skipped.
+- Provider evidence: concurrency behavior ran against real SQLite. The shared EF expression compiles
+  with all installed providers; PostgreSQL/MariaDB runtime SQL translation remains CI matrix evidence.

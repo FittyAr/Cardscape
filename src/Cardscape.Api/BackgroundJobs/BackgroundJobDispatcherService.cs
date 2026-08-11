@@ -20,7 +20,8 @@ namespace Cardscape.Api.BackgroundJobs;
 /// One instance per process. Only the API process runs it; the MCP
 /// and Web processes are stateless clients. If you scale the API to
 /// multiple replicas, each replica runs its own dispatcher; the
-/// ClaimBatch transaction guarantees no double-processing.
+/// repository claims each row with a guarded atomic update so only
+/// one replica can dispatch it.
 /// </remarks>
 public sealed class BackgroundJobDispatcherService(
     IServiceScopeFactory scopeFactory,

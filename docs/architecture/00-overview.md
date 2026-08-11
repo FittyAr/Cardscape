@@ -110,7 +110,7 @@ src/
 │   ├── Storage/                 ← attachment storage abstraction
 │   ├── Email/                   ← email sender
 │   ├── Caching/                 ← Memory + Redis
-│   ├── BackgroundJobs/          ← Hangfire
+│   ├── BackgroundJobs/          ← EF-backed queue claimed atomically; dispatched through Wolverine
 │   ├── RealTime/                ← SignalR
 │   └── DependencyInjection/    ← AddInfrastructure(IConfiguration)
 │

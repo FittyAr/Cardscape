@@ -29,10 +29,9 @@ The four product surfaces are:
 3. **Web client** (`Cardscape.Web`) — Blazor
    WASM, talks to the API. No server-side
    session.
-4. **Background workers** — Hangfire (in the
-   API process) for webhook deliveries, retention
-   sweeps, DSR fulfilment, and revocation
-   sweeps.
+4. **Background workers** — an EF-backed queue claimed by
+   the API's internal dispatcher and delivered through Wolverine;
+   dedicated hosted services run retention and revocation sweeps.
 
 ## 2. Project-side vs. deployer-side controls
 

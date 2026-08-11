@@ -103,3 +103,12 @@
 - [x] Remove `IdempotentToolRunner` and the two per-tool opt-in paths.
 - [x] Add focused policy/canonicalization and real composition tests.
 - [x] Review assertions/gaps, run Release validation, update documentation and publish.
+
+## Atomic background-job claims
+
+- [x] Add a standalone SQLite integration fixture with two independent DbContexts.
+- [x] Add a concurrent-claim test asserting disjoint batches and exact persisted state.
+- [x] Replace tracked mutation/save with guarded `ExecuteUpdateAsync` claims.
+- [x] Align `BackgroundJob.TryClaim` with the RowVersion/UpdatedAt invariant.
+- [x] Run the repository/dispatcher tests repeatedly, then the full Release suite.
+- [x] Review assertions/gaps, update architecture plan and publish.

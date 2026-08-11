@@ -167,8 +167,8 @@ The expand-contract pattern is documented in
 
 ## 6. Background jobs
 
-The background job runner (Hangfire, added in Phase 3 for
-the automation engine).
+The internal background-job dispatcher claims the EF-backed queue and
+delivers work through Wolverine. No Hangfire runtime or schema is used.
 
 | Job | p95 duration | Notes |
 |---|---|---|
