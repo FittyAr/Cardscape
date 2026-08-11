@@ -129,8 +129,7 @@ public static IServiceCollection AddCardscapeMcp(
                 Version = "1.0.0"
             };
         })
-        .WithHttpTransport()
-        .WithStdioServerTransport()
+        .WithHttpTransport(options => options.Stateless = false)
         .WithToolsFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
         .WithResourcesFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
         .WithPromptsFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
@@ -145,46 +144,10 @@ automatically. The same applies to resources and prompts.
 
 ## 4. Transport
 
-### 4.1 stdio (default for local clients)
-
-For local clients (Claude Desktop, etc.), the MCP server is
-launched as a child process by the client. The client's
-configuration looks like:
-
-```json
-{
-  "mcpServers": {
-    "cardscape": {
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "C:\\path\\to\\Cardscape\\src\\Cardscape.Mcp",
-        "--stdio"
-      ],
-      "env": {
-        "CARDS_API_TOKEN": "sk_...",
-        "Database__Provider": "Sqlite",
-        "Database__SqliteConnectionString": "Data Source=/home/me/.local/share/cardscape/cardscape.db"
-      }
-    }
-  }
-}
-```
-
-The MCP SDK's `WithStdioServerTransport()` wires up stdin /
-stdout for the protocol. The `--stdio` argument tells our
-`Program.cs` to suppress the HTTP listener and only listen on
-stdio.
-
-### 4.2 HTTP + SSE (hosted deployments)
-
-For hosted deployments (a server reachable by an AI client over
-the network), the MCP server exposes:
-
-- `POST /mcp/messages` — receive a JSON-RPC message.
-- `GET /mcp/sse` — Server-Sent Events stream for server-pushed
-  messages.
+Cardscape exposes one transport contract: **stateful Streamable
+HTTP** at `/mcp`. Stateful sessions are intentional because board
+resource subscriptions send unsolicited `resources/updated`
+notifications. Legacy SSE and stdio are not registered.
 
 Authentication: `Authorization: Bearer <api_token>` header on
 both endpoints. The token is verified by
@@ -512,8 +475,6 @@ semver strictly: a breaking change in a tool bumps the
 
 ## 14. Security considerations
 
-- The MCP server is a trusted process. Anyone with shell access
-  to the machine can launch it.
 - The HTTP transport is authenticated by API token. The
   `Authorization: Bearer` header is required on every request.
 - We do not expose the MCP server over the public internet
@@ -521,7 +482,7 @@ semver strictly: a breaking change in a tool bumps the
   allow-listing. The default deployment is **local-only**:
   the user runs the MCP server on their workstation, talks to
   Claude Desktop on the same machine.
-- API tokens are stored as bcrypt hashes. The cleartext secret
+- API tokens are stored as SHA-256 hashes. The cleartext secret
   is shown **once** at creation and never recoverable.
 - The MCP server does not log API token secrets. The structured
   log includes only the token's prefix and id, never the

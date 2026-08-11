@@ -6,43 +6,11 @@
 > 2025-2026; any client that speaks it can drive a Cardscape
 > board on the user's behalf.
 
-## 1. Pick a transport
+## 1. Configure Streamable HTTP
 
-The Cardscape MCP server supports two transports:
-
-- **stdio** — the client spawns the server as a subprocess
-  and exchanges JSON-RPC messages over stdin/stdout. Used
-  by Claude Desktop, Cursor, Continue, and most local AI
-  clients.
-- **HTTP + Server-Sent Events** — the server runs as a
-  long-lived HTTP endpoint. Used by hosted AI clients that
-  can't spawn subprocesses. Available in
-  `Cardscape.Mcp` when the deployment configures
-  `Cardscape__Mcp__Transport=http`.
-
-For the stdio path, the client launches the server with the
-right `Cardscape__ApiBaseUrl` and the user's `Cardscape__ApiToken`:
-
-```json
-{
-  "mcpServers": {
-    "cardscape": {
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "src/Cardscape.Mcp",
-        "--",
-        "--mcp-transport=stdio"
-      ],
-      "env": {
-        "Cardscape__ApiBaseUrl": "https://cardscape.example.com",
-        "Cardscape__ApiToken": "<the user's API token>"
-      }
-    }
-  }
-}
-```
+Cardscape exposes a stateful Streamable HTTP endpoint at `/mcp`. Every
+protocol request carries the user's API token in the standard
+`Authorization: Bearer <secret>` header.
 
 ## 2. Speak JSON-RPC over the chosen transport
 
@@ -54,15 +22,14 @@ like this:
 using ModelContextProtocol.Client;
 
 await using var client = await McpClient.CreateAsync(
-    new StdioClientTransport(new StdioClientTransportOptions
+    new HttpClientTransport(new HttpClientTransportOptions
     {
         Name = "Cardscape",
-        Command = "dotnet",
-        Arguments = new[] { "run", "--project", "src/Cardscape.Mcp" },
-        EnvironmentVariables = new Dictionary<string, string?>
+        Endpoint = new Uri("https://cardscape-mcp.example.com/mcp"),
+        TransportMode = HttpTransportMode.StreamableHttp,
+        AdditionalHeaders = new Dictionary<string, string>
         {
-            ["Cardscape__ApiBaseUrl"] = "https://cardscape.example.com",
-            ["Cardscape__ApiToken"]   = Environment.GetEnvironmentVariable("CARDS_CAPE_TOKEN")
+            ["Authorization"] = $"Bearer {Environment.GetEnvironmentVariable("CARD_SCAPE_TOKEN")!}"
         }
     }));
 

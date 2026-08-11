@@ -126,15 +126,14 @@ harness) in the CI, against a seeded workspace.
 
 The MCP server has the same `Application` layer as the REST
 API, so the underlying handler latency is the same. The
-budget adds a margin for the MCP transport (serialization
-over stdio or HTTP+SSE).
+budget adds a margin for Streamable HTTP serialization.
 
 ### Transport
 
 | Transport | p95 first-byte | Notes |
 |---|---|---|
-| stdio (local) | < 50 ms | the AI client is on the same machine |
-| HTTP+SSE (hosted) | < 100 ms | the AI client is over the network |
+| Streamable HTTP (local) | < 50 ms | the AI client is on the same machine |
+| Streamable HTTP (hosted) | < 100 ms | the AI client is over the network |
 
 ---
 

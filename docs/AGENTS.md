@@ -75,7 +75,7 @@ strict and one-directional:
             │                                   │
             │         ┌─────────────────────────┐
             │         │     Cardscape.Mcp       │   ← AI integration
-            └─────────┤  Model Context Protocol │     (stdio or HTTP+SSE)
+            └─────────┤  Model Context Protocol │     (stateful Streamable HTTP)
                       │  talks to Application   │
                       └─────────────────────────┘
 ```
@@ -97,7 +97,7 @@ Key rules:
   the same persistence/application registrations as the API plus
   an `ICurrentUser` resolver
   from the API token. The MCP server is a separate process
-  (stdio or HTTP+SSE) and shares the entire Application layer
+  (stateful Streamable HTTP at `/mcp`) and shares the entire Application layer
   with the REST API.
 
 Type dependencies and project references are enforced by the
@@ -115,8 +115,8 @@ other self-hostable kanban has MCP**. With it, an AI client can:
 - Search across all boards.
 - Subscribe to board and card resources for live updates.
 
-The MCP server is **transport-agnostic** (stdio for local
-clients, HTTP+SSE for hosted clients) and **idempotent** (every
+The MCP server uses authenticated **stateful Streamable HTTP** and is
+**idempotent** (every
 write tool accepts an `idempotencyKey` to make AI retries
 safe).
 

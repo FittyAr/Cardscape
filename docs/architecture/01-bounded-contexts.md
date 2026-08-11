@@ -167,8 +167,8 @@ of its own. It's a thin transport layer that:
   `Infrastructure` or `Api`.
 - Exposes tools, resources, and prompts that delegate to
   underlying context handlers.
-- Is deployed as a separate process (stdio for local AI
-  clients, HTTP+SSE for hosted deployments).
+- Is deployed as a separate process with an authenticated stateful
+  Streamable HTTP endpoint at `/mcp`.
 - Is authenticated by API tokens (a new entity in the
   `Members` context).
 

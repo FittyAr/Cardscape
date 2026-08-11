@@ -665,7 +665,7 @@ public sealed class BoardsTools(
         {
             throw new UnauthorizedAccessException(
                 "MCP tool call rejected: no authenticated principal. "
-                + "Pass a Bearer JWT in the Authorization header on the stdio/stdin transport.");
+                + "Pass the API token as an Authorization: Bearer header to the MCP HTTP endpoint.");
         }
     }
 

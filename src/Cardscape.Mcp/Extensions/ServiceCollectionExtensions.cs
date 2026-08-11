@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
@@ -46,11 +47,11 @@ public static class ServiceCollectionExtensions
                     _ => { });
 
         services.AddAuthorization();
-        services.AddHttpContextAccessor();
-
         // Reuse Application's CurrentUser mapping. MCP owns only the
-        // transport adapter that exposes its HttpContext principal.
-        services.AddScoped<ICurrentUserAccessor, McpHttpContextCurrentUserAccessor>();
+        // async-flow adapter populated from each propagated request principal.
+        services.AddSingleton<McpRequestCurrentUserAccessor>();
+        services.AddSingleton<ICurrentUserAccessor>(provider =>
+            provider.GetRequiredService<McpRequestCurrentUserAccessor>());
 
         // ── Real-time (MCP tools that mutate can push to the
         //    same SignalR hub the Web client listens to) ──────
@@ -78,10 +79,12 @@ public static class ServiceCollectionExtensions
         // BroadcastAsync through the internal broadcast endpoint.
         services.AddSingleton<McpResourceBroadcaster>();
 
-        // ── MCP server (stdio transport) ─────────────────────
+        // ── MCP server (stateful Streamable HTTP) ────────────
+        // Stateful sessions are required by resource subscriptions and
+        // unsolicited resources/updated notifications.
         services
             .AddMcpServer()
-            .WithStdioServerTransport()
+            .WithHttpTransport(options => options.Stateless = false)
             .WithToolsFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
             .WithResourcesFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
             .WithPromptsFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
@@ -89,11 +92,10 @@ public static class ServiceCollectionExtensions
             {
                 filters.AddCallToolFilter(next => async (request, cancellationToken) =>
                 {
-                    ICurrentUserAccessor accessor = request.Services!
-                        .GetRequiredService<ICurrentUserAccessor>();
+                    ClaimsPrincipal? principal = SetCurrentPrincipal(request);
                     return await McpToolScopePolicy.AuthorizeAndInvokeAsync(
                         request.Params?.Name,
-                        accessor.GetCurrentPrincipal(),
+                        principal,
                         async () =>
                         {
                             IServiceProvider requestServices = request.Services!;
@@ -135,14 +137,21 @@ public static class ServiceCollectionExtensions
         McpRequestHandler<TParams, TResult> next) =>
         async (request, cancellationToken) =>
         {
-            ICurrentUserAccessor accessor = request.Services!
-                .GetRequiredService<ICurrentUserAccessor>();
+            ClaimsPrincipal? principal = SetCurrentPrincipal(request);
             return await McpScopeAuthorization.AuthorizeAndInvokeAsync(
                 Scope.Read,
                 typeof(TParams).Name,
-                accessor.GetCurrentPrincipal(),
+                principal,
                 () => next(request, cancellationToken));
         };
+
+    private static ClaimsPrincipal? SetCurrentPrincipal<TParams>(RequestContext<TParams> request)
+    {
+        request.Services!
+            .GetRequiredService<McpRequestCurrentUserAccessor>()
+            .SetCurrentPrincipal(request.User);
+        return request.User;
+    }
 
     private static async ValueTask<EmptyResult> SubscribeToResourceAsync(
         RequestContext<SubscribeRequestParams> request,
@@ -197,15 +206,13 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Maps the MCP server pipeline. Stdio doesn't need HTTP
-    /// endpoints, but we still wire auth + authorization so tools
-    /// that reach into <see cref="ICurrentUser"/> get a fully
-    /// resolved principal.
+    /// Maps authentication and the stateful Streamable HTTP MCP endpoint.
     /// </summary>
     public static WebApplication UseCardscapeMcp(this WebApplication app)
     {
         app.UseAuthentication();
         app.UseAuthorization();
+        app.MapMcp("/mcp").RequireAuthorization();
 
         return app;
     }

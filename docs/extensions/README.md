@@ -9,7 +9,7 @@
 
 - [`01-build-your-own-mcp-client.md`](01-build-your-own-mcp-client.md) —
   A 30-line C# client that connects to the Cardscape MCP
-  server over stdio, lists the tools, and calls
+  server over Streamable HTTP, lists the tools, and calls
   `workspaces_list`.
 - [`02-trello-import.md`](02-trello-import.md) — The Trello
   `boards.json` import pipeline: the JSON shape, the
@@ -30,7 +30,7 @@ APIs**:
    `docs/api/00-conventions.md` and the live OpenAPI document
    at `/openapi/v1.json` (Development environment); the Scalar
    reference UI is at `/scalar`.
-2. **Model Context Protocol server** (stdio or HTTP+SSE) —
+2. **Model Context Protocol server** (stateful Streamable HTTP) —
    the AI integration pillar. Documented in
    `docs/architecture/03-mcp-server.md` and
    `docs/ai/01-mcp-deep-dive.md`.

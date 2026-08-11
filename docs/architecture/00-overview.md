@@ -34,7 +34,7 @@ projects for hosting and composition:
             │                                   │
             │         ┌─────────────────────────┐
             │         │     Cardscape.Mcp       │   ← AI integration
-            └─────────┤  Model Context Protocol │     (stdio or HTTP+SSE)
+            └─────────┤  Model Context Protocol │     (stateful Streamable HTTP)
                       │  talks to Application   │
                       └─────────────────────────┘
 ```

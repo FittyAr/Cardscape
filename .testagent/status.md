@@ -163,3 +163,14 @@
 - Full validation: Release build 0 warnings / 0 errors; suite 799 passed / 0 failed / 1 skipped.
 - Provider evidence: concurrency behavior ran against real SQLite. The shared EF expression compiles
   with all installed providers; PostgreSQL/MariaDB runtime SQL translation remains CI matrix evidence.
+
+## Authenticated MCP Streamable HTTP transport
+
+- Status: complete.
+- Confirmed defect: stdio requests never traversed the ASP.NET authentication handler, so its environment-token fallback could not create a principal.
+- Chosen boundary: stateful Streamable HTTP at `/mcp`; stateful mode preserves resource subscriptions and unsolicited update notifications.
+- Identity bridge: `RequestContext.User` is copied into an `AsyncLocal` carrier so nested tool scopes see the caller while concurrent async flows remain isolated.
+- Focused validation: composition 3/3; MCP E2E 7/7, including anonymous 401 and a real read-token `workspaces_list` call.
+- Pseudo-mutation review: removing endpoint authorization, request principal transfer, cross-scope carrier, exact scope, bearer header, or stateful route mapping is killed by focused tests.
+- Assertion review: exact 401, successful protocol call, principal identity, handler invocation count, idempotent replay and filter ownership are asserted; no assertion-free or truthiness-only generated case remains.
+- Full validation: Release build 0 warnings / 0 errors; suite 802 passed / 0 failed / 1 skipped.

@@ -1,11 +1,18 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
+using Cardscape.Application.Abstractions.Security;
+using Cardscape.Domain.Members;
 using Cardscape.E2ETests.Fixtures;
+using Cardscape.Infrastructure.Persistence;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol;
 using Xunit;
 
 namespace Cardscape.E2ETests;
@@ -69,6 +76,80 @@ public sealed class McpSubscriptionsCrossProcessTests
         HttpResponseMessage resp = await mcpClient.GetAsync(
             "health/live", TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Mcp_StreamableHttp_Endpoint_Rejects_Anonymous_Protocol_Requests()
+    {
+        HttpClient mcpClient = _factory.Mcp.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post, "mcp")
+        {
+            Content = new StringContent(
+                """{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"e2e","version":"1.0"}}}""",
+                Encoding.UTF8,
+                "application/json")
+        };
+
+        HttpResponseMessage response = await mcpClient.SendAsync(
+            request, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
+            "the mapped MCP transport must authenticate before dispatching JSON-RPC");
+    }
+
+    [Fact]
+    public async Task Mcp_StreamableHttp_Propagates_ApiToken_Identity_Into_Tools()
+    {
+        ApiTokenIssuance token;
+        using (IServiceScope scope = _factory.Mcp.Services.CreateScope())
+        {
+            CardscapeDbContext db = scope.ServiceProvider.GetRequiredService<CardscapeDbContext>();
+            await db.Database.EnsureCreatedAsync(TestContext.Current.CancellationToken);
+            User user = User.Register(
+                UserId.New(),
+                EmailAddress.Create($"mcp-{Guid.NewGuid():N}@cardscape.local").Value,
+                DisplayName.Create("MCP E2E").Value,
+                PasswordHash.FromHashed("v1.e2e").Value,
+                DateTimeOffset.UtcNow).Value;
+            db.Users.Add(user);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+            token = await scope.ServiceProvider.GetRequiredService<IApiTokenService>().IssueAsync(
+                user.Id,
+                "mcp-e2e",
+                ["read"],
+                expiresAt: null,
+                rateLimitPerHour: null,
+                burstSize: null,
+                TestContext.Current.CancellationToken);
+        }
+
+        HttpClient httpClient = _factory.Mcp.CreateClient();
+        var transport = new HttpClientTransport(
+            new HttpClientTransportOptions
+            {
+                Endpoint = new Uri(httpClient.BaseAddress!, "mcp"),
+                TransportMode = HttpTransportMode.StreamableHttp,
+                AdditionalHeaders = new Dictionary<string, string>
+                {
+                    ["Authorization"] = $"Bearer {token.CleartextSecret}"
+                }
+            },
+            httpClient,
+            NullLoggerFactory.Instance,
+            ownsHttpClient: false);
+        await using McpClient client = await McpClient.CreateAsync(
+            transport,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        CallToolResult result = await client.CallToolAsync(
+            "workspaces_list",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        string details = string.Join(
+            " | ",
+            result.Content.OfType<TextContentBlock>().Select(block => block.Text));
+        result.IsError.Should().NotBeTrue(details);
     }
 
     [Fact]

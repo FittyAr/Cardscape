@@ -22,11 +22,10 @@ the REST API uses are exposed as MCP tools, resources, and
 prompts. The MCP server is a **thin transport layer**; the
 domain logic lives in `Cardscape.Application`.
 
-The MCP server is **transport-agnostic**. It supports
-**stdio** (the default for local AI clients like Claude
-Desktop) and **HTTP+SSE** (for hosted AI clients). The
-transport is selected at startup via the
-`Cardscape__Mcp__Transport` configuration value.
+The MCP server exposes one authenticated **stateful Streamable
+HTTP** endpoint at `/mcp`. Stateful mode is required for board
+resource subscriptions and server-initiated update notifications.
+The server does not register stdio or legacy SSE transports.
 
 ---
 
@@ -203,8 +202,8 @@ public async Task CreateCard_ValidInput_ReturnsSuccess()
 ### 3.5 Step 5: test the tool over MCP
 
 The test in §3.4 tests the tool's C# method. A separate
-test exercises the tool over the MCP transport (stdio or
-HTTP+SSE). The MCP SDK provides a test client that can
+test exercises the tool over the Streamable HTTP transport.
+The MCP SDK provides a test client that can
 connect to the MCP server in-process and call the tools
 as a real AI client would.
 
@@ -347,17 +346,16 @@ The MCP server depends on:
 - `Cardscape.Application` (the use cases).
 - `Cardscape.Domain` (the shared error types).
 - `Cardscape.Infrastructure` (the EF Core repositories).
-- `ModelContextProtocol` (the .NET MCP SDK, version 1.4.1
-  or later).
+- `ModelContextProtocol.AspNetCore` (the .NET MCP SDK, version
+  `2.0.0`).
 
 The MCP server does **not** depend on `Cardscape.Api` or
 `Cardscape.Web`. The dependency direction is strict.
 
-The MCP server's `appsettings.json` has the same
-configuration keys as the API (the same `Database`,
-`Cardscape`, `Otel`, `Smtp` sections). The MCP server
-adds the `Cardscape__Mcp__Transport` key to select the
-transport.
+The MCP server's `appsettings.json` shares the relevant
+Infrastructure, database, telemetry and integration settings with
+the API. The transport is intentionally fixed rather than selected
+by configuration.
 
 ---
 
@@ -370,14 +368,12 @@ In local development:
 # layer; the API is a separate process for the REST API).
 dotnet run --project src/Cardscape.Api
 
-# In another terminal, start the MCP server with stdio.
-dotnet run --project src/Cardscape.Mcp -- --mcp-transport=stdio
+# In another terminal, start the MCP HTTP server.
+dotnet run --project src/Cardscape.Mcp
 ```
 
-The `--mcp-transport=stdio` flag tells the MCP server to
-listen on stdio instead of HTTP+SSE. Claude Desktop uses
-stdio; the test harness uses stdio or HTTP+SSE depending
-on the test.
+Connect an MCP client to `http://localhost:<mcp-port>/mcp` and
+send the minted API token as `Authorization: Bearer <secret>`.
 
 The local dev setup is the same as the production setup,
 minus the reverse proxy and the monitoring.

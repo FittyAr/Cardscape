@@ -186,9 +186,8 @@ server {
 }
 ```
 
-The `proxy_buffering off` for `/mcp/` is required for SSE
-(Server-Sent Events), which the MCP server uses for the
-HTTP+SSE transport.
+The `proxy_buffering off` for `/mcp/` preserves streamed responses and
+server-initiated notifications over stateful Streamable HTTP.
 
 ---
 

@@ -103,6 +103,7 @@
     <PackageVersion Include="Radzen.Blazor" Version="11.2.1" />
     <!-- Model Context Protocol (AI integration server). -->
     <PackageVersion Include="ModelContextProtocol" Version="2.0.0" />
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.0.0" />
     <!-- OpenTelemetry (tracing for the MCP server). -->
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.17.0" />

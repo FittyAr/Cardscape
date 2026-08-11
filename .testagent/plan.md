@@ -112,3 +112,11 @@
 - [x] Align `BackgroundJob.TryClaim` with the RowVersion/UpdatedAt invariant.
 - [x] Run the repository/dispatcher tests repeatedly, then the full Release suite.
 - [x] Review assertions/gaps, update architecture plan and publish.
+
+## Authenticated MCP Streamable HTTP transport
+
+- [x] Reproduce the mismatch between stdio registration and HttpContext-based authentication.
+- [x] Register the official ASP.NET Core Streamable HTTP transport in stateful mode and map `/mcp` behind authorization.
+- [x] Bridge `RequestContext.User` across the SDK's nested DI scopes without shared-request leakage.
+- [x] Add anonymous endpoint, nested-scope, filter composition and authenticated real-client tests.
+- [x] Run full Release build/suite, review assertions, update normative documentation and publish.
