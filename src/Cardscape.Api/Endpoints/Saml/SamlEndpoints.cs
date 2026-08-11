@@ -10,17 +10,12 @@ using Wolverine;
 namespace Cardscape.Api.Endpoints.Saml;
 
 /// <summary>
-/// SAML 2.0 SSO endpoints. The four IdP-facing endpoints
-/// under <c>/saml/{workspaceSlug}/{login,login-init,acs,metadata}</c>
-/// are intercepted by <see cref="Cardscape.Api.Authentication.SamlAuthenticationHandler"/>
-/// (an <c>IAuthenticationRequestHandler</c>) which drives
-/// the Sustainsys.Saml2 protocol commands. The endpoint
-/// routes below are kept as a documented fallback: if the
-/// SAML scheme is not registered the endpoints return a
-/// JSON 501 with the protocol endpoint paths so operators
-/// can confirm the URL space is mounted.
-///
-/// The admin endpoints (configure / get / disable) sit
+/// SAML 2.0 administration endpoints (configure / get /
+/// disable). The IdP-facing protocol routes are owned
+/// exclusively by
+/// <see cref="Cardscape.Api.Authentication.SamlAuthenticationHandler"/>
+/// and are intentionally not duplicated in endpoint routing.
+/// The administration endpoints sit
 /// under the JWT-protected <c>/api/workspaces/{id}/saml</c>
 /// group and use the standard <see cref="Wolverine"/> bus
 /// for command dispatch.
@@ -29,39 +24,6 @@ public static class SamlEndpoints
 {
     public static IEndpointRouteBuilder MapSamlEndpoints(this IEndpointRouteBuilder app)
     {
-        // IdP-facing (unauthenticated). The SamlAuthenticationHandler
-        // intercepts these paths via IAuthenticationRequestHandler
-        // before the endpoint runs. If the handler is not
-        // registered (e.g. the Sustainsys package reference was
-        // removed) the endpoint returns 501 so the failure is
-        // surfaced clearly.
-        var idp = app.MapGroup("/saml").WithTags("SAML");
-
-        idp.MapGet("/{workspaceSlug}/login", (string workspaceSlug) =>
-            Results.Problem(
-                title: "saml.not_handled",
-                detail: $"SAML handler is not registered. The /saml/{workspaceSlug}/login route exists but is not being processed.",
-                statusCode: StatusCodes.Status501NotImplemented));
-
-        idp.MapGet("/{workspaceSlug}/login-init", (string workspaceSlug) =>
-            Results.Problem(
-                title: "saml.not_handled",
-                detail: $"SAML handler is not registered. The /saml/{workspaceSlug}/login-init route exists but is not being processed.",
-                statusCode: StatusCodes.Status501NotImplemented));
-
-        idp.MapPost("/{workspaceSlug}/acs", () =>
-            Results.Problem(
-                title: "saml.not_handled",
-                detail: "SAML handler is not registered. The /saml/{slug}/acs route exists but is not being processed.",
-                statusCode: StatusCodes.Status501NotImplemented));
-
-        idp.MapGet("/{workspaceSlug}/metadata", (string workspaceSlug) =>
-            Results.Problem(
-                title: "saml.not_handled",
-                detail: $"SAML handler is not registered. The /saml/{workspaceSlug}/metadata route exists but is not being processed.",
-                statusCode: StatusCodes.Status501NotImplemented));
-
-        // Admin (authenticated).
         var admin = app.MapGroup("/api/workspaces/{workspaceId:guid}/saml")
             .RequireAuthorization()
             .RequireRegionGuard()

@@ -16,8 +16,7 @@ namespace Cardscape.UnitTests.Security;
 ///
 /// <list type="bullet">
 ///   <item><c>CacheAdminClaim = true</c> (default): trust the
-///         claim, only fall back to the DB when the claim is
-///         missing.</item>
+///         required claim and fail closed when it is absent.</item>
 ///   <item><c>CacheAdminClaim = false</c>: never trust the
 ///         claim, always read <c>users.IsAdmin</c> from the
 ///         database.</item>
@@ -75,23 +74,21 @@ public class AdminOnlyAuthorizationHandlerTests
     }
 
     [Fact]
-    public async Task CacheEnabled_ClaimMissing_FallsBackToDbAndHonoursRow()
+    public async Task CacheEnabled_ClaimMissing_FailsClosedEvenWhenDatabaseGrantsAdmin()
     {
         var users = new InMemoryUserRepository();
         Guid userId = Guid.NewGuid();
         await users.AddAsync(BuildUser(userId, isAdmin: true), TestContext.Current.CancellationToken);
         var handler = BuildHandler(users, cacheEnabled: true);
 
-        // No is_admin claim — the handler must fall through to
-        // the DB lookup. This is the pre-v1.2.0 migration path.
         AuthorizationHandlerContext context = BuildContext(
             userId, claimValue: null, otherClaims: new Dictionary<string, string>());
 
         await handler.HandleAsync(context);
 
-        context.HasSucceeded.Should().BeTrue(
-            "with the claim absent the handler must consult the DB " +
-            "and the user row says IsAdmin=true.");
+        context.HasSucceeded.Should().BeFalse(
+            "a token without the mandatory cached claim is invalid for admin authorization " +
+            "and must not regain access through a compatibility lookup.");
     }
 
     [Fact]

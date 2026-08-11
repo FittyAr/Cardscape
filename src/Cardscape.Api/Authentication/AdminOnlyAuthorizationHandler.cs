@@ -13,11 +13,10 @@ namespace Cardscape.Api.Authentication;
 /// configuration to decide whether to trust the
 /// <c>is_admin</c> claim embedded in the JWT at mint time
 /// (the fast path) or to read the live value from the
-/// database on every check (the strict path). A token
-/// issued before the v1.2.0 rollout (no <c>is_admin</c>
-/// claim) always falls back to the users-table lookup, so
-/// the migration is automatic and existing tokens keep
-/// working until they expire.
+/// database on every check (the strict path). When claim
+/// caching is enabled, a missing or malformed claim fails
+/// closed; every token minted by the current application is
+/// required to carry the claim.
 /// </summary>
 public sealed class AdminOnlyRequirement : IAuthorizationRequirement
 {
@@ -53,21 +52,23 @@ public sealed class AdminOnlyAuthorizationHandler(
         if (options.Value.CacheAdminClaim)
         {
             Claim? cached = context.User.FindFirst(IsAdminClaim);
-            if (cached is not null)
+            if (cached is null)
             {
-                if (string.Equals(cached.Value, "true", StringComparison.Ordinal))
-                {
-                    context.Succeed(requirement);
-                }
+                logger.LogWarning(
+                    "AdminOnly requirement evaluated with claim caching enabled but without an is_admin claim. Returning failed (403).");
                 return;
             }
+
+            if (string.Equals(cached.Value, "true", StringComparison.Ordinal))
+            {
+                context.Succeed(requirement);
+            }
+            return;
         }
 
-        // 2) Live lookup. Always used when the cached path
-        //    is disabled; used as a fallback for pre-v1.2.0
-        //    tokens when the cached path is enabled but the
-        //    claim is absent. A single-row seek by primary
-        //    key; the user table is small and indexed.
+        // 2) Live lookup. Used only when claim caching is
+        //    disabled. A single-row seek by primary key; the
+        //    user table is small and indexed.
         string? rawUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrWhiteSpace(rawUserId) || !Guid.TryParse(rawUserId, out Guid userIdGuid))
         {

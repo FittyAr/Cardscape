@@ -72,7 +72,7 @@
 | V3.4 | Cookie-based session management | N/A | The API is bearer-only. The Web client uses Blazor WASM; no server-side session. |
 | V3.5 | Token-based session management | Implemented | JWT signed with HS256, issuer + audience + lifetime + signature validated; `ClockSkew = 1 minute`. |
 | V3.6 | Federated re-authentication | Implemented | External login (Google, Microsoft, Apple, SAML, SCIM) requires the IdP session to still be valid; `OnRedirectToIdentityProvider` re-issues the challenge on token expiry. |
-| V3.7 | Defences against session abuse | Implemented | `RateLimitMiddleware` per-IP throttling, `Cardscape.Api.Endpoints.Admin` admin-only paths, `IsAdmin` claim cached + DB fallback. |
+| V3.7 | Defences against session abuse | Implemented | `RateLimitMiddleware` per-IP throttling and admin-only paths. Cached `is_admin` authorization fails closed when the mandatory claim is absent; strict mode reads the live database. |
 
 ## V4 — Access control
 

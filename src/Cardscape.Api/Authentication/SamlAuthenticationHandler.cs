@@ -99,10 +99,9 @@ public sealed class SamlAuthenticationHandler
             // 404. That hides the failure mode: the operator
             // dashboard surfaces the URL space as "endpoint
             // missing" and spends the next hour wondering why
-            // the static `/saml/{slug}/login` fallback never
-            // runs. The truthful status is 501 — the SAML
-            // handler IS registered (so the fallback endpoint
-            // is correctly bypassed), but no IdP is configured
+            // endpoint dispatch never runs. The truthful status
+            // is 501 — the SAML handler is registered and owns
+            // this route, but no IdP is configured
             // for this workspace, so the request cannot be
             // processed. The 501 makes the failure mode
             // self-explanatory in the operator log.

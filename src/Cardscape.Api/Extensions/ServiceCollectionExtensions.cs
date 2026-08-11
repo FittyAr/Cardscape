@@ -366,11 +366,9 @@ public static class ServiceCollectionExtensions
             // operator has flipped
             // Cardscape:Api:AdminAuthorization:CacheAdminClaim
             // to false, in which case the handler always
-            // reads users.IsAdmin from the database. Both
-            // paths fall back to a users-table lookup for
-            // pre-v1.2.0 tokens that don't carry the claim,
-            // so the migration is automatic and existing
-            // sessions keep working until they expire. Used
+            // reads users.IsAdmin from the database. Cached
+            // mode fails closed when the claim is absent;
+            // there is no compatibility lookup. Used
             // by the /api/admin/* endpoints (GDPR DSR,
             // SOC 2 control evidence export, etc.).
             options.AddPolicy(

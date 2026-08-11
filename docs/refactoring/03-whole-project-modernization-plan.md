@@ -80,7 +80,7 @@ Reglas permanentes:
 
 ### Fase 2 — Superficies críticas
 
-- [ ] Autenticación/autorización: JWT, API tokens, OAuth/OIDC, SAML, SCIM, 2FA, políticas y aislamiento multi-tenant.
+- [ ] Autenticación/autorización: JWT, API tokens, OAuth/OIDC, SAML, SCIM, 2FA, políticas y aislamiento multi-tenant. La autorización admin con claim cacheado ya falla cerrada y SAML tiene un único dueño para sus rutas de protocolo; continúa la auditoría de refresh tokens y proveedores externos.
 - [ ] Persistencia: modelo EF, transacciones, concurrencia, índices, consultas N+1, tracking y compatibilidad de los tres providers.
 - [ ] Gestión de secretos, cifrado, datos personales, borrado/anominización y retención.
 - [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia.
@@ -91,7 +91,7 @@ Reglas permanentes:
 ### Fase 3 — API y contratos
 
 - [ ] Revisar semántica HTTP, Problem Details, validación, cancelación y códigos de estado de todos los endpoints.
-- [ ] Eliminar endpoints legacy y contratos duplicados porque no se exige retrocompatibilidad. Retirados aliases `new*` de mutaciones Board/List/Card, rutas planas legacy de Comments, `/auth/logout`, `members_assign`, la ruta corta de Google Calendar, enums numéricos en JSON/rutas/query y el comando/store `AddAsync` de idempotencia sin consumidores; continúa la auditoría del resto de la API.
+- [ ] Eliminar endpoints legacy y contratos duplicados porque no se exige retrocompatibilidad. Retirados aliases `new*` de mutaciones Board/List/Card, rutas planas legacy de Comments, `/auth/logout`, `members_assign`, la ruta corta de Google Calendar, enums numéricos en JSON/rutas/query, el comando/store `AddAsync` de idempotencia, el fallback admin para JWT antiguos y cuatro mappings SAML inalcanzables; continúa la auditoría del resto de la API.
 - [ ] Verificar OpenAPI/Scalar y sincronía con SDK/Web.
 - [ ] Normalizar paginación, filtros, límites y errores.
 
@@ -143,6 +143,8 @@ Reglas permanentes:
 | 2026-08-11 | Claim atómico de background jobs | Cada candidato usa UPDATE guardado por status + RowVersion; workers concurrentes reciben batches disjuntos | Build 0/0; suite 799 pass, 0 fail, 1 skip | `b1dfed7` |
 | 2026-08-11 | Transporte e identidad MCP | stdio ficticio reemplazado por Streamable HTTP stateful autenticado; principal MCP propagado entre scopes del SDK | Build 0/0; suite 802 pass, 0 fail, 1 skip | `46dd323` |
 | 2026-08-11 | Reservas idempotentes atómicas | REST y MCP reservan antes del efecto; contendientes cross-process esperan/reproducen; errores y leases permiten recuperación | Build 0/0; suite 808 pass, 0 fail, 1 skip | Pendiente |
+| 2026-08-11 | Contratos preproducción canónicos | Eliminados aliases de mutaciones/comentarios, enums numéricos y superficies REST/MCP/Blazor duplicadas; SDK serializa con sus opciones configuradas | Build 0/0; suite 814 pass, 0 fail, 1 skip | `d136775` |
+| 2026-08-11 | Autorización fail-closed + ownership SAML | JWT sin `is_admin` ya no usa fallback de BD; handler SAML es dueño único de las rutas de protocolo | Build 0/0; suite 814 pass, 0 fail, 1 skip | Pendiente |
 
 ## 5. Criterio de completitud
 

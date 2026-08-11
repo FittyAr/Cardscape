@@ -145,3 +145,11 @@
 - [x] Remove REST logout, MCP assignment and Google Calendar navigation aliases.
 - [x] Add exact positive/negative contract and architecture regressions.
 - [x] Run focused/full Release validation, assertion/gap review, document and publish.
+
+## Fail-closed administrative authentication
+
+- [x] Remove the pre-v1.2.0 database fallback from cached admin authorization.
+- [x] Change the missing-claim regression to require a fail-closed result even for a live admin row.
+- [x] Remove unreachable SAML protocol fallback mappings while preserving the handler and admin endpoints.
+- [x] Reconcile operational and ASVS documentation with the strict contract.
+- [x] Run focused/full Release validation, assertion/gap review, update the modernization plan and publish.

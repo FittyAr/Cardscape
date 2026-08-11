@@ -296,3 +296,11 @@
 - SDK defect found during the audit: subclients used `JsonContent.Create` without the configured `JsonOptions`, so enum request bodies remained numeric even after response options were strict.
 - Acceptance checklist: camel-case enum names only; numeric JSON/query/route values rejected; SDK applies configured JSON options to every body; all four aliases absent; canonical alternatives remain tested.
 - Static pairing automation was attempted once as required, but the installed skill package does not contain its documented analyzer script; established xUnit integration/architecture/SDK suites were paired directly.
+
+## Fail-closed administrative authentication (2026-08-11)
+
+- Bounded target: `AdminOnlyAuthorizationHandler`, its focused unit tests, the SAML protocol/admin route split, and normative operations/security documentation.
+- Confirmed compatibility path: with `CacheAdminClaim=true`, tokens without the mandatory `is_admin` claim silently fell through to a users-table lookup and could still authorize.
+- Confirmed dead surface: four minimal API SAML protocol routes returned a fallback 501 but were always intercepted by the unconditionally registered `SamlAuthenticationHandler`; only the administration routes in that endpoint module are dispatchable.
+- Acceptance checklist: cached mode fails closed when the claim is absent; live-database mode remains available only when explicitly configured; the four unreachable SAML fallback mappings are removed; the actual SAML handler and administration endpoints remain; focused and full Release validation pass.
+- Conventions: xUnit v3 + FluentAssertions on VSTest under SDK 10.0.302.

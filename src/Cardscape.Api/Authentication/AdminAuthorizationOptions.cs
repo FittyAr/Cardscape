@@ -14,8 +14,8 @@ public sealed class AdminAuthorizationOptions
     /// <summary>
     /// When <c>true</c> (the default), the handler reads the
     /// <c>is_admin</c> claim embedded in the JWT at mint
-    /// time and only hits the database if the claim is
-    /// absent (e.g. a pre-v1.2.0 token still in circulation).
+    /// time and fails closed when the claim is absent or is
+    /// not exactly <c>true</c>.
     /// When <c>false</c>, the handler ALWAYS reads
     /// <c>users.IsAdmin</c> from the database. The trade-off:
     /// <list type="bullet">

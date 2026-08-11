@@ -117,8 +117,7 @@ public class SamlEndpointsTests
     public async Task Login_ForUnknownSlug_Returns501()
     {
         // BETA-2-#12 — see SamlAuthenticationHandler.cs. The
-        // handler is registered (so the static /saml/{slug}/login
-        // fallback that returns 501 is correctly bypassed), but
+        // handler owns the /saml/{slug} protocol surface, but
         // the per-workspace IdP config is missing, so the
         // request cannot be processed. The truthful status is
         // 501, not 404 — see the BETA-2-#12 comment for why

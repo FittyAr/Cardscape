@@ -203,3 +203,14 @@
 - Pseudo-mutation review: enabling numeric enum values, accepting numeric Search/Extension kinds, remapping REST/MCP/Blazor aliases, bypassing SDK options, or restoring `KindName` is killed by exact status/body/path/catalog/route/value assertions and compilation of the typed consumers.
 - Assertion review: generated tests cover equality, string content, negative collection membership, JSON value kind and exact cardinality; none is assertion-free, trivial-only, tautological or unawaited. The advertised `.NET` analysis extension is absent from the installed package, so xUnit/FluentAssertions classification used repository conventions.
 - Full validation: Release build 0 warnings / 0 errors; suite 814 passed / 0 failed / 1 skipped.
+
+## Fail-closed administrative authentication
+
+- Status: complete.
+- Security boundary: cached authorization now requires the token-minted `is_admin` claim and never consults persistence when that claim is absent or false.
+- Configuration boundary: `CacheAdminClaim=false` deliberately retains the live users-table decision for immediate revocation deployments; this is an active posture, not a compatibility fallback.
+- SAML boundary: the authentication request handler is the sole owner of `/saml/{slug}/*`; minimal API retains only authenticated workspace administration routes.
+- Focused validation: `AdminOnlyAuthorizationHandlerTests` 7/7; `SamlEndpointsTests` 3/3; Release build 0 warnings / 0 errors.
+- Pseudo-mutation review: restoring the missing-claim DB lookup is killed by `CacheEnabled_ClaimMissing_FailsClosedEvenWhenDatabaseGrantsAdmin`; claim true/false and explicitly configured live lookup remain independently covered.
+- Assertion review: the changed regression asserts the authorization outcome against an intentionally contradictory admin row; it is neither assertion-free, tautological nor dependent on implementation details.
+- Full validation: Release suite 814 passed / 0 failed / 1 skipped.

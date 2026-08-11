@@ -66,7 +66,10 @@ operator postures are supported:
 
 The handler reads the `is_admin` claim out of the JWT and trusts
 it as a snapshot of the user's admin status at login. **No
-database read on the hot path**. The trade-off is that a freshly
+database read on the hot path**. The claim is mandatory in this
+mode: a missing or malformed value fails closed with 403 and is
+never repaired through a database compatibility lookup. The
+trade-off is that a freshly
 revoked (or freshly granted) admin status does not take effect
 until the affected user's access token expires — by default, 60
 minutes. The user can also trigger the change by logging out and
@@ -92,11 +95,6 @@ requires admin revocation to be immediate (e.g. PCI-DSS, certain
 FedRAMP controls), or for short-lived incident-response
 configurations where the operator flips the flag during the
 incident and flips it back when it's over.
-
-The pre-v1.2.0 migration is unaffected by this flag — a token
-that has no `is_admin` claim at all (e.g. one issued before the
-claim existed) always falls through to the database lookup, so
-rolling the flag has no migration cost.
 
 ---
 
