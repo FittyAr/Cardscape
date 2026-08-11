@@ -120,6 +120,24 @@
 - [x] Prove single-use and invalid-token behavior.
 - [x] Run narrow and full Release validation with assertion review.
 
+## Phase 1 follow-up: current-user composition
+
+### Bounded target inventory
+
+- `Application.CurrentUser`: shared claims-to-`ICurrentUser` mapping, composed by `AddCardscapeApplication`.
+- `McpCurrentUser`: duplicate MCP mapping with an extra `Scopes` property absent from the interface and unused by consumers.
+- `McpHttpContextCurrentUserAccessor`: correct MCP transport adapter existed but production did not register it.
+- E2E fixture injected an API-side no-op accessor to make the MCP DI graph validate, masking the production composition gap.
+
+### Acceptance checklist
+
+- [x] Reuse Application's `CurrentUser` in MCP.
+- [x] Register the MCP-owned `ICurrentUserAccessor` adapter in production.
+- [x] Remove the duplicate current-user implementation and unused Scopes surface.
+- [x] Remove the E2E-only composition workaround.
+- [x] Add an architecture invariant preventing MCP from reimplementing `ICurrentUser`.
+- [x] Run narrow MCP E2E and architecture validation, then the full suite.
+
 ## Phase 1 follow-up: calendar feed contract
 
 ### Bounded target inventory

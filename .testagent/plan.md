@@ -20,6 +20,15 @@
 4. [x] Run the two narrow test classes and perform assertion/gap review.
 5. [x] Run full Release build and suite.
 
+## Phase 1 follow-up: current-user composition
+
+1. [x] Replace MCP's `ICurrentUser` override with `ICurrentUserAccessor` registration.
+2. [x] Delete `McpCurrentUser` and the fixture workaround.
+3. [x] Update normative MCP architecture documentation.
+4. [x] Add `Mcp_DoesNotReimplementCurrentUser`.
+5. [x] Run architecture and MCP E2E tests narrowly.
+6. [x] Run full Release build and suite.
+
 ## Phase 1 follow-up: calendar feed contract
 
 1. [x] Rename `IIcalendarService` to `ICalendarFeedRenderer`.

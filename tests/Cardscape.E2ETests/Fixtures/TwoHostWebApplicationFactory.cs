@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
@@ -218,27 +217,6 @@ public sealed class McpHostFactory : WebApplicationFactory<Cardscape.Mcp.Program
     {
         _port = port;
         _ = CreateClient();
-    }
-
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        // The MCP does not register the API's
-        // ICurrentUserAccessor (it uses API-token
-        // auth, not the user-context pipeline).
-        // The Application layer's scoped ICurrentUser
-        // is still constructed at boot for the
-        // domain-event side-effects; without an
-        // accessor the DI graph fails validation.
-        // A no-op accessor returning null is the
-        // right answer for the MCP (no
-        // ClaimsPrincipal context).
-        builder.ConfigureTestServices(services =>
-        {
-            services.AddHttpContextAccessor();
-            services.AddSingleton<Cardscape.Application.Abstractions.Security.ICurrentUserAccessor>(
-                new Cardscape.Api.Authentication.HttpContextCurrentUserAccessor(
-                    new HttpContextAccessor()));
-        });
     }
 
     protected override IHost CreateHost(IHostBuilder builder)

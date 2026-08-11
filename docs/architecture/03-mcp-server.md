@@ -253,30 +253,23 @@ The handler is **constant-time** for the bcrypt comparison.
 ## 6. Current user
 
 The Application layer's handlers read the current user via
-`ICurrentUser`. The MCP server registers an `ICurrentUser`
-implementation that resolves from the authenticated principal:
+`ICurrentUser`. Both hosts reuse Application's `CurrentUser`
+mapping and own only the transport adapter that supplies the
+authenticated principal. MCP registers
+`McpHttpContextCurrentUserAccessor` as `ICurrentUserAccessor`:
 
 ```csharp
-public sealed class McpCurrentUser : ICurrentUser
+public sealed class McpHttpContextCurrentUserAccessor(
+    IHttpContextAccessor accessor) : ICurrentUserAccessor
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    public McpCurrentUser(IHttpContextAccessor a) => _httpContextAccessor = a;
-
-    public UserId Id =>
-        new(UserId.Parse(_httpContextAccessor.HttpContext!.User
-            .FindFirstValue(ClaimTypes.NameIdentifier)!));
-
-    public bool IsAuthenticated => Id.Value != Guid.Empty;
-
-    public IReadOnlyCollection<string> Scopes =>
-        _httpContextAccessor.HttpContext!.User
-            .FindAll("scope").Select(c => c.Value).ToList();
+    public ClaimsPrincipal? GetCurrentPrincipal() =>
+        accessor.HttpContext?.User;
 }
 ```
 
-`ICurrentUser` is the same interface the REST API uses. The
-handlers don't know whether they were invoked from a REST
-endpoint or an MCP tool.
+The shared `CurrentUser` turns that principal into the same
+`ICurrentUser` contract used by REST. Handlers do not know
+whether they were invoked from an API endpoint or an MCP tool.
 
 ## 7. Tools (the read/write surface for AI)
 

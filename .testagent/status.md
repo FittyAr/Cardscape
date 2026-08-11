@@ -62,3 +62,12 @@
 - Narrow validation: renderer unit 1/1; board export/iCalendar integration 6/6.
 - Assertion/gap review: `RenderBoardAsync_WithDueCard_UsesInjectedClockAndRfc5545Dates` asserts exact DTSTAMP, DTSTART, DTEND, summary, description and calendar boundaries from valid domain aggregates. Existing integration tests retain authorization, 404, media type, empty feed and VEVENT behavior.
 - Full validation: Release build 0 warnings/0 errors; suite 744 passed, 0 failed, 1 skipped.
+
+## Phase 1 follow-up: current-user composition
+
+- Research: completed.
+- Plan: completed.
+- Implementation: completed.
+- Narrow validation: Architecture 14/14; MCP E2E 5/5.
+- Assertion/gap review: `Mcp_DoesNotReimplementCurrentUser` inspects the compiled MCP assembly for any concrete `ICurrentUser` implementation. The E2E suite now boots both real composition roots without injecting an accessor and exercises authenticated tools plus cross-process notifications.
+- Full validation: Release build 0 warnings/0 errors; suite 745 passed, 0 failed, 1 skipped.

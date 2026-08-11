@@ -43,10 +43,9 @@ public static class ServiceCollectionExtensions
         services.AddAuthorization();
         services.AddHttpContextAccessor();
 
-        // The MCP server has its own ICurrentUser implementation so
-        // Application layer handlers can read the API-token
-        // principal without coupling to ASP.NET.
-        services.AddScoped<ICurrentUser, McpCurrentUser>();
+        // Reuse Application's CurrentUser mapping. MCP owns only the
+        // transport adapter that exposes its HttpContext principal.
+        services.AddScoped<ICurrentUserAccessor, McpHttpContextCurrentUserAccessor>();
 
         // ── Real-time (MCP tools that mutate can push to the
         //    same SignalR hub the Web client listens to) ──────

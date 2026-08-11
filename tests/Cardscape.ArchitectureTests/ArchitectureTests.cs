@@ -196,6 +196,22 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void Mcp_DoesNotReimplementCurrentUser()
+    {
+        var mcpAssembly = typeof(Cardscape.Mcp.Extensions.ServiceCollectionExtensions).Assembly;
+        Type currentUserContract = typeof(Cardscape.Application.Abstractions.Security.ICurrentUser);
+
+        string[] implementations = mcpAssembly.GetTypes()
+            .Where(type => type.IsClass && currentUserContract.IsAssignableFrom(type))
+            .Select(type => type.FullName!)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        implementations.Should().BeEmpty(
+            "hosts should adapt ClaimsPrincipal through ICurrentUserAccessor and reuse Application's CurrentUser mapping");
+    }
+
+    [Fact]
     public void Domain_Entities_AreSealed()
     {
         // Aggregates and entities are sealed unless polymorphism is required.
