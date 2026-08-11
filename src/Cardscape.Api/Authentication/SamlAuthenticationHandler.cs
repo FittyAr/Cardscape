@@ -246,7 +246,6 @@ public sealed class SamlAuthenticationHandler
             ?? "/saml/callback";
         string fragment =
             $"access_token={Uri.EscapeDataString(access)}"
-            + $"&expires_at={Uri.EscapeDataString(at.AddHours(1).ToString("O"))}"
             + $"&user_id={Uri.EscapeDataString(user.Id.Value.ToString())}"
             + $"&user_email={Uri.EscapeDataString(user.Email.Value)}"
             + $"&user_name={Uri.EscapeDataString(user.DisplayName.Value)}";

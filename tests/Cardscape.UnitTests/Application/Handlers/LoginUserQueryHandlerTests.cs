@@ -93,7 +93,6 @@ public class LoginUserQueryHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.RequiresTotp.Should().BeTrue();
         result.Value.AccessToken.Should().BeNull();
-        result.Value.AccessTokenExpiresAt.Should().BeNull();
         result.Value.PendingTotpToken.Should().NotBeNullOrWhiteSpace();
         result.Value.User.Email.Should().Be("alice@example.com");
         ctx.Tokens.AccessTokensIssued.Should().BeEmpty();

@@ -28,7 +28,6 @@ public sealed record UserSummaryDto(Guid Id, string Email, string DisplayName);
 /// </summary>
 public sealed record AuthResponseDto(
     string? AccessToken,
-    DateTimeOffset? AccessTokenExpiresAt,
     UserSummaryDto User,
     bool RequiresTotp = false,
     string? PendingTotpToken = null);

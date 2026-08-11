@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Hosting;
+using Cardscape.Infrastructure.Security;
 using Cardscape.Tests.Common.Fakes;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
@@ -35,6 +36,11 @@ public sealed class InfrastructureOptionsValidationTests
         revocation.InitialDelay.Should().Be(TimeSpan.FromMinutes(1));
         revocation.Enabled.Should().BeTrue();
 
+        JwtOptions jwt = host.Services.GetRequiredService<IOptions<JwtOptions>>().Value;
+        jwt.Issuer.Should().Be("Cardscape");
+        jwt.Audience.Should().Be("Cardscape");
+        jwt.AccessTokenMinutes.Should().Be(60);
+
         await host.StopAsync(TestContext.Current.CancellationToken);
     }
 
@@ -66,6 +72,21 @@ public sealed class InfrastructureOptionsValidationTests
 
         await act.Should().ThrowAsync<OptionsValidationException>()
             .Where(exception => exception.OptionsType == typeof(RevocationSweeperOptions));
+    }
+
+    [Theory]
+    [InlineData("Jwt:Issuer", "")]
+    [InlineData("Jwt:Audience", "")]
+    [InlineData("Jwt:AccessTokenMinutes", "4")]
+    [InlineData("Jwt:AccessTokenMinutes", "1441")]
+    public async Task JwtOptions_WithInvalidValue_FailStartupValidation(string key, string value)
+    {
+        using IHost host = CreateHost(new Dictionary<string, string?> { [key] = value });
+
+        Func<Task> act = () => host.StartAsync(TestContext.Current.CancellationToken);
+
+        await act.Should().ThrowAsync<OptionsValidationException>()
+            .Where(exception => exception.OptionsType == typeof(JwtOptions));
     }
 
     private static IHost CreateHost(IReadOnlyDictionary<string, string?> overrides)

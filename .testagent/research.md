@@ -313,3 +313,11 @@
 - Decision: because backward compatibility is explicitly unnecessary, remove the fictitious feature rather than preserve an insecure contract. A future refresh-session feature must start with a persisted, hashed, single-use rotating session aggregate.
 - Acceptance checklist: no `/api/auth/refresh`; auth JSON and external callback fragments expose access tokens only; `ITokenService` only issues signed access tokens; Web never stores a Cardscape refresh token; Google integration refresh tokens remain untouched; focused and full Release validation pass.
 - Static pairing analyzer attempt: the skill's documented Roslyn file is not runnable under the repository's SDK 10 invocation (`dotnet run` found no project); established xUnit handler and endpoint suites are used directly.
+
+## Canonical JWT expiration (2026-08-11)
+
+- Bounded target: `JwtOptions`, infrastructure DI validation, `JwtTokenService`, authentication response DTOs, password/TOTP/external/SAML callbacks and focused unit tests.
+- Confirmed contract drift: the JWT `exp` used configurable `AccessTokenMinutes`, while four application handlers and SAML independently advertised `now + 1 hour`; OAuth/SAML callbacks emitted `expires_at`, but Blazor never consumed it.
+- Decision: remove redundant `AccessTokenExpiresAt`/`expires_at`; the signed JWT `exp` is the sole expiration contract. Validate JWT configuration at host startup instead of accepting unsafe or nonsensical lifetimes.
+- Acceptance checklist: no duplicated expiration fields/calculations; configured lifetime is reflected exactly in JWT `exp`; issuer/audience/signing key/lifetime fail startup validation outside safe bounds; default settings remain valid; focused and full Release validation pass.
+- Static pairing analyzer attempt: the documented Roslyn file again cannot run under the pinned SDK 10 command because no runnable project/file-based app is available; existing handler/options suites plus a focused token-service test are paired directly.

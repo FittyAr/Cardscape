@@ -162,3 +162,11 @@
 - [x] Remove refresh-token parsing and localStorage persistence from Blazor Web.
 - [x] Add exact HTTP regressions for response shape and removed route.
 - [x] Run focused/full Release validation, assertion/gap review, update documentation and publish.
+
+## Canonical JWT expiration
+
+- [x] Remove `AccessTokenExpiresAt` and callback `expires_at` duplication.
+- [x] Make the signed JWT `exp` the only expiration source.
+- [x] Add fail-fast validation for issuer, audience, 256-bit signing key and 5-minute-to-24-hour lifetime.
+- [x] Prove custom JWT expiration and invalid option boundaries with focused tests.
+- [x] Run focused/full Release validation, assertion/gap review, update documentation and publish.

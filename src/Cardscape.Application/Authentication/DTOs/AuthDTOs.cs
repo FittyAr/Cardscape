@@ -17,7 +17,6 @@ public sealed record LoginWithTotpRequest(string PendingTotpToken, string Code);
 /// </summary>
 public sealed record AuthResponse(
     string? AccessToken,
-    DateTimeOffset? AccessTokenExpiresAt,
     UserSummary User,
     bool RequiresTotp = false,
     string? PendingTotpToken = null);

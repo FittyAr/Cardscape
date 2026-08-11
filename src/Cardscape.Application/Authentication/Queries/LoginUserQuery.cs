@@ -108,14 +108,12 @@ public static class LoginUserQueryHandler
         var access = tokens.IssueAccessToken(user, ["user"]);
         return new AuthResponse(
             AccessToken: access,
-            AccessTokenExpiresAt: clock.UtcNow.AddHours(1),
             User: new UserSummary(user.Id.Value, user.Email.Value, user.DisplayName.Value));
     }
 
     private static AuthResponse BuildChallenge(User user, string pendingToken) =>
         new(
             AccessToken: null,
-            AccessTokenExpiresAt: null,
             User: new UserSummary(user.Id.Value, user.Email.Value, user.DisplayName.Value),
             RequiresTotp: true,
             PendingTotpToken: pendingToken);

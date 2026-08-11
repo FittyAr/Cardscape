@@ -205,7 +205,6 @@ public static class ExternalLoginEndpoints
                 ?? "/oauth/callback";
             string fragment =
                 $"access_token={Uri.EscapeDataString(auth.Value.AccessToken ?? string.Empty)}"
-                + $"&expires_at={Uri.EscapeDataString((auth.Value.AccessTokenExpiresAt ?? DateTimeOffset.UtcNow).ToString("O"))}"
                 + $"&user_id={Uri.EscapeDataString(auth.Value.User.Id.ToString())}"
                 + $"&user_email={Uri.EscapeDataString(auth.Value.User.Email)}"
                 + $"&user_name={Uri.EscapeDataString(auth.Value.User.DisplayName)}";

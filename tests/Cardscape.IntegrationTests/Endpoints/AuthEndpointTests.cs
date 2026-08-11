@@ -18,6 +18,7 @@ public sealed class AuthEndpointTests
         registerResponse.IsSuccessStatusCode.Should().BeTrue();
         string registerJson = await registerResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         using JsonDocument registerDocument = JsonDocument.Parse(registerJson);
+        registerDocument.RootElement.TryGetProperty("accessTokenExpiresAt", out _).Should().BeFalse();
         registerDocument.RootElement.TryGetProperty("refreshToken", out _).Should().BeFalse();
         registerDocument.RootElement.TryGetProperty("refreshTokenExpiresAt", out _).Should().BeFalse();
         AuthResponse? registered = JsonSerializer.Deserialize<AuthResponse>(registerJson, TestJson.Options);
@@ -30,6 +31,7 @@ public sealed class AuthEndpointTests
         loginResponse.IsSuccessStatusCode.Should().BeTrue();
         string loginJson = await loginResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         using JsonDocument loginDocument = JsonDocument.Parse(loginJson);
+        loginDocument.RootElement.TryGetProperty("accessTokenExpiresAt", out _).Should().BeFalse();
         loginDocument.RootElement.TryGetProperty("refreshToken", out _).Should().BeFalse();
         loginDocument.RootElement.TryGetProperty("refreshTokenExpiresAt", out _).Should().BeFalse();
         AuthResponse? logged = JsonSerializer.Deserialize<AuthResponse>(loginJson, TestJson.Options);

@@ -225,3 +225,15 @@
 - Pseudo-mutation review: restoring the route, either auth response property, or the OAuth placeholder is killed by exact negative route/property assertions. Removing access-token issuance remains covered by positive non-empty token and full handshake assertions.
 - Assertion review: the new checks use exact HTTP status, negative JSON property membership and positive protocol behavior; none is assertion-free, tautological or truthiness-only.
 - Full validation: Release suite 815 passed / 0 failed / 1 skipped.
+
+## Canonical JWT expiration
+
+- Status: complete.
+- Root cause: the token abstraction exposed only the serialized JWT while response builders independently guessed its expiration.
+- Chosen boundary: no duplicate response metadata; consumers rely on the signed `exp` claim and hosts reject invalid JWT configuration before serving traffic.
+- Host ownership: shared Infrastructure validates issuer/audience/lifetime; only the API host requires the HMAC signing secret, so MCP/Seeder do not receive an unnecessary secret.
+- Focused validation: JWT/options 16/16; auth endpoint 6/6; cross-process E2E 7/7; Release build 0 warnings / 0 errors.
+- Regression evidence: `IssueAccessToken_UsesConfiguredLifetimeForSignedExpiration` asserts exact 17-minute `nbf`/`exp`, issuer and audience; `JwtOptions_WithInvalidValue_FailStartupValidation` covers empty issuer/audience and both lifetime bounds; the two `AddApiAuthentication_*` tests cover missing/short production keys.
+- Pseudo-mutation review: hardcoding 60 minutes, loosening either bound, accepting blank issuer/audience, moving the signing secret back into shared Infrastructure or weakening API key checks is killed by exact token, startup and E2E assertions.
+- Assertion review: exact timestamps, values, option types, exception messages and host boot behavior are asserted; no generated test is assertion-free, tautological or truthiness-only.
+- Full validation: Release suite 822 passed / 0 failed / 1 skipped.

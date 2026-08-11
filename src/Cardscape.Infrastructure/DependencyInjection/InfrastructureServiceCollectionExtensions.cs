@@ -420,7 +420,14 @@ public static class InfrastructureServiceCollectionExtensions
             services.AddSingleton<IRateLimiter, RateLimiter>();
         }
 
-        services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
+        services.AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection("Jwt"))
+            .Validate(
+                options => !string.IsNullOrWhiteSpace(options.Issuer)
+                    && !string.IsNullOrWhiteSpace(options.Audience)
+                    && options.AccessTokenMinutes is >= 5 and <= 1_440,
+                "JWT requires non-empty issuer/audience and an access-token lifetime between 5 minutes and 24 hours.")
+            .ValidateOnStart();
 
         // OAuth 2.0 / OIDC for third-party apps. The repos are
         // scoped (they wrap the EF Core DbContext); the service

@@ -97,7 +97,7 @@ artefact the deployer needs to produce.
 |---|---|---|
 | Source-code integrity | ✅ | Husky pre-commit (`dotnet format --verify-no-changes`), branch protection in the deployer's GitHub org, signed commits deferred to v3.0+ |
 | Dependency hygiene | ✅ | Central Package Management (`Directory.Packages.props`), `dotnet list package --vulnerable --include-transitive` in CI |
-| Authentication | ✅ | PBKDF2-SHA256 (100k iterations) password hashing; JWT (HS256, 60-min access token / 30-day refresh); self-service revocation (`POST /api/auth/revoke`); `JwtRevocationValidator` rejects revoked tokens on every request; `RevocationSweeper` purges expired revocations every 30 minutes |
+| Authentication | ✅ | PBKDF2-SHA256 (100k iterations) password hashing; JWT (HS256, configurable 60-minute default with signed `exp`, no refresh bearer); self-service revocation (`POST /api/auth/revoke`); `JwtRevocationValidator` rejects revoked tokens on every request; `RevocationSweeper` purges expired revocations every 30 minutes |
 | Authorization | ✅ | Role-based (`WorkspaceRole` Admin / Member / Observer, `BoardMember`); `IsAdmin` claim cached in JWT (no DB roundtrip on every admin request); `AdminOnlyPolicy` + `McpSubscriptionsAdminPolicy` gate the admin surface |
 | Session management | ✅ | Bearer-only; no cookie session; `ClockSkew = 1 minute`; revocation endpoint exempt from the revocation validator for idempotency |
 | Data protection | ✅ | Soft-delete + 30-day grace + automated `Anonymise`; `RetentionSweeper` purges; DSR export is a per-user zip (data.json + attachments); right-to-erasure is the same endpoint as admin delete |

@@ -81,6 +81,10 @@ revocation that takes an hour to propagate is acceptable for
 almost every real-world incident. Pair it with a short
 `Jwt:AccessTokenMinutes` (e.g. 15) if you want faster
 propagation without paying the per-request DB cost.
+The value is validated at startup and must be between 5 and
+1,440 minutes. JWT issuer and audience must be non-empty. The API
+host separately requires an HMAC signing key containing at least
+32 UTF-8 bytes; non-API hosts are not forced to receive that secret.
 
 ### `CacheAdminClaim = false`
 

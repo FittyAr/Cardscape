@@ -95,7 +95,6 @@ public static class RegisterUserCommandHandler
 
         return Result.Success(new AuthResponse(
             access,
-            clock.UtcNow.AddHours(1),
             new UserSummary(
                 userResult.Value.Id.Value,
                 userResult.Value.Email.Value,
