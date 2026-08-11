@@ -171,3 +171,28 @@
 - [x] Deny anonymous, insufficient-scope and unclassified calls before tool execution.
 - [x] Keep an explicit closed catalog and prove it exactly matches the advertised MCP tools.
 - [x] Run narrow and full Release validation with assertion/gap review.
+
+## Phase 2 follow-up: MCP read surfaces
+
+### Bounded target inventory
+
+- Five MCP resources execute workspace/board/card queries without checking token scopes.
+- Four data-backed prompts execute card/list/notification queries without checking token scopes.
+- Resource subscribe/unsubscribe handlers accept URIs without checking the independent `read` grant.
+- The SDK exposes request filters for resource discovery/read, prompt discovery/render/completion and subscriptions.
+
+### Acceptance checklist
+
+- [x] Extract scope-claim authorization from the tool catalog into a reusable MCP-host policy.
+- [x] Require exact `read` scope for resource listing/templates/read operations.
+- [x] Require exact `read` scope for prompt listing/render operations.
+- [x] Require exact `read` scope for prompt/resource completion suggestions.
+- [x] Require exact `read` scope before subscribe/unsubscribe reaches the broadcaster.
+- [x] Preserve Application membership/tenant authorization as the second authorization boundary.
+- [x] Prove allow, deny and short-circuit behavior; run narrow and full validation.
+
+### Residual isolation risk
+
+- Subscription creation still needs URI-level membership validation, and active subscriptions need a
+  revocation strategy when board membership changes. The broadcaster currently retains sessions rather
+  than user identities, so this requires a dedicated identity-aware subscription block.

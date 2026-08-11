@@ -484,6 +484,11 @@ tool. Neither scope implies the other. Missing grants return
 `mcp.scope.forbidden`; tools missing from the catalog are denied
 with `mcp.scope.unclassified` until explicitly reviewed.
 
+The same transport policy requires `read` before resource discovery,
+resource reads, prompt discovery/rendering, completion suggestions,
+and resource subscribe/unsubscribe handlers execute. Domain queries
+then enforce workspace and board membership as the inner boundary.
+
 The MCP server does **not** support cookie auth or JWT
 auth. The AI client is not a browser; the bearer token is
 the right auth method for an AI client.

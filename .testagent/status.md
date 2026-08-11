@@ -86,3 +86,17 @@
 - The referenced `.NET` extension file was absent from the installed skill package; framework
   classification used the repository's xUnit/FluentAssertions conventions directly.
 - Full validation: Release build 0 warnings / 0 errors; suite 757 passed / 0 failed / 1 skipped.
+
+## MCP resource, prompt and subscription scopes
+
+- Status: complete.
+- Confirmed bypass: authenticated write-only tokens reach every non-tool read surface because only
+  `tools/call` has a scope filter.
+- Narrow validation: 17/17 (tool policy, reusable scope policy and real SDK filter composition).
+- Pseudo-mutation review: exact-scope comparison, authentication check, denial exception and handler
+  short-circuit are killed; removing any of the eight data-bearing filters fails the composition test.
+- Assertion review: no assertion-free/trivial tests; exception message, negative side effect and exact
+  filter cardinality are asserted. The skill package still lacks its referenced .NET extension file,
+  so xUnit/FluentAssertions classification follows repository conventions directly.
+- Residual risk recorded: subscription membership and post-subscription membership revocation.
+- Full validation: Release build 0 warnings / 0 errors; suite 763 passed / 0 failed / 1 skipped.

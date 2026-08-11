@@ -71,3 +71,11 @@
 - [x] Add an architecture test comparing the catalog with reflection-discovered tools.
 - [x] Run narrow tests and pseudo-mutation/assertion review.
 - [x] Run full build and full suite.
+
+## MCP resource, prompt and subscription scopes
+
+- [x] Inventory all non-tool MCP request surfaces and SDK filter hooks.
+- [x] Extract reusable exact-scope authorization and keep tool classification separate.
+- [x] Register read-scope filters for discovery, reads, prompts, completion and subscriptions.
+- [x] Add focused behavioral tests for the reusable policy and real filter composition.
+- [x] Review assertions/gaps, run full Release validation and update architecture plan.

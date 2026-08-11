@@ -11,8 +11,8 @@ namespace Cardscape.Mcp.Authorization;
 /// </summary>
 public static class McpToolScopePolicy
 {
-    public const string ScopeClaimType = "scope";
-    public const string ForbiddenErrorCode = "mcp.scope.forbidden";
+    public const string ScopeClaimType = McpScopeAuthorization.ScopeClaimType;
+    public const string ForbiddenErrorCode = McpScopeAuthorization.ForbiddenErrorCode;
     public const string UnclassifiedErrorCode = "mcp.scope.unclassified";
 
     public static IReadOnlyDictionary<string, Scope> RequiredScopes { get; } =
@@ -25,16 +25,7 @@ public static class McpToolScopePolicy
             throw new McpException($"{UnclassifiedErrorCode}: MCP tool is not classified for authorization.");
         }
 
-        string requiredValue = required.ToWire();
-        bool granted = principal?.Identity?.IsAuthenticated == true
-            && principal.FindAll(ScopeClaimType)
-                .Any(claim => string.Equals(claim.Value, requiredValue, StringComparison.Ordinal));
-
-        if (!granted)
-        {
-            throw new McpException(
-                $"{ForbiddenErrorCode}: Tool '{toolName}' requires the '{requiredValue}' scope.");
-        }
+        McpScopeAuthorization.Authorize(required, toolName, principal);
     }
 
     public static ValueTask<TResult> AuthorizeAndInvokeAsync<TResult>(
@@ -42,9 +33,12 @@ public static class McpToolScopePolicy
         ClaimsPrincipal? principal,
         Func<ValueTask<TResult>> next)
     {
-        ArgumentNullException.ThrowIfNull(next);
-        Authorize(toolName, principal);
-        return next();
+        if (string.IsNullOrWhiteSpace(toolName) || !RequiredScopes.TryGetValue(toolName, out Scope required))
+        {
+            throw new McpException($"{UnclassifiedErrorCode}: MCP tool is not classified for authorization.");
+        }
+
+        return McpScopeAuthorization.AuthorizeAndInvokeAsync(required, toolName, principal, next);
     }
 
     private static FrozenDictionary<string, Scope> CreateCatalog()

@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.DependencyInjection;
+using Cardscape.Domain.Security;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Mcp.Authentication;
 using Cardscape.Mcp.Authorization;
@@ -81,15 +82,26 @@ public static class ServiceCollectionExtensions
             .WithToolsFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
             .WithResourcesFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
             .WithPromptsFromAssembly(typeof(ServiceCollectionExtensions).Assembly)
-            .WithRequestFilters(filters => filters.AddCallToolFilter(next => async (request, cancellationToken) =>
+            .WithRequestFilters(filters =>
             {
-                ICurrentUserAccessor accessor = request.Services!
-                    .GetRequiredService<ICurrentUserAccessor>();
-                return await McpToolScopePolicy.AuthorizeAndInvokeAsync(
-                    request.Params?.Name,
-                    accessor.GetCurrentPrincipal(),
-                    () => next(request, cancellationToken));
-            }))
+                filters.AddCallToolFilter(next => async (request, cancellationToken) =>
+                {
+                    ICurrentUserAccessor accessor = request.Services!
+                        .GetRequiredService<ICurrentUserAccessor>();
+                    return await McpToolScopePolicy.AuthorizeAndInvokeAsync(
+                        request.Params?.Name,
+                        accessor.GetCurrentPrincipal(),
+                        () => next(request, cancellationToken));
+                });
+                filters.AddListResourceTemplatesFilter(RequireReadScope);
+                filters.AddListResourcesFilter(RequireReadScope);
+                filters.AddReadResourceFilter(RequireReadScope);
+                filters.AddListPromptsFilter(RequireReadScope);
+                filters.AddGetPromptFilter(RequireReadScope);
+                filters.AddCompleteFilter(RequireReadScope);
+                filters.AddSubscribeToResourcesFilter(RequireReadScope);
+                filters.AddUnsubscribeFromResourcesFilter(RequireReadScope);
+            })
             // The .NET MCP SDK 1.4+ routes the
             // resources/subscribe and resources/unsubscribe
             // requests through the request handler pipeline.
@@ -103,6 +115,19 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+
+    private static McpRequestHandler<TParams, TResult> RequireReadScope<TParams, TResult>(
+        McpRequestHandler<TParams, TResult> next) =>
+        async (request, cancellationToken) =>
+        {
+            ICurrentUserAccessor accessor = request.Services!
+                .GetRequiredService<ICurrentUserAccessor>();
+            return await McpScopeAuthorization.AuthorizeAndInvokeAsync(
+                Scope.Read,
+                typeof(TParams).Name,
+                accessor.GetCurrentPrincipal(),
+                () => next(request, cancellationToken));
+        };
 
     private static ValueTask<EmptyResult> SubscribeToResourceAsync(
         RequestContext<SubscribeRequestParams> request,
