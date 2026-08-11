@@ -8,28 +8,28 @@ using Microsoft.AspNetCore.Routing;
 namespace Cardscape.Api.Endpoints.Seeder;
 
 /// <summary>
-/// REST surface for the seeder. The endpoints are
-/// feature-gated: when <c>Cardscape:Seeder:Enabled</c> is
-/// <c>false</c>, the <see cref="MapSeederEndpoints"/> extension
-/// registers nothing at all so the routes do not exist (the
-/// SPA client sees 404s on the admin page). When the toggle
-/// is on, the surface is:
+/// REST surface for the seeder. Endpoints are feature-gated:
+/// when <c>Cardscape:Seeder:Enabled</c> is <c>false</c>, every
+/// route returns 404 and the admin UI is invisible. When
+/// the toggle is on, the surface is:
 /// <list type="bullet">
-///   <item><c>GET /api/admin/seeder/status</c> — table row
-///   counts, current run status, and the recent log
-///   stream.</item>
-///   <item><c>POST /api/admin/seeder/run</c> — kicks off a
-///   seed run; 409 if one is already in progress.</item>
-///   <item><c>POST /api/admin/seeder/wipe</c> — wipes every
-///   table the seeder owns (no seed follow-up).</item>
+///   <item><c>GET /api/admin/seeder/status</c> — current run
+///   state (idle / running / done), the live log entries
+///   and the per-table row counts.</item>
 ///   <item><c>GET /api/admin/seeder/options</c> — current
 ///   <see cref="SeederOptions"/> for the UI.</item>
+///   <item><c>POST /api/admin/seeder/run</c> — kicks off a
+///   seed run in the background. Returns 202 immediately;
+///   the browser polls <c>/status</c> for progress.
+///   409 if a run is already in progress.</item>
+///   <item><c>POST /api/admin/seeder/wipe</c> — wipes every
+///   row the seeder owns (no seed follow-up). 202 + 409
+///   semantics match the run endpoint.</item>
 /// </list>
-/// All endpoints are <c>AllowAnonymous</c> for the moment
-/// because the surface is intended for local development.
-/// A future hardening pass can add an admin-policy gate
-/// (the same <c>AdminOnly</c> policy that protects the rest
-/// of <c>/api/admin/*</c>).
+/// All endpoints are <c>AllowAnonymous</c> because the
+/// surface is intended for local development. A future
+/// hardening pass can add the same <c>AdminOnly</c> policy
+/// that protects the rest of <c>/api/admin/*</c>.
 /// </summary>
 public static class SeederEndpoints
 {
@@ -62,6 +62,13 @@ public static class SeederEndpoints
             });
         });
 
+        // Async run: the endpoint returns 202 the moment
+        // the runner accepts the request; the runner itself
+        // runs on a background task. The browser polls
+        // /status for the live log and the per-table
+        // counts. Keeping the endpoint non-blocking means
+        // a long seed (3-6 s) does not freeze the admin
+        // page.
         group.MapPost("/run", async (SeedRunner runner,
                                      ISeedReportProvider provider,
                                      SeederRunRequest? request,
@@ -77,8 +84,23 @@ public static class SeederEndpoints
             }
 
             bool wipe = request?.Wipe ?? runner.CurrentOptions.WipeBeforeSeed;
-            SeedReport report = await runner.RunAsync(wipe, cancellationToken);
-            return Results.Ok(ToStatus(report));
+
+            // Fire-and-forget on the runner's task scheduler.
+            // The runner's own SemaphoreSlim rejects a
+            // second RunAsync while the first is in flight,
+            // so concurrent POST /run callers do not race.
+            // Exceptions are caught inside the runner and
+            // surfaced through the report (status =
+            // "Failed: ...").
+            _ = Task.Run(() => _ = runner.RunAsync(wipe, cancellationToken),
+                cancellationToken);
+
+            return Results.Accepted(value: new
+            {
+                running = true,
+                wipe,
+                startedAt = provider.Report.StartedAt
+            });
         });
 
         group.MapPost("/wipe", async (SeedRunner runner, CancellationToken cancellationToken) =>
@@ -92,8 +114,15 @@ public static class SeederEndpoints
                 return Results.Conflict(new { error = "seeder.already_running" });
             }
 
-            SeedReport report = await runner.WipeAsync(cancellationToken);
-            return Results.Ok(ToStatus(report));
+            _ = Task.Run(() => _ = runner.WipeAsync(cancellationToken),
+                cancellationToken);
+
+            return Results.Accepted(value: new
+            {
+                running = true,
+                wipeOnly = true,
+                startedAt = runner.CurrentOptions.FixedNow
+            });
         });
 
         return app;

@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="RadzenBlazorApp1/Client/RadzenBlazorApp1.Client.csproj" />
-  <Project Path="RadzenBlazorApp1/Server/RadzenBlazorApp1.Server.csproj" />
-</Solution>

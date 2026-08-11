@@ -1,0 +1,338 @@
+@page "/admin/seeder"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
+@using System.Globalization
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services.Api
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@inject ISeederApiClient Seeder
+@inject IJSRuntime JS
+@inject DialogService DialogService
+@implements IAsyncDisposable
+
+<PageTitle>@L["SeederTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 100rem;">
+    <PageHeader Title="@L["SeederTitle"]" Subtitle="@L["SeederSubtitle"]" />
+
+    <RadzenCard>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+            <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@StatusBadge" />
+            @if (_options is not null)
+            {
+                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@($"{_options.CardsPerBoard} cards/board")" />
+                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@($"{_options.UserCount} users")" />
+                @if (_options.WipeBeforeSeed)
+                {
+                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="wipe on seed" />
+                }
+            }
+            <span style="flex:1"></span>
+            <RadzenButton Text="@L["SeederRun"]" Icon="play_arrow" ButtonStyle="ButtonStyle.Primary"
+                          Disabled="@_busy" Click="@(() => RunAsync(wipe:false))" />
+            <RadzenButton Text="@L["SeederForceReseed"]" Icon="refresh" ButtonStyle="ButtonStyle.Danger"
+                          Disabled="@_busy" Click="@(() => RunAsync(wipe:true))" />
+            <RadzenButton Text="@L["SeederWipe"]" Icon="delete_sweep" ButtonStyle="ButtonStyle.Warning"
+                          Disabled="@_busy" Click="@WipeAsync" />
+        </RadzenStack>
+    </RadzenCard>
+
+    @if (_error is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" Close="@(() => _error = null)">
+            <RadzenText TextStyle="TextStyle.Body2">@_error</RadzenText>
+        </RadzenAlert>
+    }
+
+    @if (_initialLoading)
+    {
+        <RadzenCard><RadzenText TextStyle="TextStyle.Body1">@L["CommonLoading"]</RadzenText></RadzenCard>
+    }
+    else
+    {
+        <div class="rz-display-flex rz-flex-row rz-gap-2" style="flex-wrap: wrap;">
+            <RadzenCard Style="flex: 1 1 60%; min-width: 28rem;">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H3">@L["SeederLog"]</RadzenText>
+                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@($"{_entries.Count} lines")" />
+                    </RadzenStack>
+                    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                        @StepLine
+                    </RadzenText>
+                    <RadzenProgressBar Value="@ProgressValue" Max="100" Style="margin: 0.25rem 0 0.75rem 0;" />
+                    <div style="font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; background: #0d1019; color: #d8dce5; border-radius: 8px; padding: 12px; max-height: 28rem; overflow: auto;">
+                        @if (_entries.Count == 0)
+                        {
+                            <span class="rz-color-text-secondary">@L["SeederLogEmpty"]</span>
+                        }
+                        else
+                        {
+                            @foreach (var entry in _entries)
+                            {
+                                <div style="display: grid; grid-template-columns: 5rem 3.5rem 11rem 1fr; gap: 0.5rem; align-items: baseline; padding: 1px 0;">
+                                    <span style="color: #8a93a6;">@entry.At.ToLocalTime().ToString("HH:mm:ss")</span>
+                                    <span style="@LevelStyle(entry.Level)">@entry.Level.ToUpperInvariant()</span>
+                                    <span style="color: #6ea8ff;">@entry.Step</span>
+                                    <span style="white-space: pre-wrap;">@entry.Message</span>
+                                </div>
+                            }
+                        }
+                    </div>
+                </RadzenStack>
+            </RadzenCard>
+
+            <RadzenCard Style="flex: 1 1 35%; min-width: 24rem;">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H3">@L["SeederTableStatus"]</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                        @TableSummary
+                    </RadzenText>
+                    @if (_tables.Count == 0)
+                    {
+                        <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["SeederNoTables"]</RadzenText>
+                    }
+                    else
+                    {
+                        <div style="max-height: 28rem; overflow: auto;">
+                            <RadzenDataGrid Data="@_tables" TItem="SeederTableStatusDto"
+                                            AllowSorting="false" AllowPaging="false"
+                                            Density="Density.Compact">
+                                <Columns>
+                                    <RadzenDataGridColumn TItem="SeederTableStatusDto" Property="Aggregate" Title="@L["SeederTableAggregate"]" />
+                                    <RadzenDataGridColumn TItem="SeederTableStatusDto" Property="Key" Title="@L["SeederTableTable"]">
+                                        <Template Context="row">
+                                            <code>@row.Key</code>
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn TItem="SeederTableStatusDto" Property="Rows" Title="@L["SeederTableRows"]" Width="6rem">
+                                        <Template Context="row">
+                                            <span style="font-variant-numeric: tabular-nums; text-align: right; display:block;">@row.Rows</span>
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                </Columns>
+                            </RadzenDataGrid>
+                        </div>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </div>
+    }
+</RadzenStack>
+
+@code {
+    private SeederStatusDto? _status;
+    private SeederOptionsDto? _options;
+    private List<SeederLogEntryDto> _entries = new();
+    private List<SeederTableStatusDto> _tables = new();
+    private bool _initialLoading = true;
+    private bool _busy;
+    private string? _error;
+    private CancellationTokenSource? _pollCts;
+    private Task? _pollTask;
+
+    private string StatusBadge => _status is null
+        ? "—"
+        : _status.Running
+            ? L["SeederStatusRunning"]
+            : _status.Report.Status switch
+            {
+                "Succeeded" or "Wiped" => L["SeederStatusSucceeded"],
+                var s when s.StartsWith("Failed", StringComparison.Ordinal) => L["SeederStatusFailed"],
+                _ => L["SeederStatusIdle"]
+            };
+
+    private string StepLine
+    {
+        get
+        {
+            if (_status is null) { return string.Empty; }
+            var r = _status.Report;
+            if (r.TotalSteps <= 0) { return L["SeederNoRun"]; }
+            var name = r.CurrentStepName ?? string.Empty;
+            return $"{r.CurrentStep} / {r.TotalSteps} — {name}";
+        }
+    }
+
+    private int ProgressValue => _status is null || _status.Report.TotalSteps <= 0
+        ? 0
+        : Math.Clamp((int)Math.Round(100.0 * _status.Report.CurrentStep / _status.Report.TotalSteps), 0, 100);
+
+    private string TableSummary => $"{_tables.Count} tables, {_tables.Sum(t => t.Rows)} rows total";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        _pollCts = new CancellationTokenSource();
+        _pollTask = PollAsync(_pollCts.Token);
+    }
+
+    private async Task LoadAsync()
+    {
+        _error = null;
+        try
+        {
+            ApiResult<SeederOptionsDto> options = await Seeder.GetOptionsAsync();
+            if (options.IsSuccess)
+            {
+                _options = options.Value;
+            }
+            else if (options.Error is not null && ContainsDisabled(options.Error))
+            {
+                // Server returned 404; the toggle is off. The
+                // page should still render but every action
+                // button must end up disabled. We render with
+                // a flag the operator can read on the
+                // status badge.
+                _options = null;
+            }
+
+            ApiResult<SeederStatusDto> status = await Seeder.GetStatusAsync();
+            if (status.IsSuccess)
+            {
+                ApplyStatus(status.Value!);
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _initialLoading = false;
+        }
+    }
+
+    private async Task PollAsync(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                ApiResult<SeederStatusDto> status = await Seeder.GetStatusAsync(ct);
+                if (status.IsSuccess)
+                {
+                    ApplyStatus(status.Value!);
+                }
+            }
+            catch (OperationCanceledException) { return; }
+            catch
+            {
+                // Network blip; keep the last good snapshot
+                // on screen and try again next tick.
+            }
+
+            try
+            {
+                // Poll faster while a run is in flight so the
+                // progress bar and log feel live; back off
+                // once the runner is idle.
+                int delayMs = (_status?.Running ?? false) ? 700 : 3_000;
+                await Task.Delay(delayMs, ct);
+            }
+            catch (OperationCanceledException) { return; }
+        }
+    }
+
+    private void ApplyStatus(SeederStatusDto s)
+    {
+        _status = s;
+        // The endpoints return every log entry the
+        // server has ever emitted. A full seed run is
+        // ~80 entries; the full live grid is the
+        // operator's view, so we render verbatim.
+        _entries = s.Report.Entries.OrderBy(e => e.At).ToList();
+        _tables = s.Report.Tables.OrderBy(t => t.Key, StringComparer.OrdinalIgnoreCase).ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RunAsync(bool wipe)
+    {
+        if (_busy) { return; }
+        _busy = true;
+        _error = null;
+        try
+        {
+            ApiResult<SeederRunAcceptedDto> r = await Seeder.RunAsync(wipe, ct: default);
+            if (!r.IsSuccess)
+            {
+                _error = TranslateError(r.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task WipeAsync()
+    {
+        if (_busy) { return; }
+
+        bool confirmed = await DialogService.Confirm(
+            L["SeederWipeConfirm"],
+            L["SeederWipeConfirmTitle"],
+            new ConfirmOptions { OkButtonText = L["SeederWipe"], CancelButtonText = L["CommonCancel"] });
+        if (!confirmed) { return; }
+
+        _busy = true;
+        _error = null;
+        try
+        {
+            ApiResult<SeederWipeAcceptedDto> r = await Seeder.WipeAsync(ct: default);
+            if (!r.IsSuccess)
+            {
+                _error = TranslateError(r.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private string TranslateError(string? raw)
+    {
+        if (string.IsNullOrEmpty(raw)) { return L["CommonError"]; }
+        if (raw.Contains("seeder.already_running", StringComparison.OrdinalIgnoreCase))
+        {
+            return L["SeederAlreadyRunning"];
+        }
+        if (raw.Contains("404", StringComparison.OrdinalIgnoreCase))
+        {
+            return L["SeederDisabled"];
+        }
+        return raw;
+    }
+
+    private static bool ContainsDisabled(string error) => error.Contains("404", StringComparison.OrdinalIgnoreCase);
+
+    private static string LevelStyle(string level) => level switch
+    {
+        "Success" => "color: #57d685; font-weight: 600;",
+        "Warning" => "color: #f0b400; font-weight: 600;",
+        "Error" => "color: #ff6464; font-weight: 600;",
+        _ => "color: #d8dce5; font-weight: 600;"
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_pollCts is not null)
+        {
+            _pollCts.Cancel();
+            _pollCts.Dispose();
+        }
+        if (_pollTask is not null)
+        {
+            try { await _pollTask; } catch { /* swallow on teardown */ }
+        }
+    }
+}

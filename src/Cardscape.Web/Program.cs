@@ -204,6 +204,13 @@ builder.Services.AddScoped<IGitHubApiClient, GitHubApiClient>();
 builder.Services.AddScoped<IWebhooksApiClient, WebhooksApiClient>();
 builder.Services.AddScoped<IEmailIntegrationApiClient, EmailIntegrationApiClient>();
 builder.Services.AddScoped<IMcpSubscriptionsApiClient, McpSubscriptionsApiClient>();
+// Seeder admin surface — the page lives in
+// Cardscape.Web (this project), the JSON endpoints it
+// polls live in Cardscape.Api. The page itself is
+// gated on the server's Cardscape:Seeder:Enabled
+// toggle; when the flag is off, every JSON endpoint
+// returns 404 and the page hides the action buttons.
+builder.Services.AddScoped<ISeederApiClient, SeederApiClient>();
 // BUG-A6-001 — see test-results/beta/reports/A6-views.md. The
 // topbar search input in Shared/TopbarSearch.razor needs an API
 // client to call /api/search. The endpoint existed on the
