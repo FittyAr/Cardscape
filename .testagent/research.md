@@ -321,3 +321,10 @@
 - Decision: remove redundant `AccessTokenExpiresAt`/`expires_at`; the signed JWT `exp` is the sole expiration contract. Validate JWT configuration at host startup instead of accepting unsafe or nonsensical lifetimes.
 - Acceptance checklist: no duplicated expiration fields/calculations; configured lifetime is reflected exactly in JWT `exp`; issuer/audience/signing key/lifetime fail startup validation outside safe bounds; default settings remain valid; focused and full Release validation pass.
 - Static pairing analyzer attempt: the documented Roslyn file again cannot run under the pinned SDK 10 command because no runnable project/file-based app is available; existing handler/options suites plus a focused token-service test are paired directly.
+# External authentication boundary (2026-08-11)
+
+- Scope: `ExternalLoginEndpoints`, API authentication composition, and the Blazor OAuth callback.
+- Existing convention: xUnit v3, FluentAssertions, Release builds with warnings as errors.
+- Static pairing analyzer was attempted once with the documented Roslyn command; SDK 10 rejected the file-based script because it is not a runnable project. Manual inspection was limited to this bounded scope.
+- Defect: remote handlers had no temporary sign-in scheme; Apple reused the application callback as the middleware callback; custom state cookies were written but never validated or read.
+- Acceptance checklist: external cookie is short lived; every remote provider signs into it; bearer remains the API default; Apple has a distinct middleware callback; return URLs reject external/network paths; SPA receives the validated local path.

@@ -170,3 +170,12 @@
 - [x] Add fail-fast validation for issuer, audience, 256-bit signing key and 5-minute-to-24-hour lifetime.
 - [x] Prove custom JWT expiration and invalid option boundaries with focused tests.
 - [x] Run focused/full Release validation, assertion/gap review, update documentation and publish.
+# External authentication boundary (2026-08-11)
+
+- [x] Replace custom state cookies with the framework's protected authentication properties/correlation flow.
+- [x] Add and configure a temporary external cookie and bind Google, Microsoft, and Apple to it.
+- [x] Separate Apple's remote-handler callback from Cardscape's application callback.
+- [x] Validate provider continuity and local return paths at the API boundary.
+- [x] Pass the local return path to the Radzen/Blazor callback.
+- [x] Add composition and return-path boundary tests.
+- [x] Run focused tests and complete solution validation.

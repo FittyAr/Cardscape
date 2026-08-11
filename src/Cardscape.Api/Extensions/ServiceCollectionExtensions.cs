@@ -5,6 +5,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
@@ -23,6 +24,12 @@ public static class ServiceCollectionExtensions
     /// scheme per request based on the secret's shape.
     /// </summary>
     public const string BearerPolicyScheme = "BearerPolicy";
+
+    /// <summary>
+    /// Short-lived cookie used only while an external OAuth/OIDC challenge
+    /// crosses the provider boundary. It is never an API authentication scheme.
+    /// </summary>
+    public const string ExternalCookieScheme = "Cardscape.External";
 
     /// <summary>
     /// Wires both authentication schemes the REST API accepts:
@@ -136,8 +143,23 @@ public static class ServiceCollectionExtensions
         // Default scheme is a policy that picks the inner scheme
         // per request. The selector below dispatches to JWT or
         // API token based on the bearer secret's shape.
-        AuthenticationBuilder authBuilder = services
-            .AddAuthentication(BearerPolicyScheme);
+        AuthenticationBuilder authBuilder = services.AddAuthentication(options =>
+        {
+            options.DefaultScheme = BearerPolicyScheme;
+            options.DefaultAuthenticateScheme = BearerPolicyScheme;
+            options.DefaultChallengeScheme = BearerPolicyScheme;
+            options.DefaultSignInScheme = ExternalCookieScheme;
+        });
+
+        authBuilder.AddCookie(ExternalCookieScheme, options =>
+        {
+            options.Cookie.Name = "cardscape.external";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+            options.SlidingExpiration = false;
+        });
 
         authBuilder.AddPolicyScheme(
             BearerPolicyScheme,
@@ -263,6 +285,7 @@ public static class ServiceCollectionExtensions
         {
             authBuilder.AddGoogle(options =>
             {
+                options.SignInScheme = ExternalCookieScheme;
                 options.ClientId = googleClientId;
                 options.ClientSecret = googleClientSecret;
                 options.Scope.Add("email");
@@ -277,6 +300,7 @@ public static class ServiceCollectionExtensions
         {
             authBuilder.AddMicrosoftAccount(options =>
             {
+                options.SignInScheme = ExternalCookieScheme;
                 options.ClientId = microsoftClientId;
                 options.ClientSecret = microsoftClientSecret;
                 options.Scope.Add("email");
@@ -305,6 +329,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IAppleClientSecretGenerator, AppleClientSecretGenerator>();
             authBuilder.AddOpenIdConnect(ExternalProvider.Apple.WireName(), options =>
             {
+                options.SignInScheme = ExternalCookieScheme;
                 options.Authority = "https://appleid.apple.com";
                 options.ClientId = appleClientId;
                 // The client_secret is generated per request
@@ -314,7 +339,7 @@ public static class ServiceCollectionExtensions
                 // here and replace it on every challenge via
                 // OnRedirectToIdentityProvider.
                 options.ClientSecret = "placeholder-replaced-on-redirect";
-                options.CallbackPath = "/api/auth/external/apple/callback";
+                options.CallbackPath = "/signin-apple";
                 options.Scope.Add("openid");
                 options.Scope.Add("email");
                 options.Scope.Add("name");

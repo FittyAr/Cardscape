@@ -73,11 +73,25 @@ else
             // here because the navigation away happens right after.
             _ = Tokens.SetAsync(access, user);
             Auth.Notify();
-            Nav.NavigateTo("/", forceLoad: true);
+            string returnUrl = NormalizeReturnUrl(query["return_url"]);
+            Nav.NavigateTo(returnUrl, forceLoad: true);
         }
         catch (Exception ex)
         {
             error = string.Format(L["AuthOauthError"].Value, ex.Message);
         }
+    }
+
+    private static string NormalizeReturnUrl(string? returnUrl)
+    {
+        if (string.IsNullOrWhiteSpace(returnUrl)
+            || returnUrl[0] != '/'
+            || returnUrl.StartsWith("//", StringComparison.Ordinal)
+            || returnUrl.Contains('\\'))
+        {
+            return "/";
+        }
+
+        return returnUrl;
     }
 }

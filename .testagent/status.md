@@ -237,3 +237,10 @@
 - Pseudo-mutation review: hardcoding 60 minutes, loosening either bound, accepting blank issuer/audience, moving the signing secret back into shared Infrastructure or weakening API key checks is killed by exact token, startup and E2E assertions.
 - Assertion review: exact timestamps, values, option types, exception messages and host boot behavior are asserted; no generated test is assertion-free, tautological or truthiness-only.
 - Full validation: Release suite 822 passed / 0 failed / 1 skipped.
+# External authentication boundary (2026-08-11)
+
+- Implementation and validation complete: focused tests 11/11; Release build 0 warnings/0 errors; full suite 833 pass, 0 fail, 1 skip.
+- Pseudo-mutation targets: changing the default bearer scheme, removing any provider `SignInScheme`, restoring Apple's conflicting callback, extending cookie lifetime, or accepting absolute/network paths must fail a named assertion.
+- Assertion review: assertions inspect exact schemes, cookie policy/lifetime, callback path, and normalized output; no truthiness-only or self-referential assertions.
+- Final pseudo-mutation review added exact provider-continuity cases (missing, mismatched, casing and valid). The remaining remote network handshake belongs to provider middleware and is not simulated.
+- Final assertion-quality review: 3 logical test methods / 11 data executions; all have meaningful exact equality or state assertions, zero assertion-free/trivial/self-referential tests. The documented .NET extension file was absent from the installed skill package, so FluentAssertions classification was applied from the base catalog.

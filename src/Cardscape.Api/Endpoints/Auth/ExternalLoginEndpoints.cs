@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Cardscape.Api.Extensions;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
@@ -50,18 +51,13 @@ namespace Cardscape.Api.Endpoints.Auth;
 /// </summary>
 public static class ExternalLoginEndpoints
 {
-    /// <summary>State cookie name used to round-trip the
-    /// <c>returnUrl</c> through the OAuth flow.</summary>
-    public const string StateCookieName = "cardscape.ext.state";
-
     public static IEndpointRouteBuilder MapExternalLoginEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/auth/external").WithTags("Auth");
 
-        group.MapGet("/{provider}/start", (
+        group.MapGet("/{provider}/start", async Task<IResult> (
             string provider,
-            HttpContext http,
-            IConfiguration configuration,
+            IAuthenticationSchemeProvider schemes,
             string? returnUrl) =>
         {
             if (!ExternalProviderExtensions.TryParse(provider, out var parsed))
@@ -72,28 +68,8 @@ public static class ExternalLoginEndpoints
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
-            // BETA-2-#8 — see test-results/BETA-TEST-REPORT.md.
-            //
-            // The old `IsImplemented()` hard-coded `true`
-            // for Google / Microsoft / Apple. The
-            // challenge call below would then throw
-            // `InvalidOperationException: No authentication
-            // handler is registered for the scheme
-            // 'google'` when the operator hadn't supplied
-            // the matching Authentication:Google:* keys, and
-            // the GlobalExceptionMiddleware mapped it to 500.
-            // The check now reads the live IConfiguration
-            // and verifies the matching
-            // Authentication:{Provider}:* keys are
-            // populated — exactly the precondition the
-            // scheme registration in ServiceCollectionExtensions
-            // uses to decide whether to call
-            // `AddGoogle()` / `AddMicrosoftAccount()` /
-            // `AddOpenIdConnect()`. If the keys are missing,
-            // the auth scheme is not registered, and the
-            // 501 keeps the user on the right side of the
-            // 500 cliff.
-            if (!IsSchemeRegistered(configuration, parsed))
+            string scheme = parsed.WireName();
+            if (await schemes.GetSchemeAsync(scheme) is null)
             {
                 return Results.Problem(
                     title: ExternalLoginErrors.ProviderNotImplemented.Code,
@@ -101,33 +77,16 @@ public static class ExternalLoginEndpoints
                     statusCode: StatusCodes.Status501NotImplemented);
             }
 
-            // Round-trip the returnUrl through the OAuth
-            // state parameter / cookie so the callback can
-            // hand the user back to the page they came from.
-            var state = Guid.NewGuid().ToString("N");
-            http.Response.Cookies.Append(StateCookieName, Uri.EscapeDataString(returnUrl ?? "/"),
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = http.Request.IsHttps,
-                    SameSite = SameSiteMode.Lax,
-                    MaxAge = TimeSpan.FromMinutes(10)
-                });
-            http.Response.Cookies.Append("cardscape.ext.state.id", state,
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = http.Request.IsHttps,
-                    SameSite = SameSiteMode.Lax,
-                    MaxAge = TimeSpan.FromMinutes(10)
-                });
-
             var properties = new AuthenticationProperties
             {
-                RedirectUri = $"/api/auth/external/{parsed.WireName()}/callback",
-                Items = { ["state"] = state }
+                RedirectUri = $"/api/auth/external/{scheme}/callback",
+                Items =
+                {
+                    ["cardscape.provider"] = scheme,
+                    ["cardscape.returnUrl"] = NormalizeReturnUrl(returnUrl)
+                }
             };
-            return Results.Challenge(properties, new[] { parsed.WireName() });
+            return Results.Challenge(properties, new[] { scheme });
         });
 
         group.MapGet("/{provider}/callback", async (
@@ -147,11 +106,8 @@ public static class ExternalLoginEndpoints
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
-            // Pull the claims from the external auth
-            // handler. The middleware has already run
-            // AuthenticateAsync on the request so the
-            // principal is available.
-            var authenticateResult = await http.AuthenticateAsync(parsed.WireName());
+            var authenticateResult = await http.AuthenticateAsync(
+                ServiceCollectionExtensions.ExternalCookieScheme);
             if (!authenticateResult.Succeeded || authenticateResult.Principal is null)
             {
                 return Results.Problem(
@@ -159,6 +115,25 @@ public static class ExternalLoginEndpoints
                     detail: "External provider did not return a valid principal.",
                     statusCode: StatusCodes.Status401Unauthorized);
             }
+
+            string expectedProvider = parsed.WireName();
+            if (!IsExpectedProvider(authenticateResult.Properties, expectedProvider))
+            {
+                await http.SignOutAsync(ServiceCollectionExtensions.ExternalCookieScheme);
+                return Results.Problem(
+                    title: "auth.external.provider_mismatch",
+                    detail: "External login provider did not match the requested callback.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            string returnUrl = authenticateResult.Properties.Items.TryGetValue(
+                "cardscape.returnUrl", out string? storedReturnUrl)
+                ? NormalizeReturnUrl(storedReturnUrl)
+                : "/";
+
+            // Consume the temporary principal before processing domain data so
+            // even malformed or rejected callbacks cannot be replayed.
+            await http.SignOutAsync(ServiceCollectionExtensions.ExternalCookieScheme);
 
             var principal = authenticateResult.Principal;
             string? subject = principal.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -195,11 +170,6 @@ public static class ExternalLoginEndpoints
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
-            // Drop the state cookies and hand the user
-            // back to the SPA via a redirect fragment.
-            http.Response.Cookies.Delete(StateCookieName);
-            http.Response.Cookies.Delete("cardscape.ext.state.id");
-
             string redirect = configuration["Cardscape:Web:ExternalLoginRedirectUrl"]
                 ?? configuration["Web:ExternalLoginRedirectUrl"]
                 ?? "/oauth/callback";
@@ -207,38 +177,30 @@ public static class ExternalLoginEndpoints
                 $"access_token={Uri.EscapeDataString(auth.Value.AccessToken ?? string.Empty)}"
                 + $"&user_id={Uri.EscapeDataString(auth.Value.User.Id.ToString())}"
                 + $"&user_email={Uri.EscapeDataString(auth.Value.User.Email)}"
-                + $"&user_name={Uri.EscapeDataString(auth.Value.User.DisplayName)}";
+                + $"&user_name={Uri.EscapeDataString(auth.Value.User.DisplayName)}"
+                + $"&return_url={Uri.EscapeDataString(returnUrl)}";
             return Results.Redirect($"{redirect}#{fragment}");
         });
 
         return app;
     }
 
-    /// <summary>
-    /// Returns <c>true</c> when the matching authentication
-    /// scheme is actually registered for this provider. The
-    /// registration in <c>ServiceCollectionExtensions</c> only
-    /// calls <c>AddGoogle()</c> / <c>AddMicrosoftAccount()</c>
-    /// / <c>AddOpenIdConnect()</c> when the corresponding
-    /// <c>Authentication:{Provider}:*</c> configuration keys
-    /// are present, so the same keys are the source of truth
-    /// here. Mirrors the conditions in
-    /// <c>AddApiAuthentication</c> verbatim — see BETA-2-#8
-    /// in test-results/BETA-TEST-REPORT.md.
-    /// </summary>
-    private static bool IsSchemeRegistered(IConfiguration configuration, ExternalProvider provider) => provider switch
+    internal static string NormalizeReturnUrl(string? returnUrl)
     {
-        ExternalProvider.Google =>
-            !string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientId"])
-            && !string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientSecret"]),
-        ExternalProvider.Microsoft =>
-            !string.IsNullOrWhiteSpace(configuration["Authentication:Microsoft:ClientId"])
-            && !string.IsNullOrWhiteSpace(configuration["Authentication:Microsoft:ClientSecret"]),
-        ExternalProvider.Apple =>
-            !string.IsNullOrWhiteSpace(configuration["Authentication:Apple:ClientId"])
-            && !string.IsNullOrWhiteSpace(configuration["Authentication:Apple:TeamId"])
-            && !string.IsNullOrWhiteSpace(configuration["Authentication:Apple:KeyId"])
-            && !string.IsNullOrWhiteSpace(configuration["Authentication:Apple:PrivateKeyPem"]),
-        _ => false
-    };
+        if (string.IsNullOrWhiteSpace(returnUrl)
+            || returnUrl[0] != '/'
+            || returnUrl.StartsWith("//", StringComparison.Ordinal)
+            || returnUrl.Contains('\\'))
+        {
+            return "/";
+        }
+
+        return returnUrl;
+    }
+
+    internal static bool IsExpectedProvider(
+        AuthenticationProperties properties,
+        string expectedProvider) =>
+        properties.Items.TryGetValue("cardscape.provider", out string? actualProvider)
+        && string.Equals(actualProvider, expectedProvider, StringComparison.Ordinal);
 }
