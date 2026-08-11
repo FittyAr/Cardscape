@@ -318,10 +318,14 @@ provided:
   produces the same effect (no duplicate side-effects) for a
   configurable retention window (default 24 hours).
 - The key is stored in the `IdempotencyKey` entity in `Application`. The MCP
-  filter consults the store before invoking the handler; if the key is found,
-  it returns the cached MCP response.
+  filter atomically inserts an in-progress reservation before invoking the
+  handler. Only the insertion winner executes; matching contenders wait for
+  and replay its completed response across processes.
 - Tool name and recursively sorted arguments form the request hash. Reusing a
   key for another tool or payload is rejected as a conflict.
+- Failed handlers release their reservation. An abandoned reservation has a
+  15-minute lease so a crashed process cannot block the logical operation
+  forever; normal completed responses remain authoritative for 24 hours.
 
 This makes the MCP surface safe for AI agents that retry on
 errors (which they do).

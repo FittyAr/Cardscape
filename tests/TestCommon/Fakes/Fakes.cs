@@ -611,24 +611,78 @@ public sealed class InMemoryTotpCredentialRepository
 public sealed class InMemoryIdempotencyKeyStore : IIdempotencyKeyStore
 {
     private readonly Dictionary<(UserId, string), IdempotencyKey> _store = [];
+    private readonly object _gate = new();
 
-    public int Count => _store.Count;
+    public int Count { get { lock (_gate) return _store.Count; } }
 
-    public IReadOnlyCollection<IdempotencyKey> All => _store.Values.ToList();
+    public IReadOnlyCollection<IdempotencyKey> All
+    {
+        get { lock (_gate) return _store.Values.ToArray(); }
+    }
 
     public Task<IdempotencyKey?> FindAsync(
         UserId ownerId,
         IdempotencyKeyValue key,
         CancellationToken ct = default)
     {
-        _store.TryGetValue((ownerId, key.Value), out var existing);
-        return Task.FromResult(existing);
+        lock (_gate)
+        {
+            _store.TryGetValue((ownerId, key.Value), out var existing);
+            return Task.FromResult(existing);
+        }
     }
 
     public Task AddAsync(IdempotencyKey record, CancellationToken ct = default)
     {
-        _store[(record.OwnerId, record.Key.Value)] = record;
+        lock (_gate)
+        {
+            _store[(record.OwnerId, record.Key.Value)] = record;
+        }
         return Task.CompletedTask;
+    }
+
+    public Task<bool> TryReserveAsync(
+        IdempotencyKey reservation,
+        CancellationToken ct = default)
+    {
+        lock (_gate)
+        {
+            var key = (reservation.OwnerId, reservation.Key.Value);
+            if (_store.ContainsKey(key)) return Task.FromResult(false);
+            _store.Add(key, reservation);
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<bool> CompleteReservationAsync(
+        IdempotencyKeyId id,
+        int responseStatusCode,
+        string responseJson,
+        DateTimeOffset completedAt,
+        CancellationToken ct = default)
+    {
+        lock (_gate)
+        {
+            KeyValuePair<(UserId, string), IdempotencyKey> entry = _store
+                .SingleOrDefault(pair => pair.Value.Id == id && pair.Value.IsPending);
+            if (entry.Value is null) return Task.FromResult(false);
+            Result completed = entry.Value.Complete(
+                responseStatusCode, responseJson, completedAt);
+            return Task.FromResult(completed.IsSuccess);
+        }
+    }
+
+    public Task ReleaseAsync(IdempotencyKeyId id, CancellationToken ct = default)
+    {
+        lock (_gate)
+        {
+            (UserId, string)? key = _store
+                .Where(pair => pair.Value.Id == id)
+                .Select(pair => ((UserId, string)?)pair.Key)
+                .SingleOrDefault();
+            if (key is not null) _store.Remove(key.Value);
+            return Task.CompletedTask;
+        }
     }
 }
 
@@ -946,4 +1000,3 @@ public sealed class InMemoryCommentRepository
         Task.FromResult<IReadOnlyList<Comment>>(
             Store.Values.Where(c => c.CardId.Value == cardId.Value).OrderBy(c => c.CreatedAt).ToList());
 }
-

@@ -138,9 +138,8 @@
   exception, negative invocation and persisted-state assertions cover independent effects.
 - The analysis skill package advertises `extensions/dotnet.md` but does not include it; framework
   classification therefore used the repository's xUnit/FluentAssertions conventions directly.
-- Residual risk for the transport block: concurrent first-use requests can both execute their handler
-  before the persistence unique constraint selects a winning response; cross-process exactly-once
-  execution requires an atomic reservation/lease design, not merely replay caching.
+- Residual risk recorded at that point: concurrent first-use requests could both execute before the
+  unique response insert. Resolved by the later "Atomic idempotency reservations" block below.
 - Full validation: Release build 0 warnings / 0 errors; final suite run 796 passed / 0 failed / 1 skipped.
 - The first full run exposed a transient `DbUpdateConcurrencyException` in
   `BackgroundJobRepository.ClaimBatchAsync`; the failed test passed alone and the complete rerun passed.
@@ -174,3 +173,13 @@
 - Pseudo-mutation review: removing endpoint authorization, request principal transfer, cross-scope carrier, exact scope, bearer header, or stateful route mapping is killed by focused tests.
 - Assertion review: exact 401, successful protocol call, principal identity, handler invocation count, idempotent replay and filter ownership are asserted; no assertion-free or truthiness-only generated case remains.
 - Full validation: Release build 0 warnings / 0 errors; suite 802 passed / 0 failed / 1 skipped.
+
+## Atomic idempotency reservations
+
+- Status: research complete; implementation in progress.
+- Root cause: the unique constraint arbitrates response persistence only after every contender has already executed its handler.
+- Focused validation: Application + REST 14/14; SQLite 1/1 and 5/5 repeated stability runs.
+- Pseudo-mutation review: reservation-before-handler, matching wait/replay, different-payload conflict, release-on-failure, exact lease boundary, REST replay header/status/body, and persisted completion mutations are killed. Typed unique detection is runtime-proven on SQLite; PostgreSQL/MariaDB codes compile but remain outside the current CI matrix.
+- Assertion review: 6 generated tests use equality/deep collection, exception, negative invocation, state transition, persisted state, HTTP status/header/body and cardinality assertions. No assertion-free, trivial-only, tautological or unawaited assertion remains.
+- The analysis extension catalog advertises `extensions/dotnet.md`, but that file is absent from the installed skill package; xUnit/FluentAssertions classification used repository conventions directly.
+- Full validation: Release build 0 warnings / 0 errors; suite 808 passed / 0 failed / 1 skipped.

@@ -484,7 +484,10 @@ The same closed catalog drives write idempotency. A caller may set
 `_meta.idempotencyKey` on `tools/call`; the centralized filter hashes the tool
 name plus recursively canonicalized arguments and replays the stored MCP
 result for the same owner. Reusing a key for another tool or payload is a
-conflict. Read tools bypass this policy.
+conflict. The store elects the first caller by atomically inserting a pending
+reservation, so concurrent requests in different processes do not both invoke
+the tool. Failed/abandoned reservations are released or expire by lease. Read
+tools bypass this policy.
 
 The same transport policy requires `read` before resource discovery,
 resource reads, prompt discovery/rendering, completion suggestions,

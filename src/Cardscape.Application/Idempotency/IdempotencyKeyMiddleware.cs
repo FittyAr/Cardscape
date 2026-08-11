@@ -40,13 +40,14 @@ namespace Cardscape.Application.Idempotency;
 /// On a hit (the same owner + key was seen before with the
 /// same payload hash) the middleware short-circuits and
 /// returns the stored JSON, deserialised into the handler's
-/// return type. On a miss the handler runs, its return value
-/// is serialised back to JSON, and the (status, json) pair
-/// is recorded before the middleware returns.
+/// return type. On a miss an in-progress row is inserted before
+/// the handler runs. Only the insertion winner executes; its return
+/// value completes the reservation while contenders wait and replay it.
 /// </para>
 /// </summary>
 public static class IdempotencyKeyMiddleware
 {
+    private static readonly TimeSpan ReservationPollInterval = TimeSpan.FromMilliseconds(20);
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -118,100 +119,67 @@ public static class IdempotencyKeyMiddleware
         var owner = currentUser.Id;
         var key = keyValueResult.Value;
         var requestHash = RequestHasher.Hash(requestJson);
-        DateTimeOffset now = clock.UtcNow;
-
-        // Short-circuit on a hit. A stored key past its
-        // retention window counts as a miss: the row may
-        // still be on disk (the sweeper hasn't reached it
-        // yet) but the middleware must NOT return a
-        // potentially-stale response.
-        var existing = await store.FindAsync(owner, key, ct);
-        if (existing is not null && existing.IsAlive(now))
+        while (true)
         {
-            if (!existing.MatchesRequest(requestHash))
+            IdempotencyKey? existing = await store.FindAsync(owner, key, ct);
+            if (existing is not null)
             {
-                throw new IdempotencyKeyConflictException(existing);
+                if (!existing.MatchesRequest(requestHash))
+                {
+                    throw new IdempotencyKeyConflictException(existing);
+                }
+
+                if (!existing.IsAlive(clock.UtcNow))
+                {
+                    await store.ReleaseAsync(existing.Id, ct);
+                    continue;
+                }
+
+                if (!existing.IsPending)
+                {
+                    return Deserialize<T>(existing.ResponseJson);
+                }
+
+                await Task.Delay(ReservationPollInterval, ct);
+                continue;
             }
-            return Deserialize<T>(existing.ResponseJson);
-        }
 
-        // Miss — run the handler and record the response.
-        // Two concurrent calls with the same (owner, key)
-        // tuple can both reach this branch; the unique
-        // index on (OwnerId, Key) catches the second
-        // insert. The loser re-reads the row and returns
-        // the winner's response, which is the correct
-        // at-most-once semantics.
-        var result = await handler();
-        var responseJson = JsonSerializer.Serialize(result, JsonOptions);
+            var reservationResult = IdempotencyKey.Reserve(
+                owner, key, requestHash, clock.UtcNow);
+            if (reservationResult.IsFailure)
+            {
+                throw new InvalidOperationException(reservationResult.Error.Message);
+            }
 
-        var recordResult = IdempotencyKey.Record(
-            ownerId: owner,
-            key: key,
-            requestHash: requestHash,
-            responseStatusCode: 200,
-            responseJson: responseJson,
-            at: now);
+            IdempotencyKey reservation = reservationResult.Value;
+            if (!await store.TryReserveAsync(reservation, ct))
+            {
+                continue;
+            }
 
-        if (recordResult.IsSuccess)
-        {
             try
             {
-                await store.AddAsync(recordResult.Value, ct);
+                T result = await handler();
+                string responseJson = JsonSerializer.Serialize(result, JsonOptions);
+                bool completed = await store.CompleteReservationAsync(
+                    reservation.Id,
+                    responseStatusCode: 200,
+                    responseJson,
+                    clock.UtcNow,
+                    ct);
+                if (!completed)
+                {
+                    throw new InvalidOperationException(
+                        "The idempotency reservation was lost before completion.");
+                }
+                return result;
             }
-            catch (Exception ex) when (IsUniqueConstraintViolation(ex))
+            catch
             {
-                // Race: another caller with the same
-                // (owner, key) tuple won the insert while
-                // we were running the handler. Re-read the
-                // row and return the winner's cached
-                // response so the caller still sees
-                // at-most-once semantics.
-                IdempotencyKey? winner = await store.FindAsync(owner, key, ct);
-                if (winner is not null && winner.IsAlive(clock.UtcNow)
-                    && winner.MatchesRequest(requestHash))
-                {
-                    return Deserialize<T>(winner.ResponseJson);
-                }
-
-                // The winner used a different payload for
-                // the same key. That is a true conflict;
-                // surface it so the caller can choose a
-                // fresh key.
-                if (winner is not null)
-                {
-                    throw new IdempotencyKeyConflictException(winner);
-                }
-
-                // Winner row vanished (TTL expired between
-                // our insert and the re-read). Best
-                // effort: return our just-computed result.
+                await store.ReleaseAsync(reservation.Id, CancellationToken.None);
+                throw;
             }
         }
-
-        return result;
-    }
-
-    /// <summary>
-    /// True when the failure is a database unique-key
-    /// violation (SQLite / PostgreSQL / MariaDB all
-    /// throw differently; the store layer abstracts the
-    /// exact provider). We re-read on this case so the
-    /// caller still sees at-most-once semantics even when
-    /// two concurrent writes race.
-    /// </summary>
-    private static bool IsUniqueConstraintViolation(Exception ex)
-    {
-        // EF Core wraps provider-specific exceptions in
-        // DbUpdateException; the inner exception is the
-        // one that knows whether it was a unique-key
-        // violation. We sniff the message rather than
-        // relying on provider-specific error codes so
-        // the check survives a provider swap.
-        string message = ex.InnerException?.Message ?? ex.Message;
-        return message.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("duplicate", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("unique constraint", StringComparison.OrdinalIgnoreCase);
     }
 
     private static T Deserialize<T>(string json)

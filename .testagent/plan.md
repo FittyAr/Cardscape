@@ -120,3 +120,11 @@
 - [x] Bridge `RequestContext.User` across the SDK's nested DI scopes without shared-request leakage.
 - [x] Add anonymous endpoint, nested-scope, filter composition and authenticated real-client tests.
 - [x] Run full Release build/suite, review assertions, update normative documentation and publish.
+
+## Atomic idempotency reservations
+
+- [x] Add explicit reservation/completion/release semantics to the domain/store contract.
+- [x] Reserve before invoking the handler; wait/replay for matching contenders and reject mismatched payloads.
+- [x] Make the in-memory fake thread-safe and add deterministic concurrent/failure tests.
+- [x] Add a real SQLite test with independent DbContexts proving one effect and one persisted completed response.
+- [x] Run focused stability loops, full Release validation, assertion/gap review, update the modernization plan and publish.

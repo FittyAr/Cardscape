@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Cardscape.Application.Idempotency;
+using Cardscape.Domain.Idempotency;
 using Cardscape.Domain.Members;
 using Cardscape.Tests.Common.Fakes;
 using FluentAssertions;
@@ -282,6 +283,133 @@ public class IdempotencyKeyMiddlewareTests
         second.Should().NotBe("DIFFERENT");
         second.Should().NotBe("hello world");
         store.Count.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ConcurrentSameRequest_ExecutesHandlerOnceAndReplaysWinner()
+    {
+        var store = new InMemoryIdempotencyKeyStore();
+        var clock = new FakeClock();
+        User user = await SeedUserAsync();
+        FakeCurrentUser current = FakeCurrentUser.AuthenticatedAs(user);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var calls = 0;
+
+        Task<HandlerDto> first = IdempotencyKeyMiddleware.ExecuteAsync(
+            ValidKey, "{\"a\":1}", current, store, clock,
+            async () =>
+            {
+                Interlocked.Increment(ref calls);
+                entered.SetResult();
+                await release.Task;
+                return new HandlerDto(7, "winner");
+            }, CancellationToken.None);
+        await entered.Task;
+        Task<HandlerDto> second = IdempotencyKeyMiddleware.ExecuteAsync(
+            ValidKey, "{\"a\":1}", current, store, clock,
+            () =>
+            {
+                Interlocked.Increment(ref calls);
+                return Task.FromResult(new HandlerDto(99, "loser"));
+            }, CancellationToken.None);
+
+        release.SetResult();
+        HandlerDto[] results = await Task.WhenAll(first, second);
+
+        calls.Should().Be(1);
+        results.Should().AllBeEquivalentTo(new HandlerDto(7, "winner"));
+        store.All.Should().ContainSingle().Which.IsPending.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_FailedWinner_ReleasesReservationForRetry()
+    {
+        var store = new InMemoryIdempotencyKeyStore();
+        var clock = new FakeClock();
+        User user = await SeedUserAsync();
+        FakeCurrentUser current = FakeCurrentUser.AuthenticatedAs(user);
+
+        Func<Task> first = async () => await IdempotencyKeyMiddleware.ExecuteAsync<string>(
+            ValidKey, "{}", current, store, clock,
+            () => throw new InvalidOperationException("handler failed"),
+            CancellationToken.None);
+
+        await first.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("handler failed");
+        store.Count.Should().Be(0);
+
+        string retry = await IdempotencyKeyMiddleware.ExecuteAsync(
+            ValidKey, "{}", current, store, clock,
+            () => Task.FromResult("recovered"), CancellationToken.None);
+
+        retry.Should().Be("recovered");
+        store.All.Should().ContainSingle().Which.IsPending.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DifferentPayloadWhilePending_RejectsWithoutExecutingContender()
+    {
+        var store = new InMemoryIdempotencyKeyStore();
+        var clock = new FakeClock();
+        User user = await SeedUserAsync();
+        FakeCurrentUser current = FakeCurrentUser.AuthenticatedAs(user);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var contenderCalls = 0;
+        Task<string> winner = IdempotencyKeyMiddleware.ExecuteAsync(
+            ValidKey, "{\"a\":1}", current, store, clock,
+            async () =>
+            {
+                entered.SetResult();
+                await release.Task;
+                return "winner";
+            }, CancellationToken.None);
+        await entered.Task;
+
+        Func<Task> contender = async () => await IdempotencyKeyMiddleware.ExecuteAsync(
+            ValidKey, "{\"a\":2}", current, store, clock,
+            () =>
+            {
+                contenderCalls++;
+                return Task.FromResult("contender");
+            }, CancellationToken.None);
+
+        await contender.Should().ThrowAsync<IdempotencyKeyConflictException>();
+        contenderCalls.Should().Be(0);
+        release.SetResult();
+        (await winner).Should().Be("winner");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ExpiredReservation_IsReplacedAndCompleted()
+    {
+        var store = new InMemoryIdempotencyKeyStore();
+        var clock = new FakeClock();
+        User user = await SeedUserAsync();
+        FakeCurrentUser current = FakeCurrentUser.AuthenticatedAs(user);
+        IdempotencyKey reservation = IdempotencyKey.Reserve(
+            user.Id,
+            IdempotencyKeyValue.Create(ValidKey).Value,
+            RequestHashFor("{}"),
+            clock.UtcNow).Value;
+        (await store.TryReserveAsync(
+            reservation,
+            TestContext.Current.CancellationToken)).Should().BeTrue();
+        clock.Advance(IdempotencyKey.ReservationWindow);
+        var calls = 0;
+
+        string result = await IdempotencyKeyMiddleware.ExecuteAsync(
+            ValidKey, "{}", current, store, clock,
+            () =>
+            {
+                calls++;
+                return Task.FromResult("recovered");
+            }, CancellationToken.None);
+
+        result.Should().Be("recovered");
+        calls.Should().Be(1);
+        store.All.Should().ContainSingle().Which.IsPending.Should().BeFalse();
     }
 
     private static async Task<User> SeedUserAsync(string email = "alice@example.com")

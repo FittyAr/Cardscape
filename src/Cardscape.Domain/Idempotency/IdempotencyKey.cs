@@ -37,6 +37,12 @@ namespace Cardscape.Domain.Idempotency;
 /// </remarks>
 public sealed class IdempotencyKey : AggregateRoot<IdempotencyKeyId>
 {
+    /// <summary>Internal status used while the first caller owns the key.</summary>
+    public const int ReservationStatusCode = 102;
+
+    /// <summary>Maximum time an abandoned execution blocks a retry.</summary>
+    public static readonly TimeSpan ReservationWindow = TimeSpan.FromMinutes(15);
+
     /// <summary>Lowercase hex SHA-256 of the request body.</summary>
     public const int RequestHashLength = 64;
 
@@ -153,6 +159,70 @@ public sealed class IdempotencyKey : AggregateRoot<IdempotencyKeyId>
         record.AddDomainEvent(new IdempotencyKeyRecorded(
             record.Id, record.Key, record.OwnerId, record.RequestHash, at));
         return Result.Success(record);
+    }
+
+    /// <summary>
+    /// Creates an in-progress record before the protected effect runs. The
+    /// unique owner/key index makes insertion the cross-process election.
+    /// </summary>
+    public static Result<IdempotencyKey> Reserve(
+        UserId ownerId,
+        IdempotencyKeyValue key,
+        string requestHash,
+        DateTimeOffset at)
+    {
+        Result<IdempotencyKey> result = Record(
+            ownerId,
+            key,
+            requestHash,
+            ReservationStatusCode,
+            string.Empty,
+            at);
+        if (result.IsSuccess)
+        {
+            // A reservation is coordination state, not the completed fact
+            // represented by IdempotencyKeyRecorded.
+            result.Value.ClearDomainEvents();
+            result.Value.ExpiresAt = at + ReservationWindow;
+        }
+        return result;
+    }
+
+    /// <summary>True while the elected caller is still producing a response.</summary>
+    public bool IsPending => ResponseStatusCode == ReservationStatusCode;
+
+    /// <summary>Completes a pending reservation without changing its identity.</summary>
+    public Result Complete(
+        int responseStatusCode,
+        string responseJson,
+        DateTimeOffset at)
+    {
+        if (!IsPending)
+        {
+            return Result.Failure(DomainError.Conflict(
+                "idempotency.key.already_completed",
+                "The idempotency reservation has already been completed."));
+        }
+
+        if (responseStatusCode is < 100 or > 599 or ReservationStatusCode)
+        {
+            return Result.Failure(DomainError.Validation(
+                "idempotency.key.status_invalid",
+                "Completed response status must be a valid non-reservation HTTP status."));
+        }
+
+        if (responseJson is null)
+        {
+            return Result.Failure(DomainError.Validation(
+                "idempotency.key.response_required",
+                "Response body is required."));
+        }
+
+        ResponseStatusCode = responseStatusCode;
+        ResponseJson = responseJson;
+        ExpiresAt = at + RetentionWindow;
+        StampChanged(null, at);
+        return Result.Success();
     }
 
     /// <summary>

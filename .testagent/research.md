@@ -273,3 +273,11 @@
 - [x] Prove two repositories can compete without exceptions or duplicate claims.
 - [x] Prove persisted status, attempt and concurrency-token state after claim.
 - [x] Review gaps/assertions, run focused repetition and full Release validation.
+
+## Concurrent idempotency reservations (2026-08-11)
+
+- Bounded target: `IdempotencyKeyMiddleware`, `IIdempotencyKeyStore`, the EF repository/entity configuration, the in-memory fake, and focused unit/SQLite integration tests.
+- Confirmed gap: both callers execute the handler before either inserts the unique `(OwnerId, Key)` row; the loser only replays after both side effects have occurred.
+- Existing schema can represent an in-progress reservation with HTTP 102 plus an empty response, then atomically complete it; no compatibility migration is required.
+- Acceptance checklist: one handler execution under concurrent same-payload calls; both callers receive the winner response; different payload conflicts without executing; failed winner releases the reservation; abandoned reservations expire; SQLite proves two independent DbContexts coordinate.
+- Conventions: xUnit v3 + FluentAssertions on VSTest; focused `--filter FullyQualifiedName~...` commands under SDK 10.0.302.

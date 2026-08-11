@@ -31,10 +31,9 @@ namespace Cardscape.Api.Middleware;
 ///         (POST / PUT / PATCH / DELETE). GET / HEAD / OPTIONS
 ///         pass through untouched — they're already idempotent
 ///         at the HTTP semantic level.</item>
-///   <item>On a miss: the request flows downstream. The
-///         middleware captures the response status + body and
-///         stores them keyed by (OwnerId, KeyValue) together
-///         with a SHA-256 of the request body.</item>
+///   <item>On a miss: the middleware first reserves the unique
+///         (OwnerId, KeyValue) tuple, then lets only the winner flow
+///         downstream and completes the reservation with the response.</item>
 ///   <item>On a hit with the same request hash and the row is
 ///         not past its <see cref="IdempotencyKey.RetentionWindow"/>:
 ///         the stored response is replayed verbatim (same
@@ -68,6 +67,7 @@ public sealed class IdempotencyMiddleware(
     public const string HeaderName = "Idempotency-Key";
 
     private const int MaxBodyBytes = 1 * 1024 * 1024;
+    private static readonly TimeSpan ReservationPollInterval = TimeSpan.FromMilliseconds(20);
 
     private static readonly HashSet<string> MutableMethods = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -146,11 +146,11 @@ public sealed class IdempotencyMiddleware(
 
         string requestHash = HashRequest(context.Request.Method, context.Request.Path, body);
 
-        IdempotencyKey? existing = await store.FindAsync(ownerId, key, context.RequestAborted);
-        if (existing is not null)
+        IdempotencyKey reservation;
+        while (true)
         {
-            DateTimeOffset now = clock.UtcNow;
-            if (existing.IsAlive(now))
+            IdempotencyKey? existing = await store.FindAsync(ownerId, key, context.RequestAborted);
+            if (existing is not null)
             {
                 if (!existing.MatchesRequest(requestHash))
                 {
@@ -166,17 +166,31 @@ public sealed class IdempotencyMiddleware(
                     return;
                 }
 
-                logger.LogInformation(
-                    "Idempotency-Key {Key} from {Owner} replayed; returning stored response (path={Path})",
-                    key, ownerId, context.Request.Path);
-                await ReplayAsync(context, existing, context.RequestAborted);
-                return;
+                if (!existing.IsAlive(clock.UtcNow))
+                {
+                    await store.ReleaseAsync(existing.Id, context.RequestAborted);
+                    continue;
+                }
+
+                if (!existing.IsPending)
+                {
+                    logger.LogInformation(
+                        "Idempotency-Key {Key} from {Owner} replayed; returning stored response (path={Path})",
+                        key, ownerId, context.Request.Path);
+                    await ReplayAsync(context, existing, context.RequestAborted);
+                    return;
+                }
+
+                await Task.Delay(ReservationPollInterval, context.RequestAborted);
+                continue;
             }
+
+            var reservationResult = IdempotencyKey.Reserve(
+                ownerId, key, requestHash, clock.UtcNow);
+            reservation = reservationResult.Value;
+            if (await store.TryReserveAsync(reservation, context.RequestAborted)) break;
         }
 
-        // Miss path: let the request flow downstream, then
-        // capture the response into a memory stream, store,
-        // and write back to the original Response.Body.
         var captured = new MemoryStream();
         Stream originalBody = context.Response.Body;
         context.Response.Body = captured;
@@ -185,37 +199,37 @@ public sealed class IdempotencyMiddleware(
         {
             await next(context);
         }
+        catch
+        {
+            await store.ReleaseAsync(reservation.Id, CancellationToken.None);
+            throw;
+        }
         finally
         {
             context.Response.Body = originalBody;
         }
 
         int status = context.Response.StatusCode;
-        if (status is >= 200 and < 300 or (>= 400 and < 500))
+        if (status != IdempotencyKey.ReservationStatusCode
+            && (status is >= 200 and < 300 or (>= 400 and < 500)))
         {
             string responseJson = Encoding.UTF8.GetString(captured.ToArray());
-            var record = IdempotencyKey.Record(
-                ownerId,
-                key,
-                requestHash,
+            bool completed = await store.CompleteReservationAsync(
+                reservation.Id,
                 status,
                 responseJson,
-                clock.UtcNow);
-
-            if (record.IsSuccess)
+                clock.UtcNow,
+                context.RequestAborted);
+            if (!completed)
             {
-                try
-                {
-                    await store.AddAsync(record.Value, context.RequestAborted);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(
-                        ex,
-                        "Failed to persist Idempotency-Key {Key} from {Owner} for {Path}",
-                        key, ownerId, context.Request.Path);
-                }
+                logger.LogError(
+                    "Lost Idempotency-Key reservation {Key} from {Owner} for {Path} before completion",
+                    key, ownerId, context.Request.Path);
             }
+        }
+        else
+        {
+            await store.ReleaseAsync(reservation.Id, CancellationToken.None);
         }
 
         captured.Position = 0;

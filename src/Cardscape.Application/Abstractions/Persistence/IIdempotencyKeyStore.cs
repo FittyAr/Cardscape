@@ -31,4 +31,21 @@ public interface IIdempotencyKeyStore
     /// middleware after the handler returns its response.
     /// </summary>
     Task AddAsync(IdempotencyKey record, CancellationToken ct = default);
+
+    /// <summary>
+    /// Atomically inserts an in-progress reservation. Returns false when
+    /// another process already owns the same owner/key tuple.
+    /// </summary>
+    Task<bool> TryReserveAsync(IdempotencyKey reservation, CancellationToken ct = default);
+
+    /// <summary>Completes an owned reservation if it is still pending.</summary>
+    Task<bool> CompleteReservationAsync(
+        IdempotencyKeyId id,
+        int responseStatusCode,
+        string responseJson,
+        DateTimeOffset completedAt,
+        CancellationToken ct = default);
+
+    /// <summary>Releases a failed or expired reservation/record.</summary>
+    Task ReleaseAsync(IdempotencyKeyId id, CancellationToken ct = default);
 }

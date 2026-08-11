@@ -85,7 +85,7 @@ Reglas permanentes:
 - [ ] Gestión de secretos, cifrado, datos personales, borrado/anominización y retención.
 - [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia.
 - [ ] Wolverine/background jobs: scopes, retries, outbox/inbox, cancelación y consistencia de eventos. Claim multi-worker ya es atómico y está probado; quedan outbox/inbox, cancelación y consistencia de eventos.
-- [ ] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia. Scopes, lifetime/composición, transporte Streamable HTTP autenticado, aislamiento de suscripciones e idempotencia global ya corregidos; queda la coordinación de primeras ejecuciones concurrentes.
+- [x] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia. Scopes, lifetime/composición, Streamable HTTP autenticado, aislamiento de suscripciones y reservas idempotentes cross-process verificados.
 - [ ] Observabilidad: logs estructurados, correlación, trazas, métricas, health checks y ausencia de PII/secrets.
 
 ### Fase 3 — API y contratos
@@ -141,7 +141,8 @@ Reglas permanentes:
 | 2026-08-11 | Contratos URI de recursos MCP | Parser compartido respeta autoridad/path de los cinco templates; suscripciones reutilizan el mismo contrato board | Build 0/0; suite 785 pass, 0 fail, 1 skip | `e93030e` |
 | 2026-08-11 | Idempotencia global MCP | `_meta.idempotencyKey` se aplica en un filtro central a todo el catálogo write; hash canónico incluye herramienta y argumentos | Build 0/0; suite 796 pass, 0 fail, 1 skip | `142735a` |
 | 2026-08-11 | Claim atómico de background jobs | Cada candidato usa UPDATE guardado por status + RowVersion; workers concurrentes reciben batches disjuntos | Build 0/0; suite 799 pass, 0 fail, 1 skip | `b1dfed7` |
-| 2026-08-11 | Transporte e identidad MCP | stdio ficticio reemplazado por Streamable HTTP stateful autenticado; principal MCP propagado entre scopes del SDK | Build 0/0; suite 802 pass, 0 fail, 1 skip | Pendiente |
+| 2026-08-11 | Transporte e identidad MCP | stdio ficticio reemplazado por Streamable HTTP stateful autenticado; principal MCP propagado entre scopes del SDK | Build 0/0; suite 802 pass, 0 fail, 1 skip | `46dd323` |
+| 2026-08-11 | Reservas idempotentes atómicas | REST y MCP reservan antes del efecto; contendientes cross-process esperan/reproducen; errores y leases permiten recuperación | Build 0/0; suite 808 pass, 0 fail, 1 skip | Pendiente |
 
 ## 5. Criterio de completitud
 
