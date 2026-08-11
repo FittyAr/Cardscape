@@ -128,3 +128,11 @@
 - [x] Make the in-memory fake thread-safe and add deterministic concurrent/failure tests.
 - [x] Add a real SQLite test with independent DbContexts proving one effect and one persisted completed response.
 - [x] Run focused stability loops, full Release validation, assertion/gap review, update the modernization plan and publish.
+
+## Pre-production compatibility removal
+
+- [x] Collapse Board/List/Card mutation DTOs onto canonical field names and update callers.
+- [x] Remove flat legacy Comment edit/delete routes and exercise authorization through canonical nested routes.
+- [x] Add a regression proving the flat Comment route is not mapped.
+- [x] Delete the unused issue-idempotency command and non-atomic store insertion method.
+- [x] Run focused and full Release validation, review assertions, update documentation and publish.

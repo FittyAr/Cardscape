@@ -78,10 +78,6 @@ public sealed class BoardsApiClient(IHttpClientFactory http) : ApiClientBase(htt
 
     public async Task<ApiResult<BoardDto>> RenameAsync(Guid boardId, string newName, CancellationToken ct = default)
     {
-        // BETA-7-#7 — see test-results/BETA-TEST-REPORT.md.
-        // The endpoint now accepts the consistent `name`
-        // field; `newName` is the legacy v1.0.0 surface kept
-        // for back-compat with the rest of the API.
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             $"api/boards/{boardId}/rename", new { name = newName }, JsonOptions, ct);
         return await ReadAsync<BoardDto>(response, ct);
@@ -90,10 +86,6 @@ public sealed class BoardsApiClient(IHttpClientFactory http) : ApiClientBase(htt
     public async Task<ApiResult<BoardDto>> ChangeDescriptionAsync(
         Guid boardId, string newDescription, CancellationToken ct = default)
     {
-        // BETA-7-#7 — see test-results/BETA-TEST-REPORT.md.
-        // The endpoint now accepts the consistent
-        // `description` field; `newDescription` is the
-        // legacy v1.0.0 surface kept for back-compat.
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             $"api/boards/{boardId}/description", new { description = newDescription }, JsonOptions, ct);
         return await ReadAsync<BoardDto>(response, ct);
@@ -102,10 +94,6 @@ public sealed class BoardsApiClient(IHttpClientFactory http) : ApiClientBase(htt
     public async Task<ApiResult<BoardDto>> ChangeVisibilityAsync(
         Guid boardId, string newVisibility, CancellationToken ct = default)
     {
-        // BETA-7-#7 — see test-results/BETA-TEST-REPORT.md.
-        // The endpoint now accepts the consistent
-        // `visibility` field; `newVisibility` is the
-        // legacy v1.0.0 surface kept for back-compat.
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             $"api/boards/{boardId}/visibility", new { visibility = newVisibility }, JsonOptions, ct);
         return await ReadAsync<BoardDto>(response, ct);

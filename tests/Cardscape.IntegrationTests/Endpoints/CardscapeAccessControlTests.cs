@@ -63,7 +63,7 @@ public sealed class CardscapeAccessControlTests
         HttpClient outsider = await CreateAuthenticatedClientAsync();
 
         HttpResponseMessage rename = await outsider.PostAsJsonAsync(
-            $"api/cards/{card.Id}/rename", new { newTitle = "Hacked" }, TestContext.Current.CancellationToken);
+            $"api/cards/{card.Id}/rename", new { title = "Hacked" }, TestContext.Current.CancellationToken);
         rename.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
         HttpResponseMessage complete = await outsider.PostAsync(
@@ -71,7 +71,7 @@ public sealed class CardscapeAccessControlTests
         complete.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
         HttpResponseMessage move = await outsider.PostAsJsonAsync(
-            $"api/cards/{card.Id}/move", new { newListId = list.Id, newPosition = 1024.0 }, TestContext.Current.CancellationToken);
+            $"api/cards/{card.Id}/move", new { listId = list.Id, position = 1024.0 }, TestContext.Current.CancellationToken);
         move.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
         // Outsider tries to add a new card to the owner's list.
@@ -114,7 +114,7 @@ public sealed class CardscapeAccessControlTests
 
         // But still not write — non-members can never write.
         HttpResponseMessage rename = await outsider.PostAsJsonAsync(
-            $"api/cards/{card.Id}/rename", new { newTitle = "Should fail" }, TestContext.Current.CancellationToken);
+            $"api/cards/{card.Id}/rename", new { title = "Should fail" }, TestContext.Current.CancellationToken);
         rename.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 

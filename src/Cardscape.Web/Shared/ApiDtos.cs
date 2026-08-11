@@ -200,7 +200,6 @@ public sealed record CardSnoozeDto(
 
 public sealed record CreateCardRequestDto(Guid ListId, string Title, string? Description);
 
-public sealed record MoveCardRequestDto(Guid NewListId, double NewPosition);
 
 public sealed record SetCardDueDateRequestDto(DateTimeOffset DueDate);
 

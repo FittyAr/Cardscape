@@ -183,3 +183,13 @@
 - Assertion review: 6 generated tests use equality/deep collection, exception, negative invocation, state transition, persisted state, HTTP status/header/body and cardinality assertions. No assertion-free, trivial-only, tautological or unawaited assertion remains.
 - The analysis extension catalog advertises `extensions/dotnet.md`, but that file is absent from the installed skill package; xUnit/FluentAssertions classification used repository conventions directly.
 - Full validation: Release build 0 warnings / 0 errors; suite 808 passed / 0 failed / 1 skipped.
+
+## Pre-production compatibility removal
+
+- Status: complete.
+- Removed dual mutation request fields, flat Comment routes, and the superseded non-atomic idempotency insertion path.
+- Regression evidence: `Legacy_Comment_Route_Is_Not_Mapped`; existing comment IDOR tests now exercise the canonical card-scoped edit/delete routes.
+- SDK evidence: `Boards_Rename_Async_Posts_Only_The_Canonical_Name_Field` and `Cards_Move_Async_Posts_The_Expected_Body` assert canonical values and the absence of `new*` aliases.
+- Pseudo-mutation/assertion review: remapping the flat route, changing canonical property names, or restoring aliases is killed by exact path/value/negative-property assertions; no generated test is assertion-free, trivial-only, tautological or unawaited. The advertised `.NET` analysis extension is absent from the installed skill package, so xUnit/FluentAssertions classification used repository conventions.
+- Focused validation: SDK 7/7; API route/access tests 16/16.
+- Full validation: Release build 0 warnings / 0 errors; suite 806 passed / 0 failed / 1 skipped.

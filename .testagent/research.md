@@ -281,3 +281,10 @@
 - Existing schema can represent an in-progress reservation with HTTP 102 plus an empty response, then atomically complete it; no compatibility migration is required.
 - Acceptance checklist: one handler execution under concurrent same-payload calls; both callers receive the winner response; different payload conflicts without executing; failed winner releases the reservation; abandoned reservations expire; SQLite proves two independent DbContexts coordinate.
 - Conventions: xUnit v3 + FluentAssertions on VSTest; focused `--filter FullyQualifiedName~...` commands under SDK 10.0.302.
+
+## Pre-production compatibility removal (2026-08-11)
+
+- Bounded target: Board/List/Card mutation request records, Comment endpoint routing, their Web callers, and the idempotency store surface.
+- Confirmed duplication: mutation DTOs accepted both canonical fields and `new*` aliases; Comments mapped canonical nested and legacy flat edit/delete routes; `IssueIdempotencyKeyCommand` and `IIdempotencyKeyStore.AddAsync` had no production consumer after atomic reservations landed.
+- Acceptance checklist: one request field per mutation; no `/api/comments/{id}` mapping; Web sends only canonical shapes; obsolete idempotency command/store method and their isolated tests are removed; focused API tests and full Release validation pass.
+- Conventions: xUnit v3 + FluentAssertions on VSTest under SDK 10.0.302.

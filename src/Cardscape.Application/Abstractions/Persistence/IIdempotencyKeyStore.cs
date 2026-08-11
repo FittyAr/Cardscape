@@ -5,9 +5,8 @@ namespace Cardscape.Application.Abstractions.Persistence;
 
 /// <summary>
 /// Read/write store for <see cref="IdempotencyKey"/>. The MCP
-/// idempotency middleware uses it to look up an existing key
-/// for the same (owner, key) tuple and to record a new one
-/// after the handler completes.
+/// idempotency middleware uses it to coordinate an atomic
+/// reservation and persist the completed response.
 /// </summary>
 public interface IIdempotencyKeyStore
 {
@@ -25,12 +24,6 @@ public interface IIdempotencyKeyStore
         UserId ownerId,
         IdempotencyKeyValue key,
         CancellationToken ct = default);
-
-    /// <summary>
-    /// Persists a new idempotency record. Called by the
-    /// middleware after the handler returns its response.
-    /// </summary>
-    Task AddAsync(IdempotencyKey record, CancellationToken ct = default);
 
     /// <summary>
     /// Atomically inserts an in-progress reservation. Returns false when

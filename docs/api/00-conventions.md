@@ -11,20 +11,17 @@
 https://<host>/api
 ```
 
-All endpoints are under `/api`. The version (if any) is part of
-the route: `/api/boards`, `/api/v2/boards`. We start at v1 (no
-prefix) and bump to `/api/v2/...` when we make a breaking
-change.
+All endpoints are under `/api`. While the product remains outside
+production there is one canonical, unversioned route surface.
 
 ## 2. Versioning policy
 
-- **Non-breaking** changes (new endpoint, new optional field on
-  a response, new query parameter) go out without a version
-  bump.
-- **Breaking** changes (renamed field, removed endpoint,
-  changed semantics) require a new version. We support at most
-  two versions concurrently; the older version is deprecated
-  with a `Sunset` HTTP header and a six-month removal window.
+- Breaking changes replace the previous contract directly; obsolete
+  routes, aliases and adapters are removed in the same change as their
+  callers, tests and documentation.
+- A production versioning and deprecation policy must be designed before
+  the first stable release. It must not be inferred from pre-production
+  behavior.
 
 ## 3. Authentication
 
@@ -120,7 +117,7 @@ Errors are returned as `application/problem+json` (RFC 7807):
   "instance": "/api/boards/5f3a...",
   "traceId": "00-abc-def-00",
   "errors": {
-    "newName": ["New name is required."]
+    "name": ["Name is required."]
   }
 }
 ```
@@ -172,9 +169,9 @@ header. The exact limits are configurable.
 
 ## 12. Versioning of the OpenAPI document
 
-The OpenAPI document is published at `/openapi/v1.json`
-(Development only) and at a public URL once the API is
-stable. Breaking changes bump to `/openapi/v2.json` etc.
+The canonical OpenAPI document is published at `/openapi/v1.json`
+in Development. The `v1` segment is the generator's document name;
+it does not imply that an obsolete HTTP contract remains available.
 
 ## 13. CORS
 
@@ -221,12 +218,12 @@ Content-Type: application/json
 ### Rename a board
 
 ```http
-PUT /api/boards/5f3a0000-0000-0000-0000-0000000000ab/name
+POST /api/boards/5f3a0000-0000-0000-0000-0000000000ab/rename
 Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "newName": "Q3 Roadmap (revised)"
+  "name": "Q3 Roadmap (revised)"
 }
 ```
 

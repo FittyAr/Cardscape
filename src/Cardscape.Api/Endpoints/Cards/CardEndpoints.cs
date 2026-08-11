@@ -80,31 +80,19 @@ public static class CardEndpoints
 
         group.MapPost("/{cardId:guid}/rename", async (Guid cardId, RenameBody body, IMessageBus bus, CancellationToken ct) =>
         {
-            // BETA-7-#7 — see test-results/BETA-TEST-REPORT.md.
-            // Accept both `title` and the legacy `newTitle`
-            // for back-compat with the v1.0.0 client surface.
-            string newTitle = body.Title ?? body.NewTitle ?? string.Empty;
-            var result = await bus.InvokeAsync<Result<CardDto>>(new RenameCardCommand(cardId, newTitle), ct);
+            var result = await bus.InvokeAsync<Result<CardDto>>(new RenameCardCommand(cardId, body.Title), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
         group.MapPost("/{cardId:guid}/description", async (Guid cardId, DescriptionBody body, IMessageBus bus, CancellationToken ct) =>
         {
-            // BETA-7-#7 — accept both `description` and the
-            // legacy `newDescription` for back-compat.
-            string newDescription = body.Description ?? body.NewDescription ?? string.Empty;
-            var result = await bus.InvokeAsync<Result<CardDto>>(new ChangeCardDescriptionCommand(cardId, newDescription), ct);
+            var result = await bus.InvokeAsync<Result<CardDto>>(new ChangeCardDescriptionCommand(cardId, body.Description), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
         group.MapPost("/{cardId:guid}/move", async (Guid cardId, MoveBody body, IMessageBus bus, CancellationToken ct) =>
         {
-            // BETA-7-#7 — accept both the consistent
-            // `listId` / `position` and the legacy
-            // `newListId` / `newPosition` for back-compat.
-            Guid newListId = body.ListId ?? body.NewListId;
-            double newPosition = body.Position ?? body.NewPosition;
-            var result = await bus.InvokeAsync<Result<CardDto>>(new MoveCardCommand(cardId, newListId, newPosition), ct);
+            var result = await bus.InvokeAsync<Result<CardDto>>(new MoveCardCommand(cardId, body.ListId, body.Position), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
@@ -241,9 +229,9 @@ public static class CardEndpoints
     }
 
     public sealed record CreateCardBody(Guid ListId, string Title, string? Description);
-    public sealed record RenameBody(string? Title, string? NewTitle);
-    public sealed record DescriptionBody(string? Description, string? NewDescription);
-    public sealed record MoveBody(Guid? ListId, double? Position, Guid NewListId, double NewPosition);
+    public sealed record RenameBody(string Title);
+    public sealed record DescriptionBody(string Description);
+    public sealed record MoveBody(Guid ListId, double Position);
     public sealed record DueDateBody(DateTimeOffset DueDate);
     public sealed record MirrorBody(Guid TargetListId);
     public sealed record SnoozeBody(DateTimeOffset Until);

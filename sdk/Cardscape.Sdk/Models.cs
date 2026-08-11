@@ -77,7 +77,7 @@ public sealed record CreateBoardRequest(
     [property: JsonPropertyName("visibility")] BoardVisibility Visibility = BoardVisibility.Private);
 
 public sealed record RenameBoardRequest(
-    [property: JsonPropertyName("newName")] string NewName);
+    [property: JsonPropertyName("name")] string Name);
 
 // ── Lists ──────────────────────────────────────────────
 public sealed record BoardListDto(
@@ -117,8 +117,8 @@ public sealed record UpdateCardRequest(
     [property: JsonPropertyName("dueDate")] DateTimeOffset? DueDate = null);
 
 public sealed record MoveCardRequest(
-    [property: JsonPropertyName("newListId")] Guid NewListId,
-    [property: JsonPropertyName("newPosition")] double NewPosition);
+    [property: JsonPropertyName("listId")] Guid ListId,
+    [property: JsonPropertyName("position")] double Position);
 
 // ── Labels ─────────────────────────────────────────────
 public sealed record LabelDto(

@@ -101,7 +101,7 @@ public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplication
         card.ListId.Should().Be(list.Id);
 
         // ── 7. Move to the second list ────────────────────────
-        var moveRequest = new { NewListId = secondList!.Id, NewPosition = 1.0 };
+        var moveRequest = new { ListId = secondList!.Id, Position = 1.0 };
         HttpResponseMessage moveResponse = await client.PostAsJsonAsync($"api/cards/{card.Id}/move", moveRequest, TestContext.Current.CancellationToken);
         moveResponse.IsSuccessStatusCode.Should().BeTrue(
             $"card move must succeed. Body: {await moveResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");

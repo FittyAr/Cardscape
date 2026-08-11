@@ -49,6 +49,40 @@ public sealed class SubClientTests
     }
 
     [Fact]
+    public async Task Boards_Rename_Async_Posts_Only_The_Canonical_Name_Field()
+    {
+        RequestCapture capture = new();
+        using HttpMessageHandlerStub handler = new(req =>
+        {
+            capture.CaptureSync(req);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new
+                {
+                    id = Guid.NewGuid(),
+                    name = "Renamed",
+                    description = (string?)null,
+                    visibility = 0
+                })
+            };
+        });
+        using HttpClient http = new(handler) { BaseAddress = new("https://api.example.test/") };
+        await using CardscapeClient client = new(http, new CardscapeClientOptions
+        {
+            BaseAddress = new("https://api.example.test/")
+        });
+
+        Guid boardId = Guid.NewGuid();
+        await client.Boards.RenameAsync(boardId, "Renamed", TestContext.Current.CancellationToken);
+
+        capture.Method.Should().Be(HttpMethod.Post);
+        capture.Path.Should().Be($"/api/boards/{boardId}/rename");
+        JsonElement body = JsonDocument.Parse(capture.Body).RootElement;
+        body.GetProperty("name").GetString().Should().Be("Renamed");
+        body.TryGetProperty("newName", out _).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Cards_Move_Async_Posts_The_Expected_Body()
     {
         RequestCapture capture = new();
@@ -76,15 +110,17 @@ public sealed class SubClientTests
         Guid newListId = Guid.NewGuid();
         await client.Cards.MoveAsync(
             cardId,
-            new MoveCardRequest(NewListId: newListId, NewPosition: 2.5),
+            new MoveCardRequest(ListId: newListId, Position: 2.5),
             TestContext.Current.CancellationToken);
 
         capture.Method.Should().Be(HttpMethod.Post);
         capture.Path.Should().Be($"/api/cards/{cardId}/move");
 
         JsonElement body = JsonDocument.Parse(capture.Body).RootElement;
-        body.GetProperty("newListId").GetGuid().Should().Be(newListId);
-        body.GetProperty("newPosition").GetDouble().Should().Be(2.5);
+        body.GetProperty("listId").GetGuid().Should().Be(newListId);
+        body.GetProperty("position").GetDouble().Should().Be(2.5);
+        body.TryGetProperty("newListId", out _).Should().BeFalse();
+        body.TryGetProperty("newPosition", out _).Should().BeFalse();
     }
 
     [Fact]

@@ -632,15 +632,6 @@ public sealed class InMemoryIdempotencyKeyStore : IIdempotencyKeyStore
         }
     }
 
-    public Task AddAsync(IdempotencyKey record, CancellationToken ct = default)
-    {
-        lock (_gate)
-        {
-            _store[(record.OwnerId, record.Key.Value)] = record;
-        }
-        return Task.CompletedTask;
-    }
-
     public Task<bool> TryReserveAsync(
         IdempotencyKey reservation,
         CancellationToken ct = default)

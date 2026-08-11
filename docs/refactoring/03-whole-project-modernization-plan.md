@@ -91,7 +91,7 @@ Reglas permanentes:
 ### Fase 3 — API y contratos
 
 - [ ] Revisar semántica HTTP, Problem Details, validación, cancelación y códigos de estado de todos los endpoints.
-- [ ] Eliminar endpoints legacy y contratos duplicados porque no se exige retrocompatibilidad.
+- [ ] Eliminar endpoints legacy y contratos duplicados porque no se exige retrocompatibilidad. Retirados aliases `new*` de mutaciones Board/List/Card, rutas planas legacy de Comments y el comando/store `AddAsync` de idempotencia sin consumidores; continúa la auditoría del resto de la API.
 - [ ] Verificar OpenAPI/Scalar y sincronía con SDK/Web.
 - [ ] Normalizar paginación, filtros, límites y errores.
 

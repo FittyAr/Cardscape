@@ -64,7 +64,7 @@ public sealed class V120IdorFixesTests
 
         HttpClient outsider = await CreateAuthenticatedClientAsync();
         HttpResponseMessage edit = await outsider.PutAsJsonAsync(
-            $"api/comments/{commentId}",
+            $"api/cards/{card.Id}/comments/{commentId}",
             new { newBody = "hostile" },
             TestContext.Current.CancellationToken);
         edit.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -79,8 +79,23 @@ public sealed class V120IdorFixesTests
 
         HttpClient outsider = await CreateAuthenticatedClientAsync();
         HttpResponseMessage delete = await outsider.DeleteAsync(
-            $"api/comments/{commentId}", TestContext.Current.CancellationToken);
+            $"api/cards/{card.Id}/comments/{commentId}", TestContext.Current.CancellationToken);
         delete.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Legacy_Comment_Route_Is_Not_Mapped()
+    {
+        HttpClient owner = await CreateAuthenticatedClientAsync();
+        (_, _, CardDto card) = await SeedBoardListCardAsync(owner);
+        Guid commentId = await PostCommentAsync(owner, card.Id, "owner comment");
+
+        HttpResponseMessage response = await owner.PutAsJsonAsync(
+            $"api/comments/{commentId}",
+            new { newBody = "obsolete route" },
+            TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     // ── Checklists ──────────────────────────────────────────────

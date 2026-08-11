@@ -7,7 +7,6 @@ public interface ICommentsApiClient
 {
     Task<ApiResult<IReadOnlyList<CommentDto>>> ListForCardAsync(Guid cardId, CancellationToken ct = default);
     Task<ApiResult<CommentDto>> AddAsync(Guid cardId, string body, CancellationToken ct = default);
-    Task<ApiResult> DeleteAsync(Guid commentId, CancellationToken ct = default);
 }
 
 public sealed class CommentsApiClient(IHttpClientFactory http) : ApiClientBase(http), ICommentsApiClient
@@ -27,9 +26,4 @@ public sealed class CommentsApiClient(IHttpClientFactory http) : ApiClientBase(h
         return await ReadAsync<CommentDto>(response, ct);
     }
 
-    public async Task<ApiResult> DeleteAsync(Guid commentId, CancellationToken ct = default)
-    {
-        HttpResponseMessage response = await CreateClient().DeleteAsync($"api/comments/{commentId}", ct);
-        return await ReadAsync(response, ct);
-    }
 }
