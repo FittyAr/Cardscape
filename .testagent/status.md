@@ -244,3 +244,9 @@
 - Assertion review: assertions inspect exact schemes, cookie policy/lifetime, callback path, and normalized output; no truthiness-only or self-referential assertions.
 - Final pseudo-mutation review added exact provider-continuity cases (missing, mismatched, casing and valid). The remaining remote network handshake belongs to provider middleware and is not simulated.
 - Final assertion-quality review: 3 logical test methods / 11 data executions; all have meaningful exact equality or state assertions, zero assertion-free/trivial/self-referential tests. The documented .NET extension file was absent from the installed skill package, so FluentAssertions classification was applied from the base catalog.
+# SCIM administration authorization boundary (2026-08-11)
+
+- Focused SCIM integration tests: 5/5 passing.
+- Pseudo-mutation review: member-for-owner, omitted list/revoke authorization, omitted token/workspace equality, and omitted LastUsed persistence are killed by exact 403/404/state/timestamp assertions.
+- Assertion review: both new tests contain meaningful HTTP equality plus persisted-state assertions; zero assertion-free, trivial-only or self-referential tests. The .NET extension file advertised by the installed analysis skill is absent, so FluentAssertions was classified from the base catalog.
+- Release build: 0 warnings, 0 errors. Full suite: 835 passed, 0 failed, 1 skipped.

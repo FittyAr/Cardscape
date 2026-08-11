@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Cardscape.Application.Authentication.DTOs;
@@ -73,6 +74,79 @@ public class ScimEndpointTests
             (await listResp3.Content.ReadFromJsonAsync<List<ScimTokenListItemDto>>(TestContext.Current.CancellationToken))!;
         afterRevoke.Should().HaveCount(1);
         afterRevoke[0].IsRevoked.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ScimTokenAdministration_ForNonOwner_ReturnsForbidden()
+    {
+        HttpClient owner = _factory.CreateApiClient();
+        AuthResponse ownerAuth = await RegisterAndLogin(owner);
+        owner.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", ownerAuth.AccessToken);
+        WorkspaceDto workspace = await CreateWorkspaceAsync(owner, "SCIM protected workspace");
+        ScimIssueResponseDto token = await IssueTokenAsync(owner, workspace.Id, "Protected token");
+
+        HttpClient outsider = _factory.CreateApiClient();
+        AuthResponse outsiderAuth = await RegisterAndLogin(outsider);
+        outsider.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", outsiderAuth.AccessToken);
+
+        HttpResponseMessage list = await outsider.GetAsync(
+            $"api/workspaces/{workspace.Id}/scim/tokens", TestContext.Current.CancellationToken);
+        HttpResponseMessage issue = await outsider.PostAsJsonAsync(
+            $"api/workspaces/{workspace.Id}/scim/tokens",
+            new { name = "Attacker token" }, TestContext.Current.CancellationToken);
+        HttpResponseMessage revoke = await outsider.DeleteAsync(
+            $"api/workspaces/{workspace.Id}/scim/tokens/{token.Token.Id}",
+            TestContext.Current.CancellationToken);
+
+        list.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        issue.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        revoke.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task RevokeScimToken_WhenTokenBelongsToAnotherWorkspace_ReturnsNotFound()
+    {
+        HttpClient owner = _factory.CreateApiClient();
+        AuthResponse auth = await RegisterAndLogin(owner);
+        owner.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        WorkspaceDto first = await CreateWorkspaceAsync(owner, "SCIM first workspace");
+        WorkspaceDto second = await CreateWorkspaceAsync(owner, "SCIM second workspace");
+        ScimIssueResponseDto token = await IssueTokenAsync(owner, first.Id, "First workspace token");
+
+        HttpResponseMessage crossWorkspaceRevoke = await owner.DeleteAsync(
+            $"api/workspaces/{second.Id}/scim/tokens/{token.Token.Id}",
+            TestContext.Current.CancellationToken);
+
+        crossWorkspaceRevoke.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        HttpResponseMessage originalList = await owner.GetAsync(
+            $"api/workspaces/{first.Id}/scim/tokens", TestContext.Current.CancellationToken);
+        List<ScimTokenListItemDto>? tokens = await originalList.Content
+            .ReadFromJsonAsync<List<ScimTokenListItemDto>>(TestContext.Current.CancellationToken);
+        tokens.Should().ContainSingle(t => t.Id == token.Token.Id && !t.IsRevoked);
+    }
+
+    private static async Task<WorkspaceDto> CreateWorkspaceAsync(HttpClient client, string name)
+    {
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "api/workspaces/", new CreateWorkspaceRequest(name), TestJson.Options,
+            TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<WorkspaceDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+    }
+
+    private static async Task<ScimIssueResponseDto> IssueTokenAsync(
+        HttpClient client, Guid workspaceId, string name)
+    {
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            $"api/workspaces/{workspaceId}/scim/tokens", new { name },
+            TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<ScimIssueResponseDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
     }
 
     private static async Task<AuthResponse> RegisterAndLogin(HttpClient client)

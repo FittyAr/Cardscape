@@ -47,7 +47,7 @@ public static class ScimAdminEndpoints
             Guid workspaceId, Guid tokenId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
-                new RevokeScimTokenCommand(tokenId), ct);
+                new RevokeScimTokenCommand(workspaceId, tokenId), ct);
             return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
         });
 

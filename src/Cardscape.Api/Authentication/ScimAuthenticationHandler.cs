@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,8 @@ public sealed class ScimAuthenticationHandler(
     ILoggerFactory loggerFactory,
     UrlEncoder encoder,
     IScimTokenRepository tokens,
-    IUnitOfWork unitOfWork) : AuthenticationHandler<ScimAuthenticationOptions>(options, loggerFactory, encoder)
+    IUnitOfWork unitOfWork,
+    IClock clock) : AuthenticationHandler<ScimAuthenticationOptions>(options, loggerFactory, encoder)
 {
     public const string SchemeName = "Scim";
     public const string WorkspaceIdItemKey = "scim.workspaceId";
@@ -46,14 +48,14 @@ public sealed class ScimAuthenticationHandler(
             return AuthenticateResult.Fail("Empty bearer token.");
         }
 
-        var scimToken = await tokens.FindByPlaintextAsync(token);
+        var scimToken = await tokens.FindByPlaintextAsync(token, Context.RequestAborted);
         if (scimToken is null)
         {
             return AuthenticateResult.Fail("Invalid SCIM bearer token.");
         }
 
         Context.Items[WorkspaceIdItemKey] = scimToken.WorkspaceId.Value;
-        scimToken.RecordUse(DateTimeOffset.UtcNow);
+        scimToken.RecordUse(clock.UtcNow);
 
         // The RecordUse call mutates the aggregate in memory
         // (sets LastUsedAt) but EF Core never sees the change

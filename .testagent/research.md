@@ -328,3 +328,10 @@
 - Static pairing analyzer was attempted once with the documented Roslyn command; SDK 10 rejected the file-based script because it is not a runnable project. Manual inspection was limited to this bounded scope.
 - Defect: remote handlers had no temporary sign-in scheme; Apple reused the application callback as the middleware callback; custom state cookies were written but never validated or read.
 - Acceptance checklist: external cookie is short lived; every remote provider signs into it; bearer remains the API default; Apple has a distinct middleware callback; return URLs reject external/network paths; SPA receives the validated local path.
+# SCIM administration authorization boundary (2026-08-11)
+
+- Scope: SCIM token issue/list/revoke commands and their workspace-scoped REST routes.
+- Finding: issue checked only membership; list checked no caller; revoke accepted only a token id and ignored the route workspace. Any authenticated user could enumerate or revoke another workspace's credential.
+- Decision: SCIM credential administration is owner-only, matching other high-impact workspace settings. Token revocation must match both route workspace and stored token workspace.
+- Static pairing analyzer was attempted once; SDK 10 rejected the documented file-based Roslyn script because it is not a runnable project.
+- Acceptance: outsider receives 403 for issue/list/revoke; a token cannot be revoked through another workspace route; valid owner roundtrip remains green.

@@ -67,6 +67,12 @@ public class ScimGroupsEndpointsTests
         // The owner is the only member right after creation.
         list.Resources[0].Members.Should().HaveCount(1);
         list.Resources[0].Members[0].Value.Should().Be(auth.User.Id.ToString("D"));
+
+        HttpResponseMessage tokenListResponse = await admin.GetAsync(
+            $"api/workspaces/{ws.Id}/scim/tokens", TestContext.Current.CancellationToken);
+        ScimTokenListItemDto[]? tokenList = await tokenListResponse.Content
+            .ReadFromJsonAsync<ScimTokenListItemDto[]>(TestJson.Options, TestContext.Current.CancellationToken);
+        tokenList.Should().ContainSingle(t => t.Id == issue.Token.Id && t.LastUsedAt != null);
     }
 
     [Fact]

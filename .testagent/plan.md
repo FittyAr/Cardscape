@@ -179,3 +179,10 @@
 - [x] Pass the local return path to the Radzen/Blazor callback.
 - [x] Add composition and return-path boundary tests.
 - [x] Run focused tests and complete solution validation.
+# SCIM administration authorization boundary (2026-08-11)
+
+- [x] Make issue/list/revoke owner-only in Application.
+- [x] Carry route workspace id into revoke and require token/workspace equality.
+- [x] Add integration coverage for outsider IDOR attempts and cross-workspace token mismatch.
+- [x] Run focused tests and pseudo-mutation/assertion review.
+- [x] Run Release build and full suite.
