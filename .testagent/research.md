@@ -196,3 +196,21 @@
 - Subscription creation still needs URI-level membership validation, and active subscriptions need a
   revocation strategy when board membership changes. The broadcaster currently retains sessions rather
   than user identities, so this requires a dedicated identity-aware subscription block.
+
+## Phase 2 follow-up: identity-aware MCP subscriptions
+
+### Bounded target inventory
+
+- `MembershipGuards.EnsureCanReadBoardAsync` is the existing Application rule for explicit user/board access.
+- The MCP subscribe handler currently stores only URI + `McpServer`; it neither validates the URI nor captures user identity.
+- The broadcaster sends `board://{id:N}` notifications and can re-resolve scoped repositories before fan-out.
+- Subscribe URIs are not canonicalized, so equivalent GUID formats may never match broadcast keys.
+
+### Acceptance checklist
+
+- [x] Accept only board resource URIs and canonicalize them to the broadcaster key.
+- [x] Validate the current user through the existing Application membership guard before storing a subscription.
+- [x] Store the subscriber user id with the session, without exposing it in admin snapshots.
+- [x] Revalidate each distinct subscriber identity before every broadcast and remove unauthorized subscriptions.
+- [x] Preserve public-board read semantics from Application.
+- [x] Prove URI parsing, allowed/denied membership and revocation behavior; run full validation.

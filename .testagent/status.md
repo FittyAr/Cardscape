@@ -100,3 +100,15 @@
   so xUnit/FluentAssertions classification follows repository conventions directly.
 - Residual risk recorded: subscription membership and post-subscription membership revocation.
 - Full validation: Release build 0 warnings / 0 errors; suite 763 passed / 0 failed / 1 skipped.
+
+## MCP subscription identity and membership
+
+- Status: complete.
+- Chosen boundary: MCP owns session/URI state; Application owns board read authorization.
+- Narrow validation: 9/9 covering canonicalization, invalid schemes/ids, member access,
+  public-board access, private-board denial and revoked-member pruning before fan-out.
+- Pseudo-mutation review: scheme comparison, GUID validation, empty user, membership result,
+  stored subscriber identity and the broadcast recheck are killed by focused cases.
+- Assertion review: no assertion-free/trivial cases; exact canonical output, exception codes,
+  snapshot state and repository invocation count are asserted.
+- Full validation: Release build 0 warnings / 0 errors; suite 772 passed / 0 failed / 1 skipped.

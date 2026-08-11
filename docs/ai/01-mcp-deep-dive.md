@@ -489,6 +489,12 @@ resource reads, prompt discovery/rendering, completion suggestions,
 and resource subscribe/unsubscribe handlers execute. Domain queries
 then enforce workspace and board membership as the inner boundary.
 
+Board subscriptions accept only `board://{boardId}` URIs, normalize the
+GUID and capture the authenticated user id internally. Before every
+notification fan-out the broadcaster reuses Application's board-read
+guard; revoked private-board access removes the subscription before any
+notification is sent. Administrative snapshots expose session ids only.
+
 The MCP server does **not** support cookie auth or JWT
 auth. The AI client is not a browser; the bearer token is
 the right auth method for an AI client.

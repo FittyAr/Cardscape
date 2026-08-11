@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Common;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -18,7 +20,9 @@ namespace Cardscape.Mcp.Realtime;
 /// the standard MCP
 /// <c>notifications/resources/updated</c> notification
 /// (see <c>NotificationMethods.ResourceUpdatedNotification</c>)
-/// to each subscribed session.
+/// to each subscribed session. Subscriptions retain the caller's user id
+/// internally and re-run Application's board read guard before every fan-out,
+/// so membership revocation takes effect without restarting the MCP host.
 ///
 /// The broadcaster also keeps a bounded ring of the last
 /// <see cref="MaxEventLogSize"/> events (subscribe,
@@ -38,38 +42,44 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
     public const int MaxEventLogSize = 1000;
 
     private readonly ILogger<McpResourceBroadcaster> logger;
-    private readonly ConcurrentDictionary<string, List<McpServer>> subscribers = new();
+    private readonly ConcurrentDictionary<string, List<ResourceSubscription>> subscribers = new();
     private readonly ConcurrentQueue<SubscriptionEvent> eventLog = new();
     private readonly System.Threading.Lock gate = new();
+    private readonly IServiceScopeFactory scopeFactory;
 
-    public McpResourceBroadcaster(ILogger<McpResourceBroadcaster> logger)
+    public McpResourceBroadcaster(
+        ILogger<McpResourceBroadcaster> logger,
+        IServiceScopeFactory scopeFactory)
     {
         this.logger = logger;
+        this.scopeFactory = scopeFactory;
     }
 
     /// <summary>
     /// Registers an MCP client (by its <see cref="McpServer"/>
     /// instance — the per-session server that owns the
     /// transport) to receive <c>ResourceUpdated</c> notifications
-    /// for the given resource URI. Idempotent: a duplicate
+    /// for the given resource URI. The associated user id remains process-internal
+    /// and is used to revalidate board access on broadcast. Idempotent: a duplicate
     /// <see cref="Subscribe"/> for the same server is a no-op.
     /// </summary>
-    public void Subscribe(string uri, McpServer server)
+    public void Subscribe(string uri, McpServer server, Guid userId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(uri);
         ArgumentNullException.ThrowIfNull(server);
+        ArgumentOutOfRangeException.ThrowIfEqual(userId, Guid.Empty);
 
         lock (gate)
         {
-            if (!subscribers.TryGetValue(uri, out List<McpServer>? list))
+            if (!subscribers.TryGetValue(uri, out List<ResourceSubscription>? list))
             {
                 list = [];
                 subscribers[uri] = list;
             }
 
-            if (!list.Contains(server))
+            if (!list.Any(subscription => ReferenceEquals(subscription.Server, server)))
             {
-                list.Add(server);
+                list.Add(new ResourceSubscription(server, userId));
                 RecordEvent(new SubscriptionEvent(
                     EventKind: SubscriptionEventKind.Subscribed,
                     Uri: uri,
@@ -87,9 +97,11 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
 
         lock (gate)
         {
-            if (subscribers.TryGetValue(uri, out List<McpServer>? list))
+            if (subscribers.TryGetValue(uri, out List<ResourceSubscription>? list))
             {
-                if (list.Remove(server))
+                ResourceSubscription? subscription = list.FirstOrDefault(item =>
+                    ReferenceEquals(item.Server, server));
+                if (subscription is not null && list.Remove(subscription))
                 {
                     RecordEvent(new SubscriptionEvent(
                         EventKind: SubscriptionEventKind.Unsubscribed,
@@ -122,10 +134,10 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
     {
         string uri = $"board://{boardId:N}";
 
-        List<McpServer> targets;
+        List<ResourceSubscription> targets;
         lock (gate)
         {
-            if (!subscribers.TryGetValue(uri, out List<McpServer>? list) || list.Count == 0)
+            if (!subscribers.TryGetValue(uri, out List<ResourceSubscription>? list) || list.Count == 0)
             {
                 RecordEvent(new SubscriptionEvent(
                     EventKind: SubscriptionEventKind.Broadcast,
@@ -141,11 +153,29 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
         var payload = new ResourceUpdatedNotificationParams { Uri = uri };
         int sent = 0;
         List<string> deadSessions = [];
-        foreach (McpServer server in targets)
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
+        IBoardRepository boards = scope.ServiceProvider.GetRequiredService<IBoardRepository>();
+        Dictionary<Guid, bool> accessByUser = [];
+        foreach (ResourceSubscription subscription in targets)
         {
             if (ct.IsCancellationRequested)
             {
                 break;
+            }
+
+            if (!accessByUser.TryGetValue(subscription.UserId, out bool canRead))
+            {
+                canRead = (await MembershipGuards.EnsureCanReadBoardAsync(
+                    boards, subscription.UserId, boardId, ct)).IsSuccess;
+                accessByUser[subscription.UserId] = canRead;
+            }
+
+            McpServer server = subscription.Server;
+            if (!canRead)
+            {
+                deadSessions.Add(GetSessionId(server));
+                Unsubscribe(uri, server);
+                continue;
             }
             try
             {
@@ -200,7 +230,7 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
         {
             snapshotSubscribers = subscribers.ToDictionary(
                 kvp => kvp.Key,
-                kvp => (IReadOnlyList<string>)kvp.Value.Select(GetSessionId).ToList());
+                kvp => (IReadOnlyList<string>)kvp.Value.Select(item => GetSessionId(item.Server)).ToList());
         }
 
         IReadOnlyList<SubscriptionEvent> events = eventLog
@@ -258,6 +288,8 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
         return ValueTask.CompletedTask;
     }
 }
+
+internal sealed record ResourceSubscription(McpServer Server, Guid UserId);
 
 /// <summary>Read-only snapshot of the broadcaster state.</summary>
 public sealed record McpResourceBroadcasterSnapshot(

@@ -1,3 +1,4 @@
+using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.DependencyInjection;
 using Cardscape.Domain.Security;
@@ -129,7 +130,7 @@ public static class ServiceCollectionExtensions
                 () => next(request, cancellationToken));
         };
 
-    private static ValueTask<EmptyResult> SubscribeToResourceAsync(
+    private static async ValueTask<EmptyResult> SubscribeToResourceAsync(
         RequestContext<SubscribeRequestParams> request,
         CancellationToken cancellationToken)
     {
@@ -140,10 +141,26 @@ public static class ServiceCollectionExtensions
                 "subscribe request is missing a uri parameter.", nameof(request));
         }
 
-        McpResourceBroadcaster broadcaster = request.Services!
+        IServiceProvider services = request.Services!;
+        ICurrentUser currentUser = services.GetRequiredService<ICurrentUser>();
+        if (currentUser.Id is null)
+        {
+            throw new ModelContextProtocol.McpException(
+                $"{McpBoardSubscriptionAuthorization.ForbiddenErrorCode}: An authenticated user is required.");
+        }
+
+        Guid userId = currentUser.Id.Value;
+        IBoardRepository boards = services.GetRequiredService<IBoardRepository>();
+        string canonicalUri = await McpBoardSubscriptionAuthorization.AuthorizeAsync(
+            parameters.Uri,
+            userId,
+            boards,
+            cancellationToken);
+
+        McpResourceBroadcaster broadcaster = services
             .GetRequiredService<McpResourceBroadcaster>();
-        broadcaster.Subscribe(parameters.Uri, request.Server);
-        return ValueTask.FromResult(new EmptyResult());
+        broadcaster.Subscribe(canonicalUri, request.Server, userId);
+        return new EmptyResult();
     }
 
     private static ValueTask<EmptyResult> UnsubscribeFromResourceAsync(
@@ -157,9 +174,11 @@ public static class ServiceCollectionExtensions
                 "unsubscribe request is missing a uri parameter.", nameof(request));
         }
 
+        string canonicalUri = McpBoardSubscriptionAuthorization.ToCanonicalUri(
+            McpBoardSubscriptionAuthorization.ParseBoardId(parameters.Uri));
         McpResourceBroadcaster broadcaster = request.Services!
             .GetRequiredService<McpResourceBroadcaster>();
-        broadcaster.Unsubscribe(parameters.Uri, request.Server);
+        broadcaster.Unsubscribe(canonicalUri, request.Server);
         return ValueTask.FromResult(new EmptyResult());
     }
 

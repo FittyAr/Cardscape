@@ -79,3 +79,11 @@
 - [x] Register read-scope filters for discovery, reads, prompts, completion and subscriptions.
 - [x] Add focused behavioral tests for the reusable policy and real filter composition.
 - [x] Review assertions/gaps, run full Release validation and update architecture plan.
+
+## MCP subscription identity and membership
+
+- [x] Reuse the existing explicit-user Application membership guard.
+- [x] Add a board-subscription authorizer with strict URI normalization.
+- [x] Capture user identity in broadcaster subscriptions and revalidate on fan-out.
+- [x] Add focused tests for parsing, membership and revoked-access pruning.
+- [x] Review assertions/gaps, run full validation, update plan and publish.

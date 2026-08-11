@@ -54,7 +54,7 @@ Reglas permanentes:
 - [x] MCP duplicaba `CurrentUser` y no registraba su accessor real; ahora reutiliza el mapping de Application, registra sólo el adaptador de transporte y E2E ya no parchea la composición.
 - [x] Los API tokens MCP emitían scopes pero ninguna herramienta los consumía; un filtro central ahora exige `read` o `write`, deniega herramientas sin clasificar y un invariant mantiene completo el catálogo.
 - [x] Recursos, prompts, completion y suscripciones MCP omitían scopes; las ocho superficies de datos ahora comparten la autorización exacta `read` antes de ejecutar handlers.
-- [ ] Suscripciones MCP guardan sesiones pero no identidad/membresía; deben validar el URI al suscribir y revocar el fan-out cuando cambia la membresía.
+- [x] Suscripciones MCP ahora normalizan el URI, validan membresía al crearse, conservan identidad sólo internamente y la revalidan antes de cada fan-out.
 
 ## 3. Plan de ejecución
 
@@ -85,7 +85,7 @@ Reglas permanentes:
 - [ ] Gestión de secretos, cifrado, datos personales, borrado/anominización y retención.
 - [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia.
 - [ ] Wolverine/background jobs: scopes, retries, outbox/inbox, cancelación y consistencia de eventos.
-- [ ] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia. Scopes de herramientas y lifetime/composición ya corregidos; quedan aislamiento contextual, suscripciones e idempotencia.
+- [ ] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia. Scopes, lifetime/composición y aislamiento de suscripciones ya corregidos; quedan auditoría del transporte e idempotencia global.
 - [ ] Observabilidad: logs estructurados, correlación, trazas, métricas, health checks y ausencia de PII/secrets.
 
 ### Fase 3 — API y contratos
@@ -136,7 +136,8 @@ Reglas permanentes:
 | 2026-08-11 | Contrato calendario | Puerto renombrado por capacidad; DTSTAMP determinista mediante IClock; RFC 5545 fijado con tests | Build 0/0; suite 744 pass, 0 fail, 1 skip | `9b1cf16` |
 | 2026-08-11 | Current user MCP | Mapping duplicado eliminado; accessor MCP registrado en producción; workaround E2E removido; invariant agregado | Build 0/0; suite 745 pass, 0 fail, 1 skip | `9052126` |
 | 2026-08-11 | Scopes MCP | Filtro central deny-by-default; catálogo explícito read/write; invariant contra herramientas sin clasificar | Build 0/0; suite 757 pass, 0 fail, 1 skip | `5899713` |
-| 2026-08-11 | Superficies de lectura MCP | Política reutilizable; recursos, prompts, completion y suscripciones exigen read; composición SDK fijada por test | Build 0/0; suite 763 pass, 0 fail, 1 skip | Pendiente |
+| 2026-08-11 | Superficies de lectura MCP | Política reutilizable; recursos, prompts, completion y suscripciones exigen read; composición SDK fijada por test | Build 0/0; suite 763 pass, 0 fail, 1 skip | `57b6d04` |
+| 2026-08-11 | Identidad en suscripciones MCP | URI board canónico; membresía validada al suscribir y antes de fan-out; identidad no expuesta | Build 0/0; suite 772 pass, 0 fail, 1 skip | Pendiente |
 
 ## 5. Criterio de completitud
 
