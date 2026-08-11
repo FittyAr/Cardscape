@@ -193,7 +193,7 @@ browser, not a third-party script). The threats:
 | Threat | Mitigation |
 |---|---|
 | An AI client calling a write tool without the required scope | the authorization pipeline checks the scope; the tool returns `mcp.scope.forbidden` |
-| An AI client retrying a write and creating duplicates | every write tool accepts an `Idempotency-Key`; the same key produces the same result |
+| An AI client retrying a write and creating duplicates | the centralized `tools/call` filter applies `_meta.idempotencyKey` to every catalogued write; the same owner, tool and canonical payload replay the stored result |
 
 ### R — Repudiation
 

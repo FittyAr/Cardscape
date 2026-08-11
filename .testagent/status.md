@@ -125,3 +125,23 @@
   contract message); there are no assertion-free or truthiness-only cases.
 - Final narrow validation: 21/21 after adding explicit fragment rejection.
 - Full validation: Release build 0 warnings / 0 errors; suite 785 passed / 0 failed / 1 skipped.
+
+## MCP write idempotency boundary
+
+- Status: complete for global sequential replay coverage.
+- Confirmed bypass: 57 of 59 catalogued write tools never reach the existing idempotency middleware.
+- Chosen boundary: protocol `_meta.idempotencyKey` at the centralized `tools/call` filter, backed by the existing Application policy.
+- Narrow validation: 12/12 covering policy behavior, real `CallToolResult` replay and behavioral filter composition.
+- Pseudo-mutation review found and closed the missing write-without-key bypass case. Classification,
+  canonical ordering, tool-name isolation, owner isolation, validation and handler short-circuit mutations are killed.
+- Assertion review: no assertion-free, trivial-only or self-referential tests. Equality/deep result,
+  exception, negative invocation and persisted-state assertions cover independent effects.
+- The analysis skill package advertises `extensions/dotnet.md` but does not include it; framework
+  classification therefore used the repository's xUnit/FluentAssertions conventions directly.
+- Residual risk for the transport block: concurrent first-use requests can both execute their handler
+  before the persistence unique constraint selects a winning response; cross-process exactly-once
+  execution requires an atomic reservation/lease design, not merely replay caching.
+- Full validation: Release build 0 warnings / 0 errors; final suite run 796 passed / 0 failed / 1 skipped.
+- The first full run exposed a transient `DbUpdateConcurrencyException` in
+  `BackgroundJobRepository.ClaimBatchAsync`; the failed test passed alone and the complete rerun passed.
+  This unrelated claim race is recorded for the next background-jobs block rather than hidden.

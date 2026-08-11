@@ -1,3 +1,4 @@
+using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.DependencyInjection;
@@ -5,6 +6,7 @@ using Cardscape.Domain.Security;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Mcp.Authentication;
 using Cardscape.Mcp.Authorization;
+using Cardscape.Mcp.Idempotency;
 using Cardscape.Mcp.Realtime;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
@@ -92,7 +94,19 @@ public static class ServiceCollectionExtensions
                     return await McpToolScopePolicy.AuthorizeAndInvokeAsync(
                         request.Params?.Name,
                         accessor.GetCurrentPrincipal(),
-                        () => next(request, cancellationToken));
+                        async () =>
+                        {
+                            IServiceProvider requestServices = request.Services!;
+                            return await McpToolIdempotencyPolicy.InvokeAsync(
+                                request.Params?.Name,
+                                request.Params?.Arguments,
+                                request.Params?.Meta,
+                                requestServices.GetRequiredService<ICurrentUser>(),
+                                requestServices.GetRequiredService<IIdempotencyKeyStore>(),
+                                requestServices.GetRequiredService<IClock>(),
+                                () => next(request, cancellationToken),
+                                cancellationToken);
+                        });
                 });
                 filters.AddListResourceTemplatesFilter(RequireReadScope);
                 filters.AddListResourcesFilter(RequireReadScope);

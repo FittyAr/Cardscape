@@ -111,7 +111,7 @@ or a transport.
 | Check | How to verify |
 |---|---|
 | **The tool's scope is declared.** | The tool has an `[McpScope("cards:read")]` attribute (or equivalent); the scope is enforced by the authorization pipeline. |
-| **The tool's idempotency key is supported.** | The tool accepts an `IdempotencyKey` parameter; the handler checks the key in the `Idempotency` store; the same key produces the same result. |
+| **Write idempotency remains centralized.** | Classify the tool as `write`; the `tools/call` filter consumes `_meta.idempotencyKey`, hashes the tool plus canonical arguments and replays through the Application idempotency store. Do not add per-tool idempotency parameters. |
 | **The tool's parameters are validated.** | The parameter validation is the same as the REST API's; the validator is shared, not duplicated. |
 | **The tool's response does not leak the user's data to another user.** | The tool's response is scoped to the API token's user; the tool does not return data the user cannot see via the REST API. |
 | **The tool's OTel span has the right attributes.** | The span has `cardscape.user_id`, `cardscape.workspace_id`, and `cardscape.mcp.tool`; the trace id is propagated to the `Application` layer. |

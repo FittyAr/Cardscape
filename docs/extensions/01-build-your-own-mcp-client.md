@@ -173,12 +173,16 @@ down the fan-out.
 
 ## 5. Idempotency
 
-Every Cardscape MCP write tool accepts an optional
-`idempotencyKey` parameter. Pass the same UUID for retries
+Every Cardscape MCP write tool accepts an optional protocol metadata field,
+`_meta.idempotencyKey`. Pass the same high-entropy key for retries
 of the same logical operation; the server short-circuits
 the handler and returns the stored response from the first
 call. This is the right pattern for AI agents that may
 retry on transient network failures.
+
+Do not place the key in the tool's business arguments. It belongs to the
+`tools/call` request metadata so the same centralized policy covers every
+current and future tool classified as `write`.
 
 ## 6. Reference
 

@@ -232,3 +232,23 @@
 - [x] Reuse the same board parser for subscription authorization.
 - [x] Prove all five valid contracts and malformed/cross-scheme rejection.
 - [x] Run narrow and full validation with assertion/gap review.
+
+## Phase 2 follow-up: MCP write idempotency boundary
+
+### Bounded target inventory
+
+- The closed scope catalog classifies 59 advertised tools as `write`.
+- Only `lists_create` and `cards_create` currently call `IdempotentToolRunner`; the remaining writes bypass replay protection.
+- `CallToolRequestParams` exposes protocol-level `_meta` plus the complete argument dictionary before tool binding.
+- Application already owns persistence, owner isolation, expiry, replay and conflict semantics in `IdempotencyKeyMiddleware`.
+- The current request hash omits the tool name and depends on JSON property order when callers serialize ad hoc payloads.
+
+### Acceptance checklist
+
+- [x] Apply idempotency once at the `tools/call` boundary to every catalogued write tool.
+- [x] Read the optional key from `_meta.idempotencyKey`; reads and writes without a key remain unchanged.
+- [x] Canonicalize the tool name and recursively sorted arguments so equivalent JSON hashes identically.
+- [x] Include the tool name so one key cannot replay a different tool with identical arguments.
+- [x] Remove the two per-tool shims and their duplicated DI dependencies.
+- [x] Prove replay short-circuit, payload/tool conflict, owner isolation, key validation and read bypass.
+- [x] Add a composition invariant, review gaps/assertions and run narrow plus full validation.

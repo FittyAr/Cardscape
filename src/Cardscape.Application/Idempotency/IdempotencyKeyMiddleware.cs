@@ -18,8 +18,8 @@ namespace Cardscape.Application.Idempotency;
 /// (§2.4) called out: both the REST API and the MCP can call
 /// into this middleware, so the same (owner, key, request hash)
 /// semantics apply regardless of which transport the caller
-/// used. The MCP-side <c>IdempotentToolRunner</c> is now a thin
-/// shim over this class.
+/// used. Transport adapters invoke this policy from their own
+/// request boundary.
 /// </para>
 ///
 /// <para>

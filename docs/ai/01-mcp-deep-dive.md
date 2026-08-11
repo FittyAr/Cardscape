@@ -484,6 +484,12 @@ tool. Neither scope implies the other. Missing grants return
 `mcp.scope.forbidden`; tools missing from the catalog are denied
 with `mcp.scope.unclassified` until explicitly reviewed.
 
+The same closed catalog drives write idempotency. A caller may set
+`_meta.idempotencyKey` on `tools/call`; the centralized filter hashes the tool
+name plus recursively canonicalized arguments and replays the stored MCP
+result for the same owner. Reusing a key for another tool or payload is a
+conflict. Read tools bypass this policy.
+
 The same transport policy requires `read` before resource discovery,
 resource reads, prompt discovery/rendering, completion suggestions,
 and resource subscribe/unsubscribe handlers execute. Domain queries

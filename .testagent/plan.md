@@ -94,3 +94,12 @@
 - [x] Add one strict shared parser and migrate resources/subscriptions.
 - [x] Add data-driven valid and invalid contract tests.
 - [x] Review assertions/gaps, run full validation, update plan and publish.
+
+## MCP write idempotency boundary
+
+- [x] Add canonical request serialization for tool name plus recursively sorted arguments.
+- [x] Add a closed write-tool idempotency policy backed by Application middleware.
+- [x] Compose authorization then idempotency in the single call-tool filter.
+- [x] Remove `IdempotentToolRunner` and the two per-tool opt-in paths.
+- [x] Add focused policy/canonicalization and real composition tests.
+- [x] Review assertions/gaps, run Release validation, update documentation and publish.

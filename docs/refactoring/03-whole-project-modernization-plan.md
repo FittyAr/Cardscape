@@ -84,8 +84,8 @@ Reglas permanentes:
 - [ ] Persistencia: modelo EF, transacciones, concurrencia, índices, consultas N+1, tracking y compatibilidad de los tres providers.
 - [ ] Gestión de secretos, cifrado, datos personales, borrado/anominización y retención.
 - [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia.
-- [ ] Wolverine/background jobs: scopes, retries, outbox/inbox, cancelación y consistencia de eventos.
-- [ ] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia. Scopes, lifetime/composición y aislamiento de suscripciones ya corregidos; quedan auditoría del transporte e idempotencia global.
+- [ ] Wolverine/background jobs: scopes, retries, outbox/inbox, cancelación y consistencia de eventos. La suite expuso un race transitorio de claim (`DbUpdateConcurrencyException`) pendiente de corrección específica.
+- [ ] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia. Scopes, lifetime/composición, aislamiento de suscripciones e idempotencia global ya corregidos; quedan transporte y coordinación de primeras ejecuciones concurrentes.
 - [ ] Observabilidad: logs estructurados, correlación, trazas, métricas, health checks y ausencia de PII/secrets.
 
 ### Fase 3 — API y contratos
@@ -138,7 +138,8 @@ Reglas permanentes:
 | 2026-08-11 | Scopes MCP | Filtro central deny-by-default; catálogo explícito read/write; invariant contra herramientas sin clasificar | Build 0/0; suite 757 pass, 0 fail, 1 skip | `5899713` |
 | 2026-08-11 | Superficies de lectura MCP | Política reutilizable; recursos, prompts, completion y suscripciones exigen read; composición SDK fijada por test | Build 0/0; suite 763 pass, 0 fail, 1 skip | `57b6d04` |
 | 2026-08-11 | Identidad en suscripciones MCP | URI board canónico; membresía validada al suscribir y antes de fan-out; identidad no expuesta | Build 0/0; suite 772 pass, 0 fail, 1 skip | `d1403d2` |
-| 2026-08-11 | Contratos URI de recursos MCP | Parser compartido respeta autoridad/path de los cinco templates; suscripciones reutilizan el mismo contrato board | Build 0/0; suite 785 pass, 0 fail, 1 skip | Pendiente |
+| 2026-08-11 | Contratos URI de recursos MCP | Parser compartido respeta autoridad/path de los cinco templates; suscripciones reutilizan el mismo contrato board | Build 0/0; suite 785 pass, 0 fail, 1 skip | `e93030e` |
+| 2026-08-11 | Idempotencia global MCP | `_meta.idempotencyKey` se aplica en un filtro central a todo el catálogo write; hash canónico incluye herramienta y argumentos | Build 0/0; suite 796 pass, 0 fail, 1 skip | Pendiente |
 
 ## 5. Criterio de completitud
 

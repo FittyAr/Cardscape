@@ -29,7 +29,7 @@ src/Cardscape.Mcp/
 │   ├── CommentsTool.cs                 ← add_comment
 │   ├── MembersTool.cs                  ← assign_card
 │   ├── SearchTool.cs                    ← search
-│   └── IdempotencyToolFilter.cs        ← per-request IdempotencyKey handling
+│   └── McpToolIdempotencyPolicy.cs     ← centralized _meta.idempotencyKey handling
 ├── Resources/
 │   ├── BoardResource.cs                ← board://{boardId}
 │   ├── CardResource.cs                 ← card://{cardId}
@@ -346,18 +346,19 @@ Every tool follows these rules:
 
 ### 7.2 Idempotency
 
-Write tools (`cards_create`, `cards_update`, `cards_move`,
-`cards_archive`, `comments_add`, `members_assign`,
-`labels_add`, `checklist_add`) accept an optional
-`idempotencyKey` parameter. When provided:
+Every tool classified as `write` by the closed scope catalog supports an
+optional protocol-level `_meta.idempotencyKey`. The centralized
+`tools/call` filter applies it before invoking any tool implementation. When
+provided:
 
-- The same key on the same tool, with the same payload,
+- The same key on the same tool, with the same canonical payload,
   produces the same effect (no duplicate side-effects) for a
   configurable retention window (default 24 hours).
-- The key is stored in a new `IdempotencyKey` entity in
-  `Application`. The MCP server consults the store before
-  invoking the handler; if the key is found, it returns the
-  cached response.
+- The key is stored in the `IdempotencyKey` entity in `Application`. The MCP
+  filter consults the store before invoking the handler; if the key is found,
+  it returns the cached MCP response.
+- Tool name and recursively sorted arguments form the request hash. Reusing a
+  key for another tool or payload is rejected as a conflict.
 
 This makes the MCP surface safe for AI agents that retry on
 errors (which they do).
@@ -525,7 +526,7 @@ semver strictly: a breaking change in a tool bumps the
 - The MCP server does not log API token secrets. The structured
   log includes only the token's prefix and id, never the
   secret.
-- Every write tool supports `IdempotencyKey`, which prevents
+- Every write tool supports `_meta.idempotencyKey`, which prevents
   AI-agent retries from causing duplicate side-effects.
 
 ## 15. References
