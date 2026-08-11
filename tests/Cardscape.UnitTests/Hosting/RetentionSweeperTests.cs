@@ -7,6 +7,7 @@ using Cardscape.Tests.Common.Fakes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace Cardscape.UnitTests.Hosting;
 
@@ -115,11 +116,11 @@ public class RetentionSweeperTests
                 // IServiceScope, so we don't need to pass
                 // the context in.
                 var clock = new FakeClock(Now);
-                var settings = new StubRetentionSettings
+                var settings = Options.Create(new RetentionSettingsOptions
                 {
                     UserGracePeriodDays = 30,
                     BatchSize = 100
-                };
+                });
                 var sweeper = new RetentionSweeper(
                     sp, clock, settings, NullLogger<RetentionSweeper>.Instance);
 
@@ -195,11 +196,11 @@ public class RetentionSweeperTests
                 }
 
                 var clock = new FakeClock(Now);
-                var settings = new StubRetentionSettings
+                var settings = Options.Create(new RetentionSettingsOptions
                 {
                     UserGracePeriodDays = 30,
                     BatchSize = 100
-                };
+                });
                 var sweeper = new RetentionSweeper(
                     sp, clock, settings, NullLogger<RetentionSweeper>.Instance);
 
@@ -281,20 +282,5 @@ public class RetentionSweeperTests
             // Best effort — the temp directory is scrubbed
             // by the OS eventually.
         }
-    }
-
-    /// <summary>
-    /// Minimal <see cref="IRetentionSettings"/> stub. The
-    /// sweeper only reads a handful of values, so a hand-
-    /// rolled stub is lighter than wiring
-    /// <c>IOptions&lt;RetentionSettingsOptions&gt;</c>.
-    /// </summary>
-    private sealed class StubRetentionSettings : IRetentionSettings
-    {
-        public int SweepIntervalSeconds => 21_600;
-        public int UserGracePeriodDays { get; init; } = 30;
-        public int ActivityRetentionDays => 365;
-        public int AuditRetentionDays => 730;
-        public int BatchSize { get; init; } = 100;
     }
 }

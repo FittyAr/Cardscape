@@ -50,3 +50,20 @@
 - [x] Revocation sweeper zero/negative interval and negative initial delay fail startup validation.
 - [x] Defaults pass startup validation and retain their exact safe values.
 - [x] Narrow tests compile and pass; assertions and gaps are reviewed.
+
+## Phase 1 follow-up: abstraction ownership
+
+### Bounded target inventory
+
+- `src/Cardscape.Infrastructure/Hosting/RetentionSweeper.cs`: declares `IRetentionSettings` plus an adapter that only forwards `IOptions<RetentionSettingsOptions>`.
+- `src/Cardscape.Infrastructure/DependencyInjection/InfrastructureServiceCollectionExtensions.cs`: registers the redundant adapter.
+- `tests/Cardscape.ArchitectureTests/ArchitectureTests.cs`: intended to reject Infrastructure-owned public interfaces, but filtered out correctly named `I*` interfaces and therefore could not detect them.
+- `tests/Cardscape.UnitTests/Hosting/RetentionSweeperTests.cs`: two behavioral sweeper tests use a hand-written settings stub.
+
+### Acceptance checklist
+
+- [x] Consume validated `IOptions<RetentionSettingsOptions>` directly and remove the redundant Infrastructure interface/adapter.
+- [x] Use the injected clock consistently for retention scheduling calculations.
+- [x] Make the architecture rule reject every public interface declared by Infrastructure.
+- [x] Preserve anonymisation and empty-database behavior with strong assertions.
+- [x] Run narrow architecture and retention tests, then the full solution.

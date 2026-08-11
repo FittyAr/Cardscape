@@ -255,8 +255,6 @@ public static class InfrastructureServiceCollectionExtensions
                     && options.BatchSize > 0,
                 "Retention settings require a positive sweep interval, retention periods and batch size; the user grace period cannot be negative.")
             .ValidateOnStart();
-        services.AddSingleton<Cardscape.Infrastructure.Hosting.IRetentionSettings,
-            Cardscape.Infrastructure.Hosting.RetentionSettings>();
         services.AddHostedService<Cardscape.Infrastructure.Hosting.RetentionSweeper>();
 
         // JWT revocation sweeper. Drops every

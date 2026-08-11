@@ -39,23 +39,24 @@ namespace Cardscape.Infrastructure.Hosting;
 public sealed class RetentionSweeper(
     IServiceProvider services,
     IClock clock,
-    IRetentionSettings settings,
+    IOptions<RetentionSettingsOptions> options,
     ILogger<RetentionSweeper> logger) : BackgroundService
 {
-    private readonly TimeSpan _sweepInterval = TimeSpan.FromSeconds(settings.SweepIntervalSeconds);
-    private readonly int _activityRetentionDays = settings.ActivityRetentionDays;
-    private readonly int _auditRetentionDays = settings.AuditRetentionDays;
-    private readonly int _userGracePeriodDays = settings.UserGracePeriodDays;
-    private readonly int _batchSize = settings.BatchSize;
+    private readonly TimeSpan _sweepInterval = TimeSpan.FromSeconds(options.Value.SweepIntervalSeconds);
+    private readonly int _activityRetentionDays = options.Value.ActivityRetentionDays;
+    private readonly int _auditRetentionDays = options.Value.AuditRetentionDays;
+    private readonly int _userGracePeriodDays = options.Value.UserGracePeriodDays;
+    private readonly int _batchSize = options.Value.BatchSize;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Stagger the first sweep so multiple replicas
         // don't sweep at the same moment. The stagger
-        // is derived from the process start time so it
-        // is consistent across restarts.
+        // is derived from the injected current time so
+        // scheduling remains deterministic in tests.
+        DateTimeOffset now = clock.UtcNow;
         TimeSpan initialDelay = TimeSpan.FromMinutes(
-            (DateTime.UtcNow.Minute * 60 + DateTime.UtcNow.Second) % (int)_sweepInterval.TotalSeconds / 60);
+            (now.Minute * 60 + now.Second) % (int)_sweepInterval.TotalSeconds / 60);
         if (initialDelay > TimeSpan.Zero)
         {
             try
@@ -293,15 +294,6 @@ public sealed class RetentionSweeper(
 /// <c>appsettings.json</c>. Defaults match the GDPR
 /// doc and the SOC 2 control matrix.
 /// </summary>
-public interface IRetentionSettings
-{
-    int SweepIntervalSeconds { get; }
-    int UserGracePeriodDays { get; }
-    int ActivityRetentionDays { get; }
-    int AuditRetentionDays { get; }
-    int BatchSize { get; }
-}
-
 public sealed class RetentionSettingsOptions
 {
     public const string SectionName = "Retention";
@@ -310,14 +302,4 @@ public sealed class RetentionSettingsOptions
     public int ActivityRetentionDays { get; set; } = 365;
     public int AuditRetentionDays { get; set; } = 730;
     public int BatchSize { get; set; } = 100;
-}
-
-public sealed class RetentionSettings(IOptions<RetentionSettingsOptions> options) : IRetentionSettings
-{
-    private readonly RetentionSettingsOptions _o = options.Value;
-    public int SweepIntervalSeconds => _o.SweepIntervalSeconds;
-    public int UserGracePeriodDays => _o.UserGracePeriodDays;
-    public int ActivityRetentionDays => _o.ActivityRetentionDays;
-    public int AuditRetentionDays => _o.AuditRetentionDays;
-    public int BatchSize => _o.BatchSize;
 }

@@ -258,12 +258,12 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void Infrastructure_HasNoOrphanInterfaces()
+    public void Infrastructure_DeclaresNoPublicInterfaces()
     {
-        // Every interface defined in Infrastructure must have a non-Infrastructure
-        // counterpart (i.e. it implements an Application/Abstractions/ interface).
-        // A green test means there are no Infrastructure-only interfaces that the
-        // rest of the codebase couldn't mock.
+        // Infrastructure implements ports owned by Application. Public interfaces
+        // declared here invert that ownership and create abstractions around
+        // implementation details. If a genuine port is needed, it belongs in the
+        // consuming inner layer instead.
         var allInfrastructureTypes = Types.InAssembly(typeof(Cardscape.Infrastructure.DependencyInjection.InfrastructureServiceCollectionExtensions).Assembly)
             .That()
             .AreInterfaces()
@@ -271,7 +271,6 @@ public sealed class ArchitectureTests
 
         var orphanNames = allInfrastructureTypes
             .Where(i => i.IsPublic)
-            .Where(i => !i.Name.StartsWith('I'))
             .Select(i => i.FullName)
             .ToList();
 

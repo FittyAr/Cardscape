@@ -11,3 +11,11 @@
 2. [x] Prove enabled-admin success with 200 for status/options and 202 for run/wipe.
 3. [x] Add host-start validation theories for every invalid retention/revocation boundary and a passing-defaults test.
 4. [x] Run narrow integration/unit filters, re-open assertions, and record the gap/quality review.
+
+## Phase 1 follow-up: abstraction ownership
+
+1. [x] Replace `IRetentionSettings`/`RetentionSettings` with direct `IOptions<RetentionSettingsOptions>` consumption.
+2. [x] Replace ambient `DateTime.UtcNow` use in the sweeper with the injected `IClock`.
+3. [x] Correct `Infrastructure_HasNoOrphanInterfaces` so conventional `I*` names are not accidentally excluded.
+4. [x] Run the two narrow test classes and perform assertion/gap review.
+5. [x] Run full Release build and suite.
