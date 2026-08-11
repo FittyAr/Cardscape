@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
+using Cardscape.Application.Abstractions;
 using Cardscape.Application.Authentication.Abstractions;
 using Cardscape.Domain.Members;
 
@@ -9,7 +10,7 @@ namespace Cardscape.Infrastructure.Authentication;
 /// Default <see cref="IPendingTotpLoginStore"/> implementation.
 /// Per-process dictionary keyed by a 256-bit random token.
 /// </summary>
-public sealed class InMemoryPendingTotpLoginStore : IPendingTotpLoginStore
+public sealed class InMemoryPendingTotpLoginStore(IClock clock) : IPendingTotpLoginStore
 {
     private static readonly TimeSpan TokenLifetime = TimeSpan.FromMinutes(5);
 
@@ -19,7 +20,7 @@ public sealed class InMemoryPendingTotpLoginStore : IPendingTotpLoginStore
     {
         byte[] bytes = RandomNumberGenerator.GetBytes(32);
         string token = Convert.ToBase64String(bytes);
-        _entries[token] = new Entry(userId, DateTimeOffset.UtcNow.Add(TokenLifetime));
+        _entries[token] = new Entry(userId, clock.UtcNow.Add(TokenLifetime));
         return token;
     }
 
@@ -35,7 +36,7 @@ public sealed class InMemoryPendingTotpLoginStore : IPendingTotpLoginStore
             return null;
         }
 
-        if (entry.ExpiresAt <= DateTimeOffset.UtcNow)
+        if (entry.ExpiresAt <= clock.UtcNow)
         {
             return null;
         }

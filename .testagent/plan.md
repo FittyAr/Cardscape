@@ -29,6 +29,14 @@
 5. [x] Run architecture and Seeder endpoint tests narrowly.
 6. [x] Run full Release build and suite.
 
+## Phase 1 follow-up: pending TOTP lifetime
+
+1. [x] Inject `IClock` into `InMemoryPendingTotpLoginStore`.
+2. [x] Replace ambient expiration/consumption time reads.
+3. [x] Add boundary, single-use and invalid-token unit tests.
+4. [x] Run the new test class narrowly and review assertions.
+5. [x] Run full Release build and suite.
+
 ## Phase 1 follow-up: realtime boundary ownership
 
 1. [x] Delete `IMcpResourceNotifier` from Application.

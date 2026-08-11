@@ -102,3 +102,20 @@
 - [x] Preserve the cross-process notification behavior.
 - [x] Guard the exact transport-neutral public contracts allowed in `Application.Realtime`.
 - [x] Run narrow architecture/E2E validation, assertion review and the full suite.
+
+## Phase 1 follow-up: pending TOTP lifetime
+
+### Bounded target inventory
+
+- `src/Cardscape.Application/Authentication/Abstractions/IPendingTotpLoginStore.cs`: legitimate Application port consumed by the two-step login flow.
+- `src/Cardscape.Infrastructure/Authentication/InMemoryPendingTotpLoginStore.cs`: singleton implementation with a five-minute TTL based on ambient wall-clock time.
+- `src/Cardscape.Infrastructure/Authentication/RedisPendingTotpLoginStore.cs`: alternate distributed implementation whose expiration is enforced atomically by Redis.
+
+### Acceptance checklist
+
+- [x] Preserve the port because Application consumes it and two backends implement it.
+- [x] Use the registered `IClock` in the in-memory implementation.
+- [x] Prove successful consumption immediately before expiration.
+- [x] Prove expiration at exactly five minutes and destructive removal of expired challenges.
+- [x] Prove single-use and invalid-token behavior.
+- [x] Run narrow and full Release validation with assertion review.

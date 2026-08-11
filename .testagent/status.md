@@ -44,3 +44,12 @@
 - Narrow validation: Architecture 13/13; MCP cross-process E2E 5/5.
 - Assertion/gap review: the new test compares the complete public interface set, so additions, removals and process-specific contracts all fail with explicit differences. `Api_Notifier_Can_Call_Mcp_Directly_Across_Processes` still asserts the recorded HTTP method, path, secret and board payload through the concrete API notifier.
 - Full validation: Release build 0 warnings/0 errors; suite 737 passed, 0 failed, 1 skipped.
+
+## Phase 1 follow-up: pending TOTP lifetime
+
+- Research: completed.
+- Plan: completed.
+- Implementation: completed.
+- Narrow validation: `InMemoryPendingTotpLoginStoreTests` 6/6.
+- Assertion/gap review: tests distinguish one tick before expiration from the exact exclusive boundary, prove destructive removal after expiration, prove single-use after success, and cover null/empty/whitespace/unknown tokens. The initial compile failure was traced to the deliberate TestCommon fake sharing the production type name and fixed with an explicit production-type alias.
+- Full validation: Release build 0 warnings/0 errors; suite 743 passed, 0 failed, 1 skipped.
