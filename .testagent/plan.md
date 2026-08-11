@@ -20,6 +20,14 @@
 4. [x] Run the two narrow test classes and perform assertion/gap review.
 5. [x] Run full Release build and suite.
 
+## Phase 1 follow-up: calendar feed contract
+
+1. [x] Rename `IIcalendarService` to `ICalendarFeedRenderer`.
+2. [x] Inject `IClock` into `IcsCalendarService` and remove ambient time.
+3. [x] Add a deterministic renderer test using valid domain aggregates.
+4. [x] Run calendar unit and endpoint integration tests narrowly.
+5. [x] Run full Release build and suite.
+
 ## Phase 1 follow-up: Seeder public surface
 
 1. [x] Internalize `ISeedStep`, `SeedStepBase` and all concrete steps.

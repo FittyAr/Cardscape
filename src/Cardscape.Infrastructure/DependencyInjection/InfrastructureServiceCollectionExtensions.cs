@@ -553,7 +553,7 @@ public static class InfrastructureServiceCollectionExtensions
         // endpoints throw "No service for type" on the first
         // call (caught by the G15 integration test pass).
         services.AddScoped<Application.Abstractions.Export.IExportService, BoardExportService>();
-        services.AddScoped<Application.Calendar.IIcalendarService, IcsCalendarService>();
+        services.AddScoped<Application.Calendar.ICalendarFeedRenderer, IcsCalendarService>();
 
         return services;
     }

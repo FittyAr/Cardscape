@@ -15,7 +15,7 @@ public static class RenderBoardCalendarQueryHandler
 {
     public static async Task<Result<Stream>> Handle(
         RenderBoardCalendarQuery query,
-        IIcalendarService calendar,
+        ICalendarFeedRenderer calendar,
         CancellationToken ct) =>
         await calendar.RenderBoardAsync(query.BoardId, ct);
 }

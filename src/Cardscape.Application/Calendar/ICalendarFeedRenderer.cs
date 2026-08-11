@@ -9,7 +9,7 @@ namespace Cardscape.Application.Calendar;
 /// to the browser when the user subscribes, and what the
 /// REST endpoint streams back as <c>text/calendar</c>.
 /// </summary>
-public interface IIcalendarService
+public interface ICalendarFeedRenderer
 {
     /// <summary>
     /// Returns a <see cref="Stream"/> positioned at the start of

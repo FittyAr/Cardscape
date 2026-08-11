@@ -12,7 +12,7 @@ using Cardscape.Domain.Lists;
 namespace Cardscape.Infrastructure.Calendar;
 
 /// <summary>
-/// Default <see cref="IIcalendarService"/> implementation. Emits
+/// Default <see cref="ICalendarFeedRenderer"/> implementation. Emits
 /// a minimal RFC 5545 <c>VCALENDAR</c> with one <c>VEVENT</c>
 /// per card that has a <c>DueDate</c>:
 /// <list type="bullet">
@@ -28,7 +28,8 @@ public sealed class IcsCalendarService(
     IBoardRepository boards,
     IBoardListRepository lists,
     ICardRepository cards,
-    ICurrentUser currentUser) : IIcalendarService
+    ICurrentUser currentUser,
+    IClock clock) : ICalendarFeedRenderer
 {
     public async Task<Result<Stream>> RenderBoardAsync(Guid boardId, CancellationToken ct = default)
     {
@@ -81,7 +82,7 @@ public sealed class IcsCalendarService(
         sb.AppendLine("METHOD:PUBLISH");
         sb.AppendLine($"X-WR-CALNAME:{Escape(board.Name.Value)}");
 
-        DateTimeOffset stamp = DateTimeOffset.UtcNow;
+        DateTimeOffset stamp = clock.UtcNow;
         foreach (Card card in allCards.Where(c => c.DueDate.HasValue).OrderBy(c => c.DueDate))
         {
             DateTimeOffset due = card.DueDate!.Value;

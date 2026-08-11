@@ -119,3 +119,20 @@
 - [x] Prove expiration at exactly five minutes and destructive removal of expired challenges.
 - [x] Prove single-use and invalid-token behavior.
 - [x] Run narrow and full Release validation with assertion review.
+
+## Phase 1 follow-up: calendar feed contract
+
+### Bounded target inventory
+
+- `src/Cardscape.Application/Calendar/IIcalendarService.cs`: real Application port, but its double-I name describes a technology awkwardly rather than the capability.
+- `src/Cardscape.Infrastructure/Calendar/IcsCalendarService.cs`: sole RFC 5545 renderer; imported `IClock` but generated `DTSTAMP` from ambient wall-clock time.
+- API endpoint, Wolverine query handler and Infrastructure DI registration consume the port.
+- Existing integration tests cover authorization, media type, empty feeds and VEVENT presence, but not deterministic timestamps.
+
+### Acceptance checklist
+
+- [x] Rename the port to `ICalendarFeedRenderer` across all consumers.
+- [x] Generate `DTSTAMP` from the registered `IClock`.
+- [x] Prove exact RFC 5545 timestamp and all-day date fields for a due card.
+- [x] Preserve endpoint integration behavior.
+- [x] Run narrow and full Release validation with assertion review.
