@@ -71,8 +71,7 @@ public static class SeederEndpoints
         // page.
         group.MapPost("/run", async (SeedRunner runner,
                                      ISeedReportProvider provider,
-                                     SeederRunRequest? request,
-                                     CancellationToken cancellationToken) =>
+                                     SeederRunRequest? request) =>
         {
             if (!runner.IsEnabled)
             {
@@ -92,8 +91,24 @@ public static class SeederEndpoints
             // Exceptions are caught inside the runner and
             // surfaced through the report (status =
             // "Failed: ...").
-            _ = Task.Run(() => _ = runner.RunAsync(wipe, cancellationToken),
-                cancellationToken);
+            //
+            // We deliberately pass CancellationToken.None
+            // here instead of the request's CT: as soon as
+            // the browser navigates away (e.g. an auth
+            // redirect that triggers Blazor's forceLoad, or
+            // a curl that closed the connection), the
+            // request CT fires and cancels the seed 2 ms
+            // into step 1, leaving the database empty and
+            // the report stuck on "Failed: The operation
+            // was canceled." The runner's own internal
+            // cancellation is the only meaningful signal;
+            // tying it to the HTTP request lifetime is
+            // the bug that produced the redirect loop on
+            // /admin/seeder (no admin user -> the page
+            // bounces to /login -> /login returns the
+            // returnUrl -> /admin/seeder -> still no admin
+            // -> /login -> ...).
+            _ = Task.Run(() => _ = runner.RunAsync(wipe, CancellationToken.None));
 
             return Results.Accepted(value: new
             {
@@ -103,7 +118,7 @@ public static class SeederEndpoints
             });
         });
 
-        group.MapPost("/wipe", async (SeedRunner runner, CancellationToken cancellationToken) =>
+        group.MapPost("/wipe", async (SeedRunner runner) =>
         {
             if (!runner.IsEnabled)
             {
@@ -114,8 +129,10 @@ public static class SeederEndpoints
                 return Results.Conflict(new { error = "seeder.already_running" });
             }
 
-            _ = Task.Run(() => _ = runner.WipeAsync(cancellationToken),
-                cancellationToken);
+            // Same reason as /run: don't tie the wipe to
+            // the request's CT or the operator gets a 2 ms
+            // wipe followed by a "Failed: canceled" report.
+            _ = Task.Run(() => _ = runner.WipeAsync(CancellationToken.None));
 
             return Results.Accepted(value: new
             {

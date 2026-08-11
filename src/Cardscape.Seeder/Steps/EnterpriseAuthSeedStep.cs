@@ -57,8 +57,24 @@ public sealed class EnterpriseAuthSeedStep : SeedStepBase
         //    dummy encrypted secret (real secrets come from
         //    the application layer at enrollment time).
         int enrolled = 0;
+        int skipped = 0;
         foreach (User user in context.Users.Take(context.Users.Count / 2))
         {
+            if (user.IsAdmin)
+            {
+                // The demo admin (ada) is intentionally skipped:
+                // a real TOTP enrollment needs the cleartext
+                // secret to compute a valid 6-digit code, and
+                // the seeder only persists a SHA-256 / random
+                // placeholder, so enrolling the admin would
+                // lock the only operator out of the system.
+                // Without this, /admin/seeder would be reachable
+                // but login as ada returns `requiresTotp: true`
+                // with no way to complete the second step.
+                skipped++;
+                continue;
+            }
+
             string encryptedSecret = Generators.PasswordGenerator.RandomUrlSafeToken(32);
             string recoveryCodesHash = Generators.PasswordGenerator.Sha256Hex("seed-recovery-codes");
             Result<TotpCredential> cred = TotpCredential.Enroll(
