@@ -267,3 +267,14 @@
 - Pseudo-mutation review: treating pending as active, accepting a recovery code for activation, omitting confirmation persistence, allowing confirmation twice, preserving a pending secret on re-enroll, or replacing an active credential is killed by exact state/status/identity assertions.
 - Assertion review: exact HTTP status, pending/active flags, timestamps, counts, rotated identifiers/secrets/codes, negative JWT and persistence side effects are asserted; zero new tests are assertion-free, trivial-only or self-referential. The advertised .NET extension file is absent from the installed skill package, so xUnit/FluentAssertions were classified from repository conventions and the base catalog.
 - Full validation: Release build 0 warnings / 0 errors; suite 843 passed / 0 failed / 1 skipped.
+
+# SAML administration tenant isolation (2026-08-12)
+
+- Status: complete.
+- Root cause: `GetSamlConnectionQueryHandler` trusted a caller-controlled workspace id and queried the SAML repository without identity or workspace authorization, exposing another tenant's inline IdP metadata to any authenticated user.
+- Chosen boundary: configure, read and disable are uniformly owner-only inside Application; endpoint authorization remains defense in depth and transport mapping only.
+- Focused validation: `SamlEndpointsTests` 8/8, covering anonymous 401, missing workspace 404, outsider 403/no disclosure, owner 200/exact projection and owner-without-config 204/empty body.
+- Pseudo-mutation review: removing authentication, workspace lookup, deleted-workspace handling or owner comparison; querying before authorization; returning a DTO on outsider/no-config paths; or mapping the wrong tenant is killed by exact status, empty-body, negative marker and structured DTO assertions.
+- Assertion review: all five new regressions contain meaningful equality, structural or negative assertions; zero assertion-free, trivial-only or self-referential tests. The advertised .NET extension remains absent from the installed package, so xUnit/FluentAssertions were classified from repository conventions and the base catalog.
+- Static pairing limitation: the required Roslyn file-based analyzer was attempted once and SDK execution reported no runnable project.
+- Full validation: Release build 0 warnings / 0 errors; suite 848 passed / 0 failed / 1 skipped.

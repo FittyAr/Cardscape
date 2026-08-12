@@ -350,3 +350,11 @@
 - Decision: persist enrollment as pending; only a valid TOTP code can activate it. Pending credentials cannot satisfy login/workspace policy, consume recovery codes or be disabled as active credentials. Re-enrollment replaces pending setup so lost setup material cannot strand an account.
 - UI convention: the existing settings page already uses Radzen exclusively; add confirmation with Radzen form/input/validator/button and expose pending state in the status contract.
 - Acceptance checklist: pending enrollment is not active; valid TOTP confirms exactly once; invalid confirmation preserves pending state; recovery codes cannot confirm; re-enrollment rotates a pending secret; login/workspace checks require confirmed credentials; focused and full Release validation pass.
+
+# SAML administration tenant isolation (2026-08-12)
+
+- Scope: `GetSamlConnectionQueryHandler`, SAML admin GET endpoint and focused integration coverage.
+- Finding: configure/disable were owner-only, but GET loaded the connection directly by caller-controlled workspace id without `ICurrentUser` or workspace authorization. Any authenticated user could read another tenant's SAML configuration, including inline IdP metadata XML.
+- Decision: all SAML administration operations are owner-only in Application; the endpoint remains only a transport adapter. Outsiders receive 403 and no configuration body, while the owner retains the exact projection.
+- Acceptance checklist: anonymous GET remains 401; authenticated outsider GET is 403 with no metadata disclosure; owner GET is 200 with its own configuration; missing workspace/config retains truthful not-found/no-content behavior.
+- Static pairing analyzer attempt: the required Roslyn file-based command cannot run under the installed SDK invocation (`dotnet run` reports no project); the existing `SamlEndpointsTests` integration pairing is used and the limitation is recorded.

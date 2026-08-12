@@ -205,3 +205,11 @@
 - [x] Extend the Radzen settings flow with code confirmation and pending-state recovery.
 - [x] Add exact unit/integration regressions for activation, rejection, rotation and enforcement.
 - [x] Run focused validation, pseudo-mutation/assertion review, Release build and full suite.
+
+# SAML administration tenant isolation (2026-08-12)
+
+- [x] Require authenticated workspace owner inside `GetSamlConnectionQueryHandler`.
+- [x] Preserve 204 for an owner whose workspace has no SAML connection.
+- [x] Add exact integration regressions for anonymous, outsider and owner reads.
+- [x] Verify outsider responses do not disclose inline IdP metadata.
+- [x] Run focused validation, pseudo-mutation/assertion review, Release build and full suite.

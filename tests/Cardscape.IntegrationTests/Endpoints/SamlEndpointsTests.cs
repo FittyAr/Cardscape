@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Xml.Linq;
 using Cardscape.Application.Authentication.DTOs;
+using Cardscape.Application.Saml;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.IntegrationTests.Fixtures;
 using FluentAssertions;
@@ -130,6 +131,123 @@ public class SamlEndpointsTests
         response.StatusCode.Should().Be(HttpStatusCode.NotImplemented);
     }
 
+    [Fact]
+    public async Task AdminGet_ForOutsider_ReturnsForbiddenWithoutDisclosingMetadata()
+    {
+        HttpClient owner = _factory.CreateApiClient();
+        AuthResponse ownerAuth = await RegisterAndLogin(owner);
+        owner.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", ownerAuth.AccessToken);
+
+        string slug = $"saml-private-{Guid.NewGuid():N}";
+        string secretMarker = $"private-idp-{Guid.NewGuid():N}";
+        SamlConfigResult setup = await ConfigureSamlConnectionWithInlineMetadata(
+            owner,
+            slug,
+            $"https://cardscape.local/saml/{slug}",
+            $"https://{secretMarker}.test/metadata",
+            $"https://{secretMarker}.test/sso");
+
+        HttpClient outsider = _factory.CreateApiClient();
+        AuthResponse outsiderAuth = await RegisterAndLogin(outsider);
+        outsider.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", outsiderAuth.AccessToken);
+
+        HttpResponseMessage response = await outsider.GetAsync(
+            $"api/workspaces/{setup.WorkspaceId}/saml/",
+            TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        body.Should().NotContain(secretMarker);
+        body.Should().NotContain(slug);
+    }
+
+    [Fact]
+    public async Task AdminGet_ForOwner_ReturnsOwnConfiguration()
+    {
+        HttpClient owner = _factory.CreateApiClient();
+        AuthResponse auth = await RegisterAndLogin(owner);
+        owner.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+
+        string slug = $"saml-owner-{Guid.NewGuid():N}";
+        string idpEntityId = $"https://idp-{Guid.NewGuid():N}.test/metadata";
+        SamlConfigResult setup = await ConfigureSamlConnectionWithInlineMetadata(
+            owner,
+            slug,
+            $"https://cardscape.local/saml/{slug}",
+            idpEntityId,
+            "https://idp.test/sso");
+
+        HttpResponseMessage response = await owner.GetAsync(
+            $"api/workspaces/{setup.WorkspaceId}/saml/",
+            TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        SamlConnectionDto body = (await response.Content.ReadFromJsonAsync<SamlConnectionDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+        body.WorkspaceId.Should().Be(setup.WorkspaceId);
+        body.Slug.Should().Be(slug);
+        body.IdpEntityId.Should().Be(idpEntityId);
+        body.IdpMetadataXml.Should().Contain(idpEntityId);
+    }
+
+    [Fact]
+    public async Task AdminGet_WithoutAuthentication_ReturnsUnauthorized()
+    {
+        HttpClient owner = _factory.CreateApiClient();
+        AuthResponse auth = await RegisterAndLogin(owner);
+        owner.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        SamlConfigResult setup = await ConfigureSamlConnectionWithInlineMetadata(
+            owner,
+            $"saml-anon-{Guid.NewGuid():N}",
+            $"https://cardscape.local/saml/{Guid.NewGuid():N}",
+            "https://idp.test/metadata",
+            "https://idp.test/sso");
+
+        HttpClient anonymous = _factory.CreateApiClient();
+        HttpResponseMessage response = await anonymous.GetAsync(
+            $"api/workspaces/{setup.WorkspaceId}/saml/",
+            TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task AdminGet_ForOwnerWithoutConfiguration_ReturnsNoContent()
+    {
+        HttpClient owner = _factory.CreateApiClient();
+        AuthResponse auth = await RegisterAndLogin(owner);
+        owner.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        WorkspaceDto workspace = await CreateWorkspace(owner, "SAML Empty Workspace");
+
+        HttpResponseMessage response = await owner.GetAsync(
+            $"api/workspaces/{workspace.Id}/saml/",
+            TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken))
+            .Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task AdminGet_ForMissingWorkspace_ReturnsNotFound()
+    {
+        HttpClient client = _factory.CreateApiClient();
+        AuthResponse auth = await RegisterAndLogin(client);
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+
+        HttpResponseMessage response = await client.GetAsync(
+            $"api/workspaces/{Guid.NewGuid()}/saml/",
+            TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
     // ── helpers ───────────────────────────────────────────
 
     private static async Task<AuthResponse> RegisterAndLogin(HttpClient client)
@@ -139,6 +257,14 @@ public class SamlEndpointsTests
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
         return (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
+    }
+
+    private static async Task<WorkspaceDto> CreateWorkspace(HttpClient client, string name)
+    {
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "api/workspaces/", new CreateWorkspaceRequest(name), TestJson.Options);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
     }
 
     private static async Task<SamlConfigResult> ConfigureSamlConnection(

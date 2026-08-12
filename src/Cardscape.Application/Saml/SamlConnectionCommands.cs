@@ -174,9 +174,30 @@ public static class GetSamlConnectionQueryHandler
 {
     public static async Task<Result<SamlConnectionDto?>> Handle(
         GetSamlConnectionQuery query,
+        IRepository<Workspace, WorkspaceId> workspaces,
         ISamlConnectionRepository connections,
+        ICurrentUser currentUser,
         CancellationToken ct)
     {
+        if (currentUser.Id is null)
+        {
+            return Result.Failure<SamlConnectionDto?>(DomainError.Unauthenticated(
+                "auth.required", "Authentication is required."));
+        }
+
+        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(query.WorkspaceId), ct);
+        if (workspace is null || workspace.IsDeleted)
+        {
+            return Result.Failure<SamlConnectionDto?>(DomainError.NotFound(
+                "saml.workspace_not_found", $"Workspace {query.WorkspaceId} was not found."));
+        }
+
+        if (workspace.OwnerId != currentUser.Id.Value)
+        {
+            return Result.Failure<SamlConnectionDto?>(DomainError.Forbidden(
+                "saml.not_owner", "Only the workspace owner can view SAML configuration."));
+        }
+
         var existing = await connections.FindByWorkspaceAsync(query.WorkspaceId, ct);
         if (existing is null)
         {
