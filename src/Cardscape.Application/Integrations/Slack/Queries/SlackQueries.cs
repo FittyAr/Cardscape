@@ -9,7 +9,7 @@ using Wolverine;
 
 namespace Cardscape.Application.Integrations.Slack.Queries;
 
-public sealed record ListSlackChannelsForBoardQuery(Guid BoardId) : IMessage;
+public sealed record ListSlackChannelsForBoardQuery(Guid WorkspaceId, Guid BoardId) : IMessage;
 
 public static class ListSlackChannelsForBoardQueryHandler
 {
@@ -32,6 +32,11 @@ public static class ListSlackChannelsForBoardQueryHandler
         {
             return Result.Failure<IReadOnlyList<SlackChannelDto>>(DomainError.NotFound(
                 "boards.not_found", "Board was not found."));
+        }
+        if (board.WorkspaceId.Value != query.WorkspaceId)
+        {
+            return Result.Failure<IReadOnlyList<SlackChannelDto>>(DomainError.Forbidden(
+                "workspaces.forbidden", "Board does not belong to this workspace."));
         }
 
         if (!board.IsMember(currentUser.Id.Value))

@@ -358,3 +358,13 @@
 - Decision: all SAML administration operations are owner-only in Application; the endpoint remains only a transport adapter. Outsiders receive 403 and no configuration body, while the owner retains the exact projection.
 - Acceptance checklist: anonymous GET remains 401; authenticated outsider GET is 403 with no metadata disclosure; owner GET is 200 with its own configuration; missing workspace/config retains truthful not-found/no-content behavior.
 - Static pairing analyzer attempt: the required Roslyn file-based command cannot run under the installed SDK invocation (`dotnet run` reports no project); the existing `SamlEndpointsTests` integration pairing is used and the limitation is recorded.
+
+# Slack workspace boundary and reconnect (2026-08-12)
+
+- Scope: Slack workspace aggregate, connect/list/link/unlink Application handlers, REST/MCP adapters and focused integration tests.
+- Findings: any workspace member could replace the Slack connection; reconnect claimed to rotate team/token data but only updated activity state; REST channel routes discarded their workspace id, allowing a valid channel mapping to be addressed through another tenant's URL.
+- Decision: connecting/reconnecting Slack is owner-only; reconnect atomically replaces validated team identity and token hash without exposing cleartext; every workspace-scoped REST/MCP channel operation carries and verifies its workspace id.
+- Acceptance checklist: member connect is 403; owner reconnect changes team/token prefix and preserves connection id; cross-workspace list/link/unlink is rejected without state change; same-workspace owner/member channel usage remains supported.
+- Static pairing analyzer attempt: the required Roslyn command was executed once, but the pinned SDK rejected the file-based script because it found no runnable project. This is a static-pairing limitation, not evidence of line or branch coverage.
+- Assertion review: the focused regressions use exact status, identity, hash, structured state and negative collection assertions; zero are assertion-free, trivial-only or self-referential.
+- Release build: 0 warnings, 0 errors. Full suite: 852 passed, 0 failed, 1 skipped.

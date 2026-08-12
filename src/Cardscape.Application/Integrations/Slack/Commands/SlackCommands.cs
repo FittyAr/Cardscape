@@ -45,10 +45,10 @@ public static class ConnectSlackWorkspaceCommandHandler
                 "workspaces.not_found", "Workspace was not found."));
         }
 
-        if (!workspace.HasMember(currentUser.Id.Value))
+        if (workspace.OwnerId != currentUser.Id.Value)
         {
             return Result.Failure<SlackWorkspaceDto>(DomainError.Forbidden(
-                "workspaces.forbidden", "You are not a member of this workspace."));
+                "workspaces.not_owner", "Only the workspace owner can connect Slack."));
         }
 
         if (string.IsNullOrWhiteSpace(command.BotToken))
@@ -82,10 +82,12 @@ public static class ConnectSlackWorkspaceCommandHandler
         }
         else
         {
-            // Re-connect: rotate the token hash and refresh the
-            // team / team-name fields the OAuth flow returned.
-            existing.Activate(clock.UtcNow);
-            existing.RecordUse(clock.UtcNow);
+            Result reconnect = existing.Reconnect(
+                command.TeamId, command.TeamName, tokenHash, clock.UtcNow);
+            if (reconnect.IsFailure)
+            {
+                return Result.Failure<SlackWorkspaceDto>(reconnect.Error);
+            }
             entity = existing;
         }
 
@@ -104,6 +106,7 @@ public static class ConnectSlackWorkspaceCommandHandler
 // ── Link a board to a Slack channel ─────────────────────────────
 
 public sealed record LinkSlackChannelCommand(
+    Guid WorkspaceId,
     Guid SlackWorkspaceId,
     Guid BoardId,
     string ChannelId,
@@ -134,6 +137,11 @@ public static class LinkSlackChannelCommandHandler
         {
             return Result.Failure<SlackChannelDto>(DomainError.NotFound(
                 "slack.workspace_not_found", "Slack workspace connection was not found."));
+        }
+        if (workspace.WorkspaceId.Value != command.WorkspaceId)
+        {
+            return Result.Failure<SlackChannelDto>(DomainError.Forbidden(
+                "workspaces.forbidden", "Slack connection does not belong to this workspace."));
         }
 
         Board? board = await boards.GetWithMembersAsync(
@@ -178,7 +186,7 @@ public static class LinkSlackChannelCommandHandler
 
 // ── Unlink a board from a Slack channel ─────────────────────────
 
-public sealed record UnlinkSlackChannelCommand(Guid ChannelId) : IMessage;
+public sealed record UnlinkSlackChannelCommand(Guid WorkspaceId, Guid ChannelId) : IMessage;
 
 public static class UnlinkSlackChannelCommandHandler
 {
@@ -212,6 +220,11 @@ public static class UnlinkSlackChannelCommandHandler
         {
             return Result.Failure(DomainError.NotFound(
                 "slack.workspace_not_found", "Slack workspace connection was not found."));
+        }
+        if (workspace.WorkspaceId.Value != command.WorkspaceId)
+        {
+            return Result.Failure(DomainError.Forbidden(
+                "workspaces.forbidden", "Slack channel does not belong to this workspace."));
         }
 
         Board? board = await boards.GetWithMembersAsync(channel.BoardId, ct);

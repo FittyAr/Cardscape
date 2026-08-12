@@ -278,3 +278,15 @@
 - Assertion review: all five new regressions contain meaningful equality, structural or negative assertions; zero assertion-free, trivial-only or self-referential tests. The advertised .NET extension remains absent from the installed package, so xUnit/FluentAssertions were classified from repository conventions and the base catalog.
 - Static pairing limitation: the required Roslyn file-based analyzer was attempted once and SDK execution reported no runnable project.
 - Full validation: Release build 0 warnings / 0 errors; suite 848 passed / 0 failed / 1 skipped.
+
+# Slack workspace boundary and reconnect (2026-08-12)
+
+- Status: complete.
+- Root causes: connect accepted any member instead of the workspace owner; reconnect never changed the team identity or token hash despite claiming rotation; list/link/unlink REST routes discarded their workspace route value.
+- Chosen boundary: connect/reconnect is owner-only; the aggregate validates all new installation data before atomically replacing it; every REST and MCP channel command carries a workspace id and Application rejects route/resource mismatches.
+- Focused validation: `IntegrationsEndpointTests` 14/14.
+- Regression evidence: member connect returns 403 and leaves 204/no connection; valid reconnect preserves id while replacing exact team and token prefix; invalid reconnect returns 400 and preserves all prior fields; cross-workspace list/link/unlink return 403 and preserve the sole active source mapping.
+- Pseudo-mutation review: member-for-owner, omitted reconnect assignment, partial mutation before validation, ignored route workspace on any channel operation, or mutation after mismatch is killed by exact status, identity/hash, structured state and negative collection assertions.
+- Assertion review: all four new regressions have meaningful equality plus state/negative assertions; zero are assertion-free, trivial-only or self-referential. The advertised .NET extension is still absent, so xUnit/FluentAssertions were classified from repository conventions and the base catalog.
+- Static pairing limitation: the required Roslyn analyzer was attempted once and the pinned SDK reported no runnable project; this heuristic could not supply coverage evidence.
+- Full validation: Release build 0 warnings / 0 errors; suite 852 passed / 0 failed / 1 skipped.

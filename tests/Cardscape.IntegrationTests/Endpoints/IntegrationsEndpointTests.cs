@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.Integrations.GoogleCalendar;
 using Cardscape.IntegrationTests.Fixtures;
@@ -163,6 +165,132 @@ public sealed class IntegrationsEndpointTests
             $"api/workspaces/{workspaceId}/integrations/slack/channels/{Guid.NewGuid()}",
             TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Slack_Connect_ByWorkspaceMember_ReturnsForbiddenWithoutCreatingConnection()
+    {
+        (HttpClient owner, AuthResponse _) = await CreateAuthenticatedSessionAsync();
+        Guid workspaceId = await CreateWorkspaceAsync(owner, "slack-owner-only");
+        (HttpClient member, AuthResponse memberAuth) = await CreateAuthenticatedSessionAsync();
+        HttpResponseMessage addMember = await owner.PostAsJsonAsync(
+            $"api/workspaces/{workspaceId}/members",
+            new { userId = memberAuth.User.Id, role = "member" },
+            TestContext.Current.CancellationToken);
+        addMember.EnsureSuccessStatusCode();
+
+        HttpResponseMessage attempt = await member.PostAsJsonAsync(
+            $"api/workspaces/{workspaceId}/integrations/slack/connect",
+            new { teamId = "T-MEMBER", teamName = "Member Team", botToken = "xoxb-member" },
+            TestContext.Current.CancellationToken);
+
+        attempt.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        HttpResponseMessage unchanged = await owner.GetAsync(
+            $"api/workspaces/{workspaceId}/integrations/slack/",
+            TestContext.Current.CancellationToken);
+        unchanged.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Slack_Reconnect_ByOwner_RotatesTeamAndTokenOnExistingConnection()
+    {
+        HttpClient owner = await CreateAuthenticatedClientAsync();
+        Guid workspaceId = await CreateWorkspaceAsync(owner, "slack-reconnect");
+        const string firstToken = "xoxb-first-token";
+        const string secondToken = "xoxb-second-token";
+
+        SlackWorkspaceDto first = await ConnectSlackAsync(
+            owner, workspaceId, "T-FIRST", "First Team", firstToken);
+        SlackWorkspaceDto second = await ConnectSlackAsync(
+            owner, workspaceId, "T-SECOND", "Second Team", secondToken);
+
+        second.Id.Should().Be(first.Id);
+        second.TeamId.Should().Be("T-SECOND");
+        second.TeamName.Should().Be("Second Team");
+        second.BotTokenPrefix.Should().Be(HashPrefix(secondToken));
+        second.BotTokenPrefix.Should().NotBe(first.BotTokenPrefix);
+        second.Active.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Slack_Reconnect_WithInvalidTeam_LeavesExistingConnectionUnchanged()
+    {
+        HttpClient owner = await CreateAuthenticatedClientAsync();
+        Guid workspaceId = await CreateWorkspaceAsync(owner, "slack-invalid-reconnect");
+        SlackWorkspaceDto original = await ConnectSlackAsync(
+            owner, workspaceId, "T-ORIGINAL", "Original Team", "xoxb-original-token");
+
+        HttpResponseMessage invalid = await owner.PostAsJsonAsync(
+            $"api/workspaces/{workspaceId}/integrations/slack/connect",
+            new { teamId = "T-REJECTED", teamName = "", botToken = "xoxb-rejected-token" },
+            TestContext.Current.CancellationToken);
+        invalid.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        SlackWorkspaceDto unchanged = (await owner.GetFromJsonAsync<SlackWorkspaceDto>(
+            $"api/workspaces/{workspaceId}/integrations/slack/",
+            TestJson.Options,
+            TestContext.Current.CancellationToken))!;
+        unchanged.Id.Should().Be(original.Id);
+        unchanged.TeamId.Should().Be(original.TeamId);
+        unchanged.TeamName.Should().Be(original.TeamName);
+        unchanged.BotTokenPrefix.Should().Be(original.BotTokenPrefix);
+        unchanged.Active.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Slack_ChannelRoutes_WithDifferentWorkspace_ReturnForbiddenWithoutMutation()
+    {
+        HttpClient owner = await CreateAuthenticatedClientAsync();
+        Guid sourceWorkspaceId = await CreateWorkspaceAsync(owner, "slack-source");
+        Guid otherWorkspaceId = await CreateWorkspaceAsync(owner, "slack-other");
+        Guid boardId = await CreateBoardAsync(owner, sourceWorkspaceId, "slack-source-board");
+        SlackWorkspaceDto slack = await ConnectSlackAsync(
+            owner, sourceWorkspaceId, "T-SOURCE", "Source Team", "xoxb-source-token");
+
+        HttpResponseMessage linked = await owner.PostAsJsonAsync(
+            $"api/workspaces/{sourceWorkspaceId}/integrations/slack/channels",
+            new
+            {
+                slackWorkspaceId = slack.Id,
+                boardId,
+                channelId = "C-SOURCE",
+                channelName = "source",
+                events = new[] { "card.created" }
+            },
+            TestContext.Current.CancellationToken);
+        linked.EnsureSuccessStatusCode();
+        SlackChannelDto channel = (await linked.Content.ReadFromJsonAsync<SlackChannelDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+
+        HttpResponseMessage crossList = await owner.GetAsync(
+            $"api/workspaces/{otherWorkspaceId}/integrations/slack/channels?boardId={boardId}",
+            TestContext.Current.CancellationToken);
+        crossList.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        HttpResponseMessage crossLink = await owner.PostAsJsonAsync(
+            $"api/workspaces/{otherWorkspaceId}/integrations/slack/channels",
+            new
+            {
+                slackWorkspaceId = slack.Id,
+                boardId,
+                channelId = "C-CROSS",
+                channelName = "cross",
+                events = new[] { "card.created" }
+            },
+            TestContext.Current.CancellationToken);
+        crossLink.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        HttpResponseMessage crossUnlink = await owner.DeleteAsync(
+            $"api/workspaces/{otherWorkspaceId}/integrations/slack/channels/{channel.Id}",
+            TestContext.Current.CancellationToken);
+        crossUnlink.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        SlackChannelDto[] sourceChannels = (await owner.GetFromJsonAsync<SlackChannelDto[]>(
+            $"api/workspaces/{sourceWorkspaceId}/integrations/slack/channels?boardId={boardId}",
+            TestJson.Options,
+            TestContext.Current.CancellationToken))!;
+        sourceChannels.Should().ContainSingle(c => c.Id == channel.Id && c.Active);
+        sourceChannels.Should().NotContain(c => c.ChannelId == "C-CROSS");
     }
 
     // ── Google Calendar ───────────────────────────────────
@@ -352,6 +480,12 @@ public sealed class IntegrationsEndpointTests
 
     private async Task<HttpClient> CreateAuthenticatedClientAsync()
     {
+        (HttpClient client, _) = await CreateAuthenticatedSessionAsync();
+        return client;
+    }
+
+    private async Task<(HttpClient Client, AuthResponse Auth)> CreateAuthenticatedSessionAsync()
+    {
         HttpClient client = _factory.CreateApiClient();
         string email = $"int-{Guid.NewGuid():N}@cardscape.local";
         RegisterRequest register = new(email, "Tester", "Password123!");
@@ -360,8 +494,28 @@ public sealed class IntegrationsEndpointTests
         AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>(TestJson.Options))!;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
-        return client;
+        return (client, auth);
     }
+
+    private static async Task<SlackWorkspaceDto> ConnectSlackAsync(
+        HttpClient client,
+        Guid workspaceId,
+        string teamId,
+        string teamName,
+        string botToken)
+    {
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            $"api/workspaces/{workspaceId}/integrations/slack/connect",
+            new { teamId, teamName, botToken },
+            TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<SlackWorkspaceDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+    }
+
+    private static string HashPrefix(string token) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)))
+            .ToLowerInvariant()[..8];
 
     private static async Task<Guid> CreateWorkspaceAsync(HttpClient client, string name)
     {

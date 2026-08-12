@@ -50,7 +50,7 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
 
     [McpServerTool(Name = "integrations_slack_list_channels")]
     public async Task<IReadOnlyList<SlackChannelDto>> SlackListChannels(
-        Guid boardId, CancellationToken ct)
+        Guid workspaceId, Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_slack_list_channels");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
@@ -58,7 +58,7 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         {
             RequireAuth();
             var result = await bus.InvokeAsync<Result<IReadOnlyList<SlackChannelDto>>>(
-                new ListSlackChannelsForBoardQuery(boardId), ct);
+                new ListSlackChannelsForBoardQuery(workspaceId, boardId), ct);
             var value = Ensure(result);
             __mcpSpan.MarkSuccess();
             return value;
@@ -71,14 +71,15 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "integrations_slack_unlink_channel")]
-    public async Task<string> SlackUnlinkChannel(Guid channelId, CancellationToken ct)
+    public async Task<string> SlackUnlinkChannel(Guid workspaceId, Guid channelId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_slack_unlink_channel");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
             RequireAuth();
-            var result = await bus.InvokeAsync<Result>(new UnlinkSlackChannelCommand(channelId), ct);
+            var result = await bus.InvokeAsync<Result>(
+                new UnlinkSlackChannelCommand(workspaceId, channelId), ct);
             EnsureUnit(result);
             __mcpSpan.MarkSuccess();
             return "OK";

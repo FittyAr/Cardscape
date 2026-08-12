@@ -213,3 +213,12 @@
 - [x] Add exact integration regressions for anonymous, outsider and owner reads.
 - [x] Verify outsider responses do not disclose inline IdP metadata.
 - [x] Run focused validation, pseudo-mutation/assertion review, Release build and full suite.
+
+# Slack workspace boundary and reconnect (2026-08-12)
+
+- [x] Make connect/reconnect owner-only in Application.
+- [x] Add a validated aggregate reconnect transition that actually rotates team/token data.
+- [x] Carry workspace id through list/link/unlink commands and REST/MCP adapters.
+- [x] Reject cross-workspace route/resource mismatches before mutation.
+- [x] Add exact integration regressions for member denial, rotation and cross-tenant routes.
+- [x] Run focused validation, pseudo-mutation/assertion review, Release build and full suite.

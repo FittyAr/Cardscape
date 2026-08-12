@@ -61,7 +61,7 @@ public static class SlackEndpoints
         group.MapGet("/channels", async (Guid workspaceId, [FromQuery] Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<SlackChannelDto>>>(
-                new ListSlackChannelsForBoardQuery(boardId), ct);
+                new ListSlackChannelsForBoardQuery(workspaceId, boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
@@ -69,7 +69,7 @@ public static class SlackEndpoints
         {
             var result = await bus.InvokeAsync<Result<SlackChannelDto>>(
                 new LinkSlackChannelCommand(
-                    body.SlackWorkspaceId, body.BoardId,
+                    workspaceId, body.SlackWorkspaceId, body.BoardId,
                     body.ChannelId, body.ChannelName, body.Events),
                 ct);
             return result.IsSuccess
@@ -80,7 +80,7 @@ public static class SlackEndpoints
         group.MapDelete("/channels/{channelId:guid}", async (Guid workspaceId, Guid channelId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
-                new UnlinkSlackChannelCommand(channelId), ct);
+                new UnlinkSlackChannelCommand(workspaceId, channelId), ct);
             return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
         });
 

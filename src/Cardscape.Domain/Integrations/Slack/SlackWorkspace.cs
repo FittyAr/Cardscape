@@ -135,4 +135,26 @@ public sealed class SlackWorkspace : AggregateRoot<SlackWorkspaceId>
         Active = true;
         UpdatedAt = at;
     }
+
+    /// <summary>Replaces the Slack installation identity and token after a fresh OAuth grant.</summary>
+    public Result Reconnect(
+        string teamId,
+        string teamName,
+        string botTokenHash,
+        DateTimeOffset at)
+    {
+        Result<SlackWorkspace> candidate = Connect(
+            Id, WorkspaceId, teamId, teamName, botTokenHash, at);
+        if (candidate.IsFailure)
+        {
+            return Result.Failure(candidate.Error);
+        }
+
+        TeamId = candidate.Value.TeamId;
+        TeamName = candidate.Value.TeamName;
+        BotTokenHash = candidate.Value.BotTokenHash;
+        Active = true;
+        UpdatedAt = at;
+        return Result.Success();
+    }
 }
