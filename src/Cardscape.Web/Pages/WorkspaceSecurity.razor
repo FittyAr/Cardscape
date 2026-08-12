@@ -30,9 +30,7 @@
     {
         @* Only the workspace owner can flip the 2FA policy. Admins
            and members see the read-only view so they know whether
-           the workspace is in 2FA-required mode (and that they
-           have to enrol in TOTP before the enforcement lands in
-           the follow-up commit). The owner check is computed
+           the workspace is in 2FA-required mode. The owner check is computed
            client-side from the JWT subject claim and the DTO's
            OwnerId; the server enforces the same rule in the
            command handler and returns 403 if a non-owner POSTs. *@

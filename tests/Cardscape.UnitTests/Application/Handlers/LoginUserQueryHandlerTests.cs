@@ -16,7 +16,7 @@ public class LoginUserQueryHandlerTests
         var result = await LoginUserQueryHandler.Handle(
             new LoginUserQuery("alice@example.com", "Passw0rd!"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
-            ctx.TotpCredentials, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
+            ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.User.Email.Should().Be("alice@example.com");
@@ -36,7 +36,7 @@ public class LoginUserQueryHandlerTests
         var result = await LoginUserQueryHandler.Handle(
             new LoginUserQuery("ghost@example.com", "Passw0rd!"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
-            ctx.TotpCredentials, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
+            ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("members.user.invalid_credentials");
@@ -52,7 +52,7 @@ public class LoginUserQueryHandlerTests
         var result = await LoginUserQueryHandler.Handle(
             new LoginUserQuery("alice@example.com", "wrong-pass"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
-            ctx.TotpCredentials, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
+            ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("members.user.invalid_credentials");
@@ -67,7 +67,7 @@ public class LoginUserQueryHandlerTests
         var result = await LoginUserQueryHandler.Handle(
             new LoginUserQuery("alice@example.com", "Passw0rd!"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
-            ctx.TotpCredentials, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
+            ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("members.user.inactive");
@@ -85,7 +85,7 @@ public class LoginUserQueryHandlerTests
         var result = await LoginUserQueryHandler.Handle(
             new LoginUserQuery("alice@example.com", "Passw0rd!"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
-            ctx.TotpCredentials, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
+            ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
 
         // Assert — the password check still passes (no failure
         // path), but the JWT is NOT issued: the response is a
@@ -96,6 +96,8 @@ public class LoginUserQueryHandlerTests
         result.Value.PendingTotpToken.Should().NotBeNullOrWhiteSpace();
         result.Value.User.Email.Should().Be("alice@example.com");
         ctx.Tokens.AccessTokensIssued.Should().BeEmpty();
+        user.LastLoginAt.Should().BeNull();
+        ctx.UnitOfWork.SaveChangesCallCount.Should().Be(0);
     }
 
     [Fact]
@@ -114,7 +116,7 @@ public class LoginUserQueryHandlerTests
         var result = await LoginUserQueryHandler.Handle(
             new LoginUserQuery("alice@example.com", "Passw0rd!", code),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
-            ctx.TotpCredentials, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
+            ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
 
         // Assert — full JWT, the LastUsedCounter advanced.
         result.IsSuccess.Should().BeTrue();
@@ -135,7 +137,7 @@ public class LoginUserQueryHandlerTests
         var result = await LoginUserQueryHandler.Handle(
             new LoginUserQuery("alice@example.com", "Passw0rd!", "000000"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
-            ctx.TotpCredentials, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
+            ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
 
         // The TOTP verifier rejects "000000" because the time
         // window it maps to does not match the secret the user
@@ -144,5 +146,28 @@ public class LoginUserQueryHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("auth.totp.invalid_code");
         ctx.Tokens.AccessTokensIssued.Should().BeEmpty();
+        user.LastLoginAt.Should().BeNull();
+        ctx.UnitOfWork.SaveChangesCallCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Handle_WhenWorkspaceRequiresTotpAndUserIsNotEnrolled_DeniesJwt()
+    {
+        var ctx = new HandlersTestContext();
+        var user = await ctx.SeedUserAsync("alice@example.com", "Alice", "Passw0rd!");
+        var workspace = await ctx.SeedWorkspaceAsync(user.Id.Value);
+        workspace.SetRequireTwoFactor(true, user.Id.Value, ctx.Clock.UtcNow);
+
+        var result = await LoginUserQueryHandler.Handle(
+            new LoginUserQuery("alice@example.com", "Passw0rd!"),
+            ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
+            ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins,
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("auth.totp.enrollment_required");
+        ctx.Tokens.AccessTokensIssued.Should().BeEmpty();
+        user.LastLoginAt.Should().BeNull();
+        ctx.UnitOfWork.SaveChangesCallCount.Should().Be(0);
     }
 }

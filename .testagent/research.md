@@ -335,3 +335,10 @@
 - Decision: SCIM credential administration is owner-only, matching other high-impact workspace settings. Token revocation must match both route workspace and stored token workspace.
 - Static pairing analyzer was attempted once; SDK 10 rejected the documented file-based Roslyn script because it is not a runnable project.
 - Acceptance: outsider receives 403 for issue/list/revoke; a token cannot be revoked through another workspace route; valid owner roundtrip remains green.
+# Workspace 2FA enforcement (2026-08-11)
+
+- Scope: password login and the workspace `RequireTwoFactor` toggle.
+- Finding: the flag was storage/UI-only; login never read it and still issued JWTs. Successful-login timestamps were also written before TOTP verification.
+- Decision: enabling requires active TOTP for every current member; login denies JWT for inconsistent required workspaces; LastLogin is recorded only after all factors succeed.
+- Static pairing analyzer was attempted once and failed because the documented Roslyn file is not a runnable project under the pinned SDK 10.
+- Acceptance: incomplete enrollment returns 409 without changing the flag; required workspace without an active credential returns `auth.totp.enrollment_required`, no JWT, no LastLogin write.

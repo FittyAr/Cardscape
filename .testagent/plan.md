@@ -186,3 +186,12 @@
 - [x] Add integration coverage for outsider IDOR attempts and cross-workspace token mismatch.
 - [x] Run focused tests and pseudo-mutation/assertion review.
 - [x] Run Release build and full suite.
+# Workspace 2FA enforcement (2026-08-11)
+
+- [x] Enforce workspace policy during password login before JWT issuance.
+- [x] Move LastLogin persistence after successful second-factor verification.
+- [x] Reject enabling the policy until every current member is enrolled.
+- [x] Cover the multi-member boundary where only the owner is enrolled.
+- [x] Remove storage-only/follow-up documentation.
+- [x] Run focused validation and test-quality review.
+- [x] Run Release build and full suite.

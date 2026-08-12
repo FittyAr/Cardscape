@@ -5,6 +5,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Authentication.Abstractions;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Domain.Authentication.Totp;
+using Cardscape.Domain.Authentication.Totp.Errors;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Wolverine;
@@ -45,6 +46,7 @@ public static class LoginUserQueryHandler
         ITokenService tokens,
         IClock clock,
         ITotpCredentialRepository totpCredentials,
+        IWorkspaceRepository workspaces,
         ITotpService totpService,
         IPendingTotpLoginStore pendingLogins,
         CancellationToken cancellationToken)
@@ -68,14 +70,19 @@ public static class LoginUserQueryHandler
             return Result.Failure<AuthResponse>(InvalidCredentials);
         }
 
-        user.RecordLogin(clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
         // Check the 2FA status. The credential row can be soft-deleted
         // (IsDeleted == true) when the user disabled 2FA; treat that
         // as "no 2FA" so the user can log in with email+password alone.
         var credential = await totpCredentials.FindForUserAsync(user.Id, cancellationToken);
         bool hasActiveTotp = credential is not null && !credential.IsDeleted;
+        IReadOnlyList<Domain.Workspaces.Workspace> memberships =
+            await workspaces.ListForUserAsync(user.Id.Value, cancellationToken);
+        bool workspaceRequiresTotp = memberships.Any(workspace => workspace.RequireTwoFactor);
+
+        if (workspaceRequiresTotp && !hasActiveTotp)
+        {
+            return Result.Failure<AuthResponse>(TotpErrors.EnrollmentRequired);
+        }
 
         if (hasActiveTotp)
         {
@@ -100,6 +107,8 @@ public static class LoginUserQueryHandler
             }
         }
 
+        user.RecordLogin(clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success(BuildTokens(user, tokens, clock));
     }
 

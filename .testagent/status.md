@@ -250,3 +250,9 @@
 - Pseudo-mutation review: member-for-owner, omitted list/revoke authorization, omitted token/workspace equality, and omitted LastUsed persistence are killed by exact 403/404/state/timestamp assertions.
 - Assertion review: both new tests contain meaningful HTTP equality plus persisted-state assertions; zero assertion-free, trivial-only or self-referential tests. The .NET extension file advertised by the installed analysis skill is absent, so FluentAssertions was classified from the base catalog.
 - Release build: 0 warnings, 0 errors. Full suite: 835 passed, 0 failed, 1 skipped.
+# Workspace 2FA enforcement (2026-08-11)
+
+- Focused validation: 9 login/policy unit tests and 5 workspace integration tests pass.
+- Pseudo-mutation review: removing workspace lookup, reversing the active-credential guard, moving LastLogin before factor completion, checking only the owner, or persisting after a rejected activation is killed by exact error/JWT/state/save-count assertions.
+- Assertion review: new tests use exact error/status equality, negative JWT assertions and persisted aggregate/side-effect checks; zero assertion-free, trivial-only or self-referential tests. The .NET extension advertised by the installed analysis skill is absent, so FluentAssertions was classified from the base catalog.
+- Release build: 0 warnings, 0 errors. Full suite: 838 passed, 0 failed, 1 skipped.

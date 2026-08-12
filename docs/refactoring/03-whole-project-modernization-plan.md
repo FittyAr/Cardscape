@@ -80,7 +80,7 @@ Reglas permanentes:
 
 ### Fase 2 — Superficies críticas
 
-- [ ] Autenticación/autorización: JWT, API tokens, OAuth/OIDC, SAML, SCIM, 2FA, políticas y aislamiento multi-tenant. La autorización admin falla cerrada, SAML tiene un único dueño, la sesión refresh ficticia fue eliminada y `exp` es la única expiración JWT. Google, Microsoft y Apple usan correlación protegida más cookie externa efímera; la administración SCIM es owner-only y está ligada al workspace de ruta. Quedan 2FA e invariantes multi-tenant.
+- [ ] Autenticación/autorización: JWT, API tokens, OAuth/OIDC, SAML, SCIM, 2FA, políticas y aislamiento multi-tenant. La autorización admin falla cerrada, SAML tiene un único dueño, la sesión refresh ficticia fue eliminada y `exp` es la única expiración JWT. Google, Microsoft y Apple usan correlación protegida más cookie externa efímera; SCIM está aislado por owner/workspace; `RequireTwoFactor` ya bloquea JWT y sólo se activa con todos los miembros enrolados. Quedan el ciclo de enrolamiento 2FA y los invariantes multi-tenant restantes.
 - [ ] Persistencia: modelo EF, transacciones, concurrencia, índices, consultas N+1, tracking y compatibilidad de los tres providers.
 - [ ] Gestión de secretos, cifrado, datos personales, borrado/anominización y retención.
 - [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia.
@@ -149,6 +149,7 @@ Reglas permanentes:
 | 2026-08-11 | Expiración JWT canónica | Eliminado metadata duplicado; `exp` firmado usa configuración validada al arranque con límites seguros y ownership de secreto sólo en API | Build 0/0; suite 822 pass, 0 fail, 1 skip | Pendiente |
 | 2026-08-11 | Límite OAuth/OIDC externo | Eliminado `state` casero sin validar; cookie externa efímera y correlación protegida del framework; callback Apple separado; proveedor y retorno local validados; SPA respeta el retorno | Build 0/0; suite 833 pass, 0 fail, 1 skip | Pendiente |
 | 2026-08-11 | Aislamiento de credenciales SCIM | Issue/list/revoke owner-only; revoke exige coincidencia token-workspace; reloj y cancelación propagados en autenticación; `LastUsedAt` verificado | Build 0/0; suite 835 pass, 0 fail, 1 skip | Pendiente |
+| 2026-08-11 | Enforcement 2FA por workspace | Política deja de ser decorativa: activación exige enrolamiento de todos los miembros; login niega JWT en estado inconsistente; `LastLogin` sólo se registra tras completar factores | Build 0/0; suite 838 pass, 0 fail, 1 skip | Pendiente |
 
 ## 5. Criterio de completitud
 

@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Workspaces.DTOs;
+using Cardscape.Domain.Authentication.Totp.Errors;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces;
@@ -448,12 +449,8 @@ public static class RemoveWorkspaceMemberCommandHandler
 public sealed record SetWorkspaceRegionCommand(Guid WorkspaceId, Region Region) : IMessage;
 
 /// <summary>Owner-only: toggle the workspace's two-factor
-/// authentication requirement. Storage-only in this slice;
-/// the actual login enforcement (refusing to issue a JWT for
-/// any user that belongs to a workspace that requires 2FA and
-/// has no TOTP) lands in a follow-up commit. See
-/// <c>docs/roadmap/07-trello-enterprise-parity.md</c> §2.1
-/// for the roadmap context.</summary>
+/// authentication requirement. Enabling is rejected until every
+/// current member has an active TOTP credential.</summary>
 public sealed record SetWorkspaceRequireTwoFactorCommand(Guid WorkspaceId, bool Require) : IMessage;
 
 public static class SetWorkspaceRequireTwoFactorCommandHandler
@@ -461,6 +458,7 @@ public static class SetWorkspaceRequireTwoFactorCommandHandler
     public static async Task<Result<WorkspaceDto>> Handle(
         SetWorkspaceRequireTwoFactorCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
+        ITotpCredentialRepository totpCredentials,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -486,6 +484,19 @@ public static class SetWorkspaceRequireTwoFactorCommandHandler
         if (workspace.OwnerId != currentUser.Id.Value)
         {
             return Result.Failure<WorkspaceDto>(InsufficientPermissions);
+        }
+
+        if (command.Require)
+        {
+            foreach (WorkspaceMember member in workspace.Members)
+            {
+                var credential = await totpCredentials.FindForUserAsync(
+                    new UserId(member.UserId), cancellationToken);
+                if (credential is null || credential.IsDeleted)
+                {
+                    return Result.Failure<WorkspaceDto>(TotpErrors.WorkspaceEnrollmentIncomplete);
+                }
+            }
         }
 
         var setResult = workspace.SetRequireTwoFactor(command.Require, currentUser.Id.Value, clock.UtcNow);

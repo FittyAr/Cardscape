@@ -23,4 +23,12 @@ public static class TotpErrors
     public static readonly DomainError InvalidRecoveryCode = DomainError.Unauthenticated(
         "auth.totp.invalid_recovery_code",
         "The supplied recovery code is invalid or has already been used.");
+
+    public static readonly DomainError EnrollmentRequired = DomainError.Forbidden(
+        "auth.totp.enrollment_required",
+        "Two-factor authentication must be enrolled before signing in to this workspace.");
+
+    public static readonly DomainError WorkspaceEnrollmentIncomplete = DomainError.Conflict(
+        "auth.totp.workspace_enrollment_incomplete",
+        "Every workspace member must enroll two-factor authentication before it can be required.");
 }

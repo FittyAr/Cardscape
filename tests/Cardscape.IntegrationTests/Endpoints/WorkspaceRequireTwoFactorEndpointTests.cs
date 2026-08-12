@@ -10,12 +10,7 @@ using Xunit;
 namespace Cardscape.IntegrationTests.Endpoints;
 
 /// <summary>
-/// Storage-only coverage for the workspace 2FA requirement flag.
-/// The actual login enforcement (refusing to issue a JWT for a
-/// user that belongs to a workspace that requires 2FA and has
-/// no TOTP) lands in a follow-up commit; this file just verifies
-/// that the owner can toggle the policy and that non-owners
-/// cannot.
+/// Coverage for the enforced workspace 2FA requirement.
 /// </summary>
 [Collection(CardscapeApi.Name)]
 public sealed class WorkspaceRequireTwoFactorEndpointTests
@@ -30,6 +25,7 @@ public sealed class WorkspaceRequireTwoFactorEndpointTests
     {
         HttpClient owner = await CreateAuthenticatedClientAsync("Owner");
         WorkspaceDto ws = await CreateWorkspaceAsync(owner, "2FA WS");
+        await EnrollTotpAsync(owner);
 
         HttpResponseMessage on = await owner.PostAsJsonAsync(
             $"api/workspaces/{ws.Id}/security/require-2fa",
@@ -44,6 +40,21 @@ public sealed class WorkspaceRequireTwoFactorEndpointTests
         off.IsSuccessStatusCode.Should().BeTrue();
         WorkspaceDto after2 = (await off.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         after2.RequireTwoFactor.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SetRequireTwoFactor_WhenMemberIsNotEnrolled_ReturnsConflict()
+    {
+        HttpClient owner = await CreateAuthenticatedClientAsync("Owner");
+        WorkspaceDto ws = await CreateWorkspaceAsync(owner, "2FA incomplete enrollment WS");
+
+        HttpResponseMessage response = await owner.PostAsJsonAsync(
+            $"api/workspaces/{ws.Id}/security/require-2fa",
+            new { require = true }, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        WorkspaceDto unchanged = await GetWorkspaceAsync(owner, ws.Id);
+        unchanged.RequireTwoFactor.Should().BeFalse();
     }
 
     [Fact]
@@ -104,5 +115,21 @@ public sealed class WorkspaceRequireTwoFactorEndpointTests
             "api/workspaces/", new { name }, TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
         return (await resp.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
+    }
+
+    private static async Task EnrollTotpAsync(HttpClient client)
+    {
+        HttpResponseMessage response = await client.PostAsync(
+            "api/auth/2fa/enroll", content: null, TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private static async Task<WorkspaceDto> GetWorkspaceAsync(HttpClient client, Guid workspaceId)
+    {
+        HttpResponseMessage response = await client.GetAsync(
+            $"api/workspaces/{workspaceId}", TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<WorkspaceDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
     }
 }
