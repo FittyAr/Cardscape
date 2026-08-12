@@ -83,7 +83,7 @@ Reglas permanentes:
 - [ ] Autenticación/autorización: JWT, API tokens, OAuth/OIDC, SAML, SCIM, 2FA, políticas y aislamiento multi-tenant. La autorización admin falla cerrada, la administración SAML completa es owner-only, la sesión refresh ficticia fue eliminada y `exp` es la única expiración JWT. Google, Microsoft y Apple usan correlación protegida más cookie externa efímera; SCIM está aislado por owner/workspace; `RequireTwoFactor` bloquea JWT y sólo acepta credenciales TOTP confirmadas. El enrolamiento queda pendiente hasta probar el autenticador; Slack conecta/rota sólo por owner y valida workspace en cada ruta. Quedan los invariantes multi-tenant restantes.
 - [ ] Persistencia: modelo EF, transacciones, concurrencia, índices, consultas N+1, tracking y compatibilidad de los tres providers.
 - [ ] Gestión de secretos, cifrado, datos personales, borrado/anominización y retención.
-- [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia.
+- [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia. Google Calendar ya no anuncia watch/webhook/pull ficticios; conserva únicamente el push saliente funcional.
 - [ ] Wolverine/background jobs: scopes, retries, outbox/inbox, cancelación y consistencia de eventos. Claim multi-worker ya es atómico y está probado; quedan outbox/inbox, cancelación y consistencia de eventos.
 - [x] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia. Scopes, lifetime/composición, Streamable HTTP autenticado, aislamiento de suscripciones y reservas idempotentes cross-process verificados.
 - [ ] Observabilidad: logs estructurados, correlación, trazas, métricas, health checks y ausencia de PII/secrets.
@@ -152,7 +152,8 @@ Reglas permanentes:
 | 2026-08-11 | Enforcement 2FA por workspace | Política deja de ser decorativa: activación exige enrolamiento de todos los miembros; login niega JWT en estado inconsistente; `LastLogin` sólo se registra tras completar factores | Build 0/0; suite 838 pass, 0 fail, 1 skip | `7681a0c` |
 | 2026-08-11 | Confirmación del enrolamiento TOTP | Alta pendiente hasta probar el autenticador; recovery codes bloqueados antes de activación; rotación segura del setup pendiente; flujo UI Radzen completo | Build 0/0; suite 843 pass, 0 fail, 1 skip | `c84b8c3` |
 | 2026-08-12 | Aislamiento de administración SAML | Lectura, configuración y baja uniformemente owner-only; eliminado IDOR que exponía metadata IdP entre tenants | Build 0/0; suite 848 pass, 0 fail, 1 skip | `ebf6292` |
-| 2026-08-12 | Límite workspace Slack | Connect/reconnect owner-only; rotación real y atómica de team/token; list/link/unlink rechazan route-resource mismatch en REST/MCP | Build 0/0; suite 852 pass, 0 fail, 1 skip | Incluido en este commit |
+| 2026-08-12 | Límite workspace Slack | Connect/reconnect owner-only; rotación real y atómica de team/token; list/link/unlink rechazan route-resource mismatch en REST/MCP | Build 0/0; suite 852 pass, 0 fail, 1 skip | `7a51cc3` |
+| 2026-08-12 | OAuth Google Calendar | Estado OAuth temporal protegido conserva usuario/workspace y sólo permite retorno local; eliminados REST de credenciales y watch/webhook/pull ficticios | Build 0/0; suite 853 pass, 0 fail, 1 skip | Incluido en este commit |
 
 ## 5. Criterio de completitud
 

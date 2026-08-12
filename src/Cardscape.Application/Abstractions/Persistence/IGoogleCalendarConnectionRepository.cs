@@ -5,8 +5,7 @@ namespace Cardscape.Application.Abstractions.Persistence;
 
 /// <summary>Repository for <see cref="GoogleCalendarConnection"/>.
 /// One connection per user (the per-user invariant is enforced
-/// in the command handler — see
-/// <c>EstablishGoogleCalendarConnectionCommandHandler</c>).</summary>
+/// in the OAuth completion command handler.</summary>
 public interface IGoogleCalendarConnectionRepository
 {
     Task<GoogleCalendarConnection?> FindByUserAsync(Guid userId, CancellationToken ct = default);
@@ -23,9 +22,7 @@ public interface IGoogleCalendarConnectionRepository
         WorkspaceId workspaceId, CancellationToken ct = default);
 
     /// <summary>Persists changes to a previously-loaded
-    /// connection (e.g. updated <c>SyncToken</c>,
-    /// <c>ChannelId</c>, or <c>RecordSyncSuccess /
-    /// RecordSyncError</c> side-effects). The default
+    /// connection (for example sync success/error side-effects). The default
     /// implementation relies on the EF Core change tracker, so
     /// the caller just needs the loaded aggregate to push the
     /// changes through <c>SaveChangesAsync</c>.</summary>

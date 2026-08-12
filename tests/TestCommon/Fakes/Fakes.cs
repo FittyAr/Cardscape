@@ -935,7 +935,6 @@ public sealed class InMemoryGoogleCalendarConnectionRepository : IGoogleCalendar
 public sealed class FakeGoogleCalendarSyncService : IGoogleCalendarSyncService
 {
     public List<(Guid UserId, Guid CardId, string CardTitle, string? CardDescription, DateTimeOffset? DueDate)> PushCalls { get; } = [];
-    public List<Guid> PullCalls { get; } = [];
     public Result<string>? NextPushResult { get; set; }
 
     public Task<Result<string>> PushCardDueDateAsync(
@@ -945,19 +944,6 @@ public sealed class FakeGoogleCalendarSyncService : IGoogleCalendarSyncService
         PushCalls.Add((userId, cardId, cardTitle, cardDescription, dueDate));
         return Task.FromResult(NextPushResult ?? Result.Success(string.Empty));
     }
-
-    public Task<Result<int>> PullCalendarChangesAsync(Guid userId, CancellationToken ct = default)
-    {
-        PullCalls.Add(userId);
-        return Task.FromResult(Result.Success(0));
-    }
-
-    public Task<Result<GoogleCalendarWatchInfo>> WatchCalendarAsync(
-        Guid userId, string webhookUrl, CancellationToken ct = default) =>
-        Task.FromResult(Result.Success(new GoogleCalendarWatchInfo(
-            "channel-" + Guid.NewGuid().ToString("N"),
-            "resource-" + Guid.NewGuid().ToString("N"),
-            DateTimeOffset.UtcNow.AddHours(24))));
 }
 
 /// <summary>BETA-7-#1 — see test-results/BETA-TEST-REPORT.md. No-op in-memory ISearchIndex for the test suite. The production InMemorySearchIndex lives in Cardscape.Infrastructure; we keep this fake here so the test projects can resolve the new dependency without pulling in EF / Infrastructure.</summary>

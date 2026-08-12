@@ -13,24 +13,24 @@ namespace Cardscape.Application.Integrations.GoogleCalendar;
 /// connection in a workspace. The encrypted refresh token must
 /// already be encrypted at the call site (the API layer encrypts
 /// before dispatching this command).</summary>
-public sealed record EstablishGoogleCalendarConnectionCommand(
+public sealed record CompleteGoogleCalendarOAuthCommand(
+    Guid UserId,
     Guid WorkspaceId,
     string GoogleEmail,
     string EncryptedRefreshToken,
     string CalendarId = "primary") : IMessage;
 
-public static class EstablishGoogleCalendarConnectionCommandHandler
+public static class CompleteGoogleCalendarOAuthCommandHandler
 {
     public static async Task<Result<GoogleCalendarConnectionDto>> Handle(
-        EstablishGoogleCalendarConnectionCommand command,
+        CompleteGoogleCalendarOAuthCommand command,
         IGoogleCalendarConnectionRepository connections,
         IRepository<Workspace, WorkspaceId> workspaces,
         IUnitOfWork unitOfWork,
-        ICurrentUser currentUser,
         IClock clock,
         CancellationToken ct)
     {
-        if (currentUser.Id is null)
+        if (command.UserId == Guid.Empty)
         {
             return Result.Failure<GoogleCalendarConnectionDto>(DomainError.Unauthenticated(
                 "auth.required", "Authentication is required."));
@@ -49,18 +49,18 @@ public static class EstablishGoogleCalendarConnectionCommandHandler
                 "workspaces.not_found", "Workspace was not found."));
         }
 
-        if (!workspace.HasMember(currentUser.Id.Value))
+        if (!workspace.HasMember(command.UserId))
         {
             return Result.Failure<GoogleCalendarConnectionDto>(DomainError.Forbidden(
                 "workspaces.forbidden", "You are not a member of this workspace."));
         }
 
-        var existing = await connections.FindByUserAsync(currentUser.Id.Value, ct);
+        var existing = await connections.FindByUserAsync(command.UserId, ct);
         existing?.Revoke(clock.UtcNow);
 
         var connResult = GoogleCalendarConnection.Establish(
             GoogleCalendarConnectionId.New(),
-            currentUser.Id.Value,
+            command.UserId,
             new WorkspaceId(command.WorkspaceId),
             command.GoogleEmail,
             command.EncryptedRefreshToken,

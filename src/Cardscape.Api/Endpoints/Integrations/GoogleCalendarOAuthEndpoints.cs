@@ -1,13 +1,12 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text.Json;
-using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
-using Cardscape.Application.Abstractions.Integrations;
-using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Integrations.GoogleCalendar;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -22,38 +21,27 @@ namespace Cardscape.Api.Endpoints.Integrations;
 /// <see cref="GoogleCalendarEndpoints"/> because the OAuth
 /// round-trip is a different transport (anonymous GETs
 /// against Google's <c>accounts.google.com/o/oauth2/v2/auth</c>
-/// + <c>oauth2.googleapis.com/token</c>) and the webhook is
-/// a server-to-server POST (no JWT, just channel + resource
-/// id headers).
+/// + <c>oauth2.googleapis.com/token</c>). Only the working
+/// outbound calendar synchronization is supported.
 /// </summary>
 public static class GoogleCalendarOAuthEndpoints
 {
-    public const string StateCookieName = "cardscape.gcal.state";
-    public const string StateWorkspaceCookieName = "cardscape.gcal.workspace";
+    private const string StatePurpose = "Cardscape.GoogleCalendar.OAuthState.v1";
 
     public static IEndpointRouteBuilder MapGoogleCalendarOAuthEndpoints(this IEndpointRouteBuilder app)
     {
         var oauthGroup = app.MapGroup("/api/integrations/google-calendar")
             .WithTags("Integrations.GoogleCalendar");
 
-        oauthGroup.MapGet("/start", (
+        oauthGroup.MapGet("/start", async (
             HttpContext http,
             IConfiguration configuration,
+            IDataProtectionProvider dataProtection,
+            IMessageBus bus,
             [FromQuery] Guid workspaceId,
-            [FromQuery] string? returnUrl) =>
+            [FromQuery] string? returnUrl,
+            CancellationToken ct) =>
         {
-            string clientId = configuration["Integrations:GoogleCalendar:ClientId"] ?? string.Empty;
-            string redirectUri = configuration["Integrations:GoogleCalendar:RedirectUri"]
-                ?? $"{http.Request.Scheme}://{http.Request.Host}/api/integrations/google-calendar/callback";
-
-            if (string.IsNullOrWhiteSpace(clientId))
-            {
-                return Results.Problem(
-                    title: "google_calendar.not_configured",
-                    detail: "Google Calendar integration is not configured.",
-                    statusCode: StatusCodes.Status503ServiceUnavailable);
-            }
-
             if (workspaceId == Guid.Empty)
             {
                 return Results.Problem(
@@ -62,21 +50,37 @@ public static class GoogleCalendarOAuthEndpoints
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
-            string state = Guid.NewGuid().ToString("N");
-            http.Response.Cookies.Append(StateCookieName, state, new CookieOptions
+            Result<GoogleCalendarOAuthAuthorization> authorization = await bus.InvokeAsync<
+                Result<GoogleCalendarOAuthAuthorization>>(
+                new AuthorizeGoogleCalendarOAuthQuery(workspaceId), ct);
+            if (authorization.IsFailure)
             {
-                HttpOnly = true,
-                Secure = http.Request.IsHttps,
-                SameSite = SameSiteMode.Lax,
-                MaxAge = TimeSpan.FromMinutes(10)
-            });
-            http.Response.Cookies.Append(StateWorkspaceCookieName, workspaceId.ToString(), new CookieOptions
+                return MapError(authorization.Error);
+            }
+
+            string clientId = configuration["Integrations:GoogleCalendar:ClientId"] ?? string.Empty;
+            string redirectUri = configuration["Integrations:GoogleCalendar:RedirectUri"]
+                ?? $"{http.Request.Scheme}://{http.Request.Host}/api/integrations/google-calendar/callback";
+            if (string.IsNullOrWhiteSpace(clientId))
             {
-                HttpOnly = true,
-                Secure = http.Request.IsHttps,
-                SameSite = SameSiteMode.Lax,
-                MaxAge = TimeSpan.FromMinutes(10)
-            });
+                return Results.Problem(
+                    title: "google_calendar.not_configured",
+                    detail: "Google Calendar integration is not configured.",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+
+            string localReturnUrl = IsLocalReturnUrl(returnUrl)
+                ? returnUrl!
+                : "/settings/integrations/google-calendar?connected=1";
+            var statePayload = new GoogleCalendarOAuthState(
+                authorization.Value.UserId,
+                authorization.Value.WorkspaceId,
+                localReturnUrl);
+            ITimeLimitedDataProtector protector = dataProtection
+                .CreateProtector(StatePurpose)
+                .ToTimeLimitedDataProtector();
+            string state = protector.Protect(
+                JsonSerializer.Serialize(statePayload), TimeSpan.FromMinutes(10));
 
             string scope = Uri.EscapeDataString("https://www.googleapis.com/auth/calendar.events email profile");
             string authUrl =
@@ -90,13 +94,14 @@ public static class GoogleCalendarOAuthEndpoints
                 + $"&prompt=consent"
                 + $"&include_granted_scopes=true";
             return Results.Redirect(authUrl);
-        }).AllowAnonymous();
+        }).RequireAuthorization();
 
         oauthGroup.MapGet("/callback", async (
             HttpContext http,
             IConfiguration configuration,
             IHttpClientFactory httpClientFactory,
             ISecretProtector secrets,
+            IDataProtectionProvider dataProtection,
             IMessageBus bus,
             CancellationToken ct) =>
         {
@@ -117,29 +122,21 @@ public static class GoogleCalendarOAuthEndpoints
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
-            string? expectedState = http.Request.Cookies[StateCookieName];
-            string? workspaceIdCookie = http.Request.Cookies[StateWorkspaceCookieName];
-            if (string.IsNullOrEmpty(expectedState) || string.IsNullOrEmpty(workspaceIdCookie))
+            GoogleCalendarOAuthState state;
+            try
             {
-                return Results.Problem(
-                    title: "google_calendar.state_expired",
-                    detail: "The OAuth state cookie has expired. Restart the connection flow.",
-                    statusCode: StatusCodes.Status400BadRequest);
+                ITimeLimitedDataProtector protector = dataProtection
+                    .CreateProtector(StatePurpose)
+                    .ToTimeLimitedDataProtector();
+                string serialized = protector.Unprotect(stateValues.ToString());
+                state = JsonSerializer.Deserialize<GoogleCalendarOAuthState>(serialized)
+                    ?? throw new CryptographicException("OAuth state payload is empty.");
             }
-
-            if (!string.Equals(expectedState, stateValues.ToString(), StringComparison.Ordinal))
+            catch (CryptographicException)
             {
                 return Results.Problem(
-                    title: "google_calendar.state_mismatch",
-                    detail: "The OAuth state parameter does not match the cookie.",
-                    statusCode: StatusCodes.Status400BadRequest);
-            }
-
-            if (!Guid.TryParse(workspaceIdCookie, out Guid workspaceId) || workspaceId == Guid.Empty)
-            {
-                return Results.Problem(
-                    title: "google_calendar.workspace_required",
-                    detail: "The workspace cookie is invalid. Restart the connection flow.",
+                    title: "google_calendar.state_invalid",
+                    detail: "The OAuth state is invalid or expired. Restart the connection flow.",
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
@@ -211,12 +208,10 @@ public static class GoogleCalendarOAuthEndpoints
 
             string encrypted = secrets.Protect(refreshToken);
 
-            http.Response.Cookies.Delete(StateCookieName);
-            http.Response.Cookies.Delete(StateWorkspaceCookieName);
-
             var result = await bus.InvokeAsync<Result<GoogleCalendarConnectionDto>>(
-                new EstablishGoogleCalendarConnectionCommand(
-                    workspaceId,
+                new CompleteGoogleCalendarOAuthCommand(
+                    state.UserId,
+                    state.WorkspaceId,
                     googleEmail,
                     encrypted,
                     "primary"),
@@ -227,119 +222,16 @@ public static class GoogleCalendarOAuthEndpoints
                 return MapError(result.Error);
             }
 
-            string webRedirect = configuration["Cardscape:Web:GoogleCalendarRedirectUrl"]
-                ?? configuration["Web:GoogleCalendarRedirectUrl"]
-                ?? "/settings/integrations/google-calendar?connected=1";
-            return Results.Redirect(webRedirect);
-        }).AllowAnonymous();
-
-        oauthGroup.MapPost("/watch", async (
-            HttpContext http,
-            IConfiguration configuration,
-            IGoogleCalendarConnectionRepository connections,
-            IGoogleCalendarSyncService sync,
-            IClock clock,
-            CancellationToken ct) =>
-        {
-            string? userIdValue = http.User.FindFirst("sub")?.Value
-                ?? http.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userIdValue) || !Guid.TryParse(userIdValue, out Guid userId))
-            {
-                return Results.Unauthorized();
-            }
-
-            string webhookUrl = configuration["Integrations:GoogleCalendar:WebhookUrl"]
-                ?? $"{http.Request.Scheme}://{http.Request.Host}/api/integrations/google-calendar/webhook";
-
-            Result<GoogleCalendarWatchInfo> watchResult = await sync.WatchCalendarAsync(userId, webhookUrl, ct);
-            if (watchResult.IsFailure)
-            {
-                return MapError(watchResult.Error);
-            }
-
-            var connection = await connections.FindByUserAsync(userId, ct);
-            if (connection is not null)
-            {
-                connection.SetWatch(
-                    watchResult.Value.ChannelId,
-                    watchResult.Value.ResourceId,
-                    watchResult.Value.ExpiresAt,
-                    clock.UtcNow);
-                await connections.UpdateAsync(connection, ct);
-            }
-
-            return Results.Ok(new
-            {
-                channelId = watchResult.Value.ChannelId,
-                resourceId = watchResult.Value.ResourceId,
-                expiresAt = watchResult.Value.ExpiresAt
-            });
-        }).RequireAuthorization();
-
-        oauthGroup.MapPost("/webhook", async (
-            HttpContext http,
-            IGoogleCalendarConnectionRepository connections,
-            IGoogleCalendarSyncService sync,
-            ILogger<GoogleCalendarMarker> logger,
-            CancellationToken ct) =>
-        {
-            string? channelId = http.Request.Headers["X-Goog-Channel-Id"].ToString();
-            string? resourceId = http.Request.Headers["X-Goog-Resource-Id"].ToString();
-            string? resourceState = http.Request.Headers["X-Goog-Resource-State"].ToString();
-
-            if (string.IsNullOrWhiteSpace(channelId) || string.IsNullOrWhiteSpace(resourceId))
-            {
-                return Results.BadRequest(new { error = "missing_channel_headers" });
-            }
-
-            if (string.Equals(resourceState, "stop", StringComparison.OrdinalIgnoreCase))
-            {
-                logger.LogInformation(
-                    "Google Calendar watch {ChannelId} (resource {ResourceId}) reported stop.",
-                    channelId, resourceId);
-                return Results.Ok();
-            }
-
-            IReadOnlyList<Domain.Integrations.GoogleCalendar.GoogleCalendarConnection> matches =
-                await FindByChannelAsync(connections, channelId, resourceId, ct);
-
-            if (matches.Count == 0)
-            {
-                logger.LogWarning(
-                    "Google Calendar webhook for channel {ChannelId} resource {ResourceId} found no matching connection.",
-                    channelId, resourceId);
-                return Results.NotFound();
-            }
-
-            int totalUpdated = 0;
-            foreach (Domain.Integrations.GoogleCalendar.GoogleCalendarConnection connection in matches)
-            {
-                Result<int> pull = await sync.PullCalendarChangesAsync(connection.UserId, ct);
-                if (pull.IsFailure)
-                {
-                    logger.LogWarning(
-                        "Pull for user {UserId} on webhook failed: {Code} {Message}",
-                        connection.UserId, pull.Error.Code, pull.Error.Message);
-                    continue;
-                }
-                totalUpdated += pull.Value;
-            }
-
-            return Results.Ok(new { updated = totalUpdated });
+            return Results.Redirect(state.ReturnUrl);
         }).AllowAnonymous();
 
         return app;
     }
 
-    private static async Task<IReadOnlyList<Domain.Integrations.GoogleCalendar.GoogleCalendarConnection>> FindByChannelAsync(
-        IGoogleCalendarConnectionRepository connections,
-        string channelId,
-        string resourceId,
-        CancellationToken ct)
-    {
-        await Task.CompletedTask;
-        return [];
-    }
+    private static bool IsLocalReturnUrl(string? value) =>
+        !string.IsNullOrWhiteSpace(value)
+        && value[0] == '/'
+        && (value.Length == 1 || (value[1] != '/' && value[1] != '\\'));
 
     private static IResult MapError(DomainError error) => error.Type switch
     {
@@ -352,4 +244,4 @@ public static class GoogleCalendarOAuthEndpoints
     };
 }
 
-internal sealed class GoogleCalendarMarker { }
+internal sealed record GoogleCalendarOAuthState(Guid UserId, Guid WorkspaceId, string ReturnUrl);

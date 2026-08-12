@@ -7,6 +7,11 @@ using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.Integrations.GoogleCalendar;
 using Cardscape.IntegrationTests.Fixtures;
 using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Cardscape.IntegrationTests.Endpoints;
 
@@ -296,70 +301,76 @@ public sealed class IntegrationsEndpointTests
     // ── Google Calendar ───────────────────────────────────
 
     [Fact]
-    public async Task GoogleCalendar_Connect_Then_Get_Returns_Connection()
+    public async Task GoogleCalendar_OAuthRoundTrip_PreservesIdentityAndCreatesConnection()
     {
-        HttpClient client = await CreateAuthenticatedClientAsync();
+        WebApplicationFactory<Program> factory = CreateGoogleOAuthFactory();
+        HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+        await AuthenticateAsync(client);
         Guid workspaceId = await CreateWorkspaceAsync(client, "gcal-test");
 
-        HttpResponseMessage connected = await client.PostAsJsonAsync(
-            "api/integrations/google-calendar/connect",
-            new
-            {
-                workspaceId,
-                googleEmail = "user@gmail.com",
-                encryptedRefreshToken = "encrypted-blob-abc",
-                calendarId = "primary"
-            },
+        HttpResponseMessage started = await client.GetAsync(
+            $"api/integrations/google-calendar/start?workspaceId={workspaceId}&returnUrl={Uri.EscapeDataString("https://evil.example/steal")}",
             TestContext.Current.CancellationToken);
-        if (!connected.IsSuccessStatusCode)
-        {
-            string errBody = await connected.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-            throw new Xunit.Sdk.XunitException(
-                $"GoogleCalendar connect returned {(int)connected.StatusCode} {connected.StatusCode}. Body: {errBody}");
-        }
-        connected.StatusCode.Should().Be(HttpStatusCode.Created);
+        started.StatusCode.Should().Be(HttpStatusCode.Redirect);
+        Uri redirect = started.Headers.Location!;
+        string state = ParseQueryValue(redirect.Query, "state");
+        state.Should().NotBeNullOrWhiteSpace();
+
+        AuthenticationHeaderValue authorization = client.DefaultRequestHeaders.Authorization!;
+        client.DefaultRequestHeaders.Authorization = null;
+        HttpResponseMessage callback = await client.GetAsync(
+            $"api/integrations/google-calendar/callback?code=test-code&state={Uri.EscapeDataString(state)}",
+            TestContext.Current.CancellationToken);
+        callback.StatusCode.Should().Be(HttpStatusCode.Redirect);
+        callback.Headers.Location.Should().Be("/settings/integrations/google-calendar?connected=1");
+
+        client.DefaultRequestHeaders.Authorization = authorization;
 
         HttpResponseMessage got = await client.GetAsync(
             "api/integrations/google-calendar/", TestContext.Current.CancellationToken);
-        got.IsSuccessStatusCode.Should().BeTrue();
-        string body = await got.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        body.Should().Contain("user@gmail.com");
-        body.Should().Contain("primary");
+        GoogleCalendarConnectionDto dto = (await got.Content.ReadFromJsonAsync<GoogleCalendarConnectionDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+        dto.GoogleEmail.Should().Be("oauth-user@gmail.com");
+        dto.WorkspaceId.Should().Be(workspaceId);
+        dto.IsActive.Should().BeTrue();
     }
 
     [Fact]
-    public async Task GoogleCalendar_Disconnect_Marks_Connection_Inactive()
+    public async Task GoogleCalendar_RemovedCredentialAndWebhookRoutes_ReturnNotFound()
     {
-        // GoogleCalendar disconnect is a soft delete: the
-        // connection row stays (so the user can re-link
-        // without re-doing the OAuth dance), but the
-        // projection flips IsActive=false. The endpoint
-        // returns 204 on success.
         HttpClient client = await CreateAuthenticatedClientAsync();
-        Guid workspaceId = await CreateWorkspaceAsync(client, "gcal-disconnect");
+        HttpResponseMessage connect = await client.PostAsJsonAsync(
+            "api/integrations/google-calendar/connect", new { }, TestContext.Current.CancellationToken);
+        HttpResponseMessage watch = await client.PostAsync(
+            "api/integrations/google-calendar/watch", null, TestContext.Current.CancellationToken);
+        HttpResponseMessage webhook = await client.PostAsync(
+            "api/integrations/google-calendar/webhook", null, TestContext.Current.CancellationToken);
 
-        await client.PostAsJsonAsync(
-            "api/integrations/google-calendar/connect",
-            new
-            {
-                workspaceId,
-                googleEmail = "user2@gmail.com",
-                encryptedRefreshToken = "encrypted-blob-def",
-                calendarId = (string?)null
-            },
+        connect.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        watch.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        webhook.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GoogleCalendar_Start_RequiresAuthentication_AndCallbackRejectsTamperedState()
+    {
+        WebApplicationFactory<Program> factory = CreateGoogleOAuthFactory();
+        HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        HttpResponseMessage anonymous = await client.GetAsync(
+            $"api/integrations/google-calendar/start?workspaceId={Guid.NewGuid()}",
+            TestContext.Current.CancellationToken);
+        HttpResponseMessage tampered = await client.GetAsync(
+            "api/integrations/google-calendar/callback?code=test-code&state=tampered",
             TestContext.Current.CancellationToken);
 
-        HttpResponseMessage disconnect = await client.DeleteAsync(
-            "api/integrations/google-calendar/", TestContext.Current.CancellationToken);
-        disconnect.StatusCode.Should().Be(HttpStatusCode.NoContent);
-
-        HttpResponseMessage got = await client.GetAsync(
-            "api/integrations/google-calendar/", TestContext.Current.CancellationToken);
-        got.IsSuccessStatusCode.Should().BeTrue();
-        GoogleCalendarConnectionDto reloaded =
-            (await got.Content.ReadFromJsonAsync<GoogleCalendarConnectionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
-        reloaded.Should().NotBeNull();
-        reloaded.IsActive.Should().BeFalse();
+        anonymous.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        tampered.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await tampered.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+            .Should().Contain("google_calendar.state_invalid");
     }
 
     [Fact]
@@ -495,6 +506,65 @@ public sealed class IntegrationsEndpointTests
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return (client, auth);
+    }
+
+    private static async Task AuthenticateAsync(HttpClient client)
+    {
+        string email = $"int-{Guid.NewGuid():N}@cardscape.local";
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "api/auth/register", new RegisterRequest(email, "Tester", "Password123!"),
+            TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        AuthResponse auth = (await response.Content.ReadFromJsonAsync<AuthResponse>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+    }
+
+    private WebApplicationFactory<Program> CreateGoogleOAuthFactory() =>
+        _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration((_, configuration) =>
+            {
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Integrations:GoogleCalendar:ClientId"] = "test-client",
+                    ["Integrations:GoogleCalendar:ClientSecret"] = "test-secret"
+                });
+            });
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddHttpClient("google-oauth")
+                    .ConfigurePrimaryHttpMessageHandler(() => new GoogleOAuthHandler());
+            });
+        });
+
+    private static string ParseQueryValue(string query, string name)
+    {
+        foreach (string part in query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            string[] pair = part.Split('=', 2);
+            if (pair.Length == 2 && string.Equals(pair[0], name, StringComparison.Ordinal))
+            {
+                return Uri.UnescapeDataString(pair[1]);
+            }
+        }
+        return string.Empty;
+    }
+
+    private sealed class GoogleOAuthHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            string json = request.RequestUri!.AbsolutePath.EndsWith("/token", StringComparison.Ordinal)
+                ? "{\"refresh_token\":\"refresh-token\",\"access_token\":\"access-token\"}"
+                : "{\"email\":\"oauth-user@gmail.com\"}";
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            });
+        }
     }
 
     private static async Task<SlackWorkspaceDto> ConnectSlackAsync(

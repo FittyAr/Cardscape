@@ -1379,10 +1379,6 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(0u);
 
-                    b.Property<string>("SyncToken")
-                        .HasMaxLength(1024)
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
@@ -1390,17 +1386,6 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("WatchChannelId")
-                        .HasMaxLength(128)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset?>("WatchExpiresAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("WatchResourceId")
-                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("WorkspaceId")

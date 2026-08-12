@@ -368,3 +368,13 @@
 - Static pairing analyzer attempt: the required Roslyn command was executed once, but the pinned SDK rejected the file-based script because it found no runnable project. This is a static-pairing limitation, not evidence of line or branch coverage.
 - Assertion review: the focused regressions use exact status, identity, hash, structured state and negative collection assertions; zero are assertion-free, trivial-only or self-referential.
 - Release build: 0 warnings, 0 errors. Full suite: 852 passed, 0 failed, 1 skipped.
+
+# Google Calendar OAuth boundary and fake inbound sync removal (2026-08-12)
+
+- Scope: OAuth start/callback, Application connection establishment, REST credential surface, sync abstraction/implementation, aggregate persistence and integration coverage.
+- Root causes: OAuth callback was anonymous but invoked a handler dependent on `ICurrentUser`, so a real code exchange could not preserve the initiating identity. `/connect` accepted purportedly encrypted credential material from the browser. Webhook lookup always returned an empty list and inbound event-to-card resolution always returned null, making watch/pull an advertised but non-functional feature.
+- Decision: authorize the initiating user/workspace before redirect; carry user, workspace and a validated local return path in a ten-minute purpose-bound Data Protection state; complete OAuth from that protected identity. Remove `/connect`, `/watch`, `/webhook`, pull/watch contracts, dead aggregate fields and schema columns. Retain only working outbound due-date push.
+- Acceptance: anonymous start is 401; outsider start is 403; successful callback without JWT persists the initiating user's connection; tampered state is 400 before external calls; external return URL falls back locally; removed routes are 404.
+- Static pairing analyzer attempt: the documented Roslyn file command was executed once, but SDK 10 reported no runnable project. This heuristic could not provide line or branch coverage evidence.
+- Test convention: xUnit v3 integration tests with FluentAssertions and an in-process API host; the advertised `.NET` assertion extension is absent, so repository conventions and the base catalogs were used.
+- Release build: 0 warnings, 0 errors. Full suite: 853 passed, 0 failed, 1 skipped.

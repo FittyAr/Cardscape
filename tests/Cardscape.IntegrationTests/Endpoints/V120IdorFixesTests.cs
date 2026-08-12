@@ -218,15 +218,8 @@ public sealed class V120IdorFixesTests
         WorkspaceDto ownerWorkspace = await SeedWorkspaceAsync(owner);
 
         HttpClient outsider = await CreateAuthenticatedClientAsync();
-        HttpResponseMessage connect = await outsider.PostAsJsonAsync(
-            "api/integrations/google-calendar/connect",
-            new
-            {
-                workspaceId = ownerWorkspace.Id,
-                googleEmail = "outsider@evil.example",
-                encryptedRefreshToken = Convert.ToBase64String(new byte[32]),
-                calendarId = "primary"
-            },
+        HttpResponseMessage connect = await outsider.GetAsync(
+            $"api/integrations/google-calendar/start?workspaceId={ownerWorkspace.Id}",
             TestContext.Current.CancellationToken);
         connect.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }

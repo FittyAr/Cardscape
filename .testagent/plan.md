@@ -222,3 +222,13 @@
 - [x] Reject cross-workspace route/resource mismatches before mutation.
 - [x] Add exact integration regressions for member denial, rotation and cross-tenant routes.
 - [x] Run focused validation, pseudo-mutation/assertion review, Release build and full suite.
+
+# Google Calendar OAuth boundary and fake inbound sync removal (2026-08-12)
+
+- [x] Trace identity and credential data across OAuth start, callback and Application.
+- [x] Require authentication/membership before redirect and protect identity/workspace/return URL with expiring Data Protection state.
+- [x] Complete OAuth without relying on an absent callback JWT.
+- [x] Remove the browser credential endpoint and non-functional watch/webhook/pull contracts, state and schema.
+- [x] Add regressions for successful anonymous callback, authentication, tenant isolation, state tampering, local redirects and removed routes.
+- [x] Run focused validation and pseudo-mutation/assertion review.
+- [x] Run final Release build and full suite.

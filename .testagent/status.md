@@ -290,3 +290,14 @@
 - Assertion review: all four new regressions have meaningful equality plus state/negative assertions; zero are assertion-free, trivial-only or self-referential. The advertised .NET extension is still absent, so xUnit/FluentAssertions were classified from repository conventions and the base catalog.
 - Static pairing limitation: the required Roslyn analyzer was attempted once and the pinned SDK reported no runnable project; this heuristic could not supply coverage evidence.
 - Full validation: Release build 0 warnings / 0 errors; suite 852 passed / 0 failed / 1 skipped.
+
+# Google Calendar OAuth boundary and fake inbound sync removal (2026-08-12)
+
+- Status: complete.
+- Root causes: callback identity was lost at the anonymous OAuth boundary; direct REST accepted credential material; inbound watch/webhook/pull paths were placeholders that could never locate a connection or card.
+- Chosen boundary: authenticated start plus purpose-bound ten-minute protected state; callback consumes the protected initiator identity. Only the functional outbound card due-date push remains.
+- Focused validation: `IntegrationsEndpointTests` plus Google Calendar IDOR regression 16/16.
+- Pseudo-mutation review: removing start authorization, membership check, state protection, protected identity, local-return validation or route removal is killed by exact 401/403/400/302/404, DTO identity/workspace and redirect assertions.
+- Assertion review: all new regressions assert exact status and either redirect, error code, persisted DTO fields or negative route existence; zero are assertion-free, trivial-only or self-referential. The advertised .NET extension is absent.
+- Static pairing limitation: Roslyn analyzer attempt failed because the file-based command found no runnable project under the pinned SDK.
+- Full validation: Release build 0 warnings / 0 errors; suite 853 passed / 0 failed / 1 skipped.

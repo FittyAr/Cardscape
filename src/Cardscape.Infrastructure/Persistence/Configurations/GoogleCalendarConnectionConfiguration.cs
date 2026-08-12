@@ -28,11 +28,6 @@ public sealed class GoogleCalendarConnectionConfiguration
         b.Property(x => x.IsDeleted);
         b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
 
-        b.Property(x => x.WatchChannelId).HasMaxLength(128);
-        b.Property(x => x.WatchResourceId).HasMaxLength(256);
-        b.Property(x => x.WatchExpiresAt);
-        b.Property(x => x.SyncToken).HasMaxLength(1024);
-
         b.HasIndex(x => x.UserId).IsUnique();
         b.HasIndex(x => x.WorkspaceId);
     }
