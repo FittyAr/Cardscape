@@ -30,6 +30,9 @@ public sealed class TotpCredentialConfiguration : IEntityTypeConfiguration<TotpC
             .IsRequired()
             .HasDefaultValue(0L);
 
+        b.Property(c => c.ConfirmedAt);
+        b.Ignore(c => c.IsActive);
+
         b.Property(c => c.CreatedAt).IsRequired();
         b.Property(c => c.UpdatedAt);
         b.Property(c => c.CreatedBy);

@@ -5,6 +5,7 @@ using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.IntegrationTests.Fixtures;
 using FluentAssertions;
+using OtpNet;
 using Xunit;
 
 namespace Cardscape.IntegrationTests.Endpoints;
@@ -47,6 +48,9 @@ public sealed class WorkspaceRequireTwoFactorEndpointTests
     {
         HttpClient owner = await CreateAuthenticatedClientAsync("Owner");
         WorkspaceDto ws = await CreateWorkspaceAsync(owner, "2FA incomplete enrollment WS");
+        HttpResponseMessage enrollment = await owner.PostAsync(
+            "api/auth/2fa/enroll", null, TestContext.Current.CancellationToken);
+        enrollment.EnsureSuccessStatusCode();
 
         HttpResponseMessage response = await owner.PostAsJsonAsync(
             $"api/workspaces/{ws.Id}/security/require-2fa",
@@ -122,7 +126,15 @@ public sealed class WorkspaceRequireTwoFactorEndpointTests
         HttpResponseMessage response = await client.PostAsync(
             "api/auth/2fa/enroll", content: null, TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();
+        TotpEnrollmentResponse enrollment = (await response.Content.ReadFromJsonAsync<TotpEnrollmentResponse>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+        string code = new Totp(Base32Encoding.ToBytes(enrollment.Secret)).ComputeTotp();
+        HttpResponseMessage confirmation = await client.PostAsJsonAsync(
+            "api/auth/2fa/confirm", new { code }, TestContext.Current.CancellationToken);
+        confirmation.EnsureSuccessStatusCode();
     }
+
+    private sealed record TotpEnrollmentResponse(string Secret);
 
     private static async Task<WorkspaceDto> GetWorkspaceAsync(HttpClient client, Guid workspaceId)
     {

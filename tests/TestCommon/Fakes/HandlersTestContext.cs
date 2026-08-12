@@ -107,7 +107,7 @@ public sealed class HandlersTestContext
     /// cleartext that <see cref="IdentitySecretProtector"/>
     /// "stores" verbatim.</summary>
     public async Task<(TotpCredential Credential, string Secret)> SeedTotpCredentialAsync(
-        User user, string secret = "JBSWY3DPEHPK3PXP")
+        User user, string secret = "JBSWY3DPEHPK3PXP", bool confirmed = true)
     {
         var enrolled = TotpCredential.Enroll(
             userId: user.Id,
@@ -118,6 +118,10 @@ public sealed class HandlersTestContext
                         SHA256.HashData(Encoding.UTF8.GetBytes($"recovery-{i}")))
                         .ToLowerInvariant())),
             at: Clock.UtcNow).Value;
+        if (confirmed)
+        {
+            enrolled.Confirm(1, Clock.UtcNow);
+        }
         await TotpCredentials.AddAsync(enrolled);
         return (enrolled, secret);
     }

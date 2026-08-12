@@ -170,4 +170,26 @@ public class LoginUserQueryHandlerTests
         user.LastLoginAt.Should().BeNull();
         ctx.UnitOfWork.SaveChangesCallCount.Should().Be(0);
     }
+
+    [Fact]
+    public async Task Handle_WhenWorkspaceRequiresTotpAndEnrollmentIsPending_DeniesJwt()
+    {
+        var ctx = new HandlersTestContext();
+        var user = await ctx.SeedUserAsync("pending@example.com", "Pending", "Passw0rd!");
+        var workspace = await ctx.SeedWorkspaceAsync(user.Id.Value);
+        workspace.SetRequireTwoFactor(true, user.Id.Value, ctx.Clock.UtcNow);
+        await ctx.SeedTotpCredentialAsync(user, confirmed: false);
+
+        var result = await LoginUserQueryHandler.Handle(
+            new LoginUserQuery("pending@example.com", "Passw0rd!"),
+            ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
+            ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins,
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("auth.totp.enrollment_required");
+        ctx.Tokens.AccessTokensIssued.Should().BeEmpty();
+        user.LastLoginAt.Should().BeNull();
+        ctx.UnitOfWork.SaveChangesCallCount.Should().Be(0);
+    }
 }

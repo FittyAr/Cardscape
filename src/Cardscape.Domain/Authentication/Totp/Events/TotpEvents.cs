@@ -3,8 +3,14 @@ using Cardscape.Domain.Members;
 
 namespace Cardscape.Domain.Authentication.Totp.Events;
 
-/// <summary>Raised when a user enrols 2FA / TOTP for the first time.</summary>
-public sealed record TotpCredentialEnrolled(
+/// <summary>Raised when a user starts configuring 2FA / TOTP.</summary>
+public sealed record TotpEnrollmentStarted(
+    TotpCredentialId CredentialId,
+    UserId UserId,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
+/// <summary>Raised after the authenticator secret is proven with a valid TOTP.</summary>
+public sealed record TotpCredentialConfirmed(
     TotpCredentialId CredentialId,
     UserId UserId,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);

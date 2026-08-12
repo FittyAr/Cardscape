@@ -342,3 +342,11 @@
 - Decision: enabling requires active TOTP for every current member; login denies JWT for inconsistent required workspaces; LastLogin is recorded only after all factors succeed.
 - Static pairing analyzer was attempted once and failed because the documented Roslyn file is not a runnable project under the pinned SDK 10.
 - Acceptance: incomplete enrollment returns 409 without changing the flag; required workspace without an active credential returns `auth.totp.enrollment_required`, no JWT, no LastLogin write.
+
+# TOTP enrollment confirmation (2026-08-11)
+
+- Scope: TOTP aggregate/service, persistence mapping, REST lifecycle, settings UI, login/workspace enforcement and focused unit/integration tests.
+- Finding: enrollment persisted a credential that every consumer treated as active before the user proved possession of the authenticator secret. Recovery codes were usable immediately and the workspace policy could be enabled against an unconfirmed setup.
+- Decision: persist enrollment as pending; only a valid TOTP code can activate it. Pending credentials cannot satisfy login/workspace policy, consume recovery codes or be disabled as active credentials. Re-enrollment replaces pending setup so lost setup material cannot strand an account.
+- UI convention: the existing settings page already uses Radzen exclusively; add confirmation with Radzen form/input/validator/button and expose pending state in the status contract.
+- Acceptance checklist: pending enrollment is not active; valid TOTP confirms exactly once; invalid confirmation preserves pending state; recovery codes cannot confirm; re-enrollment rotates a pending secret; login/workspace checks require confirmed credentials; focused and full Release validation pass.

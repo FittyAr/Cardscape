@@ -29,6 +29,12 @@
             <RadzenStack Gap="0.75rem">
                 <RadzenText Text="@L["SettingsTwoFactorProtectTitle"]" TextStyle="TextStyle.H5" TagName="TagName.H2" />
                 <RadzenText Text="@L["SettingsTwoFactorProtectBlurb"]" />
+                @if (status?.HasPendingEnrollment == true)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" AllowClose="false">
+                        @L["SettingsTwoFactorPending"]
+                    </RadzenAlert>
+                }
                 <RadzenButton Text="@L["SettingsTwoFactorEnrol"]"
                               Click="@OnEnroll"
                               ButtonStyle="ButtonStyle.Primary" />
@@ -58,6 +64,25 @@
                             <li><SecretBox Secret="@recoveryCode" AriaLabel="@L["SettingsTwoFactorRecoveryAria"]" /></li>
                         }
                     </ItemList>
+
+                    <RadzenText Text="@L["SettingsTwoFactorConfirmSetupTitle"]"
+                                TextStyle="TextStyle.H6" TagName="TagName.H3" Class="rz-mt-4" />
+                    <RadzenText Text="@L["SettingsTwoFactorConfirmSetupBlurb"]" />
+                    <RadzenTemplateForm TItem="ConfirmationModel" Data="@confirmation" Submit="@OnConfirmEnrollment">
+                        <RadzenStack Gap="0.75rem">
+                            <RadzenFormField Text="@L["SettingsTwoFactorCurrentCode"]" Component="confirmation-code">
+                                <RadzenTextBox Name="confirmation-code"
+                                               @bind-Value="confirmation.Code"
+                                               MaxLength="6"
+                                               InputAttributes="@(new Dictionary<string, object> { ["inputmode"] = "numeric", ["autocomplete"] = "one-time-code" })" />
+                            </RadzenFormField>
+                            <RadzenRequiredValidator Component="confirmation-code"
+                                                     Text="@L["SettingsTwoFactorCodeRequired"]" />
+                            <RadzenButton Text="@L["SettingsTwoFactorConfirmSetup"]"
+                                          ButtonType="ButtonType.Submit"
+                                          ButtonStyle="ButtonStyle.Primary" />
+                        </RadzenStack>
+                    </RadzenTemplateForm>
                 </RadzenStack>
             </RadzenCard>
         }
@@ -87,6 +112,7 @@
 @code {
     private TotpStatusDto? status;
     private TotpEnrollmentDto? enrollment;
+    private readonly ConfirmationModel confirmation = new();
     private bool loading = true;
     private string? message;
 
@@ -173,6 +199,29 @@
         }
     }
 
+    private async Task OnConfirmEnrollment()
+    {
+        message = null;
+        try
+        {
+            var http = await AuthedClientAsync();
+            var response = await http.PostAsJsonAsync("api/auth/2fa/confirm", new { code = confirmation.Code });
+            if (!response.IsSuccessStatusCode)
+            {
+                message = L["SettingsTwoFactorConfirmSetupInvalid"];
+                return;
+            }
+
+            enrollment = null;
+            confirmation.Code = string.Empty;
+            await LoadStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            message = string.Format(L["SettingsTwoFactorEnrolError"].Value, ex.Message);
+        }
+    }
+
     // BETA-2-UI-#5 — see test-results/ui/beta-test-r2-ui.md.
     //
     // The previous version used `@inject HttpClient Http`
@@ -198,6 +247,10 @@
         return http;
     }
 
-    private sealed record TotpStatusDto(bool IsEnrolled, DateTimeOffset? EnrolledAt, int RemainingRecoveryCodes);
+    private sealed record TotpStatusDto(bool IsEnrolled, bool HasPendingEnrollment, DateTimeOffset? EnrolledAt, int RemainingRecoveryCodes);
     private sealed record TotpEnrollmentDto(Guid CredentialId, string Secret, string QrCodeUrl, string[] RecoveryCodes);
+    private sealed class ConfirmationModel
+    {
+        public string Code { get; set; } = string.Empty;
+    }
 }

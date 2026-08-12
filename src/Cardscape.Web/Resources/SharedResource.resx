@@ -373,6 +373,12 @@
   <data name="SettingsTwoFactorProtectTitle" xml:space="preserve"><value>Protect your account with 2FA</value></data>
   <data name="SettingsTwoFactorProtectBlurb" xml:space="preserve"><value>Scan a QR code with your authenticator app (Authy, 1Password, Google Authenticator, …) and confirm a code to enable two-factor authentication.</value></data>
   <data name="SettingsTwoFactorEnrol" xml:space="preserve"><value>Enrol</value></data>
+  <data name="SettingsTwoFactorPending" xml:space="preserve"><value>Your previous setup was not confirmed. Start again to rotate the secret and recovery codes.</value></data>
+  <data name="SettingsTwoFactorConfirmSetupTitle" xml:space="preserve"><value>3. Confirm your authenticator</value></data>
+  <data name="SettingsTwoFactorConfirmSetupBlurb" xml:space="preserve"><value>Enter the current six-digit code. Two-factor authentication remains disabled until this succeeds.</value></data>
+  <data name="SettingsTwoFactorConfirmSetup" xml:space="preserve"><value>Confirm and enable</value></data>
+  <data name="SettingsTwoFactorConfirmSetupInvalid" xml:space="preserve"><value>The authenticator code is invalid or expired.</value></data>
+  <data name="SettingsTwoFactorCodeRequired" xml:space="preserve"><value>Enter the six-digit authenticator code.</value></data>
   <data name="SettingsTwoFactorScanTitle" xml:space="preserve"><value>1. Scan this QR code with your authenticator</value></data>
   <data name="SettingsTwoFactorOpenUri" xml:space="preserve"><value>Open the otpauth:// URI</value></data>
   <data name="SettingsTwoFactorOrCopy" xml:space="preserve"><value> or copy the secret below and enter it manually:</value></data>

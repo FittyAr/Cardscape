@@ -51,6 +51,12 @@ public sealed class TotpCredential : AggregateRoot<TotpCredentialId>
     /// </summary>
     public long LastUsedCounter { get; private set; }
 
+    /// <summary>When the user first proved possession of the authenticator secret.</summary>
+    public DateTimeOffset? ConfirmedAt { get; private set; }
+
+    /// <summary>Whether this credential can currently be used as a second factor.</summary>
+    public bool IsActive => ConfirmedAt.HasValue && !IsDeleted;
+
     // EF Core.
     private TotpCredential() { }
 
@@ -99,8 +105,22 @@ public sealed class TotpCredential : AggregateRoot<TotpCredentialId>
             encryptedSecret: encryptedSecret,
             recoveryCodesHash: recoveryCodesHash,
             at: at);
-        credential.AddDomainEvent(new TotpCredentialEnrolled(credential.Id, userId, at));
+        credential.AddDomainEvent(new TotpEnrollmentStarted(credential.Id, userId, at));
         return Result.Success(credential);
+    }
+
+    /// <summary>Activates a pending enrollment after a valid authenticator code.</summary>
+    public void Confirm(long counter, DateTimeOffset at)
+    {
+        if (IsDeleted || ConfirmedAt.HasValue)
+        {
+            return;
+        }
+
+        ConfirmedAt = at;
+        LastUsedCounter = counter;
+        UpdatedAt = at;
+        AddDomainEvent(new TotpCredentialConfirmed(Id, UserId, at));
     }
 
     /// <summary>

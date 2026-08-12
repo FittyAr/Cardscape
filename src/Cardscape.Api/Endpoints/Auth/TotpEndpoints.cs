@@ -25,6 +25,8 @@ namespace Cardscape.Api.Endpoints.Auth;
 ///   <item><c>GET /api/auth/2fa/status</c> — returns the
 ///         current enrolment state (used by the Web UI
 ///         settings page).</item>
+///   <item><c>POST /api/auth/2fa/confirm</c> — activates a
+///         pending enrollment after proving the authenticator secret.</item>
 /// </list>
 /// </summary>
 public static class TotpEndpoints
@@ -67,7 +69,7 @@ public static class TotpEndpoints
                 : Results.Problem(
                     title: result.Error.Code,
                     detail: result.Error.Message,
-                    statusCode: StatusCodes.Status400BadRequest);
+                    statusCode: MapStatusCode(result.Error.Type));
         });
 
         group.MapPost("/verify", async (
@@ -99,6 +101,26 @@ public static class TotpEndpoints
                 statusCode: StatusCodes.Status401Unauthorized);
         });
 
+        group.MapPost("/confirm", async (
+            [FromBody] TotpVerifyRequest body,
+            ITotpService totp,
+            ICurrentUser currentUser,
+            CancellationToken ct) =>
+        {
+            if (currentUser.Id is null)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await totp.ConfirmEnrollmentAsync(currentUser.Id, body.Code, ct);
+            return result.IsSuccess
+                ? Results.NoContent()
+                : Results.Problem(
+                    title: result.Error.Code,
+                    detail: result.Error.Message,
+                    statusCode: MapStatusCode(result.Error.Type));
+        });
+
         group.MapPost("/disable", async (
             [FromBody] TotpDisableRequest body,
             ITotpService totp,
@@ -116,11 +138,22 @@ public static class TotpEndpoints
                 : Results.Problem(
                     title: result.Error.Code,
                     detail: result.Error.Message,
-                    statusCode: StatusCodes.Status400BadRequest);
+                    statusCode: MapStatusCode(result.Error.Type));
         });
 
         return app;
     }
+
+    private static int MapStatusCode(ErrorType type) => type switch
+    {
+        ErrorType.Validation => StatusCodes.Status400BadRequest,
+        ErrorType.NotFound => StatusCodes.Status404NotFound,
+        ErrorType.Conflict => StatusCodes.Status409Conflict,
+        ErrorType.Forbidden => StatusCodes.Status403Forbidden,
+        ErrorType.Unauthenticated => StatusCodes.Status401Unauthorized,
+        ErrorType.External => StatusCodes.Status502BadGateway,
+        _ => StatusCodes.Status500InternalServerError
+    };
 }
 
 /// <summary>Body for <c>POST /api/auth/2fa/verify</c>.</summary>

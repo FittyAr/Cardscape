@@ -686,9 +686,15 @@ public sealed class FakeTotpService(
     public async Task<Result<TotpEnrollment>> EnrollAsync(UserId userId, CancellationToken ct)
     {
         var existing = await credentials.FindForUserAsync(userId, ct);
-        if (existing is not null && !existing.IsDeleted)
+        if (existing?.IsActive == true)
         {
             return Result.Failure<TotpEnrollment>(TotpErrors.AlreadyEnrolled);
+        }
+
+        if (existing is not null)
+        {
+            credentials.Remove(existing);
+            await unitOfWork.SaveChangesAsync(ct);
         }
 
         byte[] secretBytes = KeyGeneration.GenerateRandomKey(20);
@@ -725,6 +731,27 @@ public sealed class FakeTotpService(
             enrollResult.Value.Id, base32Secret, otpauth, recoveryCodes));
     }
 
+    public async Task<Result> ConfirmEnrollmentAsync(UserId userId, string code, CancellationToken ct)
+    {
+        var credential = await credentials.FindForUserAsync(userId, ct);
+        if (credential is null || credential.IsDeleted || credential.ConfirmedAt.HasValue)
+        {
+            return Result.Failure(TotpErrors.NotPendingEnrollment);
+        }
+
+        string cleartextSecret = protector.Unprotect(credential.EncryptedSecret);
+        var totp = new Totp(Base32Encoding.ToBytes(cleartextSecret));
+        if (string.IsNullOrWhiteSpace(code)
+            || !totp.VerifyTotp(code.Trim(), out long matchedStep, VerificationWindow.RfcSpecifiedNetworkDelay))
+        {
+            return Result.Failure(TotpErrors.InvalidCode);
+        }
+
+        credential.Confirm(matchedStep, clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
     public async Task<Result<long>> VerifyAsync(UserId userId, string code, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(code) || code.Length is < 6 or > 10)
@@ -733,7 +760,7 @@ public sealed class FakeTotpService(
         }
 
         var credential = await credentials.FindForUserAsync(userId, ct);
-        if (credential is null || credential.IsDeleted)
+        if (credential?.IsActive != true)
         {
             return Result.Failure<long>(TotpErrors.NotEnrolled);
         }
@@ -764,7 +791,7 @@ public sealed class FakeTotpService(
         }
 
         var credential = await credentials.FindForUserAsync(userId, ct);
-        if (credential is null || credential.IsDeleted)
+        if (credential?.IsActive != true)
         {
             return Result.Failure(TotpErrors.NotEnrolled);
         }
@@ -814,13 +841,18 @@ public sealed class FakeTotpService(
         var credential = await credentials.FindForUserAsync(userId, ct);
         if (credential is null || credential.IsDeleted)
         {
-            return new TotpStatus(IsEnrolled: false, EnrolledAt: null, RemainingRecoveryCodes: 0);
+            return new TotpStatus(false, false, null, 0);
+        }
+
+        if (!credential.IsActive)
+        {
+            return new TotpStatus(false, true, null, 0);
         }
 
         int remaining = credential.RecoveryCodesHash
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .Count(l => !l.StartsWith("used:", StringComparison.Ordinal));
-        return new TotpStatus(IsEnrolled: true, EnrolledAt: credential.CreatedAt, RemainingRecoveryCodes: remaining);
+        return new TotpStatus(true, false, credential.ConfirmedAt, remaining);
     }
 }
 

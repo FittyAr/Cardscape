@@ -74,7 +74,7 @@ public static class LoginUserQueryHandler
         // (IsDeleted == true) when the user disabled 2FA; treat that
         // as "no 2FA" so the user can log in with email+password alone.
         var credential = await totpCredentials.FindForUserAsync(user.Id, cancellationToken);
-        bool hasActiveTotp = credential is not null && !credential.IsDeleted;
+        bool hasActiveTotp = credential?.IsActive == true;
         IReadOnlyList<Domain.Workspaces.Workspace> memberships =
             await workspaces.ListForUserAsync(user.Id.Value, cancellationToken);
         bool workspaceRequiresTotp = memberships.Any(workspace => workspace.RequireTwoFactor);

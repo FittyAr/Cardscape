@@ -195,3 +195,13 @@
 - [x] Remove storage-only/follow-up documentation.
 - [x] Run focused validation and test-quality review.
 - [x] Run Release build and full suite.
+
+# TOTP enrollment confirmation (2026-08-11)
+
+- [x] Add an explicit pending/confirmed state to the TOTP aggregate and EF model.
+- [x] Make enrollment replace only pending credentials and keep active credentials protected.
+- [x] Confirm enrollment only through a valid authenticator TOTP; reject recovery-code activation.
+- [x] Require confirmed credentials in login, workspace policy, recovery and disable paths.
+- [x] Extend the Radzen settings flow with code confirmation and pending-state recovery.
+- [x] Add exact unit/integration regressions for activation, rejection, rotation and enforcement.
+- [x] Run focused validation, pseudo-mutation/assertion review, Release build and full suite.

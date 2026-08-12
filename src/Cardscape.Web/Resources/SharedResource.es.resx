@@ -372,6 +372,12 @@
   <data name="SettingsTwoFactorProtectTitle" xml:space="preserve"><value>Protegé tu cuenta con 2FA</value></data>
   <data name="SettingsTwoFactorProtectBlurb" xml:space="preserve"><value>Escaneá un código QR con tu app autenticadora (Authy, 1Password, Google Authenticator, …) y confirmá un código para activar la autenticación de dos factores.</value></data>
   <data name="SettingsTwoFactorEnrol" xml:space="preserve"><value>Activar</value></data>
+  <data name="SettingsTwoFactorPending" xml:space="preserve"><value>La configuración anterior no fue confirmada. Comenzá nuevamente para rotar el secreto y los códigos de recuperación.</value></data>
+  <data name="SettingsTwoFactorConfirmSetupTitle" xml:space="preserve"><value>3. Confirmá tu autenticador</value></data>
+  <data name="SettingsTwoFactorConfirmSetupBlurb" xml:space="preserve"><value>Ingresá el código actual de seis dígitos. La autenticación en dos pasos seguirá desactivada hasta que sea válido.</value></data>
+  <data name="SettingsTwoFactorConfirmSetup" xml:space="preserve"><value>Confirmar y activar</value></data>
+  <data name="SettingsTwoFactorConfirmSetupInvalid" xml:space="preserve"><value>El código del autenticador es inválido o venció.</value></data>
+  <data name="SettingsTwoFactorCodeRequired" xml:space="preserve"><value>Ingresá el código de seis dígitos del autenticador.</value></data>
   <data name="SettingsTwoFactorScanTitle" xml:space="preserve"><value>1. Escaneá este código QR con tu autenticador</value></data>
   <data name="SettingsTwoFactorOpenUri" xml:space="preserve"><value>Abrí el URI otpauth://</value></data>
   <data name="SettingsTwoFactorOrCopy" xml:space="preserve"><value> o copiá el secreto de abajo y cargalo manualmente:</value></data>

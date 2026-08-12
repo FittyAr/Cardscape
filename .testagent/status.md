@@ -256,3 +256,14 @@
 - Pseudo-mutation review: removing workspace lookup, reversing the active-credential guard, moving LastLogin before factor completion, checking only the owner, or persisting after a rejected activation is killed by exact error/JWT/state/save-count assertions.
 - Assertion review: new tests use exact error/status equality, negative JWT assertions and persisted aggregate/side-effect checks; zero assertion-free, trivial-only or self-referential tests. The .NET extension advertised by the installed analysis skill is absent, so FluentAssertions was classified from the base catalog.
 - Release build: 0 warnings, 0 errors. Full suite: 838 passed, 0 failed, 1 skipped.
+
+# TOTP enrollment confirmation (2026-08-11)
+
+- Status: complete.
+- Root cause: `/enroll` persisted a credential that login, recovery codes and workspace policy immediately treated as active without proving possession of the authenticator secret.
+- Chosen lifecycle: enrollment is pending until `/confirm` accepts a valid authenticator TOTP. Pending material may be rotated; active credentials reject re-enrollment; recovery codes cannot activate or validate a pending setup.
+- UI: the settings page remains Radzen-only and now includes an explicit six-digit confirmation form plus a recoverable pending-state warning.
+- Focused validation: login/workspace unit tests 11/11; TOTP/workspace integration tests 8/8.
+- Pseudo-mutation review: treating pending as active, accepting a recovery code for activation, omitting confirmation persistence, allowing confirmation twice, preserving a pending secret on re-enroll, or replacing an active credential is killed by exact state/status/identity assertions.
+- Assertion review: exact HTTP status, pending/active flags, timestamps, counts, rotated identifiers/secrets/codes, negative JWT and persistence side effects are asserted; zero new tests are assertion-free, trivial-only or self-referential. The advertised .NET extension file is absent from the installed skill package, so xUnit/FluentAssertions were classified from repository conventions and the base catalog.
+- Full validation: Release build 0 warnings / 0 errors; suite 843 passed / 0 failed / 1 skipped.

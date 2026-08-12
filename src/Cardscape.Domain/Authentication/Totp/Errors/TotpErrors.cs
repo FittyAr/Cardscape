@@ -16,6 +16,10 @@ public static class TotpErrors
         "auth.totp.already_enrolled",
         "Two-factor authentication is already enabled for this account.");
 
+    public static readonly DomainError NotPendingEnrollment = DomainError.Conflict(
+        "auth.totp.not_pending_enrollment",
+        "There is no pending two-factor enrollment to confirm.");
+
     public static readonly DomainError InvalidCode = DomainError.Unauthenticated(
         "auth.totp.invalid_code",
         "The supplied 2FA code is invalid or has expired.");

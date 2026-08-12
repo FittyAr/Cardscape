@@ -492,7 +492,7 @@ public static class SetWorkspaceRequireTwoFactorCommandHandler
             {
                 var credential = await totpCredentials.FindForUserAsync(
                     new UserId(member.UserId), cancellationToken);
-                if (credential is null || credential.IsDeleted)
+                if (credential?.IsActive != true)
                 {
                     return Result.Failure<WorkspaceDto>(TotpErrors.WorkspaceEnrollmentIncomplete);
                 }

@@ -32,23 +32,16 @@ public sealed class TotpService(
         CancellationToken ct)
     {
         var existing = await credentials.FindForUserAsync(userId, ct);
-        if (existing is not null && !existing.IsDeleted)
+        if (existing?.IsActive == true)
         {
             return Result.Failure<TotpEnrollment>(TotpErrors.AlreadyEnrolled);
         }
 
-        // BUG-A8-005 — see test-results/beta/reports/A8-settings.md.
-        // The previous pre-check only branched on `!IsDeleted`,
-        // so a soft-deleted "orphan" row would slip through and
-        // the subsequent insert would hit `UNIQUE constraint
-        // failed: totp_credentials.UserId` → 500. The
-        // `IsDeleted = true` row still owns the unique index,
-        // so a follow-up enroll can never co-exist with it. We
-        // hard-delete the orphan before re-enrolling so the
-        // next insert lands cleanly. The `status` endpoint
-        // already reports `isEnrolled:false` for this state, so
-        // the user-visible behaviour is unchanged.
-        if (existing is not null && existing.IsDeleted)
+        // One row per user is enforced by a unique index. A disabled
+        // credential or an unconfirmed setup may be replaced because
+        // neither is an active second factor; removing it first also
+        // guarantees that every retry rotates the secret and recovery codes.
+        if (existing is not null)
         {
             credentials.Remove(existing);
             await unitOfWork.SaveChangesAsync(ct);
@@ -98,6 +91,28 @@ public sealed class TotpService(
             RecoveryCodes: recoveryCodes));
     }
 
+    public async Task<Result> ConfirmEnrollmentAsync(
+        UserId userId,
+        string code,
+        CancellationToken ct)
+    {
+        var credential = await credentials.FindForUserAsync(userId, ct);
+        if (credential is null || credential.IsDeleted || credential.ConfirmedAt.HasValue)
+        {
+            return Result.Failure(TotpErrors.NotPendingEnrollment);
+        }
+
+        var verification = VerifyCode(credential, code);
+        if (verification.IsFailure)
+        {
+            return Result.Failure(verification.Error);
+        }
+
+        credential.Confirm(verification.Value, clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
     public async Task<Result<long>> VerifyAsync(
         UserId userId,
         string code,
@@ -109,13 +124,10 @@ public sealed class TotpService(
         }
 
         var credential = await credentials.FindForUserAsync(userId, ct);
-        if (credential is null || credential.IsDeleted)
+        if (credential?.IsActive != true)
         {
             return Result.Failure<long>(TotpErrors.NotEnrolled);
         }
-
-        string cleartextSecret = protector.Unprotect(credential.EncryptedSecret);
-        var totp = new Totp(Base32Encoding.ToBytes(cleartextSecret));
 
         // VerifyTotp with the default RfcSpecifiedNetworkDelay
         // window accepts the current step plus one step on
@@ -124,13 +136,13 @@ public sealed class TotpService(
         // counter the matching code belongs to, which we
         // compare against the last-used counter to reject
         // replays of stale codes.
-        if (!totp.VerifyTotp(
-                code.Trim(),
-                out long matchedStep,
-                VerificationWindow.RfcSpecifiedNetworkDelay))
+        var verification = VerifyCode(credential, code);
+        if (verification.IsFailure)
         {
-            return Result.Failure<long>(TotpErrors.InvalidCode);
+            return verification;
         }
+
+        long matchedStep = verification.Value;
 
         if (matchedStep <= credential.LastUsedCounter)
         {
@@ -183,7 +195,7 @@ public sealed class TotpService(
         }
 
         var credential = await credentials.FindForUserAsync(userId, ct);
-        if (credential is null || credential.IsDeleted)
+        if (credential?.IsActive != true)
         {
             return Result.Failure(TotpErrors.NotEnrolled);
         }
@@ -200,7 +212,7 @@ public sealed class TotpService(
             return Result.Failure(TotpErrors.InvalidRecoveryCode);
         }
 
-        lines[matchIndex] = $"used:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+        lines[matchIndex] = $"used:{clock.UtcNow.ToUnixTimeSeconds()}";
         string updatedHash = string.Join('\n', lines);
         credential.RecordRecoveryCodeUsed(updatedHash, clock.UtcNow);
         try
@@ -285,7 +297,7 @@ public sealed class TotpService(
         }
 
         var credential = await credentials.FindForUserAsync(userId, ct);
-        if (credential is null || credential.IsDeleted)
+        if (credential?.IsActive != true)
         {
             return Result.Failure<long>(TotpErrors.NotEnrolled);
         }
@@ -313,7 +325,20 @@ public sealed class TotpService(
         var credential = await credentials.FindForUserAsync(userId, ct);
         if (credential is null || credential.IsDeleted)
         {
-            return new TotpStatus(IsEnrolled: false, EnrolledAt: null, RemainingRecoveryCodes: 0);
+            return new TotpStatus(
+                IsEnrolled: false,
+                HasPendingEnrollment: false,
+                EnrolledAt: null,
+                RemainingRecoveryCodes: 0);
+        }
+
+        if (!credential.IsActive)
+        {
+            return new TotpStatus(
+                IsEnrolled: false,
+                HasPendingEnrollment: true,
+                EnrolledAt: null,
+                RemainingRecoveryCodes: 0);
         }
 
         int remaining = credential.RecoveryCodesHash
@@ -322,7 +347,8 @@ public sealed class TotpService(
 
         return new TotpStatus(
             IsEnrolled: true,
-            EnrolledAt: credential.CreatedAt,
+            HasPendingEnrollment: false,
+            EnrolledAt: credential.ConfirmedAt,
             RemainingRecoveryCodes: remaining);
     }
 
@@ -356,5 +382,22 @@ public sealed class TotpService(
     {
         byte[] digest = SHA256.HashData(Encoding.UTF8.GetBytes(code.Trim()));
         return Convert.ToHexString(digest).ToLowerInvariant();
+    }
+
+    private Result<long> VerifyCode(TotpCredential credential, string code)
+    {
+        if (string.IsNullOrWhiteSpace(code) || code.Length is < 6 or > 10)
+        {
+            return Result.Failure<long>(TotpErrors.InvalidCode);
+        }
+
+        string cleartextSecret = protector.Unprotect(credential.EncryptedSecret);
+        var totp = new Totp(Base32Encoding.ToBytes(cleartextSecret));
+        return totp.VerifyTotp(
+            code.Trim(),
+            out long matchedStep,
+            VerificationWindow.RfcSpecifiedNetworkDelay)
+            ? Result.Success(matchedStep)
+            : Result.Failure<long>(TotpErrors.InvalidCode);
     }
 }

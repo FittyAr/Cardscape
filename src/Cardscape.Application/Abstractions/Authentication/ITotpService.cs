@@ -23,6 +23,12 @@ public interface ITotpService
         UserId userId,
         CancellationToken ct);
 
+    /// <summary>Confirms a pending enrollment with a valid authenticator TOTP code.</summary>
+    Task<Result> ConfirmEnrollmentAsync(
+        UserId userId,
+        string code,
+        CancellationToken ct);
+
     /// <summary>
     /// Verifies a 6-digit TOTP code for the given user.
     /// Returns the matched counter on success, or a domain
@@ -83,5 +89,6 @@ public sealed record TotpEnrollment(
 /// <summary>Result of <see cref="ITotpService.GetStatusAsync"/>.</summary>
 public sealed record TotpStatus(
     bool IsEnrolled,
+    bool HasPendingEnrollment,
     DateTimeOffset? EnrolledAt,
     int RemainingRecoveryCodes);
