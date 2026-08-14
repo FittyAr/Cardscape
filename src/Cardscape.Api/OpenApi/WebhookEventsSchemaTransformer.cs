@@ -50,12 +50,10 @@ internal sealed class WebhookEventsSchemaTransformer : IOpenApiDocumentTransform
         // The framework prunes schemas that are not referenced by
         // any operation. So we don't just register WebhookEvent;
         // we also rewrite the `events` field on CreateWebhookBody
-        // and UpdateWebhookBody to $ref WebhookEvent, which both
-        // surfaces the enum in the rendered doc and keeps the
-        // schema alive.
+        // to $ref WebhookEvent, which both surfaces the enum in
+        // the rendered doc and keeps the schema alive.
         OpenApiSchemaReference eventRef = new("WebhookEvent");
         ReplaceEventsField(document, "CreateWebhookBody", eventRef);
-        ReplaceEventsField(document, "UpdateWebhookBody", eventRef);
 
         // Exposed as a string enum so Kiota / openapi-typescript /
         // NSwag all map it to a string union on the client. The

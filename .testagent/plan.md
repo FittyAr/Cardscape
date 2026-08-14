@@ -253,3 +253,11 @@
 - [x] Add exact 404 regressions for every removed REST route.
 - [x] Validate focused integration and architecture suites.
 - [x] Run full suite, update final evidence, commit and push.
+# Nested attachment/webhook route-resource boundaries (2026-08-14)
+
+- [x] Trace parent ids from Minimal API routes through Application authorization.
+- [x] Make `CardId` mandatory for attachment item messages and reject mismatches.
+- [x] Make `BoardId` mandatory for webhook item messages and reject mismatches.
+- [x] Add exact 404 integration regressions for download/delete/update/deliveries.
+- [x] Run focused build/tests and review assertion/gap quality.
+- [x] Run full suite, update modernization plan, commit and push.

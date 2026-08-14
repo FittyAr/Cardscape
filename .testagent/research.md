@@ -398,3 +398,12 @@
 - Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 855 passed / 0 failed / 1 skipped. The 12 validation cases that fail inside the restricted sandbox pass outside it; their sandbox-only failure is Windows Event Log access, not product behavior.
 - Static pairing analyzer attempt: the required Roslyn file command was attempted once and SDK execution reported no runnable project.
 - Test convention: xUnit v3 integration/architecture tests with exact status and catalog/route assertions.
+# Nested attachment/webhook route-resource boundaries (2026-08-14)
+
+- Target inventory: `AttachmentEndpoints`, attachment download/delete handlers, `WebhookEndpoints`, webhook update/delete/delivery-query handlers, and a new focused integration regression file.
+- Finding: nested routes bind `cardId`/`boardId` but discard them for item operations. The handlers authorize the item's real parent, so a request can address `/parents/A/items/item-of-B` and still operate on B.
+- Decision: carry the parent id into each Application message and fail with `NotFound` when it does not match the aggregate parent. This makes the URL canonical and avoids confirming cross-parent resource relationships.
+- Acceptance checklist: attachment download/delete reject a mismatched card with exact 404; webhook update/delete/delivery list reject a mismatched board with exact 404; canonical routes keep their existing behavior; no compatibility overload remains.
+- Existing conventions: xUnit integration tests use `CardscapeWebApplicationFactory`, bearer registration helpers, `HttpStatusCode` plus FluentAssertions, and JSON/multipart requests through the real API host.
+- Secondary finding: `UpdateWebhookBody.Events` was published in REST/OpenAPI but discarded by the endpoint and never sent by Web. It was removed rather than preserved as a compatibility facade.
+- Final evidence: focused regressions 2/2; formatter clean; complete suite 857 passed / 0 failed / 1 skipped.

@@ -325,3 +325,14 @@
 - Static pairing limitation: the analyzer was attempted once and reported no runnable project.
 - Full validation: formatter clean; Release build 0 warnings / 0 errors; suite 855 passed / 0 failed / 1 skipped.
 - Environment note: the sandboxed host cannot write Windows Event Log, so 12 host-validation cases surface an environmental `UnauthorizedAccessException`; the unrestricted suite passes all 560 executable unit tests.
+# Nested attachment/webhook route-resource boundaries (2026-08-14)
+
+- Status: complete; ready for commit and push.
+- Root cause: item commands/queries identify only the child even though their public route declares a parent-child hierarchy.
+- Required invariant: route parent id must equal the persisted child's parent id before authorization or side effects continue.
+- Implementation: attachment download/delete messages now require `CardId`; webhook update/delete/delivery-list messages now require `BoardId`; all reject route-resource mismatch with indistinguishable not-found results.
+- Dead contract removed: `UpdateWebhookBody.Events` and its OpenAPI rewrite were deleted because the endpoint never implemented event replacement and the Web client never sent it.
+- Focused evidence: `NestedResourceBoundaryTests` 2/2. `AttachmentItemOperations_WithMismatchedRouteCard_ReturnNotFound` covers download/delete plus canonical survival; `WebhookItemOperations_WithMismatchedRouteBoard_ReturnNotFound` covers update/deliveries/delete plus canonical survival.
+- Pseudo-mutation review: removing any of the five parent comparisons changes an asserted 404; delete side effects are checked by a later canonical read. Assertion review found 9 meaningful exact-status/state assertions, no assertion-free, trivial or self-referential test.
+- Analysis extension limitation: the selected skill references `extensions/dotnet.md`, but that file is absent from the repository package; the xUnit/FluentAssertions classification was performed inline.
+- Full validation: formatter clean; suite 857 passed / 0 failed / 1 skipped.

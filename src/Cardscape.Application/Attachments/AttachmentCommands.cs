@@ -295,7 +295,7 @@ public static class UploadAttachmentCommandHandler
     }
 }
 
-public sealed record DownloadAttachmentQuery(Guid AttachmentId) : IMessage;
+public sealed record DownloadAttachmentQuery(Guid CardId, Guid AttachmentId) : IMessage;
 
 public sealed record AttachmentDownload(
     string FileName,
@@ -328,6 +328,12 @@ public static class DownloadAttachmentQueryHandler
                 "attachments.not_found", "Attachment was not found."));
         }
 
+        if (attachment.CardId.Value != query.CardId)
+        {
+            return Result.Failure<AttachmentDownload>(DomainError.NotFound(
+                "attachments.not_found", "Attachment was not found."));
+        }
+
         var card = await cards.GetByIdAsync(attachment.CardId, ct);
         if (card is null)
         {
@@ -351,7 +357,7 @@ public static class DownloadAttachmentQueryHandler
     }
 }
 
-public sealed record DeleteAttachmentCommand(Guid AttachmentId) : IMessage;
+public sealed record DeleteAttachmentCommand(Guid CardId, Guid AttachmentId) : IMessage;
 
 public static class DeleteAttachmentCommandHandler
 {
@@ -375,6 +381,12 @@ public static class DeleteAttachmentCommandHandler
 
         var attachment = await attachments.GetByIdAsync(new AttachmentId(command.AttachmentId), ct);
         if (attachment is null)
+        {
+            return Result.Failure<bool>(DomainError.NotFound(
+                "attachments.not_found", "Attachment was not found."));
+        }
+
+        if (attachment.CardId.Value != command.CardId)
         {
             return Result.Failure<bool>(DomainError.NotFound(
                 "attachments.not_found", "Attachment was not found."));

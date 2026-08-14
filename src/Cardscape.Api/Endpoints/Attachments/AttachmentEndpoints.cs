@@ -79,7 +79,7 @@ public static class AttachmentEndpoints
         byId.MapGet("/download", async (Guid cardId, Guid attachmentId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<AttachmentDownload>>(
-                new DownloadAttachmentQuery(attachmentId), ct);
+                new DownloadAttachmentQuery(cardId, attachmentId), ct);
             if (result.IsFailure)
             {
                 return MapError(result.Error);
@@ -94,7 +94,7 @@ public static class AttachmentEndpoints
         byId.MapDelete("/", async (Guid cardId, Guid attachmentId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<bool>>(
-                new DeleteAttachmentCommand(attachmentId), ct);
+                new DeleteAttachmentCommand(cardId, attachmentId), ct);
             return result.IsSuccess
                 ? Results.NoContent()
                 : MapError(result.Error);

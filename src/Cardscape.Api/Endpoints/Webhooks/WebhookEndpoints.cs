@@ -62,7 +62,7 @@ public static class WebhookEndpoints
         {
             var result = await bus.InvokeAsync<Result<WebhookEndpointDto>>(
                 new UpdateWebhookEndpointCommand(
-                    endpointId, body.Url, body.Active), ct);
+                    boardId, endpointId, body.Url, body.Active), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
@@ -73,7 +73,7 @@ public static class WebhookEndpoints
             CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
-                new DeleteWebhookEndpointCommand(endpointId), ct);
+                new DeleteWebhookEndpointCommand(boardId, endpointId), ct);
             return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
         });
 
@@ -85,7 +85,7 @@ public static class WebhookEndpoints
             CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WebhookDeliveryDto>>>(
-                new ListWebhookDeliveriesQuery(endpointId, null, 0, take ?? 50), ct);
+                new ListWebhookDeliveriesQuery(boardId, endpointId, null, 0, take ?? 50), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
         });
 
@@ -93,7 +93,7 @@ public static class WebhookEndpoints
     }
 
     public sealed record CreateWebhookBody(string Url, string? Secret, IReadOnlyList<string> Events);
-    public sealed record UpdateWebhookBody(string? Url, IReadOnlyList<string>? Events, bool? Active);
+    public sealed record UpdateWebhookBody(string? Url, bool? Active);
 
     private static IResult MapError(DomainError error) => error.Type switch
     {

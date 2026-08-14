@@ -247,6 +247,7 @@ public static class ListWebhookEndpointsQueryHandler
 }
 
 public sealed record UpdateWebhookEndpointCommand(
+    Guid BoardId,
     Guid EndpointId,
     string? Url,
     bool? Active) : IMessage;
@@ -271,6 +272,12 @@ public static class UpdateWebhookEndpointCommandHandler
         WebhookEndpoint? endpoint = await endpoints.GetByIdAsync(
             new WebhookEndpointId(command.EndpointId), ct);
         if (endpoint is null)
+        {
+            return Result.Failure<WebhookEndpointDto>(DomainError.NotFound(
+                "webhooks.not_found", "Webhook endpoint was not found."));
+        }
+
+        if (endpoint.BoardId.Value != command.BoardId)
         {
             return Result.Failure<WebhookEndpointDto>(DomainError.NotFound(
                 "webhooks.not_found", "Webhook endpoint was not found."));
@@ -309,7 +316,7 @@ public static class UpdateWebhookEndpointCommandHandler
     }
 }
 
-public sealed record DeleteWebhookEndpointCommand(Guid EndpointId) : IMessage;
+public sealed record DeleteWebhookEndpointCommand(Guid BoardId, Guid EndpointId) : IMessage;
 
 public static class DeleteWebhookEndpointCommandHandler
 {
@@ -335,6 +342,12 @@ public static class DeleteWebhookEndpointCommandHandler
                 "webhooks.not_found", "Webhook endpoint was not found."));
         }
 
+        if (endpoint.BoardId.Value != command.BoardId)
+        {
+            return Result.Failure(DomainError.NotFound(
+                "webhooks.not_found", "Webhook endpoint was not found."));
+        }
+
         Board? board = await boards.GetWithMembersAsync(endpoint.BoardId, ct);
         if (board is null || !board.IsMember(currentUser.Id.Value))
         {
@@ -349,6 +362,7 @@ public static class DeleteWebhookEndpointCommandHandler
 }
 
 public sealed record ListWebhookDeliveriesQuery(
+    Guid BoardId,
     Guid EndpointId,
     int? StatusFilter,
     int Skip,
@@ -373,6 +387,12 @@ public static class ListWebhookDeliveriesQueryHandler
         WebhookEndpoint? endpoint = await endpoints.GetByIdAsync(
             new WebhookEndpointId(query.EndpointId), ct);
         if (endpoint is null)
+        {
+            return Result.Failure<IReadOnlyList<WebhookDeliveryDto>>(DomainError.NotFound(
+                "webhooks.not_found", "Webhook endpoint was not found."));
+        }
+
+        if (endpoint.BoardId.Value != query.BoardId)
         {
             return Result.Failure<IReadOnlyList<WebhookDeliveryDto>>(DomainError.NotFound(
                 "webhooks.not_found", "Webhook endpoint was not found."));
