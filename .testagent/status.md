@@ -336,3 +336,14 @@
 - Pseudo-mutation review: removing any of the five parent comparisons changes an asserted 404; delete side effects are checked by a later canonical read. Assertion review found 9 meaningful exact-status/state assertions, no assertion-free, trivial or self-referential test.
 - Analysis extension limitation: the selected skill references `extensions/dotnet.md`, but that file is absent from the repository package; the xUnit/FluentAssertions classification was performed inline.
 - Full validation: formatter clean; suite 857 passed / 0 failed / 1 skipped.
+# Trello import preview/apply fidelity (2026-08-14)
+
+- Status: complete; ready for commit and push.
+- Safety invariant: callers must choose preview or apply in the route; omission must never default to a write.
+- Fidelity invariant: the same valid archive must produce the same preview counts regardless of persistence mode.
+- REST: `/trello/preview` and `/trello/apply` are explicit; the unsuffixed route and `previewOnly` form flag are removed. Web selects the route; MCP continues choosing the service mode explicitly.
+- Import fidelity: list and label maps are constructed in both modes; apply attaches each known `idLabels` entry to its imported card.
+- Focused evidence: `TrelloImportFidelityTests` 2/2. `PreviewAndApply_ForSameArchive_ReturnMatchingCounts_AndPersistCardLabels` asserts count/sample parity, no preview IDs or board write, apply IDs and persisted `LabelCount=1`. `AmbiguousTrelloImportRoute_IsRemoved` asserts exact 404.
+- Pseudo-mutation/assertion review: the regressions kill the former preview-zero-cards branch, accidental preview writes, omitted label links and restored ambiguous route. 18 meaningful assertions span equality, structural, collection, state and negative checks; none are trivial or self-referential.
+- Analysis extension limitation: `extensions/dotnet.md` referenced by the selected skill is absent from the local package; xUnit/FluentAssertions classification was performed inline.
+- Full validation: formatter clean; suite 859 passed / 0 failed / 1 skipped.

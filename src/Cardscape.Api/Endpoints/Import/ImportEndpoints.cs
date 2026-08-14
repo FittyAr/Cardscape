@@ -28,74 +28,66 @@ public static class ImportEndpoints
     {
         var group = app.MapGroup("/api/imports").RequireAuthorization().WithTags("Imports");
 
-        // Multipart upload of a Trello boards.json archive.
-        // The endpoint reads the file part, pipes it through the
-        // IImportService, and returns the IDs of the imported
-        // boards / lists / cards / labels. The optional
-        // 'previewOnly' form field (defaults to 'false') turns
-        // the call into a dry-run: the service parses the file
-        // and returns the same shape with empty id lists and a
-        // populated ImportPreview summary, without writing
-        // anything to the database.
-        group.MapPost("/trello", async (
+        group.MapPost("/trello/preview", (
             HttpRequest request,
             IImportService import,
-            CancellationToken ct) =>
-        {
-            if (!request.HasFormContentType)
-            {
-                return Results.BadRequest(new
-                {
-                    error = "imports.invalid_content_type",
-                    message = "Expected a multipart/form-data upload with a 'file' part and a 'targetWorkspaceId' field."
-                });
-            }
+            CancellationToken ct) => ImportTrelloAsync(request, import, previewOnly: true, ct));
 
-            IFormCollection form = await request.ReadFormAsync(ct);
-            string? workspaceIdRaw = form["targetWorkspaceId"];
-            if (!Guid.TryParse(workspaceIdRaw, out Guid workspaceId))
-            {
-                return Results.BadRequest(new
-                {
-                    error = "imports.invalid_workspace",
-                    message = "The 'targetWorkspaceId' form field is required and must be a GUID."
-                });
-            }
-
-            bool previewOnly = string.Equals(
-                form["previewOnly"].ToString(),
-                "true",
-                StringComparison.OrdinalIgnoreCase);
-
-            IFormFile? file = form.Files.GetFile("file");
-            if (file is null || file.Length == 0)
-            {
-                return Results.BadRequest(new
-                {
-                    error = "imports.no_file",
-                    message = "The 'file' form part is required and must contain a Trello boards.json payload."
-                });
-            }
-
-            // Content-Length is the cheap path: reject before
-            // reading the file into memory. A spoofed or
-            // missing Content-Length is re-checked against
-            // the buffered stream after read.
-            if (file.Length > MaxUploadBytes)
-            {
-                return Results.Problem(
-                    detail: $"Trello boards.json exceeds the {MaxUploadBytes}-byte cap.",
-                    statusCode: StatusCodes.Status413PayloadTooLarge);
-            }
-
-            await using Stream stream = file.OpenReadStream();
-            Result<Domain.Import.ImportResult> result = await import.ImportTrelloJsonAsync(stream, workspaceId, previewOnly, ct);
-            return result.IsSuccess
-                ? Results.Ok(result.Value)
-                : MapError(result.Error);
-        });
+        group.MapPost("/trello/apply", (
+            HttpRequest request,
+            IImportService import,
+            CancellationToken ct) => ImportTrelloAsync(request, import, previewOnly: false, ct));
 
         return app;
+    }
+
+    private static async Task<IResult> ImportTrelloAsync(
+        HttpRequest request,
+        IImportService import,
+        bool previewOnly,
+        CancellationToken ct)
+    {
+        if (!request.HasFormContentType)
+        {
+            return Results.BadRequest(new
+            {
+                error = "imports.invalid_content_type",
+                message = "Expected a multipart/form-data upload with a 'file' part and a 'targetWorkspaceId' field."
+            });
+        }
+
+        IFormCollection form = await request.ReadFormAsync(ct);
+        string? workspaceIdRaw = form["targetWorkspaceId"];
+        if (!Guid.TryParse(workspaceIdRaw, out Guid workspaceId))
+        {
+            return Results.BadRequest(new
+            {
+                error = "imports.invalid_workspace",
+                message = "The 'targetWorkspaceId' form field is required and must be a GUID."
+            });
+        }
+
+        IFormFile? file = form.Files.GetFile("file");
+        if (file is null || file.Length == 0)
+        {
+            return Results.BadRequest(new
+            {
+                error = "imports.no_file",
+                message = "The 'file' form part is required and must contain a Trello boards.json payload."
+            });
+        }
+
+        if (file.Length > MaxUploadBytes)
+        {
+            return Results.Problem(
+                detail: $"Trello boards.json exceeds the {MaxUploadBytes}-byte cap.",
+                statusCode: StatusCodes.Status413PayloadTooLarge);
+        }
+
+        await using Stream stream = file.OpenReadStream();
+        Result<Domain.Import.ImportResult> result = await import.ImportTrelloJsonAsync(
+            stream, workspaceId, previewOnly, ct);
+        return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
     }
 
     private static IResult MapError(DomainError error) => error.Type switch

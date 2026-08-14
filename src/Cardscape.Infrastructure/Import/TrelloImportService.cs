@@ -49,7 +49,7 @@ public sealed class TrelloImportService(
     public async Task<Result<ImportResult>> ImportTrelloJsonAsync(
         Stream json,
         Guid targetWorkspaceId,
-        bool previewOnly = false,
+        bool previewOnly,
         CancellationToken ct = default)
     {
         if (currentUser.Id is null)
@@ -240,10 +240,10 @@ public sealed class TrelloImportService(
                 }
 
                 labelCount++;
+                labelMap[tl.Id] = labelResult.Value.Id.Value;
                 if (!previewOnly)
                 {
                     await labels.AddAsync(labelResult.Value, ct);
-                    labelMap[tl.Id] = labelResult.Value.Id.Value;
                     importedLabelIds.Add(labelResult.Value.Id.Value);
                 }
             }
@@ -282,10 +282,11 @@ public sealed class TrelloImportService(
                     sampleListNames.Add(listName);
                 }
 
+                listMap[tl.Id] = listResult.Value.Id.Value;
+
                 if (!previewOnly)
                 {
                     await lists.AddAsync(listResult.Value, ct);
-                    listMap[tl.Id] = listResult.Value.Id.Value;
                     importedListIds.Add(listResult.Value.Id.Value);
                 }
 
@@ -342,6 +343,19 @@ public sealed class TrelloImportService(
                 if (dueDate is { } dd)
                 {
                     cardResult.Value.SetDueDate(dd, clock.UtcNow);
+                }
+
+                if (!previewOnly)
+                {
+                    foreach (string trelloLabelId in tc.IdLabels ?? [])
+                    {
+                        if (labelMap.TryGetValue(trelloLabelId, out Guid labelId))
+                        {
+                            cardResult.Value.AttachLabel(
+                                CardLabel.Create(cardResult.Value.Id, new LabelId(labelId), clock.UtcNow),
+                                clock.UtcNow);
+                        }
+                    }
                 }
 
                 cardCount++;

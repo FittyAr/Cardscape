@@ -210,9 +210,8 @@
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
         content.Add(fileContent, "file", form.File.Name);
         content.Add(new StringContent(Id.ToString()), "targetWorkspaceId");
-        content.Add(new StringContent(previewOnly ? "true" : "false"), "previewOnly");
-
-        HttpResponseMessage response = await Http.PostAsync("api/imports/trello", content);
+        string action = previewOnly ? "preview" : "apply";
+        HttpResponseMessage response = await Http.PostAsync($"api/imports/trello/{action}", content);
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<ImportResultDto>()

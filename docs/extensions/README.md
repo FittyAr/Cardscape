@@ -13,8 +13,8 @@
   `workspaces_list`.
 - [`02-trello-import.md`](02-trello-import.md) — The Trello
   `boards.json` import pipeline: the JSON shape, the
-  `POST /api/imports/trello` endpoint, the dry-run
-  preview mode, the MCP tools, and the mapping rules.
+  explicit `POST /api/imports/trello/preview` and `/apply`
+  endpoints, the MCP tools, and the mapping rules.
 - (more to come) — Personal access tokens, OAuth 2.0
   third-party flow, webhook signature verification, iCalendar
   feed consumption, Slack/Google Drive/GitHub/Email

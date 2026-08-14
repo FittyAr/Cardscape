@@ -2,8 +2,8 @@
 
 > How to bring a Trello workspace into Cardscape
 > end-to-end. Covers the JSON shape, the
-> `POST /api/imports/trello` endpoint, the dry-run
-> preview mode, the MCP tools, and the mapping rules.
+> explicit `POST /api/imports/trello/preview` and
+> `/apply` endpoints, the MCP tools, and the mapping rules.
 
 ---
 
@@ -13,8 +13,7 @@ Trello lets users export a workspace as a single
 `boards.json` file (Trello → Profile → Settings →
 "Print and Export" → "JSON"). Cardscape reads that
 file as-is and creates a matching set of
-workspaces / boards / lists / cards / labels /
-members under a target Cardscape workspace of the
+boards / lists / cards / labels under a target Cardscape workspace of the
 caller's choice.
 
 Three ways to drive the import:
@@ -22,10 +21,9 @@ Three ways to drive the import:
 1. **Web UI** — `Workspaces / <id> / Import`. File
    picker, submit, see the live preview, submit
    again to apply.
-2. **REST API** — `POST /api/imports/trello`
-   (multipart upload). Same preview / apply
-   semantics, controlled by a `previewOnly`
-   form field.
+2. **REST API** — explicit multipart endpoints
+   `POST /api/imports/trello/preview` and
+   `POST /api/imports/trello/apply`.
 3. **MCP** — `imports_trello_preview` and
    `imports_trello_apply` tools. The preview
    tool is a dry-run; the apply tool writes to
@@ -56,10 +54,7 @@ it needs; unknown fields are silently dropped.
         "idList": "5da...01",
         "closed": false,
         "due": "2026-09-01T12:00:00.000Z",
-        "labels": [
-          { "id": "5dc...01", "name": "bug",     "color": "red"    },
-          { "id": "5dc...02", "name": "feature", "color": "green"  }
-        ],
+        "idLabels": ["5dc...01", "5dc...02"],
         "idMembers": ["5dd...01", "5dd...02"]
       }
     ],
@@ -82,29 +77,24 @@ the target workspace.
 ## 3. REST endpoint
 
 ```
-POST /api/imports/trello
+POST /api/imports/trello/preview
+POST /api/imports/trello/apply
 Content-Type: multipart/form-data; boundary=...
 
-(file=<boards.json>; targetWorkspaceId=<guid>; previewOnly=true|false)
+(file=<boards.json>; targetWorkspaceId=<guid>)
 ```
 
 - `file` — the `boards.json` upload. Required.
   The endpoint reads the stream into
   `IImportService.ImportTrelloJsonAsync`. Max
-  size is the ASP.NET Core default per-file
-  limit (≈128 MB out of the box; raise
-  `KestrelServerOptions.Limits.MaxRequestBodySize`
-  if you need more).
+  size is 10 MB at both endpoint and service boundaries.
 - `targetWorkspaceId` — the Cardscape workspace
   the import should land in. Required. The
-  caller must have owner / admin role on the
-  target workspace.
-- `previewOnly` — optional. When `true`, the
-  service parses the file and returns a
-  populated `ImportPreview` summary but does
-  **not** write to the database. When
-  absent or `false`, the import is applied.
-  Defaults to `false`.
+  caller must be a member of the target workspace.
+
+The route selects the operation. `/preview` never writes;
+`/apply` writes. The removed unsuffixed route does not default
+to either behavior.
 
 ### Response shape
 
@@ -152,7 +142,7 @@ code:
 
 ## 4. Dry-run vs. apply semantics
 
-`previewOnly=true` (or the `imports_trello_preview`
+The `/preview` route (or the `imports_trello_preview`
 MCP tool) is the recommended first step. The
 service:
 
@@ -216,14 +206,9 @@ endpoint:
 | Outputs | The `ImportResult` JSON above, with `wasApplied = true` and populated `importedXxxIds`. |
 | Notes | Calls the same pipeline with `previewOnly=false`. The MCP client's API token must be authorized on the target workspace. |
 
-The two tools share the same code path; the
-only difference is the `previewOnly` flag.
-The audit's "imports_trello_preview is
-identical to imports_trello_apply" concern
-from v1.1.0 is resolved as of v1.1.0 — the
-`previewOnly` form field and the
-`ImportResult.Preview.WasApplied` flag
-distinguish the two paths.
+The two tools share the same service pipeline and choose the
+mode explicitly. REST uses distinct routes so an omitted form
+field can never turn a preview into a write.
 
 ## 7. Idempotency
 
@@ -283,19 +268,19 @@ parameter without breaking the public shape).
    panel should show the board / list / card
    counts and a few sample names.
 4. Hit "Apply import". The target workspace
-   should now contain the boards, lists,
-   cards, labels, and (email-matched) members.
+   should now contain the boards, lists, cards and labels.
+   Trello members are counted in the summary but are not mapped
+   to Cardscape accounts.
 5. From the MCP client: call
    `imports_trello_preview` against the same
    file. The response should mirror the
    preview panel.
 6. From a curl one-liner:
    ```bash
-   curl -X POST https://localhost:5001/api/imports/trello \
+   curl -X POST https://localhost:5001/api/imports/trello/preview \
      -H "Authorization: Bearer $TOKEN" \
      -F "file=@boards.json" \
-     -F "targetWorkspaceId=$WS_ID" \
-     -F "previewOnly=true"
+     -F "targetWorkspaceId=$WS_ID"
    ```
    The response should be a 200 with the
    same `ImportResult` shape and
@@ -309,8 +294,7 @@ parameter without breaking the public shape).
 - [`../audits/2026-07-30/07-polish.md` §5.6](../audits/2026-07-30/07-polish.md) —
   the audit that flagged the missing
   preview / dry-run path. The
-  `previewOnly` form field resolves the
-  audit's PARTIAL verdict.
+  the explicit preview action resolves the audit's PARTIAL verdict.
 - [`../api/02-openapi-spec.md`](../api/02-openapi-spec.md) —
   the OpenAPI definition for
-  `POST /api/imports/trello`.
+  Trello import endpoints.

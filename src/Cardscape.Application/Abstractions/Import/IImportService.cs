@@ -29,14 +29,12 @@ public interface IImportService
     /// (board / list / card / label / member counts + sample
     /// names) without persisting anything. When
     /// <c>false</c>, performs the full import and writes
-    /// the rows. Defaults to <c>false</c> so existing
-    /// callers (the <c>imports_trello_apply</c> MCP tool,
-    /// the REST endpoint) keep their behavior.
+    /// the rows. Callers must choose the mode explicitly.
     /// </param>
     /// <param name="ct">Cancellation token.</param>
     Task<Result<ImportResult>> ImportTrelloJsonAsync(
         Stream json,
         Guid targetWorkspaceId,
-        bool previewOnly = false,
+        bool previewOnly,
         CancellationToken ct = default);
 }
