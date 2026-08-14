@@ -131,6 +131,14 @@ public static class ListGitHubPullRequestsQueryHandler
                 "boards.forbidden", "You are not a member of this board."));
         }
 
+        GitHubRepoLink? repoLink = await links.FindForBoardAndRepoAsync(
+            board.Id, query.RepoFullName, ct);
+        if (repoLink is null)
+        {
+            return Result.Failure<IReadOnlyList<GitHubPullRequestDto>>(DomainError.Forbidden(
+                "github.repo_not_linked", "This repository is not linked to the board."));
+        }
+
         return await github.ListPullRequestsAsync(query.RepoFullName, query.State, ct);
     }
 }
@@ -143,6 +151,7 @@ public static class ListGitHubIssuesQueryHandler
     public static async Task<Result<IReadOnlyList<GitHubIssueDto>>> Handle(
         ListGitHubIssuesQuery query,
         IGitHubService github,
+        IGitHubRepoLinkRepository links,
         IBoardRepository boards,
         ICurrentUser currentUser,
         CancellationToken ct)
@@ -166,6 +175,14 @@ public static class ListGitHubIssuesQueryHandler
                 "boards.forbidden", "You are not a member of this board."));
         }
 
+        GitHubRepoLink? repoLink = await links.FindForBoardAndRepoAsync(
+            board.Id, query.RepoFullName, ct);
+        if (repoLink is null)
+        {
+            return Result.Failure<IReadOnlyList<GitHubIssueDto>>(DomainError.Forbidden(
+                "github.repo_not_linked", "This repository is not linked to the board."));
+        }
+
         return await github.ListIssuesAsync(query.RepoFullName, query.State, ct);
     }
 }
@@ -181,6 +198,7 @@ public static class LinkGitHubPullRequestCommandHandler
         ICardRepository cards,
         IBoardListRepository lists,
         IBoardRepository boards,
+        IGitHubRepoLinkRepository repoLinks,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -211,6 +229,14 @@ public static class LinkGitHubPullRequestCommandHandler
         {
             return Result.Failure<GitHubPullRequestLinkDto>(DomainError.Forbidden(
                 "boards.forbidden", "You are not a member of this board."));
+        }
+
+        GitHubRepoLink? repoLink = await repoLinks.FindForBoardAndRepoAsync(
+            board.Id, command.RepoFullName, ct);
+        if (repoLink is null)
+        {
+            return Result.Failure<GitHubPullRequestLinkDto>(DomainError.Forbidden(
+                "github.repo_not_linked", "This repository is not linked to the board."));
         }
 
         var creation = GitHubPullRequestLink.Create(
@@ -248,6 +274,7 @@ public static class CreateGitHubIssueFromCardCommandHandler
         ICardRepository cards,
         IBoardListRepository lists,
         IBoardRepository boards,
+        IGitHubRepoLinkRepository repoLinks,
         ICurrentUser currentUser,
         CancellationToken ct)
     {
@@ -276,6 +303,14 @@ public static class CreateGitHubIssueFromCardCommandHandler
         {
             return Result.Failure<GitHubIssueDto>(DomainError.Forbidden(
                 "boards.forbidden", "You are not a member of this board."));
+        }
+
+        GitHubRepoLink? repoLink = await repoLinks.FindForBoardAndRepoAsync(
+            board.Id, command.RepoFullName, ct);
+        if (repoLink is null)
+        {
+            return Result.Failure<GitHubIssueDto>(DomainError.Forbidden(
+                "github.repo_not_linked", "This repository is not linked to the board."));
         }
 
         string title = !string.IsNullOrWhiteSpace(command.OverrideTitle)

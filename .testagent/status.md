@@ -301,3 +301,15 @@
 - Assertion review: all new regressions assert exact status and either redirect, error code, persisted DTO fields or negative route existence; zero are assertion-free, trivial-only or self-referential. The advertised .NET extension is absent.
 - Static pairing limitation: Roslyn analyzer attempt failed because the file-based command found no runnable project under the pinned SDK.
 - Full validation: Release build 0 warnings / 0 errors; suite 853 passed / 0 failed / 1 skipped.
+
+# GitHub repository-board authorization boundary (2026-08-14)
+
+- Status: complete; commit/push pending.
+- Root causes: Blazor omitted the server-required board id, while Application treated board membership as permission to operate on any caller-supplied GitHub repository.
+- Chosen boundary: a repository operation is valid only when the authenticated board member addresses an active repo link belonging to that exact board.
+- Focused validation: `IntegrationsEndpointTests` 16/16; Release build 0 warnings / 0 errors.
+- Regression evidence: `GitHub_Operations_ForRepositoryNotLinkedToBoard_ReturnForbidden` asserts exact 403 for pull listing, PR linking and issue creation before any external GitHub response can affect the result.
+- Pseudo-mutation review: removing any of the four repo-link lookups, using a repo from another board, or allowing the UI to omit board id is detected by the 403 regression plus compile-time client/page contract.
+- Assertion review: the new regression has three exact behavioral assertions and no trivial, assertion-free or self-referential checks.
+- Static pairing limitation: the required Roslyn analyzer was attempted once and reported no runnable project.
+- Full validation: Release build 0 warnings / 0 errors; suite 854 passed / 0 failed / 1 skipped.

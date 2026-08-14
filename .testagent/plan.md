@@ -232,3 +232,14 @@
 - [x] Add regressions for successful anonymous callback, authentication, tenant isolation, state tampering, local redirects and removed routes.
 - [x] Run focused validation and pseudo-mutation/assertion review.
 - [x] Run final Release build and full suite.
+
+# GitHub repository-board authorization boundary (2026-08-14)
+
+- [x] Trace board/repository identity across REST, Application, Blazor client and Radzen page.
+- [x] Require an active board-repository link for pull/issue reads and PR/issue writes.
+- [x] Make `boardId` mandatory in the Blazor client without a legacy overload.
+- [x] Add a Radzen board selector to pull listing and validate it before the request.
+- [x] Add exact integration regression for all unlinked-repository operations.
+- [x] Run focused build/tests and pseudo-mutation/assertion review.
+- [x] Run full suite and update documentation.
+- [x] Commit and push.

@@ -8,7 +8,7 @@ public interface IGitHubApiClient
     Task<ApiResult> LinkRepoAsync(
         Guid boardId, string repoFullName, IReadOnlyList<string> events, CancellationToken ct = default);
     Task<ApiResult<IReadOnlyList<GitHubPullRequestDto>>> ListPullsAsync(
-        string repoFullName, string? state, CancellationToken ct = default);
+        Guid boardId, string repoFullName, string? state, CancellationToken ct = default);
     Task<ApiResult<GitHubPullRequestLinkDto>> LinkPullAsync(
         Guid cardId, string repoFullName, int pullRequestNumber, CancellationToken ct = default);
     Task<ApiResult<GitHubIssueDto>> CreateIssueAsync(
@@ -27,11 +27,11 @@ public sealed class GitHubApiClient(IHttpClientFactory http) : ApiClientBase(htt
     }
 
     public async Task<ApiResult<IReadOnlyList<GitHubPullRequestDto>>> ListPullsAsync(
-        string repoFullName, string? state, CancellationToken ct = default)
+        Guid boardId, string repoFullName, string? state, CancellationToken ct = default)
     {
         string stateParam = string.IsNullOrWhiteSpace(state) ? "open" : state;
         HttpResponseMessage response = await CreateClient().GetAsync(
-            $"api/integrations/github/pulls?repoFullName={Uri.EscapeDataString(repoFullName)}&state={stateParam}", ct);
+            $"api/integrations/github/pulls?boardId={boardId:D}&repoFullName={Uri.EscapeDataString(repoFullName)}&state={stateParam}", ct);
         return await ReadAsync<IReadOnlyList<GitHubPullRequestDto>>(response, ct);
     }
 

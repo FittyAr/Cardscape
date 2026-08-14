@@ -41,6 +41,11 @@
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
             <RadzenText Text="@L["GitHubListPulls"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+            <LabeledField Text="@L["GitHubBoard"]" Component="gh-list-board">
+                <RadzenDropDown @bind-Value="listModel.BoardId" Name="gh-list-board" Style="width:100%"
+                                Data="@boards" TextProperty="Name" ValueProperty="Id"
+                                AllowClear="true" Placeholder="@L["GitHubSelectBoard"]" />
+            </LabeledField>
             <LabeledField Text="@L["GitHubRepoFullName"]" Component="gh-list-repo">
                 <RadzenTextBox @bind-Value="listModel.RepoFullName" Name="gh-list-repo"
                                Placeholder="owner/name" Style="width:100%" />
@@ -183,7 +188,7 @@
 
     private async Task ListPulls()
     {
-        if (string.IsNullOrWhiteSpace(listModel.RepoFullName))
+        if (listModel.BoardId is null || string.IsNullOrWhiteSpace(listModel.RepoFullName))
         {
             pullsError = L["GitHubRepoRequired"];
             return;
@@ -193,7 +198,8 @@
         pullsError = null;
         try
         {
-            var result = await GitHubApi.ListPullsAsync(listModel.RepoFullName.Trim(), "open");
+            var result = await GitHubApi.ListPullsAsync(
+                listModel.BoardId.Value, listModel.RepoFullName.Trim(), "open");
             if (result.IsSuccess)
             {
                 pulls = result.Value;
@@ -265,6 +271,7 @@
 
     private sealed class ListPullsModel
     {
+        public Guid? BoardId { get; set; }
         public string RepoFullName { get; set; } = string.Empty;
     }
 

@@ -301,6 +301,37 @@ public sealed class IntegrationsEndpointTests
     // ── Google Calendar ───────────────────────────────────
 
     [Fact]
+    public async Task GitHub_Operations_ForRepositoryNotLinkedToBoard_ReturnForbidden()
+    {
+        HttpClient client = await CreateAuthenticatedClientAsync();
+        Guid workspaceId = await CreateWorkspaceAsync(client, "github-boundary");
+        Guid boardId = await CreateBoardAsync(client, workspaceId, "github-board");
+        Guid listId = await CreateListAsync(client, boardId, "github-list");
+        HttpResponseMessage cardResponse = await client.PostAsJsonAsync(
+            "api/cards/", new { listId, title = "GitHub card", description = (string?)null },
+            TestContext.Current.CancellationToken);
+        cardResponse.EnsureSuccessStatusCode();
+        Guid cardId = (await cardResponse.Content.ReadFromJsonAsync<CardDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!.Id;
+
+        HttpResponseMessage pulls = await client.GetAsync(
+            $"api/integrations/github/pulls?boardId={boardId}&repoFullName=other/repo&state=open",
+            TestContext.Current.CancellationToken);
+        HttpResponseMessage linkPull = await client.PostAsJsonAsync(
+            "api/integrations/github/pulls/link",
+            new { cardId, repoFullName = "other/repo", pullRequestNumber = 42 },
+            TestContext.Current.CancellationToken);
+        HttpResponseMessage issue = await client.PostAsJsonAsync(
+            "api/integrations/github/issues",
+            new { cardId, repoFullName = "other/repo", title = "No", body = "No" },
+            TestContext.Current.CancellationToken);
+
+        pulls.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        linkPull.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        issue.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
     public async Task GoogleCalendar_OAuthRoundTrip_PreservesIdentityAndCreatesConnection()
     {
         WebApplicationFactory<Program> factory = CreateGoogleOAuthFactory();
@@ -618,6 +649,7 @@ public sealed class IntegrationsEndpointTests
     private sealed record WorkspaceDto(Guid Id);
     private sealed record BoardDto(Guid Id, Guid WorkspaceId);
     private sealed record ListDto(Guid Id);
+    private sealed record CardDto(Guid Id);
     private sealed record SlackWorkspaceDto(
         Guid Id,
         Guid WorkspaceId,

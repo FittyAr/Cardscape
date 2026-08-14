@@ -378,3 +378,13 @@
 - Static pairing analyzer attempt: the documented Roslyn file command was executed once, but SDK 10 reported no runnable project. This heuristic could not provide line or branch coverage evidence.
 - Test convention: xUnit v3 integration tests with FluentAssertions and an in-process API host; the advertised `.NET` assertion extension is absent, so repository conventions and the base catalogs were used.
 - Release build: 0 warnings, 0 errors. Full suite: 853 passed, 0 failed, 1 skipped.
+
+# GitHub repository-board authorization boundary (2026-08-14)
+
+- Scope: GitHub Application handlers, REST query contract, Blazor API client and Radzen workspace integration page.
+- Findings: the REST endpoint required `boardId`, but `GitHubApiClient` and the page never sent or selected it, so pull listing always returned 400. More importantly, list pulls/issues, link PR and create issue authorized board membership but never required the requested repository to be actively linked to that board; the injected link repository in pull listing was unused.
+- Decision: every operation against a GitHub repository must resolve an active `(board, repo)` link after board membership authorization and before external calls or persistence. The UI must select a board and the client must send its id; no compatibility overload is retained.
+- Acceptance: unlinked-repo pulls, PR linking and issue creation return 403; the Radzen page requires a board for pull listing and the client emits `boardId`.
+- Static pairing analyzer: attempted once with the documented Roslyn command; SDK execution still reports no runnable project. This is a heuristic limitation, not coverage evidence.
+- Test convention: xUnit v3 integration tests with FluentAssertions; exact status and negative side effects are preferred.
+- Release build: 0 warnings, 0 errors. Full suite: 854 passed, 0 failed, 1 skipped.
