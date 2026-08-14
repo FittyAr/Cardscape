@@ -53,7 +53,7 @@ public static class McpToolScopePolicy
             "comments_list", "custom_fields_list_definitions", "custom_fields_list_values_for_card",
             "imports_trello_preview", "inbox_list", "inbox_unread_count", "integrations_email_list_addresses",
             "integrations_github_list_issues", "integrations_github_list_prs",
-            "integrations_google_drive_picker_url", "integrations_slack_list_channels", "invitations_list_pending",
+            "integrations_slack_list_channels", "invitations_list_pending",
             "labels_list", "lists_list", "oauth_apps_list", "workspaces_list", "workspaces_list_invitations",
         ];
 
@@ -70,7 +70,7 @@ public static class McpToolScopePolicy
             "cards_unsnooze", "cards_update", "comments_add", "comments_delete", "comments_edit",
             "custom_fields_create_definition", "custom_fields_delete_definition", "custom_fields_rename_definition",
             "custom_fields_set_value", "imports_trello_apply", "inbox_mark_all_read", "inbox_mark_read",
-            "integrations_github_create_issue", "integrations_github_link_pr", "integrations_google_drive_attach",
+            "integrations_github_create_issue", "integrations_github_link_pr",
             "integrations_slack_connect", "integrations_slack_unlink_channel", "invitations_accept", "labels_create",
             "lists_create", "lists_set_limit", "oauth_apps_create", "oauth_apps_revoke",
             "workspaces_invite", "workspaces_revoke_invitation",

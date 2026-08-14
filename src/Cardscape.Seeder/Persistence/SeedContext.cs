@@ -62,7 +62,6 @@ public sealed class SeedContext
     public List<GitHubRepoLink> GitHubRepoLinks { get; } = new();
     public List<GitHubPullRequestLink> GitHubPullRequestLinks { get; } = new();
     public List<GoogleCalendarConnection> GoogleCalendarConnections { get; } = new();
-    public List<GoogleDriveConnection> GoogleDriveConnections { get; } = new();
     public List<InboundEmailAddress> InboundEmailAddresses { get; } = new();
     public List<WebhookEndpoint> WebhookEndpoints { get; } = new();
     public List<WebhookDelivery> WebhookDeliveries { get; } = new();
@@ -162,7 +161,6 @@ public sealed class SeedContext
         yield return ("github_repo_links", GitHubRepoLinks.Count);
         yield return ("github_pull_request_links", GitHubPullRequestLinks.Count);
         yield return ("google_calendar_connections", GoogleCalendarConnections.Count);
-        yield return ("google_drive_connections", GoogleDriveConnections.Count);
         yield return ("inbound_email_addresses", InboundEmailAddresses.Count);
         yield return ("webhook_endpoints", WebhookEndpoints.Count);
         yield return ("webhook_deliveries", WebhookDeliveries.Count);

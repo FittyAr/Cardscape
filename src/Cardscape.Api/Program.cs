@@ -280,7 +280,6 @@ app.MapBoardBroadcastEndpoints();
 app.MapImportEndpoints();
 app.MapTotpEndpoints();
 app.MapDashboardsEndpoints();
-app.MapGoogleDriveEndpoints();
 app.MapGitHubEndpoints();
 app.MapInboundEmailEndpoints();
 app.MapUserPreferencesEndpoints();

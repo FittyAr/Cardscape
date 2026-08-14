@@ -499,15 +499,6 @@ public sealed record SlackChannelDto(
     bool Active,
     DateTimeOffset CreatedAt);
 
-// ── Google Drive integration (v1.1.0 §3.8) ─────────────────
-public sealed record GoogleDriveConnectionDto(
-    Guid Id,
-    Guid UserId,
-    string GoogleEmail,
-    DateTimeOffset? LastUsedAt,
-    bool Active,
-    DateTimeOffset CreatedAt);
-
 // ── GitHub integration (v1.1.0 §3.9) ───────────────────────
 public sealed record GitHubPullRequestDto(
     int Number,

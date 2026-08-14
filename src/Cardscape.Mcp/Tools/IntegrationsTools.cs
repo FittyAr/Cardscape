@@ -1,7 +1,6 @@
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Integrations.GitHub.Commands;
 using Cardscape.Application.Integrations.GitHub.DTOs;
-using Cardscape.Application.Integrations.GoogleDrive.Commands;
 using Cardscape.Application.Integrations.InboundEmail.DTOs;
 using Cardscape.Application.Integrations.InboundEmail.Queries;
 using Cardscape.Application.Integrations.Slack.Commands;
@@ -15,8 +14,7 @@ using Wolverine;
 namespace Cardscape.Mcp.Tools;
 
 /// <summary>
-/// MCP tool surface for the four v1 integrations (Slack, Google
-/// Drive, GitHub, inbound email). Every tool is a thin wrapper
+/// MCP tool surface for Slack, GitHub, and inbound email. Every tool is a thin wrapper
 /// around the same Application-layer command / query the REST
 /// API uses, so authorization, validation, and side effects
 /// (audit, realtime push) all stay in one place.
@@ -83,51 +81,6 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
             EnsureUnit(result);
             __mcpSpan.MarkSuccess();
             return "OK";
-        }
-        catch (Exception ex)
-        {
-            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
-            throw;
-        }
-    }
-
-    // ── Google Drive ────────────────────────────────────────
-
-    [McpServerTool(Name = "integrations_google_drive_picker_url")]
-    public async Task<string> GoogleDrivePickerUrl(Guid workspaceId, CancellationToken ct)
-    {
-        using var __mcpSpan = McpToolSpan.Begin("integrations_google_drive_picker_url");
-        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
-        try
-        {
-            RequireAuth();
-            var result = await bus.InvokeAsync<Result<string>>(
-                new GetGoogleDrivePickerUrlQuery(workspaceId), ct);
-            var value = Ensure(result);
-            __mcpSpan.MarkSuccess();
-            return value;
-        }
-        catch (Exception ex)
-        {
-            __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
-            throw;
-        }
-    }
-
-    [McpServerTool(Name = "integrations_google_drive_attach")]
-    public async Task<Guid> GoogleDriveAttach(
-        Guid cardId, string fileId, string? fileName, CancellationToken ct)
-    {
-        using var __mcpSpan = McpToolSpan.Begin("integrations_google_drive_attach");
-        __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
-        try
-        {
-            RequireAuth();
-            var result = await bus.InvokeAsync<Result<Guid>>(
-                new AttachGoogleDriveFileCommand(cardId, fileId, fileName), ct);
-            var value = Ensure(result);
-            __mcpSpan.MarkSuccess();
-            return value;
         }
         catch (Exception ex)
         {

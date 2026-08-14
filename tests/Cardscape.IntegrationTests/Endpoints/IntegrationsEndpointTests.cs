@@ -386,6 +386,23 @@ public sealed class IntegrationsEndpointTests
     }
 
     [Fact]
+    public async Task GoogleDrive_RemovedPlaceholderRoutes_ReturnNotFound()
+    {
+        HttpClient client = await CreateAuthenticatedClientAsync();
+        HttpResponseMessage picker = await client.GetAsync(
+            $"api/integrations/google/connect?workspaceId={Guid.NewGuid()}",
+            TestContext.Current.CancellationToken);
+        HttpResponseMessage connect = await client.PostAsJsonAsync(
+            "api/integrations/google/connect", new { }, TestContext.Current.CancellationToken);
+        HttpResponseMessage attach = await client.PostAsJsonAsync(
+            "api/integrations/google/attach", new { }, TestContext.Current.CancellationToken);
+
+        picker.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        connect.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        attach.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task GoogleCalendar_Start_RequiresAuthentication_AndCallbackRejectsTamperedState()
     {
         WebApplicationFactory<Program> factory = CreateGoogleOAuthFactory();

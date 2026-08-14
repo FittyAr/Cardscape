@@ -6,11 +6,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// EF mapping for the <c>attachments</c> table. Added in this
-/// pass to back the new <c>POST /api/cards/{id}/attachments</c>
-/// endpoints (BUG-A5-002) — before, the table existed only in
-/// the domain, not in the schema, so the Google Drive
-/// integration silently dropped the row on SaveChanges.
+/// EF mapping for attachment metadata persisted by the card
+/// attachment endpoints.
 /// </summary>
 public sealed class AttachmentConfiguration : IEntityTypeConfiguration<Attachment>
 {

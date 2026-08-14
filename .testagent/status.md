@@ -313,3 +313,15 @@
 - Assertion review: the new regression has three exact behavioral assertions and no trivial, assertion-free or self-referential checks.
 - Static pairing limitation: the required Roslyn analyzer was attempted once and reported no runnable project.
 - Full validation: Release build 0 warnings / 0 errors; suite 854 passed / 0 failed / 1 skipped.
+
+# Remove non-functional Google Drive integration (2026-08-14)
+
+- Status: complete; ready for commit and push.
+- Root cause: the feature combined a placeholder UI credential, missing callback, forgeable state, unused workspace id, stale reconnect and an attachment path that authorized too late and never persisted its aggregate.
+- Chosen boundary: delete the capability completely instead of maintaining an insecure facade.
+- Focused validation: `IntegrationsEndpointTests` 17/17; `ArchitectureTests` 18/18; Release build 0 warnings / 0 errors.
+- Regression evidence: `GoogleDrive_RemovedPlaceholderRoutes_ReturnNotFound` asserts exact 404 for picker/connect/attach. Existing page-route and MCP-catalog architecture invariants pass after removal.
+- Pseudo-mutation/assertion review: restoring any removed REST mapping kills the exact 404 assertions; restoring an MCP tool without scope classification kills the deny-by-default catalog invariant; the new test has three meaningful equality assertions.
+- Static pairing limitation: the analyzer was attempted once and reported no runnable project.
+- Full validation: formatter clean; Release build 0 warnings / 0 errors; suite 855 passed / 0 failed / 1 skipped.
+- Environment note: the sandboxed host cannot write Windows Event Log, so 12 host-validation cases surface an environmental `UnauthorizedAccessException`; the unrestricted suite passes all 560 executable unit tests.

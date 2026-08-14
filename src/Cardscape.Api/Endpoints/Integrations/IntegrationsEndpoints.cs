@@ -1,7 +1,5 @@
 using Cardscape.Application.Integrations.GitHub.Commands;
 using Cardscape.Application.Integrations.GitHub.DTOs;
-using Cardscape.Application.Integrations.GoogleDrive.Commands;
-using Cardscape.Application.Integrations.GoogleDrive.DTOs;
 using Cardscape.Application.Integrations.InboundEmail.Commands;
 using Cardscape.Application.Integrations.InboundEmail.DTOs;
 using Cardscape.Application.Integrations.InboundEmail.Queries;
@@ -15,50 +13,13 @@ using Wolverine;
 namespace Cardscape.Api.Endpoints.Integrations;
 
 /// <summary>
-/// REST endpoints for the Google Drive, GitHub, and inbound
+/// REST endpoints for the GitHub and inbound
 /// email integrations. Slack has its own endpoint group under
 /// <c>/api/workspaces/{id}/integrations/slack</c> because the
 /// channel-management surface is workspace-scoped.
 /// </summary>
 public static class IntegrationsEndpoints
 {
-    public static IEndpointRouteBuilder MapGoogleDriveEndpoints(this IEndpointRouteBuilder app)
-    {
-        var group = app
-            .MapGroup("/api/integrations/google")
-            .RequireAuthorization()
-            .WithTags("Integrations.GoogleDrive");
-
-        group.MapGet("/connect", async ([FromQuery] Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
-        {
-            var result = await bus.InvokeAsync<Result<string>>(
-                new GetGoogleDrivePickerUrlQuery(workspaceId), ct);
-            return result.IsSuccess
-                ? Results.Ok(new { pickerUrl = result.Value })
-                : MapError(result.Error);
-        });
-
-        group.MapPost("/connect", async ([FromBody] ConnectGoogleDriveRequest body, IMessageBus bus, CancellationToken ct) =>
-        {
-            var result = await bus.InvokeAsync<Result<GoogleDriveConnectionDto>>(
-                new ConnectGoogleDriveCommand(
-                    body.WorkspaceId, body.GoogleEmail, body.EncryptedRefreshToken),
-                ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
-        });
-
-        group.MapPost("/attach", async ([FromBody] AttachGoogleDriveRequest body, IMessageBus bus, CancellationToken ct) =>
-        {
-            var result = await bus.InvokeAsync<Result<Guid>>(
-                new AttachGoogleDriveFileCommand(body.CardId, body.FileId, body.FileName), ct);
-            return result.IsSuccess
-                ? Results.Created($"/api/cards/{body.CardId}/attachments/{result.Value}", new { id = result.Value })
-                : MapError(result.Error);
-        });
-
-        return app;
-    }
-
     public static IEndpointRouteBuilder MapGitHubEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app
@@ -301,9 +262,6 @@ public static class IntegrationsEndpoints
         return app;
     }
 
-    public sealed record ConnectGoogleDriveRequest(
-        Guid WorkspaceId, string GoogleEmail, string EncryptedRefreshToken);
-    public sealed record AttachGoogleDriveRequest(Guid CardId, string FileId, string? FileName);
     public sealed record LinkGitHubRepoRequest(
         Guid BoardId, string RepoFullName, IReadOnlyList<string> Events);
     public sealed record LinkGitHubPullRequestRequest(

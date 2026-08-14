@@ -21,7 +21,6 @@ global using Cardscape.Domain.Dashboards;
 global using Cardscape.Domain.Idempotency;
 global using Cardscape.Domain.Integrations.GitHub;
 global using Cardscape.Domain.Integrations.GoogleCalendar;
-global using Cardscape.Domain.Integrations.GoogleDrive;
 global using Cardscape.Domain.Integrations.InboundEmail;
 global using Cardscape.Domain.Integrations.OAuthApps;
 global using Cardscape.Domain.Integrations.Slack;

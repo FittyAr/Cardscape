@@ -518,18 +518,6 @@ public static class InfrastructureServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(30);
         });
 
-        // Google Drive integration (§3.8) — the picker service
-        // and the per-user connection repository. The picker is
-        // a typed HttpClient because every call hits Google's
-        // OAuth + Drive REST endpoints; the connection
-        // repository is scoped (EF Core DbContext).
-        services.AddScoped<IGoogleDriveConnectionRepository, GoogleDriveConnectionRepository>();
-        services.AddHttpClient<IGoogleDrivePickerService, HttpGoogleDrivePickerService>(client =>
-        {
-            client.BaseAddress = new Uri("https://www.googleapis.com/");
-            client.Timeout = TimeSpan.FromSeconds(60);
-        });
-
         // GitHub integration (§3.9) — the REST service, the
         // board → repo link repository, and the card → PR link
         // repository. GitHubService is a typed HttpClient; the

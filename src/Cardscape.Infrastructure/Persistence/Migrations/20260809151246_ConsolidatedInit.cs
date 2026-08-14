@@ -502,28 +502,6 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "google_drive_connections",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    GoogleEmail = table.Column<string>(type: "TEXT", maxLength: 320, nullable: false),
-                    EncryptedRefreshToken = table.Column<string>(type: "TEXT", nullable: false),
-                    LastUsedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    Active = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    CreatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RowVersion = table.Column<uint>(type: "INTEGER", nullable: false, defaultValue: 0u),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_google_drive_connections", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "idempotency_keys",
                 columns: table => new
                 {
@@ -1353,12 +1331,6 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                 column: "WorkspaceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_google_drive_connections_UserId",
-                table: "google_drive_connections",
-                column: "UserId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_idempotency_keys_ExpiresAt",
                 table: "idempotency_keys",
                 column: "ExpiresAt");
@@ -1658,9 +1630,6 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "google_calendar_connections");
-
-            migrationBuilder.DropTable(
-                name: "google_drive_connections");
 
             migrationBuilder.DropTable(
                 name: "idempotency_keys");

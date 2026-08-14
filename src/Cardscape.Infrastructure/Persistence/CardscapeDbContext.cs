@@ -64,11 +64,8 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<OAuthAuthorizationCode> OAuthAuthorizationCodes => Set<OAuthAuthorizationCode>();
     public DbSet<OAuthAccessToken> OAuthAccessTokens => Set<OAuthAccessToken>();
     public DbSet<Domain.Authentication.RevokedTokens.RevokedToken> RevokedTokens => Set<Domain.Authentication.RevokedTokens.RevokedToken>();
-    // BUG-A5-002 — the `attachments` table was defined only on
-    // the domain side before this pass. Mapping it here makes the
-    // Google Drive integration write its row on SaveChanges and
-    // lets the new direct-upload endpoints persist their
-    // metadata.
+    // Attachment metadata is persisted independently from the
+    // underlying object storage implementation.
     public DbSet<Attachment> Attachments => Set<Attachment>();
 
     // BUG-A8-014 — backing store for the new password-reset

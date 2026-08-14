@@ -169,7 +169,6 @@
   <data name="IntegrationsTitle" xml:space="preserve"><value>Integrations</value></data>
   <data name="IntegrationsBlurb" xml:space="preserve"><value>Connect Cardscape to your team's tools.</value></data>
   <data name="SlackBlurb" xml:space="preserve"><value>Push card events to Slack channels.</value></data>
-  <data name="GoogleDriveBlurb" xml:space="preserve"><value>Attach Google Drive files to cards.</value></data>
   <data name="GitHubBlurb" xml:space="preserve"><value>Link pull requests and create issues from cards.</value></data>
   <data name="EmailToBoardBlurb" xml:space="preserve"><value>Forward emails to a list as new cards.</value></data>
   <data name="SamlBlurb" xml:space="preserve"><value>Single sign-on via your SAML 2.0 IdP.</value></data>
@@ -277,17 +276,6 @@
   <data name="SlackLastUsed" xml:space="preserve"><value>Last used</value></data>
   <data name="SlackConnectedAs" xml:space="preserve"><value>Connected as</value></data>
   <data name="SlackDisconnect" xml:space="preserve"><value>Refresh</value></data>
-  <data name="GoogleDriveTitle" xml:space="preserve"><value>Google Drive</value></data>
-  <data name="GoogleDriveConnectBlurb" xml:space="preserve"><value>Authorise Cardscape to read files from your Google Drive so you can attach them to cards. The OAuth handshake is wired as a placeholder until the redirect handler lands.</value></data>
-  <data name="GoogleDriveConnect" xml:space="preserve"><value>Connect Google Drive</value></data>
-  <data name="GoogleDrivePicker" xml:space="preserve"><value>File picker</value></data>
-  <data name="GoogleDrivePickerBlurb" xml:space="preserve"><value>Open the Google Drive picker in a new tab. The picker URL is built server-side; the browser is redirected to the Google consent screen.</value></data>
-  <data name="GoogleDrivePickerOpen" xml:space="preserve"><value>Open picker</value></data>
-  <data name="GoogleDriveWorkspace" xml:space="preserve"><value>Workspace</value></data>
-  <data name="GoogleDriveWorkspaceLabel" xml:space="preserve"><value>Workspace for the picker</value></data>
-  <data name="GoogleDriveSelectWorkspace" xml:space="preserve"><value>Select a workspace</value></data>
-  <data name="GoogleDriveSelectWorkspaceFirst" xml:space="preserve"><value>Pick a workspace first.</value></data>
-  <data name="GoogleDrivePickerEmpty" xml:space="preserve"><value>Server returned an empty picker URL.</value></data>
   <data name="GitHubTitle" xml:space="preserve"><value>GitHub integration</value></data>
   <data name="GitHubLinkRepo" xml:space="preserve"><value>Link a repository</value></data>
   <data name="GitHubLinkRepoMissing" xml:space="preserve"><value>Pick a board and enter a repo full name (owner/name).</value></data>

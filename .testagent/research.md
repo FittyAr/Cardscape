@@ -388,3 +388,13 @@
 - Static pairing analyzer: attempted once with the documented Roslyn command; SDK execution still reports no runnable project. This is a heuristic limitation, not coverage evidence.
 - Test convention: xUnit v3 integration tests with FluentAssertions; exact status and negative side effects are preferred.
 - Release build: 0 warnings, 0 errors. Full suite: 854 passed, 0 failed, 1 skipped.
+
+# Remove non-functional Google Drive integration (2026-08-14)
+
+- Scope: Domain aggregate/schema, Application ports/handlers, Infrastructure HTTP/persistence, API, MCP catalog/tools, Seeder, Blazor Radzen page/client/navigation and localization.
+- Findings: the UI sent literal `ui-placeholder` email/token values; the advertised OAuth callback did not exist; OAuth state was unsigned Base64; connect ignored `WorkspaceId`; reconnect did not rotate credentials; attach performed token exchange/download/storage before card authorization and created an `Attachment` aggregate without persisting it.
+- Decision: remove the entire Google Drive capability. A partial fix would preserve multiple misleading and unsafe contracts; pre-production policy explicitly rejects backward compatibility and placeholder features.
+- Acceptance: `/api/integrations/google/connect` GET/POST and `/attach` return 404; no Google Drive page, API client, MCP tool/scope, DI registration, Application/Domain type, Seeder state, localization key or schema table remains; Google Calendar remains unchanged.
+- Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 855 passed / 0 failed / 1 skipped. The 12 validation cases that fail inside the restricted sandbox pass outside it; their sandbox-only failure is Windows Event Log access, not product behavior.
+- Static pairing analyzer attempt: the required Roslyn file command was attempted once and SDK execution reported no runnable project.
+- Test convention: xUnit v3 integration/architecture tests with exact status and catalog/route assertions.

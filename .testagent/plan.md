@@ -243,3 +243,13 @@
 - [x] Run focused build/tests and pseudo-mutation/assertion review.
 - [x] Run full suite and update documentation.
 - [x] Commit and push.
+
+# Remove non-functional Google Drive integration (2026-08-14)
+
+- [x] Trace OAuth, credential, attachment and authorization flow end to end.
+- [x] Remove Domain/Application/Infrastructure types and persistence schema.
+- [x] Remove REST routes, MCP tools/scopes and DI composition.
+- [x] Remove Seeder data, Blazor client/page/navigation and localization keys.
+- [x] Add exact 404 regressions for every removed REST route.
+- [x] Validate focused integration and architecture suites.
+- [x] Run full suite, update final evidence, commit and push.

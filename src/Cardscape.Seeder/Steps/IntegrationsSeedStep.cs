@@ -1,6 +1,5 @@
 using Cardscape.Domain.Integrations.GitHub;
 using Cardscape.Domain.Integrations.GoogleCalendar;
-using Cardscape.Domain.Integrations.GoogleDrive;
 using Cardscape.Domain.Integrations.InboundEmail;
 using Cardscape.Domain.Integrations.OAuthApps;
 using Cardscape.Domain.Integrations.Slack;
@@ -116,24 +115,7 @@ internal sealed class IntegrationsSeedStep : SeedStepBase
             }
         }
 
-        // 4. Google Drive: two connections.
-        foreach (User user in context.Users.Take(2))
-        {
-            string encrypted = Generators.PasswordGenerator.RandomUrlSafeToken(48);
-            Result<GoogleDriveConnection> gdrive = GoogleDriveConnection.Connect(
-                GoogleDriveConnectionId.New(),
-                user.Id,
-                user.Email.Value,
-                encrypted,
-                now);
-            if (gdrive.IsSuccess)
-            {
-                context.Add(gdrive.Value);
-                context.GoogleDriveConnections.Add(gdrive.Value);
-            }
-        }
-
-        // 5. Inbound email: one address per board that points
+        // 4. Inbound email: one address per board that points
         //    at the "Doing" list (so inbound email becomes a
         //    card in the right place).
         foreach (Board board in context.Boards)
@@ -217,7 +199,7 @@ internal sealed class IntegrationsSeedStep : SeedStepBase
         Log(log, SeedLogLevel.Success,
             $"Inserted {context.SlackWorkspaces.Count} Slack workspaces ({context.SlackChannels.Count} channels), " +
             $"{context.GitHubRepoLinks.Count} GitHub repo links ({context.GitHubPullRequestLinks.Count} PR links), " +
-            $"{context.GoogleCalendarConnections.Count} Google Calendar, {context.GoogleDriveConnections.Count} Google Drive, " +
+            $"{context.GoogleCalendarConnections.Count} Google Calendar, " +
             $"{context.InboundEmailAddresses.Count} inbound email addresses, and {context.OAuthApps.Count} OAuth apps.");
         return Task.CompletedTask;
     }
