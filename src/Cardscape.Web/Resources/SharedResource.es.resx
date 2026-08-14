@@ -384,9 +384,9 @@
   <data name="SettingsTwoFactorLoadError" xml:space="preserve"><value>No se pudo cargar el estado de 2FA: {0}</value></data>
   <data name="SettingsTwoFactorEnrolError" xml:space="preserve"><value>Falló la activación: {0}</value></data>
   <data name="SettingsTwoFactorDisableError" xml:space="preserve"><value>No se pudo desactivar 2FA: {0}</value></data>
-  <data name="ImportBlurb" xml:space="preserve"><value>Subí un export JSON de Trello para crear un tablero nuevo con listas y tarjetas.</value></data>
-  <data name="ImportTrelloFile" xml:space="preserve"><value>Archivo JSON de Trello</value></data>
-  <data name="ImportTitle" xml:space="preserve"><value>Importar un tablero de Trello</value></data>
+  <data name="ImportBlurb" xml:space="preserve"><value>Subí un export JSON de Kanban para crear un tablero nuevo con listas y tarjetas.</value></data>
+  <data name="ImportKanbanFile" xml:space="preserve"><value>Archivo JSON de Kanban</value></data>
+  <data name="ImportTitle" xml:space="preserve"><value>Importar un tablero de Kanban</value></data>
 <data name="NavToggleSidebar" xml:space="preserve"><value>Mostrar/ocultar panel de navegación</value></data>  <data name="CardNotFoundTitle" xml:space="preserve"><value>No se encontró esta tarjeta</value></data>
   <data name="CardNotFoundBody" xml:space="preserve"><value>Puede haber sido eliminada, archivada o no tenés acceso. El id de la tarjeta se conserva en la URL — volvé a la lista de espacios de trabajo y elegí otra tarjeta de un tablero donde seas miembro.</value></data>
   <data name="CardNotFoundBack" xml:space="preserve"><value>Volver a los espacios de trabajo</value></data>

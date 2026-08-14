@@ -64,7 +64,7 @@ AI features). We replaced them with our own:
 | "Butler" automation | "Automation" engine |
 | "Power-Ups" | "Extensions" |
 | "Atlassian Intelligence" | "Cardscape AI" |
-| "Trello-like" / "Trello alternative" | "self-hostable kanban" / "kanban and project-management tool" |
+| "Kanban-like" / "Kanban alternative" | "self-hostable kanban" / "kanban and project-management tool" |
 
 The cleanup was not just in the new docs. We rewrote
 every file in the repository, and we rewrote the git

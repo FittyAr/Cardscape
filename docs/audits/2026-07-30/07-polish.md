@@ -112,22 +112,22 @@ the fully-DONE items; the gap is documented in the summary.
 - **Plan asks for**:
   - New bounded context `Cardscape.Domain.Import/`.
   - `IImportService` with method `ImportAsync(Stream json, ImportTarget target, ct)`.
-  - Default implementation parses Trello `boards.json`.
-  - Endpoint `POST /api/imports/trello` (multipart, `?workspaceId=…`).
+  - Default implementation parses Kanban `boards.json`.
+  - Endpoint `POST /api/imports/kanban` (multipart, `?workspaceId=…`).
   - Web UI: `/workspaces/{id}/import` with file picker **and live preview of the parsed import**.
-  - MCP tools: `imports_trello_preview`, `imports_trello_apply`.
+  - MCP tools: `imports_kanban_preview`, `imports_kanban_apply`.
 - **Evidence**:
-  - `src/Cardscape.Application/Abstractions/Import/IImportService.cs:14-27` — interface exists. **Drift**: the method is named `ImportTrelloJsonAsync(Stream json, Guid targetWorkspaceId, CancellationToken)` — the plan asked for `ImportAsync(Stream json, ImportTarget target, ct)`. There is no `ImportTarget` type; the workspace is taken as a `Guid` directly.
+  - `src/Cardscape.Application/Abstractions/Import/IImportService.cs:14-27` — interface exists. **Drift**: the method is named `ImportKanbanJsonAsync(Stream json, Guid targetWorkspaceId, CancellationToken)` — the plan asked for `ImportAsync(Stream json, ImportTarget target, ct)`. There is no `ImportTarget` type; the workspace is taken as a `Guid` directly.
   - `src/Cardscape.Domain/Import/ImportResult.cs` — domain type returned by the service.
-  - `src/Cardscape.Infrastructure/Import/TrelloImportService.cs:1-330` — concrete implementation: deserializes a Trello `boards.json` array, walks `lists`, `cards`, `labels`, `members`, writes them into the target workspace.
-  - `src/Cardscape.Infrastructure/DependencyInjection/InfrastructureServiceCollectionExtensions.cs:224` — `services.AddScoped<IImportService, TrelloImportService>();` is registered.
-  - `src/Cardscape.Api/Endpoints/Import/ImportEndpoints.cs:14-67` — `MapGroup("/api/imports").RequireAuthorization()` exposes `POST /trello` reading `targetWorkspaceId` + multipart `file` form parts, returns the `ImportResult` JSON on success.
+  - `src/Cardscape.Infrastructure/Import/KanbanImportService.cs:1-330` — concrete implementation: deserializes a Kanban `boards.json` array, walks `lists`, `cards`, `labels`, `members`, writes them into the target workspace.
+  - `src/Cardscape.Infrastructure/DependencyInjection/InfrastructureServiceCollectionExtensions.cs:224` — `services.AddScoped<IImportService, KanbanImportService>();` is registered.
+  - `src/Cardscape.Api/Endpoints/Import/ImportEndpoints.cs:14-67` — `MapGroup("/api/imports").RequireAuthorization()` exposes `POST /kanban` reading `targetWorkspaceId` + multipart `file` form parts, returns the `ImportResult` JSON on success.
   - `src/Cardscape.Web/Pages/WorkspaceImport.razor:1` — `@page "/workspaces/{id:guid}/import"`, file picker at line 19, submit at line 22. **Drift**: there is **no live preview of the parsed import** anywhere on the page; it just submits and displays the result counts (`result.ImportedBoardIds.Count`, etc.) at lines 38-41.
-  - `src/Cardscape.Mcp/Tools/MissingTools.cs:105-124` — both `imports_trello_preview` and `imports_trello_apply` MCP tools exist. **Drift**: `TrelloApply` is a one-liner that calls `TrelloPreview` (line 124), and `TrelloPreview` directly calls `import.ImportTrelloJsonAsync(stream, targetWorkspaceId, ct)` (line 118). The XML doc at lines 111-117 explicitly says: *"The v1.1.0 IImportService has one method (ImportTrelloJsonAsync) that both previews and applies. A future PR adds a dry-run flag so the preview tool can read the parsed shape without writing to the DB."* So `imports_trello_preview` does **not** preview — it applies.
-  - `docs/community/CHANGELOG.md:133-135` — feature is announced; spec reference `docs/extensions/02-trello-import.md` is referenced in `ImportEndpoints.cs:12` but **does not exist** (`docs/extensions/` only contains `01-build-your-own-mcp-client.md` and `README.md`).
-- **Notes**: the import pipeline is functionally complete end-to-end (Trello JSON → service → DB → API → Web UI → MCP). Two semantic drifts:
-  1. The "live preview" promised by the plan does not exist — the Web UI shows the import result **after** applying, and the MCP `imports_trello_preview` tool applies instead of previewing. The dry-run gap is acknowledged in the source comments as deferred work.
-  2. The interface method name is `ImportTrelloJsonAsync` not the plan's `ImportAsync(Stream, ImportTarget, ct)`. The `ImportTarget` discriminator is gone — there is only Trello today, so the `target` discriminator is unused in practice.
+  - `src/Cardscape.Mcp/Tools/MissingTools.cs:105-124` — both `imports_kanban_preview` and `imports_kanban_apply` MCP tools exist. **Drift**: `KanbanApply` is a one-liner that calls `KanbanPreview` (line 124), and `KanbanPreview` directly calls `import.ImportKanbanJsonAsync(stream, targetWorkspaceId, ct)` (line 118). The XML doc at lines 111-117 explicitly says: *"The v1.1.0 IImportService has one method (ImportKanbanJsonAsync) that both previews and applies. A future PR adds a dry-run flag so the preview tool can read the parsed shape without writing to the DB."* So `imports_kanban_preview` does **not** preview — it applies.
+  - `docs/community/CHANGELOG.md:133-135` — feature is announced; spec reference `docs/extensions/02-kanban-import.md` is referenced in `ImportEndpoints.cs:12` but **does not exist** (`docs/extensions/` only contains `01-build-your-own-mcp-client.md` and `README.md`).
+- **Notes**: the import pipeline is functionally complete end-to-end (Kanban JSON → service → DB → API → Web UI → MCP). Two semantic drifts:
+  1. The "live preview" promised by the plan does not exist — the Web UI shows the import result **after** applying, and the MCP `imports_kanban_preview` tool applies instead of previewing. The dry-run gap is acknowledged in the source comments as deferred work.
+  2. The interface method name is `ImportKanbanJsonAsync` not the plan's `ImportAsync(Stream, ImportTarget, ct)`. The `ImportTarget` discriminator is gone — there is only Kanban today, so the `target` discriminator is unused in practice.
 
 ---
 
@@ -181,7 +181,7 @@ the fully-DONE items; the gap is documented in the summary.
 | 5.3 | PWA manifest | **DONE** | Manifest, two icons (192+512, any+maskable), service worker (network-first for API, cache-first for shell, offline `/index.html` fallback), and `index.html` references all in place. |
 | 5.4 | C# API client SDK | **DONE** | `netstandard2.0;net8.0` multi-target, `PackageId=Cardscape.Sdk`, `Version=1.1.0`, `GeneratePackageOnBuild=true`, `Cardscape.Sdk.1.1.0.nupkg` produced. No separate `sdk/Cardscape.Sdk.slnx` — SDK is in the root `Cardscape.slnx` under `/sdk/`. |
 | 5.5 | Public status page | **DONE** | `docs/status.md` with 10-row components table, "no incidents" line, RSS feed note. |
-| 5.6 | Import from Trello | **PARTIAL** | Pipeline ships end-to-end (Application → Infra → API → Web → MCP). Two semantic drifts: no live preview in the Web UI; MCP `imports_trello_preview` is identical to `imports_trello_apply` (no dry-run). |
+| 5.6 | Import from Kanban | **PARTIAL** | Pipeline ships end-to-end (Application → Infra → API → Web → MCP). Two semantic drifts: no live preview in the Web UI; MCP `imports_kanban_preview` is identical to `imports_kanban_apply` (no dry-run). |
 | 5.7 | Export per-board archive | **DONE** | `IExportService` (returns `Result<Stream>` not `Result<BoardExportArchive>`), `GET /api/boards/{id}/export`, MCP `boards_export`, SDK `BoardsClient` method all in place. |
 | 5.8 | MCP subscriptions | **DRIFT** | `McpResourceBroadcaster` is registered but its `Subscribe/Unsubscribe/BroadcastAsync` methods are never called; `BroadcastAsync` is a no-op; no MCP resource-subscribe handler exists; the doc advertises a working feature the code does not implement. |
 
@@ -191,4 +191,4 @@ The plan has **no `- [ ]` / `- [x]` task checkboxes** in §5 — the eight items
 
 ### Top gap
 
-**5.8 MCP subscriptions (`McpResourceBroadcaster`)** is the single most important follow-up: the broadcaster is dead code today, the MCP SDK has no `resources/subscribe`/`resources/unsubscribe` handler that calls it, and `BroadcastAsync` is a logged no-op. The doc at `docs/extensions/01-build-your-own-mcp-client.md:121-139` advertises a feature that is not actually implemented. Second priority is **5.6** — the dry-run gap in `imports_trello_preview` and the missing live-preview UI on `WorkspaceImport.razor` are both acknowledged in the source as deferred work.
+**5.8 MCP subscriptions (`McpResourceBroadcaster`)** is the single most important follow-up: the broadcaster is dead code today, the MCP SDK has no `resources/subscribe`/`resources/unsubscribe` handler that calls it, and `BroadcastAsync` is a logged no-op. The doc at `docs/extensions/01-build-your-own-mcp-client.md:121-139` advertises a feature that is not actually implemented. Second priority is **5.6** — the dry-run gap in `imports_kanban_preview` and the missing live-preview UI on `WorkspaceImport.razor` are both acknowledged in the source as deferred work.

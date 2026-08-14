@@ -74,7 +74,7 @@ verified end-to-end:
 | §6.0 | PWA manifest | Medium | wwwroot |
 | §6.0 | C# API client SDK | Low | new project |
 | §6.0 | Public status page | Low | docs |
-| §6.0 | Import (Trello JSON) | Medium | new importer |
+| §6.0 | Import (Kanban JSON) | Medium | new importer |
 | §6.0 | Export per-board archive | Medium | new endpoint |
 | §6.0 | MCP subscriptions | Medium | new feature |
 | §6.0 | Additional ADRs | Medium | `docs/adr/` |
@@ -231,7 +231,7 @@ story whole.
 
 ---
 
-## 3. Priority 3 — Trello feature parity (Phase 3)
+## 3. Priority 3 — Kanban feature parity (Phase 3)
 
 The features from the feature inventory §2 / §10.1 that are
 not yet implemented.
@@ -713,17 +713,17 @@ The features from the feature inventory §14 (security) and
 - New bounded context `Cardscape.Domain.Import/`.
 - `IImportService` in Application with one method
   `ImportAsync(Stream json, ImportTarget target, ct)`.
-- The default implementation parses Trello's exported
+- The default implementation parses Kanban's exported
   `boards.json` format (the most common) and creates the
   matching workspaces / boards / lists / cards / labels /
   members.
-- New endpoint `POST /api/imports/trello` (multipart,
+- New endpoint `POST /api/imports/kanban` (multipart,
   `?workspaceId=…`).
 - New migration not needed (no schema change).
 - Web UI: `/workspaces/{id}/import` page with a file picker
   and a live preview of the parsed import. ✅ DONE (G13)
-- MCP tool: `imports_trello_preview`,
-  `imports_trello_apply`. ✅ DONE (G13)
+- MCP tool: `imports_kanban_preview`,
+  `imports_kanban_apply`. ✅ DONE (G13)
 
 ### 5.7 Export per-board archive
 - New bounded context `Cardscape.Domain.Export/`.
@@ -731,7 +731,7 @@ The features from the feature inventory §14 (security) and
   `ExportBoardAsync(boardId, ct)` returning a
   `BoardExportArchive` (a `Stream` of a ZIP file with
   `board.json` + the `attachments/` directory).
-- The format is the inverse of the Trello import.
+- The format is the inverse of the Kanban import.
 - New endpoint `GET /api/boards/{id}/export` (auth required,
   member-only).
 - MCP tool: `boards_export`.

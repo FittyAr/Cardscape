@@ -41,8 +41,8 @@ bullets, not `- [ ]` task list markers, so there is nothing to flip).
     for (`cards_set_aging_mode`, `cards_snooze` / `cards_unsnooze` /
     `cards_list_snoozed`, `cards_mirror_to`, `lists_set_limit`,
     `boards_list_dashcards` / `boards_create_dashcard` /
-    `boards_delete_dashcard`, `imports_trello_preview` /
-    `imports_trello_apply`, `oauth_apps_*`). They are out of scope
+    `boards_delete_dashcard`, `imports_kanban_preview` /
+    `imports_kanban_apply`, `oauth_apps_*`). They are out of scope
     for §2.1 but confirm the file exists and is in use.
 - **Notes**:
   - The three tools the §2.1 plan demanded are all present, with the

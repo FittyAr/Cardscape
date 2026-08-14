@@ -39,7 +39,7 @@
 }
 
 /* Mini cards inside the hero board: two heights to give the
-   visual rhythm of an actual Trello-style board. */
+   visual rhythm of an actual Kanban-style board. */
 .cs-hero-card-tall {
     min-height: 60px;
 }

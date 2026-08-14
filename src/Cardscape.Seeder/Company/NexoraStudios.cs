@@ -77,7 +77,7 @@ public static class NexoraStudios
             },
             ["Product Discovery"] = new List<string>
             {
-                "User interviews: Trello switchers (round 4)",
+                "User interviews: Kanban switchers (round 4)",
                 "Pricing experiment: free tier up to 5 seats",
                 "Prototype: AI auto-summarise card thread",
                 "Validate SCIM for enterprise tier",
@@ -102,7 +102,7 @@ public static class NexoraStudios
             },
             ["Marketing"] = new List<string>
             {
-                "Q3 campaign: 'Switch from Trello in a weekend'",
+                "Q3 campaign: 'Switch from Kanban in a weekend'",
                 "Blog post: building a kanban MCP for AI agents",
                 "Newsletter: open source retrospective",
                 "Landing page: enterprise tier",

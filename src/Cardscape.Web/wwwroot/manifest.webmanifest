@@ -1,7 +1,7 @@
 {
   "name": "Cardscape",
   "short_name": "Cardscape",
-  "description": "Trello-flavoured project management with real-time boards, AI assistance, and an MCP server for AI clients.",
+  "description": "Kanban-flavoured project management with real-time boards, AI assistance, and an MCP server for AI clients.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

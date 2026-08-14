@@ -28,7 +28,7 @@ The only exceptions are:
 
 1. **CSS isolation of Blazor** (`.razor.css` files) for the three
    shared components that Radzen does not cover end-to-end:
-   - `Shared/KanbanBoard.razor` + `.razor.css` — Trello-style
+   - `Shared/KanbanBoard.razor` + `.razor.css` — Kanban-style
      horizontal scroll with columns of cards. `RadzenDataGrid`
      sacrifices the column metaphor; `RadzenScheduler` is a
      time-grid and renders the cards as scheduled events (wrong
@@ -81,12 +81,12 @@ service (already wired in `Program.cs`), and per-component
 ### Why CSS isolation for the kanban, and not `RadzenScheduler` or `RadzenDataGrid`?
 
 - `RadzenScheduler` is time-grid by design (days × hours, with
-  optional `RadzenMonthView` that paints a *month*). The Trello
+  optional `RadzenMonthView` that paints a *month*). The Kanban
   card metaphor (lanes, cards with `position: relative` inside
   a `position: absolute` parent, vertical scroll) does not map
   to either. A scheduler view would have to fake lanes via
   resources and it would feel wrong to users coming from
-  Trello.
+  Kanban.
 - `RadzenDataGrid` is row-based; forcing it into a column view
   loses the card-look, the drag affordance, and the ability
   to peek at a card without opening it.
@@ -150,7 +150,7 @@ service (already wired in `Program.cs`), and per-component
   `.cs-kanban-*` classes. They use hard-coded greys
   (`#ebecf0`, `#f4f5f7`, …) and the kanban will keep the
   same look across themes. Acceptable: the kanban is meant
-  to look like a Trello board, and the Trello color
+  to look like a Kanban board, and the Kanban color
   palette is iconic.
 
 ## 5. Compliance

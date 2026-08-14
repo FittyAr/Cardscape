@@ -199,7 +199,7 @@ Build is clean. **410/410 tests green** (313 unit + 10 architecture
   — 30-line C# walkthrough for wiring an MCP client against
   the Cardscape server.
 
-### Priority 3 — Trello parity
+### Priority 3 — Kanban parity
 
 - **Card Aging** — per-card settings (mode: standard / pirate /
   none) that drive the visual fade on stale cards.
@@ -264,13 +264,13 @@ Build is clean. **410/410 tests green** (313 unit + 10 architecture
 - **PWA manifest** + service worker (see above).
 - **Public status page** at `docs/status.md` (incident log,
   uptime, scheduled maintenance).
-- **Trello JSON importer** — parses a Trello `boards.json`
+- **Kanban JSON importer** — parses a Kanban `boards.json`
   export, creates workspaces / boards / lists / cards /
   labels, returns the imported entity ids. REST:
-  `POST /api/imports/trello` (multipart upload).
+  `POST /api/imports/kanban` (multipart upload).
 - **Per-board archive export** — `GET /api/boards/{id}/export`
   returns a ZIP with `board.json` + every attachment under
-  `attachments/`. Same shape is read back by the Trello
+  `attachments/`. Same shape is read back by the Kanban
   import path.
 - **MCP subscriptions** — `McpResourceBroadcaster` fans out
   board-level events to subscribed MCP clients via
@@ -356,7 +356,7 @@ Patch release. **One bugfix** + **one regression test**
 
 ## [v1.0.0] — 2026-07-29
 
-First production release. Full Trello parity across the
+First production release. Full Kanban parity across the
 kanban, calendar, planner, automation, and AI-integration
 surfaces. **313 unit tests + 85 integration tests green.**
 API starts clean against SQLite, PostgreSQL, or MariaDB.
@@ -365,7 +365,7 @@ Production configuration has zero hard-coded secrets.
 ### Phase 5 — enterprise + AI features (`v0.7.0-jobs` through `v0.7.10-polish`)
 
 Phase 5 closed the gap between the Phase 4 surface and a
-production Trello replacement. It shipped across ten
+production Kanban replacement. It shipped across ten
 incremental pre-release tags; this v1.0.0 cuts the first
 proper semver line on top of that work.
 
@@ -601,7 +601,7 @@ plus the production-readiness work that v1.0.0 ships on.
 
 Phase 4, last slice. Per-board extension toggles (Custom Fields,
 Voting, Card Repeater) with opaque JSON config — the first move
-from the Trello power-ups playbook without committing to a full
+from the Kanban power-ups playbook without committing to a full
 plugin loader.
 
 ### Added
@@ -980,7 +980,7 @@ cards/lists, and a user-facing token management page.
   enforce access control. `EnsureCanReadBoardAsync` allows
   members always, non-members only on public boards.
   `EnsureCanMutateBoardAsync` requires membership regardless
-  of visibility (Trello model). Card / list variants resolve
+  of visibility (Kanban model). Card / list variants resolve
   the parent board and apply the same rule.
 - **`CardscapeAccessControlTests`** integration test suite
   (3 tests): outsider read on a private board returns 403 on
@@ -1268,7 +1268,7 @@ below were present before `v0.1.0-mvp`.
 
 ### Removed
 
-- `docs/roadmap/00-trello-features-analysis.md` (renamed to
+- `docs/roadmap/00-kanban-features-analysis.md` (renamed to
   `docs/roadmap/00-feature-inventory.md` and rewritten as a
   Cardscape-voice feature inventory).
 - All references to vendor-specific brand names (Butler,

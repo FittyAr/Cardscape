@@ -86,7 +86,7 @@ See:
 ## Status
 
 Cardscape is at **`v1.1.0-roadmap-execution`** — the
-`v1.0.0` production release (full Trello parity) shipped
+`v1.0.0` production release (full Kanban parity) shipped
 all 42 features from the v1.1.0 execution plan and closed
 all 14 audit gaps. The codebase runs end to end: a user can
 register, create a workspace, drop in boards/lists/cards,
@@ -114,8 +114,8 @@ SDK 2.0.
 | 3 | Access control on cards/lists + **first-class API tokens** for the MCP server + Web UI token management | **DONE** (`v0.3.0-api-tokens`) |
 | 4 | Workspace invitations, Inbox, Calendar, Planner, automation engine, board extensions | **DONE** (`v0.4.0-realtime-mcp` through `v0.6.4-extensions`) |
 | 5 | Background jobs, custom fields, voting, checklists, recurring cards, webhooks, attachments, full-text search, activity, rate limit | **DONE** (`v0.7.0-jobs` through `v0.7.10-polish`) |
-| 6 | v1.0.0 release: full Trello parity, production config, CI with coverage, polished docs | **DONE** (`v1.0.0`) |
-| 7 | Audit gap closure: hygiene, MCP completeness, Trello parity, enterprise, AI, polish | **DONE** (`v1.1.0-roadmap-execution`) |
+| 6 | v1.0.0 release: full Kanban parity, production config, CI with coverage, polished docs | **DONE** (`v1.0.0`) |
+| 7 | Audit gap closure: hygiene, MCP completeness, Kanban parity, enterprise, AI, polish | **DONE** (`v1.1.0-roadmap-execution`) |
 | 8 | Doc reconciliation, i18n follow-up, integration-test stability, CI coverage diff | **PLANNED** — see [`docs/roadmap/05-plan-v1.2.0.md`](docs/roadmap/05-plan-v1.2.0.md) |
 
 `dotnet build` is green (11/11 projects, 0 warnings,
@@ -139,7 +139,7 @@ this codebase.
 
 ### What ships in `v1.0.0`
 
-Every Trello power-user feature is in:
+Every Kanban power-user feature is in:
 
 - **Workspaces, boards, lists, cards** with positional
   re-ordering (decimal `Position` value object, not floats).
@@ -374,7 +374,7 @@ UI coverage, integration tests against the real pipeline.
 - **`v0.6.4-extensions`** — per-board extension toggles
   (`/boards/{id}/extensions`) for Custom Fields, Voting, and
   Card Repeater. Opaque `ConfigJson` per row; the
-  feature-specific UI reads the JSON at runtime. Trello
+  feature-specific UI reads the JSON at runtime. Kanban
   power-ups style, without committing to a full plugin loader
   yet. REST + 4 MCP tools (`boards_list_extensions` / `enable` /
   `disable` / `update_extension_config`).

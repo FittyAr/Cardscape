@@ -6,8 +6,8 @@ namespace Cardscape.Application.Abstractions.Export;
 /// Produces a per-board archive. The default implementation emits
 /// a ZIP file with a <c>board.json</c> (the structured export) and
 /// every attachment under <c>attachments/</c>. The same shape is
-/// read back by the Trello import path in
-/// <c>Cardscape.Infrastructure.Import.TrelloImportService</c>.
+/// read back by the Kanban import path in
+/// <c>Cardscape.Infrastructure.Import.KanbanImportService</c>.
 /// </summary>
 public interface IExportService
 {

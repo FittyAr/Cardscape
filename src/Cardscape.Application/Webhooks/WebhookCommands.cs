@@ -135,7 +135,7 @@ public static class CreateWebhookEndpointCommandHandler
         // BETA-6-#1 — see test-results/BETA-TEST-REPORT.md.
         // If the caller did not provide a secret, the server
         // generates one and returns it in the issuance payload.
-        // This matches the Trello / GitHub webhook flow: a
+        // This matches the Kanban / GitHub webhook flow: a
         // client never picks the shared secret, the server
         // hands it out once and the client has to copy it.
         string cleartext = string.IsNullOrWhiteSpace(command.Secret)

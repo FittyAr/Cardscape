@@ -48,7 +48,7 @@ public class ColorTests
     [Fact]
     public void Palette_AllEntriesAreValidHex()
     {
-        // Trello-style palette: each entry must round-trip through Create.
+        // Kanban-style palette: each entry must round-trip through Create.
         var palette = new[]
         {
             Color.Palette.Yellow,

@@ -95,7 +95,7 @@ project, which should be never.
 | Do not say | Say instead | Why |
 |---|---|---|
 | "Cardscape — a kanban clone" | "Cardscape — a self-hostable kanban and project-management tool" | The word "clone" implies a derivative; Cardscape is a standalone product |
-| "Cardscape — a Trello alternative" | "Cardscape — a self-hostable kanban and project-management tool" | We do not name competitors in our own positioning |
+| "Cardscape — a Kanban alternative" | "Cardscape — a self-hostable kanban and project-management tool" | We do not name competitors in our own positioning |
 | "Cardscape — the X killer" | "Cardscape — the only self-hostable kanban with first-class AI integration" | "Killer" is a tired marketing trope |
 | "Card" (when we mean the data model) | "card" — lowercase, in code and in prose | "Card" capitalized collides with `System.Card` namespaces in some libraries |
 
@@ -257,12 +257,12 @@ every artifact that mentions Cardscape externally.
 
 | Term | Why not | Use instead |
 |---|---|---|
-| any competitor product name (Trello, Asana, Jira, ClickUp, Linear, etc.) | we do not name competitors in our own positioning | "hosted kanban tools", "other self-hostable kanban tools" |
-| "Trello clone", "Trello alternative", "Trello killer" | positions Cardscape as derivative | drop the comparison; state the value directly |
+| any competitor product name (Kanban, Asana, Jira, ClickUp, Linear, etc.) | we do not name competitors in our own positioning | "hosted kanban tools", "other self-hostable kanban tools" |
+| "Kanban clone", "Kanban alternative", "Kanban killer" | positions Cardscape as derivative | drop the comparison; state the value directly |
 | "MVP", "demo", "just a prototype" | the user explicitly said no demo MVP | "the smallest shippable cut", "the first release" |
 | "Butler" | vendor-specific brand name for the automation feature | "Automation" |
 | "Power-Up(s)" | vendor-specific brand name for extensions | "Extension(s)" |
-| "Trello-style board" | vendor-specific visual reference | "kanban board" |
+| "Kanban-style board" | vendor-specific visual reference | "kanban board" |
 | "AI assistant" (alone) | too generic; what model? what client? | "AI client" (Claude Desktop, Cursor, etc.) or "MCP-compatible client" |
 | "the team" | the project is solo-maintained | "the maintainer" or "the project" |
 | "free" (as a feature) | the project is open-source, not free-as-in-free-pizza; the value is the license, not the price | "open-source" |

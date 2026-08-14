@@ -192,7 +192,7 @@ public static class UploadAttachmentCommandHandler
     //
     // `IsBlockedMimeType` rejects the formats that can be
     // served back to the browser as executable / script content.
-    // The denylist mirrors what Trello / Notion / Linear
+    // The denylist mirrors what Kanban / Notion / Linear
     // disallow: native executables, Office macros, script
     // content, server-side includes, and HTML (which is a
     // stored-XSS vector when served from a same-origin path).

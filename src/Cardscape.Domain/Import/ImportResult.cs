@@ -4,7 +4,7 @@ namespace Cardscape.Domain.Import;
 
 /// <summary>
 /// Result of an import operation. The default implementation parses
-/// a Trello JSON export and creates a matching set of
+/// a Kanban JSON export and creates a matching set of
 /// workspaces/boards/lists/cards/labels/members under the target
 /// workspace. Other kanban tools can implement an import service
 /// (e.g. <c>IImportService</c> in the Application layer) to plug
@@ -36,7 +36,7 @@ public sealed record ImportResult(
 
 /// <summary>
 /// Counts and sample names of an import (real or dry-run).
-/// Returned by every successful <c>IImportService.ImportTrelloJsonAsync</c>
+/// Returned by every successful <c>IImportService.ImportKanbanJsonAsync</c>
 /// call so the caller (REST endpoint, MCP tool, or Web UI) can
 /// show the user what was — or would have been — created.
 /// </summary>

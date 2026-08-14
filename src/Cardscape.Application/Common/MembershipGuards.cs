@@ -20,7 +20,7 @@ namespace Cardscape.Application.Common;
 /// <see cref="BoardVisibility.Public"/> board; non-members are
 /// rejected on a <see cref="BoardVisibility.Private"/> board.
 /// Write operations (<c>EnsureCanMutateBoardAsync</c>) require
-/// membership regardless of visibility — Trello-style.
+/// membership regardless of visibility — Kanban-style.
 /// </summary>
 public static class MembershipGuards
 {

@@ -24,7 +24,7 @@ namespace Cardscape.Mcp.Tools;
 ///   <item>P3.5 — <c>boards_list_dashcards</c>, <c>boards_create_dashcard</c>, <c>boards_delete_dashcard</c></item>
 ///   <item>P3.11 — OAuth 3rd-party apps (<c>oauth_apps_list</c> / <c>oauth_apps_create</c> /
 ///   <c>oauth_apps_revoke</c>)</item>
-///   <item>P5.6 — <c>imports_trello_preview</c>, <c>imports_trello_apply</c></item>
+///   <item>P5.6 — <c>imports_kanban_preview</c>, <c>imports_kanban_apply</c></item>
 /// </list>
 /// </summary>
 [McpServerToolType]
@@ -104,24 +104,24 @@ public sealed class V110Tools
         bus.InvokeAsync<Result>(new DeleteDashcardCommand(dashcardId), ct);
 
     // ── Imports (P5.6) ───────────────────────────────────
-    [McpServerTool(Name = "imports_trello_preview")]
-    public async Task<Result<ImportResult>> TrelloPreview(
+    [McpServerTool(Name = "imports_kanban_preview")]
+    public async Task<Result<ImportResult>> KanbanPreview(
         string boardsJson, Guid targetWorkspaceId, IImportService import, CancellationToken ct)
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes(boardsJson);
         using var stream = new MemoryStream(bytes);
         // Dry-run: parse + summarize, no DB writes.
-        return await import.ImportTrelloJsonAsync(stream, targetWorkspaceId, previewOnly: true, ct);
+        return await import.ImportKanbanJsonAsync(stream, targetWorkspaceId, previewOnly: true, ct);
     }
 
-    [McpServerTool(Name = "imports_trello_apply")]
-    public async Task<Result<ImportResult>> TrelloApply(
+    [McpServerTool(Name = "imports_kanban_apply")]
+    public async Task<Result<ImportResult>> KanbanApply(
         string boardsJson, Guid targetWorkspaceId, IImportService import, CancellationToken ct)
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes(boardsJson);
         using var stream = new MemoryStream(bytes);
         // Real import: persist + return ids + preview summary.
-        return await import.ImportTrelloJsonAsync(stream, targetWorkspaceId, previewOnly: false, ct);
+        return await import.ImportKanbanJsonAsync(stream, targetWorkspaceId, previewOnly: false, ct);
     }
 
     // ── OAuth 3rd-party apps (P3.11) ───────────────────────

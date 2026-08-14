@@ -308,7 +308,7 @@ Esfuerzo: **M**. Mata de `app.css:931-949` (19 líneas):
   - **Decisión**: crear `Shared/KanbanBoard.razor` (componente
     parametrizable con `TItem` y slots para header/footer) y
     mover el CSS a `Shared/KanbanBoard.razor.css` con **CSS
-    isolation de Blazor**. La vista Trello no tiene
+    isolation de Blazor**. La vista Kanban no tiene
     equivalente Radzen directo y re-implementarla con
     `RadzenCard` sacrifica UX.
   - Alternativa descartada: `RadzenDataGrid` (pierde la

@@ -9,7 +9,7 @@
 
 > **Note (2026-08-04)** — this file used to describe a
 > pre-alpha project. That's stale. The project is at
-> **v1.1.0-roadmap-execution** (full Trello parity + the
+> **v1.1.0-roadmap-execution** (full Kanban parity + the
 > audit gap closure, **343 unit + 10 architecture + 1
 > functional + 102 integration tests green**; the
 > `RegionGuardEndpointFilterTests` parallel-run flakes
@@ -29,7 +29,7 @@
 ## Where we are
 
 Cardscape is at **v1.0.0** — first production release with
-**full Trello parity** across kanban, calendar, planner,
+**full Kanban parity** across kanban, calendar, planner,
 automation, and AI-integration surfaces. A single user can
 register, create a workspace, drop in boards / lists /
 cards, comment, label, star, attach files, vote, add
@@ -74,7 +74,7 @@ next chunk of work.
 | 3 | API tokens (access control + first-class tokens) | end of December 2026 | ✅ done (`v0.3.0-api-tokens`) |
 | 4 | Realtime MCP + Invitations + Inbox + Calendar + Planner + Automation + Extensions | end of Q1 2027 | ✅ done (`v0.4.0` through `v0.6.4`) |
 | 5 | Polish & scale (background jobs, custom fields, voting, checklists, recurrence, webhooks, attachments, full-text search, CI, production config) | end of Q2 2027 | ✅ done (`v0.7.0` through `v0.7.10`) |
-| 6 | v1.0.0 release: full Trello parity | — | ✅ done (`v1.0.0`) |
+| 6 | v1.0.0 release: full Kanban parity | — | ✅ done (`v1.0.0`) |
 | 7 | Roadmap execution: close every audit gap | — | 🔄 in progress (`v1.1.0-roadmap-execution`) |
 
 Dates are **aspirational**. The project is solo-maintained.

@@ -11,9 +11,9 @@
   A 30-line C# client that connects to the Cardscape MCP
   server over Streamable HTTP, lists the tools, and calls
   `workspaces_list`.
-- [`02-trello-import.md`](02-trello-import.md) — The Trello
+- [`02-kanban-import.md`](02-kanban-import.md) — The Kanban
   `boards.json` import pipeline: the JSON shape, the
-  explicit `POST /api/imports/trello/preview` and `/apply`
+  explicit `POST /api/imports/kanban/preview` and `/apply`
   endpoints, the MCP tools, and the mapping rules.
 - (more to come) — Personal access tokens, OAuth 2.0
   third-party flow, webhook signature verification, iCalendar

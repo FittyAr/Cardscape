@@ -123,7 +123,7 @@ headers, which were marked `✅ DONE` per task instructions.
     - Phase 4 — **DONE v0.4.0–v0.6.4** (line 36).
     - Phase 5 — **DONE v0.7.0–v0.7.10** (line 37).
     - Phase 6 — **DONE v1.0.0** (line 38, "first production release
-      with full Trello parity", "313 unit + 85 integration tests
+      with full Kanban parity", "313 unit + 85 integration tests
       green").
     - Phase 7 — **IN PROGRESS v1.1.0-roadmap-execution** (line 39,
       points to `03-execution-plan-v1.1.0.md`).
@@ -134,7 +134,7 @@ headers, which were marked `✅ DONE` per task instructions.
   - `docs/community/ROADMAP.md`:
     - "Where we are" section
       (`docs/community/ROADMAP.md:24-51`) opens with "Cardscape is
-      at **v1.0.0** — first production release with **full Trello
+      at **v1.0.0** — first production release with **full Kanban
       parity**" (line 26) and "**313 unit tests + 86 integration
       tests** are green" (line 40). Cross-references
       `v1.1.0-roadmap-execution` (line 47) and the audit

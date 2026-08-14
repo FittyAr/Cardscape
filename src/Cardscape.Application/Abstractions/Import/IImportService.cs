@@ -7,7 +7,7 @@ namespace Cardscape.Application.Abstractions.Import;
 /// <summary>
 /// Imports a board archive from another kanban tool into a
 /// Cardscape workspace. The default implementation parses a
-/// Trello export (<c>boards.json</c>); other kanban tools can
+/// Kanban export (<c>boards.json</c>); other kanban tools can
 /// plug in their own <see cref="IImportService"/> by reading
 /// their format and producing the same <see cref="ImportResult"/>.
 /// </summary>
@@ -21,7 +21,7 @@ public interface IImportService
     /// identity so the importer can author-attribute the
     /// imported rows.
     /// </summary>
-    /// <param name="json">Trello <c>boards.json</c> payload.</param>
+    /// <param name="json">Kanban <c>boards.json</c> payload.</param>
     /// <param name="targetWorkspaceId">Destination workspace id.</param>
     /// <param name="previewOnly">
     /// When <c>true</c>, parses the payload, builds the
@@ -32,7 +32,7 @@ public interface IImportService
     /// the rows. Callers must choose the mode explicitly.
     /// </param>
     /// <param name="ct">Cancellation token.</param>
-    Task<Result<ImportResult>> ImportTrelloJsonAsync(
+    Task<Result<ImportResult>> ImportKanbanJsonAsync(
         Stream json,
         Guid targetWorkspaceId,
         bool previewOnly,

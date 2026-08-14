@@ -37,7 +37,7 @@ public sealed record Color : IValueObject
         return Result.Success(new Color(input));
     }
 
-    /// <summary>Common Trello-style palette, indexed by name.</summary>
+    /// <summary>Common Kanban-style palette, indexed by name.</summary>
     public static class Palette
     {
         public static readonly Color Yellow = Create("#f2c600").Value;
@@ -58,7 +58,7 @@ public sealed record Color : IValueObject
         // ("yellow", "blue", …) and looks it up here; an
         // unknown name surfaces as 400 instead of being
         // silently dropped on the floor. Case-insensitive
-        // — the palette names are the same Trello uses.
+        // — the palette names are the same Kanban uses.
         private static readonly System.Collections.Generic.Dictionary<string, Color> ByNameLookup =
             new(System.StringComparer.OrdinalIgnoreCase)
             {

@@ -240,7 +240,7 @@ $ docker exec cardscape.api find /app/Storage -type d
 - `POST /api/checklists/{clId}/items/reorder` → 405 (route existe para POST, pero el sub-path no)
 - `PATCH /api/checklists/{clId}/items/{itemId}/reorder` → 404
 
-**Esperado:** Un endpoint para cambiar la posición de un item dentro de su checklist (estilo Trello: `POST /reorder?position=before/after&relativeToItemId=…` o `POST /reorder` con body `{position: 2}`).
+**Esperado:** Un endpoint para cambiar la posición de un item dentro de su checklist (estilo Kanban: `POST /reorder?position=before/after&relativeToItemId=…` o `POST /reorder` con body `{position: 2}`).
 
 **Obtenido:** No existe.
 

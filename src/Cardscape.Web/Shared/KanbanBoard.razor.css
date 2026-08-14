@@ -1,4 +1,4 @@
-/* KanbanBoard — Trello-style horizontal scroll columns.
+/* KanbanBoard — Kanban-style horizontal scroll columns.
    Equivalent to the old .lists-row / .list-column / .card-mini
    block that lived in app.css:1015-1072. Moved to scoped CSS
    so it stays close to the component that owns the markup. */

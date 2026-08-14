@@ -1,4 +1,4 @@
-# Priority 3 §3.1–3.6 — Trello feature parity (cards and views) — Audit
+# Priority 3 §3.1–3.6 — Kanban feature parity (cards and views) — Audit
 
 **Date:** 2026-07-30
 **Scope:** `docs/roadmap/03-execution-plan-v1.1.0.md` §3.1 (Card Aging),

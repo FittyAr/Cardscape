@@ -9,13 +9,13 @@ using FluentAssertions;
 namespace Cardscape.IntegrationTests.Endpoints;
 
 [Collection(CardscapeApi.Name)]
-public sealed class TrelloImportFidelityTests
+public sealed class KanbanImportFidelityTests
 {
     private const string Archive = """
         [
           {
             "name": "Imported Fidelity Board",
-            "desc": "Preview and apply must agree",
+            "description": "Preview and apply must agree",
             "labels": [
               { "id": "label-1", "name": "Important", "color": "red" }
             ],
@@ -26,9 +26,9 @@ public sealed class TrelloImportFidelityTests
               {
                 "id": "card-1",
                 "name": "Keep label relation",
-                "desc": "Imported card",
-                "idList": "list-1",
-                "idLabels": ["label-1"]
+                "description": "Imported card",
+                "listId": "list-1",
+                "labelIds": ["label-1"]
               }
             ],
             "members": [
@@ -40,7 +40,7 @@ public sealed class TrelloImportFidelityTests
 
     private readonly CardscapeWebApplicationFactory _factory;
 
-    public TrelloImportFidelityTests(CardscapeWebApplicationFactory factory) => _factory = factory;
+    public KanbanImportFidelityTests(CardscapeWebApplicationFactory factory) => _factory = factory;
 
     [Fact]
     public async Task PreviewAndApply_ForSameArchive_ReturnMatchingCounts_AndPersistCardLabels()
@@ -88,14 +88,14 @@ public sealed class TrelloImportFidelityTests
     }
 
     [Fact]
-    public async Task AmbiguousTrelloImportRoute_IsRemoved()
+    public async Task AmbiguousKanbanImportRoute_IsRemoved()
     {
         HttpClient client = await CreateAuthenticatedClientAsync();
         Guid workspaceId = await CreateWorkspaceAsync(client);
 
         using MultipartFormDataContent content = CreateArchiveContent(workspaceId);
         HttpResponseMessage response = await client.PostAsync(
-            "api/imports/trello", content, TestContext.Current.CancellationToken);
+            "api/imports/kanban", content, TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
@@ -133,7 +133,7 @@ public sealed class TrelloImportFidelityTests
     {
         using MultipartFormDataContent content = CreateArchiveContent(workspaceId);
         return await client.PostAsync(
-            $"api/imports/trello/{action}", content, TestContext.Current.CancellationToken);
+            $"api/imports/kanban/{action}", content, TestContext.Current.CancellationToken);
     }
 
     private static MultipartFormDataContent CreateArchiveContent(Guid workspaceId)

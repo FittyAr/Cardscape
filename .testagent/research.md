@@ -407,11 +407,18 @@
 - Existing conventions: xUnit integration tests use `CardscapeWebApplicationFactory`, bearer registration helpers, `HttpStatusCode` plus FluentAssertions, and JSON/multipart requests through the real API host.
 - Secondary finding: `UpdateWebhookBody.Events` was published in REST/OpenAPI but discarded by the endpoint and never sent by Web. It was removed rather than preserved as a compatibility facade.
 - Final evidence: focused regressions 2/2; formatter clean; complete suite 857 passed / 0 failed / 1 skipped.
-# Trello import preview/apply fidelity (2026-08-14)
+# Kanban import preview/apply fidelity (2026-08-14)
 
-- Target inventory: `ImportEndpoints`, `IImportService`, `TrelloImportService`, `WorkspaceImport.razor`, MCP direct callers, import DTOs and new real-host integration regressions.
-- Findings: preview populates list/label maps only inside `!previewOnly`, so every preview reports zero cards; apply parses `idLabels` but never attaches imported labels; the single REST route treats a missing/invalid `previewOnly` field as apply, making omission destructive.
-- Decision: split REST into explicit `/api/imports/trello/preview` and `/apply` routes, remove the ambiguous route and form flag, build identity maps in both modes, and attach known Trello labels during apply.
-- Acceptance: preview and apply return identical board/list/card/label/member counts and samples; preview IDs remain empty and writes nothing; apply returns IDs and persisted cards retain label associations; old `/api/imports/trello` returns 404.
+- Target inventory: `ImportEndpoints`, `IImportService`, `KanbanImportService`, `WorkspaceImport.razor`, MCP direct callers, import DTOs and new real-host integration regressions.
+- Findings: preview populated list/label maps only inside `!previewOnly`, so every preview reported zero cards; apply parsed `labelIds` but never attached imported labels; the single REST route treated a missing/invalid `previewOnly` field as apply, making omission destructive.
+- Decision: split REST into explicit `/api/imports/kanban/preview` and `/apply` routes, remove the ambiguous route and form flag, build identity maps in both modes, and attach known Kanban labels during apply.
+- Acceptance: preview and apply return identical board/list/card/label/member counts and samples; preview IDs remain empty and writes nothing; apply returns IDs and persisted cards retain label associations; old `/api/imports/kanban` returns 404.
 - Conventions: integration tests use xUnit, `CardscapeWebApplicationFactory`, multipart requests, exact HTTP status assertions and typed JSON projections.
 - Final evidence: focused tests 2/2; preview/apply counts are structurally equal, preview leaves the workspace unchanged, apply persists one label relation, and the old route is 404; complete suite 859 passed / 0 failed / 1 skipped.
+# Remove prohibited competitor identity (2026-08-14)
+
+- Scope: every tracked and ignored text file, public REST/MCP contracts, C# symbols, localization, manifest, SDK metadata, Seeder content, test/report artifacts and filenames.
+- Decision: replace the prohibited product name with Cardscape-owned Kanban terminology; no aliases or compatibility routes/tools remain.
+- Contract cleanup: the import format is now explicitly Cardscape Kanban JSON with vendor-neutral fields `description`, `listId`, `labelIds`, `memberIds` and `dueDate`.
+- Acceptance: case-insensitive content and filename searches return zero matches outside regenerated build artifacts; focused import regression and full solution suite pass; `master` is pushed.
+- Final evidence: 0 content matches, 0 filename matches, focused import regression 2/2, complete suite 859 passed / 0 failed / 1 skipped.

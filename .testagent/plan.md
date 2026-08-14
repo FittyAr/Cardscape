@@ -261,12 +261,20 @@
 - [x] Add exact 404 integration regressions for download/delete/update/deliveries.
 - [x] Run focused build/tests and review assertion/gap quality.
 - [x] Run full suite, update modernization plan, commit and push.
-# Trello import preview/apply fidelity (2026-08-14)
+# Kanban import preview/apply fidelity (2026-08-14)
 
 - [x] Trace REST/Web/MCP modes and preview/apply construction paths.
 - [x] Replace the ambiguous boolean REST action with explicit preview/apply routes.
 - [x] Build list/label identity maps identically in dry-run and apply modes.
-- [x] Persist Trello card-label associations on apply.
+- [x] Persist Kanban card-label associations on apply.
 - [x] Add parity, persistence and removed-route integration regressions.
 - [x] Run focused tests, pseudo-mutation/assertion review and full suite.
 - [x] Update modernization plan, commit and push.
+# Remove prohibited competitor identity (2026-08-14)
+
+- [x] Inventory case-insensitive references in tracked and ignored workspace content.
+- [x] Rename REST, MCP, C# symbols, resources, SDK tags, Seeder copy and UI copy.
+- [x] Rename documentation, tests, reports and filenames.
+- [x] Replace the derivative JSON field vocabulary with Cardscape-owned Kanban JSON.
+- [x] Prove zero residual references, build and run focused/full tests.
+- [x] Update modernization evidence, commit and push.

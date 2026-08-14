@@ -67,7 +67,7 @@ The high-level groups:
   timelines (cursor-paginated).
 - `/api/search/*` — full-text search over cards, comments,
   checklist items, labels, activity.
-- `/api/imports/*` — Trello JSON import.
+- `/api/imports/*` — Kanban JSON import.
 - `/api/exports/*` — per-board ZIP export.
 - `/api/integrations/*` — Slack, Google Drive, GitHub, Email.
 - `/api/jobs/*` — background job inspection.

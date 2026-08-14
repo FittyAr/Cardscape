@@ -25,7 +25,7 @@
     <PackageId>Cardscape.Sdk</PackageId>
     <Version>1.2.0</Version>
     <PackageDescription>Typed C# client for the Cardscape REST API. Hand-written for the 30 most-used endpoints; the rest of the surface stays reachable through the lower-level HttpClient extension methods. Multi-targets netstandard2.0 + net8.0 + net10.0.</PackageDescription>
-    <PackageTags>cardscape;kanban;trello;mcp;api-client;netstandard2.0;net8.0;net10.0</PackageTags>
+    <PackageTags>cardscape;kanban;kanban;mcp;api-client;netstandard2.0;net8.0;net10.0</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <IsPackable>true</IsPackable>

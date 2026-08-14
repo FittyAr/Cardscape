@@ -70,7 +70,7 @@ project's coverage of each:
 
 | Control | Project artefact | Where it lives |
 |---|---|---|
-| CC3.1 — specifies objectives | the project goals (kanban + MCP + Trello parity) | [`../roadmap/02-product-positioning.md`](../roadmap/02-product-positioning.md) |
+| CC3.1 — specifies objectives | the project goals (kanban + MCP + Kanban parity) | [`../roadmap/02-product-positioning.md`](../roadmap/02-product-positioning.md) |
 | CC3.2 — identifies risks | the threat model | [`01-threat-model.md`](01-threat-model.md) |
 | CC3.3 — considers fraud potential | the audit log + the rate limit | every mutation has an audit entry; per-API-token rate limit at 100 req/min |
 | CC3.4 — identifies and analyses significant change | the ADR process | [`../adr/`](../adr/) (every change that affects a trust boundary gets an ADR) |

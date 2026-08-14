@@ -284,7 +284,7 @@ behaviour is unaffected in both directions: toggling the flag
 changes the UI surface, not the policy.
 
 The rationale for defaulting to off is recorded in
-[`docs/roadmap/07-trello-enterprise-parity.md`](../roadmap/07-trello-enterprise-parity.md#data-residency);
+[`docs/roadmap/07-kanban-enterprise-parity.md`](../roadmap/07-kanban-enterprise-parity.md#data-residency);
 the short version is that data residency as a user-facing
 concept only makes sense on a multi-region deployment with
 real cross-region enforcement, and the only currently shipped

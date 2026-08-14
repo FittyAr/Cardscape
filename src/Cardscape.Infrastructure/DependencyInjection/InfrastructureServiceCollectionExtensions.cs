@@ -437,11 +437,11 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IOAuthAccessTokenRepository, OAuthAccessTokenRepository>();
         services.AddScoped<IOAuthAppService, OAuthAppService>();
 
-        // Import pipeline (Trello default implementation; other kanban
+        // Import pipeline (Kanban default implementation; other kanban
         // tools can plug in their own IImportService). The import is
         // fully scoped because the work touches the cardscape DB
         // through the standard UnitOfWork pipeline.
-        services.AddScoped<IImportService, TrelloImportService>();
+        services.AddScoped<IImportService, KanbanImportService>();
         services.AddSingleton<IEmailService, ConsoleEmailService>();
         services.AddSingleton<IInvitationEmailService, ConsoleInvitationEmailService>();
         services.AddSingleton<ISearchIndex, InMemorySearchIndex>();

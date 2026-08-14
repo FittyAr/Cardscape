@@ -13,7 +13,7 @@
     <PageHeader Title="@L["ImportTitle"]" Subtitle="@L["ImportBlurb"]" />
 
     <RadzenCard>
-        <LabeledField Text="@L["ImportTrelloFile"]" Component="file">
+        <LabeledField Text="@L["ImportKanbanFile"]" Component="file">
             <InputFile OnChange="@OnFileSelected" accept="application/json,.json" />
         </LabeledField>
 
@@ -211,7 +211,7 @@
         content.Add(fileContent, "file", form.File.Name);
         content.Add(new StringContent(Id.ToString()), "targetWorkspaceId");
         string action = previewOnly ? "preview" : "apply";
-        HttpResponseMessage response = await Http.PostAsync($"api/imports/trello/{action}", content);
+        HttpResponseMessage response = await Http.PostAsync($"api/imports/kanban/{action}", content);
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<ImportResultDto>()

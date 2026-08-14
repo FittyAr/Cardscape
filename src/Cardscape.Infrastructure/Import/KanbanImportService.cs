@@ -15,11 +15,11 @@ using static Cardscape.Domain.Boards.Errors.BoardErrors;
 namespace Cardscape.Infrastructure.Import;
 
 /// <summary>
-/// Default <see cref="IImportService"/> that parses a Trello
-/// <c>boards.json</c> archive. The file is an array of Trello
+/// Default <see cref="IImportService"/> that parses a Kanban
+/// <c>boards.json</c> archive. The file is an array of Kanban
 /// board objects; each board has nested <c>lists</c>,
 /// <c>cards</c>, <c>labels</c>, and <c>members</c>. We map
-/// the structure to a Cardscape board (one Trello board per
+/// the structure to a Cardscape board (one Kanban board per
 /// Cardscape board) inside the supplied target workspace.
 ///
 /// Supports a dry-run mode via <c>previewOnly</c>: the
@@ -29,7 +29,7 @@ namespace Cardscape.Infrastructure.Import;
 /// the final <c>SaveChangesAsync</c>, so the database is
 /// untouched.
 /// </summary>
-public sealed class TrelloImportService(
+public sealed class KanbanImportService(
     IRepository<Workspace, WorkspaceId> workspaces,
     IBoardRepository boards,
     IBoardListRepository lists,
@@ -39,14 +39,14 @@ public sealed class TrelloImportService(
     IClock clock,
     ICurrentUser currentUser) : IImportService
 {
-    // Sample size caps for the preview summary. Trello exports
+    // Sample size caps for the preview summary. Kanban exports
     // can be huge; we don't want to push a 5,000-name list
     // through the REST/MCP/UI surface.
     private const int MaxSampleBoardNames = 5;
     private const int MaxSampleListNames = 10;
     private const int MaxSampleCardNames = 20;
 
-    public async Task<Result<ImportResult>> ImportTrelloJsonAsync(
+    public async Task<Result<ImportResult>> ImportKanbanJsonAsync(
         Stream json,
         Guid targetWorkspaceId,
         bool previewOnly,
@@ -74,7 +74,7 @@ public sealed class TrelloImportService(
         // Hard cap on the JSON payload so a direct service
         // call (e.g. from the MCP, or a future internal
         // pipeline) cannot bypass the endpoint-level cap on
-        // ImportEndpoints.MaxUploadBytes. A real Trello
+        // ImportEndpoints.MaxUploadBytes. A real Kanban
         // boards.json is well under 1 MB; 10 MB is generous
         // and keeps a single request from becoming a DoS
         // amplifier. We read once into a MemoryStream to
@@ -87,7 +87,7 @@ public sealed class TrelloImportService(
         {
             return Result.Failure<ImportResult>(DomainError.Validation(
                 "imports.payload_too_large",
-                $"Trello boards.json exceeds the {MaxBytes}-byte cap."));
+                $"Kanban boards.json exceeds the {MaxBytes}-byte cap."));
         }
 
         await using var buffer = new MemoryStream();
@@ -96,7 +96,7 @@ public sealed class TrelloImportService(
         {
             return Result.Failure<ImportResult>(DomainError.Validation(
                 "imports.payload_too_large",
-                $"Trello boards.json exceeds the {MaxBytes}-byte cap."));
+                $"Kanban boards.json exceeds the {MaxBytes}-byte cap."));
         }
         buffer.Position = 0;
 
@@ -111,24 +111,24 @@ public sealed class TrelloImportService(
         // instead — the comment above the buffer creation
         // already explains the buffering is for the
         // non-seekable-stream cap; this is the matching fix.
-        TrelloBoard[]? trelloBoards;
+        KanbanBoard[]? kanbanBoards;
         try
         {
-            trelloBoards = await JsonSerializer.DeserializeAsync<TrelloBoard[]>(
+            kanbanBoards = await JsonSerializer.DeserializeAsync<KanbanBoard[]>(
                 buffer, JsonOptions, ct);
         }
         catch (JsonException ex)
         {
             return Result.Failure<ImportResult>(DomainError.Validation(
                 "imports.invalid_json",
-                $"Trello export is not valid JSON: {ex.Message}"));
+                $"Kanban export is not valid JSON: {ex.Message}"));
         }
 
-        if (trelloBoards is null || trelloBoards.Length == 0)
+        if (kanbanBoards is null || kanbanBoards.Length == 0)
         {
             return Result.Failure<ImportResult>(DomainError.Validation(
                 "imports.empty_archive",
-                "Trello export contains no boards."));
+                "Kanban export contains no boards."));
         }
 
         var importedBoardIds = new List<Guid>();
@@ -148,7 +148,7 @@ public sealed class TrelloImportService(
         var sampleListNames = new List<string>(MaxSampleListNames);
         var sampleCardNames = new List<string>(MaxSampleCardNames);
 
-        foreach (var tb in trelloBoards)
+        foreach (var tb in kanbanBoards)
         {
             ct.ThrowIfCancellationRequested();
 
@@ -159,7 +159,7 @@ public sealed class TrelloImportService(
                 continue;
             }
 
-            var descResult = BoardDescription.Create(tb.Desc ?? string.Empty);
+            var descResult = BoardDescription.Create(tb.Description ?? string.Empty);
             if (descResult.IsFailure)
             {
                 continue;
@@ -185,7 +185,7 @@ public sealed class TrelloImportService(
                 sampleBoardNames.Add(boardName);
             }
 
-            // Members: counted for the preview only — Trello
+            // Members: counted for the preview only — Kanban
             // member accounts don't map 1:1 to Cardscape users
             // (they may not exist yet), so we don't persist them.
             int boardMemberCount = 0;
@@ -219,7 +219,7 @@ public sealed class TrelloImportService(
                     continue;
                 }
 
-                var colorValue = NormalizeTrelloColor(tl.Color);
+                var colorValue = NormalizeKanbanColor(tl.Color);
                 var colorResult = Color.Create(colorValue);
                 if (colorResult.IsFailure)
                 {
@@ -297,7 +297,7 @@ public sealed class TrelloImportService(
             int cardIndex = 0;
             foreach (var tc in tb.Cards ?? [])
             {
-                if (!listMap.TryGetValue(tc.IdList, out var listId))
+                if (!listMap.TryGetValue(tc.ListId, out var listId))
                 {
                     cardIndex++;
                     continue;
@@ -311,7 +311,7 @@ public sealed class TrelloImportService(
                     continue;
                 }
 
-                var descResult2 = CardDescription.Create(tc.Desc ?? string.Empty);
+                var descResult2 = CardDescription.Create(tc.Description ?? string.Empty);
                 if (descResult2.IsFailure)
                 {
                     cardIndex++;
@@ -319,7 +319,7 @@ public sealed class TrelloImportService(
                 }
 
                 DateTimeOffset? dueDate = null;
-                if (tc.Due is { } dueString && DateTimeOffset.TryParse(dueString, out var parsed))
+                if (tc.DueDate is { } dueString && DateTimeOffset.TryParse(dueString, out var parsed))
                 {
                     dueDate = parsed;
                 }
@@ -347,9 +347,9 @@ public sealed class TrelloImportService(
 
                 if (!previewOnly)
                 {
-                    foreach (string trelloLabelId in tc.IdLabels ?? [])
+                    foreach (string kanbanLabelId in tc.LabelIds ?? [])
                     {
-                        if (labelMap.TryGetValue(trelloLabelId, out Guid labelId))
+                        if (labelMap.TryGetValue(kanbanLabelId, out Guid labelId))
                         {
                             cardResult.Value.AttachLabel(
                                 CardLabel.Create(cardResult.Value.Id, new LabelId(labelId), clock.UtcNow),
@@ -399,14 +399,14 @@ public sealed class TrelloImportService(
             Preview: preview));
     }
 
-    private static string NormalizeTrelloColor(string? trelloColor)
+    private static string NormalizeKanbanColor(string? kanbanColor)
     {
-        if (string.IsNullOrWhiteSpace(trelloColor))
+        if (string.IsNullOrWhiteSpace(kanbanColor))
         {
             return Color.Palette.Gray.Value;
         }
 
-        return trelloColor.ToLowerInvariant() switch
+        return kanbanColor.ToLowerInvariant() switch
         {
             "yellow" => Color.Palette.Yellow.Value,
             "purple" => Color.Palette.Purple.Value,
@@ -419,7 +419,7 @@ public sealed class TrelloImportService(
             "lime" => Color.Palette.Lime.Value,
             "pink" => Color.Palette.Pink.Value,
             "gray" or "grey" => Color.Palette.Gray.Value,
-            _ => trelloColor.StartsWith('#') ? trelloColor : Color.Palette.Gray.Value
+            _ => kanbanColor.StartsWith('#') ? kanbanColor : Color.Palette.Gray.Value
         };
     }
 
@@ -430,43 +430,43 @@ public sealed class TrelloImportService(
         AllowTrailingCommas = true
     };
 
-    // ── Trello JSON shape (loose, only the fields we need) ────
+    // ── Kanban JSON shape (loose, only the fields we need) ────
 
-    private sealed class TrelloBoard
+    private sealed class KanbanBoard
     {
         public string Name { get; set; } = string.Empty;
-        public string? Desc { get; set; }
-        public TrelloLabel[]? Labels { get; set; }
-        public TrelloList[]? Lists { get; set; }
-        public TrelloCard[]? Cards { get; set; }
-        public TrelloMember[]? Members { get; set; }
+        public string? Description { get; set; }
+        public KanbanLabel[]? Labels { get; set; }
+        public KanbanList[]? Lists { get; set; }
+        public KanbanCard[]? Cards { get; set; }
+        public KanbanMember[]? Members { get; set; }
     }
 
-    private sealed class TrelloLabel
+    private sealed class KanbanLabel
     {
         public string Id { get; set; } = string.Empty;
         public string? Name { get; set; }
         public string? Color { get; set; }
     }
 
-    private sealed class TrelloList
+    private sealed class KanbanList
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
     }
 
-    private sealed class TrelloCard
+    private sealed class KanbanCard
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public string? Desc { get; set; }
-        public string IdList { get; set; } = string.Empty;
-        public string? Due { get; set; }
-        public string[]? IdLabels { get; set; }
-        public string[]? IdMembers { get; set; }
+        public string? Description { get; set; }
+        public string ListId { get; set; } = string.Empty;
+        public string? DueDate { get; set; }
+        public string[]? LabelIds { get; set; }
+        public string[]? MemberIds { get; set; }
     }
 
-    private sealed class TrelloMember
+    private sealed class KanbanMember
     {
         public string Id { get; set; } = string.Empty;
         public string? FullName { get; set; }

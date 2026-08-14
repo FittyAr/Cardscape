@@ -7,15 +7,15 @@ using Microsoft.AspNetCore.Routing;
 namespace Cardscape.Api.Endpoints.Import;
 
 /// <summary>
-/// REST endpoints for the import pipeline. Today only Trello is
+/// REST endpoints for the import pipeline. Today only Kanban is
 /// supported; the JSON schema is documented in
-/// <c>docs/extensions/02-trello-import.md</c>.
+/// <c>docs/extensions/02-kanban-import.md</c>.
 /// </summary>
 public static class ImportEndpoints
 {
     /// <summary>
-    /// Maximum size of a Trello boards.json upload. A real
-    /// Trello archive is well under 1 MB; 10 MB gives
+    /// Maximum size of a Kanban boards.json upload. A real
+    /// Kanban archive is well under 1 MB; 10 MB gives
     /// generous headroom for unusually large boards while
     /// keeping a single authenticated request from becoming
     /// a DoS amplifier. The same cap is also enforced inside
@@ -28,20 +28,20 @@ public static class ImportEndpoints
     {
         var group = app.MapGroup("/api/imports").RequireAuthorization().WithTags("Imports");
 
-        group.MapPost("/trello/preview", (
+        group.MapPost("/kanban/preview", (
             HttpRequest request,
             IImportService import,
-            CancellationToken ct) => ImportTrelloAsync(request, import, previewOnly: true, ct));
+            CancellationToken ct) => ImportKanbanAsync(request, import, previewOnly: true, ct));
 
-        group.MapPost("/trello/apply", (
+        group.MapPost("/kanban/apply", (
             HttpRequest request,
             IImportService import,
-            CancellationToken ct) => ImportTrelloAsync(request, import, previewOnly: false, ct));
+            CancellationToken ct) => ImportKanbanAsync(request, import, previewOnly: false, ct));
 
         return app;
     }
 
-    private static async Task<IResult> ImportTrelloAsync(
+    private static async Task<IResult> ImportKanbanAsync(
         HttpRequest request,
         IImportService import,
         bool previewOnly,
@@ -73,19 +73,19 @@ public static class ImportEndpoints
             return Results.BadRequest(new
             {
                 error = "imports.no_file",
-                message = "The 'file' form part is required and must contain a Trello boards.json payload."
+                message = "The 'file' form part is required and must contain a Kanban boards.json payload."
             });
         }
 
         if (file.Length > MaxUploadBytes)
         {
             return Results.Problem(
-                detail: $"Trello boards.json exceeds the {MaxUploadBytes}-byte cap.",
+                detail: $"Kanban boards.json exceeds the {MaxUploadBytes}-byte cap.",
                 statusCode: StatusCodes.Status413PayloadTooLarge);
         }
 
         await using Stream stream = file.OpenReadStream();
-        Result<Domain.Import.ImportResult> result = await import.ImportTrelloJsonAsync(
+        Result<Domain.Import.ImportResult> result = await import.ImportKanbanJsonAsync(
             stream, workspaceId, previewOnly, ct);
         return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
     }

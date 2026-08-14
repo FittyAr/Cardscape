@@ -497,7 +497,7 @@ public static class DeleteBoardCommandHandler
                 "boards.not_found", "Board was not found."));
         }
 
-        // Membership required (Trello-style — board admin /
+        // Membership required (Kanban-style — board admin /
         // member can delete; non-member cannot).
         if (!board.IsMember(currentUser.Id.Value))
         {

@@ -196,7 +196,7 @@ component reading a Radzen-declared theme variable.
 
 ### 1.2 Non-goals (out of scope for this plan)
 
-- **NG1.** Replacing the **kanban's** hard-coded Trello greys
+- **NG1.** Replacing the **kanban's** hard-coded Kanban greys
   (`#ebecf0`, `#f4f5f7`, …) in `Shared/KanbanBoard.razor.css`
   with theme variables. ADR 0009 §4 already documents this as
   an accepted trade-off; revisited only if the user changes
@@ -871,9 +871,9 @@ preferred base. Radzen's `software` free theme is:
   off).
 - Has good WCAG contrast in the default palette
   (we keep that).
-- The **closest match** to Trello's look (which Cardscape
+- The **closest match** to Kanban's look (which Cardscape
   explicitly clones — the kanban in
-  `Shared/KanbanBoard.razor.css` is Trello-styled), so
+  `Shared/KanbanBoard.razor.css` is Kanban-styled), so
   the rest of the UI feels consistent with the kanban.
 
 The custom theme **inherits** Software's shape (border
@@ -975,7 +975,7 @@ for both the light and the dark variant.
   `EmptyLayout.razor`) is unchanged. The header / sidebar /
   body structure is theme-agnostic.
 - The **kanban** in `Shared/KanbanBoard.razor.css` keeps
-  its Trello greys (ADR 0009 §4 trade-off, still applies).
+  its Kanban greys (ADR 0009 §4 trade-off, still applies).
 - The **loading spinner** and **error overlay** in
   `app.css:19-99` keep their current colors. They are
   Blazor WASM template assets, not theme surface.
@@ -1007,7 +1007,7 @@ follows the same structure as ADR 0009. Outline:
    cheaper to migrate, cheaper to query, easier to
    audit for GDPR).
 4. **Consequences** — `app.css` stays under 100 lines;
-   no new NuGet; the kanban Trello greys are still
+   no new NuGet; the kanban Kanban greys are still
    intentional; the brand kit gains a "UI surface" section;
    the GDPR surface gains one new delete path; the
    OpenAPI spec gains two new endpoints.

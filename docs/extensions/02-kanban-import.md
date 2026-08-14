@@ -1,18 +1,16 @@
-# 02 — Importing from Trello
+# 02 — Importing Cardscape Kanban JSON
 
-> How to bring a Trello workspace into Cardscape
+> How to import Cardscape's vendor-neutral Kanban JSON
 > end-to-end. Covers the JSON shape, the
-> explicit `POST /api/imports/trello/preview` and
+> explicit `POST /api/imports/kanban/preview` and
 > `/apply` endpoints, the MCP tools, and the mapping rules.
 
 ---
 
 ## 1. The short version
 
-Trello lets users export a workspace as a single
-`boards.json` file (Trello → Profile → Settings →
-"Print and Export" → "JSON"). Cardscape reads that
-file as-is and creates a matching set of
+Cardscape defines a vendor-neutral `boards.json` interchange
+format. The importer reads that format and creates a matching set of
 boards / lists / cards / labels under a target Cardscape workspace of the
 caller's choice.
 
@@ -22,17 +20,16 @@ Three ways to drive the import:
    picker, submit, see the live preview, submit
    again to apply.
 2. **REST API** — explicit multipart endpoints
-   `POST /api/imports/trello/preview` and
-   `POST /api/imports/trello/apply`.
-3. **MCP** — `imports_trello_preview` and
-   `imports_trello_apply` tools. The preview
+   `POST /api/imports/kanban/preview` and
+   `POST /api/imports/kanban/apply`.
+3. **MCP** — `imports_kanban_preview` and
+   `imports_kanban_apply` tools. The preview
    tool is a dry-run; the apply tool writes to
    the database.
 
 ## 2. JSON shape
 
-Trello's `boards.json` is a JSON array of Trello
-board objects. Cardscape only reads the fields
+Cardscape Kanban JSON is an array of board objects. Cardscape reads the fields
 it needs; unknown fields are silently dropped.
 
 ```json
@@ -40,7 +37,7 @@ it needs; unknown fields are silently dropped.
   {
     "id": "5d9...e8",
     "name": "Personal board",
-    "desc": "The board description",
+    "description": "The board description",
     "lists": [
       { "id": "5da...01", "name": "Todo", "closed": false },
       { "id": "5da...02", "name": "Doing", "closed": false },
@@ -50,12 +47,12 @@ it needs; unknown fields are silently dropped.
       {
         "id": "5db...c1",
         "name": "First card",
-        "desc": "Body of the first card",
-        "idList": "5da...01",
+        "description": "Body of the first card",
+        "listId": "5da...01",
         "closed": false,
-        "due": "2026-09-01T12:00:00.000Z",
-        "idLabels": ["5dc...01", "5dc...02"],
-        "idMembers": ["5dd...01", "5dd...02"]
+        "dueDate": "2026-09-01T12:00:00.000Z",
+        "labelIds": ["5dc...01", "5dc...02"],
+        "memberIds": ["5dd...01", "5dd...02"]
       }
     ],
     "labels": [
@@ -70,15 +67,14 @@ it needs; unknown fields are silently dropped.
 ]
 ```
 
-The array may contain more than one board; each
-Trello board becomes one Cardscape board inside
+The array may contain more than one board; each board becomes one Cardscape board inside
 the target workspace.
 
 ## 3. REST endpoint
 
 ```
-POST /api/imports/trello/preview
-POST /api/imports/trello/apply
+POST /api/imports/kanban/preview
+POST /api/imports/kanban/apply
 Content-Type: multipart/form-data; boundary=...
 
 (file=<boards.json>; targetWorkspaceId=<guid>)
@@ -86,7 +82,7 @@ Content-Type: multipart/form-data; boundary=...
 
 - `file` — the `boards.json` upload. Required.
   The endpoint reads the stream into
-  `IImportService.ImportTrelloJsonAsync`. Max
+  `IImportService.ImportKanbanJsonAsync`. Max
   size is 10 MB at both endpoint and service boundaries.
 - `targetWorkspaceId` — the Cardscape workspace
   the import should land in. Required. The
@@ -142,7 +138,7 @@ code:
 
 ## 4. Dry-run vs. apply semantics
 
-The `/preview` route (or the `imports_trello_preview`
+The `/preview` route (or the `imports_kanban_preview`
 MCP tool) is the recommended first step. The
 service:
 
@@ -159,46 +155,41 @@ cards" before any write happens.
 
 ## 5. Mapping rules
 
-The Trello ↔ Cardscape mapping is intentionally
-lossy: Trello fields that have no Cardscape
-counterpart are dropped silently. The reverse
-also holds — Trello exports do not contain
-custom fields, recurring cards, voting, or
-board extensions, so those surfaces stay empty
-in the imported data.
+The Cardscape interchange format is intentionally small.
+Unknown JSON fields are ignored, and unsupported Cardscape
+features remain empty in imported data.
 
-| Trello | Cardscape | Notes |
+| JSON field | Cardscape | Notes |
 |---|---|---|
 | `boards[]` | one `Board` per element | All boards land in the **same** target workspace. |
 | `boards[].name` | `Board.Name` | Required. Empty / whitespace names abort the import with `imports.invalid_board_name`. |
-| `boards[].desc` | `Board.Description` | Optional. Trello markdown is preserved as plain text. |
-| `boards[].lists[]` (open) | one `BoardList` per element | `closed: true` lists are dropped. |
+| `boards[].description` | `Board.Description` | Optional plain text. |
+| `boards[].lists[]` | one `BoardList` per element | Array order determines position. |
 | `lists[].name` | `BoardList.Name` | Required. Empty / whitespace names abort the import. |
-| `lists[].pos` | `BoardList.Position` | Trello floats are normalised to int. |
-| `cards[]` (open) | one `Card` per element | `closed: true` cards are dropped. |
+| list array index | `BoardList.Position` | Normalized in increments of 1024. |
+| `cards[]` | one `Card` per element | Cards whose `listId` is unknown are skipped. |
 | `cards[].name` | `Card.Title` | Required. Empty / whitespace names abort the import. |
-| `cards[].desc` | `Card.Description` | Optional. Trello markdown is preserved as plain text. |
-| `cards[].due` | `Card.DueDate` | Optional. Parsed as ISO 8601; invalid dates abort the import. |
-| `cards[].idList` | card ↔ list join | Must match a `lists[].id` in the same board. Orphaned cards abort the import. |
-| `cards[].labels[]` | card ↔ label join | The label objects are auto-created if they are not in `boards[].labels[]`. |
-| `cards[].idMembers` | card ↔ member join | Trello members without an email are dropped (Cardscape members must have an email). |
-| `boards[].labels[]` | one `Label` per element | Named labels become Cardscape labels. `null`-named labels become "Unnamed label". |
-| `boards[].members[]` | one `WorkspaceMember` per element | Members are added to the target workspace if their email matches an existing Cardscape user; otherwise they are recorded in the import preview but not added. |
+| `cards[].description` | `Card.Description` | Optional plain text. |
+| `cards[].dueDate` | `Card.DueDate` | Optional ISO 8601 value; invalid values are ignored. |
+| `cards[].listId` | card ↔ list join | Must match `lists[].id` in the same board. |
+| `cards[].labelIds[]` | card ↔ label join | Unknown label ids are ignored. |
+| `boards[].labels[]` | one `Label` per element | A blank name falls back to its color; blank name and color entries are skipped. |
+| `boards[].members[]` | preview count only | Accounts are never created or linked by import. |
 
 ## 6. MCP tools
 
 The MCP server exposes two tools that wrap the
 endpoint:
 
-### `imports_trello_preview`
+### `imports_kanban_preview`
 
 | | |
 |---|---|
-| Inputs | `boardsJsonPath` (string) — path on the MCP host filesystem to a Trello `boards.json` file. |
+| Inputs | `boardsJson` (string), `targetWorkspaceId` (GUID). |
 | Outputs | The `ImportResult` JSON above, with `wasApplied = false`. |
 | Notes | Pure dry-run. The database is never touched. The MCP host reads the file (not the API server) and dispatches the call as `previewOnly=true`. |
 
-### `imports_trello_apply`
+### `imports_kanban_apply`
 
 | | |
 |---|---|
@@ -215,41 +206,32 @@ field can never turn a preview into a write.
 Imports are **not** idempotent. Running the
 same `boards.json` twice against the same
 target workspace will create a duplicate
-board / list / card tree. The service does
-not dedupe on Trello IDs because Trello IDs
-are Trello-scoped and Cardscape IDs are
-Cardscape-scoped; the mapping is not a 1:1
-identity.
+board / list / card tree. The service intentionally does not
+deduplicate source ids; each apply creates a new Cardscape
+aggregate tree.
 
 The recommended pattern is:
 
-1. `imports_trello_preview` against a fresh
+1. `imports_kanban_preview` against a fresh
    workspace to confirm the shape.
-2. `imports_trello_apply` once.
+2. `imports_kanban_apply` once.
 3. If the user wants a second copy (e.g. for
    a sandbox), create a new target workspace
    and re-apply.
 
-A future v1.3.0 PR may add an optional
-`idempotencyKey` form field; the plumbing
-exists (`IImportService.ImportTrelloJsonAsync`
-can grow a `string? idempotencyKey = null`
-parameter without breaking the public shape).
+Idempotency is not currently part of this import contract.
 
 ## 8. Limitations
 
-- **No attachments.** Trello exports do not
-  include the actual file bytes for attached
-  files, so attachments are skipped. Re-upload
+- **No attachments.** The interchange format does not include
+  file bytes. Re-upload
   them through the Web UI after the import.
-- **No comments.** Trello comment threads are
-  not part of the JSON export.
-- **No custom fields.** Trello Power-Up data
-  is not in the JSON export.
+- **No comments.** Comment threads are not part of the format.
+- **No custom fields.** Custom field data is not part of the format.
 - **No recurring cards.** Cardscape's
   `Recurrence` block is not populated from
   the import.
-- **No board extensions / power-ups.** The
+- **No board extensions.** The
   imported boards have no calendar feed,
   custom dashboard, or board extension data.
 - **Single target workspace.** Every board
@@ -261,7 +243,7 @@ parameter without breaking the public shape).
 
 ## 9. Verification (end-to-end)
 
-1. Export a Trello workspace as JSON.
+1. Produce a JSON file matching the schema above.
 2. Open `Workspaces / <id> / Import` in the
    Web UI.
 3. Drop the file, hit "Preview import". The
@@ -269,15 +251,15 @@ parameter without breaking the public shape).
    counts and a few sample names.
 4. Hit "Apply import". The target workspace
    should now contain the boards, lists, cards and labels.
-   Trello members are counted in the summary but are not mapped
+   Kanban members are counted in the summary but are not mapped
    to Cardscape accounts.
 5. From the MCP client: call
-   `imports_trello_preview` against the same
+   `imports_kanban_preview` against the same
    file. The response should mirror the
    preview panel.
 6. From a curl one-liner:
    ```bash
-   curl -X POST https://localhost:5001/api/imports/trello/preview \
+   curl -X POST https://localhost:5001/api/imports/kanban/preview \
      -H "Authorization: Bearer $TOKEN" \
      -F "file=@boards.json" \
      -F "targetWorkspaceId=$WS_ID"
@@ -290,11 +272,11 @@ parameter without breaking the public shape).
 
 - [`01-build-your-own-mcp-client.md`](01-build-your-own-mcp-client.md) —
   the general MCP client recipe (covers
-  the `imports_trello_*` tools by name).
+  the `imports_kanban_*` tools by name).
 - [`../audits/2026-07-30/07-polish.md` §5.6](../audits/2026-07-30/07-polish.md) —
   the audit that flagged the missing
   preview / dry-run path. The
   the explicit preview action resolves the audit's PARTIAL verdict.
 - [`../api/02-openapi-spec.md`](../api/02-openapi-spec.md) —
   the OpenAPI definition for
-  Trello import endpoints.
+  Kanban import endpoints.

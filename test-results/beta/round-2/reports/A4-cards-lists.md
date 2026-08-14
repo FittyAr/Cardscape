@@ -212,7 +212,7 @@ foreach (BoardList sibling in siblings
 2. Mirror a otra list en mismo board.
 3. GET mirror card: `attachmentCount: 0`, `GET .../attachments/`: `[]`.
 
-**Esperado:** el mirror tiene el mismo attachment clonado (mismo file, mismo contenido). Trello lo hace. O si no se clona, el response debería decirlo.
+**Esperado:** el mirror tiene el mismo attachment clonado (mismo file, mismo contenido). Kanban lo hace. O si no se clona, el response debería decirlo.
 
 **Obtenido:** mirror sin attachments. La card espejada aparece "completa" pero está vacía. Si el caller asume que mirror preserva estado, se confunde.
 
@@ -269,7 +269,7 @@ foreach (BoardList sibling in siblings
 1. `POST .../labels/ {name: "dup", color: "#ff0000"}` → 201
 2. `POST .../labels/ {name: "dup", color: "#00ff00"}` → **201** (debería ser 409 Conflict)
 
-**Esperado:** 409 (label name unique per board, como en Trello).
+**Esperado:** 409 (label name unique per board, como en Kanban).
 
 **Severidad:** Low. UX/cosmetic — la UI muestra dos labels con el mismo nombre. No es un bug bloqueante pero confunde a los usuarios.
 
