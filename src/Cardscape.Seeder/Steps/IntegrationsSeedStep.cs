@@ -1,3 +1,4 @@
+using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Domain.Integrations.GitHub;
 using Cardscape.Domain.Integrations.GoogleCalendar;
 using Cardscape.Domain.Integrations.InboundEmail;
@@ -14,7 +15,7 @@ namespace Cardscape.Seeder.Steps;
 /// domain's public factory so the integration-specific
 /// validations (URL shape, repo full name, event kinds) all
 /// run.</summary>
-internal sealed class IntegrationsSeedStep : SeedStepBase
+internal sealed class IntegrationsSeedStep(ISecretProtector secretProtector) : SeedStepBase
 {
     public override string Name => "Integrations (Slack, GitHub, Google, inbound email)";
     public override int Order => 110;
@@ -25,14 +26,14 @@ internal sealed class IntegrationsSeedStep : SeedStepBase
 
         // 1. Slack: one workspace + one channel per board.
         string slackBotToken = Generators.PasswordGenerator.RandomUrlSafeToken(32);
-        string slackBotHash = Generators.PasswordGenerator.Sha256Hex(slackBotToken);
+        string protectedSlackBotToken = secretProtector.Protect(slackBotToken);
 
         Result<SlackWorkspace> slack = SlackWorkspace.Connect(
             SlackWorkspaceId.New(),
             context.WorkspaceId,
             "T0NEXORA",
             "Nexora Studios",
-            slackBotHash,
+            protectedSlackBotToken,
             now);
         if (slack.IsSuccess)
         {

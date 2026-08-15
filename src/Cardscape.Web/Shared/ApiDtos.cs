@@ -476,14 +476,12 @@ public sealed record CardRecurrenceDto(
 
 // ── Slack integration (v1.1.0 §3.7) ──────────────────────────
 // Mirrors of the Application-layer DTOs. The bot token is never
-// included in the projection — only its first 8 hex chars as a
-// stable identifier the UI can display.
+// included in the projection.
 public sealed record SlackWorkspaceDto(
     Guid Id,
     Guid WorkspaceId,
     string TeamId,
     string TeamName,
-    string BotTokenPrefix,
     DateTimeOffset? LastUsedAt,
     bool Active,
     DateTimeOffset CreatedAt);

@@ -48,9 +48,6 @@
                 <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
                     @L["SlackTeamId"]: <code>@workspace.TeamId</code>
                 </RadzenText>
-                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
-                    @L["SlackBotTokenPrefix"]: <code>@workspace.BotTokenPrefix</code>
-                </RadzenText>
                 @if (workspace.LastUsedAt is not null)
                 {
                     <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
@@ -96,7 +93,7 @@
     }
 
     private static SlackWorkspaceDto Empty() => new(
-        Guid.Empty, Guid.Empty, string.Empty, string.Empty, string.Empty,
+        Guid.Empty, Guid.Empty, string.Empty, string.Empty,
         null, false, DateTimeOffset.UtcNow);
 
     private async Task Connect()

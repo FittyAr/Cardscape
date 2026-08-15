@@ -4,11 +4,9 @@ using Cardscape.Domain.Workspaces;
 namespace Cardscape.Domain.Integrations.Slack;
 
 /// <summary>
-/// Per-workspace Slack connection. The <see cref="BotTokenHash"/>
-/// is the SHA-256 hex of the bot OAuth token issued by Slack;
-/// the cleartext is held in memory only by the
-/// <c>ISlackNotificationService</c> (looked up from configuration
-/// in the default implementation). One workspace maps to exactly
+/// Per-workspace Slack connection. <see cref="ProtectedBotToken"/>
+/// contains Data Protection ciphertext of the bot OAuth token.
+/// One workspace maps to exactly
 /// one Slack team; the
 /// <see cref="SlackChannel"/> aggregate maps a board inside the
 /// workspace to a specific channel on that team.
@@ -23,11 +21,8 @@ public sealed class SlackWorkspace : AggregateRoot<SlackWorkspaceId>
     /// <summary>Human-readable Slack team / workspace name.</summary>
     public string TeamName { get; private set; } = string.Empty;
 
-    /// <summary>Lowercase hex SHA-256 of the bot token. The
-    /// cleartext is never persisted; the default
-    /// <c>HttpSlackNotificationService</c> reads it from
-    /// configuration.</summary>
-    public string BotTokenHash { get; private set; } = string.Empty;
+    /// <summary>Data Protection ciphertext of the bot token.</summary>
+    public string ProtectedBotToken { get; private set; } = string.Empty;
 
     /// <summary>UTC timestamp of the last successful API call,
     /// or <c>null</c> if no call has succeeded yet.</summary>
@@ -43,14 +38,14 @@ public sealed class SlackWorkspace : AggregateRoot<SlackWorkspaceId>
         WorkspaceId workspaceId,
         string teamId,
         string teamName,
-        string botTokenHash,
+        string protectedBotToken,
         DateTimeOffset at)
     {
         Id = id;
         WorkspaceId = workspaceId;
         TeamId = teamId;
         TeamName = teamName;
-        BotTokenHash = botTokenHash;
+        ProtectedBotToken = protectedBotToken;
         Active = true;
         CreatedAt = at;
     }
@@ -60,7 +55,7 @@ public sealed class SlackWorkspace : AggregateRoot<SlackWorkspaceId>
         WorkspaceId workspaceId,
         string teamId,
         string teamName,
-        string botTokenHash,
+        string protectedBotToken,
         DateTimeOffset at)
     {
         if (string.IsNullOrWhiteSpace(teamId))
@@ -87,16 +82,16 @@ public sealed class SlackWorkspace : AggregateRoot<SlackWorkspaceId>
                 "slack.team_name_too_long", "Slack team name must be 200 characters or fewer."));
         }
 
-        if (string.IsNullOrWhiteSpace(botTokenHash) || botTokenHash.Length != 64)
+        if (string.IsNullOrWhiteSpace(protectedBotToken) || protectedBotToken.Length > 2048)
         {
             return Result.Failure<SlackWorkspace>(DomainError.Validation(
-                "slack.bot_token_hash_invalid",
-                "Slack bot token hash must be a 64-character lowercase hex SHA-256 digest."));
+                "slack.bot_token_protected_invalid",
+                "Protected Slack bot token is invalid."));
         }
 
         return Result.Success(new SlackWorkspace(
             id, workspaceId, teamId.Trim(), teamName.Trim(),
-            botTokenHash.ToLowerInvariant(), at));
+            protectedBotToken, at));
     }
 
     /// <summary>Records a successful outbound call. Idempotent.</summary>
@@ -140,11 +135,11 @@ public sealed class SlackWorkspace : AggregateRoot<SlackWorkspaceId>
     public Result Reconnect(
         string teamId,
         string teamName,
-        string botTokenHash,
+        string protectedBotToken,
         DateTimeOffset at)
     {
         Result<SlackWorkspace> candidate = Connect(
-            Id, WorkspaceId, teamId, teamName, botTokenHash, at);
+            Id, WorkspaceId, teamId, teamName, protectedBotToken, at);
         if (candidate.IsFailure)
         {
             return Result.Failure(candidate.Error);
@@ -152,7 +147,7 @@ public sealed class SlackWorkspace : AggregateRoot<SlackWorkspaceId>
 
         TeamId = candidate.Value.TeamId;
         TeamName = candidate.Value.TeamName;
-        BotTokenHash = candidate.Value.BotTokenHash;
+        ProtectedBotToken = candidate.Value.ProtectedBotToken;
         Active = true;
         UpdatedAt = at;
         return Result.Success();

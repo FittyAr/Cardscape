@@ -294,3 +294,11 @@
 - [x] Revalidate SSRF at fetch time and cap streamed metadata at 1 MiB.
 - [x] Run focused tests and assertion/gap review.
 - [x] Run full validation and update modernization evidence; commit and push pending.
+# Slack per-workspace credential repair (2026-08-14)
+
+- [x] Trace connect, persistence, DTO and outbound notification paths.
+- [x] Replace token hash/global configuration split with protected per-workspace token.
+- [x] Remove token prefix from Application/Web/UI contracts.
+- [x] Update consolidated schema and Seeder.
+- [x] Add and run focused outbound/persistence/reconnect regressions.
+- [x] Complete assertion/gap review, full validation and plan evidence; commit and push pending.

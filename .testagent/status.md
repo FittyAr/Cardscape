@@ -374,3 +374,11 @@
 - Focused evidence: bounded-reader unit tests 3/3 and all SAML integrations 9/9.
 - Pseudo-mutation/assertion review: regressions kill removal of either declared-length or streamed-length checks and detect re-enabled redirects. Assertions cover exact successful content, absent length, exception type/message and concrete primary-handler state.
 - Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 866 passed / 0 failed / 1 skipped.
+# Slack per-workspace credential repair (2026-08-14)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Tenant invariant: every Slack notification authenticates with the protected credential stored on the selected Slack workspace.
+- Compatibility policy: global `Integrations:Slack:BotToken`, `BotTokenHash` and public `BotTokenPrefix` behavior are removed.
+- Focused evidence: HTTP service 1/1 and Slack integration slice 8/8.
+- Pseudo-mutation/assertion review: regressions fail if ciphertext is unchanged/plaintext/non-decryptable, reconnect does not rotate it, invalid reconnect mutates it, or delivery uses any credential other than the workspace token. Assertions span persistence inequalities, decrypt round-trip, exact Bearer header/URI and domain success.
+- Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 867 passed / 0 failed / 1 skipped.

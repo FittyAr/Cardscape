@@ -1,6 +1,5 @@
-using System.Security.Cryptography;
-using System.Text;
 using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Integrations.Slack.DTOs;
@@ -28,6 +27,7 @@ public static class ConnectSlackWorkspaceCommandHandler
         IWorkspaceRepository workspaceRepo,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
+        ISecretProtector secretProtector,
         IClock clock,
         CancellationToken ct)
     {
@@ -60,7 +60,7 @@ public static class ConnectSlackWorkspaceCommandHandler
         SlackWorkspace? existing =
             await workspaces.FindForWorkspaceAsync(new WorkspaceId(command.WorkspaceId), ct);
 
-        string tokenHash = HashToken(command.BotToken);
+        string protectedToken = secretProtector.Protect(command.BotToken);
 
         SlackWorkspace entity;
         if (existing is null)
@@ -70,7 +70,7 @@ public static class ConnectSlackWorkspaceCommandHandler
                 new WorkspaceId(command.WorkspaceId),
                 command.TeamId,
                 command.TeamName,
-                tokenHash,
+                protectedToken,
                 clock.UtcNow);
             if (creation.IsFailure)
             {
@@ -83,7 +83,7 @@ public static class ConnectSlackWorkspaceCommandHandler
         else
         {
             Result reconnect = existing.Reconnect(
-                command.TeamId, command.TeamName, tokenHash, clock.UtcNow);
+                command.TeamId, command.TeamName, protectedToken, clock.UtcNow);
             if (reconnect.IsFailure)
             {
                 return Result.Failure<SlackWorkspaceDto>(reconnect.Error);
@@ -95,12 +95,6 @@ public static class ConnectSlackWorkspaceCommandHandler
         return Result.Success(SlackWorkspaceDto.FromEntity(entity));
     }
 
-    private static string HashToken(string cleartext)
-    {
-        Span<byte> hash = stackalloc byte[32];
-        SHA256.HashData(Encoding.UTF8.GetBytes(cleartext), hash);
-        return Convert.ToHexString(hash).ToLowerInvariant();
-    }
 }
 
 // ── Link a board to a Slack channel ─────────────────────────────

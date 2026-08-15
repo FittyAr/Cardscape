@@ -4,14 +4,12 @@ namespace Cardscape.Application.Integrations.Slack.DTOs;
 
 /// <summary>Compact projection of a <see cref="SlackWorkspace"/>
 /// for the API / MCP / Web layers. The bot token is never
-/// included in the projection — only its first 8 hex chars as
-/// a stable identifier the UI can display.</summary>
+/// included in the projection.</summary>
 public sealed record SlackWorkspaceDto(
     Guid Id,
     Guid WorkspaceId,
     string TeamId,
     string TeamName,
-    string BotTokenPrefix,
     DateTimeOffset? LastUsedAt,
     bool Active,
     DateTimeOffset CreatedAt)
@@ -21,7 +19,6 @@ public sealed record SlackWorkspaceDto(
         w.WorkspaceId.Value,
         w.TeamId,
         w.TeamName,
-        BotTokenPrefix: w.BotTokenHash[..Math.Min(8, w.BotTokenHash.Length)],
         LastUsedAt: w.LastUsedAt,
         Active: w.Active,
         CreatedAt: w.CreatedAt);

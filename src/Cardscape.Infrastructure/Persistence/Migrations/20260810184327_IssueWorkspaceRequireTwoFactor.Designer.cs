@@ -1717,9 +1717,9 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("BotTokenHash")
+                    b.Property<string>("ProtectedBotToken")
                         .IsRequired()
-                        .HasMaxLength(64)
+                        .HasMaxLength(2048)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")

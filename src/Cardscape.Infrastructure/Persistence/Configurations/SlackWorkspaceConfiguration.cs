@@ -20,7 +20,7 @@ public sealed class SlackWorkspaceConfiguration : IEntityTypeConfiguration<Slack
 
         b.Property(x => x.TeamId).HasMaxLength(32).IsRequired();
         b.Property(x => x.TeamName).HasMaxLength(200).IsRequired();
-        b.Property(x => x.BotTokenHash).HasMaxLength(64).IsRequired();
+        b.Property(x => x.ProtectedBotToken).HasMaxLength(2048).IsRequired();
         b.Property(x => x.LastUsedAt);
         b.Property(x => x.Active).IsRequired();
 

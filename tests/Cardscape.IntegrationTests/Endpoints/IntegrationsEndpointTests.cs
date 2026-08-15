@@ -1,10 +1,12 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text;
+using Cardscape.Application.Abstractions.Authentication;
+using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.Integrations.GoogleCalendar;
+using Cardscape.Domain.Workspaces;
 using Cardscape.IntegrationTests.Fixtures;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
@@ -206,14 +208,17 @@ public sealed class IntegrationsEndpointTests
 
         SlackWorkspaceDto first = await ConnectSlackAsync(
             owner, workspaceId, "T-FIRST", "First Team", firstToken);
+        string firstProtectedToken = await ReadProtectedSlackTokenAsync(workspaceId);
         SlackWorkspaceDto second = await ConnectSlackAsync(
             owner, workspaceId, "T-SECOND", "Second Team", secondToken);
 
         second.Id.Should().Be(first.Id);
         second.TeamId.Should().Be("T-SECOND");
         second.TeamName.Should().Be("Second Team");
-        second.BotTokenPrefix.Should().Be(HashPrefix(secondToken));
-        second.BotTokenPrefix.Should().NotBe(first.BotTokenPrefix);
+        string secondProtectedToken = await ReadProtectedSlackTokenAsync(workspaceId);
+        secondProtectedToken.Should().NotBe(firstProtectedToken);
+        secondProtectedToken.Should().NotBe(secondToken);
+        Unprotect(secondProtectedToken).Should().Be(secondToken);
         second.Active.Should().BeTrue();
     }
 
@@ -224,6 +229,7 @@ public sealed class IntegrationsEndpointTests
         Guid workspaceId = await CreateWorkspaceAsync(owner, "slack-invalid-reconnect");
         SlackWorkspaceDto original = await ConnectSlackAsync(
             owner, workspaceId, "T-ORIGINAL", "Original Team", "xoxb-original-token");
+        string originalProtectedToken = await ReadProtectedSlackTokenAsync(workspaceId);
 
         HttpResponseMessage invalid = await owner.PostAsJsonAsync(
             $"api/workspaces/{workspaceId}/integrations/slack/connect",
@@ -238,7 +244,7 @@ public sealed class IntegrationsEndpointTests
         unchanged.Id.Should().Be(original.Id);
         unchanged.TeamId.Should().Be(original.TeamId);
         unchanged.TeamName.Should().Be(original.TeamName);
-        unchanged.BotTokenPrefix.Should().Be(original.BotTokenPrefix);
+        (await ReadProtectedSlackTokenAsync(workspaceId)).Should().Be(originalProtectedToken);
         unchanged.Active.Should().BeTrue();
     }
 
@@ -631,9 +637,22 @@ public sealed class IntegrationsEndpointTests
             TestJson.Options, TestContext.Current.CancellationToken))!;
     }
 
-    private static string HashPrefix(string token) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)))
-            .ToLowerInvariant()[..8];
+    private async Task<string> ReadProtectedSlackTokenAsync(Guid workspaceId)
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        var repository = scope.ServiceProvider.GetRequiredService<ISlackWorkspaceRepository>();
+        var entity = await repository.FindForWorkspaceAsync(
+            new WorkspaceId(workspaceId), TestContext.Current.CancellationToken);
+        entity.Should().NotBeNull();
+        return entity!.ProtectedBotToken;
+    }
+
+    private string Unprotect(string protectedToken)
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        return scope.ServiceProvider.GetRequiredService<ISecretProtector>()
+            .Unprotect(protectedToken);
+    }
 
     private static async Task<Guid> CreateWorkspaceAsync(HttpClient client, string name)
     {
@@ -672,7 +691,6 @@ public sealed class IntegrationsEndpointTests
         Guid WorkspaceId,
         string TeamId,
         string TeamName,
-        string BotTokenPrefix,
         bool Active);
     private sealed record SlackChannelDto(
         Guid Id,

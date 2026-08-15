@@ -272,7 +272,6 @@
   <data name="SlackTeamId" xml:space="preserve"><value>Team id</value></data>
   <data name="SlackTeamName" xml:space="preserve"><value>Team name</value></data>
   <data name="SlackBotToken" xml:space="preserve"><value>Bot token (xoxb-…)</value></data>
-  <data name="SlackBotTokenPrefix" xml:space="preserve"><value>Prefijo del token</value></data>
   <data name="SlackLastUsed" xml:space="preserve"><value>Último uso</value></data>
   <data name="SlackConnectedAs" xml:space="preserve"><value>Conectado como</value></data>
   <data name="SlackDisconnect" xml:space="preserve"><value>Refrescar</value></data>

@@ -316,7 +316,7 @@ not yet implemented.
 - New `ISlackNotificationService` in Application with a
   default HTTP implementation posting to
   `https://slack.com/api/chat.postMessage` with the bot token
-  from `Integrations:Slack:BotToken`.
+  from the Data Protection ciphertext owned by each Slack workspace.
 - DI registration (✅ done — G1): repositories are scoped;
   `HttpSlackNotificationService` is wired with `AddHttpClient`
   against `https://slack.com/api/`.

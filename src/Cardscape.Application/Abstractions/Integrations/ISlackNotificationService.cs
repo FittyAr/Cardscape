@@ -7,8 +7,7 @@ namespace Cardscape.Application.Abstractions.Integrations;
 /// Sends a notification to a single Slack channel. The default
 /// implementation is an HTTP client that POSTs to
 /// <c>https://slack.com/api/chat.postMessage</c> with a bot token
-/// sourced from configuration
-/// (<c>Integrations:Slack:BotToken</c>). Other implementations can
+/// protected on the supplied workspace. Other implementations can
 /// route to a queue, a no-op logger, or a fake in tests.
 /// </summary>
 public interface ISlackNotificationService

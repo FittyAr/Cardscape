@@ -808,7 +808,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     WorkspaceId = table.Column<Guid>(type: "TEXT", nullable: false),
                     TeamId = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     TeamName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    BotTokenHash = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    ProtectedBotToken = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: false),
                     LastUsedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     Active = table.Column<bool>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),

@@ -516,9 +516,8 @@ public static class InfrastructureServiceCollectionExtensions
         // DI. Repositories are scoped (EF Core DbContext);
         // HttpSlackNotificationService is registered via
         // AddHttpClient so the typed HttpClient lifetime is
-        // managed by the factory and the bearer token
-        // configured at construction (Integrations:Slack:BotToken)
-        // lives for the lifetime of the instance.
+        // managed by the factory. Each request decrypts the
+        // credential owned by its Slack workspace.
         services.AddScoped<ISlackWorkspaceRepository, SlackWorkspaceRepository>();
         services.AddScoped<ISlackChannelRepository, SlackChannelRepository>();
         services.AddHttpClient<ISlackNotificationService, HttpSlackNotificationService>(client =>

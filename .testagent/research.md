@@ -437,3 +437,10 @@
 - Decision: use a named factory client with redirects disabled and 10-second timeout, revalidate SSRF immediately before the request, stream at most 1 MiB and remove file-system compatibility code.
 - Acceptance: no direct HttpClient construction or file URL path remains; redirect configuration and bounded reading have regressions; full build and suite pass.
 - Result: acceptance satisfied. Focused tests pass 12/12 across unit and the full SAML integration slice; complete suite passes 866 executed tests with one unrelated diagnostic skip.
+# Slack per-workspace credential repair (2026-08-14)
+
+- Targets: Slack aggregate/schema, connect/reconnect command, notification client, DTOs, Radzen page, Seeder and regressions.
+- Critical finding: connect accepted a token per workspace but persisted only SHA-256; outbound delivery ignored it and authenticated every tenant with one global `Integrations:Slack:BotToken` value.
+- Decision: persist Data Protection ciphertext per Slack workspace, decrypt only for its outbound request, remove the meaningless hash prefix from contracts/UI and delete the global-token behavior.
+- Acceptance: reconnect rotates decryptable ciphertext; database does not contain cleartext; outgoing Bearer header uses the supplied workspace credential; focused/full tests pass.
+- Result: acceptance satisfied. Focused tests pass 9/9 and the complete suite passes 867 executed tests with one unrelated diagnostic skip.
