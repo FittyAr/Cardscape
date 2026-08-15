@@ -452,7 +452,6 @@ public static class InfrastructureServiceCollectionExtensions
         // through the standard UnitOfWork pipeline.
         services.AddScoped<IImportService, KanbanImportService>();
         services.AddSingleton<IEmailService, ConsoleEmailService>();
-        services.AddSingleton<IInvitationEmailService, ConsoleInvitationEmailService>();
         services.AddSingleton<ISearchIndex, InMemorySearchIndex>();
 
         // AI provider (Cardscape AI). The choice is configuration-driven:

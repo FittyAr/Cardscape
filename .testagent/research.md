@@ -473,3 +473,10 @@
 - Decision: delete the sink, options and configuration completely. Console, rolling compact JSON files and OTLP remain the supported observable paths.
 - Acceptance: no runtime/config reference remains; architecture rejects reintroduced placeholder sink types; build/full suite pass.
 - Result: acceptance satisfied. Architecture passes 20/20 and complete suite passes 872 executed tests with one unrelated diagnostic skip.
+# Remove simulated invitation email transport (2026-08-15)
+
+- Targets: invitation command, email abstraction/adapter, DI, UI delivery contract and architecture coverage.
+- Critical finding: the registered "email" adapter never delivered mail; it logged the complete invitation URL including the one-time bearer token at Information, propagating it to file and OTLP sinks.
+- Decision: delete the invitation-email port and console adapter. The existing issuance response remains the single real delivery contract and the Radzen UI displays the token once for explicit secure sharing.
+- Acceptance: no token is logged or passed to a fake transport; issuance/acceptance tests and full suite pass; architecture prevents reintroduction.
+- Result: acceptance satisfied. Invitation tests pass 6/6, architecture 21/21 and complete suite 873 executed tests with one unrelated diagnostic skip.

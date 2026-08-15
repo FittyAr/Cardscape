@@ -1,5 +1,4 @@
 using Cardscape.Application.Abstractions;
-using Cardscape.Application.Abstractions.Email;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Common;
@@ -11,7 +10,7 @@ namespace Cardscape.Application.Workspaces.Commands;
 /// <summary>
 /// Owner-only: mint a new invitation to a workspace. The cleartext
 /// token is returned exactly once in <see cref="WorkspaceInvitationIssuanceDto"/>
-/// and handed to <see cref="IInvitationEmailService"/> for delivery.
+/// so the owner can deliver it through their chosen channel.
 /// The server only ever persists the SHA-256 hash + 10-char prefix.
 /// </summary>
 public sealed record IssueWorkspaceInvitationCommand(
@@ -27,7 +26,6 @@ public static class IssueWorkspaceInvitationCommandHandler
         IInvitationService invitations,
         IWorkspaceRepository workspaces,
         ICurrentUser currentUser,
-        IInvitationEmailService email,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -71,12 +69,6 @@ public static class IssueWorkspaceInvitationCommandHandler
             currentUser.Id.Value,
             command.Lifetime,
             cancellationToken);
-
-        await email.SendAsync(
-            toEmail: command.Email,
-            workspaceName: workspace.Name.Value,
-            cleartextToken: issuance.CleartextToken,
-            ct: cancellationToken);
 
         return Result.Success(new WorkspaceInvitationIssuanceDto(
             issuance.Id.Value,

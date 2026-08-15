@@ -414,3 +414,11 @@
 - Focused evidence: placeholder-sink architecture regression 1/1; architecture suite 20/20.
 - Assertion/gap review: the regression fails if either deleted type returns; exhaustive runtime/config search has no active references. Historical changelog mention is intentionally preserved.
 - Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 872 passed / 0 failed / 1 skipped.
+# Remove simulated invitation email transport (2026-08-15)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Secret invariant: invitation cleartext exists only in the issuance response and is never written to logs.
+- Product truth: Cardscape exposes one-time manual delivery in Radzen; it no longer claims to send email without a provider.
+- Focused evidence: architecture regression 1/1; invitation integration slice 6/6; architecture suite 21/21.
+- Assertion/gap review: the rule fails if either deleted port/adapter returns, while integration covers issue/list/accept/revoke behavior. Source search confirms no remaining invitation-email transport reference.
+- Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 873 passed / 0 failed / 1 skipped.

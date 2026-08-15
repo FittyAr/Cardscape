@@ -333,3 +333,10 @@
 - [x] Remove `Serilog:Database` from API configuration and normative docs.
 - [x] Add architecture regression prohibiting the placeholder types.
 - [x] Run focused/full validation and update modernization evidence; commit and push pending.
+# Remove simulated invitation email transport (2026-08-15)
+
+- [x] Trace invitation issuance, delivery adapter, DI and Radzen one-time token UI.
+- [x] Delete `IInvitationEmailService` and `ConsoleInvitationEmailService`.
+- [x] Remove fake delivery from the command and registration.
+- [x] Add architecture regression prohibiting the simulated transport.
+- [x] Run invitation/full validation and update modernization evidence; commit and push pending.
