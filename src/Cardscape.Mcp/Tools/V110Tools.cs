@@ -68,8 +68,10 @@ public sealed class V110Tools
 
     // ── Card Mirror (P3.3) ───────────────────────────────
     [McpServerTool(Name = "cards_mirror_to")]
-    public Task<Result> MirrorTo(Guid cardId, Guid targetListId, IMessageBus bus, CancellationToken ct) =>
-        bus.InvokeAsync<Result>(new MirrorCardCommand(cardId, targetListId), ct);
+    public Task<Result<CardscapeExtensions.MirrorCardResult>> MirrorTo(
+        Guid cardId, Guid targetListId, IMessageBus bus, CancellationToken ct) =>
+        bus.InvokeAsync<Result<CardscapeExtensions.MirrorCardResult>>(
+            new CardscapeExtensions.MirrorCardCommand(cardId, targetListId), ct);
 
     // ── List Limits (P3.4) ───────────────────────────────
     [McpServerTool(Name = "lists_set_limit")]

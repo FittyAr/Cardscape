@@ -73,7 +73,7 @@ Reglas permanentes:
 - [x] Generar el grafo efectivo de referencias entre proyectos y reforzar sus invariantes con architecture tests.
 - [ ] Revisar ubicación y dependencia de cada abstracción; Domain no debe depender de frameworks y Application sólo de Domain/abstracciones necesarias.
 - [x] Auditar composición DI de API, MCP y Seeder: lifetimes, duplicación, validación al arranque y opciones tipadas.
-- [ ] Revisar boundaries y vertical slices; dividir archivos monolíticos por caso de uso sin crear capas adicionales.
+- [ ] Revisar boundaries y vertical slices; dividir archivos monolíticos por caso de uso sin crear capas adicionales. El mirror de tarjetas ya tiene un único comando canónico compartido por REST/MCP; se eliminó el handler stub que no creaba la tarjeta destino.
 - [ ] Revisar el rol del SDK público y evitar duplicación de contratos con Web/API.
 - [ ] Alinear solución, Docker, CI, scripts y documentación con el mismo conjunto de proyectos.
 - [x] Reconciliar documentación normativa con Wolverine, .NET 10 y versiones instaladas.
@@ -164,6 +164,7 @@ Reglas permanentes:
 | 2026-08-14 | Credencial Slack por workspace | Reemplazado hash no utilizable + token global por ciphertext Data Protection por tenant; envío usa sólo la credencial del workspace y DTO/UI no revelan prefijos | Build 0/0; suite 867 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-14 | Límite HTTP Google Calendar | OAuth y Calendar sin redirects, timeouts explícitos, JSON limitado a 1 MiB, errores a 4 KiB y sin reflejar cuerpos OAuth | Build 0/0; suite 869 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-14 | Mapping persistente Google Calendar | Eliminado lookup placeholder; mapping card-event por conexión permite create/update/delete reales y usa reloj inyectado | Build 0/0; suite 870 pass, 0 fail, 1 skip | Incluido en este commit |
+| 2026-08-15 | Comando canónico de card mirror | Eliminado handler duplicado pointer-only; REST/MCP comparten creación real de Card + CardMirror y regla arquitectónica evita regresión | Suite 871 pass, 0 fail, 1 skip | Incluido en este commit |
 
 ## 5. Criterio de completitud
 

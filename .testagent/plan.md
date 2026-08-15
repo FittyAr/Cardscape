@@ -318,3 +318,11 @@
 - [x] Replace global time with `IClock` and update consolidated schema.
 - [x] Add/run focused mapping and Google Calendar regressions.
 - [x] Run full validation and update modernization evidence; commit and push pending.
+# Canonical card mirror command (2026-08-15)
+
+- [x] Trace REST, MCP and both same-named handlers.
+- [x] Delete the pointer-only mirror stub without compatibility alias.
+- [x] Route MCP to the canonical card-creating command and typed result.
+- [x] Remove obsolete disambiguation commentary.
+- [x] Add/run architecture regression for a single canonical command.
+- [x] Run mirror/full validation and update modernization evidence; commit and push pending.

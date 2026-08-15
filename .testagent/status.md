@@ -397,3 +397,12 @@
 - Focused evidence: mapping domain regression 1/1 and Google Calendar integrations 6/6.
 - Assertion/gap review: the regression kills missing replace/remove behavior and cross-card corruption; source search proves the always-null placeholder is gone. Existing sync-handler tests retain fan-out/success/error coverage.
 - Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 870 passed / 0 failed / 1 skipped.
+# Canonical card mirror command (2026-08-15)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Contract invariant: REST and MCP invoke the same command that atomically creates the mirrored Card and CardMirror pointer.
+- Compatibility policy: the duplicate pointer-only command and its untyped MCP result are deleted.
+- Focused evidence: architecture regression 1/1.
+- Behavioral evidence: mirror integration slice 5/5 and MCP-inclusive E2E 7/7.
+- Assertion/gap review: the architecture test fails on any second same-named command and asserts its declaring canonical type; existing integration asserts a distinct persisted target card and pointer behavior.
+- Final evidence: formatter clean; complete suite 871 passed / 0 failed / 1 skipped.

@@ -459,3 +459,10 @@
 - Decision: persist a card-to-event map on each per-user connection, protected by the aggregate row version; POST creates and records, PUT reuses, DELETE/404 removes. Use `IClock` for mutations.
 - Acceptance: no placeholder remains; mappings create/replace/remove independently per card; consolidated schema and full suite pass.
 - Result: acceptance satisfied. Focused tests pass 7/7 and the complete suite passes 870 executed tests with one unrelated diagnostic skip.
+# Canonical card mirror command (2026-08-15)
+
+- Targets: duplicate Application commands, REST alias, MCP tool and architecture coverage.
+- Critical finding: REST used the real command that creates a target Card plus CardMirror, while MCP resolved a same-named stub that attempted a self-mirror pointer and never provisioned the target card.
+- Decision: delete the duplicate command/handler entirely and route MCP to `CardscapeExtensions.MirrorCardCommand`, including its typed result. Keep one public contract only.
+- Acceptance: Application contains exactly one `MirrorCardCommand`; REST/MCP compile against it; existing mirror integration and complete suite pass.
+- Result: acceptance satisfied. Search reports one command; architecture 1/1, mirror 5/5, E2E 7/7 and complete suite 871 executed tests pass with one unrelated diagnostic skip.

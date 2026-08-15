@@ -7,14 +7,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Wolverine;
-// G6c — disambiguate the two `MirrorCardCommand` records that live
-// in the `Cardscape.Application.Cards` namespace (the real one in
-// `CardscapeExtensions` that provisions a new `Card` row + a
-// `CardMirror` pointer, and the stub in `AdditionalCardCommands`
-// that the MCP tool also happens to compile against). We bind the
-// canonical one explicitly so the HTTP endpoint and the MCP tool
-// agree on the same shape. The matching `MirrorCardResult` is
-// nested inside the same static class.
+// The single mirror command provisions both the new Card row and
+// its CardMirror pointer. REST and MCP share this exact contract.
 using MirrorCmd = Cardscape.Application.Cards.CardscapeExtensions.MirrorCardCommand;
 using MirrorResult = Cardscape.Application.Cards.CardscapeExtensions.MirrorCardResult;
 // G6b — disambiguate the snooze commands that live inside the

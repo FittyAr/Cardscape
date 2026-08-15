@@ -14,6 +14,18 @@ namespace Cardscape.ArchitectureTests;
 /// </summary>
 public sealed class ArchitectureTests
 {
+    [Fact]
+    public void Application_HasSingleCanonicalMirrorCardCommand()
+    {
+        Type[] commands = typeof(Cardscape.Application.Cards.CardscapeExtensions)
+            .Assembly.GetTypes()
+            .Where(type => type.Name == "MirrorCardCommand")
+            .ToArray();
+
+        commands.Should().ContainSingle()
+            .Which.DeclaringType.Should().Be(typeof(Cardscape.Application.Cards.CardscapeExtensions));
+    }
+
     private const string Domain = "Cardscape.Domain";
     private const string Application = "Cardscape.Application";
     private const string Infrastructure = "Cardscape.Infrastructure";
