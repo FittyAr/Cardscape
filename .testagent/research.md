@@ -430,3 +430,10 @@
 - Decision: protect the cleartext secret with existing Data Protection, unprotect only at delivery, HMAC with the actual cleartext, remove the meaningless stored prefix from public DTOs, use a named client with redirects disabled, `ResponseHeadersRead`, and bounded error-body reads.
 - Acceptance: database model contains only `ProtectedSecret`; known-vector signature uses cleartext; HTTP handler configuration forbids redirects; focused and full tests pass.
 - Result: acceptance satisfied. The consolidated schema and model snapshot use `ProtectedSecret` with ciphertext capacity; focused tests pass 3/3 and the full suite passes 862 executed tests with one unrelated diagnostic skip.
+# SAML metadata HTTP boundary hardening (2026-08-14)
+
+- Targets: per-workspace SAML handler, authentication DI, metadata fetch contract and focused tests.
+- Finding: request-time metadata download used `new HttpClient()`, followed redirects, buffered without a size limit and retained an unreachable `file://` branch despite configuration accepting only HTTP(S).
+- Decision: use a named factory client with redirects disabled and 10-second timeout, revalidate SSRF immediately before the request, stream at most 1 MiB and remove file-system compatibility code.
+- Acceptance: no direct HttpClient construction or file URL path remains; redirect configuration and bounded reading have regressions; full build and suite pass.
+- Result: acceptance satisfied. Focused tests pass 12/12 across unit and the full SAML integration slice; complete suite passes 866 executed tests with one unrelated diagnostic skip.

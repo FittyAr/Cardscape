@@ -286,3 +286,11 @@
 - [x] Inject a redirect-disabled named HTTP client and bound error reads.
 - [x] Update consolidated schema and add focused security regressions.
 - [x] Run focused/full validation and update plan; commit and push pending.
+# SAML metadata HTTP boundary hardening (2026-08-14)
+
+- [x] Trace configuration validation and request-time metadata loading.
+- [x] Remove the unreachable file URL compatibility path.
+- [x] Replace direct HttpClient construction with a named, redirect-disabled client.
+- [x] Revalidate SSRF at fetch time and cap streamed metadata at 1 MiB.
+- [x] Run focused tests and assertion/gap review.
+- [x] Run full validation and update modernization evidence; commit and push pending.

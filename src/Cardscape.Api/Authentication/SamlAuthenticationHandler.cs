@@ -8,6 +8,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Webhooks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -44,6 +45,8 @@ public sealed class SamlAuthenticationHandler
 {
     public const string SchemeName = "Saml";
     public const string SamlCallbackPath = "/saml/callback";
+    public const string MetadataHttpClientName = "SamlMetadata";
+    internal const int MaxMetadataBytes = 1024 * 1024;
 
     private readonly ISamlConnectionRepository _connections;
     private readonly IExternalLoginService _externalLogins;
@@ -51,6 +54,7 @@ public sealed class SamlAuthenticationHandler
     private readonly IUserRepository _users;
     private readonly IClock _clock;
     private readonly IConfiguration _configuration;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public SamlAuthenticationHandler(
         IOptionsMonitor<Saml2Options> options,
@@ -61,7 +65,8 @@ public sealed class SamlAuthenticationHandler
         ITokenService tokens,
         IUserRepository users,
         IClock clock,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHttpClientFactory httpClientFactory)
         : base(options, logger, encoder)
     {
         _connections = connections;
@@ -70,6 +75,7 @@ public sealed class SamlAuthenticationHandler
         _users = users;
         _clock = clock;
         _configuration = configuration;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<bool> HandleRequestAsync()
@@ -313,12 +319,6 @@ public sealed class SamlAuthenticationHandler
             // collect today. Rather than push the operator
             // through that contract, we fetch the URL
             // ourselves and run the same inline parser.
-            // HttpClient does not support file://, so we
-            // branch on the scheme: file:// is read
-            // directly; everything else goes through
-            // HttpClient. This is the MVP path: future work
-            // should switch to LoadMetadata once the
-            // admin UI exposes the signing cert upload.
             try
             {
                 string metadataXml = await ReadMetadataFromLocation(connection.IdpMetadataUrl);
@@ -377,16 +377,56 @@ public sealed class SamlAuthenticationHandler
         }
     }
 
-    private static async Task<string> ReadMetadataFromLocation(string location)
+    private async Task<string> ReadMetadataFromLocation(string location)
     {
-        if (Uri.TryCreate(location, UriKind.Absolute, out var uri)
-            && uri.Scheme == Uri.UriSchemeFile)
+        if (!Uri.TryCreate(location, UriKind.Absolute, out Uri? uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
-            return await System.IO.File.ReadAllTextAsync(uri.LocalPath).ConfigureAwait(false);
+            throw new InvalidOperationException("SAML metadata URL must be absolute HTTP(S).");
         }
 
-        using var http = new HttpClient();
-        return await http.GetStringAsync(location).ConfigureAwait(false);
+        Result addressCheck = WebhookUrlValidator.ValidateNotInternalHost(uri);
+        if (addressCheck.IsFailure)
+        {
+            throw new InvalidOperationException(addressCheck.Error.Message);
+        }
+
+        HttpClient http = _httpClientFactory.CreateClient(MetadataHttpClientName);
+        using HttpResponseMessage response = await http.GetAsync(
+            uri, HttpCompletionOption.ResponseHeadersRead, Context.RequestAborted);
+        response.EnsureSuccessStatusCode();
+        return await ReadMetadataResponseAsync(response, Context.RequestAborted);
+    }
+
+    internal static async Task<string> ReadMetadataResponseAsync(
+        HttpResponseMessage response,
+        CancellationToken ct)
+    {
+        if (response.Content.Headers.ContentLength > MaxMetadataBytes)
+        {
+            throw new InvalidOperationException("SAML metadata exceeds the 1 MiB limit.");
+        }
+
+        await using Stream source = await response.Content.ReadAsStreamAsync(ct);
+        using var buffer = new MemoryStream();
+        byte[] chunk = new byte[16 * 1024];
+        while (true)
+        {
+            int count = await source.ReadAsync(chunk, ct);
+            if (count == 0)
+            {
+                break;
+            }
+
+            if (buffer.Length + count > MaxMetadataBytes)
+            {
+                throw new InvalidOperationException("SAML metadata exceeds the 1 MiB limit.");
+            }
+
+            buffer.Write(chunk, 0, count);
+        }
+
+        return Encoding.UTF8.GetString(buffer.GetBuffer(), 0, checked((int)buffer.Length));
     }
 
     private Saml2HttpRequestData BuildRequestData()

@@ -57,6 +57,14 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        services.AddHttpClient(SamlAuthenticationHandler.MetadataHttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false
+        });
+
         // The signing key is non-negotiable. A hard-coded fallback
         // (the previous behaviour) is a critical security risk: if
         // the operator forgets to set Jwt:SigningKey in production

@@ -366,3 +366,11 @@
 - Pseudo-mutation/assertion review: the tests fail if signing reuses the persisted hash, if storage becomes cleartext/hash/non-decryptable, or if automatic redirects return. Assertions cover exact cryptographic equality, protected-state inequalities, round-trip equality and concrete handler configuration.
 - Analysis extension limitation: `extensions/dotnet.md` referenced by the selected skill is absent from the local package; xUnit/FluentAssertions classification was performed inline.
 - Final evidence: formatter completed; Release build 0 warnings / 0 errors; complete suite 862 passed / 0 failed / 1 skipped.
+# SAML metadata HTTP boundary hardening (2026-08-14)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Security invariant: persisted metadata URLs are revalidated immediately before a bounded, non-redirecting outbound request.
+- Compatibility policy: `file://` metadata loading is deleted because configuration only admits absolute HTTP(S) URLs.
+- Focused evidence: bounded-reader unit tests 3/3 and all SAML integrations 9/9.
+- Pseudo-mutation/assertion review: regressions kill removal of either declared-length or streamed-length checks and detect re-enabled redirects. Assertions cover exact successful content, absent length, exception type/message and concrete primary-handler state.
+- Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 866 passed / 0 failed / 1 skipped.
