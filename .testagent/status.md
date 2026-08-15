@@ -355,3 +355,14 @@
 - Search evidence: case-insensitive `--hidden --no-ignore` scan reports 0 textual matches outside build outputs; recursive filename scan reports 0 matches. `.git` history is intentionally not rewritten.
 - Schema evidence: the owned format uses `description`, `listId`, `labelIds`, `memberIds` and `dueDate`; the focused `KanbanImportFidelityTests` passes 2/2.
 - Full validation: formatter clean; suite 859 passed / 0 failed / 1 skipped.
+# Webhook secret and outbound HTTP hardening (2026-08-14)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Security invariant: persisted database material must not be sufficient to forge a webhook signature.
+- Network invariant: delivery never follows redirects and never buffers an unbounded response body.
+- Implementation: Data Protection ciphertext is persisted; delivery unprotects it only when signing with the actual shared secret. Public webhook DTOs no longer expose a database-derived prefix.
+- HTTP boundary: a named client disables redirects, streams response headers first and reads at most 4 KiB from an error body.
+- Focused evidence: signature vector 1/1 and real-host security regressions 2/2.
+- Pseudo-mutation/assertion review: the tests fail if signing reuses the persisted hash, if storage becomes cleartext/hash/non-decryptable, or if automatic redirects return. Assertions cover exact cryptographic equality, protected-state inequalities, round-trip equality and concrete handler configuration.
+- Analysis extension limitation: `extensions/dotnet.md` referenced by the selected skill is absent from the local package; xUnit/FluentAssertions classification was performed inline.
+- Final evidence: formatter completed; Release build 0 warnings / 0 errors; complete suite 862 passed / 0 failed / 1 skipped.

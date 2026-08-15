@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Boards;
@@ -24,7 +24,6 @@ public sealed record WebhookEndpointDto(
     Guid Id,
     Guid BoardId,
     string Url,
-    string SecretPrefix,
     IReadOnlyList<string> Events,
     bool Active,
     DateTimeOffset CreatedAt)
@@ -33,7 +32,6 @@ public sealed record WebhookEndpointDto(
         e.Id.Value,
         e.BoardId.Value,
         e.Url,
-        SecretPrefix: e.SecretHash[..Math.Min(8, e.SecretHash.Length)],
         Events: e.Events
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .ToList(),
@@ -82,6 +80,7 @@ public static class CreateWebhookEndpointCommandHandler
         IWebhookEndpointRepository endpoints,
         IBoardRepository boards,
         IUnitOfWork unitOfWork,
+        ISecretProtector secretProtector,
         ICurrentUser currentUser,
         IClock clock,
         CancellationToken ct)
@@ -163,7 +162,7 @@ public static class CreateWebhookEndpointCommandHandler
                 "boards.forbidden", "You are not a member of this board."));
         }
 
-        string secretHash = HashSecret(cleartext);
+        string protectedSecret = secretProtector.Protect(cleartext);
 
         // The factory validates URL/secret/events again; we
         // pre-filtered above to surface friendlier errors.
@@ -171,7 +170,7 @@ public static class CreateWebhookEndpointCommandHandler
             WebhookEndpointId.New(),
             new BoardId(command.BoardId),
             command.Url,
-            secretHash,
+            protectedSecret,
             string.Join(",",
                 command.Events
                     .Where(e => !string.IsNullOrWhiteSpace(e))
@@ -190,13 +189,6 @@ public static class CreateWebhookEndpointCommandHandler
         return Result.Success(new WebhookEndpointIssuance(
             WebhookEndpointDto.FromEntity(creation.Value),
             cleartext));
-    }
-
-    private static string HashSecret(string cleartext)
-    {
-        Span<byte> hash = stackalloc byte[32];
-        SHA256.HashData(Encoding.UTF8.GetBytes(cleartext), hash);
-        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
     private static string GenerateWebhookSecret()

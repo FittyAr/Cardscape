@@ -227,6 +227,15 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IBackgroundJobScheduler, BackgroundJobScheduler>();
         services.AddSingleton<IBackgroundJobHandlerRegistry, BackgroundJobHandlerRegistry>();
         services.AddSingleton<IBackgroundJobHandler, CloneCardHandler>();
+        services.AddHttpClient(WebhookDeliveryHandler.WebhookHttpClientName, client =>
+        {
+            client.Timeout = WebhookDeliveryHandler.RequestTimeout;
+            client.DefaultRequestHeaders.UserAgent.Add(
+                new System.Net.Http.Headers.ProductInfoHeaderValue("Cardscape-Webhooks", "1.0"));
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false
+        });
         // BETA-A7-009 — see test-results/beta/reports/A7-advanced.md.
         // The webhook delivery handler is responsible for POSTing the
         // queued payload to the user's endpoint with the HMAC-SHA256

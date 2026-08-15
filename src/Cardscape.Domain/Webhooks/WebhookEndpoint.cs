@@ -7,7 +7,7 @@ namespace Cardscape.Domain.Webhooks;
 /// A board-scoped destination for outbound webhook calls. Each
 /// endpoint is subscribed to one or more event types
 /// (<see cref="WebhookEventTypes"/>) and signs its payloads with
-/// the HMAC-SHA256 of <see cref="SecretHash"/>. Soft-deleted
+/// a protected shared secret. Soft-deleted
 /// endpoints stay in the table so past <see cref="WebhookDelivery"/>
 /// rows keep their foreign-key target, but new events skip them.
 /// </summary>
@@ -19,10 +19,10 @@ public sealed class WebhookEndpoint : AggregateRoot<WebhookEndpointId>
     public string Url { get; private set; } = string.Empty;
 
     /// <summary>
-    /// Hex-encoded HMAC-SHA256 of the cleartext secret. The cleartext
-    /// is given to the caller once at creation and never persisted.
+    /// Data Protection ciphertext of the shared signing secret.
+    /// Cleartext is returned once and never persisted.
     /// </summary>
-    public string SecretHash { get; private set; } = string.Empty;
+    public string ProtectedSecret { get; private set; } = string.Empty;
 
     /// <summary>
     /// Comma-joined list of subscribed event type identifiers
@@ -40,7 +40,7 @@ public sealed class WebhookEndpoint : AggregateRoot<WebhookEndpointId>
         WebhookEndpointId id,
         BoardId boardId,
         string url,
-        string secretHash,
+        string protectedSecret,
         string events,
         bool active,
         DateTimeOffset at)
@@ -48,7 +48,7 @@ public sealed class WebhookEndpoint : AggregateRoot<WebhookEndpointId>
         Id = id;
         BoardId = boardId;
         Url = url;
-        SecretHash = secretHash;
+        ProtectedSecret = protectedSecret;
         Events = events;
         Active = active;
         CreatedAt = at;
@@ -58,7 +58,7 @@ public sealed class WebhookEndpoint : AggregateRoot<WebhookEndpointId>
         WebhookEndpointId id,
         BoardId boardId,
         string url,
-        string secretHash,
+        string protectedSecret,
         string events,
         DateTimeOffset at)
     {
@@ -96,16 +96,16 @@ public sealed class WebhookEndpoint : AggregateRoot<WebhookEndpointId>
                 "webhooks.url_too_long", "Webhook URL must be 500 characters or fewer."));
         }
 
-        if (string.IsNullOrWhiteSpace(secretHash))
+        if (string.IsNullOrWhiteSpace(protectedSecret))
         {
             return Result.Failure<WebhookEndpoint>(DomainError.Validation(
                 "webhooks.secret_required", "Webhook secret is required."));
         }
 
-        if (secretHash.Length != 64)
+        if (protectedSecret.Length > 2048)
         {
             return Result.Failure<WebhookEndpoint>(DomainError.Validation(
-                "webhooks.secret_hash_invalid", "Webhook secret hash must be 64 hex characters (SHA-256)."));
+                "webhooks.secret_protected_invalid", "Protected webhook secret is too large."));
         }
 
         if (string.IsNullOrWhiteSpace(events))
@@ -115,7 +115,7 @@ public sealed class WebhookEndpoint : AggregateRoot<WebhookEndpointId>
         }
 
         return Result.Success(new WebhookEndpoint(
-            id, boardId, parsed.ToString(), secretHash, events, active: true, at));
+            id, boardId, parsed.ToString(), protectedSecret, events, active: true, at));
     }
 
     /// <summary>Updates the destination URL. Validates the same way as the constructor.</summary>
@@ -217,21 +217,21 @@ public sealed class WebhookEndpoint : AggregateRoot<WebhookEndpointId>
         return Result.Success();
     }
 
-    /// <summary>Replaces the stored secret hash (hex SHA-256).</summary>
-    public Result RotateSecret(string newSecretHash)
+    /// <summary>Replaces the protected shared secret.</summary>
+    public Result RotateProtectedSecret(string protectedSecret)
     {
-        if (string.IsNullOrWhiteSpace(newSecretHash) || newSecretHash.Length != 64)
+        if (string.IsNullOrWhiteSpace(protectedSecret) || protectedSecret.Length > 2048)
         {
             return Result.Failure(DomainError.Validation(
-                "webhooks.secret_hash_invalid", "Webhook secret hash must be 64 hex characters (SHA-256)."));
+                "webhooks.secret_protected_invalid", "Protected webhook secret is invalid."));
         }
 
-        if (string.Equals(newSecretHash, SecretHash, StringComparison.Ordinal))
+        if (string.Equals(protectedSecret, ProtectedSecret, StringComparison.Ordinal))
         {
             return Result.Success();
         }
 
-        SecretHash = newSecretHash;
+        ProtectedSecret = protectedSecret;
         return Result.Success();
     }
 

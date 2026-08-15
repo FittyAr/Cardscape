@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Webhooks;
 using Cardscape.Domain.Common;
@@ -32,23 +33,21 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
     private static readonly JsonSerializerOptions LogJsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly IServiceScopeFactory _scopes;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ISecretProtector _secretProtector;
     private readonly ILogger<WebhookDeliveryHandler> _logger;
 
     public WebhookDeliveryHandler(
         IServiceScopeFactory scopes,
+        IHttpClientFactory httpClientFactory,
+        ISecretProtector secretProtector,
         ILogger<WebhookDeliveryHandler> logger)
     {
         _scopes = scopes;
+        _httpClientFactory = httpClientFactory;
+        _secretProtector = secretProtector;
         _logger = logger;
     }
-
-    /// <summary>Reused per-instance; the handler is a singleton,
-    /// so this is the connection pool.</summary>
-    private static readonly HttpClient SharedHttp = new()
-    {
-        Timeout = RequestTimeout,
-        DefaultRequestHeaders = { UserAgent = { new ProductInfoHeaderValue("Cardscape-Webhooks", "0.7") } }
-    };
 
     public async Task HandleAsync(Guid jobId, JsonElement payload, CancellationToken ct)
     {
@@ -138,7 +137,8 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
         try
         {
             byte[] bodyBytes = Encoding.UTF8.GetBytes(delivery.PayloadJson);
-            string signature = SignBody(endpoint.SecretHash, bodyBytes);
+            string cleartextSecret = _secretProtector.Unprotect(endpoint.ProtectedSecret);
+            string signature = SignBody(cleartextSecret, bodyBytes);
 
             using HttpRequestMessage request = new(HttpMethod.Post, endpoint.Url)
             {
@@ -151,8 +151,9 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
             request.Headers.TryAddWithoutValidation("X-Cardscape-Event", delivery.EventType);
             request.Headers.TryAddWithoutValidation("X-Cardscape-Delivery", delivery.Id.Value.ToString());
 
-            using HttpResponseMessage response = await SharedHttp.SendAsync(
-                request, HttpCompletionOption.ResponseContentRead, ct);
+            HttpClient httpClient = _httpClientFactory.CreateClient(WebhookHttpClientName);
+            using HttpResponseMessage response = await httpClient.SendAsync(
+                request, HttpCompletionOption.ResponseHeadersRead, ct);
 
             if (response.IsSuccessStatusCode)
             {
@@ -201,17 +202,12 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
     private const int BackgroundJobMaxAttempts = 5;
 
     /// <summary>HMAC-SHA256 of <paramref name="body"/> keyed by
-    /// <paramref name="secretHash"/>. Returned in the
+    /// <paramref name="cleartextSecret"/>. Returned in the
     /// <c>X-Cardscape-Signature: sha256=&lt;hex&gt;</c> header
     /// shape.</summary>
-    public static string SignBody(string secretHash, ReadOnlySpan<byte> body)
+    public static string SignBody(string cleartextSecret, ReadOnlySpan<byte> body)
     {
-        // The secret is stored as a hex SHA-256 of the cleartext.
-        // Subscribers know the cleartext; they reproduce the hex
-        // hash and use that as the HMAC key. This keeps the DB row
-        // safe even if leaked (an attacker would need to recover
-        // the cleartext to forge signatures).
-        byte[] keyBytes = Convert.FromHexString(secretHash);
+        byte[] keyBytes = Encoding.UTF8.GetBytes(cleartextSecret);
         Span<byte> signature = stackalloc byte[32];
         HMACSHA256.HashData(keyBytes, body, signature);
         return "sha256=" + Convert.ToHexString(signature).ToLowerInvariant();
@@ -232,7 +228,10 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
     {
         try
         {
-            return await response.Content.ReadAsStringAsync(ct);
+            await using Stream stream = await response.Content.ReadAsStreamAsync(ct);
+            byte[] buffer = new byte[MaxErrorBodyBytes];
+            int count = await stream.ReadAsync(buffer, ct);
+            return Encoding.UTF8.GetString(buffer, 0, count);
         }
         catch
         {
@@ -242,4 +241,7 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
 
     private static string Truncate(string value, int maxLength) =>
         value.Length <= maxLength ? value : value[..maxLength];
+
+    public const string WebhookHttpClientName = "WebhookDelivery";
+    private const int MaxErrorBodyBytes = 4096;
 }

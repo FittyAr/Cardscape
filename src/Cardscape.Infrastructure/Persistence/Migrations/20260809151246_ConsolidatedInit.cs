@@ -923,7 +923,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     BoardId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Url = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    SecretHash = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    ProtectedSecret = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: false),
                     Events = table.Column<string>(type: "TEXT", nullable: false),
                     Active = table.Column<bool>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),

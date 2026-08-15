@@ -6,14 +6,14 @@ namespace Cardscape.UnitTests.Domain.Aggregates;
 
 public class WebhookEndpointTests
 {
-    private const string ValidHash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+    private const string ValidProtectedSecret = "CfDJ8-example-protected-webhook-secret";
 
     private static Result<WebhookEndpoint> TryCreate(string url) =>
         WebhookEndpoint.Create(
             WebhookEndpointId.New(),
             BoardId.New(),
             url,
-            ValidHash,
+            ValidProtectedSecret,
             "card.created",
             DateTimeOffset.UtcNow);
 

@@ -394,7 +394,6 @@ public sealed record WebhookEndpointDto(
     Guid Id,
     Guid BoardId,
     string Url,
-    string SecretPrefix,
     IReadOnlyList<string> Events,
     bool Active,
     DateTimeOffset CreatedAt);

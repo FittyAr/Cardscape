@@ -51,7 +51,7 @@ else
                                 }
                             </RadzenStack>
                             <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
-                                @($"{L["WebhooksCreatedAt"]}: {endpoint.CreatedAt.LocalDateTime:yyyy-MM-dd HH:mm} · secret prefix: {endpoint.SecretPrefix}")
+                                @($"{L["WebhooksCreatedAt"]}: {endpoint.CreatedAt.LocalDateTime:yyyy-MM-dd HH:mm}")
                             </RadzenText>
                         </RadzenStack>
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
@@ -97,7 +97,6 @@ else
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
             <RadzenText Text="@L["WebhooksCreated"]" TextStyle="TextStyle.Body1" />
-            <RadzenText Text="@showSecret.Endpoint.SecretPrefix" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
             <RadzenTextBox Value="@showSecret.CleartextSecret" ReadOnly="true" Style="width:100%; font-family: monospace" />
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
                 <RadzenButton Text="@L["ActionClose"]" Click="@(() => showSecret = null)" />

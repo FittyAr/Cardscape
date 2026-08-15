@@ -2304,9 +2304,9 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(0u);
 
-                    b.Property<string>("SecretHash")
+                    b.Property<string>("ProtectedSecret")
                         .IsRequired()
-                        .HasMaxLength(64)
+                        .HasMaxLength(2048)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")

@@ -422,3 +422,11 @@
 - Contract cleanup: the import format is now explicitly Cardscape Kanban JSON with vendor-neutral fields `description`, `listId`, `labelIds`, `memberIds` and `dueDate`.
 - Acceptance: case-insensitive content and filename searches return zero matches outside regenerated build artifacts; focused import regression and full solution suite pass; `master` is pushed.
 - Final evidence: 0 content matches, 0 filename matches, focused import regression 2/2, complete suite 859 passed / 0 failed / 1 skipped.
+# Webhook secret and outbound HTTP hardening (2026-08-14)
+
+- Targets: webhook aggregate/schema, create DTO/handler, delivery handler, DI HTTP client, Radzen webhook page/shared DTO, consolidated migrations and focused unit tests.
+- Critical finding: `SHA256(cleartext)` is stored and then used as the HMAC key. Anyone reading the database can forge `X-Cardscape-Signature`; hashing does not protect a value that is itself the signing key.
+- Network finding: the static default `HttpClient` follows redirects and buffers the complete error response, allowing a public endpoint to redirect to an internal target or consume unbounded memory.
+- Decision: protect the cleartext secret with existing Data Protection, unprotect only at delivery, HMAC with the actual cleartext, remove the meaningless stored prefix from public DTOs, use a named client with redirects disabled, `ResponseHeadersRead`, and bounded error-body reads.
+- Acceptance: database model contains only `ProtectedSecret`; known-vector signature uses cleartext; HTTP handler configuration forbids redirects; focused and full tests pass.
+- Result: acceptance satisfied. The consolidated schema and model snapshot use `ProtectedSecret` with ciphertext capacity; focused tests pass 3/3 and the full suite passes 862 executed tests with one unrelated diagnostic skip.

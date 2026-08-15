@@ -278,3 +278,11 @@
 - [x] Replace the derivative JSON field vocabulary with Cardscape-owned Kanban JSON.
 - [x] Prove zero residual references, build and run focused/full tests.
 - [x] Update modernization evidence, commit and push.
+# Webhook secret and outbound HTTP hardening (2026-08-14)
+
+- [x] Trace secret creation, storage, DTO exposure and signing.
+- [x] Replace hash-as-key storage with Data Protection ciphertext.
+- [x] Remove webhook secret prefix from Application/Web contracts.
+- [x] Inject a redirect-disabled named HTTP client and bound error reads.
+- [x] Update consolidated schema and add focused security regressions.
+- [x] Run focused/full validation and update plan; commit and push pending.
