@@ -490,7 +490,21 @@ public static class InfrastructureServiceCollectionExtensions
         // transient (cheap to instantiate per call).
         services.AddScoped<IGoogleCalendarConnectionRepository, GoogleCalendarConnectionRepository>();
         services.AddTransient<IGoogleCalendarSyncService, HttpGoogleCalendarSyncService>();
-        services.AddHttpClient("google-oauth");
+        services.AddHttpClient("google-oauth", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false
+        });
+        services.AddHttpClient(nameof(IGoogleCalendarSyncService), client =>
+        {
+            client.BaseAddress = new Uri("https://www.googleapis.com/calendar/v3/");
+            client.Timeout = TimeSpan.FromSeconds(15);
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false
+        });
 
         // SCIM v2 provisioning — the per-workspace token
         // repository, the user-provisioning service, and the

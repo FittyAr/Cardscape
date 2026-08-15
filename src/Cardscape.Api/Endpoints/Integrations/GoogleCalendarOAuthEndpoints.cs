@@ -27,6 +27,7 @@ namespace Cardscape.Api.Endpoints.Integrations;
 public static class GoogleCalendarOAuthEndpoints
 {
     private const string StatePurpose = "Cardscape.GoogleCalendar.OAuthState.v1";
+    private const int MaxGoogleResponseBytes = 1024 * 1024;
 
     public static IEndpointRouteBuilder MapGoogleCalendarOAuthEndpoints(this IEndpointRouteBuilder app)
     {
@@ -162,17 +163,20 @@ public static class GoogleCalendarOAuthEndpoints
                 ["redirect_uri"] = redirectUri,
                 ["grant_type"] = "authorization_code"
             });
-            HttpResponseMessage tokenResponse = await tokenHttp.PostAsync(
-                "https://oauth2.googleapis.com/token", content, ct);
+            using var tokenRequest = new HttpRequestMessage(
+                HttpMethod.Post, "https://oauth2.googleapis.com/token")
+            { Content = content };
+            using HttpResponseMessage tokenResponse = await tokenHttp.SendAsync(
+                tokenRequest, HttpCompletionOption.ResponseHeadersRead, ct);
             if (!tokenResponse.IsSuccessStatusCode)
             {
-                string body = await tokenResponse.Content.ReadAsStringAsync(ct);
                 return Results.Problem(
                     title: "google_calendar.token_exchange_failed",
-                    detail: $"Google token exchange failed ({(int)tokenResponse.StatusCode}): {body}",
+                    detail: $"Google token exchange failed with status {(int)tokenResponse.StatusCode}.",
                     statusCode: StatusCodes.Status502BadGateway);
             }
 
+            await tokenResponse.Content.LoadIntoBufferAsync(MaxGoogleResponseBytes, ct);
             JsonElement tokenBody = await tokenResponse.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
             string? refreshToken = tokenBody.TryGetProperty("refresh_token", out JsonElement rt) ? rt.GetString() : null;
             string? accessToken = tokenBody.TryGetProperty("access_token", out JsonElement at) ? at.GetString() : null;
@@ -188,11 +192,14 @@ public static class GoogleCalendarOAuthEndpoints
             if (!string.IsNullOrEmpty(accessToken))
             {
                 using HttpClient userHttp = httpClientFactory.CreateClient("google-oauth");
-                userHttp.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-                HttpResponseMessage userResponse = await userHttp.GetAsync(
-                    "https://www.googleapis.com/oauth2/v3/userinfo", ct);
+                using var userRequest = new HttpRequestMessage(
+                    HttpMethod.Get, "https://www.googleapis.com/oauth2/v3/userinfo");
+                userRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                using HttpResponseMessage userResponse = await userHttp.SendAsync(
+                    userRequest, HttpCompletionOption.ResponseHeadersRead, ct);
                 if (userResponse.IsSuccessStatusCode)
                 {
+                    await userResponse.Content.LoadIntoBufferAsync(MaxGoogleResponseBytes, ct);
                     JsonElement userBody = await userResponse.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
                     googleEmail = userBody.TryGetProperty("email", out JsonElement emailEl) ? emailEl.GetString() : null;
                 }

@@ -444,3 +444,11 @@
 - Decision: persist Data Protection ciphertext per Slack workspace, decrypt only for its outbound request, remove the meaningless hash prefix from contracts/UI and delete the global-token behavior.
 - Acceptance: reconnect rotates decryptable ciphertext; database does not contain cleartext; outgoing Bearer header uses the supplied workspace credential; focused/full tests pass.
 - Result: acceptance satisfied. Focused tests pass 9/9 and the complete suite passes 867 executed tests with one unrelated diagnostic skip.
+# Google Calendar outbound HTTP hardening (2026-08-14)
+
+- Targets: OAuth token/userinfo callback, Calendar sync HTTP client, DI registrations and integration configuration tests.
+- Findings: both named clients followed redirects; OAuth success responses and Calendar error bodies were unbounded; token-exchange failures reflected the complete provider body through public Problem Details.
+- Decision: disable redirects, set explicit timeouts, use `ResponseHeadersRead`, cap Google JSON at 1 MiB and Calendar error text at 4 KiB, and expose only provider status on OAuth failure.
+- Deferred explicitly: the fake card-event lookup that makes upsert/delete ineffective requires a per-user persistent mapping and is the next dedicated block.
+- Acceptance: both primary handlers reject redirects, responses are bounded, provider error bodies are not public, focused/full tests pass.
+- Result: acceptance satisfied. Focused Google Calendar integrations pass 6/6 and the complete suite passes 869 executed tests with one unrelated diagnostic skip.

@@ -26,8 +26,9 @@ public sealed class HttpGoogleCalendarSyncService(
     ISecretProtector secrets,
     IConfiguration configuration) : IGoogleCalendarSyncService
 {
-    private const string BaseAddress = "https://www.googleapis.com/calendar/v3/";
     private const string OauthTokenEndpoint = "https://oauth2.googleapis.com/token";
+    private const int MaxGoogleResponseBytes = 1024 * 1024;
+    private const int MaxGoogleErrorBytes = 4096;
 
     public async Task<Result<string>> PushCardDueDateAsync(
         Guid userId, Guid cardId, string cardTitle, string? cardDescription,
@@ -55,7 +56,6 @@ public sealed class HttpGoogleCalendarSyncService(
         string? eventId = await ReadCardGoogleEventIdAsync(cardId, ct);
         HttpClient http = httpClientFactory.CreateClient(nameof(IGoogleCalendarSyncService));
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        http.BaseAddress = new Uri(BaseAddress);
 
         if (dueDate is null)
         {
@@ -117,8 +117,11 @@ public sealed class HttpGoogleCalendarSyncService(
             ["refresh_token"] = refreshToken,
             ["grant_type"] = "refresh_token"
         });
-        HttpResponseMessage response = await http.PostAsync(OauthTokenEndpoint, content, ct);
+        using var request = new HttpRequestMessage(HttpMethod.Post, OauthTokenEndpoint) { Content = content };
+        using HttpResponseMessage response = await http.SendAsync(
+            request, HttpCompletionOption.ResponseHeadersRead, ct);
         response.EnsureSuccessStatusCode();
+        await response.Content.LoadIntoBufferAsync(MaxGoogleResponseBytes, ct);
         JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
         return body.GetProperty("access_token").GetString() ?? string.Empty;
     }
@@ -126,7 +129,10 @@ public sealed class HttpGoogleCalendarSyncService(
     private static async Task<DomainError> MapHttpError(
         HttpResponseMessage response, string verb, CancellationToken ct)
     {
-        string body = await response.Content.ReadAsStringAsync(ct);
+        await using Stream stream = await response.Content.ReadAsStreamAsync(ct);
+        byte[] buffer = new byte[MaxGoogleErrorBytes];
+        int count = await stream.ReadAsync(buffer, ct);
+        string body = System.Text.Encoding.UTF8.GetString(buffer, 0, count);
         return DomainError.External(
             $"google_calendar.{(int)response.StatusCode}",
             $"Google Calendar {verb} failed ({(int)response.StatusCode}): {body}");

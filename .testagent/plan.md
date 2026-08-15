@@ -302,3 +302,11 @@
 - [x] Update consolidated schema and Seeder.
 - [x] Add and run focused outbound/persistence/reconnect regressions.
 - [x] Complete assertion/gap review, full validation and plan evidence; commit and push pending.
+# Google Calendar outbound HTTP hardening (2026-08-14)
+
+- [x] Trace OAuth and Calendar API client creation/response handling.
+- [x] Configure redirect-disabled named clients with explicit timeouts.
+- [x] Stream and bound token, userinfo and Calendar error responses.
+- [x] Stop reflecting OAuth provider bodies through Problem Details.
+- [x] Add and run focused client configuration regressions.
+- [x] Run full validation and update modernization evidence; commit and push pending.

@@ -382,3 +382,11 @@
 - Focused evidence: HTTP service 1/1 and Slack integration slice 8/8.
 - Pseudo-mutation/assertion review: regressions fail if ciphertext is unchanged/plaintext/non-decryptable, reconnect does not rotate it, invalid reconnect mutates it, or delivery uses any credential other than the workspace token. Assertions span persistence inequalities, decrypt round-trip, exact Bearer header/URI and domain success.
 - Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 867 passed / 0 failed / 1 skipped.
+# Google Calendar outbound HTTP hardening (2026-08-14)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Network invariant: Google OAuth and Calendar clients never follow redirects and never buffer an unbounded provider response.
+- Disclosure invariant: public OAuth errors contain the upstream status, not the upstream response body.
+- Focused evidence: Google Calendar integration slice 6/6, including both named-client primary handlers.
+- Assertion/gap review: the configuration theory fails for either OAuth or Calendar if redirects return; existing callback tests continue validating token exchange/userinfo behavior. Structural review confirms `ResponseHeadersRead`, 1 MiB success caps, 4 KiB error cap and absence of provider-body interpolation.
+- Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 869 passed / 0 failed / 1 skipped.
