@@ -28,7 +28,7 @@ projects for hosting and composition:
    ┌────────────────────┐          ┌────────────────────────┐
    │   Application      │  ←────   │    Infrastructure     │  ← technical
    │   use cases        │          │    EF Core, Identity,  │
-   │   (Wolverine + FV) │          │    Storage, Email     │
+   │   (Wolverine + FV) │          │    Storage, Search    │
    └────────┬───────────┘          └────────────────────────┘
             ▲                                   ▲
             │                                   │
@@ -45,7 +45,7 @@ Key rules:
   framework types beyond primitives).
 - **Application** depends only on Domain. It defines the
   abstractions (`IRepository<T>`, `IUnitOfWork`, `IStorageService`,
-  `IEmailService`, etc.).
+  etc.).
 - **Infrastructure** depends on Application and Domain. It
   provides the concrete implementations: `CardscapeDbContext`
   for EF Core, `AspNetIdentityService` for Identity, etc.
@@ -85,7 +85,7 @@ src/
 │   └── Common/                  ← abstractions, primitives, errors, enums
 │
 ├── Cardscape.Application/
-│   ├── Abstractions/            ← IRepository<T>, IUnitOfWork, IEmailService, ...
+│   ├── Abstractions/            ← IRepository<T>, IUnitOfWork, IStorageService, ...
 │   ├── Boards/                  ← bounded-context folder
 │   │   ├── Commands/            ← CreateBoard.cs, RenameBoard.cs, ArchiveBoard.cs
 │   │   ├── Queries/             ← GetBoardById.cs, ListBoardsForWorkspace.cs

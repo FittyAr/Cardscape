@@ -167,6 +167,7 @@ Reglas permanentes:
 | 2026-08-15 | Comando canónico de card mirror | Eliminado handler duplicado pointer-only; REST/MCP comparten creación real de Card + CardMirror y regla arquitectónica evita regresión | Suite 871 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-15 | Eliminación database log sink ficticio | Retirados sink/options/config que descartaban eventos; documentación normativa alinea console/file/OTLP reales | Build 0/0; suite 872 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-15 | Eliminación email de invitación simulado | Retirados puerto/adaptador que no enviaban correo y filtraban URL con token a logs; UI conserva entrega manual real | Build 0/0; suite 873 pass, 0 fail, 1 skip | Incluido en este commit |
+| 2026-08-15 | Eliminación transporte email genérico sin uso | Retirados puerto, envelope, adapter log-only y registro DI sin consumidores; documentación ya no afirma SMTP inexistente | Build 0/0; suite 874 pass, 0 fail, 1 skip | Incluido en este commit |
 
 ## 5. Criterio de completitud
 

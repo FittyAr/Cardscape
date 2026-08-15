@@ -69,7 +69,7 @@ strict and one-directional:
    ┌────────────────────┐          ┌────────────────────────┐
    │   Application      │  ←────   │    Infrastructure     │  ← technical
    │   use cases        │          │    EF Core, Identity,  │
-   │   (Wolverine + FV) │          │    Storage, Email     │
+   │   (Wolverine + FV) │          │    Storage, Search    │
    └────────┬───────────┘          └────────────────────────┘
             ▲                                   ▲
             │                                   │
@@ -84,8 +84,7 @@ Key rules:
 
 - **Domain** depends on nothing.
 - **Application** depends only on Domain. It defines the
-  abstractions (`IRepository<T>`, `IUnitOfWork`, `IStorageService`,
-  `IEmailService`, …).
+  abstractions (`IRepository<T>`, `IUnitOfWork`, `IStorageService`, …).
 - **Infrastructure** depends on Application and Domain. It
   provides the concrete implementations.
 - **Api** depends on Application and Infrastructure. Its

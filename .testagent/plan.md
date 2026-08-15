@@ -340,3 +340,11 @@
 - [x] Remove fake delivery from the command and registration.
 - [x] Add architecture regression prohibiting the simulated transport.
 - [x] Run invitation/full validation and update modernization evidence; commit and push pending.
+
+# Remove unused generic email transport (2026-08-15)
+
+- [x] Trace every reference and confirm the port has no consumer.
+- [x] Delete `IEmailService`, `EmailMessage` and `ConsoleEmailService` without compatibility aliases.
+- [x] Remove the DI registration and false SMTP claims from normative documentation.
+- [x] Add an architecture regression prohibiting the ceremonial transport types.
+- [x] Run focused/full validation and update modernization evidence; commit and push pending.

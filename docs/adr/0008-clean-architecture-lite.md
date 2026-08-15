@@ -15,9 +15,9 @@ shape is:
   on any other layer.
 - `Cardscape.Application` — use cases (commands,
   queries, handlers), abstractions (`IRepository`,
-  `IEmailService`), DTOs. Depends only on `Domain`.
+  `IStorageService`), DTOs. Depends only on `Domain`.
 - `Cardscape.Infrastructure` — EF Core, repositories,
-  email, storage, search. Depends on `Application`
+  storage, search. Depends on `Application`
   and `Domain`. Implements the `Application`
   abstractions.
 - `Cardscape.Api` — minimal-API endpoints, auth,

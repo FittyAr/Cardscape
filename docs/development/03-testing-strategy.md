@@ -34,7 +34,7 @@ the gap visible.
 ### Unit tests (fast, no I/O)
 
 - Mock the application-layer abstractions (`IBoardRepository`,
-  `IUnitOfWork`, `IEmailService`).
+  `IUnitOfWork`, `IStorageService`).
 - Pure logic: validators, value object construction, domain
   rules, mapper correctness.
 - Run in milliseconds. Hundreds per second.

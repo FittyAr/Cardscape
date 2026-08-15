@@ -1,6 +1,5 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
-using Cardscape.Application.Abstractions.Email;
 using Cardscape.Application.Abstractions.Import;
 using Cardscape.Application.Abstractions.Integrations;
 using Cardscape.Application.Abstractions.Persistence;
@@ -35,7 +34,6 @@ using Cardscape.Infrastructure.Authentication;
 using Cardscape.Infrastructure.BackgroundJobs;
 using Cardscape.Infrastructure.Calendar;
 using Cardscape.Infrastructure.Configuration;
-using Cardscape.Infrastructure.Email;
 using Cardscape.Infrastructure.Export;
 using Cardscape.Infrastructure.Import;
 using Cardscape.Infrastructure.Integrations;
@@ -451,7 +449,6 @@ public static class InfrastructureServiceCollectionExtensions
         // fully scoped because the work touches the cardscape DB
         // through the standard UnitOfWork pipeline.
         services.AddScoped<IImportService, KanbanImportService>();
-        services.AddSingleton<IEmailService, ConsoleEmailService>();
         services.AddSingleton<ISearchIndex, InMemorySearchIndex>();
 
         // AI provider (Cardscape AI). The choice is configuration-driven:

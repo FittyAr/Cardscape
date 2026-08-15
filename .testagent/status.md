@@ -422,3 +422,12 @@
 - Focused evidence: architecture regression 1/1; invitation integration slice 6/6; architecture suite 21/21.
 - Assertion/gap review: the rule fails if either deleted port/adapter returns, while integration covers issue/list/accept/revoke behavior. Source search confirms no remaining invitation-email transport reference.
 - Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 873 passed / 0 failed / 1 skipped.
+
+# Remove unused generic email transport (2026-08-15)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Product invariant: the composition root advertises only capabilities with real behavior and a consumer.
+- Compatibility policy: the unused generic port/envelope and log-only adapter are deleted, not retained as extension points.
+- Focused evidence: generic-email architecture regression 1/1; architecture suite 22/22.
+- Assertion/gap review: the regression fails if the deleted port, envelope or adapter returns; exhaustive source and normative-doc search has no active reference. The historical changelog is intentionally preserved.
+- Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 874 passed / 0 failed / 1 skipped.

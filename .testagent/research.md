@@ -480,3 +480,11 @@
 - Decision: delete the invitation-email port and console adapter. The existing issuance response remains the single real delivery contract and the Radzen UI displays the token once for explicit secure sharing.
 - Acceptance: no token is logged or passed to a fake transport; issuance/acceptance tests and full suite pass; architecture prevents reintroduction.
 - Result: acceptance satisfied. Invitation tests pass 6/6, architecture 21/21 and complete suite 873 executed tests with one unrelated diagnostic skip.
+
+# Remove unused generic email transport (2026-08-15)
+
+- Targets: generic application email port/envelope, infrastructure adapter, DI registration, normative documentation and regression coverage.
+- Critical finding: `IEmailService` had zero consumers. Its sole adapter returned a completed task after logging metadata while documentation claimed production SMTP delivery that did not exist.
+- Decision: delete the unused port, message envelope and console adapter without a compatibility shim; add a real capability-specific boundary only when a workflow requires one.
+- Acceptance: no runtime or normative reference remains; architecture rejects the three ceremonial types; build and full suite pass.
+- Result: acceptance satisfied. Architecture passes 22/22 and complete suite passes 874 executed tests with one unrelated diagnostic skip.

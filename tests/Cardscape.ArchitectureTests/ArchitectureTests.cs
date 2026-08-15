@@ -15,6 +15,22 @@ namespace Cardscape.ArchitectureTests;
 public sealed class ArchitectureTests
 {
     [Fact]
+    public void Product_ContainsNoSimulatedGenericEmailTransport()
+    {
+        string[] forbiddenTypes = ["IEmailService", "EmailMessage", "ConsoleEmailService"];
+        Type[] matches = new[]
+            {
+                typeof(Cardscape.Application.Cards.CardscapeExtensions).Assembly,
+                typeof(Cardscape.Infrastructure.DependencyInjection.InfrastructureServiceCollectionExtensions).Assembly
+            }
+            .SelectMany(assembly => assembly.GetTypes())
+            .Where(type => forbiddenTypes.Contains(type.Name, StringComparer.Ordinal))
+            .ToArray();
+
+        matches.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Product_ContainsNoSimulatedInvitationEmailTransport()
     {
         string[] forbiddenTypes = ["IInvitationEmailService", "ConsoleInvitationEmailService"];
