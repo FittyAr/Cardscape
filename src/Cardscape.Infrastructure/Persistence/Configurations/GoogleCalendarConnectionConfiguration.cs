@@ -17,6 +17,7 @@ public sealed class GoogleCalendarConnectionConfiguration
         b.Property(x => x.GoogleEmail).HasMaxLength(320).IsRequired();
         b.Property(x => x.EncryptedRefreshToken).HasMaxLength(2048).IsRequired();
         b.Property(x => x.CalendarId).HasMaxLength(256).IsRequired();
+        b.Property(x => x.EventMappingsJson).HasMaxLength(65535).IsRequired();
         b.Property(x => x.LastSyncedAt);
         b.Property(x => x.LastSyncErrorAt);
         b.Property(x => x.LastSyncError).HasMaxLength(1024);

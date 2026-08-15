@@ -452,3 +452,10 @@
 - Deferred explicitly: the fake card-event lookup that makes upsert/delete ineffective requires a per-user persistent mapping and is the next dedicated block.
 - Acceptance: both primary handlers reject redirects, responses are bounded, provider error bodies are not public, focused/full tests pass.
 - Result: acceptance satisfied. Focused Google Calendar integrations pass 6/6 and the complete suite passes 869 executed tests with one unrelated diagnostic skip.
+# Google Calendar persistent event mapping (2026-08-14)
+
+- Targets: Google connection aggregate/schema, outbound sync service and focused mapping tests.
+- Critical finding: `ReadCardGoogleEventIdAsync` was a placeholder that always returned null, so every due-date update created a duplicate event and clearing a due date could never delete it.
+- Decision: persist a card-to-event map on each per-user connection, protected by the aggregate row version; POST creates and records, PUT reuses, DELETE/404 removes. Use `IClock` for mutations.
+- Acceptance: no placeholder remains; mappings create/replace/remove independently per card; consolidated schema and full suite pass.
+- Result: acceptance satisfied. Focused tests pass 7/7 and the complete suite passes 870 executed tests with one unrelated diagnostic skip.

@@ -1349,6 +1349,11 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2048)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("EventMappingsJson")
+                        .IsRequired()
+                        .HasMaxLength(65535)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("GoogleEmail")
                         .IsRequired()
                         .HasMaxLength(320)

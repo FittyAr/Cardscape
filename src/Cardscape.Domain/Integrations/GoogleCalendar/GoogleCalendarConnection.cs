@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
 
@@ -24,6 +25,7 @@ public sealed class GoogleCalendarConnection : AggregateRoot<GoogleCalendarConne
     public string GoogleEmail { get; private set; } = string.Empty;
     public string EncryptedRefreshToken { get; private set; } = string.Empty;
     public string CalendarId { get; private set; } = "primary";
+    public string EventMappingsJson { get; private set; } = "{}";
     public DateTimeOffset? LastSyncedAt { get; private set; }
     public DateTimeOffset? LastSyncErrorAt { get; private set; }
     public string? LastSyncError { get; private set; }
@@ -103,6 +105,33 @@ public sealed class GoogleCalendarConnection : AggregateRoot<GoogleCalendarConne
         LastSyncErrorAt = at;
         LastSyncError = string.IsNullOrWhiteSpace(error) ? "Unknown error" : error;
         UpdatedAt = at;
+    }
+
+    public string? FindEventId(Guid cardId)
+    {
+        Dictionary<Guid, string>? mappings = JsonSerializer.Deserialize<Dictionary<Guid, string>>(
+            EventMappingsJson);
+        return mappings?.GetValueOrDefault(cardId);
+    }
+
+    public void SetEventId(Guid cardId, string eventId, DateTimeOffset at)
+    {
+        Dictionary<Guid, string> mappings = JsonSerializer.Deserialize<Dictionary<Guid, string>>(
+            EventMappingsJson) ?? [];
+        mappings[cardId] = eventId;
+        EventMappingsJson = JsonSerializer.Serialize(mappings);
+        UpdatedAt = at;
+    }
+
+    public void RemoveEventId(Guid cardId, DateTimeOffset at)
+    {
+        Dictionary<Guid, string> mappings = JsonSerializer.Deserialize<Dictionary<Guid, string>>(
+            EventMappingsJson) ?? [];
+        if (mappings.Remove(cardId))
+        {
+            EventMappingsJson = JsonSerializer.Serialize(mappings);
+            UpdatedAt = at;
+        }
     }
 
     /// <summary>User-initiated revoke. Sets <see cref="IsActive"/> to

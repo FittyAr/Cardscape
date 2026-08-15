@@ -390,3 +390,10 @@
 - Focused evidence: Google Calendar integration slice 6/6, including both named-client primary handlers.
 - Assertion/gap review: the configuration theory fails for either OAuth or Calendar if redirects return; existing callback tests continue validating token exchange/userinfo behavior. Structural review confirms `ResponseHeadersRead`, 1 MiB success caps, 4 KiB error cap and absence of provider-body interpolation.
 - Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 869 passed / 0 failed / 1 skipped.
+# Google Calendar persistent event mapping (2026-08-14)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Functional invariant: one Google event id is retained per connection/card pair, so later changes update and due-date clearing deletes that exact event.
+- Focused evidence: mapping domain regression 1/1 and Google Calendar integrations 6/6.
+- Assertion/gap review: the regression kills missing replace/remove behavior and cross-card corruption; source search proves the always-null placeholder is gone. Existing sync-handler tests retain fan-out/success/error coverage.
+- Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 870 passed / 0 failed / 1 skipped.

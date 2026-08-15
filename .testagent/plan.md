@@ -310,3 +310,11 @@
 - [x] Stop reflecting OAuth provider bodies through Problem Details.
 - [x] Add and run focused client configuration regressions.
 - [x] Run full validation and update modernization evidence; commit and push pending.
+# Google Calendar persistent event mapping (2026-08-14)
+
+- [x] Trace due-date fan-out and confirm the lookup always returned null.
+- [x] Add per-connection persisted card-event mappings.
+- [x] Make POST/PUT/DELETE update mappings only after accepted provider results.
+- [x] Replace global time with `IClock` and update consolidated schema.
+- [x] Add/run focused mapping and Google Calendar regressions.
+- [x] Run full validation and update modernization evidence; commit and push pending.

@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Integrations;
 using Cardscape.Application.Abstractions.Persistence;
@@ -24,6 +25,7 @@ public sealed class HttpGoogleCalendarSyncService(
     IHttpClientFactory httpClientFactory,
     IGoogleCalendarConnectionRepository connections,
     ISecretProtector secrets,
+    IClock clock,
     IConfiguration configuration) : IGoogleCalendarSyncService
 {
     private const string OauthTokenEndpoint = "https://oauth2.googleapis.com/token";
@@ -49,11 +51,7 @@ public sealed class HttpGoogleCalendarSyncService(
         // update a Google event; when it doesn't we delete
         // the previously-pushed one (best-effort — a 404 on
         // delete is treated as success).
-        // The mapping Card -> Google event id is kept in the
-        // card's GoogleCalendarEventId column (read from
-        // custom-fields). When the column is missing the
-        // implementation falls back to creating a new event.
-        string? eventId = await ReadCardGoogleEventIdAsync(cardId, ct);
+        string? eventId = connection.FindEventId(cardId);
         HttpClient http = httpClientFactory.CreateClient(nameof(IGoogleCalendarSyncService));
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
@@ -67,6 +65,8 @@ public sealed class HttpGoogleCalendarSyncService(
                 {
                     return Result.Failure<string>(await MapHttpError(delete, "delete", ct));
                 }
+                connection.RemoveEventId(cardId, clock.UtcNow);
+                await connections.UpdateAsync(connection, ct);
             }
             return Result.Success(eventId ?? string.Empty);
         }
@@ -93,6 +93,14 @@ public sealed class HttpGoogleCalendarSyncService(
 
         JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
         string newEventId = body.TryGetProperty("id", out JsonElement id) ? id.GetString() ?? string.Empty : string.Empty;
+        if (string.IsNullOrWhiteSpace(newEventId))
+        {
+            return Result.Failure<string>(DomainError.External(
+                "google_calendar.event_id_missing", "Google Calendar returned no event id."));
+        }
+
+        connection.SetEventId(cardId, newEventId, clock.UtcNow);
+        await connections.UpdateAsync(connection, ct);
         return Result.Success(newEventId);
     }
 
@@ -138,14 +146,4 @@ public sealed class HttpGoogleCalendarSyncService(
             $"Google Calendar {verb} failed ({(int)response.StatusCode}): {body}");
     }
 
-    private static async Task<string?> ReadCardGoogleEventIdAsync(Guid cardId, CancellationToken ct)
-    {
-        // The card's Google event id is stored in a custom field
-        // named 'google_calendar_event_id'. For v1.1.0 the lookup
-        // is a placeholder — when the Card-CustomField pipeline
-        // exposes a typed 'GoogleCalendarEventId' field the
-        // reader flips to that source.
-        await Task.CompletedTask;
-        return null;
-    }
 }

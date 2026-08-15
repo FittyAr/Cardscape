@@ -484,6 +484,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     WorkspaceId = table.Column<Guid>(type: "TEXT", nullable: false),
                     GoogleEmail = table.Column<string>(type: "TEXT", maxLength: 320, nullable: false),
                     EncryptedRefreshToken = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: false),
+                    EventMappingsJson = table.Column<string>(type: "TEXT", maxLength: 65535, nullable: false),
                     CalendarId = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     LastSyncedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     LastSyncErrorAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
