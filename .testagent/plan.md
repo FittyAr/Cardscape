@@ -326,3 +326,10 @@
 - [x] Remove obsolete disambiguation commentary.
 - [x] Add/run architecture regression for a single canonical command.
 - [x] Run mirror/full validation and update modernization evidence; commit and push pending.
+# Remove placeholder database log sink (2026-08-15)
+
+- [x] Trace sink configuration and prove it discards enabled events.
+- [x] Delete placeholder sink and options without compatibility configuration.
+- [x] Remove `Serilog:Database` from API configuration and normative docs.
+- [x] Add architecture regression prohibiting the placeholder types.
+- [x] Run focused/full validation and update modernization evidence; commit and push pending.

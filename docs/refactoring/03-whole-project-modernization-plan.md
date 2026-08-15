@@ -86,7 +86,7 @@ Reglas permanentes:
 - [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia. Google Calendar ya no anuncia watch/webhook/pull ficticios; conserva únicamente el push saliente. Sus clientes OAuth/Calendar no siguen redirects, tienen timeouts y límites de respuesta, no reflejan cuerpos del proveedor y conservan el mapping card-event por conexión para ejecutar POST/PUT/DELETE reales. Google Drive fue eliminado por completo. Las rutas jerárquicas de adjuntos y webhooks ya exigen coincidencia entre URL y recurso persistido. Kanban separa preview/apply explícitamente, mantiene paridad de resumen y conserva asociaciones card-label. Los webhooks protegen el secreto de firma con Data Protection, firman con el secreto real, no revelan prefijos derivados, no siguen redirecciones y limitan la lectura de errores.
 - [ ] Wolverine/background jobs: scopes, retries, outbox/inbox, cancelación y consistencia de eventos. Claim multi-worker ya es atómico y está probado; quedan outbox/inbox, cancelación y consistencia de eventos.
 - [x] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia. Scopes, lifetime/composición, Streamable HTTP autenticado, aislamiento de suscripciones y reservas idempotentes cross-process verificados.
-- [ ] Observabilidad: logs estructurados, correlación, trazas, métricas, health checks y ausencia de PII/secrets.
+- [ ] Observabilidad: logs estructurados, correlación, trazas, métricas, health checks y ausencia de PII/secrets. Se eliminó el `DatabaseLogSink` placeholder que descartaba eventos; sólo se anuncian console, rolling JSON y OTLP funcionales.
 
 ### Fase 3 — API y contratos
 
@@ -165,6 +165,7 @@ Reglas permanentes:
 | 2026-08-14 | Límite HTTP Google Calendar | OAuth y Calendar sin redirects, timeouts explícitos, JSON limitado a 1 MiB, errores a 4 KiB y sin reflejar cuerpos OAuth | Build 0/0; suite 869 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-14 | Mapping persistente Google Calendar | Eliminado lookup placeholder; mapping card-event por conexión permite create/update/delete reales y usa reloj inyectado | Build 0/0; suite 870 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-15 | Comando canónico de card mirror | Eliminado handler duplicado pointer-only; REST/MCP comparten creación real de Card + CardMirror y regla arquitectónica evita regresión | Suite 871 pass, 0 fail, 1 skip | Incluido en este commit |
+| 2026-08-15 | Eliminación database log sink ficticio | Retirados sink/options/config que descartaban eventos; documentación normativa alinea console/file/OTLP reales | Build 0/0; suite 872 pass, 0 fail, 1 skip | Incluido en este commit |
 
 ## 5. Criterio de completitud
 

@@ -10,8 +10,8 @@ namespace Cardscape.Infrastructure.Email;
 /// SECURITY: the body is NEVER logged at Information level. The
 /// body routinely carries PII (recipient name, invitation
 /// URLs that encode a one-time secret, future password-reset
-/// tokens) and persisting it to a log file or the
-/// <c>DatabaseLogSink</c> is a privacy / secrets-in-logs leak.
+/// tokens) and persisting it to any log sink is a privacy /
+/// secrets-in-logs leak.
 /// Operators that need the body for a single message can flip
 /// <c>Cardscape:Logging:EmailBodies</c> to <c>true</c> at Debug
 /// level on a per-request basis; the default is body-less.

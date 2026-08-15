@@ -15,6 +15,18 @@ namespace Cardscape.ArchitectureTests;
 public sealed class ArchitectureTests
 {
     [Fact]
+    public void Infrastructure_ContainsNoPlaceholderLogSinks()
+    {
+        string[] forbiddenTypes = ["DatabaseLogSink", "DatabaseLogSinkOptions"];
+        Type[] matches = typeof(Cardscape.Infrastructure.DependencyInjection.InfrastructureServiceCollectionExtensions)
+            .Assembly.GetTypes()
+            .Where(type => forbiddenTypes.Contains(type.Name, StringComparer.Ordinal))
+            .ToArray();
+
+        matches.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Application_HasSingleCanonicalMirrorCardCommand()
     {
         Type[] commands = typeof(Cardscape.Application.Cards.CardscapeExtensions)

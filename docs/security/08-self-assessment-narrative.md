@@ -152,16 +152,7 @@ artefact the deployer needs to produce.
    data-protection ring); the storage-tier
    encryption is the deployer's.
 
-6. **`DatabaseLogSink` is a no-op in v1.2.0.**
-   The log sink is wired but the actual
-   database write is a TODO with a follow-up
-   ADR (`0011-database-log-sink.md`)
-   referenced from the source. The deployer
-   should not rely on the DB log sink; the
-   file + OpenTelemetry sinks are the
-   production paths.
-
-7. **Sub-processors are operator-action.**
+6. **Sub-processors are operator-action.**
    The repo ships no third-party service
    integrations by default. The deployer
    enumerates their own sub-processors and

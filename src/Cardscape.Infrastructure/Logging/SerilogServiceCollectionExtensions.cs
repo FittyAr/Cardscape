@@ -21,9 +21,8 @@ namespace Cardscape.Infrastructure.Logging;
 ///   <item><c>{RootPath}/{service}/{yyyyMMdd}/{service}-app.log</c> — every event.</item>
 ///   <item><c>{RootPath}/{service}/{yyyyMMdd}/{service}-errors.log</c> — <c>Warning</c> and above only.</item>
 /// </list>
-/// A console sink is always on. The database sink is a no-op
-/// until <c>Serilog:Database:Enabled</c> is set; the OTel sink
-/// is conditional on the OTel endpoint being configured (the
+/// A console sink is always on. The OTel sink is conditional
+/// on the OTel endpoint being configured (the
 /// shared <c>Otel:EndpointUrl</c> key matches the MCP tracing
 /// setup so logs and traces leave through the same collector).
 /// </remarks>
@@ -52,8 +51,6 @@ public static class SerilogServiceCollectionExtensions
 
         string serviceName = ServiceName(service);
         RollingFileSettings fileSettings = BuildFileSettings(config, env, serviceName);
-        DatabaseLogSinkOptions databaseOptions = BuildDatabaseOptions(config);
-
         builder.Host.UseSerilog((ctx, sp, lc) =>
         {
             lc.ReadFrom.Configuration(ctx.Configuration)
@@ -84,11 +81,6 @@ public static class SerilogServiceCollectionExtensions
                       fileSizeLimitBytes: fileSettings.FileSizeLimitBytes,
                       rollOnFileSizeLimit: true,
                       shared: true)));
-
-            if (databaseOptions.Enabled)
-            {
-                lc.WriteTo.Sink(new DatabaseLogSink(databaseOptions));
-            }
 
             string? otlpEndpoint = ctx.Configuration[OtlpEndpointConfigKey]
                 ?? Environment.GetEnvironmentVariable("Otel__EndpointUrl");
@@ -137,16 +129,6 @@ public static class SerilogServiceCollectionExtensions
             ServiceName = serviceName,
             RetainedFileCountLimit = retained,
             FileSizeLimitBytes = sizeLimit
-        };
-    }
-
-    private static DatabaseLogSinkOptions BuildDatabaseOptions(IConfiguration config)
-    {
-        return new DatabaseLogSinkOptions
-        {
-            Enabled = config.GetValue<bool>("Serilog:Database:Enabled"),
-            ConnectionString = config["Serilog:Database:ConnectionString"],
-            TableName = config["Serilog:Database:TableName"] ?? "logs"
         };
     }
 

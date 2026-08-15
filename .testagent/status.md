@@ -406,3 +406,11 @@
 - Behavioral evidence: mirror integration slice 5/5 and MCP-inclusive E2E 7/7.
 - Assertion/gap review: the architecture test fails on any second same-named command and asserts its declaring canonical type; existing integration asserts a distinct persisted target card and pointer behavior.
 - Final evidence: formatter clean; complete suite 871 passed / 0 failed / 1 skipped.
+# Remove placeholder database log sink (2026-08-15)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Operational invariant: every advertised logging sink performs real output; supported paths are console, rolling JSON files and optional OTLP.
+- Compatibility policy: `Serilog:Database` is removed rather than retained as an ignored setting.
+- Focused evidence: placeholder-sink architecture regression 1/1; architecture suite 20/20.
+- Assertion/gap review: the regression fails if either deleted type returns; exhaustive runtime/config search has no active references. Historical changelog mention is intentionally preserved.
+- Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 872 passed / 0 failed / 1 skipped.

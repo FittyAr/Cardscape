@@ -466,3 +466,10 @@
 - Decision: delete the duplicate command/handler entirely and route MCP to `CardscapeExtensions.MirrorCardCommand`, including its typed result. Keep one public contract only.
 - Acceptance: Application contains exactly one `MirrorCardCommand`; REST/MCP compile against it; existing mirror integration and complete suite pass.
 - Result: acceptance satisfied. Search reports one command; architecture 1/1, mirror 5/5, E2E 7/7 and complete suite 871 executed tests pass with one unrelated diagnostic skip.
+# Remove placeholder database log sink (2026-08-15)
+
+- Targets: logging composition, placeholder sink/options, API configuration and normative security documentation.
+- Finding: enabling `Serilog:Database` registered an `ILogEventSink` whose only behavior was discarding every event; no schema, writer or buffering existed.
+- Decision: delete the sink, options and configuration completely. Console, rolling compact JSON files and OTLP remain the supported observable paths.
+- Acceptance: no runtime/config reference remains; architecture rejects reintroduced placeholder sink types; build/full suite pass.
+- Result: acceptance satisfied. Architecture passes 20/20 and complete suite passes 872 executed tests with one unrelated diagnostic skip.
