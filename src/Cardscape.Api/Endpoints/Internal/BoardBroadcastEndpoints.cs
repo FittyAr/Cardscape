@@ -50,7 +50,6 @@ public static class BoardBroadcastEndpoints
 
         group.MapPost("/", async (
             HttpContext http,
-            BroadcastRequest request,
             IBoardNotifier notifier,
             IConfiguration config,
             Cardscape.Infrastructure.Persistence.CardscapeDbContext db,
@@ -75,10 +74,9 @@ public static class BoardBroadcastEndpoints
                 return Results.Unauthorized();
             }
 
-            // Body cap. The Content-Length header (when
-            // present) lets us short-circuit before allocating
-            // the read buffer; absent the cap is still
-            // enforced by the read loop.
+            // Authenticate before reading any attacker-controlled body. Then
+            // enforce the cap before JSON deserialization; endpoint parameter
+            // binding would consume the stream before this code can inspect it.
             if (http.Request.ContentLength is long advertised && advertised > MaxBodyBytes)
             {
                 return Results.Problem(
@@ -99,10 +97,22 @@ public static class BoardBroadcastEndpoints
                         statusCode: StatusCodes.Status413PayloadTooLarge);
                 }
             }
-            // The body was already consumed by the model
-            // binder; we kept the cap so a huge payload
-            // cannot be smuggled past ASP.NET's
-            // [FromBody] binding on a future refactor.
+
+            BroadcastRequest? request;
+            try
+            {
+                request = JsonSerializer.Deserialize<BroadcastRequest>(
+                    buffer.AsSpan(0, read), PayloadOptions);
+            }
+            catch (JsonException)
+            {
+                return Results.BadRequest(new { error = "Request body must be valid broadcast JSON." });
+            }
+
+            if (request is null)
+            {
+                return Results.BadRequest(new { error = "Request body is required." });
+            }
 
             if (string.IsNullOrWhiteSpace(request.Method))
             {
@@ -122,11 +132,19 @@ public static class BoardBroadcastEndpoints
             string? raw = request.Payload.ValueKind == JsonValueKind.Undefined
                 ? null
                 : request.Payload.GetRawText();
-            bool success = await DispatchAsync(notifier, resolvedBoardId.Value, request.Method, raw, ct);
+            bool success;
+            try
+            {
+                success = await DispatchAsync(notifier, resolvedBoardId.Value, request.Method, raw, ct);
+            }
+            catch (JsonException)
+            {
+                return Results.BadRequest(new { error = "Payload does not match the broadcast method." });
+            }
             return success
                 ? Results.Accepted()
                 : Results.BadRequest(new { error = $"Unknown method '{request.Method}'." });
-        });
+        }).Accepts<BroadcastRequest>("application/json");
 
         return app;
     }

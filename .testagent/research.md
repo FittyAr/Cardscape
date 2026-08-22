@@ -547,3 +547,12 @@
 - Acceptance: valid OAuth and tampered-state behavior remain intact; payloads above the cap return `google_calendar.response_too_large`; malformed payloads at and below the cap return `google_calendar.invalid_response`; complete validation passes.
 - Tooling limitation: `test-analysis-extensions/extensions/dotnet.md` is still absent, so xUnit/FluentAssertions classification follows repository examples directly.
 - Result: acceptance satisfied. Focused callback cases pass 5/5 and the complete suite passes 895 executed tests with one unrelated diagnostic skip.
+
+# Enforce internal broadcast body boundary before binding (2026-08-22)
+
+- Targets: `/api/internal/broadcast`, shared-secret ordering, JSON binding, 64 KiB cap, typed payload dispatch and OpenAPI request metadata.
+- Critical finding: minimal-API model binding consumed and deserialized `BroadcastRequest` before endpoint code ran. The subsequent stream loop always saw EOF, so the documented 64 KiB cap was ineffective and malformed typed payloads could escape as 500 errors.
+- Decision: authenticate first, reject advertised oversize, stream at most 64 KiB plus one byte, deserialize the envelope explicitly, preserve OpenAPI with `Accepts<BroadcastRequest>` and map envelope/payload JSON failures to 400.
+- Acceptance: known-length and unknown-length bodies above 64 KiB return 413; exactly 64 KiB reaches dispatch validation; malformed envelope and typed payload return stable 400; valid broadcasts remain accepted.
+- Tooling limitation: the referenced .NET test-analysis extension remains absent; xUnit/FluentAssertions review follows repository conventions.
+- Result: acceptance satisfied. Endpoint tests pass 10/10 and the complete suite passes 900 executed tests with one unrelated diagnostic skip.

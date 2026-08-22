@@ -496,3 +496,13 @@
 - Assertion review: each theory row asserts both HTTP 502 and a distinct stable error code; no assertion-free, trivial or self-referential generated test exists.
 - Pseudo-mutation review: above-limit alone would not kill `>`→`>=`, so an exactly-1-MiB malformed payload now must reach parsing and return `invalid_response`.
 - Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 895 passed / 0 failed / 1 skipped.
+
+# Enforce internal broadcast body boundary before binding (2026-08-22)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Security invariant: authentication occurs before body consumption and no request body above 64 KiB reaches JSON deserialization.
+- Contract invariant: malformed external input is a 4xx response, never an unhandled JSON exception.
+- Focused evidence: `BoardBroadcastEndpointTests` 10/10.
+- Assertion review: four new boundary/parser tests use 7 meaningful equality/string assertions; none are assertion-free, trivial or self-referential.
+- Pseudo-mutation review: `>`→`>=` is killed by the exactly-64-KiB case; removing either Content-Length or stream enforcement is killed by advertised/chunked oversize cases; removing JSON catches is killed by envelope and typed-payload cases.
+- Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 900 passed / 0 failed / 1 skipped.

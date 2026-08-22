@@ -417,3 +417,15 @@
 - [x] Add above-limit, exact-limit and malformed provider regressions.
 - [x] Format, build and run the complete suite.
 - [x] Commit and push to `master` (included in this block).
+
+# Enforce internal broadcast body boundary before binding (2026-08-22)
+
+- [x] Trace request binding, authentication, body consumption and dispatch.
+- [x] Remove automatic body binding from the endpoint delegate.
+- [x] Authenticate before reading and cap known/unknown-length bodies at 64 KiB.
+- [x] Deserialize envelope explicitly and preserve OpenAPI request metadata.
+- [x] Map malformed envelope and incompatible typed payload to 400.
+- [x] Add advertised, chunked, exact-boundary and malformed regressions.
+- [x] Run focused endpoint tests 10/10.
+- [x] Format, build and run the complete suite.
+- [x] Commit and push to `master` (included in this block).

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using Cardscape.IntegrationTests.Fixtures;
 using Microsoft.AspNetCore.Hosting;
@@ -99,6 +100,78 @@ public sealed class BoardBroadcastEndpointTests
     }
 
     [Fact]
+    public async Task Broadcast_WithAdvertisedBodyAbove64KiB_Returns413()
+    {
+        using HttpClient client = CreateClientWithSecret();
+        using HttpContent content = CreateSizedContent(64 * 1024 + 1);
+
+        using HttpResponseMessage response = await client.PostAsync(
+            "api/internal/broadcast/", content, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.RequestEntityTooLarge);
+    }
+
+    [Fact]
+    public async Task Broadcast_WithChunkedBodyAbove64KiB_Returns413()
+    {
+        using HttpClient client = CreateClientWithSecret();
+        byte[] bytes = CreateSizedBytes(64 * 1024 + 1);
+        using var content = new UnknownLengthContent(bytes);
+
+        using HttpResponseMessage response = await client.PostAsync(
+            "api/internal/broadcast/", content, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.RequestEntityTooLarge);
+    }
+
+    [Fact]
+    public async Task Broadcast_WithBodyExactly64KiB_ReachesDispatchValidation()
+    {
+        using HttpClient client = CreateClientWithSecret();
+        using HttpContent content = CreateSizedContent(64 * 1024);
+
+        using HttpResponseMessage response = await client.PostAsync(
+            "api/internal/broadcast/", content, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+            .Should().Contain("Unknown method");
+    }
+
+    [Fact]
+    public async Task Broadcast_WithMalformedJson_Returns400()
+    {
+        using HttpClient client = CreateClientWithSecret();
+        using var content = new StringContent("not-json", Encoding.UTF8, "application/json");
+
+        using HttpResponseMessage response = await client.PostAsync(
+            "api/internal/broadcast/", content, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+            .Should().Contain("valid broadcast JSON");
+    }
+
+    [Fact]
+    public async Task Broadcast_WithPayloadIncompatibleWithMethod_Returns400()
+    {
+        using HttpClient client = CreateClientWithSecret();
+        using JsonContent content = JsonContent.Create(new
+        {
+            boardId = Guid.NewGuid(),
+            method = "CardCreated",
+            payload = "not-a-card-payload"
+        });
+
+        using HttpResponseMessage response = await client.PostAsync(
+            "api/internal/broadcast/", content, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+            .Should().Contain("does not match the broadcast method");
+    }
+
+    [Fact]
     public async Task Broadcast_CardCreated_With_ListId_Resolves_Board()
     {
         HttpClient client = CreateClientWithSecret();
@@ -167,5 +240,43 @@ public sealed class BoardBroadcastEndpointTests
             payload
         });
         return await client.PostAsync("api/internal/broadcast/", content);
+    }
+
+    private static ByteArrayContent CreateSizedContent(int size)
+    {
+        var content = new ByteArrayContent(CreateSizedBytes(size));
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        return content;
+    }
+
+    private static byte[] CreateSizedBytes(int size)
+    {
+        var empty = new
+        {
+            boardId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            method = "NotARealMethod",
+            payload = new { padding = string.Empty }
+        };
+        int overhead = JsonSerializer.SerializeToUtf8Bytes(empty).Length;
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            empty.boardId,
+            empty.method,
+            payload = new { padding = new string('x', size - overhead) }
+        });
+        bytes.Should().HaveCount(size);
+        return bytes;
+    }
+
+    private sealed class UnknownLengthContent(byte[] bytes) : HttpContent
+    {
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) =>
+            stream.WriteAsync(bytes, 0, bytes.Length);
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = 0;
+            return false;
+        }
     }
 }
