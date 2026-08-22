@@ -52,7 +52,6 @@ public static class MarkAllNotificationsReadCommandHandler
     public static async Task<Result> Handle(
         MarkAllNotificationsReadCommand command,
         INotificationRepository notifications,
-        IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
         CancellationToken cancellationToken)
@@ -63,15 +62,8 @@ public static class MarkAllNotificationsReadCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        var unread = await notifications.ListForUserAsync(
-            currentUser.Id.Value, unreadOnly: true, skip: 0, take: 200, cancellationToken);
-
-        foreach (var n in unread)
-        {
-            n.MarkRead(clock.UtcNow);
-        }
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await notifications.MarkAllReadAsync(
+            currentUser.Id.Value, clock.UtcNow, cancellationToken);
         return Result.Success();
     }
 }

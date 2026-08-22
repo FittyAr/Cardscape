@@ -13,28 +13,30 @@ public sealed class BackgroundJobRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<BackgroundJob>> ClaimBatchAsync(
         int batchSize, DateTimeOffset now, CancellationToken ct = default)
     {
-        // Status translates through its int conversion, so exclude terminal
-        // rows in SQL. ScheduledFor is DateTimeOffset, which SQLite cannot
-        // order server-side; apply only that due-time check client-side.
-        // Rows are intentionally not tracked: the actual claim is the guarded
-        // ExecuteUpdate below.
-        var due = new List<BackgroundJob>();
-        await foreach (BackgroundJob job in Db.Set<BackgroundJob>()
+        IQueryable<BackgroundJob> pending = Db.Set<BackgroundJob>()
             .Where(job => job.Status == BackgroundJobStatus.Pending)
-            .AsNoTracking()
-            .AsAsyncEnumerable()
-            .WithCancellation(ct))
-        {
-            if (job.ScheduledFor <= now)
-            {
-                due.Add(job);
-            }
-        }
+            .AsNoTracking();
 
-        due.Sort((a, b) => a.ScheduledFor.CompareTo(b.ScheduledFor));
-        if (due.Count > batchSize)
+        List<BackgroundJob> due;
+        if (!Db.Database.IsSqlite())
         {
-            due = due.GetRange(0, batchSize);
+            due = await pending
+                .Where(job => job.ScheduledFor <= now)
+                .OrderBy(job => job.ScheduledFor)
+                .Take(batchSize)
+                .ToListAsync(ct);
+        }
+        else
+        {
+            // SQLite cannot compare or order DateTimeOffset values. The status
+            // predicate still runs in EF; only the due-time window is local.
+            due = await pending.ToListAsync(ct);
+            due.RemoveAll(job => job.ScheduledFor > now);
+            due.Sort((left, right) => left.ScheduledFor.CompareTo(right.ScheduledFor));
+            if (due.Count > batchSize)
+            {
+                due.RemoveRange(batchSize, due.Count - batchSize);
+            }
         }
 
         List<BackgroundJob> claimed = [];
@@ -91,22 +93,20 @@ public sealed class BackgroundJobRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<BackgroundJob>> ListDeadLetterAsync(
         int skip, int take, CancellationToken ct = default)
     {
-        var rows = new List<BackgroundJob>();
-        await foreach (BackgroundJob job in Db.Set<BackgroundJob>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<BackgroundJob> deadLetters = Db.Set<BackgroundJob>()
+            .AsNoTracking()
+            .Where(job => job.Status == BackgroundJobStatus.DeadLetter);
+        if (!Db.Database.IsSqlite())
         {
-            if (job.Status == BackgroundJobStatus.DeadLetter)
-            {
-                rows.Add(job);
-            }
+            return await deadLetters
+                .OrderByDescending(job => job.CompletedAt)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
         }
 
-        rows.Sort((a, b) =>
-            Nullable.Compare(b.CompletedAt, a.CompletedAt));
-        if (skip >= rows.Count)
-        {
-            return [];
-        }
-        int end = Math.Min(skip + take, rows.Count);
-        return rows.GetRange(skip, end - skip);
+        var rows = await deadLetters.ToListAsync(ct);
+        rows.Sort((left, right) => Nullable.Compare(right.CompletedAt, left.CompletedAt));
+        return rows.Skip(skip).Take(take).ToList();
     }
 }

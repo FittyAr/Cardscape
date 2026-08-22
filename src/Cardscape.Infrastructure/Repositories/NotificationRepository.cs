@@ -12,26 +12,41 @@ public sealed class NotificationRepository(CardscapeDbContext db) : RepositoryBa
     public async Task<IReadOnlyList<Notification>> ListForUserAsync(
         Guid userId, bool unreadOnly, int skip, int take, CancellationToken ct = default)
     {
-        // SQLite does not support ORDER BY on DateTimeOffset columns.
-        // Push the user filter to the server, materialize, then sort
-        // and paginate in memory. The inbox is per-user, so the row
-        // count is bounded by recent activity.
-        var query = Db.Set<Notification>().Where(n => n.UserId == userId);
+        IQueryable<Notification> query = Db.Set<Notification>()
+            .AsNoTracking()
+            .Where(notification => notification.UserId == userId);
         if (unreadOnly)
         {
-            query = query.Where(n => !n.IsRead);
+            query = query.Where(notification => !notification.IsRead);
         }
 
-        var rows = new List<Notification>();
-        await foreach (var n in query.AsAsyncEnumerable().WithCancellation(ct))
+        if (!Db.Database.IsSqlite())
         {
-            rows.Add(n);
+            return await query
+                .OrderByDescending(notification => notification.CreatedAt)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
         }
 
-        rows.Sort((a, b) => b.CreatedAt.CompareTo(a.CreatedAt));
+        // SQLite cannot order DateTimeOffset values; all filtering remains EF.
+        var rows = await query.ToListAsync(ct);
+        rows.Sort((left, right) => right.CreatedAt.CompareTo(left.CreatedAt));
         return rows.Skip(skip).Take(take).ToList();
     }
 
     public async Task<int> CountUnreadAsync(Guid userId, CancellationToken ct = default) =>
         await Db.Set<Notification>().CountAsync(n => n.UserId == userId && !n.IsRead, ct);
+
+    public async Task<int> MarkAllReadAsync(
+        Guid userId, DateTimeOffset readAt, CancellationToken ct = default) =>
+        await Db.Set<Notification>()
+            .Where(notification => notification.UserId == userId && !notification.IsRead)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(notification => notification.IsRead, true)
+                .SetProperty(notification => notification.ReadAt, readAt)
+                .SetProperty(notification => notification.UpdatedAt, readAt)
+                .SetProperty(notification => notification.UpdatedBy, (Guid?)null)
+                .SetProperty(notification => notification.RowVersion, notification => notification.RowVersion + 1),
+                ct);
 }

@@ -13,35 +13,17 @@ public sealed class BoardExtensionRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<BoardExtension>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {
-        // Strongly-typed-id LINQ translation: e.BoardId.Value == x
-        // can't be pushed to SQL. AsAsyncEnumerable + client filter.
-        var boardValue = boardId.Value;
-        var rows = new List<BoardExtension>();
-        await foreach (var e in Db.Set<BoardExtension>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (e.BoardId.Value == boardValue)
-            {
-                rows.Add(e);
-            }
-        }
-
-        rows.Sort((a, b) => (int)a.Kind - (int)b.Kind);
-        return rows;
+        return await Db.Set<BoardExtension>()
+            .AsNoTracking()
+            .Where(extension => extension.BoardId == boardId)
+            .OrderBy(extension => extension.Kind)
+            .ToListAsync(ct);
     }
 
     public async Task<BoardExtension?> GetByBoardAndKindAsync(
         BoardId boardId, ExtensionKind kind, CancellationToken ct = default)
     {
-        var boardValue = boardId.Value;
-        await foreach (var e in Db.Set<BoardExtension>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (e.BoardId.Value == boardValue && e.Kind == kind)
-            {
-                return e;
-            }
-        }
-
-        return null;
+        return await Db.Set<BoardExtension>().FirstOrDefaultAsync(extension =>
+            extension.BoardId == boardId && extension.Kind == kind, ct);
     }
 }
-

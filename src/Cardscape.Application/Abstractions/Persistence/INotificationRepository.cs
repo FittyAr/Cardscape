@@ -6,4 +6,5 @@ public interface INotificationRepository : IRepository<Notification, Notificatio
 {
     Task<IReadOnlyList<Notification>> ListForUserAsync(Guid userId, bool unreadOnly, int skip, int take, CancellationToken ct = default);
     Task<int> CountUnreadAsync(Guid userId, CancellationToken ct = default);
+    Task<int> MarkAllReadAsync(Guid userId, DateTimeOffset readAt, CancellationToken ct = default);
 }

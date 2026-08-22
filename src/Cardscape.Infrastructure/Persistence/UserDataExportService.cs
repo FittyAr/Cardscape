@@ -37,27 +37,13 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
             user.IsAnonymised,
             user.IsRestricted);
 
-        // The strongly-typed ID columns are mapped by EF
-        // as Guid under the hood. We read the raw rows
-        // first (a single small read per table), then
-        // filter in memory on the .Value equality. This
-        // sidesteps the EF query translator's inability
-        // to compare the value-object records to Guid
-        // in a where clause.
         Guid uid = userId.Value;
 
-        // WorkspaceMember and BoardMember are owned
-        // entity types (the per-aggregate collection
-        // navigation), so they cannot be addressed as
-        // a top-level DbSet<>. We Include() the
-        // navigation on the parent query and filter
-        // the loaded members in memory.
         var workspaceRows = await db.Workspaces
             .AsNoTracking()
-            .Include(w => w.Members)
+            .Where(workspace => workspace.Members.Any(member => member.UserId == uid))
             .ToListAsync(ct);
         var workspaces = workspaceRows
-            .Where(w => w.Members.Any(m => m.UserId == uid))
             .Select(w => new UserExportWorkspaceDto(
                 w.Id.Value,
                 w.Name.Value,
@@ -67,10 +53,9 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
 
         var boardRows = await db.Boards
             .AsNoTracking()
-            .Include(b => b.Members)
+            .Where(board => board.Members.Any(member => member.UserId == uid))
             .ToListAsync(ct);
         var boards = boardRows
-            .Where(b => b.Members.Any(m => m.UserId == uid))
             .Select(b => new UserExportBoardDto(
                 b.Id.Value,
                 b.Name.Value,
@@ -79,11 +64,11 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
                 b.CreatedAt))
             .ToList();
 
-        // Cards: CreatedBy is a nullable Guid. Read all,
-        // filter in memory.
-        var allCards = await db.Cards.AsNoTracking().ToListAsync(ct);
-        var cards = allCards
-            .Where(c => c.CreatedBy.HasValue && c.CreatedBy.Value == uid)
+        var authoredCards = await db.Cards
+            .AsNoTracking()
+            .Where(card => card.CreatedBy == uid)
+            .ToListAsync(ct);
+        var cards = authoredCards
             .Select(c => new UserExportCardDto(
                 c.Id.Value,
                 c.Title.Value,
@@ -93,10 +78,11 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
                 c.UpdatedAt))
             .ToList();
 
-        // Comments: AuthorId is the strongly-typed UserId.
-        var allComments = await db.Comments.AsNoTracking().ToListAsync(ct);
-        var comments = allComments
-            .Where(c => c.AuthorId == uid)
+        var authoredComments = await db.Comments
+            .AsNoTracking()
+            .Where(comment => comment.AuthorId == uid)
+            .ToListAsync(ct);
+        var comments = authoredComments
             .Select(c => new UserExportCommentDto(
                 c.Id.Value,
                 c.Body.Value,
@@ -104,20 +90,27 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
                 c.CreatedAt))
             .ToList();
 
-        // Activity: ActorId is a raw Guid. SQLite does not
-        // support ORDER BY on DateTimeOffset columns, so we
-        // pull the recent slice client-side: AsEnumerable()
-        // switches the query to LINQ-to-Objects, then we
-        // sort + cap in memory. The cap (1_000) is loose
-        // enough that a fresh in-memory sort is fast.
-        var allActivities = await db.Activities
+        IQueryable<Domain.Activities.Activity> activityQuery = db.Activities
             .AsNoTracking()
-            .AsAsyncEnumerable()
-            .OrderByDescending(a => a.OccurredAt)
-            .Take(1_000)
-            .ToListAsync(ct);
-        var activities = allActivities
-            .Where(a => a.ActorId == uid)
+            .Where(activity => activity.ActorId == uid);
+        List<Domain.Activities.Activity> userActivities;
+        if (!db.Database.IsSqlite())
+        {
+            userActivities = await activityQuery
+                .OrderByDescending(activity => activity.OccurredAt)
+                .Take(1_000)
+                .ToListAsync(ct);
+        }
+        else
+        {
+            userActivities = await activityQuery.ToListAsync(ct);
+            userActivities.Sort((left, right) => right.OccurredAt.CompareTo(left.OccurredAt));
+            if (userActivities.Count > 1_000)
+            {
+                userActivities.RemoveRange(1_000, userActivities.Count - 1_000);
+            }
+        }
+        var activities = userActivities
             .Select(a => new UserExportActivityDto(
                 a.Id.Value,
                 a.Kind.ToString(),
@@ -125,10 +118,11 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
                 a.OccurredAt))
             .ToList();
 
-        // API tokens: UserId is strongly-typed.
-        var allApiTokens = await db.ApiTokens.AsNoTracking().ToListAsync(ct);
-        var apiTokens = allApiTokens
-            .Where(t => t.UserId.Value == uid)
+        var userApiTokens = await db.ApiTokens
+            .AsNoTracking()
+            .Where(token => token.UserId == userId)
+            .ToListAsync(ct);
+        var apiTokens = userApiTokens
             .Select(t => new UserExportApiTokenDto(
                 t.Id.Value,
                 t.Name.Value,
@@ -138,10 +132,11 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
                 t.ExpiresAt))
             .ToList();
 
-        // OAuth apps: OwnerId is a raw Guid.
-        var allOAuthApps = await db.OAuthApps.AsNoTracking().ToListAsync(ct);
-        var oauthApps = allOAuthApps
-            .Where(a => a.OwnerId == uid)
+        var userOAuthApps = await db.OAuthApps
+            .AsNoTracking()
+            .Where(app => app.OwnerId == uid)
+            .ToListAsync(ct);
+        var oauthApps = userOAuthApps
             .Select(a => new UserExportOAuthAppDto(
                 a.Id.Value,
                 a.Name,
@@ -154,29 +149,31 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
                 a.IsRevoked))
             .ToList();
 
-        // External logins + TOTP + Google Calendar
-        var externalLoginRows = await db.ExternalLogins.AsNoTracking().ToListAsync(ct);
-        var totpRows = await db.TotpCredentials.AsNoTracking().ToListAsync(ct);
-        var googleCalendarRows = await db.GoogleCalendarConnections.AsNoTracking().ToListAsync(ct);
+        var externalLoginRows = await db.ExternalLogins
+            .AsNoTracking()
+            .Where(login => login.UserId == userId)
+            .ToListAsync(ct);
+        var totpRows = await db.TotpCredentials
+            .AsNoTracking()
+            .Where(credential => credential.UserId == userId)
+            .ToListAsync(ct);
+        var googleCalendarRows = await db.GoogleCalendarConnections
+            .AsNoTracking()
+            .Where(connection => connection.UserId == uid)
+            .ToListAsync(ct);
 
         var integrations = new List<UserExportIntegrationDto>();
-        integrations.AddRange(externalLoginRows
-            .Where(e => e.UserId.Value == uid)
-            .Select(e => new UserExportIntegrationDto(
+        integrations.AddRange(externalLoginRows.Select(e => new UserExportIntegrationDto(
                 e.Provider.ToString(),
                 e.Email,
                 Active: true,
                 ConnectedAt: e.LastUsedAt)));
-        integrations.AddRange(totpRows
-            .Where(t => t.UserId.Value == uid)
-            .Select(t => new UserExportIntegrationDto(
+        integrations.AddRange(totpRows.Select(t => new UserExportIntegrationDto(
                 "TOTP",
                 null,
                 true,
                 t.CreatedAt)));
-        integrations.AddRange(googleCalendarRows
-            .Where(c => c.UserId == uid)
-            .Select(c => new UserExportIntegrationDto(
+        integrations.AddRange(googleCalendarRows.Select(c => new UserExportIntegrationDto(
                 "GoogleCalendar",
                 c.GoogleEmail,
                 c.IsActive,
