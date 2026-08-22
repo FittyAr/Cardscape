@@ -148,8 +148,7 @@
         try
         {
             await Task.Delay(50);
-            await Js.InvokeVoidAsync("eval",
-                "var el=document.getElementById('blazor-error-ui');if(el){el.classList.add('d-none');el.style.display='none';}");
+            await Js.InvokeVoidAsync("cardscape.hideErrorUi");
         }
         catch
         {

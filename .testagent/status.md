@@ -468,3 +468,11 @@
 - Focused evidence: adapter regressions 4/4.
 - Assertion/gap review: success asserts the parsed contract and request URI; negative tests independently kill missing size cap, leaked error bodies and uncaught malformed JSON.
 - Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 889 passed / 0 failed / 1 skipped.
+
+# Remove abandoned UI experiment and dynamic script evaluation (2026-08-22)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Structure invariant: `Shared` contains usable components with real consumers, not reverted-experiment placeholders.
+- Security invariant: application code does not require dynamic JavaScript evaluation to manage framework UI.
+- UI evidence: every remaining shared Razor component has a consumer; no `eval` call, direct HTML control or alternate component library remains in active Razor markup.
+- Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 889 passed / 0 failed / 1 skipped.

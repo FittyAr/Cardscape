@@ -387,3 +387,12 @@
 - [x] Add direct success, oversized, malformed and provider-error regressions.
 - [x] Format, build and run the complete suite.
 - [x] Commit and push to `master` (`4870bf7`).
+
+# Remove abandoned UI experiment and dynamic script evaluation (2026-08-22)
+
+- [x] Inventory shared Razor components and their consumers.
+- [x] Delete the empty `LoggerErrorContent` experiment artifact.
+- [x] Replace `eval` interop with the named browser helper.
+- [x] Verify the UI remains Radzen-only.
+- [x] Format, build and run the complete suite.
+- [x] Commit and push to `master` (included in this block).

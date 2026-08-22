@@ -9,6 +9,19 @@
 
 window.cardscape = window.cardscape || {};
 
+// Clears the framework error banner after navigation. Keeping this
+// DOM operation in a named helper avoids dynamic script evaluation and
+// remains compatible with a strict `script-src 'self'` policy.
+window.cardscape.hideErrorUi = function () {
+    var element = document.getElementById('blazor-error-ui');
+    if (!element) {
+        return;
+    }
+
+    element.classList.add('d-none');
+    element.style.display = 'none';
+};
+
 // downloadTextFile: writes `content` to a file and triggers
 // a browser download. The MIME type is passed through so
 // the same helper serves CSV (text/csv) and JSON

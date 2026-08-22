@@ -521,3 +521,11 @@
 - Decision: request headers-first, cap successful payloads at 1 MiB, map oversized/malformed responses to stable external errors and log only HTTP status for provider failures.
 - Acceptance: valid completion contract remains intact; oversized and malformed responses fail predictably; provider bodies never enter product errors or logs; focused/full validation passes.
 - Result: acceptance satisfied. Adapter regressions pass 4/4 and the complete suite passes 889 executed tests with one unrelated diagnostic skip.
+
+# Remove abandoned UI experiment and dynamic script evaluation (2026-08-22)
+
+- Targets: orphaned shared Razor components, navigation error-banner recovery and the browser helper boundary.
+- Critical findings: `LoggerErrorContent.razor` was an empty, unreferenced placeholder retained after a reverted experiment; `App.razor` used JavaScript `eval` even though normative security documentation requires `script-src 'self'`.
+- Decision: delete the placeholder without an alias and move the existing DOM operation to the named `cardscape.hideErrorUi` helper already loaded by the application.
+- Acceptance: no orphan component or dynamic evaluation remains; navigation recovery behavior is preserved; UI remains Radzen-only; complete validation passes.
+- Result: acceptance satisfied. Source inventory finds no reference to the deleted component, no dynamic evaluation and no non-Radzen UI controls; the complete suite passes 889 executed tests with one unrelated diagnostic skip.
