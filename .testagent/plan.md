@@ -359,3 +359,11 @@
 - [x] Add all-kind/accent coverage after pseudo-mutation review.
 - [x] Reconcile ADR/status/architecture documentation and add a regression against volatile search.
 - [x] Run focused/full validation; commit and push to `master` pending.
+
+# Minimal AI provider boundary (2026-08-21)
+
+- [x] Trace every AI port method and product consumer.
+- [x] Remove unused chat and embeddings operations/contracts/wire types.
+- [x] Inline the two-message completion request in the real provider.
+- [x] Add architecture regression fixing the minimal port.
+- [x] Validate and document; commit and push to `master` pending.

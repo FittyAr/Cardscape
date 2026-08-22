@@ -17,9 +17,7 @@ namespace Cardscape.Infrastructure.Ai;
 ///
 /// The request body follows the OpenAI
 /// <c>/v1/chat/completions</c> shape; the response is parsed
-/// the same way. The embeddings endpoint
-/// (<c>/v1/embeddings</c>) follows the same shape for the
-/// <c>embed</c> method.
+/// the same way.
 ///
 /// No NuGet dependency on an OpenAI SDK: <see cref="HttpClient"/>
 /// + <see cref="JsonSerializer"/> are enough. The point of
@@ -50,24 +48,15 @@ public sealed class OpenAiCompatibleAiService : IAiService
 
     public async Task<Result<AiTextCompletion>> CompleteAsync(AiPrompt prompt, AiOptions options, CancellationToken ct = default)
     {
-        var messages = new List<AiMessage>
-        {
-            new(Role: "system", Content: prompt.System),
-            new(Role: "user", Content: prompt.User)
-        };
-        Result<AiChatCompletion> result = await ChatAsync(messages, options, ct);
-        return result.IsSuccess
-            ? Result<AiTextCompletion>.Success(new AiTextCompletion(result.Value.Text, result.Value.Model, result.Value.PromptTokens, result.Value.CompletionTokens))
-            : Result<AiTextCompletion>.Failure(result.Error);
-    }
-
-    public async Task<Result<AiChatCompletion>> ChatAsync(IReadOnlyList<AiMessage> messages, AiOptions options, CancellationToken ct = default)
-    {
         try
         {
             ChatCompletionsRequest request = new(
                 Model: options.ModelOverride ?? _options.Model,
-                Messages: messages.Select(m => new ChatMessage(m.Role, m.Content)).ToList(),
+                Messages:
+                [
+                    new ChatMessage("system", prompt.System),
+                    new ChatMessage("user", prompt.User)
+                ],
                 Temperature: options.Temperature,
                 MaxTokens: options.MaxTokens);
 
@@ -76,7 +65,7 @@ public sealed class OpenAiCompatibleAiService : IAiService
             {
                 string body = await response.Content.ReadAsStringAsync(ct);
                 _logger.LogWarning("OpenAI-compatible provider returned {Status}: {Body}", (int)response.StatusCode, body);
-                return Result<AiChatCompletion>.Failure(new DomainError(
+                return Result<AiTextCompletion>.Failure(new DomainError(
                     ErrorType.External,
                     "ai.provider_error",
                     $"Provider returned HTTP {(int)response.StatusCode}."));
@@ -85,63 +74,27 @@ public sealed class OpenAiCompatibleAiService : IAiService
             ChatCompletionsResponse? parsed = await response.Content.ReadFromJsonAsync<ChatCompletionsResponse>(JsonOptions, ct);
             if (parsed is null || parsed.Choices.Count == 0)
             {
-                return Result<AiChatCompletion>.Failure(new DomainError(
+                return Result<AiTextCompletion>.Failure(new DomainError(
                     ErrorType.External,
                     "ai.empty_response",
                     "Provider returned an empty completion."));
             }
 
             string text = parsed.Choices[0].Message?.Content ?? string.Empty;
-            return Result<AiChatCompletion>.Success(new AiChatCompletion(text, parsed.Model, parsed.Usage?.PromptTokens, parsed.Usage?.CompletionTokens));
+            return Result<AiTextCompletion>.Success(new AiTextCompletion(
+                text, parsed.Model, parsed.Usage?.PromptTokens, parsed.Usage?.CompletionTokens));
         }
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "OpenAI-compatible provider call failed.");
-            return Result<AiChatCompletion>.Failure(new DomainError(
+            return Result<AiTextCompletion>.Failure(new DomainError(
                 ErrorType.External,
                 "ai.network_error",
                 ex.Message));
         }
     }
 
-    public async Task<Result<AiEmbedding>> EmbedAsync(string input, CancellationToken ct = default)
-    {
-        try
-        {
-            EmbeddingsRequest request = new(Model: _options.Model, Input: input);
-            using HttpResponseMessage response = await _http.PostAsJsonAsync("v1/embeddings", request, JsonOptions, ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                string body = await response.Content.ReadAsStringAsync(ct);
-                _logger.LogWarning("OpenAI-compatible embeddings endpoint returned {Status}: {Body}", (int)response.StatusCode, body);
-                return Result<AiEmbedding>.Failure(new DomainError(
-                    ErrorType.External,
-                    "ai.provider_error",
-                    $"Provider returned HTTP {(int)response.StatusCode}."));
-            }
-
-            EmbeddingsResponse? parsed = await response.Content.ReadFromJsonAsync<EmbeddingsResponse>(JsonOptions, ct);
-            if (parsed is null || parsed.Data.Count == 0 || parsed.Data[0].Embedding is null)
-            {
-                return Result<AiEmbedding>.Failure(new DomainError(
-                    ErrorType.External,
-                    "ai.empty_response",
-                    "Provider returned an empty embedding."));
-            }
-
-            return Result<AiEmbedding>.Success(new AiEmbedding(parsed.Data[0].Embedding, parsed.Model));
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "OpenAI-compatible embeddings call failed.");
-            return Result<AiEmbedding>.Failure(new DomainError(
-                ErrorType.External,
-                "ai.network_error",
-                ex.Message));
-        }
-    }
-
-    // ── Wire types (OpenAI v1 /chat/completions + /embeddings) ─────
+    // ── Wire types (OpenAI v1 /chat/completions) ─────
 
     private sealed record ChatCompletionsRequest(string Model, IReadOnlyList<ChatMessage> Messages, double Temperature, int MaxTokens);
     private sealed record ChatMessage(string Role, string Content);
@@ -150,9 +103,6 @@ public sealed class OpenAiCompatibleAiService : IAiService
     private sealed record ChatChoice(int Index, ChatMessage? Message, string? FinishReason);
     private sealed record ChatUsage(int? PromptTokens, int? CompletionTokens, int? TotalTokens);
 
-    private sealed record EmbeddingsRequest(string Model, string Input);
-    private sealed record EmbeddingsResponse(string Model, IReadOnlyList<EmbeddingDatum> Data);
-    private sealed record EmbeddingDatum(int Index, IReadOnlyList<float> Embedding);
 }
 
 /// <summary>Configuration for the AI provider. Bound from <c>Ai:*</c> keys.</summary>

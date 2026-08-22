@@ -7,7 +7,7 @@ namespace Cardscape.Application.Abstractions;
 /// generative features (card description generation, comment
 /// summary, auto-checklist, smart owner suggestions).
 ///
-/// The interface is intentionally narrow: every method takes
+/// The interface is intentionally narrow: its completion operation takes
 /// a prompt-shaped input and returns a result-shaped output
 /// wrapped in <see cref="Result{T}"/>. The application layer
 /// does not know whether the implementation talks to a
@@ -23,11 +23,6 @@ public interface IAiService
     /// <summary>Generates a text completion from a single prompt.</summary>
     Task<Result<AiTextCompletion>> CompleteAsync(AiPrompt prompt, AiOptions options, CancellationToken ct = default);
 
-    /// <summary>Generates a chat completion from a list of messages.</summary>
-    Task<Result<AiChatCompletion>> ChatAsync(IReadOnlyList<AiMessage> messages, AiOptions options, CancellationToken ct = default);
-
-    /// <summary>Generates an embedding for semantic search / similarity.</summary>
-    Task<Result<AiEmbedding>> EmbedAsync(string input, CancellationToken ct = default);
 }
 
 /// <summary>A single prompt to send to the AI provider.</summary>
@@ -39,14 +34,5 @@ public sealed record AiOptions(
     int MaxTokens = 1024,
     string? ModelOverride = null);
 
-/// <summary>One turn in a chat conversation.</summary>
-public sealed record AiMessage(string Role, string Content);
-
 /// <summary>The AI provider's reply to a single-prompt completion.</summary>
 public sealed record AiTextCompletion(string Text, string? Model, int? PromptTokens, int? CompletionTokens);
-
-/// <summary>The AI provider's reply to a multi-turn chat.</summary>
-public sealed record AiChatCompletion(string Text, string? Model, int? PromptTokens, int? CompletionTokens);
-
-/// <summary>A vector embedding of an input string.</summary>
-public sealed record AiEmbedding(IReadOnlyList<float> Vector, string? Model);

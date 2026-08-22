@@ -27,38 +27,6 @@ public sealed class RuleBasedAiService : IAiService
             new AiTextCompletion(text, Model: "rule-based", PromptTokens: null, CompletionTokens: null)));
     }
 
-    public Task<Result<AiChatCompletion>> ChatAsync(IReadOnlyList<AiMessage> messages, AiOptions options, CancellationToken ct = default)
-    {
-        // The rule-based engine does not maintain multi-turn state. The
-        // last user message is treated as a single-prompt completion.
-        string last = string.Empty;
-        for (int i = messages.Count - 1; i >= 0; i--)
-        {
-            if (messages[i].Role == "user")
-            {
-                last = messages[i].Content;
-                break;
-            }
-        }
-        if (string.IsNullOrEmpty(last) && messages.Count > 0)
-        {
-            last = messages[messages.Count - 1].Content;
-        }
-        string text = RenderTemplate(new AiPrompt(System: string.Empty, User: last));
-        return Task.FromResult(Result<AiChatCompletion>.Success(
-            new AiChatCompletion(text, Model: "rule-based", PromptTokens: null, CompletionTokens: null)));
-    }
-
-    public Task<Result<AiEmbedding>> EmbedAsync(string input, CancellationToken ct = default)
-    {
-        // The rule-based engine does not produce embeddings. The
-        // application layer treats this as a graceful no-op (an
-        // empty vector). A future swap to OpenAI-compatible
-        // embeddings is a one-line DI change.
-        IReadOnlyList<float> vector = [];
-        return Task.FromResult(Result<AiEmbedding>.Success(new AiEmbedding(vector, Model: "rule-based")));
-    }
-
     private static string RenderTemplate(AiPrompt prompt)
     {
         string user = prompt.User.Trim();

@@ -15,6 +15,23 @@ namespace Cardscape.ArchitectureTests;
 public sealed class ArchitectureTests
 {
     [Fact]
+    public void Application_AiPortContainsOnlyConsumedCompletionCapability()
+    {
+        typeof(Cardscape.Application.Abstractions.IAiService)
+            .GetMethods()
+            .Select(method => method.Name)
+            .Should().Equal("CompleteAsync");
+
+        string[] forbiddenTypes = ["AiMessage", "AiChatCompletion", "AiEmbedding"];
+        Type[] matches = typeof(Cardscape.Application.Cards.CardscapeExtensions)
+            .Assembly.GetTypes()
+            .Where(type => forbiddenTypes.Contains(type.Name, StringComparer.Ordinal))
+            .ToArray();
+
+        matches.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Product_ContainsNoVolatileSearchIndex()
     {
         string[] forbiddenTypes = ["ISearchIndex", "InMemorySearchIndex", "FakeSearchIndex"];

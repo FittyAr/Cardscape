@@ -497,3 +497,11 @@
 - Acceptance checklist: persisted cards are searchable from a fresh DbContext; unauthorized boards are excluded; archived/deleted rows do not surface; write handlers no longer depend on search maintenance; no volatile production index remains.
 - Gap review: the first two regressions covered lifecycle, authorization and tombstones but not four result branches. A third test now persists Card, Comment, Checklist/Item, Label and Activity and asserts all six accent-insensitive hits from a fresh context.
 - Result: acceptance satisfied. Architecture passes 23/23 and the complete suite passes 878 executed tests with one unrelated diagnostic skip.
+
+# Minimal AI provider boundary (2026-08-21)
+
+- Targets: `IAiService`, both providers, OpenAI-compatible wire DTOs and architecture coverage.
+- Finding: `ChatAsync` and `EmbedAsync` had zero consumers. The rule-based provider returned an empty embedding as success, while the HTTP provider carried an unused embeddings integration.
+- Decision: keep only `CompleteAsync`, the sole product capability used by all four AI features; delete unused contracts and implementations without aliases.
+- Acceptance: the port exposes exactly one operation; removed types cannot return; focused architecture/build/full suite pass.
+- Result: acceptance satisfied. Architecture passes 24/24 and complete suite passes 879 executed tests with one unrelated diagnostic skip.

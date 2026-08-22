@@ -441,3 +441,12 @@
 - Assertion review: 3 tests, 10 meaningful assertions/chains; equality, collection, structural, state and negative categories; zero trivial, assertion-free or self-referential tests.
 - Pseudo-mutation review: lifecycle, board authorization, archived/deleted exclusion, five result kinds, accent normalization and exact scores are killed. Pagination boundary variations remain covered by the pre-existing service contract behavior rather than this bounded regression set.
 - Final evidence: formatter and diff check clean; Release build 0 warnings / 0 errors; complete suite 878 passed / 0 failed / 1 skipped.
+
+# Minimal AI provider boundary (2026-08-21)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Contract invariant: the Application AI port contains only capabilities currently consumed by product use cases.
+- Compatibility policy: unused chat/embedding DTOs and methods are deleted rather than retained for hypothetical providers.
+- Focused evidence: AI-port architecture regression 1/1; exhaustive source search only finds deleted type names in the prohibition rule.
+- Assertion/gap review: reflection asserts the exact public operation sequence and independently asserts removed DTO types are absent, killing method-return and type-reintroduction mutations.
+- Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 879 passed / 0 failed / 1 skipped.
