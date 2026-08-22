@@ -18,32 +18,10 @@ public sealed class ActivityRepository(CardscapeDbContext db) : RepositoryBase<A
         Guid? beforeId,
         CancellationToken ct = default)
     {
-        var boardIdValue = boardId.Value;
-        // AsAsyncEnumerable + client filter: the strongly-typed
-        // BoardId / CardId has-conversion path doesn't translate
-        // cleanly under EF Core 10 + HasConversion. The activity
-        // table is bounded in practice so a client-side filter is
-        // fine. Sort newest-first and take `limit` items that come
-        // strictly after the cursor (or all items when no cursor).
-        var rows = new List<Activity>();
-        await foreach (var a in Db.Set<Activity>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (a.BoardId.Value != boardIdValue)
-            {
-                continue;
-            }
-
-            if (beforeOccurredAt is { } cursorTime && beforeId is { } cursorId
-                && !IsBeforeCursor(a, cursorTime, cursorId))
-            {
-                continue;
-            }
-
-            rows.Add(a);
-        }
-
-        rows.Sort((a, b) => b.OccurredAt.CompareTo(a.OccurredAt));
-        return rows.Take(limit).ToList();
+        IQueryable<Activity> query = Db.Set<Activity>()
+            .AsNoTracking()
+            .Where(activity => activity.BoardId == boardId);
+        return await ExecutePageAsync(query, limit, beforeOccurredAt, beforeId, ct);
     }
 
     public async Task<IReadOnlyList<Activity>> ListForCardAsync(
@@ -53,26 +31,49 @@ public sealed class ActivityRepository(CardscapeDbContext db) : RepositoryBase<A
         Guid? beforeId,
         CancellationToken ct = default)
     {
-        var cardIdValue = cardId.Value;
-        var rows = new List<Activity>();
-        await foreach (var a in Db.Set<Activity>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<Activity> query = Db.Set<Activity>()
+            .AsNoTracking()
+            .Where(activity => activity.CardId == cardId.Value);
+        return await ExecutePageAsync(query, limit, beforeOccurredAt, beforeId, ct);
+    }
+
+    private async Task<IReadOnlyList<Activity>> ExecutePageAsync(
+        IQueryable<Activity> query,
+        int limit,
+        DateTimeOffset? beforeOccurredAt,
+        Guid? beforeId,
+        CancellationToken ct)
+    {
+        if (!Db.Database.IsSqlite())
         {
-            if (a.CardId != cardIdValue)
+            if (beforeOccurredAt is null || beforeId is null)
             {
-                continue;
+                return await query
+                    .OrderByDescending(activity => activity.OccurredAt)
+                    .ThenByDescending(activity => activity.Id)
+                    .Take(limit)
+                    .ToListAsync(ct);
             }
 
-            if (beforeOccurredAt is { } cursorTime && beforeId is { } cursorId
-                && !IsBeforeCursor(a, cursorTime, cursorId))
-            {
-                continue;
-            }
-
-            rows.Add(a);
+            // The timestamp predicate reduces the cursor window in SQL. The
+            // converted Guid tie-breaker is finalized locally for portability.
+            query = query.Where(activity => activity.OccurredAt <= beforeOccurredAt.Value);
         }
 
-        rows.Sort((a, b) => b.OccurredAt.CompareTo(a.OccurredAt));
+        var rows = await query.ToListAsync(ct);
+        if (beforeOccurredAt is { } cursorTime && beforeId is { } cursorId)
+        {
+            rows.RemoveAll(activity => !IsBeforeCursor(activity, cursorTime, cursorId));
+        }
+
+        rows.Sort(CompareNewestFirst);
         return rows.Take(limit).ToList();
+    }
+
+    private static int CompareNewestFirst(Activity left, Activity right)
+    {
+        int timestamp = right.OccurredAt.CompareTo(left.OccurredAt);
+        return timestamp != 0 ? timestamp : right.Id.Value.CompareTo(left.Id.Value);
     }
 
     /// <summary>
