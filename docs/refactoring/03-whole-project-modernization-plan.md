@@ -173,6 +173,7 @@ Reglas permanentes:
 | 2026-08-21 | Eliminación proveedor AI simulado | Retirado fallback rule-based; único backend real OpenAI-compatible, defaults Ollama, configuración fail-fast y redirects bloqueados | Build 0/0; suite 885 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-21 | Límite HTTP del proveedor AI | Respuestas headers-first y acotadas a 1 MiB; JSON inválido estable; cuerpos externos fuera de logs y errores | Build 0/0; suite 889 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-22 | Limpieza del límite UI de errores | Eliminado componente placeholder; recuperación de banner sin `eval`, mediante helper explícito compatible con CSP | Build 0/0; suite 889 pass, 0 fail, 1 skip | Incluido en este commit |
+| 2026-08-22 | Eliminación de bypasses de privilegios en Development | Retiradas rutas/commands para auto-admin y baja TOTP; bootstrap administrativo confinado al proceso de tests | Build 0/0; suite 892 pass, 0 fail, 1 skip | Incluido en este commit |
 
 ## 5. Criterio de completitud
 

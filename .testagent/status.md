@@ -476,3 +476,13 @@
 - Security invariant: application code does not require dynamic JavaScript evaluation to manage framework UI.
 - UI evidence: every remaining shared Razor component has a consumer; no `eval` call, direct HTML control or alternate component library remains in active Razor markup.
 - Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 889 passed / 0 failed / 1 skipped.
+
+# Remove development privilege bypasses (2026-08-22)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Product invariant: changing the hosting environment never exposes an HTTP privilege-escalation or 2FA-reset shortcut.
+- Test boundary: privileged fixture state is created inside the test process and is unreachable over the product transport.
+- Focused evidence: architecture 1/1, affected integration tests 17/17, authorization security tests 5/5 and Development-host route regressions 2/2.
+- Assertion review: the architecture test uses an exact negative type-set assertion; each HTTP theory case asserts the externally observable 404. No assertion-free, trivial or self-referential new test exists.
+- Pseudo-mutation review: renaming deleted types would survive architecture coverage, so exact-route HTTP cases were added; restoring either route or mapping it conditionally in Development now fails.
+- Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 892 passed / 0 failed / 1 skipped.

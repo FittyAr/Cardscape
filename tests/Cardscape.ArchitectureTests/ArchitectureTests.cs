@@ -15,6 +15,29 @@ namespace Cardscape.ArchitectureTests;
 public sealed class ArchitectureTests
 {
     [Fact]
+    public void Product_ContainsNoDevelopmentPrivilegeBypass()
+    {
+        string[] forbiddenTypes =
+        [
+            "DevOnlyEndpoints",
+            "DevDisableTotpCommand",
+            "DevDisableTotpCommandHandler",
+            "PromoteSelfToAdminCommand",
+            "PromoteSelfToAdminCommandHandler"
+        ];
+        Type[] matches = new[]
+            {
+                typeof(Cardscape.Application.Cards.CardscapeExtensions).Assembly,
+                typeof(Cardscape.Api.Endpoints.Auth.AuthEndpoints).Assembly
+            }
+            .SelectMany(assembly => assembly.GetTypes())
+            .Where(type => forbiddenTypes.Contains(type.Name, StringComparer.Ordinal))
+            .ToArray();
+
+        matches.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Product_ContainsNoSimulatedAiProvider()
     {
         Type[] matches = typeof(Cardscape.Infrastructure.DependencyInjection.InfrastructureServiceCollectionExtensions)

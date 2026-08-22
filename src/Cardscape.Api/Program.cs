@@ -12,7 +12,6 @@ using Cardscape.Api.Endpoints.Checklists;
 using Cardscape.Api.Endpoints.Comments;
 using Cardscape.Api.Endpoints.CustomFields;
 using Cardscape.Api.Endpoints.Dashboards;
-using Cardscape.Api.Endpoints.Dev;
 using Cardscape.Api.Endpoints.Extensions;
 using Cardscape.Api.Endpoints.Import;
 using Cardscape.Api.Endpoints.Integrations;
@@ -201,7 +200,6 @@ if (app.Environment.IsDevelopment())
     // pipeline (release job, third-party SDK generators) consumes.
     app.MapOpenApi();
     app.MapScalarApiReference();
-    app.MapDevOnlyEndpoints();
 }
 
 // Apply pending EF Core migrations on startup.

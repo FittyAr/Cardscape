@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.IntegrationTests.Fixtures;
+using Cardscape.Tests.Common.Fixtures;
 using FluentAssertions;
 
 namespace Cardscape.IntegrationTests.Endpoints;
@@ -78,8 +79,8 @@ public sealed class McpSubscriptionsAdminEndpointTests
     public async Task GetSnapshot_Token_Minted_Before_Promotion_Still_Returns_403()
     {
         // The is_admin claim is embedded in the JWT at
-        // mint time. A token issued before the
-        // promote-self-admin call still carries
+        // mint time. A token issued before the test fixture
+        // changes the underlying user still carries
         // is_admin=false even after the DB row is
         // updated — the operator has to re-authenticate
         // (or wait for the access-token TTL, default
@@ -87,11 +88,9 @@ public sealed class McpSubscriptionsAdminEndpointTests
         // test pins the contract so the implementation
         // never silently falls back to the DB lookup for
         // tokens that DO carry the claim.
-        HttpClient client = await CreateAuthenticatedClientAsync();
-        HttpResponseMessage promote = await client.PostAsync(
-            "api/dev/promote-self-admin", content: null, TestContext.Current.CancellationToken);
-        promote.IsSuccessStatusCode.Should().BeTrue(
-            "the dev-only promote-self-admin endpoint should be wired in the Development environment");
+        (HttpClient client, string email) = await CreateRegisteredClientAsync();
+        await _factory.Services.PromoteUserToAdminAsync(
+            email, TestContext.Current.CancellationToken);
         // Same client, same token — no re-login. The
         // is_admin claim is still false because the
         // token was minted before the promotion.
@@ -124,20 +123,15 @@ public sealed class McpSubscriptionsAdminEndpointTests
 
     private async Task<HttpClient> CreateAdminClientAsync()
     {
-        // Register, promote, then re-login so the new
+        // Register, promote through the test fixture, then re-login so the new
         // JWT carries the is_admin=true claim. The
         // McpSubscriptionsAdminPolicy reads the claim
         // (no DB lookup) and a stale token would
         // 403.
         (HttpClient firstClient, string email) = await CreateRegisteredClientAsync();
-        HttpResponseMessage promote = await firstClient.PostAsync(
-            "api/dev/promote-self-admin", content: null, TestContext.Current.CancellationToken);
-        if (!promote.IsSuccessStatusCode)
-        {
-            string body = await promote.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-            throw new Xunit.Sdk.XunitException(
-                $"promote-self-admin returned {(int)promote.StatusCode} {promote.StatusCode}. Body: {body}");
-        }
+        await _factory.Services.PromoteUserToAdminAsync(
+            email, TestContext.Current.CancellationToken);
+        firstClient.Dispose();
 
         // Re-login to get a JWT with the fresh
         // is_admin claim. The test API's login
@@ -148,7 +142,7 @@ public sealed class McpSubscriptionsAdminEndpointTests
             "api/auth/login", new { email, password = "Password123!" },
             TestContext.Current.CancellationToken);
         login.IsSuccessStatusCode.Should().BeTrue(
-            "after promote-self-admin, the user should be able to log in with the same password");
+            "after fixture promotion, the user should be able to log in with the same password");
         AuthResponse auth = (await login.Content.ReadFromJsonAsync<AuthResponse>())!;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);

@@ -529,3 +529,12 @@
 - Decision: delete the placeholder without an alias and move the existing DOM operation to the named `cardscape.hideErrorUi` helper already loaded by the application.
 - Acceptance: no orphan component or dynamic evaluation remains; navigation recovery behavior is preserved; UI remains Radzen-only; complete validation passes.
 - Result: acceptance satisfied. Source inventory finds no reference to the deleted component, no dynamic evaluation and no non-Radzen UI controls; the complete suite passes 889 executed tests with one unrelated diagnostic skip.
+
+# Remove development privilege bypasses (2026-08-22)
+
+- Targets: `/api/dev/promote-self-admin`, `/api/dev/disable-totp`, their Application commands and all administrative test bootstraps.
+- Confirmed exploit: in any host running as `Development`, a registered user could mint an admin token and an unauthenticated caller who knew an email could disable that account's TOTP. Environment gating reduced exposure but did not remove the privilege boundary bypass.
+- Decision: delete both routes, request DTOs, commands, handlers and result types without compatibility aliases. Administrative tests mutate users only in-process through `TestCommon`, using the real domain/repository/unit-of-work boundaries.
+- Acceptance: both legacy routes return 404 even in the Development test host; removed product types cannot return; administrative authorization behavior remains covered.
+- Tooling limitation: the installed `test-analysis-extensions` catalog references `extensions/dotnet.md`, but that file is absent. The xUnit/FluentAssertions review was therefore performed inline from repository conventions.
+- Result: acceptance satisfied. Route regressions pass 2/2, architecture passes 26/26 and the complete suite passes 892 executed tests with one unrelated diagnostic skip.

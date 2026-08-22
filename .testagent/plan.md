@@ -396,3 +396,14 @@
 - [x] Verify the UI remains Radzen-only.
 - [x] Format, build and run the complete suite.
 - [x] Commit and push to `master` (included in this block).
+
+# Remove development privilege bypasses (2026-08-22)
+
+- [x] Trace both routes, product commands and every test consumer.
+- [x] Delete the development endpoint surface and Application commands.
+- [x] Move admin setup to an in-process `TestCommon` helper.
+- [x] Add architecture regression for removed privilege-bypass types.
+- [x] Add Development-host HTTP regressions requiring 404 for both old routes.
+- [x] Run focused architecture, integration and security tests.
+- [x] Format, build and run the complete suite.
+- [x] Commit and push to `master` (included in this block).

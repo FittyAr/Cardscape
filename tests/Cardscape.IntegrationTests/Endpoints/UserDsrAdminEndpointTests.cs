@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.IntegrationTests.Fixtures;
+using Cardscape.Tests.Common.Fixtures;
 using FluentAssertions;
 
 namespace Cardscape.IntegrationTests.Endpoints;
@@ -168,14 +169,9 @@ public sealed class UserDsrAdminEndpointTests
     private async Task<HttpClient> CreateAdminClientAsync()
     {
         (HttpClient firstClient, string email) = await CreateRegisteredClientAsync();
-        HttpResponseMessage promote = await firstClient.PostAsync(
-            "api/dev/promote-self-admin", content: null, TestContext.Current.CancellationToken);
-        if (!promote.IsSuccessStatusCode)
-        {
-            string body = await promote.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-            throw new Xunit.Sdk.XunitException(
-                $"promote-self-admin returned {(int)promote.StatusCode} {promote.StatusCode}. Body: {body}");
-        }
+        await _factory.Services.PromoteUserToAdminAsync(
+            email, TestContext.Current.CancellationToken);
+        firstClient.Dispose();
 
         // Re-login so the new JWT carries the is_admin
         // claim. The AdminOnlyPolicy reads the cached
@@ -186,7 +182,7 @@ public sealed class UserDsrAdminEndpointTests
             "api/auth/login", new { email, password = "Password123!" },
             TestContext.Current.CancellationToken);
         login.IsSuccessStatusCode.Should().BeTrue(
-            "after promote-self-admin, the user should be able to log in with the same password");
+            "after fixture promotion, the user should be able to log in with the same password");
         AuthResponse auth = (await login.Content.ReadFromJsonAsync<AuthResponse>())!;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);

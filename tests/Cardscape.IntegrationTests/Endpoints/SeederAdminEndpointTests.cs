@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.IntegrationTests.Fixtures;
+using Cardscape.Tests.Common.Fixtures;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -117,9 +118,8 @@ public sealed class SeederAdminEndpointTests
         (HttpClient firstClient, string email) = await CreateRegisteredClientAsync(factory);
         using (firstClient)
         {
-            HttpResponseMessage promotion = await firstClient.PostAsync(
-                "api/dev/promote-self-admin", null, TestContext.Current.CancellationToken);
-            promotion.IsSuccessStatusCode.Should().BeTrue();
+            await factory.Services.PromoteUserToAdminAsync(
+                email, TestContext.Current.CancellationToken);
         }
 
         HttpClient client = factory.CreateClient();
