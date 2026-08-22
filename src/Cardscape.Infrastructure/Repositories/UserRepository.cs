@@ -19,21 +19,8 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
             return null;
         }
 
-        // EF Core cannot translate the EmailAddress value-object property
-        // (u.Email.Value) to SQL. We use a streaming client-side filter
-        // over a primary-key-ordered scan; for a user table this is cheap
-        // and avoids a SQL-side LIKE. The value object is created on
-        // insert with a normalized email, so a case-insensitive ordinal
-        // match is enough.
-        await foreach (var user in Db.Set<User>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (string.Equals(user.Email.Value, normalized, StringComparison.OrdinalIgnoreCase))
-            {
-                return user;
-            }
-        }
-
-        return null;
+        EmailAddress typedEmail = EmailAddress.Create(normalized).Value;
+        return await Db.Set<User>().FirstOrDefaultAsync(user => user.Email == typedEmail, ct);
     }
 
 

@@ -24,18 +24,15 @@ public sealed class OAuthAppRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<OAuthApp>> ListForOwnerAsync(
         Guid ownerId, CancellationToken ct = default)
     {
-        // EF Core 10 / SQLite can't ORDER BY DateTimeOffset
-        // reliably; the per-owner result set is small so we
-        // stream client-side and sort in memory.
-        var rows = new List<OAuthApp>();
-        await foreach (var app in Db.Set<OAuthApp>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<OAuthApp> query = Db.Set<OAuthApp>()
+            .AsNoTracking()
+            .Where(app => app.OwnerId == ownerId);
+        if (!Db.Database.IsSqlite())
         {
-            if (app.OwnerId == ownerId)
-            {
-                rows.Add(app);
-            }
+            return await query.OrderByDescending(app => app.CreatedAt).ToListAsync(ct);
         }
 
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => b.CreatedAt.CompareTo(a.CreatedAt));
         return rows;
     }

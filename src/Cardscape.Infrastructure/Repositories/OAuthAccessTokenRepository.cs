@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Integrations.OAuthApps;
+using Cardscape.Domain.Members;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,23 +27,35 @@ public sealed class OAuthAccessTokenRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<OAuthAccessToken>> ListForUserAsync(
         Guid userId, CancellationToken ct = default)
     {
-        var rows = new List<OAuthAccessToken>();
-        await foreach (var token in Db.Set<OAuthAccessToken>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<OAuthAccessToken> query = Db.Set<OAuthAccessToken>()
+            .AsNoTracking()
+            .Where(token => token.UserId == new UserId(userId));
+        if (!Db.Database.IsSqlite())
         {
-            if (token.UserId.Value == userId)
-            {
-                rows.Add(token);
-            }
+            return await query.OrderByDescending(token => token.CreatedAt).ToListAsync(ct);
         }
 
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => b.CreatedAt.CompareTo(a.CreatedAt));
         return rows;
     }
 
     public async Task<int> PurgeExpiredAsync(DateTimeOffset cutoff, CancellationToken ct = default)
     {
-        return await Db.Set<OAuthAccessToken>()
-            .Where(t => t.ExpiresAt < cutoff && t.RevokedAt != null)
-            .ExecuteDeleteAsync(ct);
+        IQueryable<OAuthAccessToken> revoked = Db.Set<OAuthAccessToken>()
+            .Where(token => token.RevokedAt != null);
+        if (!Db.Database.IsSqlite())
+        {
+            return await revoked.Where(token => token.ExpiresAt < cutoff).ExecuteDeleteAsync(ct);
+        }
+
+        var expiredIds = new List<OAuthAccessTokenId>();
+        await foreach (OAuthAccessToken token in revoked.AsAsyncEnumerable().WithCancellation(ct))
+        {
+            if (token.ExpiresAt < cutoff) expiredIds.Add(token.Id);
+        }
+        return expiredIds.Count == 0
+            ? 0
+            : await Db.Set<OAuthAccessToken>().Where(token => expiredIds.Contains(token.Id)).ExecuteDeleteAsync(ct);
     }
 }

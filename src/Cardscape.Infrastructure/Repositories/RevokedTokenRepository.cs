@@ -39,22 +39,15 @@ public sealed class RevokedTokenRepository(
 
     public async Task<int> PurgeExpiredAsync(DateTimeOffset now, CancellationToken ct = default)
     {
-        // BETA-2-#13 / BETA-4-#2 — see test-results/BETA-TEST-REPORT.md.
-        //
-        // The original implementation called
-        // ExecuteDeleteAsync(Where(t => t.TokenExpiresAt <= now))
-        // and the R2 fix split it into a SELECT + RemoveRange,
-        // but EF Core 10 + SQLite still cannot translate
-        // `TokenExpiresAt <= now` (a DateTimeOffset comparison
-        // against a captured local) — the provider throws
-        // "could not be translated" at runtime and the
-        // RevocationSweeper's background loop logs an error
-        // every minute. The pragmatic fix is the same pattern
-        // BETA-2-#7 used: pull the rows with AsAsyncEnumerable
-        // and filter on the client. The revoked-tokens table
-        // is bounded by the JWT TTL, so the client-side
-        // filter is cheap; the win is that the sweeper
-        // actually completes instead of erroring on every tick.
+        if (!context.Database.IsSqlite())
+        {
+            return await context.RevokedTokens
+                .Where(token => token.TokenExpiresAt <= now)
+                .ExecuteDeleteAsync(ct);
+        }
+
+        // SQLite cannot compare DateTimeOffset. Select only the ids locally,
+        // then execute one set-based DELETE rather than loading tracked rows.
         var expired = new List<RevokedTokenId>();
         await foreach (var token in context.RevokedTokens.AsAsyncEnumerable().WithCancellation(ct))
         {
@@ -69,11 +62,8 @@ public sealed class RevokedTokenRepository(
             return 0;
         }
 
-        var rows = await context.RevokedTokens
-            .Where(t => expired.Contains(t.Id))
-            .ToListAsync(ct);
-        context.RevokedTokens.RemoveRange(rows);
-        await context.SaveChangesAsync(ct);
-        return rows.Count;
+        return await context.RevokedTokens
+            .Where(token => expired.Contains(token.Id))
+            .ExecuteDeleteAsync(ct);
     }
 }

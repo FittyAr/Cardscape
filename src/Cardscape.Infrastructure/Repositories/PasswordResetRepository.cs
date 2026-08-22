@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Authentication.PasswordResets;
 using Cardscape.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 
 
@@ -11,15 +12,8 @@ public sealed class PasswordResetRepository(CardscapeDbContext db)
 {
     public async Task<PasswordReset?> FindByTokenHashAsync(string tokenHash, CancellationToken ct = default)
     {
-        PasswordReset? found = null;
-        await foreach (PasswordReset r in Db.Set<PasswordReset>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (string.Equals(r.TokenHash, tokenHash, StringComparison.Ordinal) && !r.IsDeleted)
-            {
-                found = r;
-                break;
-            }
-        }
-        return found;
+        if (string.IsNullOrWhiteSpace(tokenHash)) return null;
+        return await Db.Set<PasswordReset>()
+            .FirstOrDefaultAsync(reset => reset.TokenHash == tokenHash && !reset.IsDeleted, ct);
     }
 }

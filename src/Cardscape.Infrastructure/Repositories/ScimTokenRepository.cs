@@ -14,15 +14,12 @@ public sealed class ScimTokenRepository(CardscapeDbContext db) : IScimTokenRepos
 
     public async Task<ScimToken?> FindByPlaintextAsync(string plaintext, CancellationToken ct = default)
     {
-        // The token is hashed at the domain layer, so we look
-        // it up by hashing the presented plaintext against
-        // every non-revoked row. For a v1.1.0 the SCIM token
-        // list per workspace is small (typically 1) so the
-        // linear scan is fine; a follow-up PR can introduce
-        // a faster lookup keyed on a HMAC prefix.
-        await foreach (var token in db.ScimTokens.AsAsyncEnumerable().WithCancellation(ct))
+        // Salted password-style hashes cannot be queried by equality. Filter
+        // revoked rows in SQL, then verify the remaining candidates locally.
+        IQueryable<ScimToken> active = db.ScimTokens.Where(token => !token.IsRevoked);
+        await foreach (ScimToken token in active.AsAsyncEnumerable().WithCancellation(ct))
         {
-            if (!token.IsRevoked && token.Verify(plaintext))
+            if (token.Verify(plaintext))
             {
                 return token;
             }
@@ -37,10 +34,17 @@ public sealed class ScimTokenRepository(CardscapeDbContext db) : IScimTokenRepos
         // set of primitive types). The list is small (typically
         // 1-2 tokens per workspace) so we fetch the matching
         // rows in any order and sort client-side.
-        IReadOnlyList<ScimToken> rows = await db.ScimTokens
-            .Where(t => t.WorkspaceId == new Domain.Workspaces.WorkspaceId(workspaceId))
-            .ToListAsync(ct);
-        return rows.OrderByDescending(t => t.CreatedAt).ToList();
+        IQueryable<ScimToken> query = db.ScimTokens
+            .AsNoTracking()
+            .Where(token => token.WorkspaceId == new Domain.Workspaces.WorkspaceId(workspaceId));
+        if (!db.Database.IsSqlite())
+        {
+            return await query.OrderByDescending(token => token.CreatedAt).ToListAsync(ct);
+        }
+
+        var rows = await query.ToListAsync(ct);
+        rows.Sort((a, b) => b.CreatedAt.CompareTo(a.CreatedAt));
+        return rows;
     }
 
     public async Task AddAsync(ScimToken token, CancellationToken ct = default)

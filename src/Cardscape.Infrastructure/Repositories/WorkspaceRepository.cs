@@ -11,19 +11,12 @@ public sealed class WorkspaceRepository(CardscapeDbContext db) : RepositoryBase<
 {
     public async Task<IReadOnlyList<Workspace>> ListForUserAsync(Guid userId, CancellationToken ct = default)
     {
-        var rows = new List<Workspace>();
-        await foreach (var w in Db.Set<Workspace>().Include(w => w.Members).AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (w.IsDeleted || !w.Members.Any(m => m.UserId == userId))
-            {
-                continue;
-            }
-
-            rows.Add(w);
-        }
-
-        rows.Sort((a, b) => string.Compare(a.Name.Value, b.Name.Value, StringComparison.OrdinalIgnoreCase));
-        return rows;
+        return await Db.Set<Workspace>()
+            .AsNoTracking()
+            .Include(workspace => workspace.Members)
+            .Where(workspace => !workspace.IsDeleted && workspace.Members.Any(member => member.UserId == userId))
+            .OrderBy(workspace => workspace.Name)
+            .ToListAsync(ct);
     }
 
     public async Task<Workspace?> GetWithMembersAsync(WorkspaceId id, CancellationToken ct = default)

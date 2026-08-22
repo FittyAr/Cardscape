@@ -11,9 +11,7 @@ namespace Cardscape.Infrastructure.Repositories;
 /// EF Core implementation of <see cref="IWorkspaceInvitationRepository"/>.
 /// The lookup-by-hash path is the accept endpoint's hot path: every
 /// accept attempt hashes the cleartext and looks it up. The
-/// email-scoped query streams client-side because the strongly-typed
-/// <c>Email</c> value object can't be translated to SQL through the
-/// conversion (same trap as <see cref="ApiTokenRepository"/>).
+/// email-scoped query uses the normalized indexed string directly.
 /// </summary>
 public sealed class WorkspaceInvitationRepository(CardscapeDbContext db)
     : RepositoryBase<WorkspaceInvitation, WorkspaceInvitationId>(db), IWorkspaceInvitationRepository
@@ -33,38 +31,19 @@ public sealed class WorkspaceInvitationRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<WorkspaceInvitation>> ListForWorkspaceAsync(
         Guid workspaceId, bool includeTerminal, CancellationToken ct = default)
     {
-        // BETA-2-#2 (regression) — see
-        // test-results/BETA-TEST-REPORT.md. The endpoint fix
-        // made `includeTerminal` optional with a default of
-        // false; the previous implementation worked when
-        // callers passed it through, but a fresh GET (no
-        // query string) was still hitting the route and
-        // walking into the SQL-translation failure on
-        // `i.WorkspaceId.Value == workspaceId`. The strongly-
-        // typed WorkspaceId value object doesn't translate
-        // through the EF Core SQLite provider. Same fix
-        // pattern as AutomationRuleRepository / CardRepository
-        // / GitHubRepoLinkRepository: bring the rows into
-        // memory with AsAsyncEnumerable() and filter
-        // client-side. Invitation counts per workspace are
-        // small (single digits to low hundreds), so the
-        // round-trip cost is negligible.
-        var rows = new List<WorkspaceInvitation>();
-        await foreach (var inv in Db.Set<WorkspaceInvitation>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<WorkspaceInvitation> query = Db.Set<WorkspaceInvitation>()
+            .AsNoTracking()
+            .Where(invitation => invitation.WorkspaceId == new WorkspaceId(workspaceId));
+        if (!includeTerminal)
         {
-            if (inv.WorkspaceId.Value != workspaceId)
-            {
-                continue;
-            }
-
-            if (!includeTerminal && (inv.AcceptedAt is not null || inv.RevokedAt is not null))
-            {
-                continue;
-            }
-
-            rows.Add(inv);
+            query = query.Where(invitation => invitation.AcceptedAt == null && invitation.RevokedAt == null);
+        }
+        if (!Db.Database.IsSqlite())
+        {
+            return await query.OrderByDescending(invitation => invitation.InvitedAt).ToListAsync(ct);
         }
 
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => b.InvitedAt.CompareTo(a.InvitedAt));
         return rows;
     }
@@ -78,25 +57,18 @@ public sealed class WorkspaceInvitationRepository(CardscapeDbContext db)
         }
 
         var normalized = email.Trim().ToLowerInvariant();
-        // Email is a value object; the strongly-typed access path
-        // doesn't translate. Stream client-side and filter, then
-        // keep only non-terminal rows in memory.
-        var rows = new List<WorkspaceInvitation>();
-        await foreach (var inv in Db.Set<WorkspaceInvitation>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<WorkspaceInvitation> query = Db.Set<WorkspaceInvitation>()
+            .AsNoTracking()
+            .Where(invitation =>
+                invitation.Email == normalized
+                && invitation.AcceptedAt == null
+                && invitation.RevokedAt == null);
+        if (!Db.Database.IsSqlite())
         {
-            if (!string.Equals(inv.Email, normalized, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            if (inv.AcceptedAt is not null || inv.RevokedAt is not null)
-            {
-                continue;
-            }
-
-            rows.Add(inv);
+            return await query.OrderByDescending(invitation => invitation.InvitedAt).ToListAsync(ct);
         }
 
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => b.InvitedAt.CompareTo(a.InvitedAt));
         return rows;
     }

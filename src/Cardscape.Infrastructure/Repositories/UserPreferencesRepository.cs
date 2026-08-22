@@ -19,18 +19,11 @@ public sealed class UserPreferencesRepository(CardscapeDbContext db)
 {
     public async Task DeleteByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
-        // Stream client-side: the strongly-typed-id conversion
-        // does not translate to SQL with the current EF Core
-        // 10 + Npgsql / SQLite / MySql provider matrix. The
-        // table is at most one row per user, so the cost is
-        // trivial.
-        await foreach (UserPreferences prefs in Db.Set<UserPreferences>().AsAsyncEnumerable().WithCancellation(ct))
+        UserPreferences? preferences = await Db.Set<UserPreferences>()
+            .FirstOrDefaultAsync(prefs => prefs.Id == new UserId(userId), ct);
+        if (preferences is not null)
         {
-            if (prefs.Id.Value == userId)
-            {
-                Db.Set<UserPreferences>().Remove(prefs);
-                return;
-            }
+            Db.Set<UserPreferences>().Remove(preferences);
         }
     }
 }
