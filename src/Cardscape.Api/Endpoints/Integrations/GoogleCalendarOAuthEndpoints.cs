@@ -176,8 +176,13 @@ public static class GoogleCalendarOAuthEndpoints
                     statusCode: StatusCodes.Status502BadGateway);
             }
 
-            await tokenResponse.Content.LoadIntoBufferAsync(MaxGoogleResponseBytes, ct);
-            JsonElement tokenBody = await tokenResponse.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
+            Result<JsonElement> tokenBodyResult = await ReadGoogleJsonAsync(tokenResponse.Content, ct);
+            if (tokenBodyResult.IsFailure)
+            {
+                return MapError(tokenBodyResult.Error);
+            }
+
+            JsonElement tokenBody = tokenBodyResult.Value;
             string? refreshToken = tokenBody.TryGetProperty("refresh_token", out JsonElement rt) ? rt.GetString() : null;
             string? accessToken = tokenBody.TryGetProperty("access_token", out JsonElement at) ? at.GetString() : null;
             if (string.IsNullOrEmpty(refreshToken))
@@ -199,8 +204,13 @@ public static class GoogleCalendarOAuthEndpoints
                     userRequest, HttpCompletionOption.ResponseHeadersRead, ct);
                 if (userResponse.IsSuccessStatusCode)
                 {
-                    await userResponse.Content.LoadIntoBufferAsync(MaxGoogleResponseBytes, ct);
-                    JsonElement userBody = await userResponse.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
+                    Result<JsonElement> userBodyResult = await ReadGoogleJsonAsync(userResponse.Content, ct);
+                    if (userBodyResult.IsFailure)
+                    {
+                        return MapError(userBodyResult.Error);
+                    }
+
+                    JsonElement userBody = userBodyResult.Value;
                     googleEmail = userBody.TryGetProperty("email", out JsonElement emailEl) ? emailEl.GetString() : null;
                 }
             }
@@ -239,6 +249,41 @@ public static class GoogleCalendarOAuthEndpoints
         !string.IsNullOrWhiteSpace(value)
         && value[0] == '/'
         && (value.Length == 1 || (value[1] != '/' && value[1] != '\\'));
+
+    private static async Task<Result<JsonElement>> ReadGoogleJsonAsync(
+        HttpContent content,
+        CancellationToken ct)
+    {
+        if (content.Headers.ContentLength is long length && length > MaxGoogleResponseBytes)
+        {
+            return Result.Failure<JsonElement>(DomainError.External(
+                "google_calendar.response_too_large",
+                $"Google response exceeded {MaxGoogleResponseBytes} bytes."));
+        }
+
+        try
+        {
+            await content.LoadIntoBufferAsync(MaxGoogleResponseBytes, ct);
+        }
+        catch (HttpRequestException)
+        {
+            return Result.Failure<JsonElement>(DomainError.External(
+                "google_calendar.response_too_large",
+                $"Google response exceeded {MaxGoogleResponseBytes} bytes."));
+        }
+
+        try
+        {
+            JsonElement body = await content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
+            return Result.Success(body);
+        }
+        catch (JsonException)
+        {
+            return Result.Failure<JsonElement>(DomainError.External(
+                "google_calendar.invalid_response",
+                "Google returned invalid JSON."));
+        }
+    }
 
     private static IResult MapError(DomainError error) => error.Type switch
     {

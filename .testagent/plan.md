@@ -407,3 +407,13 @@
 - [x] Run focused architecture, integration and security tests.
 - [x] Format, build and run the complete suite.
 - [x] Commit and push to `master` (included in this block).
+
+# Harden anonymous Google Calendar OAuth callback (2026-08-22)
+
+- [x] Inventory the remaining explicit and protocol-required anonymous surfaces.
+- [x] Verify protected OAuth state binds identity, workspace, expiry and local return URL.
+- [x] Centralize Google JSON buffering/parsing behind a 1 MiB cap.
+- [x] Map oversized and malformed payloads to stable external errors.
+- [x] Add above-limit, exact-limit and malformed provider regressions.
+- [x] Format, build and run the complete suite.
+- [x] Commit and push to `master` (included in this block).

@@ -538,3 +538,12 @@
 - Acceptance: both legacy routes return 404 even in the Development test host; removed product types cannot return; administrative authorization behavior remains covered.
 - Tooling limitation: the installed `test-analysis-extensions` catalog references `extensions/dotnet.md`, but that file is absent. The xUnit/FluentAssertions review was therefore performed inline from repository conventions.
 - Result: acceptance satisfied. Route regressions pass 2/2, architecture passes 26/26 and the complete suite passes 892 executed tests with one unrelated diagnostic skip.
+
+# Harden anonymous Google Calendar OAuth callback (2026-08-22)
+
+- Targets: anonymous/public endpoint inventory, Google Calendar callback state, external token/userinfo response parsing and health endpoint disclosure.
+- Findings: health is intentionally minimal; the OAuth callback must remain anonymous for the provider round-trip and its protected state correctly binds user, workspace, expiry and local return URL. However, oversized or malformed Google JSON escaped as unhandled exceptions.
+- Decision: retain only the necessary anonymous callback, centralize bounded JSON parsing at 1 MiB and map invalid provider payloads to stable 502 external errors.
+- Acceptance: valid OAuth and tampered-state behavior remain intact; payloads above the cap return `google_calendar.response_too_large`; malformed payloads at and below the cap return `google_calendar.invalid_response`; complete validation passes.
+- Tooling limitation: `test-analysis-extensions/extensions/dotnet.md` is still absent, so xUnit/FluentAssertions classification follows repository examples directly.
+- Result: acceptance satisfied. Focused callback cases pass 5/5 and the complete suite passes 895 executed tests with one unrelated diagnostic skip.

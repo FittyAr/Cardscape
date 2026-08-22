@@ -486,3 +486,13 @@
 - Assertion review: the architecture test uses an exact negative type-set assertion; each HTTP theory case asserts the externally observable 404. No assertion-free, trivial or self-referential new test exists.
 - Pseudo-mutation review: renaming deleted types would survive architecture coverage, so exact-route HTTP cases were added; restoring either route or mapping it conditionally in Development now fails.
 - Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 892 passed / 0 failed / 1 skipped.
+
+# Harden anonymous Google Calendar OAuth callback (2026-08-22)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Exposure invariant: anonymous routing is retained only where an external OAuth provider cannot present a Cardscape bearer token.
+- Resource invariant: no Google token or userinfo payload above 1 MiB is buffered or parsed.
+- Focused evidence: valid/tampered/invalid provider callback cases 5/5, including the exact size boundary.
+- Assertion review: each theory row asserts both HTTP 502 and a distinct stable error code; no assertion-free, trivial or self-referential generated test exists.
+- Pseudo-mutation review: above-limit alone would not kill `>`→`>=`, so an exactly-1-MiB malformed payload now must reach parsing and return `invalid_response`.
+- Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 895 passed / 0 failed / 1 skipped.

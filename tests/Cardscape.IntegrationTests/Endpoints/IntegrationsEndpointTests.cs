@@ -427,6 +427,36 @@ public sealed class IntegrationsEndpointTests
             .Should().Contain("google_calendar.state_invalid");
     }
 
+    [Theory]
+    [InlineData(GoogleOAuthResponseMode.Oversized, "google_calendar.response_too_large")]
+    [InlineData(GoogleOAuthResponseMode.AtLimitMalformed, "google_calendar.invalid_response")]
+    [InlineData(GoogleOAuthResponseMode.Malformed, "google_calendar.invalid_response")]
+    public async Task GoogleCalendar_Callback_WithInvalidProviderPayload_ReturnsStableBadGateway(
+        GoogleOAuthResponseMode responseMode,
+        string expectedError)
+    {
+        WebApplicationFactory<Program> factory = CreateGoogleOAuthFactory(responseMode);
+        HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+        await AuthenticateAsync(client);
+        Guid workspaceId = await CreateWorkspaceAsync(client, "gcal-invalid-response");
+        HttpResponseMessage started = await client.GetAsync(
+            $"api/integrations/google-calendar/start?workspaceId={workspaceId}",
+            TestContext.Current.CancellationToken);
+        string state = ParseQueryValue(started.Headers.Location!.Query, "state");
+
+        client.DefaultRequestHeaders.Authorization = null;
+        HttpResponseMessage callback = await client.GetAsync(
+            $"api/integrations/google-calendar/callback?code=test-code&state={Uri.EscapeDataString(state)}",
+            TestContext.Current.CancellationToken);
+
+        callback.StatusCode.Should().Be(HttpStatusCode.BadGateway);
+        (await callback.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+            .Should().Contain(expectedError);
+    }
+
     [Fact]
     public async Task GoogleCalendar_Get_For_Fresh_User_Returns_Default_Not_Connected_Dto()
     {
@@ -575,7 +605,8 @@ public sealed class IntegrationsEndpointTests
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);
     }
 
-    private WebApplicationFactory<Program> CreateGoogleOAuthFactory() =>
+    private WebApplicationFactory<Program> CreateGoogleOAuthFactory(
+        GoogleOAuthResponseMode responseMode = GoogleOAuthResponseMode.Valid) =>
         _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureAppConfiguration((_, configuration) =>
@@ -589,7 +620,7 @@ public sealed class IntegrationsEndpointTests
             builder.ConfigureTestServices(services =>
             {
                 services.AddHttpClient("google-oauth")
-                    .ConfigurePrimaryHttpMessageHandler(() => new GoogleOAuthHandler());
+                    .ConfigurePrimaryHttpMessageHandler(() => new GoogleOAuthHandler(responseMode));
             });
         });
 
@@ -606,19 +637,33 @@ public sealed class IntegrationsEndpointTests
         return string.Empty;
     }
 
-    private sealed class GoogleOAuthHandler : HttpMessageHandler
+    private sealed class GoogleOAuthHandler(GoogleOAuthResponseMode responseMode) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            string json = request.RequestUri!.AbsolutePath.EndsWith("/token", StringComparison.Ordinal)
-                ? "{\"refresh_token\":\"refresh-token\",\"access_token\":\"access-token\"}"
-                : "{\"email\":\"oauth-user@gmail.com\"}";
+            string json = responseMode switch
+            {
+                GoogleOAuthResponseMode.Oversized => new string('x', 1024 * 1024 + 1),
+                GoogleOAuthResponseMode.AtLimitMalformed => new string('x', 1024 * 1024),
+                GoogleOAuthResponseMode.Malformed => "not-json",
+                _ when request.RequestUri!.AbsolutePath.EndsWith("/token", StringComparison.Ordinal) =>
+                    "{\"refresh_token\":\"refresh-token\",\"access_token\":\"access-token\"}",
+                _ => "{\"email\":\"oauth-user@gmail.com\"}"
+            };
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json")
             });
         }
+    }
+
+    public enum GoogleOAuthResponseMode
+    {
+        Valid,
+        Oversized,
+        AtLimitMalformed,
+        Malformed
     }
 
     private static async Task<SlackWorkspaceDto> ConnectSlackAsync(
