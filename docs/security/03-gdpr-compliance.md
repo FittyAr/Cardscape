@@ -207,9 +207,9 @@ and user-confirmed; the LLM does not act
 autonomously. The deployer must document
 this in their privacy notice and offer the
 user the right to opt out of the AI
-surfaces; the project ships
-`Cardscape:Ai:Enabled = false` to disable
-the AI surfaces at the deployment level.
+surfaces. Cardscape does not currently ship a deployment-level AI toggle;
+operators that prohibit AI must block the configured `Ai:Endpoint` and document
+that policy.
 
 ## 5. Breach notification
 

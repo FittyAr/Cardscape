@@ -452,25 +452,33 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<ISearchService, DatabaseSearchService>();
 
         // AI provider (Cardscape AI). The choice is configuration-driven:
-        //   Ai:Provider = RuleBased         → deterministic templates, no network (default)
-        //   Ai:Provider = OpenAiCompatible  → posts to a /v1/chat/completions endpoint
-        string aiProvider = configuration["Ai:Provider"] ?? "RuleBased";
+        // AI is always backed by a real OpenAI-compatible endpoint. Local
+        // self-hosters can use the default Ollama URL without credentials.
+        string aiProvider = configuration["Ai:Provider"] ?? "OpenAiCompatible";
         services.Configure<AiProviderOptions>(configuration.GetSection("Ai"));
-        if (aiProvider.Equals("OpenAiCompatible", StringComparison.OrdinalIgnoreCase))
+        if (!aiProvider.Equals("OpenAiCompatible", StringComparison.OrdinalIgnoreCase))
         {
-            string? endpoint = configuration["Ai:Endpoint"]
-                ?? throw new InvalidOperationException(
-                    "Ai:Endpoint is required when Ai:Provider is OpenAiCompatible.");
-            services.AddHttpClient<IAiService, OpenAiCompatibleAiService>(client =>
-            {
-                client.BaseAddress = new Uri(endpoint);
-                client.Timeout = TimeSpan.FromSeconds(60);
-            });
+            throw new InvalidOperationException(
+                $"Unsupported Ai:Provider '{aiProvider}'. Only OpenAiCompatible is supported.");
         }
-        else
+
+        string endpoint = configuration["Ai:Endpoint"] ?? "http://localhost:11434/";
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? endpointUri)
+            || (!endpointUri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+                && !endpointUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
         {
-            services.AddSingleton<IAiService, RuleBasedAiService>();
+            throw new InvalidOperationException(
+                "Ai:Endpoint must be an absolute HTTP or HTTPS URL.");
         }
+
+        services.AddHttpClient<IAiService, OpenAiCompatibleAiService>(client =>
+        {
+            client.BaseAddress = endpointUri;
+            client.Timeout = TimeSpan.FromSeconds(60);
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false
+        });
 
         var storageRoot = configuration["Storage:LocalRoot"] ?? Path.Combine(AppContext.BaseDirectory, "storage");
         services.AddSingleton<IStorageService>(_ => new LocalFileStorageService(storageRoot));

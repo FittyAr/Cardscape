@@ -10,10 +10,7 @@ namespace Cardscape.Application.Abstractions;
 /// The interface is intentionally narrow: its completion operation takes
 /// a prompt-shaped input and returns a result-shaped output
 /// wrapped in <see cref="Result{T}"/>. The application layer
-/// does not know whether the implementation talks to a
-/// local rule-based engine, an OpenAI-compatible endpoint, or
-/// a future provider. The choice is made at DI registration
-/// time from <c>Ai:Provider</c> configuration.
+/// does not know which OpenAI-compatible endpoint provides the completion.
 ///
 /// See <c>docs/roadmap/03-execution-plan-v1.1.0.md</c> §4.7
 /// for the rationale and the provider list.

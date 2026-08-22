@@ -99,7 +99,7 @@ hosted service. It mirrors the component table from
 | Authentication | 🟢/🟡/🔴 | Email/password + external providers |
 | File storage | 🟢/🟡/🔴 | Attachments + archives |
 | Search | 🟢/🟡/🔴 | Relational search over authorized current data |
-| AI features | 🟢/🟡/🔴 | Rule-based + OpenAI-compatible |
+| AI features | 🟢/🟡/🔴 | OpenAI-compatible provider |
 | Background jobs | 🟢/🟡/🔴 | Internal job dispatcher |
 | Database | 🟢/🟡/🔴 | Primary + read replica |
 

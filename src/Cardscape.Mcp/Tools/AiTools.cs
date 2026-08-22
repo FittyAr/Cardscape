@@ -9,8 +9,7 @@ namespace Cardscape.Mcp.Tools;
 
 /// <summary>
 /// AI-powered MCP tools. Exposed to AI clients through the
-/// Model Context Protocol when the AI provider is configured
-/// (either <c>RuleBased</c> or <c>OpenAiCompatible</c>).
+/// Model Context Protocol through the configured OpenAI-compatible provider.
 /// </summary>
 [McpServerToolType]
 public sealed class AiTools(IMessageBus bus, ICurrentUser currentUser)

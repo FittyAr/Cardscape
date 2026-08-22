@@ -108,15 +108,15 @@ public sealed class OpenAiCompatibleAiService : IAiService
 /// <summary>Configuration for the AI provider. Bound from <c>Ai:*</c> keys.</summary>
 public sealed class AiProviderOptions
 {
-    /// <summary>Provider name. Today: <c>RuleBased</c>, <c>OpenAiCompatible</c>. Default: <c>RuleBased</c>.</summary>
-    public string Provider { get; set; } = "RuleBased";
+    /// <summary>The only supported provider protocol.</summary>
+    public string Provider { get; set; } = "OpenAiCompatible";
 
     /// <summary>Base URL of the OpenAI-compatible endpoint. Required for <c>OpenAiCompatible</c>.</summary>
-    public string? Endpoint { get; set; }
+    public string Endpoint { get; set; } = "http://localhost:11434/";
 
     /// <summary>Bearer token for the OpenAI-compatible endpoint. Optional for local models like Ollama.</summary>
     public string? ApiKey { get; set; }
 
     /// <summary>Default model name. Provider-specific (e.g. <c>gpt-4o-mini</c>, <c>llama3</c>).</summary>
-    public string Model { get; set; } = "gpt-4o-mini";
+    public string Model { get; set; } = "llama3.2";
 }

@@ -450,3 +450,12 @@
 - Focused evidence: AI-port architecture regression 1/1; exhaustive source search only finds deleted type names in the prohibition rule.
 - Assertion/gap review: reflection asserts the exact public operation sequence and independently asserts removed DTO types are absent, killing method-return and type-reintroduction mutations.
 - Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 879 passed / 0 failed / 1 skipped.
+
+# Remove simulated AI provider (2026-08-21)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Product truth: every successful AI response now originates from an actual configured OpenAI-compatible HTTP service.
+- Security invariant: redirects are disabled so a provider cannot redirect Authorization to another origin.
+- Compatibility policy: the simulated provider and its legacy configuration are rejected rather than preserved behind aliases.
+- Focused evidence: simulated-provider architecture regression 1/1; default/invalid provider configuration 5/5.
+- Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 885 passed / 0 failed / 1 skipped.

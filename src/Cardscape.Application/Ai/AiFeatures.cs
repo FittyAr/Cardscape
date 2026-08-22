@@ -301,7 +301,7 @@ public sealed class SuggestCardOwnersCommandHandler(
         if (candidates.Count == 0)
         {
             return Result<AiFeatures.AiOwnerSuggestions>.Success(
-                new AiFeatures.AiOwnerSuggestions([], Model: "rule-based"));
+                new AiFeatures.AiOwnerSuggestions([], Model: "not-invoked"));
         }
 
         // The pick is deterministic (the first candidate

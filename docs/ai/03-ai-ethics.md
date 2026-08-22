@@ -96,8 +96,8 @@ Cardscape deliberately does **not** build:
 ## 4. The AI provider model
 
 The AI features in Cardscape are powered by an
-**AI provider**. The provider is a separate service
-(OpenAI, Anthropic, a local model, etc.) that the user
+**AI provider**. The provider is a separate OpenAI-compatible service
+(OpenAI, a compatible gateway, or a local model) that the user
 configures. Cardscape does not ship an AI model; the
 project ships the **integration** with the provider.
 
@@ -112,20 +112,19 @@ The user can choose:
 - **A local model** (Ollama, LM Studio, etc.). The user
   runs the model on the same host as Cardscape. The
   user's data does not leave the host.
-- **No provider.** The user disables the AI features. The
-  MCP server still works (the AI client, if any, is the
-  one calling the AI; Cardscape is just the data layer).
 
-The default for a new deployment is **no provider**. The
-AI features are opt-in; the user must explicitly configure
-a provider to enable them.
+The default endpoint is local Ollama at
+`http://localhost:11434/` with model `llama3.2`. Operators using a hosted
+provider override `Ai:Endpoint`, `Ai:Model` and `Ai:ApiKey`. Cardscape never
+substitutes templates or simulated AI when the provider is unavailable; the
+requested operation fails as an external dependency error.
 
 ### 4.2 The provider is the user's data, not Cardscape's
 
 Cardscape does not store the user's API key in a database
 or a config file that is sent to a Cardscape-controlled
 service. The key is stored in the user's environment
-(e.g. `Cardscape__Ai__OpenAi__ApiKey`) or in the user's
+(e.g. `Ai__ApiKey`) or in the user's
 secret manager (e.g. HashiCorp Vault, AWS Secrets
 Manager). The key is read at startup and held in memory;
 it is not logged, not exported, and not sent to any
@@ -209,26 +208,13 @@ actions in the same view as the human users' actions.
 
 ---
 
-## 7. The user can disable the AI
+## 7. The user controls AI invocation
 
-The user can disable the AI at three levels:
-
-- **Per workspace.** The "Settings → AI" page in the web
-  UI has a toggle to disable the AI features for the
-  workspace. The MCP server's tools return
-  `ai.disabled_for_workspace` if the user has disabled
-  the AI for the workspace.
-- **Per API token.** The "Settings → API tokens" page
-  shows the token's scopes. The user can revoke the
-  `cards:write` scope, which prevents the AI from
-  modifying cards. The user can revoke the token
-  entirely, which prevents the AI from doing anything.
-- **Per deployment.** The `appsettings.json` has an
-  `Ai__Enabled` flag. Setting it to `false` disables all
-  AI features for the deployment.
-
-The user is in control. The default for a new deployment
-is `Ai__Enabled = false`. The user opts in.
+Cardscape never invokes the provider automatically. Every generation or
+summary begins with an explicit user action in Radzen or an authenticated MCP
+tool call. API-token scopes and revocation control MCP access. A deployment
+that must prohibit AI entirely should block the configured provider endpoint;
+a first-class deployment/workspace feature toggle is not currently shipped.
 
 ---
 

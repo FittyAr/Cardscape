@@ -20,7 +20,7 @@ point users at their own status URL.
 | Authentication | 🟢 Operational | Email/password, Google, Microsoft, Apple, SAML, SCIM |
 | File storage | 🟢 Operational | Attachments + import/export archives |
 | Search | 🟢 Operational | Relational search across current rows in boards the user can read |
-| AI features | 🟢 Operational | Rule-based by default; OpenAI-compatible when configured |
+| AI features | 🟢 Operational | OpenAI-compatible provider; local Ollama endpoint by default |
 | Background jobs | 🟢 Operational | Internal job dispatcher (no Hangfire) |
 | Database | 🟢 Operational | Primary PostgreSQL with read replica |
 

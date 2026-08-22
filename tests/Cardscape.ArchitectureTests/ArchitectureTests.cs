@@ -15,6 +15,17 @@ namespace Cardscape.ArchitectureTests;
 public sealed class ArchitectureTests
 {
     [Fact]
+    public void Product_ContainsNoSimulatedAiProvider()
+    {
+        Type[] matches = typeof(Cardscape.Infrastructure.DependencyInjection.InfrastructureServiceCollectionExtensions)
+            .Assembly.GetTypes()
+            .Where(type => type.Name == "RuleBasedAiService")
+            .ToArray();
+
+        matches.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Application_AiPortContainsOnlyConsumedCompletionCapability()
     {
         typeof(Cardscape.Application.Abstractions.IAiService)

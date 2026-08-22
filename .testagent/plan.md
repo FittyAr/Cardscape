@@ -367,3 +367,13 @@
 - [x] Inline the two-message completion request in the real provider.
 - [x] Add architecture regression fixing the minimal port.
 - [x] Validate and document; commit and push to `master` pending.
+
+# Remove simulated AI provider (2026-08-21)
+
+- [x] Delete `RuleBasedAiService` and its fallback selection.
+- [x] Default to a real local OpenAI-compatible endpoint and model.
+- [x] Reject legacy/unknown providers and invalid endpoint schemes.
+- [x] Disable HTTP redirects for provider credentials.
+- [x] Add DI defaults/invalid configuration and architecture regressions.
+- [x] Update normative docs and validate the complete solution.
+- [ ] Commit and push to `master`.

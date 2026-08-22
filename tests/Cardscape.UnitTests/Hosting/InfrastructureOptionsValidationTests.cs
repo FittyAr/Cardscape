@@ -1,4 +1,5 @@
 using Cardscape.Application.Abstractions;
+using Cardscape.Infrastructure.Ai;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Hosting;
 using Cardscape.Infrastructure.Security;
@@ -87,6 +88,32 @@ public sealed class InfrastructureOptionsValidationTests
 
         await act.Should().ThrowAsync<OptionsValidationException>()
             .Where(exception => exception.OptionsType == typeof(JwtOptions));
+    }
+
+    [Fact]
+    public void AiProvider_WithDefaults_UsesRealOpenAiCompatibleBackend()
+    {
+        using IHost host = CreateHost(new Dictionary<string, string?>());
+
+        host.Services.GetRequiredService<IAiService>()
+            .Should().BeOfType<OpenAiCompatibleAiService>();
+        AiProviderOptions options = host.Services
+            .GetRequiredService<IOptions<AiProviderOptions>>().Value;
+        options.Provider.Should().Be("OpenAiCompatible");
+        options.Endpoint.Should().Be("http://localhost:11434/");
+        options.Model.Should().Be("llama3.2");
+    }
+
+    [Theory]
+    [InlineData("Ai:Provider", "RuleBased")]
+    [InlineData("Ai:Provider", "Unknown")]
+    [InlineData("Ai:Endpoint", "relative/path")]
+    [InlineData("Ai:Endpoint", "file:///tmp/model")]
+    public void AiProvider_WithUnsupportedConfiguration_FailsComposition(string key, string value)
+    {
+        Action act = () => CreateHost(new Dictionary<string, string?> { [key] = value });
+
+        act.Should().Throw<InvalidOperationException>();
     }
 
     private static IHost CreateHost(IReadOnlyDictionary<string, string?> overrides)

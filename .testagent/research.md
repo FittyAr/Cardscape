@@ -505,3 +505,11 @@
 - Decision: keep only `CompleteAsync`, the sole product capability used by all four AI features; delete unused contracts and implementations without aliases.
 - Acceptance: the port exposes exactly one operation; removed types cannot return; focused architecture/build/full suite pass.
 - Result: acceptance satisfied. Architecture passes 24/24 and complete suite passes 879 executed tests with one unrelated diagnostic skip.
+
+# Remove simulated AI provider (2026-08-21)
+
+- Targets: provider selection, `RuleBasedAiService`, OpenAI-compatible HTTP client, default options, empty-owner response and architecture/configuration coverage.
+- Critical finding: missing/unknown provider configuration silently selected deterministic templates that presented themselves as AI; it also encouraged default-success behavior when no model existed.
+- Decision: delete the provider with no compatibility alias. OpenAI-compatible is the only accepted protocol, defaults to local Ollama (`http://localhost:11434/`, `llama3.2`), rejects unknown providers/non-HTTP endpoints and never follows redirects carrying credentials.
+- Acceptance: default DI resolves the real HTTP backend; invalid/legacy settings fail composition; architecture prohibits the simulated provider; full validation passes.
+- Result: acceptance satisfied. Focused checks pass 1/1 architecture and 5/5 configuration cases; architecture passes 25/25 and the complete suite passes 885 executed tests with one unrelated diagnostic skip.
