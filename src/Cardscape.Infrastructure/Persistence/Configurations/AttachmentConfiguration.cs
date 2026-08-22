@@ -20,7 +20,7 @@ public sealed class AttachmentConfiguration : IEntityTypeConfiguration<Attachmen
         b.Property(a => a.CardId)
             .HasConversion(id => id.Value, v => new CardId(v))
             .IsRequired();
-        b.HasIndex(a => a.CardId);
+        b.HasIndex(a => new { a.CardId, a.IsDeleted, a.CreatedAt });
 
         b.Property(a => a.FileName).HasMaxLength(512).IsRequired();
         b.Property(a => a.MimeType).HasMaxLength(256).IsRequired();

@@ -16,7 +16,7 @@ public sealed class ApiTokenConfiguration : IEntityTypeConfiguration<ApiToken>
         b.Property(t => t.UserId)
             .HasConversion(id => id.Value, v => new UserId(v))
             .IsRequired();
-        b.HasIndex(t => t.UserId);
+        b.HasIndex(t => new { t.UserId, t.CreatedAt });
 
         b.Property(t => t.Name)
             .HasConversion(n => n.Value, v => ApiTokenName.Create(v).Value)

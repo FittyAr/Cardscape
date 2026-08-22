@@ -15,7 +15,8 @@ public sealed class BoardAutomationRuleConfiguration : IEntityTypeConfiguration<
         b.Property(x => x.BoardId)
             .HasConversion(id => id.Value, v => new BoardId(v))
             .IsRequired();
-        b.HasIndex(x => x.BoardId);
+        b.HasIndex(x => new { x.BoardId, x.Position });
+        b.HasIndex(x => new { x.BoardId, x.IsEnabled, x.Position });
 
         b.Property(x => x.Name)
             .HasMaxLength(120)

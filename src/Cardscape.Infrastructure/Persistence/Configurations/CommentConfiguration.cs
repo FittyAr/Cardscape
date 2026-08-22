@@ -25,6 +25,7 @@ public sealed class CommentConfiguration : IEntityTypeConfiguration<Comment>
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
         b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
-        b.HasIndex(x => x.CardId);
+        b.HasIndex(x => new { x.CardId, x.IsDeleted, x.CreatedAt });
+        b.HasIndex(x => x.AuthorId);
     }
 }

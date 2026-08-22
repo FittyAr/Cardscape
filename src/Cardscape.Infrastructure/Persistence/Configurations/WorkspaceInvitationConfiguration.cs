@@ -15,12 +15,12 @@ public sealed class WorkspaceInvitationConfiguration : IEntityTypeConfiguration<
         b.Property(i => i.WorkspaceId)
             .HasConversion(id => id.Value, v => new WorkspaceId(v))
             .IsRequired();
-        b.HasIndex(i => i.WorkspaceId);
+        b.HasIndex(i => new { i.WorkspaceId, i.InvitedAt });
 
         b.Property(i => i.Email)
             .HasMaxLength(320) // RFC 5321 maximum email length
             .IsRequired();
-        b.HasIndex(i => i.Email);
+        b.HasIndex(i => new { i.Email, i.AcceptedAt, i.RevokedAt, i.InvitedAt });
 
         b.Property(i => i.Role)
             .HasConversion<int>()

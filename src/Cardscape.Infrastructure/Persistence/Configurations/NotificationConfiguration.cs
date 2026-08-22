@@ -23,5 +23,6 @@ public sealed class NotificationConfiguration : IEntityTypeConfiguration<Notific
         b.Property(x => x.IsDeleted);
         b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
         b.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedAt });
+        b.HasIndex(x => new { x.UserId, x.CreatedAt });
     }
 }

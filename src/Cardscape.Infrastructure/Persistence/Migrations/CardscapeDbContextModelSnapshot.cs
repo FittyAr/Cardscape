@@ -64,7 +64,11 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BoardId", "OccurredAt");
+                    b.HasIndex("ActorId", "OccurredAt");
+
+                    b.HasIndex("BoardId", "OccurredAt", "Id");
+
+                    b.HasIndex("CardId", "OccurredAt", "Id");
 
                     b.ToTable("activities", (string)null);
                 });
@@ -121,9 +125,9 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CardId");
-
                     b.HasIndex("UploaderId");
+
+                    b.HasIndex("CardId", "IsDeleted", "CreatedAt");
 
                     b.ToTable("attachments", (string)null);
                 });
@@ -178,10 +182,10 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
-
                     b.HasIndex("Provider", "Subject")
                         .IsUnique();
+
+                    b.HasIndex("UserId", "LastUsedAt");
 
                     b.ToTable("external_logins", (string)null);
                 });
@@ -540,6 +544,9 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Status", "CompletedAt")
+                        .HasDatabaseName("IX_background_jobs_Status_CompletedAt");
+
                     b.HasIndex("Status", "ScheduledFor")
                         .HasDatabaseName("IX_background_jobs_Status_ScheduledFor");
 
@@ -653,7 +660,9 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BoardId");
+                    b.HasIndex("BoardId", "Position");
+
+                    b.HasIndex("BoardId", "IsEnabled", "Position");
 
                     b.ToTable("board_automation_rules", (string)null);
                 });
@@ -794,8 +803,8 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BoardId")
-                        .HasDatabaseName("IX_custom_field_definitions_BoardId");
+                    b.HasIndex("BoardId", "Position")
+                        .HasDatabaseName("IX_custom_field_definitions_BoardId_Position");
 
                     b.ToTable("custom_field_definitions", (string)null);
                 });
@@ -1068,7 +1077,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CardId");
+                    b.HasIndex("CardId", "IsDeleted", "CreatedAt");
 
                     b.ToTable("checklists", (string)null);
                 });
@@ -1112,7 +1121,9 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CardId");
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("CardId", "IsDeleted", "CreatedAt");
 
                     b.ToTable("comments", (string)null);
                 });
@@ -1519,7 +1530,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.HasIndex("TokenHash")
                         .IsUnique();
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "CreatedAt");
 
                     b.ToTable("oauth_access_tokens", (string)null);
                 });
@@ -1722,11 +1733,6 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("ProtectedBotToken")
-                        .IsRequired()
-                        .HasMaxLength(2048)
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -1737,6 +1743,11 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset?>("LastUsedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProtectedBotToken")
+                        .IsRequired()
+                        .HasMaxLength(2048)
                         .HasColumnType("TEXT");
 
                     b.Property<uint>("RowVersion")
@@ -1813,7 +1824,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BoardId");
+                    b.HasIndex("BoardId", "IsDeleted", "Name");
 
                     b.ToTable("labels", (string)null);
                 });
@@ -1994,6 +2005,8 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId", "CreatedAt");
+
                     b.HasIndex("UserId", "IsRead", "CreatedAt");
 
                     b.ToTable("notifications", (string)null);
@@ -2124,7 +2137,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.HasIndex("HashedSecret")
                         .IsUnique();
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "CreatedAt");
 
                     b.ToTable("api_tokens", (string)null);
                 });
@@ -2303,16 +2316,16 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ProtectedSecret")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(0u);
-
-                    b.Property<string>("ProtectedSecret")
-                        .IsRequired()
-                        .HasMaxLength(2048)
-                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("TEXT");
@@ -2454,12 +2467,12 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email");
-
                     b.HasIndex("TokenHash")
                         .IsUnique();
 
-                    b.HasIndex("WorkspaceId");
+                    b.HasIndex("WorkspaceId", "InvitedAt");
+
+                    b.HasIndex("Email", "AcceptedAt", "RevokedAt", "InvitedAt");
 
                     b.ToTable("workspace_invitations", (string)null);
                 });
@@ -2670,7 +2683,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("Id");
 
-                            b1.HasIndex("ChecklistId");
+                            b1.HasIndex("ChecklistId", "Position");
 
                             b1.ToTable("checklist_items", (string)null);
 

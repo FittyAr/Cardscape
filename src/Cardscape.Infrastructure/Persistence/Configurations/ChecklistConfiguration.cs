@@ -17,7 +17,7 @@ public sealed class ChecklistConfiguration : IEntityTypeConfiguration<Checklist>
         b.Property(c => c.CardId)
             .HasConversion(id => id.Value, v => new CardId(v))
             .IsRequired();
-        b.HasIndex(c => c.CardId);
+        b.HasIndex(c => new { c.CardId, c.IsDeleted, c.CreatedAt });
 
         b.Property(c => c.Title)
             .HasConversion(t => t.Value, v => ChecklistTitle.Create(v).Value)
@@ -59,7 +59,7 @@ public sealed class ChecklistConfiguration : IEntityTypeConfiguration<Checklist>
             ib.Property(i => i.UpdatedBy);
             ib.Property(i => i.IsDeleted);
             ib.Property(i => i.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
-            ib.HasIndex(i => i.ChecklistId);
+            ib.HasIndex(i => new { i.ChecklistId, i.Position });
         });
     }
 }

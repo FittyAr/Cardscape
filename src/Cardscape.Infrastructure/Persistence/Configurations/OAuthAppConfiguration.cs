@@ -130,7 +130,7 @@ public sealed class OAuthAccessTokenConfiguration : IEntityTypeConfiguration<OAu
         b.Property(t => t.UserId)
             .HasConversion(id => id.Value, v => new UserId(v))
             .IsRequired();
-        b.HasIndex(t => t.UserId);
+        b.HasIndex(t => new { t.UserId, t.CreatedAt });
 
         b.Property(t => t.TokenHash)
             .HasMaxLength(64)

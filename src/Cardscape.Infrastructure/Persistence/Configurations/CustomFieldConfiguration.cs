@@ -28,7 +28,8 @@ public sealed class CustomFieldDefinitionConfiguration : IEntityTypeConfiguratio
         b.Property(x => x.IsDeleted);
         b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
 
-        b.HasIndex(x => x.BoardId).HasDatabaseName("IX_custom_field_definitions_BoardId");
+        b.HasIndex(x => new { x.BoardId, x.Position })
+            .HasDatabaseName("IX_custom_field_definitions_BoardId_Position");
     }
 }
 

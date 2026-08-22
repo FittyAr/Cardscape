@@ -33,5 +33,7 @@ public sealed class BackgroundJobConfiguration : IEntityTypeConfiguration<Backgr
         // composite index makes that O(log n) instead of a full scan.
         b.HasIndex(x => new { x.Status, x.ScheduledFor })
             .HasDatabaseName("IX_background_jobs_Status_ScheduledFor");
+        b.HasIndex(x => new { x.Status, x.CompletedAt })
+            .HasDatabaseName("IX_background_jobs_Status_CompletedAt");
     }
 }

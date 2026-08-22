@@ -16,7 +16,7 @@ public sealed class ExternalLoginConfiguration : IEntityTypeConfiguration<Extern
         b.Property(l => l.UserId)
             .HasConversion(id => id.Value, v => new UserId(v))
             .IsRequired();
-        b.HasIndex(l => l.UserId);
+        b.HasIndex(l => new { l.UserId, l.LastUsedAt });
 
         b.Property(l => l.Provider)
             .HasConversion<int>()
