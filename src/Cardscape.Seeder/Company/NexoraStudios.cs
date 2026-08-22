@@ -145,7 +145,7 @@ public static class NexoraStudios
         "Loving the scope here. Can we add a quick test for the empty-state path before merging?",
         "I tried this against a 10k-card workspace on staging and it cut p95 in half. Numbers in the PR.",
         "Pulled the design tokens from the Figma file — attached. Should we also update the docs site?",
-        "Out of curiosity, has anyone run this against PostgreSQL yet? I want to make sure the migration is portable.",
+        "Can we validate the migration on a clean database before merging?",
         "Looped in @legal because this touches a GDPR surface. They'll get back to us tomorrow.",
         "Bumping priority. We have two enterprise prospects waiting on this exact feature.",
         "Pairing on this with the new hire tomorrow morning. Will sync back to the board afterwards.",

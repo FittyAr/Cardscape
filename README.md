@@ -15,7 +15,7 @@ with a complete feature surface — kanban boards, calendar,
 automation engine, extensions, Inbox, Planner, and AI — and a
 Model Context Protocol server that lets AI assistants read,
 create, and move cards on your behalf. It runs on **.NET 10**,
-persists to **SQLite**, **PostgreSQL**, or **MariaDB**, and ships
+persists to **SQLite** through EF Core, and ships
 under the **Reciprocal Public License 1.5**.
 
 It is the only self-hostable kanban with a first-class MCP server.
@@ -32,9 +32,8 @@ It is the only self-hostable kanban with a first-class MCP server.
   the same authorization, the same idempotency. An AI client
   drives the boards through the same `Application` layer a human
   does through the web UI.
-- **Multi-database without lock-in.** SQLite for solo and dev,
-  PostgreSQL or MariaDB for production. The provider is
-  configuration, not code.
+- **Simple, durable persistence.** SQLite through EF Core keeps
+  self-hosting operationally small and the data file portable.
 - **A complete feature surface.** Workspaces, boards, lists,
   cards, members, comments, checklists, attachments, calendar,
   automation rules, scheduled commands, Inbox, Planner,
@@ -218,9 +217,6 @@ cd cardscape
 # Generate a real JWT signing key for production
 export CARDS_CAPE_JWT_KEY=$(openssl rand -base64 48)
 
-# (optional) Override the default Postgres password
-export CARDS_CAPE_DB_PASSWORD=cardscape-dev-password
-
 # Bring the stack up
 docker compose up -d
 
@@ -228,8 +224,7 @@ docker compose up -d
 open http://localhost:8080
 ```
 
-You can also use the SQLite-only dev compose if you do not want
-to run Postgres:
+Use the development compose to enable development defaults and demo data:
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d
@@ -254,21 +249,13 @@ The Blazor client reads its API base URL from
 `-- "ApiBaseUrl=http://your-api:8080/"` or by editing that
 file before running.
 
-### 3. Picking a database
+### 3. Database
 
-Cardscape supports three providers, all switchable at runtime
-through configuration:
-
-| Provider | Connection string example | When to use |
-|---|---|---|
-| SQLite | `Data Source=Data/cardscape.db` | Solo, dev, single-node self-host |
-| PostgreSQL | `Host=db;Port=5432;Database=cardscape;Username=…;Password=…` | Production, multi-user |
-| MariaDB | `Server=db;Port=3306;Database=cardscape;Uid=…;Pwd=…` | Production, MySQL shops |
-
-Set `Database__Provider` to `Sqlite`, `PostgreSQL`, or `MariaDB`
-to match the connection string. Migrations live in a single set
-under `src/Cardscape.Infrastructure/Persistence/Migrations/`
-that runs on all three engines.
+Cardscape supports SQLite through EF Core. The default connection
+string is `Data Source=Data/cardscape.db`; override
+`ConnectionStrings__Default` when a different SQLite file or connection
+mode is required. The canonical migration history lives under
+`src/Cardscape.Infrastructure/Persistence/Migrations/`.
 
 ---
 
@@ -338,7 +325,7 @@ What is **not** in v0.5.0-invitations (still in Phase 4):
 
 - Extensions, automation engine, calendar, Inbox, Planner —
   these ship across `v0.6.0-inbox` through `v0.6.4-extensions`.
-- Search relevance + PostgreSQL FTS / Lucene.NET.
+- Search relevance with SQLite FTS5.
 - Attachments and storage providers other than the local
   filesystem.
 
@@ -438,7 +425,7 @@ What is **not** in v0.4.0-realtime-mcp:
 
 - Workspace member invitations (the next slice, v0.5).
 - Extensions, automation engine, calendar, Inbox, Planner.
-- Search relevance + PostgreSQL FTS / Lucene.NET.
+- Search relevance with SQLite FTS5.
 - Attachments and storage providers other than the local
   filesystem.
 
@@ -483,7 +470,7 @@ What is **not** in v0.2.0-core-mcp (per the [implementation plan](docs/roadmap/0
 - API-token entity (the long-lived, scoped, revocable token
   the MCP server should ideally use instead of JWTs).
 - Extensions, automation engine, calendar, Inbox, Planner.
-- Search relevance + PostgreSQL FTS / Lucene.NET.
+- Search relevance with SQLite FTS5.
 - Attachments and storage providers other than the local
   filesystem.
 
@@ -502,9 +489,8 @@ end-to-end vertical slice for a single user:
   archive / move. Boards can be **starred**; cards can be
   **assigned**, **labeled**, **dated**, **completed**, and
   **commented on**.
-- **Multi-DB**: SQLite (default), PostgreSQL, MariaDB. The
-  same EF Core migration runs on all three; the provider is
-  picked at boot from configuration.
+- **Persistence**: SQLite through EF Core with one canonical
+  migration history.
 - **Blazor WebAssembly client** (`src/Cardscape.Web/`) that
   covers the full surface: sign up, sign in, workspaces, boards,
   board detail (kanban columns), card detail (metadata +
@@ -515,8 +501,8 @@ end-to-end vertical slice for a single user:
 - **Wolverine** for command/query routing (no MediatR, no
   source-generated dispatcher boilerplate).
 - **Mapperly** for compile-time DTO mapping.
-- **Docker** multi-stage build + `docker compose.yml` (API +
-  Postgres) and `docker-compose.dev.yml` (SQLite only).
+- **Docker** multi-stage build plus production and development
+  compose configurations backed by SQLite volumes.
 - **Tests**: 179 unit tests (domain + application, all fakes
   in-memory) and 10 integration tests (full HTTP stack via
   `WebApplicationFactory<Program>` with SQLite shared-memory).
@@ -577,14 +563,14 @@ Full layout and dependency rules:
 | Client | Blazor WebAssembly | 10.0.10, Radzen components |
 | UI components | Radzen.Blazor | 11.2.1 |
 | ORM | Entity Framework Core | 10.0.10 LTS (third-party providers trail .NET) |
-| DB providers | Sqlite, Npgsql, MySql.EntityFrameworkCore | runtime, all switchable via config |
+| Database | SQLite through EF Core | single supported provider and migration history |
 | Validation | FluentValidation | 12.1.1 |
 | CQRS / Mediator | Wolverine | 6.24.5 (JasperFx), source-generator |
 | Mapping | Mapperly | 4.3.1 (Riok), source-generator |
 | Auth | JWT bearer + Pbkdf2 password hasher | built-in + `System.IdentityModel.Tokens.Jwt` 8.22.0 |
 | AI integration | Model Context Protocol | .NET SDK `2.0.0`, stdio + HTTP endpoints |
 | Tests | xUnit + FluentAssertions + `WebApplicationFactory` | 3.2.2 / 8.10.0 / ASP.NET Core 10.0.10 |
-| Containers | Docker + docker compose | multi-stage Dockerfile, Postgres + API |
+| Containers | Docker + docker compose | multi-stage Dockerfile, SQLite-backed API |
 | License | Reciprocal Public License 1.5 | RPL-1.5 |
 
 Stack rationale and pinned versions are in

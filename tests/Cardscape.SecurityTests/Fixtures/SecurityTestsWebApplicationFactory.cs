@@ -45,13 +45,11 @@ public sealed class SecurityTestsWebApplicationFactory : WebApplicationFactory<P
     protected override IHost CreateHost(IHostBuilder builder)
     {
         string? previousConn = Environment.GetEnvironmentVariable("ConnectionStrings__Default");
-        string? previousProvider = Environment.GetEnvironmentVariable("Database__Provider");
         string? previousJwt = Environment.GetEnvironmentVariable("Jwt__SigningKey");
         string? previousStorage = Environment.GetEnvironmentVariable("Storage__LocalRoot");
         string? previousEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
         Environment.SetEnvironmentVariable("ConnectionStrings__Default", _connectionString);
-        Environment.SetEnvironmentVariable("Database__Provider", "Sqlite");
         Environment.SetEnvironmentVariable("Jwt__SigningKey",
             "security-tests-signing-key-please-override-32+chars");
         Environment.SetEnvironmentVariable("Storage__LocalRoot", _storageRoot);
@@ -64,7 +62,6 @@ public sealed class SecurityTestsWebApplicationFactory : WebApplicationFactory<P
         finally
         {
             Environment.SetEnvironmentVariable("ConnectionStrings__Default", previousConn);
-            Environment.SetEnvironmentVariable("Database__Provider", previousProvider);
             Environment.SetEnvironmentVariable("Jwt__SigningKey", previousJwt);
             Environment.SetEnvironmentVariable("Storage__LocalRoot", previousStorage);
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", previousEnv);

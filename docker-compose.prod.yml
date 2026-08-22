@@ -69,7 +69,6 @@ services:
       # for the full race-condition writeup.
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      Database__Provider: Sqlite
       ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
       Storage__LocalRoot: /app/Storage
       # Same insecure dev key fallback as the dev compose.

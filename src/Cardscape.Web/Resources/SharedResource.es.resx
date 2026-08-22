@@ -57,7 +57,7 @@
   <data name="HomePointBoardsTitle" xml:space="preserve"><value>Tableros hechos para trabajar</value></data>
   <data name="HomePointBoardsBody" xml:space="preserve"><value>Espacios, listas, tarjetas, calendario y planificador — la superficie que ya conocés, sin el candado del hosting.</value></data>
   <data name="HomePointSelfHostTitle" xml:space="preserve"><value>Tuyo para correr</value></data>
-  <data name="HomePointSelfHostBody" xml:space="preserve"><value>SQLite, PostgreSQL o MariaDB. Un build, tu infraestructura, tus datos.</value></data>
+  <data name="HomePointSelfHostBody" xml:space="preserve"><value>Persistencia SQLite. Un build, tu infraestructura, tus datos.</value></data>
   <data name="HomePointMcpTitle" xml:space="preserve"><value>IA que puede manejar el tablero</value></data>
   <data name="HomePointMcpBody" xml:space="preserve"><value>Un servidor MCP de primera clase deja que Cursor, Claude y otros agentes lean y escriban tarjetas con seguridad.</value></data>
   <data name="NavHome" xml:space="preserve"><value>Inicio</value></data>

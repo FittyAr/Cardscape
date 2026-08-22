@@ -36,7 +36,7 @@ information.
 | Cardscape version | commit SHA / tag / branch |
 | .NET SDK | `dotnet --version` |
 | OS | (Windows / macOS / Linux + version) |
-| Database provider | (SQLite / PostgreSQL / MariaDB + version) |
+| SQLite version | |
 | Browser (if web) | (name + version) |
 | MCP client (if MCP) | (Claude Desktop / Cursor / ...) |
 

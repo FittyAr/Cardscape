@@ -5,17 +5,6 @@
 # - `cardscape.data` + `cardscape.uploads` — named volumes so the SQLite
 #   file and uploaded storage survive container restarts.
 #
-# PostgreSQL is a known follow-up: the EF Core migrations were generated
-# against the SQLite provider and the design-time factory still uses
-# SQLite by default. Running against PostgreSQL trips the runtime
-# `PendingModelChangesWarning` (model vs. snapshot column-type drift:
-# TEXT/INTEGER vs. uuid/text/bigint/boolean). The fix is a single
-# `dotnet ef migrations add` pass with `Database__Provider=PostgreSQL`
-# + a single consolidation migration that drops the 30+ per-issue
-# migrations, both of which are tracked in
-# docs/operations/12-postgresql-future-work.md. Until that pass lands,
-# the documented deploy path is the SQLite stack below.
-#
 # Bring the whole thing up with:
 #     docker compose up -d
 # Then open http://localhost:8080 in your browser.
@@ -31,7 +20,6 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      Database__Provider: Sqlite
       ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
       Storage__LocalRoot: /app/Storage
       # IMPORTANT: override the dev default in production. Generate with
@@ -72,4 +60,3 @@ services:
 volumes:
   cardscape.data:
   cardscape.uploads:
-

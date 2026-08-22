@@ -5,15 +5,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <!--
-      NOTE: We target net10.0 (LTS), so the whole Microsoft.* / ASP.NET Core
-      stack is on the 10.0.x line. EF Core 11 preview providers for MariaDB
-      have not shipped yet, so we use EF Core 10.0.10 (current LTS) for all
-      three database engines: SQLite, PostgreSQL, and MariaDB (via Oracle's
-      MySql.EntityFrameworkCore, which is wire-compatible with MariaDB).
-      This decision will be revisited once Pomelo / Oracle ship EF Core 11
-      providers for MariaDB.
-    -->
+    <!-- .NET 10 LTS application stack with EF Core 10 and SQLite. -->
     <!-- Application layer. -->
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
@@ -54,9 +46,6 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.10" />
-    <!-- Database providers (one per engine, all EF Core 10-compatible). -->
-    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <PackageVersion Include="MySql.EntityFrameworkCore" Version="10.0.9" />
     <!-- API surface. -->
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
     <!--

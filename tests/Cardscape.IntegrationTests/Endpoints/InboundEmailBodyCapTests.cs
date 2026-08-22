@@ -139,7 +139,6 @@ public sealed class InboundEmailBodyCapTests
                     ["InboundEmail:SigningSecret"] = TestSigningSecret,
                     ["ConnectionStrings:Default"] = _factory.ConnectionString,
                     ["Storage:LocalRoot"] = _factory.StorageRoot,
-                    ["Database:Provider"] = "Sqlite"
                 });
             });
         });

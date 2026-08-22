@@ -60,7 +60,6 @@ public static class InfrastructureServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var provider = configuration["Database:Provider"] ?? "Sqlite";
         var connectionString = configuration.GetConnectionString("Default")
             ?? throw new InvalidOperationException(
                 "ConnectionStrings:Default is required.");
@@ -84,25 +83,8 @@ public static class InfrastructureServiceCollectionExtensions
             // background.
             options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
-            switch (provider.ToLowerInvariant())
-            {
-                case "sqlite":
-                    options.UseSqlite(connectionString, b => b.MigrationsAssembly("Cardscape.Infrastructure"));
-                    break;
-                case "postgresql":
-                case "postgres":
-                case "npgsql":
-                    options.UseNpgsql(connectionString, b => b.MigrationsAssembly("Cardscape.Infrastructure"));
-                    break;
-                case "mariadb":
-                case "mysql":
-                    options.UseMySQL(connectionString, b => b.MigrationsAssembly("Cardscape.Infrastructure"));
-                    break;
-                default:
-                    throw new InvalidOperationException(
-                        $"Unsupported database provider: {provider}. " +
-                        "Use Sqlite, PostgreSQL, or MariaDB.");
-            }
+            options.UseSqlite(connectionString,
+                sqlite => sqlite.MigrationsAssembly("Cardscape.Infrastructure"));
         });
 
         services.AddScoped<DomainEventsInterceptor>();

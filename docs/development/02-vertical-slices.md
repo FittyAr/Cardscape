@@ -169,20 +169,18 @@ public sealed class BoardConfiguration : IEntityTypeConfiguration<Board>
   value converters.
 - Indexes are declared explicitly. EF Core does not infer them.
 
-Then add a migration in all three provider folders:
+Then add a SQLite migration:
 
 ```bash
 dotnet ef migrations add RenameBoard \
   --project src/Cardscape.Infrastructure \
   --startup-project src/Cardscape.Api \
-  --output-dir Persistence/Migrations/Sqlite
-# (repeat for PostgreSQL and MariaDB)
+  --output-dir Persistence/Migrations
 ```
 
-Hand-diff the three files. If the schema change is simple
-(renaming a column), they should be identical. If it's
-complex, write a per-provider override in the `Up` / `Down`
-methods and reference the ADR.
+Inspect the generated migration, verify the snapshot has no
+pending changes, and apply the history to a clean temporary
+SQLite database.
 
 ### Step 6 — API: endpoint
 
@@ -399,8 +397,8 @@ exercises.
 
 - [ ] Domain layer changed? An entity / VO / event updated.
 - [ ] Application layer changed? Command, handler, validator.
-- [ ] Infrastructure layer changed? EF Core configuration +
-      migration in all three providers.
+- [ ] Infrastructure layer changed? EF Core configuration and SQLite
+      migration updated together.
 - [ ] API endpoint added or changed? Registered in
       `Program.cs`.
 - [ ] Web client method added? Registered in `Program.cs`.

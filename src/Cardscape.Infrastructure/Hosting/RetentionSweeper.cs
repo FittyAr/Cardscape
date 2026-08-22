@@ -258,11 +258,7 @@ public sealed class RetentionSweeper(
             return 0;
         }
 
-        // The `Contains` predicate is translatable
-        // across every supported provider (SQLite,
-        // PostgreSQL, MariaDB) and the IN-list is
-        // parameterised so the bulk delete is safe
-        // from injection.
+        // EF Core parameterises the translated IN-list.
         return await table
             .Where(BuildIdInPredicate<TEntity, TId>(ids))
             .Cast<TEntity>()

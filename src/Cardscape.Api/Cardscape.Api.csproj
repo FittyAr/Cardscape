@@ -48,13 +48,6 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
 
-    <!--
-      The API project composes the database provider chosen at runtime.
-      Only one of these three should be referenced per build flavor, but
-      having all three available makes it trivial to switch via configuration.
-    -->
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
-    <PackageReference Include="MySql.EntityFrameworkCore" />
     <PackageReference Include="Sustainsys.Saml2.AspNetCore2" />
   </ItemGroup>
 
@@ -75,9 +68,7 @@
     <!--
       Migrations: a single set of migrations under
       src/Cardscape.Infrastructure/Persistence\Migrations is the canonical
-      schema. EF Core's relational abstractions let the same migration
-      code run on SQLite, PostgreSQL, and MariaDB; per-provider overrides
-      go inside the Up/Down methods with explicit provider checks.
+      SQLite schema and is generated exclusively from the EF Core model.
     -->
     <EmbeddedResource Include="..\Cardscape.Infrastructure\Persistence\Migrations\*.cs" />
   </ItemGroup>

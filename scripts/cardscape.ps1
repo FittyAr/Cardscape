@@ -71,7 +71,7 @@ function Show-Catalogue {
     Write-Host '  pwsh scripts/cardscape.ps1 setup'
     Write-Host '  pwsh scripts/cardscape.ps1 build -Release'
     Write-Host '  pwsh scripts/cardscape.ps1 test -Unit -Coverage'
-    Write-Host '  pwsh scripts/cardscape.ps1 run api -Database PostgreSQL'
+    Write-Host '  pwsh scripts/cardscape.ps1 run api -ConnectionString "Data Source=Data/cardscape-local.db"'
     Write-Host '  pwsh scripts/cardscape.ps1 migrate add IssueFooBar'
     Write-Host '  pwsh scripts/cardscape.ps1 db reset -Force'
     Write-Host ''

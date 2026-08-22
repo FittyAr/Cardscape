@@ -101,7 +101,6 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
                 {
                     ["ConnectionStrings:Default"] = _factory.ConnectionString,
                     ["Storage:LocalRoot"] = _factory.StorageRoot,
-                    ["Database:Provider"] = "Sqlite"
                 });
             });
             builder.ConfigureTestServices(services =>
@@ -167,7 +166,6 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
                 {
                     ["ConnectionStrings:Default"] = _factory.ConnectionString,
                     ["Storage:LocalRoot"] = _factory.StorageRoot,
-                    ["Database:Provider"] = "Sqlite"
                 });
             });
             builder.ConfigureTestServices(services =>
@@ -268,7 +266,6 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
                 {
                     ["ConnectionStrings:Default"] = _factory.ConnectionString,
                     ["Storage:LocalRoot"] = _factory.StorageRoot,
-                    ["Database:Provider"] = "Sqlite"
                 });
             });
             builder.ConfigureTestServices(services =>

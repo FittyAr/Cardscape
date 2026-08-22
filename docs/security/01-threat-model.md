@@ -24,7 +24,7 @@ at least one.
 | **The network** | the path from the browser to the API host, and from the AI client to the MCP host | untrusted (an attacker can read and modify traffic; TLS protects confidentiality) |
 | **The API host** | the ASP.NET Core process serving the REST API | trusted |
 | **The MCP host** | the ASP.NET Core process serving the MCP server | trusted |
-| **The database** | the SQLite / PostgreSQL / MariaDB instance | trusted |
+| **The database** | the SQLite database file | trusted |
 
 The "trusted" boundaries are trusted only within the
 process. A bug in the code (e.g. an injection

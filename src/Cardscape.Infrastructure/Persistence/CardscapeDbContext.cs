@@ -26,9 +26,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Cardscape.Infrastructure.Persistence;
 
 /// <summary>
-/// The Cardscape database context. The runtime configuration
-/// selects the provider (SQLite, PostgreSQL, MariaDB) via
-/// <c>Program.cs</c>.
+/// The Cardscape SQLite database context.
 /// </summary>
 public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> options) : DbContext(options)
 {

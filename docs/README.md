@@ -57,10 +57,11 @@ one; mark it as `Superseded by ADR NNNN` instead.
 
 | ADR | Title | Status |
 |---|---|---|
-| [0001](adr/0001-multi-provider-strategy.md) | Multi-provider persistence (SQLite, PostgreSQL, MariaDB) with SQLite-only test matrix | Accepted (2026-07-27) |
+| [0001](adr/0001-multi-provider-strategy.md) | Multi-provider persistence | Superseded by ADR 0012 |
 | [0002](adr/0002-mcp-server.md) | Model Context Protocol (MCP) server | Accepted (2026-07-27) |
 | [0009](adr/0009-radzen-only-ui.md) | Radzen-only UI: kill HTML/JS/CSS custom in `Cardscape.Web` | Accepted (2026-08-03) |
 | [0010](adr/0010-client-side-culture-switcher.md) | Client-side culture switcher (Blazor WebAssembly) | Accepted (2026-08-04) |
+| [0012](adr/0012-sqlite-only-persistence.md) | SQLite-only persistence | Accepted (2026-08-22) |
 
 ## 3. How the docs are organized
 
@@ -77,7 +78,7 @@ docs/
 ├── architecture/                      # how the solution is shaped
 │   ├── 00-overview.md                 # the layers and the directory layout
 │   ├── 01-bounded-contexts.md         # vertical slices
-│   ├── 02-multi-provider-persistence.md  # companion to ADR 0001
+│   ├── 02-multi-provider-persistence.md  # SQLite persistence reference
 │   └── 03-mcp-server.md               # companion to ADR 0002
 ├── blog/                              # public-facing blog posts
 │   └── 01-cardscape-rebrand.md        # the rebrand announcement

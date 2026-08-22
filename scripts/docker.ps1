@@ -2,8 +2,8 @@
 # docker.ps1 — Manage the local docker-compose stack.
 #
 # Usage:
-#   pwsh scripts/docker.ps1 up                    # full stack (Api + Postgres)
-#   pwsh scripts/docker.ps1 up -Dev               # sqlite-only dev stack
+#   pwsh scripts/docker.ps1 up                    # production-like SQLite API stack
+#   pwsh scripts/docker.ps1 up -Dev               # development SQLite API stack
 #   pwsh scripts/docker.ps1 down                  # stop + remove containers
 #   pwsh scripts/docker.ps1 down -V               # also drop named volumes
 #   pwsh scripts/docker.ps1 logs                  # tail logs
@@ -13,10 +13,9 @@
 #   pwsh scripts/docker.ps1 restart api           # restart a single service
 #
 # Notes:
-#   - Default compose file is docker-compose.yml (production-ish, includes
-#     Postgres). For local development without Postgres, use -Dev to pick
-#     docker-compose.dev.yml.
-#   - Reads CARDS_CAPE_JWT_KEY / CARDS_CAPE_DB_PASSWORD from .env if present.
+#   - Default compose file is docker-compose.yml. Use -Dev to select
+#     docker-compose.dev.yml and its development defaults.
+#   - Reads CARDS_CAPE_JWT_KEY from .env if present.
 # =============================================================================
 
 #Requires -Version 7.0

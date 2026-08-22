@@ -10,7 +10,7 @@
 | Git | any recent | The `core.autocrlf=false` recommendation applies; the repo ships LF line endings. |
 | An editor | Rider / VS 2022 17.x+ / VS Code + C# Dev Kit | Any of them. The project includes an `.editorconfig` so your editor will pick up the style rules. |
 | SQLite browser (optional) | DB Browser for SQLite or `sqlite3` CLI | Helpful when debugging migrations. |
-| Docker (optional) | any recent | Only if you want to run PostgreSQL or MariaDB locally. The MVP runs on SQLite. |
+| Docker (optional) | any recent | Used for the containerized SQLite deployment. |
 
 ## 2. Clone and build
 
@@ -67,33 +67,22 @@ dotnet run --project src/Cardscape.Web
 It listens on `https://localhost:7001` by default. Navigate there to
 see the Blazor WASM client.
 
-## 5. Switch the database engine
+## 5. Configure SQLite
 
-The provider is chosen at boot from `Database:Provider` in
-`appsettings.json` (or via environment variable
-`Database__Provider`). Valid values:
-
-| Value | Engine | Connection string key |
-|---|---|---|
-| `Sqlite` | SQLite (default) | `Database:SqliteConnectionString` |
-| `PostgreSQL` | PostgreSQL | `Database:PostgreSqlConnectionString` |
-| `MariaDB` | MariaDB | `Database:MariaDbConnectionString` |
-
-Example `appsettings.Development.json`:
+Cardscape supports SQLite. Configure its connection string in
+`appsettings.Development.json` or with
+`ConnectionStrings__Default`:
 
 ```json
 {
-  "Database": {
-    "Provider": "PostgreSQL",
-    "PostgreSqlConnectionString": "Host=localhost;Port=5432;Database=cardscape;Username=postgres;Password=postgres"
+  "ConnectionStrings": {
+    "Default": "Data Source=Data/cardscape.db"
   }
 }
 ```
 
-The same binary ships to any deployment; only the configuration
-changes. Migrations are applied automatically on boot (in
-Development) or via a separate `dotnet ef database update` step
-(in Production).
+Migrations are applied automatically on boot in Development or
+via `dotnet ef database update` in Production.
 
 ## 6. Generate migrations
 
@@ -104,30 +93,15 @@ incantation. Short version:
 # Add the EF Core tool if you haven't
 dotnet tool install -g dotnet-ef
 
-# One migration, three times, three folders
 dotnet ef migrations add <Name> \
   --project src/Cardscape.Infrastructure \
   --startup-project src/Cardscape.Api \
-  --output-dir Persistence/Migrations/Sqlite
-
-# (repeat for PostgreSQL and MariaDB)
+  --output-dir Persistence/Migrations
 ```
 
-The first time you add a migration, **always hand-diff** the three
-generated files. Look for:
-
-- Default value syntax (SQLite, PostgreSQL, MariaDB differ on
-  `DEFAULT (now())` vs. `DEFAULT CURRENT_TIMESTAMP` vs.
-  `DEFAULT now()`).
-- Identity/auto-increment (`INTEGER PRIMARY KEY AUTOINCREMENT` in
-  SQLite, `SERIAL` in PostgreSQL, `BIGINT AUTO_INCREMENT` in
-  MariaDB).
-- String length and collation.
-- JSON columns (we recommend `text` everywhere and a value
-  converter on the C# side).
-
-If the diff is non-trivial, add a per-provider override in the
-`Up` / `Down` methods and a comment in the commit message.
+Inspect every generated file, run
+`dotnet ef migrations has-pending-model-changes`, and apply the
+full history to a clean temporary SQLite database before merge.
 
 ## 7. Run the tests
 
@@ -147,12 +121,6 @@ The current matrix runs all tests against SQLite only:
 - **Architecture tests** (`Cardscape.ArchitectureTests`) verify
   the dependency graph and naming rules with NetArchTest. These
   run on every build and protect the architecture from drift.
-
-When the MariaDB / PostgreSQL providers ship EF Core 11 versions,
-add the corresponding `PackageReference` to the test project,
-remove the `--filter "Database=Sqlite"` from CI, and tag the new
-tests with `[Trait("Database", "PostgreSQL")]` or
-`[Trait("Database", "MariaDB")]`. The rest is automatic.
 
 ## 8. Recommended editor setup
 

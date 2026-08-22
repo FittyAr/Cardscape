@@ -74,8 +74,8 @@ Before cutting a release, the following must be true.
 - [ ] `dotnet test` is green on the SQLite-only matrix.
 - [ ] `dotnet test --filter "Database=Sqlite"` passes all
       unit, integration, and architecture tests.
-- [ ] `dotnet ef migrations` for all three providers
-      (SQLite, PostgreSQL, MariaDB) compile.
+- [ ] `dotnet ef migrations has-pending-model-changes` reports none.
+- [ ] The full migration history applies to a clean SQLite database.
 - [ ] No `TODO` markers in the changed files of this release.
       (Long-lived TODOs are tracked as GitHub issues.)
 - [ ] No `// FIXME` markers without an issue reference.
@@ -101,8 +101,6 @@ Before cutting a release, the following must be true.
 - [ ] For Phase 2+: smoke test the MCP server end-to-end
       with Claude Desktop (stdio) against a seeded
       workspace.
-- [ ] For multi-DB: at least one manual smoke test on
-      PostgreSQL and one on MariaDB (in Docker).
 
 ### Dependencies
 
@@ -160,7 +158,7 @@ produces:
 - `ghcr.io/cardscape/cardscape-mcp:<tag>` — the MCP server
   (Phase 2+).
 - A `docker-compose.yml` example that wires them together
-  with a SQLite or PostgreSQL database.
+  with its SQLite database.
 
 The `latest` tag tracks the most recent release. Older
 versions are kept for one minor version back (e.g. when

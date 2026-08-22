@@ -5,14 +5,11 @@
 #   pwsh scripts/run.ps1 api                   # run REST API + Blazor host
 #   pwsh scripts/run.ps1 web                   # run Blazor WASM client only
 #   pwsh scripts/run.ps1 mcp                   # run MCP server
-#   pwsh scripts/run.ps1 api -Database PostgreSQL
 #   pwsh scripts/run.ps1 api -Port 5291 -NoHttps
 #   pwsh scripts/run.ps1 api -- --urls=http://localhost:5291
 #
 # Notes:
-#   - Default provider is Sqlite (Data Source=Data/cardscape.db).
-#   - For Postgres / MariaDB you'll need a running instance — see
-#     scripts/db.ps1 helpers or docker-compose.dev.yml + the postgres compose.
+#   - Persistence uses SQLite (Data Source=Data/cardscape.db by default).
 #   - The API also hosts the Blazor WASM client (see src/Cardscape.Api),
 #     so `api` is the typical one-shot run.
 # =============================================================================
@@ -24,9 +21,6 @@ param(
     [Parameter(Mandatory, Position = 0)]
     [ValidateSet('api', 'web', 'mcp')]
     [string]$Service,
-
-    [ValidateSet('Sqlite', 'PostgreSQL', 'MariaDB')]
-    [string]$Database,
 
     [string]$ConnectionString,
     [string]$Port,
@@ -53,7 +47,6 @@ if (-not (Test-Path $project)) {
 
 # Environment overrides for the child dotnet process.
 $envOverrides = @{}
-if ($Database)        { $envOverrides['Database__Provider']        = $Database }
 if ($ConnectionString){ $envOverrides['ConnectionStrings__Default'] = $ConnectionString }
 if ($Port) {
     $url = if ($NoHttps) { "http://localhost:$Port" } else { "https://localhost:$Port" }

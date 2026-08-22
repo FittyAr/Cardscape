@@ -18,8 +18,7 @@
 
 The simplest self-hostable Cardscape deployment is a
 single Linux host with Docker and Docker Compose. The host
-runs the API, the web client, and the database (SQLite
-for solo/dev, PostgreSQL for production). The MCP server
+runs the API, the web client, and the SQLite database. The MCP server
 shares the same host when Phase 2 ships.
 
 ### 1.1 Requirements
@@ -53,8 +52,7 @@ services:
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - Database__Provider=Sqlite
-      - Database__ConnectionString=Data Source=/data/cardscape.db
+      - ConnectionStrings__Default=Data Source=/data/cardscape.db
       - Cardscape__JwtSecret=${JWT_SECRET:?JWT_SECRET is required}
       - Otel__Endpoint=http://otel-collector:4317
     volumes:
@@ -229,8 +227,7 @@ sections:
 | Variable | Section | Default | Notes |
 |---|---|---|---|
 | `ASPNETCORE_ENVIRONMENT` | top | `Production` | `Development` for local dev |
-| `Database__Provider` | `Database` | `Sqlite` | one of `Sqlite`, `PostgreSQL`, `MariaDB` |
-| `Database__ConnectionString` | `Database` | `Data Source=/data/cardscape.db` | provider-specific |
+| `ConnectionStrings__Default` | `ConnectionStrings` | `Data Source=/app/Data/cardscape.db` | SQLite connection string |
 | `Cardscape__JwtSecret` | `Cardscape` | (required) | 32+ random bytes, base64 |
 | `Otel__Endpoint` | `Otel` | (none) | OTel collector URL, e.g. `http://otel-collector:4317` |
 | `Smtp__Host` | `Smtp` | (none) | for outbound email |
@@ -245,66 +242,7 @@ when the implementation lands.
 
 ---
 
-## 5. The PostgreSQL deployment
-
-For a production deployment, SQLite is replaced with
-PostgreSQL. The change is configuration only:
-
-```yaml
-services:
-  api:
-    environment:
-      - Database__Provider=PostgreSQL
-      - Database__ConnectionString=Host=postgres;Port=5432;Database=cardscape;Username=cardscape;Password=${DB_PASSWORD}
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      - POSTGRES_DB=cardscape
-      - POSTGRES_USER=cardscape
-      - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
-    volumes:
-      - cardscape-postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cardscape"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-volumes:
-  cardscape-postgres:
-```
-
-The `Database__Provider` switch triggers the EF Core
-configuration in
-[`src/Cardscape.Infrastructure/Persistence/`](../../src/Cardscape.Infrastructure/Persistence/)
-to call `UseNpgsql` instead of `UseSqlite`.
-
-> **Known follow-up.** The current EF Core migrations were
-> generated with the SQLite design-time factory, so the
-> snapshot is SQLite-typed. Switching the runtime provider
-> to PostgreSQL trips `PendingModelChangesWarning` at
-> startup. The full root cause + one-pass fix are documented
-> in
-> [`12-postgresql-future-work.md`](12-postgresql-future-work.md).
-> Until that pass lands, the documented self-hostable stack
-> is SQLite-only.
-
----
-
-## 6. The MariaDB deployment
-
-Same as PostgreSQL, with `Database__Provider=MariaDB` and
-the MariaDB connection string. The image is
-`mariadb:11`.
-
----
-
-## 7. The MCP server deployment (Phase 2+)
+## 5. The MCP server deployment (Phase 2+)
 
 The MCP server is the same `api` container in Phase 2+ —
 the MCP endpoint is exposed at `/mcp/`. The AI client
@@ -343,7 +281,7 @@ creation time, and never again.
 
 ---
 
-## 8. The production deployment guide
+## 6. The production deployment guide
 
 A full production deployment (Kubernetes, high availability,
 disaster recovery, multi-region) is out of scope for this
@@ -355,10 +293,8 @@ covers:
   ConfigMap, Secret, PersistentVolumeClaim).
 - **Helm chart** (the maintainer publishes one with the
   v1.0 release).
-- **PostgreSQL HA** (Patroni, pg_auto_failover, or a
-  managed service like AWS RDS or Cloud SQL).
-- **Multi-region** (active-passive with read replicas in
-  the secondary region).
+- **SQLite availability and scale-up constraints**.
+- **Multi-region backup and restore strategy**.
 - **Disaster recovery** (cross-region backups, RTO/RPO
   targets).
 - **Capacity planning** (CPU, memory, IOPS, network).
@@ -369,7 +305,7 @@ self-hosting.
 
 ---
 
-## 9. The upgrade path
+## 7. The upgrade path
 
 The upgrade from one version to the next is:
 
@@ -392,7 +328,7 @@ release in the
 
 ---
 
-## 10. The rollback path
+## 8. The rollback path
 
 If the upgrade fails, the rollback is:
 
@@ -409,7 +345,7 @@ backup procedure.
 
 ---
 
-## 11. When to revisit
+## 9. When to revisit
 
 This document is revisited when:
 

@@ -89,9 +89,7 @@ demo deployable from a single `docker compose up`.
   Infrastructure, Api, Web, Mcp).
 - 5 test projects (unit, integration, architecture, functional,
   shared test common).
-- Multi-provider persistence: SQLite, PostgreSQL, MariaDB.
-  Test matrix today is SQLite-only; the convention to grow
-  it is documented in [ADR 0001](docs/adr/0001-multi-provider-strategy.md).
+- SQLite persistence with EF Core migrations and automated coverage.
 - RPL-1.5 LICENSE.
 - `Cardscape.Mcp` project skeleton with stdio transport and
   the auth handler scaffold. See
@@ -115,8 +113,7 @@ end-to-end vertical that proves the architecture.
 
 - Domain entities: Workspace, Board, List, Card, User,
   Member, Label, Attachment, Checklist, Comment, Activity.
-- EF Core persistence with migrations for all three
-  providers (SQLite, PostgreSQL, MariaDB).
+- EF Core persistence with canonical SQLite migrations.
 - ASP.NET Identity integration.
 - REST endpoints for the entities above.
 - Blazor WASM client with the board view, drag-and-drop,

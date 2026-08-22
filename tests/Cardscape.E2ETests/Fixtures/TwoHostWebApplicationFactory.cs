@@ -119,7 +119,6 @@ public sealed class ApiHostFactory : WebApplicationFactory<Cardscape.Api.Program
     protected override IHost CreateHost(IHostBuilder builder)
     {
         string? previousConn = Environment.GetEnvironmentVariable("ConnectionStrings__Default");
-        string? previousProvider = Environment.GetEnvironmentVariable("Database__Provider");
         string? previousJwt = Environment.GetEnvironmentVariable("Jwt__SigningKey");
         string? previousStorage = Environment.GetEnvironmentVariable("Storage__LocalRoot");
         string? previousEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
@@ -136,7 +135,6 @@ public sealed class ApiHostFactory : WebApplicationFactory<Cardscape.Api.Program
         Directory.CreateDirectory(_storageRoot);
 
         Environment.SetEnvironmentVariable("ConnectionStrings__Default", _connectionString);
-        Environment.SetEnvironmentVariable("Database__Provider", "Sqlite");
         Environment.SetEnvironmentVariable("Jwt__SigningKey",
             "e2e-tests-signing-key-please-override-32+chars");
         Environment.SetEnvironmentVariable("Storage__LocalRoot", _storageRoot);
@@ -184,7 +182,6 @@ public sealed class ApiHostFactory : WebApplicationFactory<Cardscape.Api.Program
         finally
         {
             Environment.SetEnvironmentVariable("ConnectionStrings__Default", previousConn);
-            Environment.SetEnvironmentVariable("Database__Provider", previousProvider);
             Environment.SetEnvironmentVariable("Jwt__SigningKey", previousJwt);
             Environment.SetEnvironmentVariable("Storage__LocalRoot", previousStorage);
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", previousEnv);
@@ -222,7 +219,6 @@ public sealed class McpHostFactory : WebApplicationFactory<Cardscape.Mcp.Program
     protected override IHost CreateHost(IHostBuilder builder)
     {
         string? previousConn = Environment.GetEnvironmentVariable("ConnectionStrings__Default");
-        string? previousProvider = Environment.GetEnvironmentVariable("Database__Provider");
         string? previousStorage = Environment.GetEnvironmentVariable("Storage__LocalRoot");
         string? previousEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
         string? previousUrls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
@@ -239,7 +235,6 @@ public sealed class McpHostFactory : WebApplicationFactory<Cardscape.Mcp.Program
         Directory.CreateDirectory(_storageRoot);
 
         Environment.SetEnvironmentVariable("ConnectionStrings__Default", _connectionString);
-        Environment.SetEnvironmentVariable("Database__Provider", "Sqlite");
         Environment.SetEnvironmentVariable("Storage__LocalRoot", _storageRoot);
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         Environment.SetEnvironmentVariable("ASPNETCORE_URLS", $"http://127.0.0.1:{_port}");
@@ -254,7 +249,6 @@ public sealed class McpHostFactory : WebApplicationFactory<Cardscape.Mcp.Program
         finally
         {
             Environment.SetEnvironmentVariable("ConnectionStrings__Default", previousConn);
-            Environment.SetEnvironmentVariable("Database__Provider", previousProvider);
             Environment.SetEnvironmentVariable("Storage__LocalRoot", previousStorage);
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", previousEnv);
             Environment.SetEnvironmentVariable("ASPNETCORE_URLS", previousUrls);

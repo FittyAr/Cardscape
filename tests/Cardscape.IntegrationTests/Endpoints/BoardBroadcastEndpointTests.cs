@@ -290,7 +290,6 @@ public sealed class BoardBroadcastEndpointTests
                     ["Internal:Secret"] = Secret,
                     ["ConnectionStrings:Default"] = _factory.ConnectionString,
                     ["Storage:LocalRoot"] = _factory.StorageRoot,
-                    ["Database:Provider"] = "Sqlite"
                 });
             });
         });

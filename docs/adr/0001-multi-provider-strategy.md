@@ -1,6 +1,6 @@
 # ADR 0001: Multi-provider persistence (SQLite, PostgreSQL, MariaDB) with SQLite-only test matrix
 
-- **Status**: Accepted
+- **Status**: Superseded by ADR 0012
 - **Date**: 2026-07-27
 - **Deciders**: Cardscape maintainers
 
