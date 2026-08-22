@@ -12,7 +12,7 @@ namespace Cardscape.Infrastructure.Integrations;
 
 /// <summary>
 /// Default <see cref="IInboundEmailService"/> that recognises the
-/// three inbound email providers supported out of the box:
+/// three providers the project supports out of the box:
 ///
 /// <list type="bullet">
 ///   <item><b>sendgrid</b> — JSON body with

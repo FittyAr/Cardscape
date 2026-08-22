@@ -29,7 +29,7 @@ The answer or behavior you expected.
 - Cardscape version: commit / tag / branch
 - .NET SDK: `dotnet --version`
 - OS: (Windows / macOS / Linux)
-- SQLite version:
+- Database provider: (SQLite / PostgreSQL / MariaDB)
 - MCP client (if MCP): (Claude Desktop / Cursor / ...)
 
 ## Why I'm filing an issue instead of a Discussion

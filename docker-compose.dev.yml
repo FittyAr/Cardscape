@@ -1,4 +1,4 @@
-# Self-contained development stack backed by SQLite.
+# Self-contained development stack — SQLite only, no Postgres.
 # Use this when you want a one-command spin-up for trying Cardscape
 # without external dependencies.
 #
@@ -17,6 +17,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
+      Database__Provider: Sqlite
       ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
       Storage__LocalRoot: /app/Storage
       Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:-dev-only-insecure-signing-key-please-override-in-production-32+chars}

@@ -136,9 +136,9 @@ message; users cannot sign in or interact with boards.
 2. **Check the API logs.** `docker compose logs --tail=200
    api`. Look for unhandled exceptions, OOM kills, or
    panics.
-3. **Check the database.** Verify that the SQLite file exists,
-   is writable by the container user, and the volume has free
-   space. If database access fails, see §5.2.
+3. **Check the database.** `docker compose exec postgres
+   pg_isready -U cardscape` (or the equivalent for SQLite
+   or MariaDB). If the database is down, see §5.2.
 4. **Check the host.** `docker system df`, `df -h`, `free
    -h`. The host may be out of disk space or memory.
 5. **Restart the stack.** `docker compose restart`. This

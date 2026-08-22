@@ -120,7 +120,7 @@ accordingly.
   the API / MCP / Web (e.g.
   Caddy, nginx, Cloudflare —
   whichever the deployer uses)
-- The SQLite database
+- The PostgreSQL / SQLite database
   backing the API
 - The object-storage adapter (S3,
   MinIO, local disk — whichever

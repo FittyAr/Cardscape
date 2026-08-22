@@ -57,7 +57,7 @@
   <data name="HomePointBoardsTitle" xml:space="preserve"><value>Boards that feel like work</value></data>
   <data name="HomePointBoardsBody" xml:space="preserve"><value>Workspaces, lists, cards, calendar, and planner — the surface you already know, without the hosted lock-in.</value></data>
   <data name="HomePointSelfHostTitle" xml:space="preserve"><value>Yours to run</value></data>
-  <data name="HomePointSelfHostBody" xml:space="preserve"><value>SQLite persistence. One build, your infrastructure, your data.</value></data>
+  <data name="HomePointSelfHostBody" xml:space="preserve"><value>SQLite, PostgreSQL, or MariaDB. One build, your infrastructure, your data.</value></data>
   <data name="HomePointMcpTitle" xml:space="preserve"><value>AI that can drive the board</value></data>
   <data name="HomePointMcpBody" xml:space="preserve"><value>A first-class MCP server lets Cursor, Claude, and other agents read and write cards safely.</value></data>
   <data name="NavHome" xml:space="preserve"><value>Home</value></data>

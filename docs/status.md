@@ -22,7 +22,7 @@ point users at their own status URL.
 | Search | 🟢 Operational | Relational search across current rows in boards the user can read |
 | AI features | 🟢 Operational | OpenAI-compatible provider; local Ollama endpoint by default |
 | Background jobs | 🟢 Operational | Internal job dispatcher (no Hangfire) |
-| Database | 🟢 Operational | SQLite persistent store |
+| Database | 🟢 Operational | Primary PostgreSQL with read replica |
 
 ## Last incident
 

@@ -1,6 +1,6 @@
-# ADR 0001: Multi-provider persistence (SQLite, PostgreSQL, MariaDB) with SQLite-only test matrix
+# ADR 0001: Multi-provider persistence with SQLite development and multi-engine release validation
 
-- **Status**: Superseded by ADR 0012
+- **Status**: Accepted
 - **Date**: 2026-07-27
 - **Deciders**: Cardscape maintainers
 
@@ -86,20 +86,25 @@ EF Core 11 binaries.
    different defaults. Where the abstractions are insufficient, we
    add a per-provider conditional in the migration body (rare).
 
-6. **Test matrix, July 2026**: integration tests run **only on
-   SQLite**. The other two providers are excluded from the test
-   project on purpose:
+6. **Ordinary development matrix**: local and continuous development
+   integration tests run on **SQLite** for a fast, dependency-free loop:
    - `tests/Cardscape.IntegrationTests.csproj` does not reference
      `Npgsql.EntityFrameworkCore.PostgreSQL` or
      `MySql.EntityFrameworkCore`.
    - The integration-test in-process host is always wired against
      SQLite (`Data Source=:memory:` or a per-test temp file).
-   - The CI matrix will run `dotnet test --filter "Database=Sqlite"`.
+   - The ordinary CI matrix runs `dotnet test --filter "Database=Sqlite"`.
    - Unit tests in `Cardscape.UnitTests` are provider-agnostic by
      construction — they mock the `DbContext` or use EF Core's
      `InMemory` provider — so they don't need this filter.
 
-7. **Test trait convention**: every test class (or method) that
+7. **Release compatibility gate**: a final release must apply its EF Core
+   migrations and pass the automated integration suite against real SQLite,
+   PostgreSQL, and MariaDB/MySQL engines. Provider compilation or manual
+   smoke testing alone is insufficient. Until that matrix is green, a build
+   is a development artifact and must not be published as a final release.
+
+8. **Test trait convention**: every test class (or method) that
    exercises a provider-specific path will be tagged with:
 
    ```csharp

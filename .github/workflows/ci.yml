@@ -106,6 +106,7 @@ jobs:
     timeout-minutes: 25
     env:
       Configuration: Release
+      Database__Provider: Sqlite
       ConnectionStrings__Default: 'Data Source=Data/cardscape-ci.db;Cache=Shared;Mode=Memory'
       ASPNETCORE_ENVIRONMENT: Testing
     steps:
@@ -144,6 +145,7 @@ jobs:
     timeout-minutes: 20
     env:
       Configuration: Release
+      Database__Provider: Sqlite
       ConnectionStrings__Default: 'Data Source=Data/cardscape-ci-coverage.db;Cache=Shared;Mode=Memory'
       ASPNETCORE_ENVIRONMENT: Testing
     steps:
@@ -266,6 +268,7 @@ jobs:
           mkdir -p artifacts/openapi
           (ASPNETCORE_URLS='http://127.0.0.1:18080' ASPNETCORE_ENVIRONMENT=Development \
             ConnectionStrings__Default='Data Source=Data/cardscape-release.db' \
+            Database__Provider=Sqlite \
             Jwt__SigningKey='release-placeholder-key-replace-in-deployment' \
             Internal__Secret='release-placeholder-secret-replace-in-deployment' \
             Storage__LocalRoot='/tmp/cardscape-storage' \

@@ -101,6 +101,8 @@ src/
 │   │   ├── Configurations/      ← IEntityTypeConfiguration<T> per aggregate root
 │   │   ├── Migrations/          ← one folder per provider
 │   │   │   ├── Sqlite/
+│   │   │   ├── PostgreSQL/
+│   │   │   └── MariaDB/
 │   │   ├── Repositories/        ← BoardRepository.cs, ...
 │   │   ├── Interceptors/        ← AuditableEntitySaveChangesInterceptor.cs
 │   │   └── Seeds/               ← initial data
@@ -233,7 +235,7 @@ for the recipe. The short version:
 4. Add a validator in `Application/<Context>/Validations/`.
 5. Add an EF Core configuration in
    `Infrastructure/Persistence/Configurations/`.
-6. Add the SQLite migration to the canonical EF Core history.
+6. Add a migration in all three provider folders.
 7. **For the REST surface**: add an endpoint in
    `Api/Endpoints/<Context>/`.
 8. **For the AI surface**: add a tool method in
@@ -260,7 +262,7 @@ for the recipe. The short version:
 
 ## 8. References
 
-- [`../adr/0012-sqlite-only-persistence.md`](../adr/0012-sqlite-only-persistence.md)
+- [`../adr/0001-multi-provider-strategy.md`](../adr/0001-multi-provider-strategy.md)
 - [`../adr/0002-mcp-server.md`](../adr/0002-mcp-server.md)
 - [`01-bounded-contexts.md`](01-bounded-contexts.md)
 - [`03-mcp-server.md`](03-mcp-server.md)

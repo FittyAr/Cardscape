@@ -22,10 +22,12 @@ with hosted kanban tools, and an AI integration that no other
 self-hostable kanban has. We do not cut corners. We do not
 ship a "demo MVP" and call it done.
 
-The persistence layer supports **SQLite**. See
-[ADR 0012](adr/0012-sqlite-only-persistence.md) for the decision
-that replaced the unverified multi-provider strategy. See
-[ADR 0002](adr/0002-mcp-server.md) for the MCP server decision.
+The persistence layer supports **SQLite**, **PostgreSQL**, and
+**MariaDB**; the test matrix currently runs **only on SQLite**.
+See [ADR 0001](adr/0001-multi-provider-strategy.md) for the
+rationale and the test-trait convention we use to grow the
+matrix later. See [ADR 0002](adr/0002-mcp-server.md) for the
+MCP server decision.
 
 ## 2. Stack
 
@@ -36,7 +38,7 @@ that replaced the unverified multi-provider strategy. See
 | Client | Blazor WebAssembly | 10.0.10 |
 | UI components | Radzen.Blazor | 11.2.1 |
 | ORM | Entity Framework Core | 10.0.10 LTS |
-| Database | Microsoft.EntityFrameworkCore.Sqlite | 10.0.10 |
+| DB providers (runtime) | Sqlite, Npgsql, MySql.EntityFrameworkCore | 10.0.10 / 10.0.3 / 10.0.9 |
 | Validation | FluentValidation | 12.1.1 |
 | CQRS / Mediator | Wolverine | 6.24.5 |
 | API docs | Microsoft.AspNetCore.OpenApi + Scalar.AspNetCore | 10.0.10 / 2.12.50 |
@@ -121,30 +123,59 @@ See [`architecture/03-mcp-server.md`](architecture/03-mcp-server.md)
 for the operational guide and [ADR 0002](adr/0002-mcp-server.md)
 for the decision.
 
-## 5. Persistence philosophy
+## 5. Design philosophy: design for three, test on one
 
-SQLite is the single supported provider. Runtime composition,
-migrations, CI, tests, Docker, and documentation must describe
-that same engine. Persistence code uses LINQ and EF Core; raw SQL
-requires a demonstrated EF Core limitation, a scoped exception,
-and automated coverage. A new provider is not supported until its
-migrations, integration matrix, and deployment target land in the
-same change. See [ADR 0012](adr/0012-sqlite-only-persistence.md).
+> *"todo el desarrollo debe ser pensado, diseñador y programado
+> pensando en los 3."*
+
+The application is designed, implemented, and packaged to run on
+three database engines — SQLite, PostgreSQL, and MariaDB. But
+the automated test matrix today runs **only on SQLite**.
+
+**Why**: the third-party EF Core providers for PostgreSQL and
+MariaDB target EF Core 10 on the 10.0.x line, and the whole
+solution lives on the same LTS feature band for support
+uniformity. See [ADR 0001](adr/0001-multi-provider-strategy.md)
+for the full rationale.
+
+**What this means in code**:
+
+- The runtime projects (`Cardscape.Api`, `Cardscape.Mcp`)
+  reference all three provider packages and select the engine
+  at boot time via `Database:Provider` configuration.
+- The integration-test project (`Cardscape.IntegrationTests`)
+  references only `Microsoft.EntityFrameworkCore.Sqlite`.
+- Every LINQ expression, every column attribute, every
+  migration body is written against the relational abstractions.
+  We avoid `EF.Functions.*` provider-specific helpers, raw SQL
+  strings, and per-engine JSON conventions.
+
+**Test trait convention**:
+
+```csharp
+[Trait("Database", "Sqlite")]      // today
+[Trait("Database", "PostgreSQL")]  // when the provider ships EF Core 11
+[Trait("Database", "MariaDB")]     // when the provider ships EF Core 11
+```
+
+The CI command is `dotnet test --filter "Database=Sqlite"`. When
+the deferred providers catch up, removing the filter and adding
+the trait to the new tests is the entire migration.
 
 ## 6. Working rules for any agent
 
 1. **Never edit `global.json` without explicit human approval.**
-2. **Never bump EF Core or SQLite provider versions** without a
-   clean migration and full-suite verification.
+2. **Never bump EF Core provider versions** without verifying all
+   three engines (SQLite, PostgreSQL, MariaDB) are still working.
 3. **Never delete ADR files.** Mark as `Superseded by ADR NNNN`
    instead.
 4. **When adding a NuGet package, declare its version in
    `Directory.Packages.props` only.**
-5. **Migrations** live in
-   `src/Cardscape.Infrastructure/Persistence/Migrations`.
+5. **Migrations**: each EF Core provider has its own output
+   directory under `src/Cardscape.Infrastructure/Persistence/Migrations/{Provider}`.
 6. **Don't touch the `.gitignore` for `obj/`, `bin/`, `.vs/`, etc.**
-7. **SQLite-specific client evaluation requires a comment**
-   explaining the EF Core translation limitation.
+7. **No provider-specific code paths without a comment**
+   explaining why the abstraction failed and pointing at the ADR.
 8. **No new dependencies without a justification line** in the
    commit message and a row in the `Directory.Packages.props`
    changelog.
@@ -159,15 +190,27 @@ same change. See [ADR 0012](adr/0012-sqlite-only-persistence.md).
 ## 7. Migrations incantation
 
 ```bash
+# SQLite
 dotnet ef migrations add <Name> \
   --project src/Cardscape.Infrastructure \
   --startup-project src/Cardscape.Api \
-  --output-dir Persistence/Migrations
+  --output-dir Persistence/Migrations/Sqlite
+
+# PostgreSQL
+dotnet ef migrations add <Name> \
+  --project src/Cardscape.Infrastructure \
+  --startup-project src/Cardscape.Api \
+  --output-dir Persistence/Migrations/PostgreSQL
+
+# MariaDB
+dotnet ef migrations add <Name> \
+  --project src/Cardscape.Infrastructure \
+  --startup-project src/Cardscape.Api \
+  --output-dir Persistence/Migrations/MariaDB
 ```
 
-Always inspect the generated migration, verify there are no
-pending model changes, and apply the complete history to a clean
-temporary SQLite database before merge.
+Always run all three. The first migration is hand-diffed before
+merge to catch the cases where the abstraction is too thin.
 
 ## 8. Available agent skills (project-local)
 

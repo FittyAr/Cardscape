@@ -153,6 +153,7 @@ USER cardscape
 
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV Database__Provider=Sqlite
 ENV ConnectionStrings__Default=Data Source=/app/Data/cardscape.db
 ENV Storage__LocalRoot=/app/Storage
 EXPOSE 8080

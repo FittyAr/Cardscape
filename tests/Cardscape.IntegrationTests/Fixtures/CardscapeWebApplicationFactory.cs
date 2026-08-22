@@ -83,11 +83,13 @@ public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Progr
     protected override IHost CreateHost(IHostBuilder builder)
     {
         string? previousConnString = Environment.GetEnvironmentVariable("ConnectionStrings__Default");
+        string? previousProvider = Environment.GetEnvironmentVariable("Database__Provider");
         string? previousJwtKey = Environment.GetEnvironmentVariable("Jwt__SigningKey");
         string? previousStorage = Environment.GetEnvironmentVariable("Storage__LocalRoot");
         string? previousEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
         Environment.SetEnvironmentVariable("ConnectionStrings__Default", _connectionString);
+        Environment.SetEnvironmentVariable("Database__Provider", "Sqlite");
         Environment.SetEnvironmentVariable("Jwt__SigningKey",
             "integration-tests-signing-key-please-override-in-production-32+chars");
         Environment.SetEnvironmentVariable("Storage__LocalRoot", _storageRoot);
@@ -100,6 +102,7 @@ public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Progr
         finally
         {
             Environment.SetEnvironmentVariable("ConnectionStrings__Default", previousConnString);
+            Environment.SetEnvironmentVariable("Database__Provider", previousProvider);
             Environment.SetEnvironmentVariable("Jwt__SigningKey", previousJwtKey);
             Environment.SetEnvironmentVariable("Storage__LocalRoot", previousStorage);
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", previousEnv);

@@ -3,7 +3,8 @@
 #
 # Usage:
 #   pwsh scripts/migrate.ps1 list                       # list applied + pending
-#   pwsh scripts/migrate.ps1 apply                      # apply pending SQLite migrations
+#   pwsh scripts/migrate.ps1 apply                      # apply pending (default provider)
+#   pwsh scripts/migrate.ps1 apply -Database PostgreSQL
 #   pwsh scripts/migrate.ps1 add IssueFooBar            # create a new migration
 #   pwsh scripts/migrate.ps1 script                     # generate SQL script (idempotent)
 #   pwsh scripts/migrate.ps1 script -From 0 -To Latest  # explicit range
@@ -11,8 +12,12 @@
 #   pwsh scripts/migrate.ps1 bundle                     # build a self-contained ef bundle
 #
 # Notes:
-#   - SQLite is the only supported provider.
-#   - The Infrastructure project owns the EF Core migration history.
+#   - The provider is selected via $env:Database__Provider (mirrors
+#     DesignTimeCardscapeDbContextFactory). Defaults to Sqlite.
+#   - The Infra project is the migration host. Commands are scoped to it.
+#   - For Postgres / MariaDB, the design-time factory points at
+#     localhost:5432 / localhost:3306 with the cardscape/cardscape default creds.
+#     Override via $env:ConnectionStrings__Default if needed.
 # =============================================================================
 
 #Requires -Version 7.0
@@ -24,6 +29,7 @@ param(
     [string]$Action,
 
     [string]$Name,
+    [string]$Database,
     [string]$From,
     [string]$To,
     [string]$Output,
@@ -45,7 +51,14 @@ if (-not $efInstalled) {
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
-Write-Info "Effective provider: SQLite"
+# Default provider from the configuration or env.
+if ($Database) { $env:Database__Provider = $Database }
+if (-not $env:Database__Provider) {
+    $env:Database__Provider = 'Sqlite'
+    Write-Info "Database__Provider not set; defaulting to Sqlite (Data Source=Data/cardscape.db)."
+}
+
+Write-Info "Effective provider: $($env:Database__Provider)"
 
 $project = $Script:InfraProject
 if (-not (Test-Path $project)) {
@@ -92,7 +105,7 @@ switch ($Action) {
         }
     }
     'drop' {
-        Confirm-Destructive -What "drop the SQLite database" -Force:$Force
+        Confirm-Destructive -What "drop the database ($($env:Database__Provider))" -Force:$Force
         $args = @('ef', 'database', 'drop', '--project', $project, '--no-build', '--force')
         if ($Forward) { $args += $Forward }
         Invoke-Step -Message "Dropping database" -Action {

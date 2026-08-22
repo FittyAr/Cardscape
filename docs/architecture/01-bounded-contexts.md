@@ -121,7 +121,7 @@ exposes tools that delegate to the underlying contexts.
 4. Create
    `src/Cardscape.Infrastructure/Persistence/Repositories/<Context>Repository.cs`
    if the context has its own repository.
-5. Add the SQLite migration to the canonical EF Core history.
+5. Add a migration in all three provider folders.
 6. **For the REST surface**: add `src/Cardscape.Api/Endpoints/<Context>/`
    with the endpoints.
 7. **For the AI surface**: add `src/Cardscape.Mcp/Tools/<Context>Tool.cs`

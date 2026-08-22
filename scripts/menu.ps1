@@ -219,7 +219,9 @@ function Menu-Run {
     Write-Host '   1) API + Blazor (default)'   -ForegroundColor White
     Write-Host '   2) Web (Blazor WASM client)' -ForegroundColor White
     Write-Host '   3) MCP server'              -ForegroundColor White
-    Write-Host '   4) API with custom URL'     -ForegroundColor White
+    Write-Host '   4) API with PostgreSQL'     -ForegroundColor White
+    Write-Host '   5) API with MariaDB'        -ForegroundColor White
+    Write-Host '   6) API with custom URL'     -ForegroundColor White
     Write-Host '   b) Back'                    -ForegroundColor DarkGray
     Muted '   tip: services block until you Ctrl+C them — output streams live.'
     $p = (Read-Host '  >').Trim().ToLowerInvariant()
@@ -227,7 +229,9 @@ function Menu-Run {
         '1' { Invoke-Cardscape @('run', 'api') }
         '2' { Invoke-Cardscape @('run', 'web') }
         '3' { Invoke-Cardscape @('run', 'mcp') }
-        '4' {
+        '4' { Invoke-Cardscape @('run', 'api', '-Database', 'PostgreSQL') }
+        '5' { Invoke-Cardscape @('run', 'api', '-Database', 'MariaDB') }
+        '6' {
             $u = Read-Host '   ASPNETCORE_URLS (e.g. http://localhost:5291)'
             if ($u) { Invoke-Cardscape @('run', 'api', '--', '--urls', $u) }
         }
@@ -239,33 +243,39 @@ function Menu-Run {
 function Menu-Migrate {
     Section 'EF Core migrations'
     Write-Host '   1) List applied + pending'   -ForegroundColor White
-    Write-Host '   2) Apply pending'            -ForegroundColor White
-    Write-Host '   3) Add a new migration'      -ForegroundColor White
-    Write-Host '   4) Generate SQL script'      -ForegroundColor White
-    Write-Host '   5) Drop the database'        -ForegroundColor White
-    Write-Host '   6) Remove last migration'    -ForegroundColor White
-    Write-Host '   7) Build self-contained efbundle' -ForegroundColor White
+    Write-Host '   2) Apply pending (Sqlite)'   -ForegroundColor White
+    Write-Host '   3) Apply pending (Postgres)' -ForegroundColor White
+    Write-Host '   4) Apply pending (MariaDB)'  -ForegroundColor White
+    Write-Host '   5) Add a new migration'      -ForegroundColor White
+    Write-Host '   6) Generate SQL script'      -ForegroundColor White
+    Write-Host '   7) Drop the database'        -ForegroundColor White
+    Write-Host '   8) Remove last migration'    -ForegroundColor White
+    Write-Host '   9) Build self-contained efbundle' -ForegroundColor White
     Write-Host '   b) Back'                     -ForegroundColor DarkGray
     $p = (Read-Host '  >').Trim().ToLowerInvariant()
     switch ($p) {
         '1' { Invoke-Cardscape @('migrate', 'list') }
-        '2' { Invoke-Cardscape @('migrate', 'apply') }
-        '3' {
+        '2' { Invoke-Cardscape @('migrate', 'apply', '-Database', 'Sqlite') }
+        '3' { Invoke-Cardscape @('migrate', 'apply', '-Database', 'PostgreSQL') }
+        '4' { Invoke-Cardscape @('migrate', 'apply', '-Database', 'MariaDB') }
+        '5' {
             $n = Read-Host '   migration name (e.g. IssueFooBar)'
             if ($n) { Invoke-Cardscape @('migrate', 'add', $n) }
         }
-        '4' {
+        '6' {
             $o = Read-Host '   output path (Enter for migrations.sql)'
             $args = @('migrate', 'script')
             if ($o) { $args += @('-Output', $o) }
             Invoke-Cardscape $args
         }
-        '5' {
+        '7' {
             Alert '   This DROPS the database. The sub-script will ask for confirmation.'
-            Invoke-Cardscape @('migrate', 'drop')
+            $db = Read-Host '   provider [Sqlite/PostgreSQL/MariaDB] (Enter for Sqlite)'
+            if (-not $db) { $db = 'Sqlite' }
+            Invoke-Cardscape @('migrate', 'drop', '-Database', $db)
         }
-        '6' { Invoke-Cardscape @('migrate', 'remove') }
-        '7' { Invoke-Cardscape @('migrate', 'bundle') }
+        '8' { Invoke-Cardscape @('migrate', 'remove') }
+        '9' { Invoke-Cardscape @('migrate', 'bundle') }
         'b' { return }
         default { Alert "  unknown option: $p" }
     }
@@ -273,20 +283,25 @@ function Menu-Migrate {
 
 function Menu-Database {
     Section 'Database'
-    Write-Host '   1) Show SQLite connection'               -ForegroundColor White
-    Write-Host '   2) Reset SQLite (drop + re-apply)'       -ForegroundColor White
-    Write-Host '   3) Open SQLite file (sqlite3 CLI / OS)'  -ForegroundColor White
-    Write-Host '   4) List tables'                          -ForegroundColor White
+    Write-Host '   1) Show current provider + connection'   -ForegroundColor White
+    Write-Host '   2) Reset Sqlite (drop + re-apply)'       -ForegroundColor White
+    Write-Host '   3) Reset PostgreSQL (drop + re-apply)'   -ForegroundColor White
+    Write-Host '   4) Open Sqlite file (sqlite3 CLI / OS)'  -ForegroundColor White
+    Write-Host '   5) List tables'                          -ForegroundColor White
     Write-Host '   b) Back'                                 -ForegroundColor DarkGray
     $p = (Read-Host '  >').Trim().ToLowerInvariant()
     switch ($p) {
         '1' { Invoke-Cardscape @('db', 'info') }
         '2' {
             Alert '   This DROPS the database. The sub-script will ask for confirmation.'
-            Invoke-Cardscape @('db', 'reset')
+            Invoke-Cardscape @('db', 'reset', '-Database', 'Sqlite')
         }
-        '3' { Invoke-Cardscape @('db', 'open') }
-        '4' { Invoke-Cardscape @('db', 'tables') }
+        '3' {
+            Alert '   This DROPS the database. The sub-script will ask for confirmation.'
+            Invoke-Cardscape @('db', 'reset', '-Database', 'PostgreSQL')
+        }
+        '4' { Invoke-Cardscape @('db', 'open') }
+        '5' { Invoke-Cardscape @('db', 'tables') }
         'b' { return }
         default { Alert "  unknown option: $p" }
     }
@@ -294,8 +309,8 @@ function Menu-Database {
 
 function Menu-Docker {
     Section 'Docker compose'
-    Write-Host '   1) Up dev stack (-Detached)' -ForegroundColor White
-    Write-Host '   2) Up production-like stack (-Detached)' -ForegroundColor White
+    Write-Host '   1) Up dev stack (Sqlite only, -Detached)' -ForegroundColor White
+    Write-Host '   2) Up full stack (with Postgres, -Detached)' -ForegroundColor White
     Write-Host '   3) Up attached (foreground logs)' -ForegroundColor White
     Write-Host '   4) Down (keep volumes)' -ForegroundColor White
     Write-Host '   5) Down + drop volumes'  -ForegroundColor White

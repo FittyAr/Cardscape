@@ -27,7 +27,7 @@ public sealed class WebhookEndpoint : AggregateRoot<WebhookEndpointId>
     /// <summary>
     /// Comma-joined list of subscribed event type identifiers
     /// (e.g. <c>"card.created,card.moved"</c>). Stored as a single
-    /// SQLite TEXT column.
+    /// TEXT column for portability across the three providers.
     /// </summary>
     public string Events { get; private set; } = string.Empty;
 

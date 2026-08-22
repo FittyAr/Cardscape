@@ -49,8 +49,9 @@ pwsh scripts/test.ps1 -Unit -Coverage
   pwsh scripts/cardscape.ps1 test -- --logger "trx;LogFileName=results.trx"
   ```
 - **Environment overrides** mirror ASP.NET Core's `__` (double
-  underscore) convention. For example, `run -ConnectionString` sets
-  `ConnectionStrings__Default` for the child process.
+  underscore) convention. The dispatcher sets them for the child
+  process when you pass flags like `-Database PostgreSQL` to `run`
+  or `migrate`.
 
 ## Quick recipes
 
@@ -72,7 +73,7 @@ pwsh scripts/cardscape.ps1 db reset -Force
 # Run only unit tests with coverage:
 pwsh scripts/cardscape.ps1 test -Unit -Coverage
 
-# Spin up the development Docker stack:
+# Spin up the dev docker stack (sqlite only, no Postgres):
 pwsh scripts/cardscape.ps1 docker up -Dev -Detached
 pwsh scripts/cardscape.ps1 docker logs -Service cardscape.api
 pwsh scripts/cardscape.ps1 docker down -V   # also drop volumes

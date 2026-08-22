@@ -77,15 +77,17 @@ you run them.
 | Axis | Cardscape | Other self-hostable kanban (typical) | Hosted kanban (typical) |
 |---|---|---|---|
 | SQLite (single file, zero config) | ✅ yes | often ✅ | n/a (the vendor runs the database) |
-| PostgreSQL | ❌ no | sometimes | the vendor's choice |
-| MariaDB / MySQL | ❌ no | sometimes | the vendor's choice |
+| PostgreSQL | ✅ yes | sometimes | the vendor's choice |
+| MariaDB / MySQL | ✅ yes | sometimes | the vendor's choice |
 | Other (MongoDB, DynamoDB, Cosmos) | ❌ no | sometimes | the vendor's choice |
-| Provider is configuration, not code | ❌ SQLite-only | often no | n/a |
-| Database test matrix | SQLite | usually one provider tested | n/a |
+| Provider is configuration, not code | ✅ yes | often no (the project is hard-coded to one provider) | n/a |
+| Multi-DB test matrix | SQLite-only today (the multi-DB plumbing is in place; the test matrix grows as the providers stabilize) | usually one provider tested | n/a |
 
-Cardscape supports and tests SQLite. Another provider is not
-advertised until its migrations, tests, and deployment path are
-delivered together (see [ADR 0012](../adr/0012-sqlite-only-persistence.md)).
+Cardscape's position: **design for three, test on one**.
+The runtime supports three relational database engines; the
+test matrix is SQLite-only today. The other providers
+gain tests as their EF Core providers stabilize (see
+[ADR 0001](../adr/0001-multi-provider-strategy.md)).
 
 ---
 

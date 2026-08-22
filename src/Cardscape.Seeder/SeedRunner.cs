@@ -257,7 +257,12 @@ public sealed class SeedRunner : IDisposable
             }
             catch (Exception ex)
             {
-                // A missing table on a fresh database is tolerable during wipe.
+                // Some providers (PostgreSQL in particular)
+                // use quoted identifiers; we don't quote here
+                // because all our migration tables are
+                // snake_case. The DELETE either matches or
+                // throws "no such table" on a fresh DB; both
+                // are tolerable.
                 report.Log(new SeedLogEntry(DateTimeOffset.UtcNow, SeedLogLevel.Warning, "Wipe",
                     $"  · {table}: {ex.Message}"));
             }
@@ -269,7 +274,9 @@ public sealed class SeedRunner : IDisposable
         // Read the row count for every tracked aggregate so the
         // UI can render the "After" column without running
         // COUNT(*) itself. Each call goes through EF Core's
-        // relational command pipeline.
+        // relational command pipeline; the underlying provider
+        // uses the index-only scan SQLite/PostgreSQL expose for
+        // COUNT(*) on a single table.
         var tables = new (string Key, string Aggregate, Func<Task<long>> Count)[]
         {
             ("users", "users", () => db.Set<User>().LongCountAsync(cancellationToken)),

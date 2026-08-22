@@ -122,6 +122,7 @@ public sealed class InfrastructureOptionsValidationTests
         var configuration = new Dictionary<string, string?>
         {
             ["ConnectionStrings:Default"] = "Data Source=:memory:",
+            ["Database:Provider"] = "Sqlite",
             ["Jwt:SigningKey"] = "unit-tests-signing-key-please-override-32-characters"
         };
         foreach ((string key, string? value) in overrides)

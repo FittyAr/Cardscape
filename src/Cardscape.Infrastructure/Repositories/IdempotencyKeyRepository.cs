@@ -4,6 +4,8 @@ using Cardscape.Domain.Members;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using MySql.Data.MySqlClient;
+using Npgsql;
 
 namespace Cardscape.Infrastructure.Repositories;
 
@@ -83,6 +85,18 @@ public sealed class IdempotencyKeyRepository(CardscapeDbContext db)
             return sqlite.SqliteErrorCode == 19 && sqlite.SqliteExtendedErrorCode == 2067;
         }
 
-        return false;
+        if (exception.InnerException is PostgresException postgres)
+        {
+            return postgres.SqlState == PostgresErrorCodes.UniqueViolation;
+        }
+
+        if (exception.InnerException is MySqlException mysql)
+        {
+            return mysql.Number == 1062;
+        }
+
+        string message = exception.InnerException?.Message ?? exception.Message;
+        return message.Contains("duplicate", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("unique constraint", StringComparison.OrdinalIgnoreCase);
     }
 }
