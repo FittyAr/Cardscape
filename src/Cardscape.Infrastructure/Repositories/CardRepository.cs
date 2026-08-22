@@ -13,102 +13,61 @@ public sealed class CardRepository(CardscapeDbContext db) : RepositoryBase<Card,
 {
     public async Task<IReadOnlyList<Card>> ListForBoardAsync(BoardId boardId, bool includeArchived, CancellationToken ct = default)
     {
-        var idValue = boardId.Value;
-        var rows = new List<Card>();
-        var lists = new Dictionary<Guid, BoardList>();
-        await foreach (var l in Db.Set<BoardList>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<Card> query =
+            from card in Db.Set<Card>().AsNoTracking()
+            join list in Db.Set<BoardList>().AsNoTracking() on card.ListId equals list.Id
+            where list.BoardId == boardId
+            select card;
+        if (!includeArchived)
         {
-            if (l.BoardId.Value == idValue)
-            {
-                lists[l.Id.Value] = l;
-            }
+            query = query.Where(c => !c.IsArchived);
         }
 
-        await foreach (var c in Db.Set<Card>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (!lists.ContainsKey(c.ListId.Value))
-            {
-                continue;
-            }
-
-            if (!includeArchived && c.IsArchived)
-            {
-                continue;
-            }
-
-            rows.Add(c);
-        }
-
-        rows.Sort((a, b) => a.Position.Value.CompareTo(b.Position.Value));
-        return rows;
+        return await query.OrderBy(c => c.Position).ToListAsync(ct);
     }
 
     public async Task<IReadOnlyList<Card>> ListForListAsync(BoardListId listId, bool includeArchived, CancellationToken ct = default)
     {
-        var idValue = listId.Value;
-        var rows = new List<Card>();
-        await foreach (var c in Db.Set<Card>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<Card> query = Db.Set<Card>()
+            .AsNoTracking()
+            .Where(c => c.ListId == listId);
+        if (!includeArchived)
         {
-            if (c.ListId.Value != idValue)
-            {
-                continue;
-            }
-
-            if (!includeArchived && c.IsArchived)
-            {
-                continue;
-            }
-
-            rows.Add(c);
+            query = query.Where(c => !c.IsArchived);
         }
 
-        rows.Sort((a, b) => a.Position.Value.CompareTo(b.Position.Value));
-        return rows;
+        return await query.OrderBy(c => c.Position).ToListAsync(ct);
     }
 
     public async Task<IReadOnlyList<Card>> ListDueInRangeForBoardAsync(
         BoardId boardId, DateTimeOffset from, DateTimeOffset to, CancellationToken ct = default)
     {
-        var boardValue = boardId.Value;
-        // Collect the lists under this board (streamed because the
-        // list-id value-object can't be translated by EF).
-        var listIds = new HashSet<Guid>();
-        await foreach (var l in Db.Set<BoardList>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<Card> candidates =
+            from card in Db.Set<Card>().AsNoTracking()
+            join list in Db.Set<BoardList>().AsNoTracking() on card.ListId equals list.Id
+            where list.BoardId == boardId && card.DueDate != null
+            select card;
+
+        if (!Db.Database.IsSqlite())
         {
-            if (l.BoardId.Value == boardValue)
-            {
-                listIds.Add(l.Id.Value);
-            }
+            return await candidates
+                .Where(card => card.DueDate >= from && card.DueDate < to)
+                .OrderBy(card => card.DueDate)
+                .ToListAsync(ct);
         }
 
-        if (listIds.Count == 0)
-        {
-            return [];
-        }
-
-        // Cards with a due date in [from, to) on one of the board's
-        // lists. We use a ListId Guid round-trip to keep the LINQ
-        // expression translatable.
+        // SQLite cannot translate ordering or range comparisons over
+        // DateTimeOffset. Keep only that provider limitation on the
+        // client; board/list filtering and null elimination remain in SQL.
         var rows = new List<Card>();
-        await foreach (var c in Db.Set<Card>().AsAsyncEnumerable().WithCancellation(ct))
+        await foreach (Card card in candidates.AsAsyncEnumerable().WithCancellation(ct))
         {
-            if (!listIds.Contains(c.ListId.Value))
+            if (card.DueDate < from || card.DueDate >= to)
             {
                 continue;
             }
 
-            DateTimeOffset? due = c.DueDate;
-            if (due is null)
-            {
-                continue;
-            }
-
-            if (due.Value < from || due.Value >= to)
-            {
-                continue;
-            }
-
-            rows.Add(c);
+            rows.Add(card);
         }
 
         rows.Sort((a, b) => a.DueDate!.Value.CompareTo(b.DueDate!.Value));
@@ -117,10 +76,9 @@ public sealed class CardRepository(CardscapeDbContext db) : RepositoryBase<Card,
 
     public async Task<Card?> GetWithDetailsAsync(CardId id, CancellationToken ct = default)
     {
-        var idValue = id.Value;
         return await Db.Set<Card>()
             .Include(c => c.Members)
             .Include(c => c.CardLabels)
-            .FirstOrDefaultAsync(c => EF.Property<Guid>(c, "Id") == idValue, ct);
+            .FirstOrDefaultAsync(c => c.Id == id, ct);
     }
 }
