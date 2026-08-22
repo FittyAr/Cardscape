@@ -36,7 +36,6 @@ public sealed class ApiTokenConfiguration : IEntityTypeConfiguration<ApiToken>
             .HasConversion(
                 s => s.ToString(),
                 v => ApiTokenScopes.Create(v.Split(';', StringSplitOptions.RemoveEmptyEntries)).Value)
-            .HasColumnType("TEXT")
             .IsRequired();
 
         b.Property(t => t.ExpiresAt);

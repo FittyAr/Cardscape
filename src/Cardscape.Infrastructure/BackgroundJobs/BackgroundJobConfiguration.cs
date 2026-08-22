@@ -13,14 +13,14 @@ public sealed class BackgroundJobConfiguration : IEntityTypeConfiguration<Backgr
         b.Property(x => x.Id).HasConversion(id => id.Value, v => new BackgroundJobId(v));
 
         b.Property(x => x.Type).HasMaxLength(200).IsRequired();
-        b.Property(x => x.PayloadJson).HasColumnType("TEXT").IsRequired();
+        b.Property(x => x.PayloadJson).IsRequired();
         b.Property(x => x.ScheduledFor).IsRequired();
         b.Property(x => x.Status).HasConversion<int>().IsRequired();
         b.Property(x => x.Attempts).IsRequired();
         b.Property(x => x.MaxAttempts).IsRequired();
         b.Property(x => x.StartedAt);
         b.Property(x => x.CompletedAt);
-        b.Property(x => x.LastError).HasColumnType("TEXT");
+        b.Property(x => x.LastError);
 
         b.Property(x => x.CreatedAt).IsRequired();
         b.Property(x => x.UpdatedAt);

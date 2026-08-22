@@ -20,11 +20,11 @@ public sealed class WebhookDeliveryConfiguration : IEntityTypeConfiguration<Webh
         b.Property(x => x.EventType).HasMaxLength(100).IsRequired();
         b.HasIndex(x => x.EventType);
 
-        b.Property(x => x.PayloadJson).HasColumnType("TEXT").IsRequired();
+        b.Property(x => x.PayloadJson).IsRequired();
         b.Property(x => x.Status).HasConversion<int>().IsRequired();
         b.Property(x => x.AttemptCount).IsRequired();
         b.Property(x => x.LastAttemptAt);
-        b.Property(x => x.LastError).HasColumnType("TEXT");
+        b.Property(x => x.LastError);
 
         b.Property(x => x.CreatedAt).IsRequired();
         b.Property(x => x.UpdatedAt);

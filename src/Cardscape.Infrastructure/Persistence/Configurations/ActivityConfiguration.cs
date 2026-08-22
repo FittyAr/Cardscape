@@ -17,7 +17,7 @@ public sealed class ActivityConfiguration : IEntityTypeConfiguration<Activity>
         b.Property(x => x.CardId);
         b.Property(x => x.ActorId).IsRequired();
         b.Property(x => x.Kind).HasConversion<int>().IsRequired();
-        b.Property(x => x.PayloadJson).HasColumnType("text").IsRequired();
+        b.Property(x => x.PayloadJson).IsRequired();
         b.Property(x => x.OccurredAt).IsRequired();
         b.Property(x => x.CreatedAt).IsRequired();
         b.Property(x => x.CreatedBy);

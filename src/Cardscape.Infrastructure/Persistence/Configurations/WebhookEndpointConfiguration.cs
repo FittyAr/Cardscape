@@ -20,7 +20,7 @@ public sealed class WebhookEndpointConfiguration : IEntityTypeConfiguration<Webh
 
         b.Property(x => x.Url).HasMaxLength(500).IsRequired();
         b.Property(x => x.ProtectedSecret).HasMaxLength(2048).IsRequired();
-        b.Property(x => x.Events).HasColumnType("TEXT").IsRequired();
+        b.Property(x => x.Events).IsRequired();
         b.Property(x => x.Active).IsRequired();
 
         b.Property(x => x.CreatedAt).IsRequired();

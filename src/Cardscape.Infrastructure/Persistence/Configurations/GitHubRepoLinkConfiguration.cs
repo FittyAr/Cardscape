@@ -19,7 +19,7 @@ public sealed class GitHubRepoLinkConfiguration : IEntityTypeConfiguration<GitHu
         b.HasIndex(x => x.BoardId);
 
         b.Property(x => x.RepoFullName).HasMaxLength(200).IsRequired();
-        b.Property(x => x.Events).HasColumnType("TEXT").IsRequired();
+        b.Property(x => x.Events).IsRequired();
         b.Property(x => x.Active).IsRequired();
 
         b.Property(x => x.CreatedAt).IsRequired();

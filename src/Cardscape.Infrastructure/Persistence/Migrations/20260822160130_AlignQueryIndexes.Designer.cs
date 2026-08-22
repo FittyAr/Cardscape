@@ -51,7 +51,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("PayloadJson")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -1986,7 +1986,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("PayloadJson")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("ReadAt")
                         .HasColumnType("TEXT");

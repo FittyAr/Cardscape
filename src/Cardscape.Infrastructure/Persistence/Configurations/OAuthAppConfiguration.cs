@@ -55,14 +55,14 @@ public sealed class OAuthAppConfiguration : IEntityTypeConfiguration<OAuthApp>
                 s => string.Join(';', s),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries))
             .Metadata.SetValueComparer(StringArrayValueComparer.Instance);
-        b.Property(a => a.AllowedScopes).HasColumnType("TEXT").IsRequired();
+        b.Property(a => a.AllowedScopes).IsRequired();
 
         b.Property(a => a.RedirectUris)
             .HasConversion(
                 s => string.Join(';', s),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries))
             .Metadata.SetValueComparer(StringArrayValueComparer.Instance);
-        b.Property(a => a.RedirectUris).HasColumnType("TEXT").IsRequired();
+        b.Property(a => a.RedirectUris).IsRequired();
 
         b.Property(a => a.IsRevoked).IsRequired();
 
@@ -104,7 +104,7 @@ public sealed class OAuthAuthorizationCodeConfiguration : IEntityTypeConfigurati
                 s => string.Join(';', s),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries))
             .Metadata.SetValueComparer(StringArrayValueComparer.Instance);
-        b.Property(c => c.Scopes).HasColumnType("TEXT").IsRequired();
+        b.Property(c => c.Scopes).IsRequired();
 
         b.Property(c => c.ExpiresAt).IsRequired();
         b.Property(c => c.IsConsumed).IsRequired();
@@ -142,7 +142,7 @@ public sealed class OAuthAccessTokenConfiguration : IEntityTypeConfiguration<OAu
                 s => string.Join(';', s),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries))
             .Metadata.SetValueComparer(StringArrayValueComparer.Instance);
-        b.Property(t => t.Scopes).HasColumnType("TEXT").IsRequired();
+        b.Property(t => t.Scopes).IsRequired();
 
         b.Property(t => t.ExpiresAt).IsRequired();
         b.HasIndex(t => t.ExpiresAt);

@@ -19,11 +19,9 @@ public sealed class TotpCredentialConfiguration : IEntityTypeConfiguration<TotpC
         b.HasIndex(c => c.UserId).IsUnique();
 
         b.Property(c => c.EncryptedSecret)
-            .HasColumnType("TEXT")
             .IsRequired();
 
         b.Property(c => c.RecoveryCodesHash)
-            .HasColumnType("TEXT")
             .IsRequired();
 
         b.Property(c => c.LastUsedCounter)

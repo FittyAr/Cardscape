@@ -18,7 +18,7 @@ public sealed class CustomFieldDefinitionConfiguration : IEntityTypeConfiguratio
             .IsRequired();
         b.Property(x => x.Name).HasMaxLength(120).IsRequired();
         b.Property(x => x.Kind).HasConversion<int>().IsRequired();
-        b.Property(x => x.OptionsJson).HasColumnType("TEXT");
+        b.Property(x => x.OptionsJson);
         b.Property(x => x.Position).IsRequired();
 
         b.Property(x => x.CreatedAt).IsRequired();
@@ -47,7 +47,7 @@ public sealed class CustomFieldValueConfiguration : IEntityTypeConfiguration<Cus
         b.Property(x => x.CardId)
             .HasConversion(id => id.Value, v => new CardId(v))
             .IsRequired();
-        b.Property(x => x.ValueJson).HasColumnType("TEXT").IsRequired();
+        b.Property(x => x.ValueJson).IsRequired();
 
         b.Property(x => x.CreatedAt).IsRequired();
         b.Property(x => x.UpdatedAt);

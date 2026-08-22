@@ -25,7 +25,7 @@ public sealed class SlackChannelConfiguration : IEntityTypeConfiguration<SlackCh
 
         b.Property(x => x.ChannelId).HasMaxLength(32).IsRequired();
         b.Property(x => x.ChannelName).HasMaxLength(200).IsRequired();
-        b.Property(x => x.Events).HasColumnType("TEXT").IsRequired();
+        b.Property(x => x.Events).IsRequired();
         b.Property(x => x.Active).IsRequired();
 
         b.Property(x => x.CreatedAt).IsRequired();

@@ -33,7 +33,6 @@ public sealed class IdempotencyKeyConfiguration : IEntityTypeConfiguration<Idemp
             .HasDefaultValue(200);
 
         b.Property(k => k.ResponseJson)
-            .HasColumnType("TEXT")
             .IsRequired();
 
         b.Property(k => k.ExpiresAt).IsRequired();

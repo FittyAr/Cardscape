@@ -13,7 +13,7 @@ public sealed class NotificationConfiguration : IEntityTypeConfiguration<Notific
         b.Property(x => x.Id).HasConversion(id => id.Value, v => new NotificationId(v));
         b.Property(x => x.UserId).IsRequired();
         b.Property(x => x.Kind).HasConversion<int>().IsRequired();
-        b.Property(x => x.PayloadJson).HasColumnType("text").IsRequired();
+        b.Property(x => x.PayloadJson).IsRequired();
         b.Property(x => x.IsRead).IsRequired();
         b.Property(x => x.ReadAt);
         b.Property(x => x.CreatedAt).IsRequired();
