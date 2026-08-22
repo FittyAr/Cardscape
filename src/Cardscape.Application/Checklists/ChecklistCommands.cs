@@ -1,6 +1,5 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
-using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
@@ -286,7 +285,6 @@ public static class AddChecklistItemCommandHandler
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
-        ISearchIndex searchIndex,
         IActivityRepository activities,
         CancellationToken ct)
     {
@@ -337,7 +335,6 @@ public static class AddChecklistItemCommandHandler
         Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
         if (card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
         {
-            await searchIndex.IndexChecklistItemAsync(newItem, checklist, boardId, ct);
             await activities.AddAsync(Activity.Create(
                 new Domain.Boards.BoardId(boardId),
                 card.Id.Value,
@@ -377,7 +374,6 @@ public static class RenameChecklistItemCommandHandler
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
-        ISearchIndex searchIndex,
         IActivityRepository activities,
         CancellationToken ct)
     {
@@ -425,7 +421,6 @@ public static class RenameChecklistItemCommandHandler
         Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
         if (updated is not null && card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
         {
-            await searchIndex.IndexChecklistItemAsync(updated, checklist, boardId, ct);
             await activities.AddAsync(Activity.Create(
                 new Domain.Boards.BoardId(boardId),
                 card.Id.Value,

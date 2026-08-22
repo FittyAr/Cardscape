@@ -18,7 +18,7 @@ public class CreateCardCommandHandlerTests
 
         var result = await CreateCardCommandHandler.Handle(
             new CreateCardCommand(list.Id.Value, "Buy milk", "details"),
-            ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.SearchIndex, ctx.Activities, CancellationToken.None);
+            ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Title.Should().Be("Buy milk");
@@ -39,7 +39,7 @@ public class CreateCardCommandHandlerTests
 
         var result = await CreateCardCommandHandler.Handle(
             new CreateCardCommand(list.Id.Value, "Buy milk", "details"),
-            ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.SearchIndex, ctx.Activities, CancellationToken.None);
+            ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Unauthenticated);
@@ -54,7 +54,7 @@ public class CreateCardCommandHandlerTests
 
         var result = await CreateCardCommandHandler.Handle(
             new CreateCardCommand(Guid.NewGuid(), "Buy milk", "details"),
-            ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.SearchIndex, ctx.Activities, CancellationToken.None);
+            ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.NotFound);
@@ -72,7 +72,7 @@ public class CreateCardCommandHandlerTests
 
         var result = await CreateCardCommandHandler.Handle(
             new CreateCardCommand(list.Id.Value, "", "details"),
-            ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.SearchIndex, ctx.Activities, CancellationToken.None);
+            ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("cards.title.required");
@@ -91,7 +91,7 @@ public class CreateCardCommandHandlerTests
 
         var result = await CreateCardCommandHandler.Handle(
             new CreateCardCommand(list.Id.Value, "Sneaky", "details"),
-            ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.SearchIndex, ctx.Activities, CancellationToken.None);
+            ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Forbidden);

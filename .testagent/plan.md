@@ -348,3 +348,14 @@
 - [x] Remove the DI registration and false SMTP claims from normative documentation.
 - [x] Add an architecture regression prohibiting the ceremonial transport types.
 - [x] Run focused/full validation and update modernization evidence; commit and push pending.
+
+# Persistent relational search (2026-08-21)
+
+- [x] Trace the search port, implementation, all write-side mutations and normative claims.
+- [x] Replace the mutable singleton index with a scoped EF Core read service.
+- [x] Remove `Index*`/`Remove*`, the fake index and search dependencies from commands.
+- [x] Add `SearchAsync_PersistedCardsInFreshContext_RespectsAuthorizationAndArchivedState`.
+- [x] Add `SearchAsync_DeletedCardInFreshContext_DoesNotReturnStaleHit`.
+- [x] Add all-kind/accent coverage after pseudo-mutation review.
+- [x] Reconcile ADR/status/architecture documentation and add a regression against volatile search.
+- [x] Run focused/full validation; commit and push to `master` pending.

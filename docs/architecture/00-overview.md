@@ -175,7 +175,7 @@ incrementally as the roadmap unfolds:
 | `Attachments` | file attachment, link attachment | Files on a card |
 | `Activities` | activity event | Append-only audit log |
 | `Notifications` | in-app + email subscription | Phase 1 |
-| `Search` | full-text index | Phase 1 |
+| `Search` | relational read service | Current authorized cards, comments, checklists, labels and activity |
 | `Extensions` | extension definition, board-extension join | Extension API (Phase 3) |
 | `Automation` | rule, button, schedule | Automation engine (Phase 3) |
 | `Integrations` | webhook, OAuth app, third-party mapping | Phase 3 |

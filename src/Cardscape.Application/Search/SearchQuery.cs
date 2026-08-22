@@ -33,17 +33,17 @@ public static class SearchQueryHandler
 {
     /// <summary>Hard cap on the query string. A genuine search
     /// phrase is well under 1 KB; a 4 KB cap keeps the
-    /// regex-based tokenizer and the per-hit O(n) scan
+    /// tokenizer and the per-hit O(n) scan
     /// honest while still giving the user enough room for
     /// long quoted phrases or error-message searches. A
     /// 1 MB query string would be a denial-of-service
-    /// vector against the in-memory index, not a real
+    /// vector against relational candidate scoring, not a real
     /// search.</summary>
     public const int MaxQueryLength = 4 * 1024;
 
     public static async Task<Result<SearchPageDto>> Handle(
         SearchQuery query,
-        ISearchIndex index,
+        ISearchService searchService,
         ICurrentUser currentUser,
         IBoardRepository boards,
         IWorkspaceRepository workspaces,
@@ -60,10 +60,9 @@ public static class SearchQueryHandler
             return Result.Success(new SearchPageDto([], 0));
         }
 
-        // Cap the query string at the endpoint. The index
-        // has no DoS protection of its own (a 1 MB query
-        // would walk every hit in the in-memory index with
-        // a tokenized scan of the same length); failing
+        // Cap the query string at the endpoint. A 1 MB query
+        // would score every authorized candidate with a tokenized
+        // scan of the same length; failing
         // fast at the handler keeps the cap authoritative
         // and the response shape consistent (an empty
         // page, not a 500).
@@ -74,9 +73,7 @@ public static class SearchQueryHandler
                 $"The search query exceeds the {MaxQueryLength}-character limit."));
         }
 
-        // The in-memory search index is process-wide and
-        // contains hits for every board across every
-        // workspace. Without an explicit filter a
+        // Without an explicit authorization filter a
         // workspace-A user could discover the existence
         // (and snippet text) of a workspace-B card by
         // guessing a common phrase like "password" or
@@ -93,7 +90,7 @@ public static class SearchQueryHandler
         HashSet<Guid> allowedBoards = await CollectReadableBoardIdsAsync(
             boards, workspaces, currentUser.Id.Value, cancellationToken);
 
-        SearchPage page = await index.SearchAsync(
+        SearchPage page = await searchService.SearchAsync(
             query.Query, query.BoardId, query.Kind, query.Page, query.PageSize,
             allowedBoards, cancellationToken);
 
@@ -113,10 +110,8 @@ public static class SearchQueryHandler
         var allowed = new HashSet<Guid>();
 
         // ListForUserAsync returns every workspace where
-        // the user is the owner OR a member. The in-memory
-        // search index does not yet differentiate per-board
-        // visibility; that's a follow-up once the index
-        // stores visibility per hit. For now, the
+        // the user is the owner OR a member. Search currently
+        // follows workspace-level board visibility. The
         // "workspace I can see" approximation is correct
         // for every realistic Cardscape install.
         IReadOnlyList<Domain.Workspaces.Workspace> visibleWorkspaces =

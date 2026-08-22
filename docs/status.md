@@ -19,7 +19,7 @@ point users at their own status URL.
 | Real-time hub | 🟢 Operational | SignalR hub backing live board / card updates |
 | Authentication | 🟢 Operational | Email/password, Google, Microsoft, Apple, SAML, SCIM |
 | File storage | 🟢 Operational | Attachments + import/export archives |
-| Search | 🟢 Operational | In-memory full-text search across boards the user can read |
+| Search | 🟢 Operational | Relational search across current rows in boards the user can read |
 | AI features | 🟢 Operational | Rule-based by default; OpenAI-compatible when configured |
 | Background jobs | 🟢 Operational | Internal job dispatcher (no Hangfire) |
 | Database | 🟢 Operational | Primary PostgreSQL with read replica |

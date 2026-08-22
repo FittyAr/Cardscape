@@ -1,6 +1,5 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
-using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Storage;
 using Cardscape.Application.Cards.Common;
@@ -34,7 +33,6 @@ public static class CreateCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
-        ISearchIndex searchIndex,
         IActivityRepository activities,
         CancellationToken cancellationToken)
     {
@@ -87,12 +85,6 @@ public static class CreateCardCommandHandler
         await cards.AddAsync(cardResult.Value, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // BETA-7-#1 / #2 — see test-results/BETA-TEST-REPORT.md.
-        // Populate the search index and the activity feed on
-        // every write. Search is a singleton; it is
-        // safe to call from the scoped handler.
-        await searchIndex.IndexCardAsync(cardResult.Value, list.BoardId.Value, cancellationToken);
-
         var activity = Activity.Create(
             list.BoardId,
             cardResult.Value.Id.Value,
@@ -131,7 +123,6 @@ public static class RenameCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
-        ISearchIndex searchIndex,
         IActivityRepository activities,
         CancellationToken cancellationToken)
     {
@@ -168,8 +159,6 @@ public static class RenameCardCommandHandler
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // BETA-7-#1 / #2 — see test-results/BETA-TEST-REPORT.md.
-        await searchIndex.IndexCardAsync(card, guard.Value.Board.Id.Value, cancellationToken);
         await activities.AddAsync(Activity.Create(
             guard.Value.Board.Id,
             card.Id.Value,
@@ -196,7 +185,6 @@ public static class ChangeCardDescriptionCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
-        ISearchIndex searchIndex,
         IActivityRepository activities,
         CancellationToken cancellationToken)
     {
@@ -233,9 +221,6 @@ public static class ChangeCardDescriptionCommandHandler
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // BETA-7-#1 / #2 — re-index the search hit so a
-        // snippet search picks up the new description.
-        await searchIndex.IndexCardAsync(card, guard.Value.Board.Id.Value, cancellationToken);
         await activities.AddAsync(Activity.Create(
             guard.Value.Board.Id,
             card.Id.Value,
@@ -692,7 +677,6 @@ public static class DeleteCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
-        ISearchIndex searchIndex,
         IActivityRepository activities,
         CancellationToken cancellationToken)
     {
@@ -763,11 +747,6 @@ public static class DeleteCardCommandHandler
             }
         }
 
-        // BETA-7-#1 — RemoveCardAsync also drops the
-        // comment + checklist-item hits for the card, so the
-        // search index stays consistent.
-        await searchIndex.RemoveCardAsync(card.Id.Value, cancellationToken);
-
         return Result.Success();
     }
 }
@@ -785,7 +764,6 @@ public static class RestoreCardCommandHandler
         ICurrentUser currentUser,
         IClock clock,
         IActivityRepository activities,
-        ISearchIndex searchIndex,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -810,9 +788,6 @@ public static class RestoreCardCommandHandler
         card.Restore(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // BETA-7-#1 / #2 — re-index the search hit and record
-        // the restore on the activity feed.
-        await searchIndex.IndexCardAsync(card, guard.Value.Board.Id.Value, cancellationToken);
         await activities.AddAsync(Activity.Create(
             guard.Value.Board.Id,
             card.Id.Value,

@@ -4,7 +4,6 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Integrations;
 using Cardscape.Application.Abstractions.Persistence;
-using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Authentication.Abstractions;
 using Cardscape.Domain.Activities;
@@ -945,42 +944,6 @@ public sealed class FakeGoogleCalendarSyncService : IGoogleCalendarSyncService
         return Task.FromResult(NextPushResult ?? Result.Success(string.Empty));
     }
 }
-
-/// <summary>BETA-7-#1 — see test-results/BETA-TEST-REPORT.md. No-op in-memory ISearchIndex for the test suite. The production InMemorySearchIndex lives in Cardscape.Infrastructure; we keep this fake here so the test projects can resolve the new dependency without pulling in EF / Infrastructure.</summary>
-public sealed class FakeSearchIndex : ISearchIndex
-{
-    public List<Guid> IndexedCardIds { get; } = [];
-    public List<Guid> IndexedCommentIds { get; } = [];
-    public List<Guid> RemovedCardIds { get; } = [];
-
-    public Task IndexCardAsync(Card card, Guid boardId, CancellationToken ct = default)
-    {
-        IndexedCardIds.Add(card.Id.Value);
-        return Task.CompletedTask;
-    }
-
-    public Task RemoveCardAsync(Guid cardId, CancellationToken ct = default)
-    {
-        RemovedCardIds.Add(cardId);
-        return Task.CompletedTask;
-    }
-
-    public Task IndexCommentAsync(Comment comment, Guid boardId, CancellationToken ct = default)
-    {
-        IndexedCommentIds.Add(comment.Id.Value);
-        return Task.CompletedTask;
-    }
-
-    public Task IndexChecklistItemAsync(ChecklistItem item, Checklist checklist, Guid boardId, CancellationToken ct = default) => Task.CompletedTask;
-
-    public Task IndexLabelAsync(Label label, CancellationToken ct = default) => Task.CompletedTask;
-
-    public Task IndexActivityAsync(Activity activity, CancellationToken ct = default) => Task.CompletedTask;
-
-    public Task<SearchPage> SearchAsync(string query, Guid? boardId, SearchHitKind? kind, int page, int pageSize, IReadOnlySet<Guid> allowedBoardIds, CancellationToken ct = default) =>
-        Task.FromResult(new SearchPage([], 0));
-}
-
 
 public sealed class InMemoryCommentRepository
     : InMemoryRepositoryBase<Comment, CommentId>, ICommentRepository

@@ -48,11 +48,6 @@ public sealed class HandlersTestContext
     public InMemoryGoogleCalendarConnectionRepository GoogleCalendarConnections { get; } = new();
     public FakeGoogleCalendarSyncService GoogleCalendarSync { get; } = new();
 
-    // BETA-7-#1 / #2 — see test-results/BETA-TEST-REPORT.md.
-    // The new card / comment / label / checklist handlers
-    // wire ISearchIndex and IActivityRepository; the
-    // handler tests resolve them from this context.
-    public FakeSearchIndex SearchIndex { get; } = new();
     public InMemoryActivityRepository Activities { get; } = new();
     public InMemoryCommentRepository Comments { get; } = new();
     public InMemoryChecklistRepository Checklists { get; } = new();

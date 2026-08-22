@@ -1,6 +1,5 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
-using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Labels.DTOs;
 using Cardscape.Domain.Activities;
@@ -24,7 +23,6 @@ public static class CreateLabelCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
-        ISearchIndex searchIndex,
         IActivityRepository activities,
         CancellationToken cancellationToken)
     {
@@ -75,12 +73,10 @@ public static class CreateLabelCommandHandler
         await labels.AddAsync(labelResult.Value, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // BETA-7-#1 / #2 — index the label and record the
-        // creation on the activity feed. Label creation has
+        // Record creation on the activity feed. Label creation has
         // no dedicated ActivityKind, so we reuse CardRenamed
         // as the closest stand-in (a follow-up PR can add a
         // dedicated LabelCreated kind).
-        await searchIndex.IndexLabelAsync(labelResult.Value, cancellationToken);
         await activities.AddAsync(Activity.Create(
             labelResult.Value.BoardId,
             null,
@@ -109,7 +105,6 @@ public static class UpdateLabelCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
-        ISearchIndex searchIndex,
         IActivityRepository activities,
         CancellationToken cancellationToken)
     {
@@ -145,9 +140,7 @@ public static class UpdateLabelCommandHandler
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // BETA-7-#1 / #2 — re-index the updated label and
-        // record the update on the activity feed.
-        await searchIndex.IndexLabelAsync(label, cancellationToken);
+        // Record the update on the activity feed.
         await activities.AddAsync(Activity.Create(
             label.BoardId,
             null,
@@ -193,15 +186,7 @@ public static class DeleteLabelCommandHandler
         label.Delete(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // BETA-7-#2 — record the deletion on the activity feed.
-        // The in-memory search index is process-wide and
-        // doesn't currently support RemoveLabelAsync; the
-        // label hit stays in the index until the next process
-        // restart. The hit is filtered out at search time by
-        // the soft-delete check (the label is gone from the DB
-        // and won't surface in any label picker / kanban
-        // card decoration). A follow-up can wire up
-        // RemoveLabelAsync on the ISearchIndex.
+        // Record the deletion on the activity feed.
         await activities.AddAsync(Activity.Create(
             label.BoardId,
             null,

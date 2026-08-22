@@ -98,7 +98,7 @@ hosted service. It mirrors the component table from
 | Real-time hub | 🟢/🟡/🔴 | SignalR hub |
 | Authentication | 🟢/🟡/🔴 | Email/password + external providers |
 | File storage | 🟢/🟡/🔴 | Attachments + archives |
-| Search | 🟢/🟡/🔴 | In-memory full-text search |
+| Search | 🟢/🟡/🔴 | Relational search over authorized current data |
 | AI features | 🟢/🟡/🔴 | Rule-based + OpenAI-compatible |
 | Background jobs | 🟢/🟡/🔴 | Internal job dispatcher |
 | Database | 🟢/🟡/🔴 | Primary + read replica |

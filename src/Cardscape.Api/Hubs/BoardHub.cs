@@ -41,7 +41,7 @@ public sealed class BoardHub : Hub<IBoardClient>
         // real-time updates (cardCreated, cardMoved, comments,
         // etc.) for any board whose Guid they can guess. The
         // Guid space makes blind enumeration impractical,
-        // but a leaked Guid (e.g. via the search index, a
+        // but a leaked Guid (e.g. via a search response, a
         // shared link, or a notification payload) was enough
         // for a real-time IDOR.
         if (_currentUser.Id is null)

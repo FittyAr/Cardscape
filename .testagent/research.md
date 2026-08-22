@@ -488,3 +488,12 @@
 - Decision: delete the unused port, message envelope and console adapter without a compatibility shim; add a real capability-specific boundary only when a workflow requires one.
 - Acceptance: no runtime or normative reference remains; architecture rejects the three ceremonial types; build and full suite pass.
 - Result: acceptance satisfied. Architecture passes 22/22 and complete suite passes 874 executed tests with one unrelated diagnostic skip.
+
+# Persistent relational search (2026-08-21)
+
+- Targets: `ISearchIndex`, `InMemorySearchIndex`, DI lifetime, search query handler, write-side command dependencies, normative ADR/status documentation and integration coverage.
+- Critical finding: the advertised search index was an empty process-local dictionary after every restart and diverged across nodes. ADR 0005 incorrectly claimed it scanned EF rows and was always correct.
+- Static pairing: no direct search implementation test exists; `FakeSearchIndex` only returned an empty page and existed to satisfy write-handler constructors. The required `find-untested-sources` package lacks its referenced `scripts/` directory, so its analyzer could not run.
+- Acceptance checklist: persisted cards are searchable from a fresh DbContext; unauthorized boards are excluded; archived/deleted rows do not surface; write handlers no longer depend on search maintenance; no volatile production index remains.
+- Gap review: the first two regressions covered lifecycle, authorization and tombstones but not four result branches. A third test now persists Card, Comment, Checklist/Item, Label and Activity and asserts all six accent-insensitive hits from a fresh context.
+- Result: acceptance satisfied. Architecture passes 23/23 and the complete suite passes 878 executed tests with one unrelated diagnostic skip.

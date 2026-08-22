@@ -218,8 +218,7 @@ public sealed class Board : AggregateRoot<BoardId>
     /// tracker and the <see cref="BoardDeleted"/> event is
     /// raised so domain-event handlers can cascade the delete
     /// to child aggregates (lists, cards, labels, comments,
-    /// votes, attachments) and fan out to the search index
-    /// and the activity broadcaster.
+    /// votes and attachments) and fan out to the activity broadcaster.
     /// </summary>
     public Result Delete(Guid deletedBy, DateTimeOffset at)
     {

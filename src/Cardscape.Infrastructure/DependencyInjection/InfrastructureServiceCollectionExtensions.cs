@@ -449,7 +449,7 @@ public static class InfrastructureServiceCollectionExtensions
         // fully scoped because the work touches the cardscape DB
         // through the standard UnitOfWork pipeline.
         services.AddScoped<IImportService, KanbanImportService>();
-        services.AddSingleton<ISearchIndex, InMemorySearchIndex>();
+        services.AddScoped<ISearchService, DatabaseSearchService>();
 
         // AI provider (Cardscape AI). The choice is configuration-driven:
         //   Ai:Provider = RuleBased         → deterministic templates, no network (default)

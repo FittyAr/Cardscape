@@ -9,7 +9,7 @@ using Wolverine;
 namespace Cardscape.Mcp.Tools;
 
 /// <summary>
-/// MCP tool surface for the full-text search index. Delegates
+/// MCP tool surface for relational search. Delegates
 /// to the same <see cref="SearchQuery"/> handler the REST
 /// <c>GET /api/search</c> endpoint uses, so authorization,
 /// the per-board read-access filter, and the 4 KB query cap

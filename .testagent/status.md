@@ -431,3 +431,13 @@
 - Focused evidence: generic-email architecture regression 1/1; architecture suite 22/22.
 - Assertion/gap review: the regression fails if the deleted port, envelope or adapter returns; exhaustive source and normative-doc search has no active reference. The historical changelog is intentionally preserved.
 - Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 874 passed / 0 failed / 1 skipped.
+
+# Persistent relational search (2026-08-21)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Root cause: production search state was populated only by post-start writes and had no rebuild or durable backend.
+- Intended invariant: search reads current authorized relational rows and never depends on process history.
+- Focused evidence: relational search integration 3/3, volatile-index architecture regression 1/1 and affected handler tests 17/17.
+- Assertion review: 3 tests, 10 meaningful assertions/chains; equality, collection, structural, state and negative categories; zero trivial, assertion-free or self-referential tests.
+- Pseudo-mutation review: lifecycle, board authorization, archived/deleted exclusion, five result kinds, accent normalization and exact scores are killed. Pagination boundary variations remain covered by the pre-existing service contract behavior rather than this bounded regression set.
+- Final evidence: formatter and diff check clean; Release build 0 warnings / 0 errors; complete suite 878 passed / 0 failed / 1 skipped.
