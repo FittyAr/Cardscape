@@ -171,6 +171,7 @@ Reglas permanentes:
 | 2026-08-21 | Búsqueda relacional persistente | Índice singleton volátil reemplazado por lectura EF scoped; comandos sin mutaciones de índice; reinicios, tombstones y aislamiento cubiertos | Build 0/0; suite 878 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-21 | Puerto AI mínimo | Eliminados chat, embeddings y wire DTOs sin consumidores; el puerto conserva solo completion usada por el producto | Build 0/0; suite 879 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-21 | Eliminación proveedor AI simulado | Retirado fallback rule-based; único backend real OpenAI-compatible, defaults Ollama, configuración fail-fast y redirects bloqueados | Build 0/0; suite 885 pass, 0 fail, 1 skip | Incluido en este commit |
+| 2026-08-21 | Límite HTTP del proveedor AI | Respuestas headers-first y acotadas a 1 MiB; JSON inválido estable; cuerpos externos fuera de logs y errores | Build 0/0; suite 889 pass, 0 fail, 1 skip | Incluido en este commit |
 
 ## 5. Criterio de completitud
 

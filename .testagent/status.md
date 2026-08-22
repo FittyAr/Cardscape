@@ -459,3 +459,12 @@
 - Compatibility policy: the simulated provider and its legacy configuration are rejected rather than preserved behind aliases.
 - Focused evidence: simulated-provider architecture regression 1/1; default/invalid provider configuration 5/5.
 - Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 885 passed / 0 failed / 1 skipped.
+
+# Harden OpenAI-compatible HTTP boundary (2026-08-21)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Resource invariant: a provider cannot force Cardscape to buffer more than 1 MiB for one completion response.
+- Privacy invariant: response bodies controlled by an external provider are not copied to logs or product errors.
+- Focused evidence: adapter regressions 4/4.
+- Assertion/gap review: success asserts the parsed contract and request URI; negative tests independently kill missing size cap, leaked error bodies and uncaught malformed JSON.
+- Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 889 passed / 0 failed / 1 skipped.

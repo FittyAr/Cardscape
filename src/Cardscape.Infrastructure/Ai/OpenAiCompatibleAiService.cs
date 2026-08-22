@@ -26,6 +26,8 @@ namespace Cardscape.Infrastructure.Ai;
 /// </summary>
 public sealed class OpenAiCompatibleAiService : IAiService
 {
+    private const int MaxResponseBytes = 1024 * 1024;
+
     private readonly HttpClient _http;
     private readonly AiProviderOptions _options;
     private readonly ILogger<OpenAiCompatibleAiService> _logger;
@@ -60,18 +62,47 @@ public sealed class OpenAiCompatibleAiService : IAiService
                 Temperature: options.Temperature,
                 MaxTokens: options.MaxTokens);
 
-            using HttpResponseMessage response = await _http.PostAsJsonAsync("v1/chat/completions", request, JsonOptions, ct);
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "v1/chat/completions")
+            {
+                Content = JsonContent.Create(request, options: JsonOptions)
+            };
+            using HttpResponseMessage response = await _http.SendAsync(
+                httpRequest, HttpCompletionOption.ResponseHeadersRead, ct);
             if (!response.IsSuccessStatusCode)
             {
-                string body = await response.Content.ReadAsStringAsync(ct);
-                _logger.LogWarning("OpenAI-compatible provider returned {Status}: {Body}", (int)response.StatusCode, body);
+                _logger.LogWarning(
+                    "OpenAI-compatible provider returned HTTP {Status}",
+                    (int)response.StatusCode);
                 return Result<AiTextCompletion>.Failure(new DomainError(
                     ErrorType.External,
                     "ai.provider_error",
                     $"Provider returned HTTP {(int)response.StatusCode}."));
             }
 
-            ChatCompletionsResponse? parsed = await response.Content.ReadFromJsonAsync<ChatCompletionsResponse>(JsonOptions, ct);
+            try
+            {
+                await response.Content.LoadIntoBufferAsync(MaxResponseBytes, ct);
+            }
+            catch (HttpRequestException)
+            {
+                return Result<AiTextCompletion>.Failure(new DomainError(
+                    ErrorType.External,
+                    "ai.response_too_large",
+                    $"Provider response exceeded {MaxResponseBytes} bytes."));
+            }
+
+            ChatCompletionsResponse? parsed;
+            try
+            {
+                parsed = await response.Content.ReadFromJsonAsync<ChatCompletionsResponse>(JsonOptions, ct);
+            }
+            catch (JsonException)
+            {
+                return Result<AiTextCompletion>.Failure(new DomainError(
+                    ErrorType.External,
+                    "ai.invalid_response",
+                    "Provider returned invalid JSON."));
+            }
             if (parsed is null || parsed.Choices.Count == 0)
             {
                 return Result<AiTextCompletion>.Failure(new DomainError(

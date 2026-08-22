@@ -513,3 +513,11 @@
 - Decision: delete the provider with no compatibility alias. OpenAI-compatible is the only accepted protocol, defaults to local Ollama (`http://localhost:11434/`, `llama3.2`), rejects unknown providers/non-HTTP endpoints and never follows redirects carrying credentials.
 - Acceptance: default DI resolves the real HTTP backend; invalid/legacy settings fail composition; architecture prohibits the simulated provider; full validation passes.
 - Result: acceptance satisfied. Focused checks pass 1/1 architecture and 5/5 configuration cases; architecture passes 25/25 and the complete suite passes 885 executed tests with one unrelated diagnostic skip.
+
+# Harden OpenAI-compatible HTTP boundary (2026-08-21)
+
+- Targets: completion request transport, provider response buffering, malformed payload handling and external error logging.
+- Critical findings: successful responses were deserialized from an unbounded stream, malformed JSON escaped as an exception and complete provider error bodies were written to logs.
+- Decision: request headers-first, cap successful payloads at 1 MiB, map oversized/malformed responses to stable external errors and log only HTTP status for provider failures.
+- Acceptance: valid completion contract remains intact; oversized and malformed responses fail predictably; provider bodies never enter product errors or logs; focused/full validation passes.
+- Result: acceptance satisfied. Adapter regressions pass 4/4 and the complete suite passes 889 executed tests with one unrelated diagnostic skip.

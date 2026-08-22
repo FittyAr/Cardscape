@@ -377,3 +377,13 @@
 - [x] Add DI defaults/invalid configuration and architecture regressions.
 - [x] Update normative docs and validate the complete solution.
 - [ ] Commit and push to `master`.
+
+# Harden OpenAI-compatible HTTP boundary (2026-08-21)
+
+- [x] Trace response consumption and compare it with hardened integration clients.
+- [x] Switch completion calls to headers-first HTTP handling.
+- [x] Bound successful JSON responses to 1 MiB.
+- [x] Stop logging external response bodies and map malformed JSON explicitly.
+- [x] Add direct success, oversized, malformed and provider-error regressions.
+- [x] Format, build and run the complete suite.
+- [ ] Commit and push to `master`.
