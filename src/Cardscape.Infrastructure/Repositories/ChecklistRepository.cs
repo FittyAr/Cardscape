@@ -1,6 +1,8 @@
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
 using Cardscape.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 
 
@@ -12,14 +14,15 @@ public sealed class ChecklistRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<Checklist>> ListForCardAsync(
         Guid cardId, CancellationToken ct = default)
     {
-        var rows = new List<Checklist>();
-        await foreach (var c in Db.Set<Checklist>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<Checklist> query = Db.Set<Checklist>()
+            .AsNoTracking()
+            .Where(checklist => checklist.CardId == new CardId(cardId) && !checklist.IsDeleted);
+        if (!Db.Database.IsSqlite())
         {
-            if (c.CardId.Value == cardId && !c.IsDeleted)
-            {
-                rows.Add(c);
-            }
+            return await query.OrderBy(checklist => checklist.CreatedAt).ToListAsync(ct);
         }
+
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
         return rows;
     }
@@ -31,15 +34,10 @@ public sealed class ChecklistItemRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<ChecklistItem>> ListForChecklistAsync(
         Guid checklistId, CancellationToken ct = default)
     {
-        var rows = new List<ChecklistItem>();
-        await foreach (var i in Db.Set<ChecklistItem>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (i.ChecklistId.Value == checklistId)
-            {
-                rows.Add(i);
-            }
-        }
-        rows.Sort((a, b) => a.Position.Value.CompareTo(b.Position.Value));
-        return rows;
+        return await Db.Set<ChecklistItem>()
+            .AsNoTracking()
+            .Where(item => item.ChecklistId == new ChecklistId(checklistId))
+            .OrderBy(item => item.Position)
+            .ToListAsync(ct);
     }
 }

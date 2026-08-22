@@ -13,50 +13,28 @@ public sealed class CardVoteRepository(CardscapeDbContext db)
 {
     public async Task<int> CountForCardAsync(CardId cardId, CancellationToken ct = default)
     {
-        var cardIdValue = cardId.Value;
-        // HasConversion on the CardId value-object means EF can't
-        // translate the navigation in the WHERE clause; do the
-        // filter client-side. The result set is bounded by the
-        // vote count on a single card. AsAsyncEnumerable yields
-        // rows lazily so the SQL round-trip doesn't park a
-        // thread-pool worker.
-        int count = 0;
-        await foreach (var v in Db.Set<CardVote>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (v.CardId.Value == cardIdValue)
-            {
-                count++;
-            }
-        }
-        return count;
+        return await Db.Set<CardVote>().CountAsync(vote => vote.CardId == cardId, ct);
     }
 
     public async Task<bool> HasVotedAsync(
         CardId cardId, Guid userId, CancellationToken ct = default)
     {
-        var cardIdValue = cardId.Value;
-        await foreach (var v in Db.Set<CardVote>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (v.CardId.Value == cardIdValue && v.UserId == userId)
-            {
-                return true;
-            }
-        }
-        return false;
+        return await Db.Set<CardVote>()
+            .AnyAsync(vote => vote.CardId == cardId && vote.UserId == userId, ct);
     }
 
     public async Task<IReadOnlyList<CardVote>> ListForCardAsync(
         CardId cardId, CancellationToken ct = default)
     {
-        var cardIdValue = cardId.Value;
-        var rows = new List<CardVote>();
-        await foreach (var v in Db.Set<CardVote>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<CardVote> votes = Db.Set<CardVote>()
+            .AsNoTracking()
+            .Where(vote => vote.CardId == cardId);
+        if (!Db.Database.IsSqlite())
         {
-            if (v.CardId.Value == cardIdValue)
-            {
-                rows.Add(v);
-            }
+            return await votes.OrderBy(vote => vote.VotedAt).ToListAsync(ct);
         }
+
+        var rows = await votes.ToListAsync(ct);
         rows.Sort((a, b) => a.VotedAt.CompareTo(b.VotedAt));
         return rows;
     }
@@ -88,21 +66,10 @@ public sealed class CardVoteRepository(CardscapeDbContext db)
             throw new ArgumentException("userId must be non-empty.", nameof(userId));
         }
 
-        var cardIdValue = cardId.Value;
         await using var tx = await Db.Database.BeginTransactionAsync(ct);
 
-        // 1. Async-stream the votes for this card and find the
-        //    (CardId, UserId) pair. AsAsyncEnumerable yields
-        //    rows without parking a thread-pool worker.
-        CardVote? existing = null;
-        await foreach (var v in Db.Set<CardVote>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (v.CardId.Value == cardIdValue && v.UserId == userId)
-            {
-                existing = v;
-                break;
-            }
-        }
+        CardVote? existing = await Db.Set<CardVote>()
+            .FirstOrDefaultAsync(vote => vote.CardId == cardId && vote.UserId == userId, ct);
 
         if (existing is not null)
         {

@@ -12,16 +12,8 @@ public sealed class CardAgingSettingsRepository(
 {
     public async Task<CardAgingSettings?> GetByCardIdAsync(CardId cardId, CancellationToken ct = default)
     {
-        // Strongly-typed-id filter: same AsAsyncEnumerable pattern as
-        // the other repositories (HasConversion + EF Core 10 limitation).
-        IAsyncEnumerable<CardAgingSettings> stream = context.CardAgingSettings
-            .AsAsyncEnumerable()
-            .Where(s => s.Id.Value == cardId.Value);
-        await foreach (CardAgingSettings s in stream.WithCancellation(ct))
-        {
-            return s;
-        }
-        return null;
+        return await context.CardAgingSettings
+            .FirstOrDefaultAsync(settings => settings.Id == cardId, ct);
     }
 
     public async Task AddAsync(CardAgingSettings settings, CancellationToken ct = default) =>

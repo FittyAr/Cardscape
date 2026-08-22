@@ -1,6 +1,8 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Attachments;
+using Cardscape.Domain.Cards;
 using Cardscape.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 
 
@@ -11,28 +13,24 @@ public sealed class AttachmentRepository(CardscapeDbContext db)
 {
     public async Task<IReadOnlyList<Attachment>> ListForCardAsync(Guid cardId, CancellationToken ct = default)
     {
-        var rows = new List<Attachment>();
-        await foreach (var a in Db.Set<Attachment>().AsAsyncEnumerable().WithCancellation(ct))
+        var typedCardId = new CardId(cardId);
+        IQueryable<Attachment> query = Db.Set<Attachment>()
+            .AsNoTracking()
+            .Where(attachment => attachment.CardId == typedCardId && !attachment.IsDeleted);
+        if (!Db.Database.IsSqlite())
         {
-            if (a.CardId.Value == cardId && !a.IsDeleted)
-            {
-                rows.Add(a);
-            }
+            return await query.OrderBy(attachment => attachment.CreatedAt).ToListAsync(ct);
         }
+
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
         return rows;
     }
 
     public async Task<int> CountForCardAsync(Guid cardId, CancellationToken ct = default)
     {
-        int count = 0;
-        await foreach (var a in Db.Set<Attachment>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (a.CardId.Value == cardId && !a.IsDeleted)
-            {
-                count++;
-            }
-        }
-        return count;
+        var typedCardId = new CardId(cardId);
+        return await Db.Set<Attachment>()
+            .CountAsync(attachment => attachment.CardId == typedCardId && !attachment.IsDeleted, ct);
     }
 }

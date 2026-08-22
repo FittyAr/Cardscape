@@ -12,18 +12,15 @@ public sealed class CommentRepository(CardscapeDbContext db) : RepositoryBase<Co
 {
     public async Task<IReadOnlyList<Comment>> ListForCardAsync(CardId cardId, CancellationToken ct = default)
     {
-        var cardIdValue = cardId.Value;
-        var rows = new List<Comment>();
-        await foreach (var c in Db.Set<Comment>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<Comment> query = Db.Set<Comment>()
+            .AsNoTracking()
+            .Where(comment => comment.CardId == cardId && !comment.IsDeleted);
+        if (!Db.Database.IsSqlite())
         {
-            if (c.CardId.Value != cardIdValue || c.IsDeleted)
-            {
-                continue;
-            }
-
-            rows.Add(c);
+            return await query.OrderBy(comment => comment.CreatedAt).ToListAsync(ct);
         }
 
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
         return rows;
     }
