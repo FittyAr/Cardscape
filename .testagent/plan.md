@@ -376,7 +376,7 @@
 - [x] Disable HTTP redirects for provider credentials.
 - [x] Add DI defaults/invalid configuration and architecture regressions.
 - [x] Update normative docs and validate the complete solution.
-- [ ] Commit and push to `master`.
+- [x] Commit and push to `master` (`71159af`).
 
 # Harden OpenAI-compatible HTTP boundary (2026-08-21)
 
@@ -386,4 +386,4 @@
 - [x] Stop logging external response bodies and map malformed JSON explicitly.
 - [x] Add direct success, oversized, malformed and provider-error regressions.
 - [x] Format, build and run the complete suite.
-- [ ] Commit and push to `master`.
+- [x] Commit and push to `master` (`4870bf7`).
