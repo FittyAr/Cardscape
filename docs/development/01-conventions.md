@@ -83,6 +83,16 @@ The naming rules are also enforced by the
 
 ## 5. EF Core
 
+- **EF Core is the default and required persistence API.** Express reads,
+  writes, set-based updates/deletes, transactions and migrations through EF
+  Core whenever the provider can translate the operation. Raw SQL is allowed
+  only after documenting a concrete translation/capability gap; it must be
+  parameterized, isolated behind Infrastructure and covered against every
+  supported provider affected by the exception.
+- **Keep filtering, projection, ordering and pagination server-side.** Do not
+  cross into `AsEnumerable()` / `AsAsyncEnumerable()` before those operations
+  merely to work around a LINQ expression; first rewrite it using mapped domain
+  values, navigations or an EF-translatable projection.
 - **Always `AsNoTracking()` for read-only queries.** The only
   exception is when the caller is going to mutate the entity
   and call `SaveChangesAsync`.

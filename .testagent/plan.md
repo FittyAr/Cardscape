@@ -351,6 +351,18 @@
 
 # Persistent relational search (2026-08-21)
 
+# EF Core broadcast target resolution (2026-08-22)
+
+- [x] Confirm strongly typed ID value converters and locate client-side scans.
+- [x] Replace list resolution with a translated, no-tracking key lookup.
+- [x] Replace card resolution with translated card and parent-list lookups.
+- [x] Replace the synthetic list case with a persisted-list acceptance test.
+- [x] Add a persisted-card acceptance test.
+- [x] Run focused endpoint tests 11/11.
+- [x] Review assertions and pseudo-mutation gaps.
+- [x] Format, build and run the complete suite.
+- [x] Commit and push directly to `master` (included in this block).
+
 - [x] Trace the search port, implementation, all write-side mutations and normative claims.
 - [x] Replace the mutable singleton index with a scoped EF Core read service.
 - [x] Remove `Index*`/`Remove*`, the fake index and search dependencies from commands.

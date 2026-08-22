@@ -453,6 +453,18 @@
 
 # Remove simulated AI provider (2026-08-21)
 
+# EF Core broadcast target resolution (2026-08-22)
+
+- Status: implementation and validation complete; ready for commit and push.
+- Root cause: an obsolete comment claimed EF Core 10 could not translate strongly typed IDs, so a single lookup streamed entire tables and filtered in the API process.
+- Decision: use mapped domain IDs in `FirstOrDefaultAsync` predicates with `AsNoTracking`; no raw SQL or compatibility path remains.
+- Focused evidence: `BoardBroadcastEndpointTests` 11/11, including real persisted list and card resolution.
+- Assertion review: both generated regressions make one exact HTTP status assertion; neither is assertion-free, trivial or self-referential. The fixture setup also uses `EnsureSuccessStatusCode`, so a failed persistence prerequisite cannot produce a false positive.
+- Pseudo-mutation review: returning null, querying the wrong list/card key, or skipping the card-to-list lookup changes 202 to 400 and is killed. Replacing `AsNoTracking` or reverting to a client scan is behaviorally equivalent at this endpoint, so query-shape compliance is verified structurally by the absence of `AsAsyncEnumerable`/raw-SQL APIs in the resolver.
+- Tooling limitation: the installed test-analysis catalog advertises `extensions/dotnet.md`, but the file is absent; xUnit/FluentAssertions classification was performed inline from the repository conventions.
+- Fixture finding: a first full run exposed that creating rows in the shared host and resolving them in a derived host was order-dependent. Keeping setup and broadcast inside the same derived host removed the cross-host state ambiguity; the complete integration project then passed 256/256.
+- Final evidence: formatter clean; Release build 0 warnings / 0 errors; complete suite 901 passed / 0 failed / 1 skipped.
+
 - Status: implementation and validation complete; ready for commit and push.
 - Product truth: every successful AI response now originates from an actual configured OpenAI-compatible HTTP service.
 - Security invariant: redirects are disabled so a provider cannot redirect Authorization to another origin.

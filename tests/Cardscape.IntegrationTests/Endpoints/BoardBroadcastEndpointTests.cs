@@ -96,7 +96,8 @@ public sealed class BoardBroadcastEndpointTests
                 title = "AI created this",
                 at = DateTimeOffset.UtcNow
             });
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        response.StatusCode.Should().Be(HttpStatusCode.Accepted, body);
     }
 
     [Fact]
@@ -172,27 +173,103 @@ public sealed class BoardBroadcastEndpointTests
     }
 
     [Fact]
-    public async Task Broadcast_CardCreated_With_ListId_Resolves_Board()
+    public async Task Broadcast_ListCreated_WithPersistedListId_ResolvesBoard()
     {
-        HttpClient client = CreateClientWithSecret();
-        Guid listId = Guid.NewGuid();
-        HttpResponseMessage response = await PostAsync(client,
+        using HttpClient client = CreateClientWithSecret();
+        await AuthenticateClientAsync(client, "broadcast-list");
+        (BoardDto board, BoardListDto list) = await CreateBoardWithListAsync(client, "List resolver");
+
+        using HttpResponseMessage response = await PostAsync(client,
             method: "ListCreated",
             boardId: null,
-            listId: listId,
+            listId: list.Id,
             cardId: null,
             payload: new
             {
-                listId,
-                boardId = Guid.NewGuid(),
-                name = "L",
+                listId = list.Id,
+                boardId = board.Id,
+                name = list.Name,
                 at = DateTimeOffset.UtcNow
             });
-        // The list doesn't actually exist in the database; the
-        // resolver returns null and the endpoint responds 400.
-        // The smoke test below uses a real list id to confirm
-        // the resolver path.
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        response.StatusCode.Should().Be(HttpStatusCode.Accepted, body);
+    }
+
+    [Fact]
+    public async Task Broadcast_CardCreated_WithPersistedCardId_ResolvesBoard()
+    {
+        using HttpClient client = CreateClientWithSecret();
+        await AuthenticateClientAsync(client, "broadcast-card");
+        (BoardDto board, BoardListDto list) = await CreateBoardWithListAsync(client, "Card resolver");
+        CardDto card = await CreateCardAsync(client, list.Id, "Resolved card");
+
+        using HttpResponseMessage response = await PostAsync(client,
+            method: "CardCreated",
+            cardId: card.Id,
+            payload: new
+            {
+                cardId = card.Id,
+                boardId = board.Id,
+                listId = list.Id,
+                title = card.Title,
+                at = DateTimeOffset.UtcNow
+            });
+
+        string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        response.StatusCode.Should().Be(HttpStatusCode.Accepted, body);
+    }
+
+    private static async Task AuthenticateClientAsync(HttpClient client, string prefix)
+    {
+        var register = new RegisterRequest(
+            $"{prefix}-{Guid.NewGuid():N}@cardscape.local",
+            $"{prefix} user",
+            "Password123!");
+        using HttpResponseMessage response = await client.PostAsJsonAsync(
+            "api/auth/register", register, TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        AuthResponse auth = (await response.Content.ReadFromJsonAsync<AuthResponse>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+    }
+
+    private static async Task<(BoardDto Board, BoardListDto List)> CreateBoardWithListAsync(
+        HttpClient client,
+        string name)
+    {
+        using HttpResponseMessage workspaceResponse = await client.PostAsJsonAsync(
+            "api/workspaces/", new { name = $"{name} workspace" }, TestContext.Current.CancellationToken);
+        workspaceResponse.EnsureSuccessStatusCode();
+        WorkspaceDto workspace = (await workspaceResponse.Content.ReadFromJsonAsync<WorkspaceDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+
+        using HttpResponseMessage boardResponse = await client.PostAsJsonAsync(
+            "api/boards/",
+            new { workspaceId = workspace.Id, name, description = (string?)null, visibility = "private" },
+            TestContext.Current.CancellationToken);
+        boardResponse.EnsureSuccessStatusCode();
+        BoardDto board = (await boardResponse.Content.ReadFromJsonAsync<BoardDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+
+        using HttpResponseMessage listResponse = await client.PostAsJsonAsync(
+            "api/lists/", new { boardId = board.Id, name = $"{name} list" },
+            TestContext.Current.CancellationToken);
+        listResponse.EnsureSuccessStatusCode();
+        BoardListDto list = (await listResponse.Content.ReadFromJsonAsync<BoardListDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+        return (board, list);
+    }
+
+    private static async Task<CardDto> CreateCardAsync(HttpClient client, Guid listId, string title)
+    {
+        using HttpResponseMessage response = await client.PostAsJsonAsync(
+            "api/cards/", new { listId, title, description = (string?)null },
+            TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<CardDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
     }
 
     private HttpClient CreateClientWithSecret()

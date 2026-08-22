@@ -1,5 +1,21 @@
 # Test research
 
+## EF Core broadcast target resolution (2026-08-22)
+
+### Bounded target inventory
+
+- `BoardBroadcastEndpoints.ResolveBoardIdAsync`: resolved one target by streaming complete `BoardList` and `Card` tables into the API process.
+- Strongly typed list/card IDs are mapped with EF Core value converters and can be compared directly in translated LINQ.
+- `BoardBroadcastEndpointTests`: existing endpoint/security boundary coverage had no persisted card resolver case and its list case used a nonexistent id.
+
+### Existing conventions and acceptance checklist
+
+- xUnit `[Fact]`, FluentAssertions, real SQLite through `CardscapeWebApplicationFactory`, and public API setup for persisted fixtures.
+- [x] Persisted list id resolves its board and returns 202.
+- [x] Persisted card id resolves its parent list/board and returns 202.
+- [x] Resolution uses bounded `AsNoTracking` EF Core queries without raw SQL or client-side enumeration.
+- [x] Focused integration slice compiles and passes.
+
 ## Bounded target inventory
 
 - `tests/Cardscape.ArchitectureTests/ArchitectureTests.cs`: existing NetArchTest rules inspect compiled type dependencies, not the effective `ProjectReference` graph.

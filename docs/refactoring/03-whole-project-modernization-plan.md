@@ -176,6 +176,7 @@ Reglas permanentes:
 | 2026-08-22 | Eliminación de bypasses de privilegios en Development | Retiradas rutas/commands para auto-admin y baja TOTP; bootstrap administrativo confinado al proceso de tests | Build 0/0; suite 892 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-22 | Callback OAuth Google Calendar acotado | Estado anónimo necesario conservado; JSON externo limitado a 1 MiB y errores 502 estables para payload inválido | Build 0/0; suite 895 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-22 | Límite real del broadcast interno | Autenticación previa, lectura manual máxima 64 KiB, soporte chunked y errores JSON 400 antes del dispatch SignalR | Build 0/0; suite 900 pass, 0 fail, 1 skip | Incluido en este commit |
+| 2026-08-22 | Resolución relacional del broadcast | Eliminados escaneos cliente; lista y tarjeta se resuelven mediante consultas EF Core acotadas, sin tracking y traducibles por IDs tipados | Build 0/0; suite 901 pass, 0 fail, 1 skip | Incluido en este commit |
 
 ## 5. Criterio de completitud
 

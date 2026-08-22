@@ -154,10 +154,10 @@ public static class BoardBroadcastEndpoints
     /// knows the entity it just created or mutated (a list, a
     /// card, a comment, a label), not necessarily the parent
     /// board. The API runs the same EF Core model, so it can do
-    /// the lookup here in one query per broadcast. EF Core 10
-    /// cannot translate the strongly-typed-id access path
-    /// (<c>l.Id.Value == x</c>), so the lookup streams
-    /// client-side via <c>AsAsyncEnumerable</c>.
+    /// the lookup here with bounded, server-side EF Core queries.
+    /// The strongly typed ids are mapped through value converters,
+    /// so comparing their domain values translates to the underlying
+    /// relational key columns without client-side table scans.
     /// </summary>
     private static async Task<Guid?> ResolveBoardIdAsync(
         BroadcastRequest request,
@@ -171,50 +171,28 @@ public static class BoardBroadcastEndpoints
 
         if (request.ListId is { } listId && listId != Guid.Empty)
         {
-            Guid found = Guid.Empty;
-            await foreach (var l in db.Set<Domain.Lists.BoardList>()
-                                      .AsAsyncEnumerable()
-                                      .WithCancellation(ct))
-            {
-                if (l.Id.Value == listId)
-                {
-                    found = l.BoardId.Value;
-                    break;
-                }
-            }
-            return found == Guid.Empty ? null : found;
+            Domain.Lists.BoardList? list = await db.Set<Domain.Lists.BoardList>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.Id == new Domain.Lists.BoardListId(listId), ct);
+
+            return list?.BoardId.Value;
         }
 
         if (request.CardId is { } cardId && cardId != Guid.Empty)
         {
-            Guid cardListId = Guid.Empty;
-            await foreach (var c in db.Set<Domain.Cards.Card>()
-                                      .AsAsyncEnumerable()
-                                      .WithCancellation(ct))
-            {
-                if (c.Id.Value == cardId)
-                {
-                    cardListId = c.ListId.Value;
-                    break;
-                }
-            }
-            if (cardListId == Guid.Empty)
+            Domain.Cards.Card? card = await db.Set<Domain.Cards.Card>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == new Domain.Cards.CardId(cardId), ct);
+            if (card is null)
             {
                 return null;
             }
 
-            Guid cardBoardId = Guid.Empty;
-            await foreach (var l in db.Set<Domain.Lists.BoardList>()
-                                      .AsAsyncEnumerable()
-                                      .WithCancellation(ct))
-            {
-                if (l.Id.Value == cardListId)
-                {
-                    cardBoardId = l.BoardId.Value;
-                    break;
-                }
-            }
-            return cardBoardId == Guid.Empty ? null : cardBoardId;
+            Domain.Lists.BoardList? list = await db.Set<Domain.Lists.BoardList>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.Id == card.ListId, ct);
+
+            return list?.BoardId.Value;
         }
 
         return null;
