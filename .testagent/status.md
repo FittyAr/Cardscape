@@ -1,5 +1,15 @@
 # Test status
 
+## Application public-port namespace boundary (2026-08-22)
+
+- Research: complete; the old test was one-sided and the Realtime test encoded three legacy exceptions.
+- Plan: complete.
+- Implementation: complete in `Application_PublicInterfaces_ResideUnderAbstractionsNamespace`; the prior naming behavior remains independently enforced by `Application_Abstractions_UseInterfaceNamingConvention`.
+- Scope: architecture test and `.testagent/*`; duplicate relocated-namespace usings were also removed from the two coordinated `tests/TestCommon/Fakes` files so the narrow project could compile.
+- Narrow validation: `dotnet test tests/Cardscape.ArchitectureTests/Cardscape.ArchitectureTests.csproj -c Release --no-restore -p:BuildProjectReferences=false --filter "FullyQualifiedName~Application_PublicInterfaces_ResideUnderAbstractionsNamespace|FullyQualifiedName~Application_Abstractions_UseInterfaceNamingConvention" -m:1 -nr:false -v:minimal` → 2 passed, 0 failed, 0 skipped.
+- Assertion-quality review: the boundary assertion compares the complete offender collection with empty, has an explanatory architectural reason, preserves fully qualified names for actionable diagnostics, and rejects similarly prefixed namespaces without a dot boundary. The naming test separately reports every nonconforming abstraction. Neither is assertion-free, tautological, or coupled to a five-type allowlist.
+- Pseudo-mutation review: moving any port back to a feature namespace, adding a new public interface outside Abstractions, retaining a legacy alias, accepting an `AbstractionsLegacy` lookalike, dropping public/nested-public filtering, narrowing discovery to Abstractions, or removing the `I` convention makes a test fail or reintroduces a reviewed gap. Private implementation interfaces remain intentionally outside the public-port rule.
+
 ## Transactional EF Core domain-event outbox (2026-08-22)
 
 - Status: complete; five outbox regressions plus the two affected persistence-model regressions pass 7/7.

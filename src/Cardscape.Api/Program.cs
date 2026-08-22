@@ -38,6 +38,7 @@ using Cardscape.Api.OpenApi;
 using Cardscape.Api.Realtime;
 using Cardscape.Application.DependencyInjection;
 using Cardscape.Application.Realtime;
+using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Logging;
 using Cardscape.Infrastructure.Persistence;

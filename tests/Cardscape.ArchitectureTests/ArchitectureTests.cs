@@ -444,10 +444,8 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void Application_Abstractions_Live_Under_Abstractions_Namespace()
+    public void Application_Abstractions_UseInterfaceNamingConvention()
     {
-        // Every public interface that lives in Application/Abstractions/ must
-        // start with 'I'. Catches accidental public surface without the I prefix.
         TestResult result = Types.InAssembly(typeof(Cardscape.Application.Abstractions.IClock).Assembly)
             .That()
             .ResideInNamespace("Cardscape.Application.Abstractions")
@@ -458,33 +456,28 @@ public sealed class ArchitectureTests
             .GetResult();
 
         result.IsSuccessful.Should().BeTrue(
-            $"All interfaces in Application/Abstractions must start with I. Offenders: {string.Join(", ", result.FailingTypeNames ?? [])}");
+            $"Application abstractions must use the interface naming convention. Offenders: {string.Join(", ", result.FailingTypeNames ?? [])}");
     }
 
     [Fact]
-    public void Application_RealtimeExposesOnlyTransportNeutralContracts()
+    public void Application_PublicInterfaces_ResideUnderAbstractionsNamespace()
     {
-        string[] approvedContracts =
-        [
-            "Cardscape.Application.Realtime.IBoardClient",
-            "Cardscape.Application.Realtime.IBoardNotifier",
-            "Cardscape.Application.Realtime.IDomainEventBroadcaster",
-        ];
-
-        string[] actualContracts = Types.InAssembly(typeof(Cardscape.Application.Abstractions.IClock).Assembly)
-            .That()
-            .ResideInNamespace("Cardscape.Application.Realtime")
-            .And()
-            .AreInterfaces()
+        // Application owns its public ports. Keeping every port below one
+        // namespace makes that boundary discoverable and prevents feature or
+        // implementation namespaces from becoming accidental contract roots.
+        string[] misplacedInterfaces = typeof(Cardscape.Application.Abstractions.IClock).Assembly
             .GetTypes()
-            .Where(type => type.IsPublic)
+            .Where(type => type.IsInterface && (type.IsPublic || type.IsNestedPublic))
+            .Where(type => type.Namespace is null ||
+                !(type.Namespace.Equals("Cardscape.Application.Abstractions", StringComparison.Ordinal) ||
+                  type.Namespace.StartsWith("Cardscape.Application.Abstractions.", StringComparison.Ordinal)))
             .Select(type => type.FullName!)
             .Order(StringComparer.Ordinal)
             .ToArray();
 
-        actualContracts.Should().BeEquivalentTo(
-            approvedContracts,
-            "process- or transport-specific notification clients belong to their host layer");
+        misplacedInterfaces.Should().BeEmpty(
+            "all public Application ports must live under Cardscape.Application.Abstractions; " +
+            "legacy aliases in feature namespaces are not supported");
     }
 
     [Fact]

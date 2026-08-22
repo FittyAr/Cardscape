@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Realtime;
+using Cardscape.Application.Abstractions.Realtime;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

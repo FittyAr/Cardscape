@@ -1,5 +1,24 @@
 # Test implementation plan
 
+## Application public-port namespace boundary (2026-08-22)
+
+### Phase 1 — replace the one-sided rule
+
+- [x] Replace `Application_Abstractions_Live_Under_Abstractions_Namespace` with `Application_PublicInterfaces_ResideUnderAbstractionsNamespace`.
+- [x] Reflect over all Application types and select every public interface, including nested-public declarations.
+- [x] Assert that no selected interface exists outside `Cardscape.Application.Abstractions*`, with exact offender names in failure output.
+- [x] Match the root namespace or a descendant beginning with `Cardscape.Application.Abstractions.` so similarly prefixed namespaces cannot evade the boundary.
+- [x] Retain `Application_Abstractions_UseInterfaceNamingConvention` as a separate naming concern.
+
+### Phase 2 — remove legacy architectural permission
+
+- [x] Delete `Application_RealtimeExposesOnlyTransportNeutralContracts`; the global rule permits no feature-namespace aliases.
+
+### Phase 3 — verification
+
+- [x] Run the namespace-boundary and interface-naming tests narrowly after the coordinated production relocation compiles.
+- [x] Re-open the implementation and perform assertion-quality and pseudo-mutation review inline.
+
 ## Transactional EF Core domain-event outbox (2026-08-22)
 
 ### Phase 1 — persistence interception

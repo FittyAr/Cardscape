@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Realtime;
+using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Domain.Boards;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;

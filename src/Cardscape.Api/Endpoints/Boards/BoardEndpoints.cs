@@ -189,7 +189,7 @@ public static class BoardEndpoints
         // that injects a service-account JWT.
         group.MapGet("/{boardId:guid}/ics", async (
             Guid boardId,
-            [FromServices] Cardscape.Application.Calendar.ICalendarFeedRenderer calendar,
+            [FromServices] Cardscape.Application.Abstractions.Calendar.ICalendarFeedRenderer calendar,
             CancellationToken ct) =>
         {
             var result = await calendar.RenderBoardAsync(boardId, ct);

@@ -1,14 +1,10 @@
-namespace Cardscape.Application.Realtime;
+using Cardscape.Application.Realtime;
+
+namespace Cardscape.Application.Abstractions.Realtime;
 
 /// <summary>
-/// Server-to-client events broadcast to every SignalR client
-/// subscribed to a board. The interface lives in the Application
-/// layer so the Application-side domain event dispatcher can
-/// express the fan-out contract without taking a dependency
-/// on ASP.NET Core. The API hosts the SignalR <c>BoardHub</c>
-/// and provides the implementation; the MCP project consumes
-/// the same payload shape through its own broadcast webhook
-/// (see <c>McpResourceBroadcaster</c>).
+/// Transport-neutral client contract for board subscription notifications.
+/// Presentation hosts adapt this port to SignalR, MCP, or another transport.
 /// </summary>
 public interface IBoardClient
 {

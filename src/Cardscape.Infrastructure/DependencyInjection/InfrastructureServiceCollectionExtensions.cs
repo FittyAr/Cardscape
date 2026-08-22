@@ -1,12 +1,13 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
+using Cardscape.Application.Abstractions.Calendar;
 using Cardscape.Application.Abstractions.Import;
 using Cardscape.Application.Abstractions.Integrations;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Storage;
-using Cardscape.Application.Authentication.Abstractions;
+using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Realtime;
 using Cardscape.Application.Webhooks;
 using Cardscape.Domain.Activities;
@@ -579,7 +580,7 @@ public static class InfrastructureServiceCollectionExtensions
         // endpoints throw "No service for type" on the first
         // call (caught by the G15 integration test pass).
         services.AddScoped<Application.Abstractions.Export.IExportService, BoardExportService>();
-        services.AddScoped<Application.Calendar.ICalendarFeedRenderer, IcsCalendarService>();
+        services.AddScoped<ICalendarFeedRenderer, IcsCalendarService>();
 
         return services;
     }

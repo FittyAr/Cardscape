@@ -1,5 +1,28 @@
 # Test research
 
+## Application public-port namespace boundary (2026-08-22)
+
+### Bounded target inventory
+
+- `Cardscape.Application` assembly: authoritative inventory of every public top-level or nested interface declared by the Application layer.
+- `tests/Cardscape.ArchitectureTests/ArchitectureTests.cs`: existing NetArchTest/xUnit architecture suite. Its prior `Application_Abstractions_Live_Under_Abstractions_Namespace` rule only inspected interfaces already inside `Cardscape.Application.Abstractions`, so an interface declared in a feature namespace escaped detection.
+- Legacy exceptions were explicitly encoded by `Application_RealtimeExposesOnlyTransportNeutralContracts`, which allowed `IBoardClient`, `IBoardNotifier`, and `IDomainEventBroadcaster` to remain in `Cardscape.Application.Realtime`.
+- Ports in the production relocation scope: `ICalendarFeedRenderer`, `IPendingTotpLoginStore`, `IBoardClient`, `IBoardNotifier`, and `IDomainEventBroadcaster`.
+- Test conventions: xUnit v3 `[Fact]`, FluentAssertions, architecture rules in the dedicated ArchitectureTests project, and deterministic ordinal ordering in diagnostics.
+
+### Acceptance checklist
+
+- [x] Enumerate every public interface declared by `Cardscape.Application`, rather than starting the query inside the desired namespace.
+- [x] Require its namespace to be exactly `Cardscape.Application.Abstractions` or a dot-delimited descendant, without accepting lookalikes such as `AbstractionsLegacy`.
+- [x] Reject public legacy alias interfaces left in feature namespaces, including Calendar, Authentication, or Realtime.
+- [x] Remove the explicit Realtime allowlist that contradicted the new global boundary.
+- [x] Preserve the independent `I` naming convention for interfaces already owned by Abstractions.
+- [x] Modify tests and `.testagent` artifacts only; production relocation remains owned by the parent block.
+
+### Implementation note
+
+- Reflection is used for the inventory because it expresses public visibility (including nested-public interfaces) directly. Namespace matching uses ordinal prefix semantics and the failure assertion reports the complete offending type set.
+
 ## Transactional EF Core domain-event outbox (2026-08-22)
 
 ### Bounded target inventory

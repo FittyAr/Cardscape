@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using Cardscape.Application.Abstractions;
-using Cardscape.Application.Authentication.Abstractions;
+using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Domain.Members;
 
 namespace Cardscape.Infrastructure.Authentication;

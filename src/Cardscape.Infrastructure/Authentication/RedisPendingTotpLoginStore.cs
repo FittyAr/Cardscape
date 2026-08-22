@@ -1,5 +1,5 @@
 using System.Globalization;
-using Cardscape.Application.Authentication.Abstractions;
+using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Domain.Members;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;

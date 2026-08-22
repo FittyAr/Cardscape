@@ -1,4 +1,5 @@
 using Cardscape.Application.Realtime;
+using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Persistence.Interceptors;
 using Cardscape.Infrastructure.Persistence.Outbox;

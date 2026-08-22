@@ -1,4 +1,5 @@
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Cards.Events;
 using Cardscape.Domain.Comments.Events;
@@ -21,7 +22,7 @@ namespace Cardscape.Application.Realtime;
 /// cannot reference Wolverine without breaking the
 /// layered architecture. Instead, the infrastructure
 /// The durable domain-event outbox invokes
-/// <see cref="IDomainEventBroadcaster.BroadcastAsync"/>
+/// <see cref="Abstractions.Realtime.IDomainEventBroadcaster.BroadcastAsync"/>
 /// directly — the type-based dispatch lives here.
 /// <para>
 /// The broadcaster is registered as a singleton; the

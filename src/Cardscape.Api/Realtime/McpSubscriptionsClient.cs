@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using Cardscape.Application.Realtime;
+using Cardscape.Application.Abstractions.Realtime;
 
 namespace Cardscape.Api.Realtime;
 

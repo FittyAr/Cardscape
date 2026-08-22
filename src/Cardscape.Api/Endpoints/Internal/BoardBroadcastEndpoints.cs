@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Cardscape.Api.Hubs;
 using Cardscape.Application.Realtime;
+using Cardscape.Application.Abstractions.Realtime;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;

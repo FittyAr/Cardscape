@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using Cardscape.Application.Realtime;
+using Cardscape.Application.Abstractions.Realtime;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
