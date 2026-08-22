@@ -14,15 +14,15 @@ public sealed class WebhookEndpointRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<WebhookEndpoint>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {
-        var boardValue = boardId.Value;
-        var rows = new List<WebhookEndpoint>();
-        await foreach (var e in Db.Set<WebhookEndpoint>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<WebhookEndpoint> query = Db.Set<WebhookEndpoint>()
+            .AsNoTracking()
+            .Where(endpoint => endpoint.BoardId == boardId && !endpoint.IsDeleted);
+        if (!Db.Database.IsSqlite())
         {
-            if (e.BoardId.Value == boardValue && !e.IsDeleted)
-            {
-                rows.Add(e);
-            }
+            return await query.OrderBy(endpoint => endpoint.CreatedAt).ToListAsync(ct);
         }
+
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
         return rows;
     }
@@ -35,14 +35,12 @@ public sealed class WebhookEndpointRepository(CardscapeDbContext db)
             return [];
         }
 
-        var rows = new List<WebhookEndpoint>();
-        await foreach (var e in Db.Set<WebhookEndpoint>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (e.Active && !e.IsDeleted && e.SubscribesTo(eventType))
-            {
-                rows.Add(e);
-            }
-        }
-        return rows;
+        // Preserve exact comma-delimited token semantics while pushing the
+        // selective active/deleted predicate to the database.
+        var candidates = await Db.Set<WebhookEndpoint>()
+            .AsNoTracking()
+            .Where(endpoint => endpoint.Active && !endpoint.IsDeleted)
+            .ToListAsync(ct);
+        return candidates.Where(endpoint => endpoint.SubscribesTo(eventType)).ToList();
     }
 }

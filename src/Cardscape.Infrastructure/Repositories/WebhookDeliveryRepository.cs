@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Webhooks;
 using Cardscape.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 
 
@@ -16,21 +17,26 @@ public sealed class WebhookDeliveryRepository(CardscapeDbContext db)
         int take,
         CancellationToken ct = default)
     {
-        var endpointValue = endpointId.Value;
-        var rows = new List<WebhookDelivery>();
-        await foreach (var d in Db.Set<WebhookDelivery>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<WebhookDelivery> query = Db.Set<WebhookDelivery>()
+            .AsNoTracking()
+            .Where(delivery => delivery.EndpointId == endpointId);
+        if (statusFilter is not null)
         {
-            if (d.EndpointId.Value == endpointValue
-                && (statusFilter is null || d.Status == statusFilter.Value))
-            {
-                rows.Add(d);
-            }
+            query = query.Where(delivery => delivery.Status == statusFilter.Value);
         }
 
-        // SQLite cannot ORDER BY on DateTimeOffset, so sort
-        // client-side. The list is bounded by the page size
-        // (default 50, max 200) and the per-endpoint delivery
-        // history, which is small in practice.
+        if (!Db.Database.IsSqlite())
+        {
+            return await query
+                .OrderByDescending(delivery => delivery.CreatedAt)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
+        }
+
+        // SQLite cannot order DateTimeOffset. The indexed endpoint/status
+        // filters still run in SQL; only ordering and page slicing remain local.
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => b.CreatedAt.CompareTo(a.CreatedAt));
         if (skip >= rows.Count)
         {

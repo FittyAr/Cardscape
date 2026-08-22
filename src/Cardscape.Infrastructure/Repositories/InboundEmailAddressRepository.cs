@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Integrations.InboundEmail;
 using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 
 
@@ -13,15 +14,15 @@ public sealed class InboundEmailAddressRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<InboundEmailAddress>> ListForWorkspaceAsync(
         WorkspaceId workspaceId, CancellationToken ct = default)
     {
-        var workspaceValue = workspaceId.Value;
-        var rows = new List<InboundEmailAddress>();
-        await foreach (var a in Db.Set<InboundEmailAddress>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<InboundEmailAddress> query = Db.Set<InboundEmailAddress>()
+            .AsNoTracking()
+            .Where(address => address.WorkspaceId == workspaceId && !address.IsDeleted);
+        if (!Db.Database.IsSqlite())
         {
-            if (a.WorkspaceId.Value == workspaceValue && !a.IsDeleted)
-            {
-                rows.Add(a);
-            }
+            return await query.OrderBy(address => address.CreatedAt).ToListAsync(ct);
         }
+
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
         return rows;
     }
@@ -35,15 +36,10 @@ public sealed class InboundEmailAddressRepository(CardscapeDbContext db)
         }
 
         var needle = email.Trim().ToLowerInvariant();
-        await foreach (var a in Db.Set<InboundEmailAddress>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (!a.IsDeleted
-                && a.Active
-                && string.Equals(a.EmailAddress, needle, StringComparison.Ordinal))
-            {
-                return a;
-            }
-        }
-        return null;
+        return await Db.Set<InboundEmailAddress>()
+            .FirstOrDefaultAsync(address =>
+                !address.IsDeleted
+                && address.Active
+                && address.EmailAddress == needle, ct);
     }
 }

@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Integrations.Slack;
 using Cardscape.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 
 
@@ -13,15 +14,15 @@ public sealed class SlackChannelRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<SlackChannel>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {
-        var boardValue = boardId.Value;
-        var rows = new List<SlackChannel>();
-        await foreach (var c in Db.Set<SlackChannel>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<SlackChannel> query = Db.Set<SlackChannel>()
+            .AsNoTracking()
+            .Where(channel => channel.BoardId == boardId && !channel.IsDeleted);
+        if (!Db.Database.IsSqlite())
         {
-            if (c.BoardId.Value == boardValue && !c.IsDeleted)
-            {
-                rows.Add(c);
-            }
+            return await query.OrderBy(channel => channel.CreatedAt).ToListAsync(ct);
         }
+
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
         return rows;
     }
@@ -34,18 +35,13 @@ public sealed class SlackChannelRepository(CardscapeDbContext db)
             return [];
         }
 
-        var boardValue = boardId.Value;
-        var rows = new List<SlackChannel>();
-        await foreach (var c in Db.Set<SlackChannel>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (c.BoardId.Value == boardValue
-                && !c.IsDeleted
-                && c.Active
-                && c.SubscribesTo(eventType))
-            {
-                rows.Add(c);
-            }
-        }
-        return rows;
+        // Events is a comma-delimited exact-token contract. EF string
+        // matching would admit partial tokens, so only this final predicate
+        // remains in memory after the indexed board/active filter runs in SQL.
+        var candidates = await Db.Set<SlackChannel>()
+            .AsNoTracking()
+            .Where(channel => channel.BoardId == boardId && !channel.IsDeleted && channel.Active)
+            .ToListAsync(ct);
+        return candidates.Where(channel => channel.SubscribesTo(eventType)).ToList();
     }
 }

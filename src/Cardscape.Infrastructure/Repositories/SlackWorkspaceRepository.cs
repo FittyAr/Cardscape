@@ -14,18 +14,14 @@ public sealed class SlackWorkspaceRepository(CardscapeDbContext db)
     public async Task<SlackWorkspace?> FindForWorkspaceAsync(
         WorkspaceId workspaceId, CancellationToken ct = default)
     {
-        var workspaceValue = workspaceId.Value;
-        SlackWorkspace? best = null;
-        await foreach (var w in Db.Set<SlackWorkspace>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<SlackWorkspace> query = Db.Set<SlackWorkspace>()
+            .Where(workspace => workspace.WorkspaceId == workspaceId && !workspace.IsDeleted);
+        if (!Db.Database.IsSqlite())
         {
-            if (w.WorkspaceId.Value == workspaceValue && !w.IsDeleted)
-            {
-                if (best is null || w.CreatedAt > best.CreatedAt)
-                {
-                    best = w;
-                }
-            }
+            return await query.OrderByDescending(workspace => workspace.CreatedAt).FirstOrDefaultAsync(ct);
         }
-        return best;
+
+        var rows = await query.ToListAsync(ct);
+        return rows.MaxBy(workspace => workspace.CreatedAt);
     }
 }

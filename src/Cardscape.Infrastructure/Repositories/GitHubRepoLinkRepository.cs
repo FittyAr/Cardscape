@@ -3,6 +3,7 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Integrations.GitHub;
 using Cardscape.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 
 
@@ -14,15 +15,15 @@ public sealed class GitHubRepoLinkRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<GitHubRepoLink>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {
-        var boardValue = boardId.Value;
-        var rows = new List<GitHubRepoLink>();
-        await foreach (var l in Db.Set<GitHubRepoLink>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<GitHubRepoLink> query = Db.Set<GitHubRepoLink>()
+            .AsNoTracking()
+            .Where(link => link.BoardId == boardId && !link.IsDeleted);
+        if (!Db.Database.IsSqlite())
         {
-            if (l.BoardId.Value == boardValue && !l.IsDeleted)
-            {
-                rows.Add(l);
-            }
+            return await query.OrderBy(link => link.CreatedAt).ToListAsync(ct);
         }
+
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
         return rows;
     }
@@ -35,19 +36,13 @@ public sealed class GitHubRepoLinkRepository(CardscapeDbContext db)
             return null;
         }
 
-        var boardValue = boardId.Value;
         var needle = repoFullName.Trim().ToLowerInvariant();
-        await foreach (var l in Db.Set<GitHubRepoLink>().AsAsyncEnumerable().WithCancellation(ct))
-        {
-            if (l.BoardId.Value == boardValue
-                && !l.IsDeleted
-                && l.Active
-                && string.Equals(l.RepoFullName, needle, StringComparison.Ordinal))
-            {
-                return l;
-            }
-        }
-        return null;
+        return await Db.Set<GitHubRepoLink>()
+            .FirstOrDefaultAsync(link =>
+                link.BoardId == boardId
+                && !link.IsDeleted
+                && link.Active
+                && link.RepoFullName == needle, ct);
     }
 }
 
@@ -57,15 +52,15 @@ public sealed class GitHubPullRequestLinkRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<GitHubPullRequestLink>> ListForCardAsync(
         CardId cardId, CancellationToken ct = default)
     {
-        var cardValue = cardId.Value;
-        var rows = new List<GitHubPullRequestLink>();
-        await foreach (var l in Db.Set<GitHubPullRequestLink>().AsAsyncEnumerable().WithCancellation(ct))
+        IQueryable<GitHubPullRequestLink> query = Db.Set<GitHubPullRequestLink>()
+            .AsNoTracking()
+            .Where(link => link.CardId == cardId && !link.IsDeleted);
+        if (!Db.Database.IsSqlite())
         {
-            if (l.CardId.Value == cardValue && !l.IsDeleted)
-            {
-                rows.Add(l);
-            }
+            return await query.OrderBy(link => link.CreatedAt).ToListAsync(ct);
         }
+
+        var rows = await query.ToListAsync(ct);
         rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
         return rows;
     }
