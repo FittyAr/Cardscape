@@ -19,9 +19,9 @@ public abstract class Entity<TId>
     public DateTimeOffset? UpdatedAt { get; protected set; }
 
     /// <summary>
-    /// Stamps the entity as modified right now by the given user and
-    /// bumps the optimistic-concurrency token. Application-layer
-    /// handlers should call this after they mutate the aggregate.
+    /// Stamps the entity as modified and advances its optimistic-concurrency
+    /// token. The persistence interceptor only advances the token when a
+    /// mutation has not already done so in the domain.
     /// </summary>
     public void StampChanged(Guid? by, DateTimeOffset at)
     {
@@ -38,10 +38,9 @@ public abstract class Entity<TId>
 
     /// <summary>
     /// Optimistic-concurrency token used by EF Core. Starts at 0 on
-    /// construction; every state-changing method (or its handler)
-    /// bumps it via <see cref="StampChanged"/>. SQLite has no native
-    /// rowversion, so we use a managed <c>uint</c> with a DB-side
-    /// default of 0 (see <c>*Configuration.cs</c>).
+    /// construction. Domain mutations may advance it explicitly; the EF Core
+    /// save interceptor covers remaining modified rows. This provides the same
+    /// managed-token semantics on every supported provider.
     /// </summary>
     public uint RowVersion { get; protected set; }
 

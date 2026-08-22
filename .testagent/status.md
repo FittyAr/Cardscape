@@ -518,3 +518,14 @@
 - Assertion review: four new boundary/parser tests use 7 meaningful equality/string assertions; none are assertion-free, trivial or self-referential.
 - Pseudo-mutation review: `>`→`>=` is killed by the exactly-64-KiB case; removing either Content-Length or stream enforcement is killed by advertised/chunked oversize cases; removing JSON catches is killed by envelope and typed-payload cases.
 - Final evidence: formatter/diff check clean; Release build 0 warnings / 0 errors; complete suite 900 passed / 0 failed / 1 skipped.
+# EF Core RowVersion model contract (2026-08-22)
+
+- Implemented `EveryMappedRowVersion_IsAConcurrencyTokenWithZeroDefault` in `CardscapeDbContextModelTests`.
+- The test discovers all mapped entity types dynamically, including owned types, and protects against vacuous success with `NotBeEmpty`.
+- Assertion-quality review: one aggregate assertion reports every entity-qualified violation, its actual concurrency-token flag, and actual relational default.
+- Pseudo-mutation review: removing either `IsConcurrencyToken` or `HasDefaultValue(0u)` from any mapped RowVersion causes that entity to appear in `violations`; adding a new RowVersion-bearing mapped type is covered automatically.
+- Scope review: only the regression test and `.testagent` artifacts were changed by this task; no production code was modified.
+- Added `SavingModifiedEntities_AdvancesRowVersionExactlyOnce`, exercising a domain-stamped `BackgroundJob` and an unstamped `Notification` through the real SQLite save interceptor.
+- Assertion-quality review: both branches assert the exact persisted token value (`1u`), so either a missing fallback or a double increment fails independently.
+- Pseudo-mutation review: removing `StampChanged` differentiation, the interceptor increment, or its current/original guard makes at least one exact assertion fail.
+- Narrow validation passed 2/2: `dotnet test tests/Cardscape.UnitTests/Cardscape.UnitTests.csproj -c Release --no-restore -p:BuildProjectReferences=false --filter "FullyQualifiedName~CardscapeDbContextModelTests" -m:1 -nr:false -v:minimal`.

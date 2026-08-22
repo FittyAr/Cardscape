@@ -58,16 +58,15 @@ public sealed class DomainEventsInterceptor(
             }
 
             // Optimistic concurrency. The domain aggregates expose
-            // a RowVersion column (declared IsConcurrencyToken in
-            // every EF configuration) but the mutating methods set
-            // UpdatedAt directly without going through the
-            // Entity<TId>.StampChanged helper. Without a bump here,
+            // a RowVersion column. Some mutating methods advance it
+            // through Entity<TId>.StampChanged while others rely on
+            // persistence to detect their tracked changes. Without
+            // a fallback bump here,
             // two concurrent saves on the same row would both see
             // the same RowVersion and the second would silently
-            // overwrite the first. We bump RowVersion on every
-            // entity that is Modified and carries a RowVersion
-            // column, so the UPDATE issued by EF Core hits the
-            // version the previous read saw.
+            // overwrite the first. We bump only when CurrentValue is
+            // still OriginalValue, so domain-stamped entities advance
+            // exactly once. EF uses OriginalValue in the UPDATE predicate.
             //
             // We intentionally do NOT bump on Added (the row did
             // not exist; the original version is the freshly-
@@ -88,7 +87,9 @@ public sealed class DomainEventsInterceptor(
                     continue;
                 }
 
-                if (rvProp.CurrentValue is uint current)
+                if (rvProp.CurrentValue is uint current
+                    && rvProp.OriginalValue is uint original
+                    && current == original)
                 {
                     rvProp.CurrentValue = current + 1;
                     rvProp.IsModified = true;
@@ -145,4 +146,3 @@ public sealed class DomainEventsInterceptor(
         return await base.SavedChangesAsync(eventData, result, cancellationToken);
     }
 }
-

@@ -38,6 +38,5 @@ public sealed class ExternalLoginConfiguration : IEntityTypeConfiguration<Extern
         b.Property(l => l.CreatedBy);
         b.Property(l => l.UpdatedBy);
         b.Property(l => l.IsDeleted);
-        b.Property(l => l.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }

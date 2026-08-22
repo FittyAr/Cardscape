@@ -34,6 +34,5 @@ public sealed class AttachmentConfiguration : IEntityTypeConfiguration<Attachmen
         b.Property(a => a.CreatedBy);
         b.Property(a => a.UpdatedBy);
         b.Property(a => a.IsDeleted);
-        b.Property(a => a.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }

@@ -27,7 +27,6 @@ public sealed class GoogleCalendarConnectionConfiguration
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
 
         b.HasIndex(x => x.UserId).IsUnique();
         b.HasIndex(x => x.WorkspaceId);

@@ -23,6 +23,5 @@ public sealed class ScimTokenConfiguration : IEntityTypeConfiguration<ScimToken>
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }

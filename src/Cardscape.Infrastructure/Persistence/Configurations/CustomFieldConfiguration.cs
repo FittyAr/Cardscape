@@ -26,7 +26,6 @@ public sealed class CustomFieldDefinitionConfiguration : IEntityTypeConfiguratio
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
 
         b.HasIndex(x => new { x.BoardId, x.Position })
             .HasDatabaseName("IX_custom_field_definitions_BoardId_Position");
@@ -54,7 +53,6 @@ public sealed class CustomFieldValueConfiguration : IEntityTypeConfiguration<Cus
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
 
         // (FieldDefinitionId, CardId) is the natural unique key.
         b.HasIndex(x => new { x.FieldDefinitionId, x.CardId })

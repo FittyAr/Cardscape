@@ -24,7 +24,6 @@ public sealed class ActivityConfiguration : IEntityTypeConfiguration<Activity>
         b.Property(x => x.UpdatedAt);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
         b.HasIndex(x => new { x.BoardId, x.OccurredAt, x.Id });
         b.HasIndex(x => new { x.CardId, x.OccurredAt, x.Id });
         b.HasIndex(x => new { x.ActorId, x.OccurredAt });

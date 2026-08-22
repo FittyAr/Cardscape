@@ -68,7 +68,6 @@ public sealed class OAuthAppConfiguration : IEntityTypeConfiguration<OAuthApp>
 
         b.Property(a => a.CreatedAt).IsRequired();
         b.Property(a => a.UpdatedAt);
-        b.Property(a => a.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }
 
@@ -153,6 +152,5 @@ public sealed class OAuthAccessTokenConfiguration : IEntityTypeConfiguration<OAu
 
         b.Property(t => t.CreatedAt).IsRequired();
         b.Property(t => t.UpdatedAt);
-        b.Property(t => t.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }

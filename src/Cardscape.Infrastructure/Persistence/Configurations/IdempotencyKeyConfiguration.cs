@@ -43,6 +43,5 @@ public sealed class IdempotencyKeyConfiguration : IEntityTypeConfiguration<Idemp
         b.Property(k => k.CreatedBy);
         b.Property(k => k.UpdatedBy);
         b.Property(k => k.IsDeleted);
-        b.Property(k => k.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }

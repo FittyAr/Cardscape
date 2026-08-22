@@ -940,7 +940,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<uint>("RowVersion")
-                        .HasColumnType("int unsigned");
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(0u);
 
                     b.Property<int>("StaleAfterDays")
                         .HasColumnType("int");
@@ -981,7 +984,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<uint>("RowVersion")
-                        .HasColumnType("int unsigned");
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(0u);
 
                     b.Property<Guid>("SourceCardId")
                         .HasColumnType("char(36)");
@@ -1020,7 +1026,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<uint>("RowVersion")
-                        .HasColumnType("int unsigned");
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset>("SnoozedAt")
                         .HasColumnType("datetime");
@@ -1157,7 +1166,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<uint>("RowVersion")
-                        .HasColumnType("int unsigned");
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(0u);
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -1636,7 +1648,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(2000)");
 
                     b.Property<uint>("RowVersion")
-                        .HasColumnType("int unsigned");
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(0u);
 
                     b.Property<string>("Scopes")
                         .IsRequired()

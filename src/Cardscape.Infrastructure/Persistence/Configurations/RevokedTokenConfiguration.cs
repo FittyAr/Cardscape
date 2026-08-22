@@ -39,6 +39,5 @@ public sealed class RevokedTokenConfiguration : IEntityTypeConfiguration<Revoked
         b.Property(t => t.CreatedBy);
         b.Property(t => t.UpdatedBy);
         b.Property(t => t.IsDeleted);
-        b.Property(t => t.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }

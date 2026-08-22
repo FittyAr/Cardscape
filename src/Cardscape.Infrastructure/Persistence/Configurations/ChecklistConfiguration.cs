@@ -29,7 +29,6 @@ public sealed class ChecklistConfiguration : IEntityTypeConfiguration<Checklist>
         b.Property(c => c.CreatedBy);
         b.Property(c => c.UpdatedBy);
         b.Property(c => c.IsDeleted);
-        b.Property(c => c.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
 
         // Items are an owned collection — EF stores them in a
         // separate table (checklist_items) and reloads them as
@@ -58,7 +57,6 @@ public sealed class ChecklistConfiguration : IEntityTypeConfiguration<Checklist>
             ib.Property(i => i.CreatedBy);
             ib.Property(i => i.UpdatedBy);
             ib.Property(i => i.IsDeleted);
-            ib.Property(i => i.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
             ib.HasIndex(i => new { i.ChecklistId, i.Position });
         });
     }

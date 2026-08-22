@@ -57,6 +57,5 @@ public sealed class ApiTokenConfiguration : IEntityTypeConfiguration<ApiToken>
         b.Property(t => t.CreatedBy);
         b.Property(t => t.UpdatedBy);
         b.Property(t => t.IsDeleted);
-        b.Property(t => t.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }

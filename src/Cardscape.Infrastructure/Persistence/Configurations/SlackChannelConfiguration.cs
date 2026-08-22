@@ -33,7 +33,6 @@ public sealed class SlackChannelConfiguration : IEntityTypeConfiguration<SlackCh
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
 
         b.HasIndex(x => new { x.SlackWorkspaceId, x.BoardId, x.ChannelId })
             .HasDatabaseName("IX_slack_channels_WorkspaceId_BoardId_ChannelId")

@@ -25,7 +25,6 @@ public sealed class BoardStarConfiguration : IEntityTypeConfiguration<BoardStar>
         b.Property(s => s.BoardId).HasConversion(id => id.Value, v => new BoardId(v));
         b.Property(s => s.UserId).IsRequired();
         b.Property(s => s.StarredAt).IsRequired();
-        b.Property(s => s.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
         b.Property(s => s.CreatedAt).IsRequired();
         b.Property(s => s.UpdatedAt);
         b.Property(s => s.CreatedBy);

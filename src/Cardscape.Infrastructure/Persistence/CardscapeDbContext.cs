@@ -11,6 +11,7 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Comments;
+using Cardscape.Domain.Common;
 using Cardscape.Domain.Idempotency;
 using Cardscape.Domain.Integrations.OAuthApps;
 using Cardscape.Domain.Labels;
@@ -83,17 +84,29 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<BoardStar> BoardStars => Set<BoardStar>();
 
     /// <summary>
-    /// EF Core's <see cref="ModelConfigurationBuilder"/> doesn't
-    /// expose a default-value or concurrency-token convention, so
-    /// every <c>*Configuration.cs</c> applies
-    /// <c>.IsConcurrencyToken().HasDefaultValue(0u)</c> to its
-    /// <c>RowVersion</c> property explicitly. See
-    /// <c>Common.Entity&lt;TId&gt;.RowVersion</c> for the
-    /// optimistic-concurrency contract.
+    /// Applies every entity configuration and then enforces the shared
+    /// optimistic-concurrency contract. This includes owned entity types,
+    /// which are easy to omit when RowVersion is configured file by file.
     /// </summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        ApplyOptimisticConcurrencyConvention(modelBuilder);
         base.OnModelCreating(modelBuilder);
+    }
+
+    private static void ApplyOptimisticConcurrencyConvention(ModelBuilder modelBuilder)
+    {
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var rowVersion = entityType.FindProperty(nameof(Entity<Guid>.RowVersion));
+            if (rowVersion?.ClrType != typeof(uint))
+            {
+                continue;
+            }
+
+            rowVersion.IsConcurrencyToken = true;
+            rowVersion.SetDefaultValue(0u);
+        }
     }
 }

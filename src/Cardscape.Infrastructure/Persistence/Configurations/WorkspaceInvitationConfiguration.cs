@@ -50,6 +50,5 @@ public sealed class WorkspaceInvitationConfiguration : IEntityTypeConfiguration<
         b.Property(i => i.CreatedBy);
         b.Property(i => i.UpdatedBy);
         b.Property(i => i.IsDeleted);
-        b.Property(i => i.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }

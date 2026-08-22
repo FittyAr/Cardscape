@@ -35,6 +35,5 @@ public sealed class UserPreferencesConfiguration : IEntityTypeConfiguration<User
         b.Property(p => p.CreatedBy);
         b.Property(p => p.UpdatedBy);
         b.Property(p => p.IsDeleted);
-        b.Property(p => p.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }

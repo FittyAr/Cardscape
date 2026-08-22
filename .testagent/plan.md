@@ -441,3 +441,11 @@
 - [x] Run focused endpoint tests 10/10.
 - [x] Format, build and run the complete suite.
 - [x] Commit and push to `master` (included in this block).
+# EF Core RowVersion model contract (2026-08-22)
+
+1. [x] Research the real EF model and current unit-test conventions.
+2. [x] Add `EveryMappedRowVersion_IsAConcurrencyTokenWithZeroDefault`, enumerating the complete model and aggregating violations.
+3. [x] Run the narrow test and record assertion/gap review.
+4. [x] Re-open the test and map every acceptance item to concrete evidence.
+5. [x] Select existing stamped (`BackgroundJob`) and unstamped (`Notification`) mutation paths.
+6. [x] Add and run `SavingModifiedEntities_AdvancesRowVersionExactlyOnce` against real SQLite persistence.

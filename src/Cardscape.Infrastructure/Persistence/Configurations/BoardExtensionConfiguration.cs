@@ -25,7 +25,6 @@ public sealed class BoardExtensionConfiguration : IEntityTypeConfiguration<Board
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
 
         // (BoardId, Kind) is unique — one row per extension per board.
         b.HasIndex(x => new { x.BoardId, x.Kind }).IsUnique();

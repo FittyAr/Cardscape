@@ -938,7 +938,10 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<uint>("RowVersion")
-                        .HasColumnType("INTEGER");
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0u);
 
                     b.Property<int>("StaleAfterDays")
                         .HasColumnType("INTEGER");
@@ -979,7 +982,10 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<uint>("RowVersion")
-                        .HasColumnType("INTEGER");
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0u);
 
                     b.Property<Guid>("SourceCardId")
                         .HasColumnType("TEXT");
@@ -1018,7 +1024,10 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<uint>("RowVersion")
-                        .HasColumnType("INTEGER");
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset>("SnoozedAt")
                         .HasColumnType("TEXT");
@@ -1155,7 +1164,10 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<uint>("RowVersion")
-                        .HasColumnType("INTEGER");
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0u);
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -1634,7 +1646,10 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<uint>("RowVersion")
-                        .HasColumnType("INTEGER");
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0u);
 
                     b.Property<string>("Scopes")
                         .IsRequired()

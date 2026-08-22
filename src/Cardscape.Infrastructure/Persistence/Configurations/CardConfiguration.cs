@@ -36,7 +36,6 @@ public sealed class CardConfiguration : IEntityTypeConfiguration<Card>
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
         b.HasIndex(x => x.ListId);
         b.HasIndex(x => new { x.ListId, x.Position });
 
@@ -48,7 +47,6 @@ public sealed class CardConfiguration : IEntityTypeConfiguration<Card>
             mb.Property(m => m.CardId).HasConversion(id => id.Value, v => new CardId(v));
             mb.Property(m => m.UserId).IsRequired();
             mb.Property(m => m.AssignedAt).IsRequired();
-            mb.Property(m => m.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
             mb.HasIndex(m => new { m.CardId, m.UserId }).IsUnique();
         });
 
@@ -59,7 +57,6 @@ public sealed class CardConfiguration : IEntityTypeConfiguration<Card>
             lb.Property(cl => cl.Id).HasConversion(id => id.Value, v => new Domain.Labels.CardLabelId(v));
             lb.Property(cl => cl.CardId).HasConversion(id => id.Value, v => new CardId(v));
             lb.Property(cl => cl.LabelId).HasConversion(id => id.Value, v => new Domain.Labels.LabelId(v));
-            lb.Property(cl => cl.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
             lb.HasIndex(cl => new { cl.CardId, cl.LabelId }).IsUnique();
         });
     }

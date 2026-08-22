@@ -572,3 +572,32 @@
 - Acceptance: known-length and unknown-length bodies above 64 KiB return 413; exactly 64 KiB reaches dispatch validation; malformed envelope and typed payload return stable 400; valid broadcasts remain accepted.
 - Tooling limitation: the referenced .NET test-analysis extension remains absent; xUnit/FluentAssertions review follows repository conventions.
 - Result: acceptance satisfied. Endpoint tests pass 10/10 and the complete suite passes 900 executed tests with one unrelated diagnostic skip.
+# EF Core RowVersion model contract (2026-08-22)
+
+## Bounded target inventory
+
+- Production model: `src/Cardscape.Infrastructure/Persistence/CardscapeDbContext.cs` and configurations applied from the Infrastructure assembly.
+- Test project: `tests/Cardscape.UnitTests/Cardscape.UnitTests.csproj` (xUnit v3, FluentAssertions, Infrastructure reference, SQLite provider transitively available).
+- New test target: `tests/Cardscape.UnitTests/Infrastructure/Persistence/CardscapeDbContextModelTests.cs`.
+
+## Existing conventions
+
+- Tests use `[Fact]`, descriptive method names, and FluentAssertions.
+- Infrastructure tests live below `tests/Cardscape.UnitTests/Infrastructure`.
+- Model construction can use an in-memory SQLite connection without external services.
+
+## Acceptance checklist
+
+- [x] Discover every mapped EF Core entity type that exposes a `RowVersion` property, including owned types.
+- [x] Assert every discovered `RowVersion` is an optimistic concurrency token.
+- [x] Assert every discovered `RowVersion` has relational default value `0u`.
+- [x] Produce useful entity-qualified diagnostics for every violation.
+- [x] Modify tests only; do not modify production code.
+
+## Save-interceptor extension
+
+- Existing stamped entity: `BackgroundJob.TryClaim` calls `StampChanged`, advancing `RowVersion` in the domain.
+- Existing unstamped entity: `Notification.MarkRead` mutates persisted state without calling `StampChanged`.
+- Existing persistence hook: `DomainEventsInterceptor.SavingChangesAsync` supplies a fallback only when current and original RowVersion match.
+- [x] Prove a stamped mutation remains at exactly version 1 after persistence.
+- [x] Prove an unstamped mutation reaches exactly version 1 through the persistence fallback.

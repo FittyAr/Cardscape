@@ -28,6 +28,5 @@ public sealed class CardVoteConfiguration : IEntityTypeConfiguration<CardVote>
         b.Property(v => v.CreatedBy);
         b.Property(v => v.UpdatedBy);
         b.Property(v => v.IsDeleted);
-        b.Property(v => v.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }

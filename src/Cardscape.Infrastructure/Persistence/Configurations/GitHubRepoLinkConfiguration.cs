@@ -27,7 +27,6 @@ public sealed class GitHubRepoLinkConfiguration : IEntityTypeConfiguration<GitHu
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
 
         b.HasIndex(x => new { x.BoardId, x.RepoFullName })
             .HasDatabaseName("IX_github_repo_links_BoardId_RepoFullName")
@@ -57,6 +56,5 @@ public sealed class GitHubPullRequestLinkConfiguration : IEntityTypeConfiguratio
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }

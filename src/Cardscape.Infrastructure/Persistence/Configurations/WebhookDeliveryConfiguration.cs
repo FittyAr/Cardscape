@@ -31,7 +31,6 @@ public sealed class WebhookDeliveryConfiguration : IEntityTypeConfiguration<Webh
         b.Property(x => x.CreatedBy);
         b.Property(x => x.UpdatedBy);
         b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
 
         // (EndpointId, CreatedAt) makes the per-endpoint list
         // query (newest first) cheap on the hot path the Web UI

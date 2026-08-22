@@ -36,6 +36,5 @@ public sealed class TotpCredentialConfiguration : IEntityTypeConfiguration<TotpC
         b.Property(c => c.CreatedBy);
         b.Property(c => c.UpdatedBy);
         b.Property(c => c.IsDeleted);
-        b.Property(c => c.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }

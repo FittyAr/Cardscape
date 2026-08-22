@@ -24,6 +24,5 @@ public sealed class CardRecurrenceConfiguration : IEntityTypeConfiguration<CardR
         b.Property(r => r.CreatedBy).IsRequired();
         b.Property(r => r.CreatedAt).IsRequired();
         b.Property(r => r.UpdatedAt);
-        b.Property(r => r.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
     }
 }
