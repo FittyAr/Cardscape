@@ -39,6 +39,7 @@ using Cardscape.Infrastructure.Import;
 using Cardscape.Infrastructure.Integrations;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Persistence.Interceptors;
+using Cardscape.Infrastructure.Persistence.Outbox;
 using Cardscape.Infrastructure.Repositories;
 using Cardscape.Infrastructure.Scim;
 using Cardscape.Infrastructure.Search;
@@ -107,7 +108,11 @@ public static class InfrastructureServiceCollectionExtensions
         });
 
         services.AddScoped<DomainEventsInterceptor>();
-        services.AddScoped<IDomainEventDispatcher, WolverineDomainEventDispatcher>();
+        services.AddSingleton<DomainEventOutboxProcessor>();
+        services.AddHostedService(serviceProvider =>
+            new DomainEventOutboxDispatcherService(
+                serviceProvider.GetRequiredService<DomainEventOutboxProcessor>(),
+                serviceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<DomainEventOutboxDispatcherService>>()));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Domain-event fan-out. Three broadcasters run
@@ -135,8 +140,7 @@ public static class InfrastructureServiceCollectionExtensions
         // there is no manual subscription in Program.cs. The
         // rules created via the API persisted correctly but
         // were never executed. Converted to a proper
-        // IDomainEventBroadcaster so the existing
-        // WolverineDomainEventDispatcher fan-out picks it up.
+        // IDomainEventBroadcaster so the durable outbox fan-out picks it up.
         services.AddSingleton<
             IDomainEventBroadcaster,
             Cardscape.Application.Automation.AutomationEventBroadcaster>();

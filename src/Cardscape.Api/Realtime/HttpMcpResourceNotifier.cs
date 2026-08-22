@@ -77,20 +77,17 @@ public sealed class HttpMcpResourceNotifier
             using HttpResponseMessage response = await _http.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogDebug(
-                    "API->MCP board-event for {BoardId} returned {Status}",
-                    boardId, (int)response.StatusCode);
+                throw new HttpRequestException(
+                    $"API-to-MCP board-event returned HTTP {(int)response.StatusCode}.");
             }
         }
         catch (Exception ex)
         {
-            // Best-effort: the board change is durable; the
-            // SignalR push already fired; AI clients can
-            // re-poll the resource on the next refresh.
-            _logger.LogDebug(
+            _logger.LogWarning(
                 ex,
                 "API->MCP board-event for {BoardId} threw",
                 boardId);
+            throw;
         }
     }
 }

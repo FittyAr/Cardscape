@@ -2490,6 +2490,64 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.ToTable("workspace_invitations", (string)null);
                 });
 
+            modelBuilder.Entity("Cardscape.Infrastructure.Persistence.Outbox.DomainEventOutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("BroadcasterType")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAtUtcTicks")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("LockId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("LockedUntilUtcTicks")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("NextAttemptAtUtcTicks")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("OccurredAtUtcTicks")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("ProcessedAtUtcTicks")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0u);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessedAtUtcTicks", "NextAttemptAtUtcTicks", "LockedUntilUtcTicks", "CreatedAtUtcTicks");
+
+                    b.ToTable("domain_event_outbox", (string)null);
+                });
+
             modelBuilder.Entity("Cardscape.Domain.Boards.Board", b =>
                 {
                     b.OwnsMany("Cardscape.Domain.Boards.BoardMember", "Members", b1 =>

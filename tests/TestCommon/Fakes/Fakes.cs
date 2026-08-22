@@ -110,19 +110,6 @@ public sealed class FakeCurrentUser : ICurrentUser
     };
 }
 
-/// <summary>Records every dispatched event. Tests assert on the
-/// collected events.</summary>
-public sealed class FakeDomainEventDispatcher : IDomainEventDispatcher
-{
-    public List<IDomainEvent> Dispatched { get; } = [];
-
-    public Task DispatchAsync(IEnumerable<IDomainEvent> events, CancellationToken ct = default)
-    {
-        Dispatched.AddRange(events);
-        return Task.CompletedTask;
-    }
-}
-
 /// <summary>Generic in-memory implementation of <see cref="IRepository{T, TId}"/>.
 /// Backed by a <see cref="Dictionary{TKey, TValue}"/>; safe for
 /// single-threaded tests.</summary>

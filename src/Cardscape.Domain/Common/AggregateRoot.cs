@@ -24,7 +24,7 @@ public interface IAggregateRoot
     /// <summary>Domain events raised by this aggregate, in raise order.</summary>
     IReadOnlyCollection<IDomainEvent> DomainEvents { get; }
 
-    /// <summary>Removes all recorded events. Called by the dispatcher after publication.</summary>
+    /// <summary>Removes events after their outbox deliveries are durable.</summary>
     void ClearDomainEvents();
 }
 
@@ -44,9 +44,8 @@ public abstract class AggregateRoot<TId> : Entity<TId>, IAggregateRoot
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     /// <summary>
-    /// Records a domain event. The event will be dispatched by the
-    /// persistence interceptor after the next successful
-    /// <c>SaveChangesAsync</c> call.
+    /// Records a domain event. The persistence interceptor stores durable
+    /// per-broadcaster deliveries with the aggregate's next successful save.
     /// </summary>
     protected void AddDomainEvent(IDomainEvent @event) => _domainEvents.Add(@event);
 

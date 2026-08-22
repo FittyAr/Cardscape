@@ -20,7 +20,7 @@ namespace Cardscape.Application.Webhooks;
 /// methods for events that do not implement
 /// <c>Wolverine.IMessage</c>; the Domain layer cannot
 /// reference Wolverine. The infrastructure
-/// <c>WolverineDomainEventDispatcher</c> invokes
+/// The durable domain-event outbox invokes
 /// <see cref="IDomainEventBroadcaster.BroadcastAsync"/>
 /// directly and the dispatch lives here.
 /// <para>
@@ -45,8 +45,7 @@ namespace Cardscape.Application.Webhooks;
 /// <see cref="IServiceScope"/> per event (the scope is
 /// disposed when the handler returns). The work is
 /// awaited inline so the
-/// <c>WolverineDomainEventDispatcher.DispatchAsync</c>
-/// pipeline can complete before the scope is disposed.
+/// outbox delivery can complete before the scope is disposed.
 /// </para>
 /// </summary>
 public sealed class WebhookEventBroadcaster : IDomainEventBroadcaster
@@ -270,5 +269,4 @@ public sealed class WebhookEventBroadcaster : IDomainEventBroadcaster
         }
     }
 }
-
 

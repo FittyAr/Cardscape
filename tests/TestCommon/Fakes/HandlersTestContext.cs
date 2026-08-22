@@ -33,7 +33,6 @@ public sealed class HandlersTestContext
     public FakePasswordHasher PasswordHasher { get; } = new();
     public FakeTokenService Tokens { get; } = new();
     public FakeCurrentUser CurrentUser { get; set; } = FakeCurrentUser.Anonymous();
-    public FakeDomainEventDispatcher EventDispatcher { get; } = new();
     public FakeDeploymentRegion DeploymentRegion { get; } = new();
     public IdentitySecretProtector SecretProtector { get; } = new();
     public InMemoryPendingTotpLoginStore PendingTotpLogins { get; } = new();

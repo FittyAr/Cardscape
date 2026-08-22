@@ -18,16 +18,14 @@ namespace Cardscape.Application.Automation;
 /// CardCreatedInList) and run a matching action
 /// (MoveCardToList, AssignUser, SetDueDate, MarkComplete).
 /// The broadcaster runs the matching rules for every raised
-/// event; the action is best-effort — a failure logs a
-/// warning but never propagates to the originating request
-/// (automation is side-channel, not a precondition).
+/// event. Delivery failures propagate to the durable outbox, which retries
+/// this broadcaster without rolling back the originating request.
 /// <para>
 /// The switch on runtime type is the dispatch
 /// strategy: <see cref="IDomainEvent"/> values do not
 /// implement <c>Wolverine.IMessage</c>, so Wolverine's
 /// static-handler discovery does not pick them up. The
-/// <c>WolverineDomainEventDispatcher</c> invokes
-/// <see cref="BroadcastAsync"/> directly and the
+/// The durable domain-event outbox invokes <see cref="BroadcastAsync"/> and the
 /// <c>switch</c> lives here.
 /// </para>
 /// <para>
@@ -36,8 +34,7 @@ namespace Cardscape.Application.Automation;
 /// broadcaster creates a fresh <see cref="IServiceScope"/>
 /// per event (the scope is disposed when the handler
 /// returns). The work is awaited inline so the
-/// <c>WolverineDomainEventDispatcher.DispatchAsync</c>
-/// pipeline can complete before the scope is disposed.
+/// outbox delivery can complete before the scope is disposed.
 /// </para>
 /// </summary>
 public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
@@ -188,6 +185,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
                 ex,
                 "AutomationEventBroadcaster failed while processing {Trigger} for card {CardId}",
                 trigger, cardId);
+            throw;
         }
         finally
         {
@@ -277,6 +275,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
         catch (Exception ex)
         {
             logger.LogError(ex, "Automation rule {RuleId} threw on card {CardId}", rule.Id, card.Id);
+            throw;
         }
     }
 }

@@ -1,5 +1,16 @@
 # Test status
 
+## Transactional EF Core domain-event outbox (2026-08-22)
+
+- Status: complete; five outbox regressions plus the two affected persistence-model regressions pass 7/7.
+- Atomicity evidence: `SavingChanges_WhenOutboxInsertFails_RollsBackAggregateAndPreservesDomainEvents` fails the outbox INSERT through an EF command interceptor, then proves both tables remain empty and the aggregate still owns its event.
+- Delivery evidence: success/failure/retry tests assert exact broadcaster identity, attempts, error lifecycle, processed timestamp, and invocation collections independently.
+- Serialization evidence: the real `CardCreated` round-trip asserts concrete runtime type plus exact `CardId`, `BoardListId`, `CardTitle`, and `OccurredAt`.
+- Assertion-quality review: 5 generated tests contain 34 meaningful assertion chains across equality, collection, null/negative, exception, type, state/side-effect, and structural categories; 0 assertion-free, 0 trivial-only, and 0 self-referential tests.
+- Pseudo-mutation review: tests kill removed per-broadcaster fan-out, premature event clearing, missing transaction rollback, swallowed/unstored failures, attempt reset/increment errors, retry delay errors, cross-broadcaster blocking, wrong concrete type, and scalar value-object corruption. Lease expiry, batch-size 50, duplicate-id normalization, 2048-character error truncation, and unknown-event rejection remain lower-priority processor/entity boundaries outside the four requested behaviors.
+- Tooling note: `test-analysis-extensions` advertises `extensions/dotnet.md`, but that file is absent from the installed repository skill package; xUnit v3 and FluentAssertions classification was therefore performed inline from repository conventions.
+- Narrow validation: `dotnet test tests/Cardscape.UnitTests/Cardscape.UnitTests.csproj -c Release --no-restore -p:BuildProjectReferences=false -p:UseSharedCompilation=false --filter "FullyQualifiedName~DomainEventOutboxTests|FullyQualifiedName~CardscapeDbContextModelTests" -m:1 -nr:false -v:minimal` → 7 passed, 0 failed.
+
 - Research: completed.
 - Plan: completed.
 - Implementation: completed.

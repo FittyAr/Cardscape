@@ -20,7 +20,7 @@ namespace Cardscape.Application.Realtime;
 /// <c>Wolverine.IMessage</c>, and the Domain layer
 /// cannot reference Wolverine without breaking the
 /// layered architecture. Instead, the infrastructure
-/// <c>WolverineDomainEventDispatcher</c> invokes
+/// The durable domain-event outbox invokes
 /// <see cref="IDomainEventBroadcaster.BroadcastAsync"/>
 /// directly — the type-based dispatch lives here.
 /// <para>
@@ -30,8 +30,7 @@ namespace Cardscape.Application.Realtime;
 /// <see cref="IServiceScope"/> per event (the scope is
 /// disposed when the handler returns). The work is
 /// awaited inline so the
-/// <c>WolverineDomainEventDispatcher.DispatchAsync</c>
-/// pipeline can complete before the scope is disposed.
+/// outbox delivery can complete before the scope is disposed.
 /// </para>
 /// </summary>
 public sealed class BoardEventBroadcaster : IDomainEventBroadcaster

@@ -7,9 +7,8 @@ namespace Cardscape.Application.Realtime;
 /// event to whatever side-effects the host process wants
 /// to attach (SignalR fan-out, webhook enqueue, MCP push,
 /// etc.). Implementations live in the Application layer;
-/// the infrastructure <c>WolverineDomainEventDispatcher</c>
-/// resolves the registered <see cref="IDomainEventBroadcaster"/>
-/// collection and invokes every match.
+/// the infrastructure outbox creates and retries one durable delivery for
+/// every registered <see cref="IDomainEventBroadcaster"/>.
 /// <para>
 /// Wolverine's static-handler discovery does not enumerate
 /// static methods for events that do not implement
@@ -26,9 +25,8 @@ public interface IDomainEventBroadcaster
 {
     /// <summary>
     /// Reacts to a single domain event. Implementations
-    /// should be best-effort: a failure here must not
-    /// surface as a SaveChanges failure (the dispatcher
-    /// catches and logs).
+    /// Throw when delivery fails. The durable outbox records the failure and
+    /// retries this broadcaster independently with exponential backoff.
     /// </summary>
     Task BroadcastAsync(IDomainEvent @event, CancellationToken ct = default);
 }

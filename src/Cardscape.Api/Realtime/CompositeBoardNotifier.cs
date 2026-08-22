@@ -11,9 +11,8 @@ namespace Cardscape.Api.Realtime;
 /// <c>notifications/resources/updated</c> push). The SignalR
 /// dispatch is awaited synchronously so the local Web clients
 /// see the change in the same request that caused it; the MCP
-/// notify is fire-and-forget — it is best-effort and the
-/// <see cref="HttpMcpResourceNotifier"/> swallows transient
-/// failures itself.
+/// notify is awaited. Transient failures propagate to the domain-event outbox
+/// so this broadcaster delivery remains pending and is retried.
 /// </summary>
 public sealed class CompositeBoardNotifier : IBoardNotifier
 {

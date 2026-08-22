@@ -1,21 +1,24 @@
-using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Abstractions;
+using Cardscape.Application.Realtime;
 using Cardscape.Domain.Common;
+using Cardscape.Infrastructure.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
 namespace Cardscape.Infrastructure.Persistence.Interceptors;
 
 /// <summary>
-/// Collects domain events from tracked aggregate roots and
-/// dispatches them after <c>SaveChangesAsync</c> succeeds.
+/// Collects domain events from tracked aggregate roots and stores one durable
+/// delivery per broadcaster in the same <c>SaveChangesAsync</c> transaction.
 /// Also normalises entity state for new owned/child rows that EF
 /// mis-marks as <see cref="EntityState.Modified"/> when their parent
 /// navigation changes.
 /// </summary>
-public sealed class DomainEventsInterceptor(
-    IDomainEventDispatcher dispatcher,
+internal sealed class DomainEventsInterceptor(
+    IEnumerable<IDomainEventBroadcaster> broadcasters,
+    DomainEventOutboxProcessor outboxProcessor,
+    IClock clock,
     ILogger<DomainEventsInterceptor> logger) : SaveChangesInterceptor
 {
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
@@ -95,6 +98,47 @@ public sealed class DomainEventsInterceptor(
                     rvProp.IsModified = true;
                 }
             }
+
+            var aggregateEntries = eventData.Context.ChangeTracker
+                .Entries()
+                .Where(entry => entry.Entity is IAggregateRoot)
+                .ToList();
+            IDomainEvent[] events = aggregateEntries
+                .SelectMany(entry => ((IAggregateRoot)entry.Entity).DomainEvents)
+                .ToArray();
+
+            bool outboxAlreadyQueued = eventData.Context.ChangeTracker
+                .Entries<DomainEventOutboxMessage>()
+                .Any(entry => entry.State == EntityState.Added);
+            if (events.Length > 0 && !outboxAlreadyQueued)
+            {
+                DateTimeOffset createdAt = clock.UtcNow;
+                string[] broadcasterTypes = broadcasters
+                    .Select(item => item.GetType().FullName
+                        ?? throw new InvalidOperationException("A domain event broadcaster has no stable type name."))
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
+                if (broadcasterTypes.Length == 0)
+                {
+                    throw new InvalidOperationException(
+                        "Domain events were raised but no outbox broadcasters are registered.");
+                }
+
+                foreach (IDomainEvent @event in events)
+                {
+                    (string eventType, string payloadJson) =
+                        DomainEventOutboxSerializer.Serialize(@event);
+                    foreach (string broadcasterType in broadcasterTypes)
+                    {
+                        eventData.Context.Add(DomainEventOutboxMessage.Create(
+                            eventType,
+                            payloadJson,
+                            broadcasterType,
+                            @event.OccurredAt,
+                            createdAt));
+                    }
+                }
+            }
         }
 
         return base.SavingChangesAsync(eventData, result, cancellationToken);
@@ -107,38 +151,41 @@ public sealed class DomainEventsInterceptor(
     {
         if (eventData.Context is not null)
         {
-            // EF Core's generic Entries<AggregateRoot<Guid>>() filter does
-            // not match strongly-typed aggregate roots (Card : AggregateRoot<CardId>,
-            // Board : AggregateRoot<BoardId>, ...). The non-generic
-            // IAggregateRoot interface lets us pick every aggregate up
-            // regardless of its identifier type. Without this, the
-            // broadcaster never fires — a latent bug that the cross-process
-            // E2E test exposed.
-            var aggregateEntries = eventData.Context.ChangeTracker
-                .Entries()
-                .Where(e => e.Entity is IAggregateRoot)
-                .ToList();
-
-            var events = aggregateEntries
-                .SelectMany(e => ((IAggregateRoot)e.Entity).DomainEvents)
-                .ToList();
-            logger.LogInformation("DomainEventsInterceptor.SavedChanges: {Count} events from {Aggregates} aggregates", events.Count, aggregateEntries.Count);
-
-            if (events.Count > 0)
+            foreach (var entry in eventData.Context.ChangeTracker.Entries()
+                .Where(entry => entry.Entity is IAggregateRoot))
             {
-                foreach (var ev in events) { logger.LogInformation("Event type: {EventType}", ev.GetType().Name); }
+                ((IAggregateRoot)entry.Entity).ClearDomainEvents();
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return await base.SavedChangesAsync(eventData, result, cancellationToken);
+            }
+
+            // An explicit caller-owned transaction may still be open after
+            // SaveChanges. A separate outbox scope cannot observe those rows
+            // until commit; the hosted dispatcher will claim them afterward.
+            if (eventData.Context.Database.CurrentTransaction is not null)
+            {
+                return await base.SavedChangesAsync(eventData, result, cancellationToken);
+            }
+
+            Guid[] deliveryIds = eventData.Context.ChangeTracker
+                .Entries<DomainEventOutboxMessage>()
+                .Where(entry => entry.Entity.ProcessedAt is null)
+                .Select(entry => entry.Entity.Id)
+                .ToArray();
+            if (deliveryIds.Length > 0)
+            {
                 try
                 {
-                    await dispatcher.DispatchAsync(events, cancellationToken);
+                    await outboxProcessor.ProcessAsync(deliveryIds, cancellationToken);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Failed to dispatch {Count} domain event(s).", events.Count);
-                }
-
-                foreach (var entry in aggregateEntries)
-                {
-                    ((IAggregateRoot)entry.Entity).ClearDomainEvents();
+                    logger.LogError(
+                        ex,
+                        "Immediate domain event outbox dispatch failed; durable deliveries remain pending");
                 }
             }
         }

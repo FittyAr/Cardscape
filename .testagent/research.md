@@ -1,5 +1,29 @@
 # Test research
 
+## Transactional EF Core domain-event outbox (2026-08-22)
+
+### Bounded target inventory
+
+- Proposed `Infrastructure.Persistence.Outbox.DomainEventOutboxMessage`: one durable delivery per domain event and concrete `IDomainEventBroadcaster`.
+- Proposed `Infrastructure.Persistence.Outbox.DomainEventOutboxInterceptor`: captures events from every tracked `IAggregateRoot` during `SavingChanges`, adds delivery rows through EF Core so aggregate changes and outbox inserts commit atomically, and clears captured events only after a successful save.
+- Proposed `Infrastructure.Persistence.Outbox.DomainEventOutboxProcessor`: resolves pending deliveries, deserializes the concrete domain event, invokes only the named broadcaster, and persists attempt/error/success state.
+- `CardscapeDbContext`: real SQLite relational boundary for atomic-save and retry tests; no EF in-memory provider and no raw SQL.
+- Real serialization specimen: `CardCreated`, including `CardId`, `BoardListId`, `CardTitle`, and `OccurredAt`.
+- Test conventions: xUnit v3 `[Fact]`, FluentAssertions, `Member_Condition_ExpectedResult`, async cancellation through `TestContext.Current.CancellationToken`, and in-memory SQLite kept open for the test lifetime.
+
+### Acceptance checklist
+
+- [x] One aggregate event with two broadcasters creates exactly two durable delivery rows in the same `SaveChanges` and clears the aggregate event collection after success.
+- [x] A failed aggregate save persists neither aggregate nor outbox deliveries and does not clear the aggregate event collection.
+- [x] A broadcaster exception leaves only its delivery pending with exact attempt/error state; a later successful run marks it processed and clears the error.
+- [x] Independent broadcasters have independent delivery state: one failure cannot prevent another delivery for the same event from succeeding.
+- [x] A real `CardCreated` round-trips with its concrete runtime type and exact strongly typed identifiers/value object/timestamp.
+- [x] Tests remain bounded to Infrastructure outbox behavior and do not modify production code.
+
+### Contract coordination
+
+- Tests target the production names requested by the parent task. Exact constructor/factory and processor method signatures remain intentionally pending until the production implementation publishes its contract; behavioral expectations above are fixed.
+
 ## EF Core broadcast target resolution (2026-08-22)
 
 ### Bounded target inventory

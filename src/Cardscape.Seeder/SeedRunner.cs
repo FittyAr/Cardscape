@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Infrastructure.Persistence;
+using Cardscape.Infrastructure.Persistence.Outbox;
 using Cardscape.Seeder.Configuration;
 using Cardscape.Seeder.Persistence;
 using Cardscape.Seeder.Reporting;
@@ -177,78 +178,69 @@ public sealed class SeedRunner : IDisposable
 
     private static async Task WipeAsync(CardscapeDbContext db, SeedReport report, CancellationToken cancellationToken)
     {
-        // Order matters: every row that has a foreign key must
-        // be deleted before the row it points at. We use raw
-        // DELETE statements so the EF Core change tracker does
-        // not blow up trying to re-resolve navigation
-        // properties. The migrations table is intentionally
-        // skipped so the schema stays.
-        string[] tablesInDeleteOrder =
+        // Order matters: every row that has a foreign key must be deleted before
+        // the row it points at. ExecuteDeleteAsync keeps the operation set-based,
+        // bypasses change tracking and lets each EF Core provider generate SQL.
+        // The migrations table is intentionally skipped so the schema stays.
+        var tablesInDeleteOrder = new (string Name, Func<Task<int>> Delete)[]
         {
-            "webhook_deliveries",
-            "webhook_endpoints",
-            "inbound_email_addresses",
-            "google_calendar_connections",
-            "github_pull_request_links",
-            "github_repo_links",
-            "slack_channels",
-            "slack_workspaces",
-            "saml_connections",
-            "scim_tokens",
-            "oauth_access_tokens",
-            "oauth_authorization_codes",
-            "oauth_apps",
-            "revoked_tokens",
-            "password_resets",
-            "totp_credentials",
-            "external_logins",
-            "idempotency_keys",
-            "background_jobs",
-            "api_tokens",
-            "notifications",
-            "activities",
-            "comments",
-            "checklist_items",
-            "checklists",
-            "attachments",
-            "card_votes",
-            "card_recurrences",
-            "card_snoozes",
-            "card_mirrors",
-            "card_aging_settings",
-            "card_labels",
-            "card_members",
-            "custom_field_values",
-            "custom_field_definitions",
-            "dashcards",
-            "cards",
-            "lists",
-            "labels",
-            "board_automation_rules",
-            "board_extensions",
-            "board_stars",
-            "board_members",
-            "boards",
-            "workspace_invitations",
-            "workspace_members",
-            "workspaces",
-            "user_preferences",
-            "users",
+            ("domain_event_outbox", () => db.Set<DomainEventOutboxMessage>().ExecuteDeleteAsync(cancellationToken)),
+            ("webhook_deliveries", () => db.Set<WebhookDelivery>().ExecuteDeleteAsync(cancellationToken)),
+            ("webhook_endpoints", () => db.Set<WebhookEndpoint>().ExecuteDeleteAsync(cancellationToken)),
+            ("inbound_email_addresses", () => db.Set<InboundEmailAddress>().ExecuteDeleteAsync(cancellationToken)),
+            ("google_calendar_connections", () => db.GoogleCalendarConnections.ExecuteDeleteAsync(cancellationToken)),
+            ("github_pull_request_links", () => db.Set<GitHubPullRequestLink>().ExecuteDeleteAsync(cancellationToken)),
+            ("github_repo_links", () => db.Set<GitHubRepoLink>().ExecuteDeleteAsync(cancellationToken)),
+            ("slack_channels", () => db.Set<SlackChannel>().ExecuteDeleteAsync(cancellationToken)),
+            ("slack_workspaces", () => db.Set<SlackWorkspace>().ExecuteDeleteAsync(cancellationToken)),
+            ("saml_connections", () => db.SamlConnections.ExecuteDeleteAsync(cancellationToken)),
+            ("scim_tokens", () => db.ScimTokens.ExecuteDeleteAsync(cancellationToken)),
+            ("oauth_access_tokens", () => db.OAuthAccessTokens.ExecuteDeleteAsync(cancellationToken)),
+            ("oauth_authorization_codes", () => db.OAuthAuthorizationCodes.ExecuteDeleteAsync(cancellationToken)),
+            ("oauth_apps", () => db.OAuthApps.ExecuteDeleteAsync(cancellationToken)),
+            ("revoked_tokens", () => db.RevokedTokens.ExecuteDeleteAsync(cancellationToken)),
+            ("password_resets", () => db.PasswordResets.ExecuteDeleteAsync(cancellationToken)),
+            ("totp_credentials", () => db.TotpCredentials.ExecuteDeleteAsync(cancellationToken)),
+            ("external_logins", () => db.ExternalLogins.ExecuteDeleteAsync(cancellationToken)),
+            ("idempotency_keys", () => db.IdempotencyKeys.ExecuteDeleteAsync(cancellationToken)),
+            ("background_jobs", () => db.BackgroundJobs.ExecuteDeleteAsync(cancellationToken)),
+            ("api_tokens", () => db.ApiTokens.ExecuteDeleteAsync(cancellationToken)),
+            ("notifications", () => db.Notifications.ExecuteDeleteAsync(cancellationToken)),
+            ("activities", () => db.Activities.ExecuteDeleteAsync(cancellationToken)),
+            ("comments", () => db.Comments.ExecuteDeleteAsync(cancellationToken)),
+            ("checklist_items", () => db.ChecklistItems.ExecuteDeleteAsync(cancellationToken)),
+            ("checklists", () => db.Checklists.ExecuteDeleteAsync(cancellationToken)),
+            ("attachments", () => db.Attachments.ExecuteDeleteAsync(cancellationToken)),
+            ("card_votes", () => db.CardVotes.ExecuteDeleteAsync(cancellationToken)),
+            ("card_recurrences", () => db.CardRecurrences.ExecuteDeleteAsync(cancellationToken)),
+            ("card_snoozes", () => db.CardSnoozes.ExecuteDeleteAsync(cancellationToken)),
+            ("card_mirrors", () => db.CardMirrors.ExecuteDeleteAsync(cancellationToken)),
+            ("card_aging_settings", () => db.CardAgingSettings.ExecuteDeleteAsync(cancellationToken)),
+            ("card_labels", () => db.Set<CardLabel>().ExecuteDeleteAsync(cancellationToken)),
+            ("card_members", () => db.Set<CardMember>().ExecuteDeleteAsync(cancellationToken)),
+            ("custom_field_values", () => db.CustomFieldValues.ExecuteDeleteAsync(cancellationToken)),
+            ("custom_field_definitions", () => db.CustomFieldDefinitions.ExecuteDeleteAsync(cancellationToken)),
+            ("dashcards", () => db.Set<Dashcard>().ExecuteDeleteAsync(cancellationToken)),
+            ("cards", () => db.Cards.ExecuteDeleteAsync(cancellationToken)),
+            ("lists", () => db.Lists.ExecuteDeleteAsync(cancellationToken)),
+            ("labels", () => db.Labels.ExecuteDeleteAsync(cancellationToken)),
+            ("board_automation_rules", () => db.Set<BoardAutomationRule>().ExecuteDeleteAsync(cancellationToken)),
+            ("board_extensions", () => db.BoardExtensions.ExecuteDeleteAsync(cancellationToken)),
+            ("board_stars", () => db.BoardStars.ExecuteDeleteAsync(cancellationToken)),
+            ("board_members", () => db.Set<BoardMember>().ExecuteDeleteAsync(cancellationToken)),
+            ("boards", () => db.Boards.ExecuteDeleteAsync(cancellationToken)),
+            ("workspace_invitations", () => db.WorkspaceInvitations.ExecuteDeleteAsync(cancellationToken)),
+            ("workspace_members", () => db.Set<WorkspaceMember>().ExecuteDeleteAsync(cancellationToken)),
+            ("workspaces", () => db.Workspaces.ExecuteDeleteAsync(cancellationToken)),
+            ("user_preferences", () => db.Set<UserPreferences>().ExecuteDeleteAsync(cancellationToken)),
+            ("users", () => db.Users.ExecuteDeleteAsync(cancellationToken)),
         };
 
-        foreach (string table in tablesInDeleteOrder)
+        foreach ((string table, Func<Task<int>> delete) in tablesInDeleteOrder)
         {
             try
             {
-                // The table name is picked from a hard-coded
-                // list above, not user input — interpolating is
-                // intentional and the EF1002 warning does not
-                // apply. The #pragma keeps the warning
-                // suppressed for this single statement.
-#pragma warning disable EF1002
-                int deleted = await db.Database.ExecuteSqlRawAsync(
-                    $"DELETE FROM {table}", cancellationToken);
-#pragma warning restore EF1002
+                int deleted = await delete();
                 if (deleted > 0)
                 {
                     report.Log(new SeedLogEntry(DateTimeOffset.UtcNow, SeedLogLevel.Info, "Wipe",
@@ -257,12 +249,7 @@ public sealed class SeedRunner : IDisposable
             }
             catch (Exception ex)
             {
-                // Some providers (PostgreSQL in particular)
-                // use quoted identifiers; we don't quote here
-                // because all our migration tables are
-                // snake_case. The DELETE either matches or
-                // throws "no such table" on a fresh DB; both
-                // are tolerable.
+                // A missing table is tolerable on a fresh or partially migrated database.
                 report.Log(new SeedLogEntry(DateTimeOffset.UtcNow, SeedLogLevel.Warning, "Wipe",
                     $"  · {table}: {ex.Message}"));
             }

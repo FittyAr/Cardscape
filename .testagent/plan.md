@@ -1,5 +1,27 @@
 # Test implementation plan
 
+## Transactional EF Core domain-event outbox (2026-08-22)
+
+### Phase 1 — persistence interception
+
+- [x] `SavingChanges_WithOneEventAndTwoBroadcasters_PersistsOneDeliveryPerBroadcasterAndClearsAggregateEvents`: use real SQLite, a real aggregate event, and two deterministic fake broadcasters; assert aggregate row, exact delivery count/distinct broadcaster identities, event type/payload, and empty aggregate event collection.
+- [x] `SavingChanges_WhenOutboxInsertFails_RollsBackAggregateAndPreservesDomainEvents`: inject a relational command failure during the outbox insert and assert the implicit transaction rolls back both aggregate and deliveries while preserving the event for retry.
+
+### Phase 2 — processing isolation and retry
+
+- [x] `ProcessPendingAsync_WhenBroadcasterFails_RecordsAttemptAndErrorThenSuccessfulRetryMarksProcessed`: first fake invocation throws, second succeeds; reload the delivery after each processor run and assert exact attempt count, non-empty then cleared error, null then non-null processed timestamp, and invocation count.
+- [x] `ProcessPendingAsync_WithIndependentBroadcasters_FailureDoesNotBlockSuccessfulDelivery`: one broadcaster throws and one succeeds for the same event; assert independent pending/processed state and one invocation each.
+
+### Phase 3 — concrete serialization contract
+
+- [x] `SerializeAndDeserialize_CardCreated_RoundTripsConcreteEventAndTypedValues`: assert concrete `CardCreated`, exact `CardId.Value`, `BoardListId.Value`, `CardTitle.Value`, and `OccurredAt` after production serializer round-trip.
+
+### Phase 4 — verification
+
+- [x] Build and run the narrow outbox test class.
+- [x] Re-open every test and map all acceptance items to concrete assertions.
+- [x] Perform pseudo-mutation/test-gap and assertion-quality review; record findings in `.testagent/status.md`.
+
 1. [x] Add `SourceProjects_HaveOnlyTheApprovedDirectProjectReferences` to parse every `src` project and compare the complete direct-reference graph, including the API-to-Web hosting exception.
 2. [x] Add registry tests for resolution, empty registry, invalid empty discriminator, duplicate discriminator, ordinal matching, source snapshotting, and defensive `RegisteredTypes` snapshots.
 3. [x] Build and run `Cardscape.ArchitectureTests` and the registry tests narrowly.

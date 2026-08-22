@@ -1,10 +1,13 @@
+using Cardscape.Application.Realtime;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Persistence.Interceptors;
+using Cardscape.Infrastructure.Persistence.Outbox;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Notifications;
 using Cardscape.Tests.Common.Fakes;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Cardscape.UnitTests.Infrastructure.Persistence;
@@ -50,8 +53,22 @@ public sealed class CardscapeDbContextModelTests
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync(TestContext.Current.CancellationToken);
+        var clock = new FakeClock();
+        await using ServiceProvider services = new ServiceCollection()
+            .AddSingleton(connection)
+            .AddScoped(serviceProvider => new CardscapeDbContext(
+                new DbContextOptionsBuilder<CardscapeDbContext>()
+                    .UseSqlite(serviceProvider.GetRequiredService<SqliteConnection>())
+                    .Options))
+            .BuildServiceProvider(validateScopes: true);
+        var processor = new DomainEventOutboxProcessor(
+            services.GetRequiredService<IServiceScopeFactory>(),
+            clock,
+            NullLogger<DomainEventOutboxProcessor>.Instance);
         var interceptor = new DomainEventsInterceptor(
-            new FakeDomainEventDispatcher(),
+            Array.Empty<IDomainEventBroadcaster>(),
+            processor,
+            clock,
             NullLogger<DomainEventsInterceptor>.Instance);
         var options = new DbContextOptionsBuilder<CardscapeDbContext>()
             .UseSqlite(connection)

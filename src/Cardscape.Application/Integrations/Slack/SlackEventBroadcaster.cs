@@ -26,8 +26,7 @@ namespace Cardscape.Application.Integrations.Slack;
 /// because Wolverine's static-handler discovery does not
 /// enumerate static methods for events that do not
 /// implement <c>Wolverine.IMessage</c>; the Domain layer
-/// cannot reference Wolverine. The infrastructure
-/// <c>WolverineDomainEventDispatcher</c> invokes
+/// cannot reference Wolverine. The infrastructure outbox invokes
 /// <see cref="IDomainEventBroadcaster.BroadcastAsync"/>
 /// directly — the type-based dispatch lives in this class.
 /// </para>
@@ -198,6 +197,11 @@ public sealed class SlackEventBroadcaster : IDomainEventBroadcaster
                 if (send.IsSuccess)
                 {
                     workspace.RecordUse(clock.UtcNow);
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"Slack delivery failed with code '{send.Error.Code}'.");
                 }
             }
         }
