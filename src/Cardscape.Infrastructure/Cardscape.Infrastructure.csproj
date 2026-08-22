@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>Cardscape.Infrastructure</AssemblyName>
     <RootNamespace>Cardscape.Infrastructure</RootNamespace>
-    <Description>Infrastructure layer: EF Core, Identity, storage, email, background jobs. Multi-provider (SQLite / PostgreSQL / MariaDB).</Description>
+    <Description>Infrastructure layer: EF Core, Identity, storage, email, background jobs. Multi-provider (SQLite / PostgreSQL / MySQL).</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -56,7 +56,7 @@
   <!--
     Database providers are NOT referenced from this project. The Application
     layer only depends on Microsoft.EntityFrameworkCore. The concrete provider
-    (SQLite, PostgreSQL, or MariaDB) is selected at composition time in the
+    (SQLite, PostgreSQL, or MySQL) is selected at composition time in the
     API project via a runtime configuration switch — this is what allows
     the same artifacts to target any of the three engines.
   -->

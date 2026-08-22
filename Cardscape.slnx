@@ -3,6 +3,8 @@
     <Project Path="src/Cardscape.Domain/Cardscape.Domain.csproj" />
     <Project Path="src/Cardscape.Application/Cardscape.Application.csproj" />
     <Project Path="src/Cardscape.Infrastructure/Cardscape.Infrastructure.csproj" />
+    <Project Path="src/Cardscape.Migrations.PostgreSql/Cardscape.Migrations.PostgreSql.csproj" />
+    <Project Path="src/Cardscape.Migrations.MySql/Cardscape.Migrations.MySql.csproj" />
     <Project Path="src/Cardscape.Api/Cardscape.Api.csproj" />
     <Project Path="src/Cardscape.Web/Cardscape.Web.csproj" />
     <Project Path="src/Cardscape.Mcp/Cardscape.Mcp.csproj" />

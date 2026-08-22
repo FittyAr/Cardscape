@@ -260,7 +260,7 @@ public sealed class RetentionSweeper(
 
         // The `Contains` predicate is translatable
         // across every supported provider (SQLite,
-        // PostgreSQL, MariaDB) and the IN-list is
+        // PostgreSQL, MySQL) and the IN-list is
         // parameterised so the bulk delete is safe
         // from injection.
         return await table

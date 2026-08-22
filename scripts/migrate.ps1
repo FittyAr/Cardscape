@@ -14,8 +14,8 @@
 # Notes:
 #   - The provider is selected via $env:Database__Provider (mirrors
 #     DesignTimeCardscapeDbContextFactory). Defaults to Sqlite.
-#   - The Infra project is the migration host. Commands are scoped to it.
-#   - For Postgres / MariaDB, the design-time factory points at
+#   - Each provider owns an independent migration assembly.
+#   - For PostgreSQL / MySQL, the design-time factory points at
 #     localhost:5432 / localhost:3306 with the cardscape/cardscape default creds.
 #     Override via $env:ConnectionStrings__Default if needed.
 # =============================================================================
@@ -29,6 +29,7 @@ param(
     [string]$Action,
 
     [string]$Name,
+    [ValidateSet('Sqlite', 'PostgreSQL', 'MySql')]
     [string]$Database,
     [string]$From,
     [string]$To,
@@ -39,7 +40,7 @@ param(
 
 . (Join-Path $PSScriptRoot '_common.ps1')
 
-if (-not (Test-Dotnet -RequirePreview)) { exit 1 }
+if (-not (Test-Dotnet)) { exit 1 }
 
 # Ensure dotnet-ef is installed. The repo uses Directory.Packages.props
 # (CPM), so the tool manifest in dotnet-tools.json is the source of truth.
@@ -60,20 +61,46 @@ if (-not $env:Database__Provider) {
 
 Write-Info "Effective provider: $($env:Database__Provider)"
 
-$project = $Script:InfraProject
+$provider = $env:Database__Provider.ToLowerInvariant()
+$startupArgs = @()
+$migrationOutput = 'Persistence/Migrations'
+$migrationLocation = 'src/Cardscape.Infrastructure/Persistence/Migrations/'
+
+switch ($provider) {
+    'sqlite' {
+        $project = $Script:InfraProject
+    }
+    { $_ -in 'postgresql', 'postgres', 'npgsql' } {
+        $project = Join-Path $RepoRoot 'src/Cardscape.Migrations.PostgreSql/Cardscape.Migrations.PostgreSql.csproj'
+        $startupArgs = @('--startup-project', $Script:ApiProject)
+        $migrationOutput = 'Migrations'
+        $migrationLocation = 'src/Cardscape.Migrations.PostgreSql/Migrations/'
+    }
+    'mysql' {
+        $project = Join-Path $RepoRoot 'src/Cardscape.Migrations.MySql/Cardscape.Migrations.MySql.csproj'
+        $startupArgs = @('--startup-project', $Script:ApiProject)
+        $migrationOutput = 'Migrations'
+        $migrationLocation = 'src/Cardscape.Migrations.MySql/Migrations/'
+    }
+    default {
+        Write-Err "Unsupported provider '$($env:Database__Provider)'. Use Sqlite, PostgreSQL, or MySql."
+        exit 2
+    }
+}
+
 if (-not (Test-Path $project)) {
-    Write-Err "Infra project not found: $project"
+    Write-Err "Migration project not found: $project"
     exit 1
 }
 
 switch ($Action) {
     'list' {
-        $args = @('ef', 'migrations', 'list', '--project', $project, '--no-build')
+        $args = @('ef', 'migrations', 'list', '--project', $project, '--no-build') + $startupArgs
         if ($Forward) { $args += $Forward }
         Run-Dotnet -Args $args | Out-Null
     }
     'apply' {
-        $args = @('ef', 'database', 'update', '--project', $project, '--no-build')
+        $args = @('ef', 'database', 'update', '--project', $project, '--no-build') + $startupArgs
         if ($Forward) { $args += $Forward }
         Invoke-Step -Message "Applying migrations" -Action {
             Run-Dotnet -Args $args | Out-Null
@@ -82,15 +109,15 @@ switch ($Action) {
     }
     'add' {
         if (-not $Name) { Write-Err "Pass -Name <MigrationName>."; exit 2 }
-        $args = @('ef', 'migrations', 'add', $Name, '--project', $project, '--no-build', '--output-dir', 'Persistence/Migrations')
+        $args = @('ef', 'migrations', 'add', $Name, '--project', $project, '--no-build', '--output-dir', $migrationOutput) + $startupArgs
         if ($Forward) { $args += $Forward }
         Invoke-Step -Message "Creating migration $Name" -Action {
             Run-Dotnet -Args $args | Out-Null
         }
-        Write-Ok "Migration $Name created under src/Cardscape.Infrastructure/Persistence/Migrations/."
+        Write-Ok "Migration $Name created under $migrationLocation."
     }
     'script' {
-        $args = @('ef', 'migrations', 'script', '--project', $project, '--no-build', '--idempotent')
+        $args = @('ef', 'migrations', 'script', '--project', $project, '--no-build', '--idempotent') + $startupArgs
         if ($From) { $args += @('--from', $From) }
         if ($To)   { $args += @('--to',   $To) }
         if ($Output) {
@@ -106,7 +133,7 @@ switch ($Action) {
     }
     'drop' {
         Confirm-Destructive -What "drop the database ($($env:Database__Provider))" -Force:$Force
-        $args = @('ef', 'database', 'drop', '--project', $project, '--no-build', '--force')
+        $args = @('ef', 'database', 'drop', '--project', $project, '--no-build', '--force') + $startupArgs
         if ($Forward) { $args += $Forward }
         Invoke-Step -Message "Dropping database" -Action {
             Run-Dotnet -Args $args | Out-Null
@@ -114,14 +141,14 @@ switch ($Action) {
     }
     'remove' {
         Confirm-Destructive -What "remove the most recent migration file" -Force:$Force
-        $args = @('ef', 'migrations', 'remove', '--project', $project, '--no-build', '--force')
+        $args = @('ef', 'migrations', 'remove', '--project', $project, '--no-build', '--force') + $startupArgs
         if ($Forward) { $args += $Forward }
         Invoke-Step -Message "Removing last migration" -Action {
             Run-Dotnet -Args $args | Out-Null
         }
     }
     'bundle' {
-        $args = @('ef', 'migrations', 'bundle', '--project', $project, '--no-build', '--self-contained', '-o', (Join-Path $RepoRoot 'efbundle'))
+        $args = @('ef', 'migrations', 'bundle', '--project', $project, '--no-build', '--self-contained', '-o', (Join-Path $RepoRoot 'efbundle')) + $startupArgs
         if ($Forward) { $args += $Forward }
         Invoke-Step -Message "Building efbundle" -Action {
             Run-Dotnet -Args $args | Out-Null

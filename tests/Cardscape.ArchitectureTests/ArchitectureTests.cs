@@ -156,10 +156,12 @@ public sealed class ArchitectureTests
                 ["Cardscape.Domain"] = [],
                 ["Cardscape.Application"] = ["Cardscape.Domain"],
                 ["Cardscape.Infrastructure"] = ["Cardscape.Application"],
+                ["Cardscape.Migrations.PostgreSql"] = ["Cardscape.Infrastructure"],
+                ["Cardscape.Migrations.MySql"] = ["Cardscape.Infrastructure"],
                 ["Cardscape.Web"] = [],
                 ["Cardscape.Seeder"] = ["Cardscape.Application", "Cardscape.Domain", "Cardscape.Infrastructure"],
                 ["Cardscape.Mcp"] = ["Cardscape.Application", "Cardscape.Infrastructure"],
-                ["Cardscape.Api"] = ["Cardscape.Application", "Cardscape.Infrastructure", "Cardscape.Seeder", "Cardscape.Web"],
+                ["Cardscape.Api"] = ["Cardscape.Application", "Cardscape.Infrastructure", "Cardscape.Migrations.MySql", "Cardscape.Migrations.PostgreSql", "Cardscape.Seeder", "Cardscape.Web"],
             };
 
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

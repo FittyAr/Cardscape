@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Cardscape.Migrations.PostgreSql</AssemblyName>
+    <RootNamespace>Cardscape.Migrations.PostgreSql</RootNamespace>
+    <Description>EF Core migration history for Cardscape on PostgreSQL.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

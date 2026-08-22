@@ -72,13 +72,11 @@ Before cutting a release, the following must be true.
 
 - [ ] `dotnet build` is green: `0 errors, 0 warnings`.
 - [ ] The ordinary `dotnet test` suite is green on SQLite.
-- [ ] `dotnet test --filter "Database=Sqlite"` passes all
-      unit, integration, and architecture tests.
-- [ ] EF Core migrations apply cleanly to fresh SQLite, PostgreSQL,
-      and MariaDB/MySQL databases.
-- [ ] The automated integration matrix is green against real SQLite,
-      PostgreSQL, and MariaDB/MySQL engines. A release may not replace
-      this gate with provider compilation or a manual smoke test.
+- [ ] EF Core migrations apply cleanly to fresh SQLite, PostgreSQL 17,
+      and MySQL 8.4 databases.
+- [ ] The automated provider-migration matrix is green against real
+      PostgreSQL and MySQL services. A release may not replace this gate
+      with provider compilation or a manual smoke test.
 - [ ] No `TODO` markers in the changed files of this release.
       (Long-lived TODOs are tracked as GitHub issues.)
 - [ ] No `// FIXME` markers without an issue reference.
@@ -105,7 +103,9 @@ Before cutting a release, the following must be true.
       with Claude Desktop (stdio) against a seeded
       workspace.
 - [ ] For multi-DB: at least one manual smoke test on
-      PostgreSQL and one on MariaDB (in Docker).
+      PostgreSQL and one on MySQL (in Docker).
+- [ ] MariaDB is not advertised unless its independent compatibility
+      gate is green with a stable EF Core 10 provider.
 
 ### Dependencies
 

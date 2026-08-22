@@ -868,7 +868,6 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(16000)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("DueDate")
@@ -1354,7 +1353,6 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("EventMappingsJson")
                         .IsRequired()
-                        .HasMaxLength(65535)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("GoogleEmail")

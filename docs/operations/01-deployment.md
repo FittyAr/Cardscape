@@ -229,7 +229,7 @@ sections:
 | Variable | Section | Default | Notes |
 |---|---|---|---|
 | `ASPNETCORE_ENVIRONMENT` | top | `Production` | `Development` for local dev |
-| `Database__Provider` | `Database` | `Sqlite` | one of `Sqlite`, `PostgreSQL`, `MariaDB` |
+| `Database__Provider` | `Database` | `Sqlite` | one of `Sqlite`, `PostgreSQL`, `MySql` |
 | `Database__ConnectionString` | `Database` | `Data Source=/data/cardscape.db` | provider-specific |
 | `Cardscape__JwtSecret` | `Cardscape` | (required) | 32+ random bytes, base64 |
 | `Otel__Endpoint` | `Otel` | (none) | OTel collector URL, e.g. `http://otel-collector:4317` |
@@ -284,23 +284,17 @@ configuration in
 [`src/Cardscape.Infrastructure/Persistence/`](../../src/Cardscape.Infrastructure/Persistence/)
 to call `UseNpgsql` instead of `UseSqlite`.
 
-> **Known follow-up.** The current EF Core migrations were
-> generated with the SQLite design-time factory, so the
-> snapshot is SQLite-typed. Switching the runtime provider
-> to PostgreSQL trips `PendingModelChangesWarning` at
-> startup. The full root cause + one-pass fix are documented
-> in
-> [`12-postgresql-future-work.md`](12-postgresql-future-work.md).
-> Until that pass lands, the documented self-hostable stack
-> is SQLite-only.
+> PostgreSQL and MySQL use provider-specific EF Core migration assemblies.
+> MariaDB remains gated; see
+> [`12-mariadb-future-work.md`](12-mariadb-future-work.md).
 
 ---
 
-## 6. The MariaDB deployment
+## 6. The MySQL deployment
 
-Same as PostgreSQL, with `Database__Provider=MariaDB` and
-the MariaDB connection string. The image is
-`mariadb:11`.
+Use `Database__Provider=MySql` with a MySQL connection string. The
+validated release image is `mysql:8.4`. MariaDB is not currently a
+supported alias; see `12-mariadb-future-work.md`.
 
 ---
 

@@ -31,7 +31,7 @@ param(
 if ($Release -and -not $Configuration) { $Configuration = 'Release' }
 if (-not $Configuration) { $Configuration = 'Debug' }
 
-if (-not (Test-Dotnet -RequirePreview)) { exit 1 }
+if (-not (Test-Dotnet)) { exit 1 }
 
 $dotnetArgs = @('build')
 

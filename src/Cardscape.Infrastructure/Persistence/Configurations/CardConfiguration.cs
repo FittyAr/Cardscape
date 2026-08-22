@@ -21,7 +21,6 @@ public sealed class CardConfiguration : IEntityTypeConfiguration<Card>
             .IsRequired();
         b.Property(x => x.Description)
             .HasConversion(d => d.Value, v => CardDescription.Create(v).Value)
-            .HasMaxLength(CardDescription.MaxLength)
             .IsRequired();
         b.Property(x => x.Position).HasConversion(p => p.Value, v => Position.From(v)).IsRequired();
         b.Property(x => x.DueDate);

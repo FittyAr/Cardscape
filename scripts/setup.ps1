@@ -34,7 +34,7 @@ $failed = $false
 # 1. .NET SDK
 # -----------------------------------------------------------------------------
 Write-Step "Checking .NET SDK"
-if (-not (Test-Dotnet -RequirePreview)) {
+if (-not (Test-Dotnet)) {
     Write-Err "Your installed SDK does not match global.json. Install the required band."
     Write-Info "Required: $(Get-Content $Script:GlobalJson | ConvertFrom-Json).sdk.version"
     Write-Info "Get it from https://dotnet.microsoft.com/download/dotnet/11.0"

@@ -61,6 +61,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Cardscape.Application\Cardscape.Application.csproj" />
     <ProjectReference Include="..\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
+    <ProjectReference Include="..\Cardscape.Migrations.PostgreSql\Cardscape.Migrations.PostgreSql.csproj" />
+    <ProjectReference Include="..\Cardscape.Migrations.MySql\Cardscape.Migrations.MySql.csproj" />
     <ProjectReference Include="..\Cardscape.Web\Cardscape.Web.csproj" />
     <!--
       Optional, feature-gated seeder. Scaffolds a demo dataset
@@ -73,11 +75,8 @@
 
   <ItemGroup>
     <!--
-      Migrations: a single set of migrations under
-      src/Cardscape.Infrastructure/Persistence\Migrations is the canonical
-      schema. EF Core's relational abstractions let the same migration
-      code run on SQLite, PostgreSQL, and MariaDB; per-provider overrides
-      go inside the Up/Down methods with explicit provider checks.
+      SQLite migrations remain in Infrastructure. PostgreSQL and MySQL
+      use their provider-specific migration assemblies referenced above.
     -->
     <EmbeddedResource Include="..\Cardscape.Infrastructure\Persistence\Migrations\*.cs" />
   </ItemGroup>

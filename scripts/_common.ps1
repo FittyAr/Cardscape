@@ -80,11 +80,6 @@ function Write-Err {
 # -----------------------------------------------------------------------------
 
 function Test-Dotnet {
-    [CmdletBinding()]
-    param(
-        [switch]$RequirePreview
-    )
-
     if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
         Write-Err ".NET SDK not found on PATH. Install the SDK pinned in global.json and retry."
         return $false
@@ -94,13 +89,6 @@ function Test-Dotnet {
     if (-not $installed) {
         Write-Err "Failed to read dotnet --version."
         return $false
-    }
-
-    if ($RequirePreview) {
-        if ($installed -notmatch '-' -and $installed -notmatch 'preview') {
-            Write-Warn "Installed SDK is $installed (stable). global.json requires a preview band."
-            return $false
-        }
     }
 
     Write-Ok "dotnet $installed"

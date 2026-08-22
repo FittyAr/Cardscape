@@ -220,7 +220,7 @@ function Menu-Run {
     Write-Host '   2) Web (Blazor WASM client)' -ForegroundColor White
     Write-Host '   3) MCP server'              -ForegroundColor White
     Write-Host '   4) API with PostgreSQL'     -ForegroundColor White
-    Write-Host '   5) API with MariaDB'        -ForegroundColor White
+    Write-Host '   5) API with MySQL'          -ForegroundColor White
     Write-Host '   6) API with custom URL'     -ForegroundColor White
     Write-Host '   b) Back'                    -ForegroundColor DarkGray
     Muted '   tip: services block until you Ctrl+C them — output streams live.'
@@ -230,7 +230,7 @@ function Menu-Run {
         '2' { Invoke-Cardscape @('run', 'web') }
         '3' { Invoke-Cardscape @('run', 'mcp') }
         '4' { Invoke-Cardscape @('run', 'api', '-Database', 'PostgreSQL') }
-        '5' { Invoke-Cardscape @('run', 'api', '-Database', 'MariaDB') }
+        '5' { Invoke-Cardscape @('run', 'api', '-Database', 'MySql') }
         '6' {
             $u = Read-Host '   ASPNETCORE_URLS (e.g. http://localhost:5291)'
             if ($u) { Invoke-Cardscape @('run', 'api', '--', '--urls', $u) }
@@ -245,7 +245,7 @@ function Menu-Migrate {
     Write-Host '   1) List applied + pending'   -ForegroundColor White
     Write-Host '   2) Apply pending (Sqlite)'   -ForegroundColor White
     Write-Host '   3) Apply pending (Postgres)' -ForegroundColor White
-    Write-Host '   4) Apply pending (MariaDB)'  -ForegroundColor White
+    Write-Host '   4) Apply pending (MySQL)'    -ForegroundColor White
     Write-Host '   5) Add a new migration'      -ForegroundColor White
     Write-Host '   6) Generate SQL script'      -ForegroundColor White
     Write-Host '   7) Drop the database'        -ForegroundColor White
@@ -257,7 +257,7 @@ function Menu-Migrate {
         '1' { Invoke-Cardscape @('migrate', 'list') }
         '2' { Invoke-Cardscape @('migrate', 'apply', '-Database', 'Sqlite') }
         '3' { Invoke-Cardscape @('migrate', 'apply', '-Database', 'PostgreSQL') }
-        '4' { Invoke-Cardscape @('migrate', 'apply', '-Database', 'MariaDB') }
+        '4' { Invoke-Cardscape @('migrate', 'apply', '-Database', 'MySql') }
         '5' {
             $n = Read-Host '   migration name (e.g. IssueFooBar)'
             if ($n) { Invoke-Cardscape @('migrate', 'add', $n) }
@@ -270,7 +270,7 @@ function Menu-Migrate {
         }
         '7' {
             Alert '   This DROPS the database. The sub-script will ask for confirmation.'
-            $db = Read-Host '   provider [Sqlite/PostgreSQL/MariaDB] (Enter for Sqlite)'
+            $db = Read-Host '   provider [Sqlite/PostgreSQL/MySql] (Enter for Sqlite)'
             if (-not $db) { $db = 'Sqlite' }
             Invoke-Cardscape @('migrate', 'drop', '-Database', $db)
         }

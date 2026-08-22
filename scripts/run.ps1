@@ -11,7 +11,7 @@
 #
 # Notes:
 #   - Default provider is Sqlite (Data Source=Data/cardscape.db).
-#   - For Postgres / MariaDB you'll need a running instance — see
+#   - For PostgreSQL / MySQL you'll need a running instance — see
 #     scripts/db.ps1 helpers or docker-compose.dev.yml + the postgres compose.
 #   - The API also hosts the Blazor WASM client (see src/Cardscape.Api),
 #     so `api` is the typical one-shot run.
@@ -25,7 +25,7 @@ param(
     [ValidateSet('api', 'web', 'mcp')]
     [string]$Service,
 
-    [ValidateSet('Sqlite', 'PostgreSQL', 'MariaDB')]
+    [ValidateSet('Sqlite', 'PostgreSQL', 'MySql')]
     [string]$Database,
 
     [string]$ConnectionString,

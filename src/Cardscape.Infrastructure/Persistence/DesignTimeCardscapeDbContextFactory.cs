@@ -12,25 +12,27 @@ public sealed class DesignTimeCardscapeDbContextFactory : IDesignTimeDbContextFa
     public CardscapeDbContext CreateDbContext(string[] args)
     {
         var provider = Environment.GetEnvironmentVariable("Database__Provider") ?? "Sqlite";
+        var configuredConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Default");
 
         var builder = new DbContextOptionsBuilder<CardscapeDbContext>();
 
         switch (provider.ToLowerInvariant())
         {
             case "sqlite":
-                builder.UseSqlite("Data Source=Data/cardscape.db",
+                builder.UseSqlite(configuredConnectionString ?? "Data Source=Data/cardscape.db",
                     b => b.MigrationsAssembly("Cardscape.Infrastructure"));
                 break;
             case "postgresql":
             case "postgres":
             case "npgsql":
-                builder.UseNpgsql("Host=localhost;Database=cardscape;Username=cardscape;Password=cardscape",
-                    b => b.MigrationsAssembly("Cardscape.Infrastructure"));
+                builder.UseNpgsql(configuredConnectionString
+                    ?? "Host=localhost;Database=cardscape;Username=cardscape;Password=cardscape",
+                    b => b.MigrationsAssembly("Cardscape.Migrations.PostgreSql"));
                 break;
-            case "mariadb":
             case "mysql":
-                builder.UseMySQL("server=localhost;database=cardscape;user=cardscape;password=cardscape",
-                    b => b.MigrationsAssembly("Cardscape.Infrastructure"));
+                builder.UseMySQL(configuredConnectionString
+                    ?? "server=localhost;database=cardscape;user=cardscape;password=cardscape",
+                    b => b.MigrationsAssembly("Cardscape.Migrations.MySql"));
                 break;
             default:
                 throw new InvalidOperationException($"Unsupported database provider: {provider}");

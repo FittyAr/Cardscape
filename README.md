@@ -15,7 +15,7 @@ with a complete feature surface — kanban boards, calendar,
 automation engine, extensions, Inbox, Planner, and AI — and a
 Model Context Protocol server that lets AI assistants read,
 create, and move cards on your behalf. It runs on **.NET 10**,
-persists to **SQLite**, **PostgreSQL**, or **MariaDB**, and ships
+persists to **SQLite**, **PostgreSQL**, or **MySQL**, and ships
 under the **Reciprocal Public License 1.5**.
 
 It is the only self-hostable kanban with a first-class MCP server.
@@ -33,7 +33,7 @@ It is the only self-hostable kanban with a first-class MCP server.
   drives the boards through the same `Application` layer a human
   does through the web UI.
 - **Multi-database without lock-in.** SQLite for solo and dev,
-  PostgreSQL or MariaDB for production. The provider is
+  PostgreSQL or MySQL for production. The provider is
   configuration, not code.
 - **A complete feature surface.** Workspaces, boards, lists,
   cards, members, comments, checklists, attachments, calendar,
@@ -263,12 +263,11 @@ through configuration:
 |---|---|---|
 | SQLite | `Data Source=Data/cardscape.db` | Solo, dev, single-node self-host |
 | PostgreSQL | `Host=db;Port=5432;Database=cardscape;Username=…;Password=…` | Production, multi-user |
-| MariaDB | `Server=db;Port=3306;Database=cardscape;Uid=…;Pwd=…` | Production, MySQL shops |
+| MySQL | `Server=db;Port=3306;Database=cardscape;Uid=…;Pwd=…` | Production, MySQL 8.4+ |
 
-Set `Database__Provider` to `Sqlite`, `PostgreSQL`, or `MariaDB`
-to match the connection string. Migrations live in a single set
-under `src/Cardscape.Infrastructure/Persistence/Migrations/`
-that runs on all three engines.
+Set `Database__Provider` to `Sqlite`, `PostgreSQL`, or `MySql`
+to match the connection string. Each engine has an EF Core migration
+history generated for its native types.
 
 ---
 
@@ -502,8 +501,8 @@ end-to-end vertical slice for a single user:
   archive / move. Boards can be **starred**; cards can be
   **assigned**, **labeled**, **dated**, **completed**, and
   **commented on**.
-- **Multi-DB**: SQLite (default), PostgreSQL, MariaDB. The
-  same EF Core migration runs on all three; the provider is
+- **Multi-DB**: SQLite (default), PostgreSQL, MySQL. Native
+  EF Core migration histories are selected with the provider,
   picked at boot from configuration.
 - **Blazor WebAssembly client** (`src/Cardscape.Web/`) that
   covers the full surface: sign up, sign in, workspaces, boards,

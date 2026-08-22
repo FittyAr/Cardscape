@@ -92,16 +92,17 @@ public static class InfrastructureServiceCollectionExtensions
                 case "postgresql":
                 case "postgres":
                 case "npgsql":
-                    options.UseNpgsql(connectionString, b => b.MigrationsAssembly("Cardscape.Infrastructure"));
+                    options.UseNpgsql(connectionString,
+                        postgres => postgres.MigrationsAssembly("Cardscape.Migrations.PostgreSql"));
                     break;
-                case "mariadb":
                 case "mysql":
-                    options.UseMySQL(connectionString, b => b.MigrationsAssembly("Cardscape.Infrastructure"));
+                    options.UseMySQL(connectionString,
+                        mySql => mySql.MigrationsAssembly("Cardscape.Migrations.MySql"));
                     break;
                 default:
                     throw new InvalidOperationException(
                         $"Unsupported database provider: {provider}. " +
-                        "Use Sqlite, PostgreSQL, or MariaDB.");
+                        "Use Sqlite, PostgreSQL, or MySql.");
             }
         });
 

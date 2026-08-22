@@ -10,10 +10,10 @@
 #   pwsh scripts/db.ps1 tables                        # list tables via dotnet ef
 #
 # Notes:
-#   - Sqlite is the default. Postgres / MariaDB use the same connection string
+#   - Sqlite is the default. PostgreSQL / MySQL use the same connection string
 #     layout that DesignTimeCardscapeDbContextFactory expects.
 #   - `reset` runs migrate.ps1 drop + apply under the hood. For Postgres /
-#     MariaDB, the database itself must already exist (the role/user too).
+#     MySQL, the database itself must already exist (the role/user too).
 # =============================================================================
 
 #Requires -Version 7.0
@@ -24,7 +24,7 @@ param(
     [ValidateSet('info', 'reset', 'open', 'tables')]
     [string]$Action,
 
-    [ValidateSet('Sqlite', 'PostgreSQL', 'MariaDB')]
+    [ValidateSet('Sqlite', 'PostgreSQL', 'MySql')]
     [string]$Database,
     [string]$ConnectionString,
     [switch]$DropOnly,
@@ -43,7 +43,7 @@ $provider = $env:Database__Provider
 $defaultCs = switch ($provider.ToLowerInvariant()) {
     'sqlite' { 'Data Source=Data/cardscape.db' }
     'postgresql' { 'Host=localhost;Port=5432;Database=cardscape;Username=cardscape;Password=cardscape' }
-    'mariadb'    { 'server=localhost;port=3306;database=cardscape;user=cardscape;password=cardscape' }
+    'mysql'      { 'server=localhost;port=3306;database=cardscape;user=cardscape;password=cardscape' }
     default {
         if ($env:ConnectionStrings__Default) { $env:ConnectionStrings__Default }
         else { 'Data Source=Data/cardscape.db' }

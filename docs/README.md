@@ -16,7 +16,7 @@ If you are a new contributor (human or AI agent), follow this order:
 1. [`AGENTS.md`](AGENTS.md) — the **contract** that any agent
    (human or AI) working on the repo must follow. Covers
    stack, design philosophy, working rules, the MCP pillar,
-   the SQLite-only test matrix, and the available skills.
+   the persistence validation matrix, and the available skills.
 2. [`roadmap/02-product-positioning.md`](roadmap/02-product-positioning.md)
    — the project's name, tagline, positioning pillars,
    vocabulary guide, and voice. **Read this before writing
@@ -45,8 +45,7 @@ If you are a new contributor (human or AI agent), follow this order:
    — recipe for adding a new feature (use case → endpoint
    → MCP tool → UI).
 10. [`development/03-testing-strategy.md`](development/03-testing-strategy.md)
-    — why the test matrix is SQLite-only today and how it
-    grows.
+    — the fast SQLite suite and the real-engine release gates.
 11. [`api/00-conventions.md`](api/00-conventions.md) — REST
     conventions for the public API.
 
@@ -57,7 +56,7 @@ one; mark it as `Superseded by ADR NNNN` instead.
 
 | ADR | Title | Status |
 |---|---|---|
-| [0001](adr/0001-multi-provider-strategy.md) | Multi-provider persistence (SQLite, PostgreSQL, MariaDB) with SQLite-only test matrix | Accepted (2026-07-27) |
+| [0001](adr/0001-multi-provider-strategy.md) | Multi-provider persistence: SQLite development, PostgreSQL/MySQL release gates | Accepted (amended 2026-08-22) |
 | [0002](adr/0002-mcp-server.md) | Model Context Protocol (MCP) server | Accepted (2026-07-27) |
 | [0009](adr/0009-radzen-only-ui.md) | Radzen-only UI: kill HTML/JS/CSS custom in `Cardscape.Web` | Accepted (2026-08-03) |
 | [0010](adr/0010-client-side-culture-switcher.md) | Client-side culture switcher (Blazor WebAssembly) | Accepted (2026-08-04) |
@@ -94,7 +93,7 @@ docs/
 │   ├── 00-onboarding.md              # 10-minute local setup
 │   ├── 01-conventions.md             # C# style, async, EF Core rules
 │   ├── 02-vertical-slices.md         # recipe for adding a feature
-│   ├── 03-testing-strategy.md        # SQLite-only test matrix
+│   ├── 03-testing-strategy.md        # SQLite suite + real-engine migration gates
 │   └── 04-release-process.md         # versioning, tags, NuGet, Docker
 ├── i18n/                              # internationalization (EN + ES today)
 │   ├── 01-policy.md                  # what gets translated, who translates

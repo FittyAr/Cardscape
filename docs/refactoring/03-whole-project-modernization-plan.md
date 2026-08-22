@@ -15,8 +15,8 @@ Reglas permanentes:
 - Favorecer APIs y patrones modernos soportados por .NET 10; no introducir previews ni actualizar `global.json` sin autorización explícita.
 - Mantener Clean Architecture sólo donde los límites aporten independencia real. Eliminar abstracciones, service locators y capas ceremoniales que no protejan una frontera.
 - Organizar Application/API/Web por capacidad o bounded context y evitar archivos monolíticos.
-- Desarrollar y ejecutar la suite ordinaria sobre SQLite, manteniendo compatibilidad de producto con PostgreSQL y MariaDB/MySQL.
-- No publicar una release final hasta validar automáticamente migraciones y comportamiento de integración sobre SQLite, PostgreSQL y MariaDB/MySQL reales. Una declaración de compatibilidad sin matriz verde no satisface este gate.
+- Desarrollar y ejecutar la suite ordinaria sobre SQLite, manteniendo compatibilidad de release comprobada con PostgreSQL y MySQL.
+- No anunciar MariaDB ni publicar una release que lo incluya hasta que un provider EF Core 10 estable supere migraciones e integración sobre MariaDB real. Una declaración de compatibilidad sin matriz verde no satisface este gate.
 - Usar exclusivamente componentes Radzen en la UI. CSS isolation se acepta sólo para interacciones sin equivalente Radzen, como un kanban; cualquier otra excepción deberá quedar justificada.
 - No mantener rutas, contratos, migraciones o adaptadores obsoletos por compatibilidad. Los cambios incompatibles deben actualizar en el mismo bloque código, pruebas y documentación.
 - Cada bloque termina con build Release sin warnings, pruebas pertinentes verdes, actualización de este checklist, commit pequeño y push a `origin/master`.
@@ -41,7 +41,7 @@ Reglas permanentes:
 - [x] La documentación normativa principal fue reconciliada con Wolverine, .NET 10 y las versiones centrales instaladas. Los ADR y auditorías históricas se preservan sin reescritura.
 - [ ] `Directory.Build.props` suprime una lista extraordinariamente amplia y duplicada de analizadores. Esto reduce el valor de `TreatWarningsAsErrors`; debe reducirse gradualmente con justificación por regla.
 - [ ] Existen archivos con demasiadas responsabilidades: `CardDetail.razor` (~58 KB), `BoardDetail.razor` (~34 KB), `CardCommands.cs` (~40 KB), el registro DI de Infrastructure (~32 KB), `BoardsTools.cs` (~31 KB) y `Api/Program.cs` (~18 KB).
-- [ ] La migración documentada por proveedor contradice la estructura actual de migraciones consolidadas; debe implementarse y comprobarse una estrategia multi-provider que mantenga SQLite para desarrollo/pruebas ordinarias y bloquee releases sin PostgreSQL y MariaDB/MySQL verdes.
+- [x] SQLite, PostgreSQL y MySQL tienen assemblies de migración EF Core separados; CI aplica las historias externas sobre PostgreSQL 17 y MySQL 8.4 reales y el job bloquea releases. MariaDB queda explícitamente fuera hasta disponer de provider EF Core 10 estable.
 - [ ] Hay comentarios y descripciones de proyecto que siguen llamando “scaffold/placeholder” a código activo; pueden ocultar funcionalidad incompleta real.
 - [ ] La solución contiene documentación histórica extensa y contradictoria con el estado actual. Los ADR se preservan, pero la documentación normativa debe reconciliarse.
 - [x] Las rutas destructivas del Seeder estaban expuestas con `AllowAnonymous`; el grupo completo ahora exige `AdminOnly` y tiene cobertura 401/403/admin.
@@ -187,6 +187,7 @@ Reglas permanentes:
 | 2026-08-22 | Índices alineados a consultas EF | 19 índices compuestos/nuevos cubren filtros, orden y paginación reales; 13 índices prefijo redundantes fueron retirados mediante migración EF Core | Build 0/0; migración completa aplicada; suite 901 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-22 | Corrección del objetivo multi-provider | Revertida la reducción SQLite-only; SQLite sigue siendo el entorno ordinario, mientras PostgreSQL y MariaDB/MySQL son compatibilidad obligatoria y gate automático de toda release final | Build 0/0; suite SQLite 901 pass, 0 fail, 1 skip | Incluido en este commit |
 | 2026-08-22 | Modelo relacional neutral | Retiradas 19 declaraciones `HasColumnType("TEXT")` del modelo común; EF Core vuelve a seleccionar tipos nativos por provider y el historial SQLite preproducción fue normalizado sin migración destructiva | Build 0/0; modelo SQLite sin cambios pendientes; suite 901 pass, 0 fail, 1 skip; 0 SQL manual | Incluido en este commit |
+| 2026-08-22 | Migraciones nativas PostgreSQL/MySQL | Assemblies separados generados por EF Core, factory design-time respeta la conexión externa, textos grandes usan tipos nativos y CI aplica historias limpias sobre PostgreSQL 17/MySQL 8.4; MariaDB no se anuncia tras reproducir incompatibilidad del provider Oracle | Build 0/0; suite 901 pass, 0 fail, 1 skip; SQLite sin cambios pendientes; PostgreSQL 17/MySQL 8.4 aplicados desde cero; snapshots sin cambios; actionlint 0; 0 SQL manual | Incluido en este commit |
 
 ## 5. Criterio de completitud
 
