@@ -102,8 +102,7 @@ public sealed class ApiTokenService(
                     : "API token has expired."));
         }
 
-        token.RecordUse(now);
-        await unitOfWork.SaveChangesAsync(ct);
+        await repository.RecordUseAsync(token.Id, now, ct);
 
         return Result.Success(new ApiTokenValidation(
             token.UserId,

@@ -19,7 +19,22 @@ public sealed class ApiTokenRepository(CardscapeDbContext db)
         }
 
         return await Db.Set<ApiToken>()
+            .AsNoTracking()
             .FirstOrDefaultAsync(t => t.HashedSecret == hashedSecret, ct);
+    }
+
+    public async Task RecordUseAsync(
+        ApiTokenId id,
+        DateTimeOffset at,
+        CancellationToken ct = default)
+    {
+        await Db.Set<ApiToken>()
+            .Where(token => token.Id == id && token.RevokedAt == null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(token => token.LastUsedAt, at)
+                .SetProperty(token => token.UpdatedAt, at)
+                .SetProperty(token => token.RowVersion, token => token.RowVersion + 1),
+                ct);
     }
 
     public async Task<IReadOnlyList<ApiToken>> ListForUserAsync(Guid userId, CancellationToken ct = default)

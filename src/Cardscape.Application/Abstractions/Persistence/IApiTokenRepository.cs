@@ -15,6 +15,11 @@ public interface IApiTokenRepository : IRepository<ApiToken, ApiTokenId>
     /// given hash.</summary>
     Task<ApiToken?> FindByHashedSecretAsync(string hashedSecret, CancellationToken ct = default);
 
+    /// <summary>Atomically records successful use without attaching the token.
+    /// Authentication requests may overlap, so this audit write must not rely
+    /// on a previously loaded concurrency token.</summary>
+    Task RecordUseAsync(ApiTokenId id, DateTimeOffset at, CancellationToken ct = default);
+
     /// <summary>Lists every token owned by the given user. Used
     /// by the Web UI to show the "API tokens" page.</summary>
     Task<IReadOnlyList<ApiToken>> ListForUserAsync(Guid userId, CancellationToken ct = default);
