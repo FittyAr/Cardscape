@@ -110,10 +110,7 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddScoped<DomainEventsInterceptor>();
         services.AddSingleton<DomainEventOutboxProcessor>();
-        services.AddHostedService(serviceProvider =>
-            new DomainEventOutboxDispatcherService(
-                serviceProvider.GetRequiredService<DomainEventOutboxProcessor>(),
-                serviceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<DomainEventOutboxDispatcherService>>()));
+        services.AddHostedService<DomainEventOutboxDispatcherService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Domain-event fan-out. Three broadcasters run

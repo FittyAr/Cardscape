@@ -247,6 +247,30 @@ public sealed class McpHostFactory : WebApplicationFactory<Cardscape.Mcp.Program
         Environment.SetEnvironmentVariable("Cardscape__Internal__Secret", TwoHostWebApplicationFactory.SharedSecret);
         Environment.SetEnvironmentVariable("Internal__Secret", TwoHostWebApplicationFactory.SharedSecret);
 
+        builder.ConfigureServices(services =>
+        {
+            // This fixture verifies MCP transport/authentication and cross-host
+            // notification routing. Periodic persistence workers are unrelated
+            // writers and make direct token setup race on SQLite.
+            string[] excludedHostedServices =
+            [
+                "Cardscape.Infrastructure.Persistence.Outbox.DomainEventOutboxDispatcherService",
+                "Cardscape.Infrastructure.Hosting.RetentionSweeper",
+                "Cardscape.Infrastructure.Hosting.RevocationSweeper"
+            ];
+
+            for (int index = services.Count - 1; index >= 0; index--)
+            {
+                ServiceDescriptor descriptor = services[index];
+                if (descriptor.ServiceType == typeof(IHostedService)
+                    && descriptor.ImplementationType?.FullName is string implementationName
+                    && excludedHostedServices.Contains(implementationName, StringComparer.Ordinal))
+                {
+                    services.RemoveAt(index);
+                }
+            }
+        });
+
         try
         {
             return base.CreateHost(builder);

@@ -35,6 +35,7 @@ public sealed class BackgroundJobDispatcherTests
     [Fact]
     public async Task Dispatcher_Picks_Up_And_Runs_Successful_Job()
     {
+        string connectionString = CreateIsolatedConnectionString();
         JobMarker marker = new();
         using TestHandler handler = new("test:happy", marker);
 
@@ -48,7 +49,7 @@ public sealed class BackgroundJobDispatcherTests
                     {
                         config.AddInMemoryCollection(new Dictionary<string, string?>
                         {
-                            ["ConnectionStrings:Default"] = _factory.ConnectionString,
+                            ["ConnectionStrings:Default"] = connectionString,
                             ["Storage:LocalRoot"] = _factory.StorageRoot
                         });
                     });
@@ -80,6 +81,7 @@ public sealed class BackgroundJobDispatcherTests
         // every test in the same xUnit collection, so a hardcoded type
         // would race with other tests' leftover jobs.
         string type = $"test:always-fail:{Guid.NewGuid():N}";
+        string connectionString = CreateIsolatedConnectionString();
         JobMarker marker = new();
         using TestHandler handler = new(type, marker, failAlways: true);
 
@@ -93,7 +95,7 @@ public sealed class BackgroundJobDispatcherTests
                     {
                         config.AddInMemoryCollection(new Dictionary<string, string?>
                         {
-                            ["ConnectionStrings:Default"] = _factory.ConnectionString,
+                            ["ConnectionStrings:Default"] = connectionString,
                             ["Storage:LocalRoot"] = _factory.StorageRoot
                         });
                     });
@@ -135,7 +137,19 @@ public sealed class BackgroundJobDispatcherTests
         // moves the job through MarkFailedAsync until it exhausts
         // retries and dead-letters it. Wolverine dispatches messages
         // asynchronously, so we poll for the dead-letter row.
-        using IServiceScope scope = _factory.Services.CreateScope();
+        string connectionString = CreateIsolatedConnectionString();
+        using IServiceScope scope = _factory.WithWebHostBuilder(b =>
+                {
+                    b.ConfigureAppConfiguration((_, config) =>
+                    {
+                        config.AddInMemoryCollection(new Dictionary<string, string?>
+                        {
+                            ["ConnectionStrings:Default"] = connectionString,
+                            ["Storage:LocalRoot"] = _factory.StorageRoot
+                        });
+                    });
+                })
+            .Services.CreateScope();
 
         IBackgroundJobScheduler scheduler = scope.ServiceProvider
             .GetRequiredService<IBackgroundJobScheduler>();
@@ -179,6 +193,9 @@ public sealed class BackgroundJobDispatcherTests
                 new ExecuteBackgroundJobCommand(job.Id.Value, job.Type, job.PayloadJson));
         }
     }
+
+    private static string CreateIsolatedConnectionString() =>
+        $"Data Source={Path.Combine(Path.GetTempPath(), $"cardscape-background-jobs-{Guid.NewGuid():N}.db")}";
 
     private static async Task WaitForAsync(Func<Task<bool>> predicate, TimeSpan timeout)
     {

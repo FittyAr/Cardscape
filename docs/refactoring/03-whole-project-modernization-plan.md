@@ -113,7 +113,7 @@ Reglas permanentes:
 - [ ] Reducir supresiones globales de analyzers y mover excepciones inevitables al scope mínimo.
 - [ ] Añadir validaciones de arquitectura para los defectos encontrados (lifetimes cuando sea comprobable, referencias y convenciones).
 - [ ] Revisar tests funcionales/E2E para que validen comportamiento y no detalles internos.
-- [ ] Eliminar carreras temporales de la infraestructura de tests SQLite: la fixture MCP E2E reproduce intermitentemente `database is locked` al escribir tokens mientras corren hosted services, y el test de dead-letter observó una vez el marcador antes del primer intento; ambos pasan aislados pero requieren estabilización basada en condición, no sleeps o retries ciegos.
+- [x] Eliminar carreras temporales de la infraestructura de tests SQLite: la fixture MCP excluye únicamente sweepers/outbox ajenos a su contrato y los tests manuales del dispatcher usan una base aislada por escenario, evitando que el host principal reclame sus jobs. No se añadieron sleeps ni retries ciegos.
 
 ### Fase 6 — Operación y cierre
 
@@ -212,6 +212,7 @@ Reglas permanentes:
 | 2026-08-25 | División de comandos Comment | Eliminado `CommentCommands.cs` de 262 líneas; agregar, editar y eliminar comentarios quedan en archivos independientes por caso de uso, sin alterar autoría, membresía ni actividad | Build 0/0; suite 908 pass, 0 fail, 1 skip; máximo 115 líneas por archivo; inventario público idéntico; 0 SQL manual en `src` | Incluido en este commit |
 | 2026-08-25 | División de reglas de automatización Board | Eliminado `BoardAutomationRuleCommands.cs` de 251 líneas; crear, habilitar, deshabilitar, eliminar, listar y mapear el DTO quedan en archivos por caso de uso o contrato, conservando consultas EF Core | Build 0/0; suite 908 pass, 0 fail, 1 skip; máximo 72 líneas por archivo; inventario público idéntico; 0 SQL manual en `src` | Incluido en este commit |
 | 2026-08-25 | División del ciclo de vida User | Eliminado `UserLifecycleCommands.cs` de 249 líneas; baja lógica, restauración, anonimización, restricción y rol admin quedan en archivos independientes por caso de uso, preservando documentación y contratos | Build 0/0; suite final 908 pass, 0 fail, 1 skip; máximo 80 líneas por archivo; inventario público idéntico; 0 SQL manual en `src`; carreras SQLite/test temporal registradas aparte | Incluido en este commit |
+| 2026-08-25 | Estabilidad de fixtures SQLite | La fixture MCP deja fuera los tres workers persistentes ajenos al transporte probado; cada escenario manual de background jobs obtiene su propia base, eliminando reclamos cruzados; el outbox usa registro DI tipado | Build 0/0; E2E completo 10/10; dead-letter 10/10; suite 908 pass, 0 fail, 1 skip; 0 SQL manual en `src` | Incluido en este commit |
 
 ## 5. Criterio de completitud
 
