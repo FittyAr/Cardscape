@@ -23,6 +23,15 @@ public sealed class BoardListRepository(CardscapeDbContext db) : RepositoryBase<
         return await query.OrderBy(l => l.Position).ToListAsync(ct);
     }
 
+    public async Task<BoardId?> GetBoardIdAsync(BoardListId listId, CancellationToken ct = default)
+    {
+        return await Db.Set<BoardList>()
+            .AsNoTracking()
+            .Where(list => list.Id == listId)
+            .Select(list => list.BoardId)
+            .SingleOrDefaultAsync(ct);
+    }
+
     public async Task<IReadOnlyDictionary<Guid, Guid>> ListBoardIdsByListIdAsync(CancellationToken ct = default)
     {
         var rows = await Db.Set<BoardList>()

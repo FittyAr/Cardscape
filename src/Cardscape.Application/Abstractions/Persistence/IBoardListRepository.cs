@@ -7,6 +7,8 @@ public interface IBoardListRepository : IRepository<BoardList, BoardListId>
 {
     Task<IReadOnlyList<BoardList>> ListForBoardAsync(BoardId boardId, bool includeArchived, CancellationToken ct = default);
 
+    Task<BoardId?> GetBoardIdAsync(BoardListId listId, CancellationToken ct = default);
+
     /// <summary>
     /// Returns every (list id, board id) pair the repository knows
     /// about. The calendar / planner views use this to resolve

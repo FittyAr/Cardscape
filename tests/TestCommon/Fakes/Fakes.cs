@@ -291,6 +291,12 @@ public sealed class InMemoryBoardListRepository : InMemoryRepositoryBase<BoardLi
         return Task.FromResult(rows);
     }
 
+    public Task<BoardId?> GetBoardIdAsync(BoardListId listId, CancellationToken ct = default)
+    {
+        BoardId? boardId = Store.GetValueOrDefault(listId)?.BoardId;
+        return Task.FromResult(boardId);
+    }
+
     public Task<IReadOnlyDictionary<Guid, Guid>> ListBoardIdsByListIdAsync(CancellationToken ct = default)
     {
         IReadOnlyDictionary<Guid, Guid> map = Store.Values
