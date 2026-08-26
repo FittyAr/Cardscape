@@ -534,6 +534,10 @@ public sealed class InMemoryCardVoteRepository
 public sealed class InMemoryChecklistRepository
     : InMemoryRepositoryBase<Checklist, ChecklistId>, IChecklistRepository
 {
+    public Task<int> CountForCardAsync(Guid cardId, CancellationToken ct = default) =>
+        Task.FromResult(Store.Values.Count(checklist =>
+            checklist.CardId.Value == cardId && !checklist.IsDeleted));
+
     public Task<IReadOnlyList<Checklist>> ListForCardAsync(Guid cardId, CancellationToken ct = default) =>
         Task.FromResult<IReadOnlyList<Checklist>>(
             Store.Values.Where(c => c.CardId.Value == cardId && !c.IsDeleted)
@@ -949,6 +953,10 @@ public sealed class FakeGoogleCalendarSyncService : IGoogleCalendarSyncService
 public sealed class InMemoryCommentRepository
     : InMemoryRepositoryBase<Comment, CommentId>, ICommentRepository
 {
+    public Task<int> CountForCardAsync(CardId cardId, CancellationToken ct = default) =>
+        Task.FromResult(Store.Values.Count(comment =>
+            comment.CardId == cardId && !comment.IsDeleted));
+
     public Task<IReadOnlyList<Comment>> ListForCardAsync(CardId cardId, CancellationToken ct = default) =>
         Task.FromResult<IReadOnlyList<Comment>>(
             Store.Values.Where(c => c.CardId.Value == cardId.Value).OrderBy(c => c.CreatedAt).ToList());

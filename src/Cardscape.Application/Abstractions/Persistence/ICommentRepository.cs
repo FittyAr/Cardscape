@@ -6,4 +6,6 @@ namespace Cardscape.Application.Abstractions.Persistence;
 public interface ICommentRepository : IRepository<Comment, CommentId>
 {
     Task<IReadOnlyList<Comment>> ListForCardAsync(CardId cardId, CancellationToken ct = default);
+
+    Task<int> CountForCardAsync(CardId cardId, CancellationToken ct = default);
 }

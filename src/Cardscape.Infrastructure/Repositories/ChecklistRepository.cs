@@ -11,6 +11,13 @@ namespace Cardscape.Infrastructure.Repositories;
 public sealed class ChecklistRepository(CardscapeDbContext db)
     : RepositoryBase<Checklist, ChecklistId>(db), IChecklistRepository
 {
+    public async Task<int> CountForCardAsync(Guid cardId, CancellationToken ct = default)
+    {
+        var typedCardId = new CardId(cardId);
+        return await Db.Set<Checklist>()
+            .CountAsync(checklist => checklist.CardId == typedCardId && !checklist.IsDeleted, ct);
+    }
+
     public async Task<IReadOnlyList<Checklist>> ListForCardAsync(
         Guid cardId, CancellationToken ct = default)
     {

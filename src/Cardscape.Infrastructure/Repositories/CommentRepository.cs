@@ -10,6 +10,12 @@ namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class CommentRepository(CardscapeDbContext db) : RepositoryBase<Comment, CommentId>(db), ICommentRepository
 {
+    public async Task<int> CountForCardAsync(CardId cardId, CancellationToken ct = default)
+    {
+        return await Db.Set<Comment>()
+            .CountAsync(comment => comment.CardId == cardId && !comment.IsDeleted, ct);
+    }
+
     public async Task<IReadOnlyList<Comment>> ListForCardAsync(CardId cardId, CancellationToken ct = default)
     {
         IQueryable<Comment> query = Db.Set<Comment>()

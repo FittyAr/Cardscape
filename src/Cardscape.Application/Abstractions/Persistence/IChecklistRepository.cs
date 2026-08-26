@@ -6,6 +6,8 @@ public interface IChecklistRepository : IRepository<Checklist, ChecklistId>
 {
     /// <summary>All checklists attached to a card, ordered by creation time.</summary>
     Task<IReadOnlyList<Checklist>> ListForCardAsync(Guid cardId, CancellationToken ct = default);
+
+    Task<int> CountForCardAsync(Guid cardId, CancellationToken ct = default);
 }
 
 public interface IChecklistItemRepository : IRepository<ChecklistItem, ChecklistItemId>
