@@ -10,7 +10,18 @@ public sealed record WorkspaceDto(
     bool IsArchived,
     bool RequireTwoFactor,
     DateTimeOffset CreatedAt,
-    int MemberCount);
+    int MemberCount)
+{
+    public static WorkspaceDto FromEntity(Workspace workspace) => new(
+        workspace.Id.Value,
+        workspace.Name.Value,
+        workspace.OwnerId,
+        workspace.Region,
+        workspace.IsArchived,
+        workspace.RequireTwoFactor,
+        workspace.CreatedAt,
+        workspace.Members.Count);
+}
 
 public sealed record WorkspaceMemberDto(
     Guid UserId,

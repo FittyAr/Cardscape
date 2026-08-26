@@ -108,11 +108,18 @@ public static class ListWorkspaceMembersQueryHandler
             return Result.Failure<IReadOnlyList<WorkspaceMemberDto>>(NotMember);
         }
 
-        var rows = new List<WorkspaceMemberDto>();
-        foreach (var m in workspace.Members)
+        List<Domain.Members.UserId> userIds = workspace.Members
+            .Select(member => new Domain.Members.UserId(member.UserId))
+            .Distinct()
+            .ToList();
+        Dictionary<Guid, Domain.Members.User> usersById =
+            (await users.ListByIdsAsync(userIds, cancellationToken))
+            .ToDictionary(user => user.Id.Value);
+
+        var rows = new List<WorkspaceMemberDto>(workspace.Members.Count);
+        foreach (WorkspaceMember member in workspace.Members)
         {
-            var user = await users.GetByIdAsync(new Domain.Members.UserId(m.UserId), cancellationToken);
-            if (user is null)
+            if (!usersById.TryGetValue(member.UserId, out Domain.Members.User? user))
             {
                 continue;
             }
@@ -120,8 +127,8 @@ public static class ListWorkspaceMembersQueryHandler
                 user.Id.Value,
                 user.Email.Value,
                 user.DisplayName.Value,
-                m.Role,
-                m.JoinedAt));
+                member.Role,
+                member.JoinedAt));
         }
 
         return Result.Success<IReadOnlyList<WorkspaceMemberDto>>(rows);
