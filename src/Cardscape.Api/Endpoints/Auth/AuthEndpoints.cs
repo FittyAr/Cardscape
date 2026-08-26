@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Hosting;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Auth;
@@ -38,26 +39,16 @@ public static class AuthEndpoints
                 : Results.Problem(result.Error.Message, statusCode: StatusCodes.Status401Unauthorized, title: result.Error.Code);
         });
 
-        // BUG-A8-014 — see test-results/beta/reports/A8-settings.md.
-        // Self-serve password reset. The endpoint is
-        // anonymous (no JWT) and returns the same shape
-        // whether or not the email exists so the API cannot
-        // be used to enumerate accounts. The cleartext
-        // token is included in the response only when
-        // `ASPNETCORE_ENVIRONMENT=Development` is set, so
-        // the QA flow can run without an SMTP provider.
-        // In production the email pipeline (out of scope
-        // for this pass) is responsible for shipping the
-        // token to the user.
         group.MapPost("/forgot-password", async (
             ForgotPasswordRequest request,
             HttpContext http,
+            IHostEnvironment environment,
             IMessageBus bus,
             CancellationToken ct) =>
         {
             string? ip = http.Connection.RemoteIpAddress?.ToString();
             var result = await bus.InvokeAsync<Result<PasswordResetRequestResult>>(
-                new RequestPasswordResetCommand(request.Email, ip), ct);
+                new RequestPasswordResetCommand(request.Email, ip, environment.IsDevelopment()), ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : Results.Problem(result.Error.Message, statusCode: StatusCodes.Status400BadRequest, title: result.Error.Code);

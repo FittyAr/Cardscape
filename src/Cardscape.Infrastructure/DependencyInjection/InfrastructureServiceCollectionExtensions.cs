@@ -331,12 +331,6 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRepository<TotpCredential, TotpCredentialId>, TotpCredentialRepository>(sp => sp.GetRequiredService<TotpCredentialRepository>());
         services.AddScoped<ITotpCredentialRepository, TotpCredentialRepository>(sp => sp.GetRequiredService<TotpCredentialRepository>());
 
-        // BUG-A8-014 — backing store for the new password
-        // reset tokens issued by POST /api/auth/forgot-password
-        // and consumed by POST /api/auth/reset-password. The
-        // token hash is stored in the cleartext, not the
-        // token itself, so a leaked DB row still cannot be
-        // used to log in.
         services.AddScoped<PasswordResetRepository>();
         services.AddScoped<IRepository<PasswordReset, PasswordResetId>, PasswordResetRepository>(sp => sp.GetRequiredService<PasswordResetRepository>());
         services.AddScoped<IPasswordResetRepository, PasswordResetRepository>(sp => sp.GetRequiredService<PasswordResetRepository>());

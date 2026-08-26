@@ -69,12 +69,6 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     // underlying object storage implementation.
     public DbSet<Attachment> Attachments => Set<Attachment>();
 
-    // BUG-A8-014 — backing store for the new password-reset
-    // tokens. Same pattern as `Attachments`: the domain
-    // aggregate is new in this pass and the DbSet + EF
-    // configuration are added in the same commit so the
-    // /api/auth/forgot-password and /api/auth/reset-password
-    // endpoints can persist their rows.
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     // BETA-5-#1 — see test-results/BETA-TEST-REPORT.md. Exposed as a
     // standalone DbSet (not via OwnsMany) so the star-toggle path
