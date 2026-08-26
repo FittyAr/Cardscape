@@ -1,6 +1,6 @@
 using Cardscape.Api.Hubs;
-using Cardscape.Application.Realtime;
 using Cardscape.Application.Abstractions.Realtime;
+using Cardscape.Application.Realtime;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Cardscape.Api.Realtime;

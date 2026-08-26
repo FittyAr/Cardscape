@@ -1,7 +1,7 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
-using Cardscape.Application.Realtime;
 using Cardscape.Application.Abstractions.Realtime;
+using Cardscape.Application.Realtime;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Cards.Events;

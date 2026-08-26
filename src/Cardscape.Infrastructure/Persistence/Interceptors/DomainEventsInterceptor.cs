@@ -1,6 +1,6 @@
 using Cardscape.Application.Abstractions;
-using Cardscape.Application.Realtime;
 using Cardscape.Application.Abstractions.Realtime;
+using Cardscape.Application.Realtime;
 using Cardscape.Domain.Common;
 using Cardscape.Infrastructure.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;
