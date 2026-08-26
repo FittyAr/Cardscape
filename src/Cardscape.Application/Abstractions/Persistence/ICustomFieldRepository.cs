@@ -24,6 +24,9 @@ public interface ICustomFieldValueRepository
     Task<IReadOnlyList<CustomFieldValue>> ListForCardAsync(
         CardId cardId, CancellationToken ct = default);
 
+    Task<IReadOnlyList<CustomFieldValue>> ListForFieldAsync(
+        CustomFieldDefinitionId fieldId, CancellationToken ct = default);
+
     Task<IReadOnlyList<CustomFieldValue>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default);
 

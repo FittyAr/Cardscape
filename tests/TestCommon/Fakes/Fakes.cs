@@ -380,6 +380,15 @@ public sealed class InMemoryCustomFieldValueRepository
         return Task.FromResult(rows);
     }
 
+    public Task<IReadOnlyList<CustomFieldValue>> ListForFieldAsync(
+        CustomFieldDefinitionId fieldId, CancellationToken ct = default)
+    {
+        IReadOnlyList<CustomFieldValue> rows = Store.Values
+            .Where(value => value.FieldDefinitionId == fieldId)
+            .ToList();
+        return Task.FromResult(rows);
+    }
+
     public async Task<IReadOnlyList<CustomFieldValue>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {

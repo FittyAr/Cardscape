@@ -36,6 +36,14 @@ public sealed class CustomFieldValueRepository(CardscapeDbContext db)
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<CustomFieldValue>> ListForFieldAsync(
+        CustomFieldDefinitionId fieldId, CancellationToken ct = default)
+    {
+        return await Db.Set<CustomFieldValue>()
+            .Where(value => value.FieldDefinitionId == fieldId)
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<CustomFieldValue>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {
