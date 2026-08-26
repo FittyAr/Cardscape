@@ -54,14 +54,14 @@ internal static class ChecklistsAccess
                 "cards.not_found", "Card was not found."));
         }
 
-        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
-        if (!map.TryGetValue(card.ListId.Value, out Guid boardId))
+        BoardId? boardId = await lists.GetBoardIdAsync(card.ListId, ct);
+        if (boardId is null)
         {
             return Result.Failure(DomainError.NotFound(
                 "boards.not_found", "Board was not found."));
         }
 
-        Board? board = await boards.GetWithMembersAsync(new BoardId(boardId), ct);
+        Board? board = await boards.GetWithMembersAsync(boardId, ct);
         if (board is null || !board.IsMember(currentUser.Id.Value))
         {
             return Result.Failure(DomainError.Forbidden(
@@ -71,4 +71,3 @@ internal static class ChecklistsAccess
         return Result.Success();
     }
 }
-

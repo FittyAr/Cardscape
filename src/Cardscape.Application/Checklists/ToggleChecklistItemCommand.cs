@@ -74,12 +74,12 @@ public static class ToggleChecklistItemCommandHandler
         ActivityKind kind = item.IsCompleted
             ? ActivityKind.ChecklistItemCompleted
             : ActivityKind.ChecklistItemUncompleted;
-        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
         Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
-        if (card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
+        BoardId? boardId = card is null ? null : await lists.GetBoardIdAsync(card.ListId, ct);
+        if (card is not null && boardId is not null)
         {
             await activities.AddAsync(Activity.Create(
-                new Domain.Boards.BoardId(boardId),
+                boardId,
                 card.Id.Value,
                 currentUser.Id.Value,
                 kind,
@@ -91,5 +91,4 @@ public static class ToggleChecklistItemCommandHandler
         return Result.Success(ChecklistDto.FromEntity(checklist));
     }
 }
-
 

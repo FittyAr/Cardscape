@@ -1,22 +1,18 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Domain.Activities;
-using Cardscape.Domain.Boards;
-using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Lists;
 using Wolverine;
 
 namespace Cardscape.Application.Checklists;
 
-public sealed record DeleteChecklistItemCommand(Guid ChecklistId, Guid ItemId) : IMessage;
+public sealed record RenameChecklistCommand(Guid ChecklistId, string Title) : IMessage;
 
-public static class DeleteChecklistItemCommandHandler
+public static class RenameChecklistCommandHandler
 {
     public static async Task<Result<ChecklistDto>> Handle(
-        DeleteChecklistItemCommand command,
+        RenameChecklistCommand command,
         IChecklistRepository checklists,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -24,7 +20,6 @@ public static class DeleteChecklistItemCommandHandler
         IUnitOfWork uow,
         ICurrentUser currentUser,
         IClock clock,
-        IActivityRepository activities,
         CancellationToken ct)
     {
         if (currentUser.Id is null)
@@ -33,8 +28,12 @@ public static class DeleteChecklistItemCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        // v1.2.0 audit (pass 12): IDOR — see
-        // ChecklistsAccess.EnsureCanAccessChecklistAsync.
+        var titleResult = ChecklistTitle.Create(command.Title);
+        if (titleResult.IsFailure)
+        {
+            return Result.Failure<ChecklistDto>(titleResult.Error);
+        }
+
         var access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
             command.ChecklistId, checklists, cards, lists, boards, currentUser, ct);
         if (access.IsFailure)
@@ -50,33 +49,13 @@ public static class DeleteChecklistItemCommandHandler
                 "checklists.not_found", "Checklist was not found."));
         }
 
-        var remove = checklist.RemoveItem(
-            new ChecklistItemId(command.ItemId), clock.UtcNow);
-        if (remove.IsFailure)
+        var rename = checklist.Rename(titleResult.Value, clock.UtcNow);
+        if (rename.IsFailure)
         {
-            return Result.Failure<ChecklistDto>(remove.Error);
+            return Result.Failure<ChecklistDto>(rename.Error);
         }
 
         await uow.SaveChangesAsync(ct);
-
-        // BETA-7-#2 — record the deletion on the activity
-        // feed. There is no dedicated ChecklistItemDeleted
-        // kind, so we reuse ChecklistCreated.
-        Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
-        BoardId? boardId = card is null ? null : await lists.GetBoardIdAsync(card.ListId, ct);
-        if (card is not null && boardId is not null)
-        {
-            await activities.AddAsync(Activity.Create(
-                boardId,
-                card.Id.Value,
-                currentUser.Id.Value,
-                ActivityKind.ChecklistCreated,
-                $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{command.ItemId}\",\"action\":\"delete\"}}",
-                clock.UtcNow), ct);
-            await uow.SaveChangesAsync(ct);
-        }
-
         return Result.Success(ChecklistDto.FromEntity(checklist));
     }
 }
-

@@ -71,14 +71,14 @@ public static class ListCardChecklistsQueryHandler
                 "cards.not_found", "Card was not found."));
         }
 
-        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
-        if (!map.TryGetValue(card.ListId.Value, out Guid boardId))
+        BoardId? boardId = await lists.GetBoardIdAsync(card.ListId, ct);
+        if (boardId is null)
         {
             return Result.Failure<IReadOnlyList<ChecklistDto>>(DomainError.NotFound(
                 "boards.not_found", "Board was not found."));
         }
 
-        Board? board = await boards.GetWithMembersAsync(new BoardId(boardId), ct);
+        Board? board = await boards.GetWithMembersAsync(boardId, ct);
         if (board is null || !board.IsMember(currentUser.Id.Value))
         {
             return Result.Failure<IReadOnlyList<ChecklistDto>>(DomainError.Forbidden(

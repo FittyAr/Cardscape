@@ -70,12 +70,12 @@ public static class AddChecklistItemCommandHandler
                 "checklists.item_not_added", "Checklist item could not be added."));
         }
 
-        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
         Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
-        if (card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
+        BoardId? boardId = card is null ? null : await lists.GetBoardIdAsync(card.ListId, ct);
+        if (card is not null && boardId is not null)
         {
             await activities.AddAsync(Activity.Create(
-                new Domain.Boards.BoardId(boardId),
+                boardId,
                 card.Id.Value,
                 currentUser.Id.Value,
                 ActivityKind.ChecklistCreated, // ChecklistItemAdded reuses ChecklistCreated until a dedicated kind is added.
@@ -156,12 +156,12 @@ public static class RenameChecklistItemCommandHandler
 
         // BETA-7-#1 / #2 — re-index the renamed item.
         ChecklistItem? updated = checklist.Items.FirstOrDefault(i => i.Id.Value == command.ItemId);
-        IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(ct);
         Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
-        if (updated is not null && card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
+        BoardId? boardId = card is null ? null : await lists.GetBoardIdAsync(card.ListId, ct);
+        if (updated is not null && card is not null && boardId is not null)
         {
             await activities.AddAsync(Activity.Create(
-                new Domain.Boards.BoardId(boardId),
+                boardId,
                 card.Id.Value,
                 currentUser.Id.Value,
                 ActivityKind.ChecklistCreated, // ChecklistItemRenamed reuses ChecklistCreated until a dedicated kind is added.
