@@ -102,14 +102,14 @@ public static class MembershipGuards
         Guid userId,
         CancellationToken ct)
     {
-        BoardList? list = await lists.GetByIdAsync(card.ListId, ct);
-        if (list is null)
+        BoardId? boardId = await lists.GetBoardIdAsync(card.ListId, ct);
+        if (boardId is null)
         {
             return Result.Failure<(Card, Board)>(DomainError.NotFound(
                 "lists.not_found", "List was not found."));
         }
 
-        Result<Board> boardResult = await EnsureCanReadBoardAsync(boards, userId, list.BoardId.Value, ct);
+        Result<Board> boardResult = await EnsureCanReadBoardAsync(boards, userId, boardId.Value, ct);
         return boardResult.IsSuccess
             ? Result.Success((card, boardResult.Value))
             : Result.Failure<(Card, Board)>(boardResult.Error);
@@ -127,14 +127,14 @@ public static class MembershipGuards
         Guid userId,
         CancellationToken ct)
     {
-        BoardList? list = await lists.GetByIdAsync(card.ListId, ct);
-        if (list is null)
+        BoardId? boardId = await lists.GetBoardIdAsync(card.ListId, ct);
+        if (boardId is null)
         {
             return Result.Failure<(Card, Board)>(DomainError.NotFound(
                 "lists.not_found", "List was not found."));
         }
 
-        Result<Board> boardResult = await EnsureCanMutateBoardAsync(boards, userId, list.BoardId.Value, ct);
+        Result<Board> boardResult = await EnsureCanMutateBoardAsync(boards, userId, boardId.Value, ct);
         return boardResult.IsSuccess
             ? Result.Success((card, boardResult.Value))
             : Result.Failure<(Card, Board)>(boardResult.Error);
