@@ -23,4 +23,26 @@ public sealed class TotpCredentialRepository(CardscapeDbContext db)
         return await Set
             .FirstOrDefaultAsync(c => c.UserId == userId, ct);
     }
+
+    public async Task<bool> AreActiveForAllUsersAsync(
+        IReadOnlyCollection<UserId> userIds,
+        CancellationToken ct = default)
+    {
+        UserId[] distinctUserIds = userIds.Distinct().ToArray();
+        if (distinctUserIds.Length == 0)
+        {
+            return true;
+        }
+
+        int activeCredentialCount = await Set
+            .Where(credential =>
+                credential.ConfirmedAt != null
+                && !credential.IsDeleted
+                && distinctUserIds.Contains(credential.UserId))
+            .Select(credential => credential.UserId)
+            .Distinct()
+            .CountAsync(ct);
+
+        return activeCredentialCount == distinctUserIds.Length;
+    }
 }

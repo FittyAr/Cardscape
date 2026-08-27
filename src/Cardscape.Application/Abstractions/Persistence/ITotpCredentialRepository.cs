@@ -14,4 +14,8 @@ public interface ITotpCredentialRepository : IRepository<TotpCredential, TotpCre
     /// the given user has enrolled. <c>null</c> when the
     /// user has not enrolled 2FA.</summary>
     Task<TotpCredential?> FindForUserAsync(UserId userId, CancellationToken ct = default);
+
+    Task<bool> AreActiveForAllUsersAsync(
+        IReadOnlyCollection<UserId> userIds,
+        CancellationToken ct = default);
 }

@@ -583,6 +583,17 @@ public sealed class InMemoryTotpCredentialRepository
 {
     public Task<TotpCredential?> FindForUserAsync(UserId userId, CancellationToken ct = default) =>
         Task.FromResult(Store.Values.FirstOrDefault(c => c.UserId == userId));
+
+    public Task<bool> AreActiveForAllUsersAsync(
+        IReadOnlyCollection<UserId> userIds,
+        CancellationToken ct = default)
+    {
+        bool allActive = userIds
+            .Distinct()
+            .All(userId => Store.Values.Any(credential =>
+                credential.UserId == userId && credential.IsActive));
+        return Task.FromResult(allActive);
+    }
 }
 
 /// <summary>
