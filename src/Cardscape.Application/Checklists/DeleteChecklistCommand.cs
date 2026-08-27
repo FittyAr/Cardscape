@@ -28,16 +28,15 @@ public static class DeleteChecklistCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        var access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
+        Result<ChecklistAccessContext> access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
             command.ChecklistId, checklists, cards, lists, boards, currentUser, ct);
         if (access.IsFailure)
         {
-            return access;
+            return Result.Failure(access.Error);
         }
 
-        Checklist? checklist = await checklists.GetByIdAsync(
-            new ChecklistId(command.ChecklistId), ct);
-        if (checklist is null || checklist.IsDeleted)
+        Checklist checklist = access.Value.Checklist;
+        if (checklist.IsDeleted)
         {
             return Result.Failure(DomainError.NotFound(
                 "checklists.not_found", "Checklist was not found."));

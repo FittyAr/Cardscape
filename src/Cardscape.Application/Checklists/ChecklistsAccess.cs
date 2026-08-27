@@ -11,21 +11,11 @@ using Wolverine;
 
 namespace Cardscape.Application.Checklists;
 
-/// <summary>Internal helper that wraps the membership-check pattern
-/// shared by all per-checklist operations.</summary>
+internal sealed record ChecklistAccessContext(Checklist Checklist, Card Card, BoardId BoardId);
+
 internal static class ChecklistsAccess
 {
-    /// <summary>
-    /// Loads the checklist, follows card→list→board, and verifies
-    /// the current user is a board member. The v1.2.0 audit
-    /// (pass 12) found that the rename / delete / item handlers
-    /// accepted any <c>checklistId</c> from any authenticated
-    /// user — a clear IDOR. The handler chain now goes
-    /// handler → load checklist → this guard → aggregate
-    /// mutation, mirroring the pattern the comment handlers
-    /// adopted in the same pass.
-    /// </summary>
-    public static async Task<Result> EnsureCanAccessChecklistAsync(
+    public static async Task<Result<ChecklistAccessContext>> EnsureCanAccessChecklistAsync(
         Guid checklistId,
         IChecklistRepository checklists,
         ICardRepository cards,
@@ -36,38 +26,38 @@ internal static class ChecklistsAccess
     {
         if (currentUser.Id is null)
         {
-            return Result.Failure(DomainError.Unauthenticated(
+            return Result.Failure<ChecklistAccessContext>(DomainError.Unauthenticated(
                 "auth.required", "Authentication is required."));
         }
 
         Checklist? checklist = await checklists.GetByIdAsync(new ChecklistId(checklistId), ct);
         if (checklist is null)
         {
-            return Result.Failure(DomainError.NotFound(
+            return Result.Failure<ChecklistAccessContext>(DomainError.NotFound(
                 "checklists.not_found", "Checklist was not found."));
         }
 
         Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
         if (card is null)
         {
-            return Result.Failure(DomainError.NotFound(
+            return Result.Failure<ChecklistAccessContext>(DomainError.NotFound(
                 "cards.not_found", "Card was not found."));
         }
 
         BoardId? boardId = await lists.GetBoardIdAsync(card.ListId, ct);
         if (boardId is null)
         {
-            return Result.Failure(DomainError.NotFound(
+            return Result.Failure<ChecklistAccessContext>(DomainError.NotFound(
                 "boards.not_found", "Board was not found."));
         }
 
         Board? board = await boards.GetWithMembersAsync(boardId, ct);
         if (board is null || !board.IsMember(currentUser.Id.Value))
         {
-            return Result.Failure(DomainError.Forbidden(
+            return Result.Failure<ChecklistAccessContext>(DomainError.Forbidden(
                 "boards.forbidden", "You are not a member of this board."));
         }
 
-        return Result.Success();
+        return Result.Success(new ChecklistAccessContext(checklist, card, boardId));
     }
 }

@@ -2,21 +2,18 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Activities;
-using Cardscape.Domain.Boards;
-using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Lists;
 using Wolverine;
 
 namespace Cardscape.Application.Checklists;
 
-public sealed record DeleteChecklistItemCommand(Guid ChecklistId, Guid ItemId) : IMessage;
+public sealed record RenameChecklistItemCommand(Guid ChecklistId, Guid ItemId, string Text) : IMessage;
 
-public static class DeleteChecklistItemCommandHandler
+public static class RenameChecklistItemCommandHandler
 {
     public static async Task<Result<ChecklistDto>> Handle(
-        DeleteChecklistItemCommand command,
+        RenameChecklistItemCommand command,
         IChecklistRepository checklists,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -33,6 +30,12 @@ public static class DeleteChecklistItemCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
+        var textResult = ChecklistItemText.Create(command.Text);
+        if (textResult.IsFailure)
+        {
+            return Result.Failure<ChecklistDto>(textResult.Error);
+        }
+
         Result<ChecklistAccessContext> access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
             command.ChecklistId, checklists, cards, lists, boards, currentUser, ct);
         if (access.IsFailure)
@@ -41,11 +44,11 @@ public static class DeleteChecklistItemCommandHandler
         }
 
         Checklist checklist = access.Value.Checklist;
-        var remove = checklist.RemoveItem(
-            new ChecklistItemId(command.ItemId), clock.UtcNow);
-        if (remove.IsFailure)
+        var update = checklist.UpdateItem(
+            new ChecklistItemId(command.ItemId), textResult.Value, clock.UtcNow);
+        if (update.IsFailure)
         {
-            return Result.Failure<ChecklistDto>(remove.Error);
+            return Result.Failure<ChecklistDto>(update.Error);
         }
 
         await activities.AddAsync(Activity.Create(
@@ -53,7 +56,7 @@ public static class DeleteChecklistItemCommandHandler
             access.Value.Card.Id.Value,
             currentUser.Id.Value,
             ActivityKind.ChecklistCreated,
-            $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{command.ItemId}\",\"action\":\"delete\"}}",
+            $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{command.ItemId}\"}}",
             clock.UtcNow), ct);
         await uow.SaveChangesAsync(ct);
 

@@ -34,21 +34,14 @@ public static class RenameChecklistCommandHandler
             return Result.Failure<ChecklistDto>(titleResult.Error);
         }
 
-        var access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
+        Result<ChecklistAccessContext> access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
             command.ChecklistId, checklists, cards, lists, boards, currentUser, ct);
         if (access.IsFailure)
         {
             return Result.Failure<ChecklistDto>(access.Error);
         }
 
-        Checklist? checklist = await checklists.GetByIdAsync(
-            new ChecklistId(command.ChecklistId), ct);
-        if (checklist is null)
-        {
-            return Result.Failure<ChecklistDto>(DomainError.NotFound(
-                "checklists.not_found", "Checklist was not found."));
-        }
-
+        Checklist checklist = access.Value.Checklist;
         var rename = checklist.Rename(titleResult.Value, clock.UtcNow);
         if (rename.IsFailure)
         {

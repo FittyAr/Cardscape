@@ -33,23 +33,14 @@ public static class ToggleChecklistItemCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        // v1.2.0 audit (pass 12): IDOR — see
-        // ChecklistsAccess.EnsureCanAccessChecklistAsync.
-        var access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
+        Result<ChecklistAccessContext> access = await ChecklistsAccess.EnsureCanAccessChecklistAsync(
             command.ChecklistId, checklists, cards, lists, boards, currentUser, ct);
         if (access.IsFailure)
         {
             return Result.Failure<ChecklistDto>(access.Error);
         }
 
-        Checklist? checklist = await checklists.GetByIdAsync(
-            new ChecklistId(command.ChecklistId), ct);
-        if (checklist is null)
-        {
-            return Result.Failure<ChecklistDto>(DomainError.NotFound(
-                "checklists.not_found", "Checklist was not found."));
-        }
-
+        Checklist checklist = access.Value.Checklist;
         ChecklistItem? item = checklist.Items.FirstOrDefault(
             i => i.Id.Value == command.ItemId);
         if (item is null)
@@ -66,29 +57,18 @@ public static class ToggleChecklistItemCommandHandler
             return Result.Failure<ChecklistDto>(result.Error);
         }
 
-        await uow.SaveChangesAsync(ct);
-
-        // BETA-7-#2 — record the toggle on the activity feed.
-        // Check / uncheck use the dedicated ChecklistItem*
-        // kinds; the existing completed flag tells us which.
         ActivityKind kind = item.IsCompleted
             ? ActivityKind.ChecklistItemCompleted
             : ActivityKind.ChecklistItemUncompleted;
-        Card? card = await cards.GetByIdAsync(checklist.CardId, ct);
-        BoardId? boardId = card is null ? null : await lists.GetBoardIdAsync(card.ListId, ct);
-        if (card is not null && boardId is not null)
-        {
-            await activities.AddAsync(Activity.Create(
-                boardId,
-                card.Id.Value,
-                currentUser.Id.Value,
-                kind,
-                $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{item.Id.Value}\"}}",
-                clock.UtcNow), ct);
-            await uow.SaveChangesAsync(ct);
-        }
+        await activities.AddAsync(Activity.Create(
+            access.Value.BoardId,
+            access.Value.Card.Id.Value,
+            currentUser.Id.Value,
+            kind,
+            $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{item.Id.Value}\"}}",
+            clock.UtcNow), ct);
+        await uow.SaveChangesAsync(ct);
 
         return Result.Success(ChecklistDto.FromEntity(checklist));
     }
 }
-
