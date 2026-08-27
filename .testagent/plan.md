@@ -490,3 +490,11 @@
 4. [x] Re-open the test and map every acceptance item to concrete evidence.
 5. [x] Select existing stamped (`BackgroundJob`) and unstamped (`Notification`) mutation paths.
 6. [x] Add and run `SavingModifiedEntities_AdvancesRowVersionExactlyOnce` against real SQLite persistence.
+
+# Dashcard configuration regression (2026-08-26)
+
+1. [x] Add `Dashcard.UpdateConfiguration` and share JSON/size validation with creation.
+2. [x] Make `UpdateDashcardConfigCommandHandler` invoke the aggregate mutation.
+3. [x] Strengthen `Update_Config_Persists_Json` to assert the response and a fresh list query.
+4. [x] Run focused Dashboards and architecture tests.
+5. [x] Review assertion quality and pseudo-mutation gaps, then run the complete suite.

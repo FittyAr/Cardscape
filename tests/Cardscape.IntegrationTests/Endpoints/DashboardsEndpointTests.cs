@@ -74,6 +74,78 @@ public sealed class DashboardsEndpointTests
             new { configurationJson = "{\"threshold\":7}" },
             TestContext.Current.CancellationToken);
         updated.IsSuccessStatusCode.Should().BeTrue();
+        DashcardDto updatedDashcard = (await updated.Content.ReadFromJsonAsync<DashcardDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+        updatedDashcard.ConfigurationJson.Should().Be("{\"threshold\":7}");
+
+        IReadOnlyList<DashcardDto> listed = (await client.GetFromJsonAsync<IReadOnlyList<DashcardDto>>(
+            $"api/boards/{seed.BoardId}/dashcards/",
+            TestJson.Options,
+            TestContext.Current.CancellationToken))!;
+        listed.Should().ContainSingle(card =>
+            card.Id == dashcard.Id && card.ConfigurationJson == "{\"threshold\":7}");
+    }
+
+    [Fact]
+    public async Task Update_Config_With_Invalid_Json_Returns_400()
+    {
+        HttpClient client = await CreateAuthenticatedClientAsync();
+        Seed seed = await CreateSeedAsync(client, "dash-invalid-config");
+
+        HttpResponseMessage created = await client.PostAsJsonAsync(
+            $"api/boards/{seed.BoardId}/dashcards/",
+            new
+            {
+                boardId = seed.BoardId,
+                kind = "overdueCount",
+                title = "Count",
+                configurationJson = (string?)null,
+                position = 0
+            },
+            TestContext.Current.CancellationToken);
+        DashcardDto dashcard = (await created.Content.ReadFromJsonAsync<DashcardDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+
+        HttpResponseMessage updated = await client.PutAsJsonAsync(
+            $"api/boards/{seed.BoardId}/dashcards/{dashcard.Id}/config",
+            new { configurationJson = "not-json" },
+            TestContext.Current.CancellationToken);
+
+        updated.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Theory]
+    [InlineData(8192, HttpStatusCode.OK)]
+    [InlineData(8193, HttpStatusCode.BadRequest)]
+    public async Task Update_Config_Enforces_Exact_Size_Boundary(
+        int configurationLength,
+        HttpStatusCode expectedStatus)
+    {
+        HttpClient client = await CreateAuthenticatedClientAsync();
+        Seed seed = await CreateSeedAsync(client, $"dash-config-{configurationLength}");
+
+        HttpResponseMessage created = await client.PostAsJsonAsync(
+            $"api/boards/{seed.BoardId}/dashcards/",
+            new
+            {
+                boardId = seed.BoardId,
+                kind = "overdueCount",
+                title = "Count",
+                configurationJson = (string?)null,
+                position = 0
+            },
+            TestContext.Current.CancellationToken);
+        DashcardDto dashcard = (await created.Content.ReadFromJsonAsync<DashcardDto>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+        string configurationJson = $"{{\"value\":\"{new string('x', configurationLength - 12)}\"}}";
+        configurationJson.Should().HaveLength(configurationLength);
+
+        HttpResponseMessage updated = await client.PutAsJsonAsync(
+            $"api/boards/{seed.BoardId}/dashcards/{dashcard.Id}/config",
+            new { configurationJson },
+            TestContext.Current.CancellationToken);
+
+        updated.StatusCode.Should().Be(expectedStatus);
     }
 
     [Fact]
@@ -149,5 +221,11 @@ public sealed class DashboardsEndpointTests
     private sealed record Seed(Guid BoardId);
     private sealed record WorkspaceDto(Guid Id);
     private sealed record BoardDto(Guid Id, Guid WorkspaceId);
-    private sealed record DashcardDto(Guid Id, Guid BoardId, DashcardKind Kind, int Position, string? Title, string? ConfigJson);
+    private sealed record DashcardDto(
+        Guid Id,
+        Guid BoardId,
+        DashcardKind Kind,
+        int Position,
+        string? Title,
+        string? ConfigurationJson);
 }

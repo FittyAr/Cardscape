@@ -550,3 +550,15 @@
 - Assertion-quality review: both branches assert the exact persisted token value (`1u`), so either a missing fallback or a double increment fails independently.
 - Pseudo-mutation review: removing `StampChanged` differentiation, the interceptor increment, or its current/original guard makes at least one exact assertion fail.
 - Narrow validation passed 2/2: `dotnet test tests/Cardscape.UnitTests/Cardscape.UnitTests.csproj -c Release --no-restore -p:BuildProjectReferences=false --filter "FullyQualifiedName~CardscapeDbContextModelTests" -m:1 -nr:false -v:minimal`.
+
+# Dashcard configuration regression (2026-08-26)
+
+- Research and acceptance checklist recorded; implementation pending.
+- Implemented aggregate mutation and shared JSON/8192-character validation.
+- `Update_Config_Persists_Json` asserts both the returned DTO and persisted state from a fresh GET.
+- `Update_Config_With_Invalid_Json_Returns_400` covers malformed JSON.
+- `Update_Config_Enforces_Exact_Size_Boundary` covers 8192 accepted and 8193 rejected.
+- Assertion-quality review: generated regressions contain meaningful equality, state/persistence, collection and negative HTTP assertions; none are assertion-free or trivial-only.
+- Pseudo-mutation review: assignment removal, stale DTO mapping, missing persistence, validation removal, and `>`→`>=` boundary mutations are killed. No high-risk survived mutation remains in the changed path.
+- Focused Dashboards validation passed 7/7; architecture plus Dashboards passed 31/31 before the boundary case was added.
+- Final validation: Release build 0 warnings / 0 errors; complete suite 911 passed / 0 failed / 1 skipped.

@@ -648,3 +648,14 @@
 - Existing persistence hook: `DomainEventsInterceptor.SavingChangesAsync` supplies a fallback only when current and original RowVersion match.
 - [x] Prove a stamped mutation remains at exactly version 1 after persistence.
 - [x] Prove an unstamped mutation reaches exactly version 1 through the persistence fallback.
+
+# Dashcard configuration regression (2026-08-26)
+
+- Target: `Dashcard.UpdateConfiguration`, its Application handler, and `PUT /api/boards/{boardId}/dashcards/{dashcardId}/config`.
+- Existing convention: xUnit integration tests use the shared SQLite API fixture, `HttpClient`, and FluentAssertions.
+- Defect: the handler returned success without changing `ConfigurationJson`; the existing test asserted only the status code.
+- Acceptance checklist:
+  - [x] Updating configuration changes the returned DTO.
+  - [x] A subsequent board listing returns the persisted JSON.
+  - [x] Mapping uses the real `ConfigurationJson` contract name.
+  - [x] Invalid and oversized configuration remain rejected by the domain invariant.

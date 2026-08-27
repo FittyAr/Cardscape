@@ -26,10 +26,6 @@ public static class ListDashcardsForBoardQueryHandler
                 "auth.required", "Authentication is required."));
         }
 
-        // v1.2.0 audit (pass 12): the previous incarnation
-        // had no authentication AND no membership check —
-        // any caller could read every board's dashcard
-        // layout by guessing the board id.
         Board? board = await boards.GetByIdAsync(new BoardId(query.BoardId), ct);
         if (board is null || !board.IsMember(currentUser.Id.Value))
         {
@@ -38,11 +34,7 @@ public static class ListDashcardsForBoardQueryHandler
         }
 
         IReadOnlyList<Dashcard> cards = await repo.ListForBoardAsync(new BoardId(query.BoardId), ct);
-        IReadOnlyList<DashcardDto> dtos = cards
-            .Select(c => new DashcardDto(
-                c.Id.Value, c.BoardId.Value, c.Kind, c.Title, c.ConfigurationJson,
-                c.Position, c.CreatedAt))
-            .ToList();
+        IReadOnlyList<DashcardDto> dtos = cards.Select(DashcardDto.FromEntity).ToList();
         return Result.Success(dtos);
     }
 }

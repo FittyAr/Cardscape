@@ -9,7 +9,17 @@ public sealed record DashcardDto(
     string Title,
     string? ConfigurationJson,
     int Position,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt)
+{
+    public static DashcardDto FromEntity(Dashcard dashcard) => new(
+        dashcard.Id.Value,
+        dashcard.BoardId.Value,
+        dashcard.Kind,
+        dashcard.Title,
+        dashcard.ConfigurationJson,
+        dashcard.Position,
+        dashcard.CreatedAt);
+}
 
 public sealed record CreateDashcardRequest(Guid BoardId, DashcardKind Kind, string Title, string? ConfigurationJson, int Position);
 public sealed record UpdateDashcardConfigRequest(string ConfigurationJson);
