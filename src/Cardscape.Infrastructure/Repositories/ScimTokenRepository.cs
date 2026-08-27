@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Authentication.Scim;
+using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,7 +28,9 @@ public sealed class ScimTokenRepository(CardscapeDbContext db) : IScimTokenRepos
         return null;
     }
 
-    public async Task<IReadOnlyList<ScimToken>> ListForWorkspaceAsync(Guid workspaceId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<ScimToken>> ListForWorkspaceAsync(
+        WorkspaceId workspaceId,
+        CancellationToken ct = default)
     {
         // SQLite does not support ORDER BY on DateTimeOffset
         // columns (the engine's ORDER BY only handles a fixed
@@ -36,7 +39,7 @@ public sealed class ScimTokenRepository(CardscapeDbContext db) : IScimTokenRepos
         // rows in any order and sort client-side.
         IQueryable<ScimToken> query = db.ScimTokens
             .AsNoTracking()
-            .Where(token => token.WorkspaceId == new Domain.Workspaces.WorkspaceId(workspaceId));
+            .Where(token => token.WorkspaceId == workspaceId);
         if (!db.Database.IsSqlite())
         {
             return await query.OrderByDescending(token => token.CreatedAt).ToListAsync(ct);
