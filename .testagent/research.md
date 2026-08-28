@@ -659,3 +659,12 @@
   - [x] A subsequent board listing returns the persisted JSON.
   - [x] Mapping uses the real `ConfigurationJson` contract name.
   - [x] Invalid and oversized configuration remain rejected by the domain invariant.
+## 2026-08-28 — Inbound email workspace/list boundary
+
+- Target: `RegisterInboundEmailAddressCommandHandler` and its REST integration coverage.
+- Existing convention: xUnit integration tests use `CardscapeWebApplicationFactory`, real SQLite, HTTP helpers and FluentAssertions.
+- Defect: registration checks workspace membership and list existence independently, but never proves the list's board belongs to the supplied workspace.
+- Acceptance checklist:
+  - [ ] Reject a target list whose board belongs to another workspace.
+  - [ ] Do not persist an address under the supplied workspace after rejection.
+  - [ ] Preserve valid register/list/unregister behavior.

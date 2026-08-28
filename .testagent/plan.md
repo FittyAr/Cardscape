@@ -498,3 +498,8 @@
 3. [x] Strengthen `Update_Config_Persists_Json` to assert the response and a fresh list query.
 4. [x] Run focused Dashboards and architecture tests.
 5. [x] Review assertion quality and pseudo-mutation gaps, then run the complete suite.
+## 2026-08-28 — Inbound email workspace/list boundary
+
+1. Add `InboundEmail_Register_With_List_From_Another_Workspace_Returns_BadRequest` to the existing endpoint suite.
+2. Assert HTTP 400 and absence of the rejected email from the workspace listing.
+3. Run the new test before the production fix, then the complete inbound-email subset and full solution.

@@ -562,3 +562,11 @@
 - Pseudo-mutation review: assignment removal, stale DTO mapping, missing persistence, validation removal, and `>`→`>=` boundary mutations are killed. No high-risk survived mutation remains in the changed path.
 - Focused Dashboards validation passed 7/7; architecture plus Dashboards passed 31/31 before the boundary case was added.
 - Final validation: Release build 0 warnings / 0 errors; complete suite 911 passed / 0 failed / 1 skipped.
+## 2026-08-28 — Inbound email workspace/list boundary
+
+- Research and plan recorded.
+- Regression `InboundEmail_Register_With_List_From_Another_Workspace_Returns_BadRequest` falló primero con 201 y pasa tras el fix.
+- Regresiones Inbound Email: 9/9.
+- Pseudo-mutation review: quitar/invertir el chequeo workspace-list cambia 400 a 201 y queda detectado; persistir antes de rechazar queda detectado por el listado posterior. No quedan mutaciones de alto riesgo sobrevivientes dentro del límite corregido.
+- Assertion review: 2 assertions significativas en 2 categorías — igualdad del contrato HTTP y colección negativa/efecto de estado. 0 triviales, 0 autorreferenciales, 0 assertion-free.
+- La extensión `test-analysis-extensions/extensions/dotnet.md` no está presente en el paquete instalado; se aplicó el fallback xUnit/FluentAssertions documentado por los skills.

@@ -571,6 +571,37 @@ public sealed class IntegrationsEndpointTests
         resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    [Fact]
+    public async Task InboundEmail_Register_With_List_From_Another_Workspace_Returns_BadRequest()
+    {
+        HttpClient client = await CreateAuthenticatedClientAsync();
+        Guid requestedWorkspaceId = await CreateWorkspaceAsync(client, "email-boundary-source");
+        Guid targetWorkspaceId = await CreateWorkspaceAsync(client, "email-boundary-target");
+        Guid targetBoardId = await CreateBoardAsync(client, targetWorkspaceId, "email-boundary-board");
+        Guid foreignListId = await CreateListAsync(client, targetBoardId, "Foreign inbox");
+        string rejectedEmail = $"boundary-{Guid.NewGuid():N}@cardscape.example";
+
+        HttpResponseMessage registered = await client.PostAsJsonAsync(
+            "api/integrations/email/addresses",
+            new
+            {
+                workspaceId = requestedWorkspaceId,
+                emailAddress = rejectedEmail,
+                targetListId = foreignListId,
+                label = "Must not cross workspaces"
+            },
+            TestContext.Current.CancellationToken);
+
+        registered.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        InboundEmailAddressDto[] addresses =
+            (await client.GetFromJsonAsync<InboundEmailAddressDto[]>(
+                $"api/integrations/email/addresses?workspaceId={requestedWorkspaceId}",
+                TestJson.Options,
+                TestContext.Current.CancellationToken))!;
+        addresses.Should().NotContain(address => address.EmailAddress == rejectedEmail);
+    }
+
     // ── helpers ─────────────────────────────────────────────
 
     private async Task<HttpClient> CreateAuthenticatedClientAsync()
