@@ -54,7 +54,7 @@ public class CardVoteTests
         var result = await ToggleCardVoteCommandHandler.Handle(
             new ToggleCardVoteCommand(card.Id.Value),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
-            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
+            ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.VoteCount.Should().Be(1);
@@ -79,12 +79,12 @@ public class CardVoteTests
         await ToggleCardVoteCommandHandler.Handle(
             new ToggleCardVoteCommand(card.Id.Value),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
-            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
+            ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         var result = await ToggleCardVoteCommandHandler.Handle(
             new ToggleCardVoteCommand(card.Id.Value),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
-            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
+            ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.VoteCount.Should().Be(0);
@@ -108,7 +108,7 @@ public class CardVoteTests
         var result = await ToggleCardVoteCommandHandler.Handle(
             new ToggleCardVoteCommand(card.Id.Value),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
-            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
+            ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Forbidden);
@@ -125,7 +125,7 @@ public class CardVoteTests
         var result = await ToggleCardVoteCommandHandler.Handle(
             new ToggleCardVoteCommand(Guid.NewGuid()),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
-            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
+            ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.NotFound);
@@ -174,7 +174,7 @@ public class CardVoteTests
         await ToggleCardVoteCommandHandler.Handle(
             new ToggleCardVoteCommand(card.Id.Value),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
-            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
+            ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         var result = await ListCardVotesQueryHandler.Handle(
             new ListCardVotesQuery(card.Id.Value),
