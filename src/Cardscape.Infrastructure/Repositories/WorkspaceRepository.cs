@@ -19,6 +19,22 @@ public sealed class WorkspaceRepository(CardscapeDbContext db) : RepositoryBase<
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<Workspace>> ListByIdsAsync(
+        IReadOnlyList<WorkspaceId> ids,
+        CancellationToken ct = default)
+    {
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        HashSet<WorkspaceId> wanted = new(ids);
+        return await Db.Set<Workspace>()
+            .AsNoTracking()
+            .Where(workspace => wanted.Contains(workspace.Id))
+            .ToListAsync(ct);
+    }
+
     public async Task<Workspace?> GetWithMembersAsync(WorkspaceId id, CancellationToken ct = default)
     {
         // Strongly-typed id comparison: EF Core 10's HasConversion

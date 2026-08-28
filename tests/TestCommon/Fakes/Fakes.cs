@@ -177,6 +177,17 @@ public sealed class InMemoryWorkspaceRepository : InMemoryRepositoryBase<Workspa
         return Task.FromResult(rows);
     }
 
+    public Task<IReadOnlyList<Workspace>> ListByIdsAsync(
+        IReadOnlyList<WorkspaceId> ids,
+        CancellationToken ct = default)
+    {
+        HashSet<WorkspaceId> wanted = new(ids);
+        IReadOnlyList<Workspace> rows = Store.Values
+            .Where(workspace => wanted.Contains(workspace.Id))
+            .ToList();
+        return Task.FromResult(rows);
+    }
+
     public Task<Workspace?> GetWithMembersAsync(WorkspaceId id, CancellationToken ct = default) =>
         GetByIdAsync(id, ct);
 }
