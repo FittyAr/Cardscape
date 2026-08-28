@@ -310,6 +310,17 @@ public sealed class InMemoryBoardListRepository : InMemoryRepositoryBase<BoardLi
         return Task.FromResult(boardId);
     }
 
+    public Task<Position> GetNextPositionAsync(BoardId boardId, CancellationToken ct = default)
+    {
+        double? maximum = Store.Values
+            .Where(list => list.BoardId == boardId)
+            .Select(list => (double?)list.Position.Value)
+            .Max();
+        return Task.FromResult(maximum is double value
+            ? Position.After(Position.From(value))
+            : Position.Start());
+    }
+
     public Task<IReadOnlyDictionary<Guid, Guid>> ListBoardIdsByListIdAsync(CancellationToken ct = default)
     {
         IReadOnlyDictionary<Guid, Guid> map = Store.Values

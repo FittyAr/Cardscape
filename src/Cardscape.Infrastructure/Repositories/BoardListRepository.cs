@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Boards;
+using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,18 @@ public sealed class BoardListRepository(CardscapeDbContext db) : RepositoryBase<
         }
 
         return await query.OrderBy(l => l.Position).ToListAsync(ct);
+    }
+
+    public async Task<Position> GetNextPositionAsync(BoardId boardId, CancellationToken ct = default)
+    {
+        Position maximum = await Db.Set<BoardList>()
+            .AsNoTracking()
+            .Where(list => list.BoardId == boardId)
+            .OrderByDescending(list => list.Position)
+            .Select(list => list.Position)
+            .FirstOrDefaultAsync(ct);
+
+        return Position.After(maximum);
     }
 
     public async Task<BoardId?> GetBoardIdAsync(BoardListId listId, CancellationToken ct = default)

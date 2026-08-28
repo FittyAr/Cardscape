@@ -1,4 +1,5 @@
 using Cardscape.Domain.Boards;
+using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
 
 namespace Cardscape.Application.Abstractions.Persistence;
@@ -6,6 +7,8 @@ namespace Cardscape.Application.Abstractions.Persistence;
 public interface IBoardListRepository : IRepository<BoardList, BoardListId>
 {
     Task<IReadOnlyList<BoardList>> ListForBoardAsync(BoardId boardId, bool includeArchived, CancellationToken ct = default);
+
+    Task<Position> GetNextPositionAsync(BoardId boardId, CancellationToken ct = default);
 
     Task<BoardId?> GetBoardIdAsync(BoardListId listId, CancellationToken ct = default);
 
