@@ -265,13 +265,26 @@ public sealed class InMemoryCardRepository : InMemoryRepositoryBase<Card, CardId
         return Task.FromResult(rows);
     }
 
-    public Task<IReadOnlyList<Card>> ListDueInRangeForBoardAsync(
-        BoardId boardId, DateTimeOffset from, DateTimeOffset to, CancellationToken ct = default)
+    public Task<IReadOnlyList<CalendarCardReadModel>> ListCalendarEntriesAsync(
+        Guid userId,
+        BoardId? boardId,
+        DateTimeOffset from,
+        DateTimeOffset to,
+        CancellationToken ct = default)
     {
-        IReadOnlyList<Card> rows = Store.Values
+        IReadOnlyList<CalendarCardReadModel> rows = Store.Values
             .Where(c => c.DueDate is not null
                         && c.DueDate.Value >= from
                         && c.DueDate.Value < to)
+            .Select(c => new CalendarCardReadModel(
+                c.Id.Value,
+                c.ListId.Value,
+                string.Empty,
+                boardId?.Value ?? Guid.Empty,
+                string.Empty,
+                c.Title.Value,
+                c.DueDate!.Value,
+                c.IsCompleted))
             .ToList();
         return Task.FromResult(rows);
     }

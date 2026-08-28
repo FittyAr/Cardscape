@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Lists;
+using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,38 +40,60 @@ public sealed class CardRepository(CardscapeDbContext db) : RepositoryBase<Card,
         return await query.OrderBy(c => c.Position).ToListAsync(ct);
     }
 
-    public async Task<IReadOnlyList<Card>> ListDueInRangeForBoardAsync(
-        BoardId boardId, DateTimeOffset from, DateTimeOffset to, CancellationToken ct = default)
+    public async Task<IReadOnlyList<CalendarCardReadModel>> ListCalendarEntriesAsync(
+        Guid userId,
+        BoardId? boardId,
+        DateTimeOffset from,
+        DateTimeOffset to,
+        CancellationToken ct = default)
     {
-        IQueryable<Card> candidates =
+        IQueryable<CalendarCardReadModel> candidates =
             from card in Db.Set<Card>().AsNoTracking()
             join list in Db.Set<BoardList>().AsNoTracking() on card.ListId equals list.Id
-            where list.BoardId == boardId && card.DueDate != null
-            select card;
+            join board in Db.Set<Board>().AsNoTracking() on list.BoardId equals board.Id
+            join workspace in Db.Set<Workspace>().AsNoTracking() on board.WorkspaceId equals workspace.Id
+            where card.DueDate != null
+                && !board.IsDeleted
+                && !workspace.IsDeleted
+                && (boardId != null
+                    ? board.Id == boardId
+                    : workspace.Members.Any(member => member.UserId == userId))
+            select new CalendarCardReadModel(
+                card.Id.Value,
+                list.Id.Value,
+                list.Name.Value,
+                board.Id.Value,
+                board.Name.Value,
+                card.Title.Value,
+                card.DueDate!.Value,
+                card.IsCompleted);
 
+        List<CalendarCardReadModel> rows;
         if (!Db.Database.IsSqlite())
         {
-            return await candidates
-                .Where(card => card.DueDate >= from && card.DueDate < to)
-                .OrderBy(card => card.DueDate)
+            rows = await candidates
+                .Where(row => row.DueDate >= from && row.DueDate < to)
+                .OrderBy(row => row.DueDate)
                 .ToListAsync(ct);
         }
-
-        // SQLite cannot translate ordering or range comparisons over
-        // DateTimeOffset. Keep only that provider limitation on the
-        // client; board/list filtering and null elimination remain in SQL.
-        var rows = new List<Card>();
-        await foreach (Card card in candidates.AsAsyncEnumerable().WithCancellation(ct))
+        else
         {
-            if (card.DueDate < from || card.DueDate >= to)
+            // SQLite cannot translate ordering or range comparisons over
+            // DateTimeOffset. Membership, tenant and relational filters
+            // still execute in SQL; only the provider limitation stays local.
+            rows = [];
+            await foreach (var row in candidates.AsAsyncEnumerable().WithCancellation(ct))
             {
-                continue;
-            }
+                if (row.DueDate < from || row.DueDate >= to)
+                {
+                    continue;
+                }
 
-            rows.Add(card);
+                rows.Add(row);
+            }
         }
 
-        rows.Sort((a, b) => a.DueDate!.Value.CompareTo(b.DueDate!.Value));
+        rows.Sort((a, b) => a.DueDate.CompareTo(b.DueDate));
         return rows;
     }
 
