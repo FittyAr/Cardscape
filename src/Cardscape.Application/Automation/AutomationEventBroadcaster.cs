@@ -41,13 +41,16 @@ namespace Cardscape.Application.Automation;
 public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IClock _clock;
     private readonly ILogger<AutomationEventBroadcaster> _logger;
 
     public AutomationEventBroadcaster(
         IServiceScopeFactory scopeFactory,
+        IClock clock,
         ILogger<AutomationEventBroadcaster> logger)
     {
         _scopeFactory = scopeFactory;
+        _clock = clock;
         _logger = logger;
     }
 
@@ -119,8 +122,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
             cardId: @event.CardId,
             trigger: AutomationTrigger.CardCompleted,
             extraFilter: _ => true,
-            ct: ct,
-            resolveListIdFromCard: true);
+            ct: ct);
 
     private Task HandleCardReopened(CardReopened @event, CancellationToken ct) =>
         RunForCardAsync(
@@ -128,16 +130,14 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
             cardId: @event.CardId,
             trigger: AutomationTrigger.CardReopened,
             extraFilter: _ => true,
-            ct: ct,
-            resolveListIdFromCard: true);
+            ct: ct);
 
     private async Task RunForCardAsync(
         BoardListId? listId,
         CardId cardId,
         AutomationTrigger trigger,
         Func<BoardAutomationRule, bool> extraFilter,
-        CancellationToken ct,
-        bool resolveListIdFromCard = false)
+        CancellationToken ct)
     {
         // BETA-A7-R2-001 — see test-results/beta/round-2/reports/A7-advanced.md.
         // Set the AsyncLocal flag so the broadcaster drops
@@ -161,7 +161,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
                 return;
             }
 
-            BoardListId effectiveListId = listId ?? (resolveListIdFromCard ? card.ListId : card.ListId);
+            BoardListId effectiveListId = listId ?? card.ListId;
             BoardList? list = await lists.GetByIdAsync(effectiveListId, ct);
             if (list is null)
             {
@@ -177,7 +177,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
 
             foreach (BoardAutomationRule rule in matches)
             {
-                await ExecuteActionAsync(rule, card, unitOfWork, _logger, ct);
+                await ExecuteActionAsync(rule, card, unitOfWork, _clock, _logger, ct);
             }
         }
         catch (Exception ex)
@@ -201,6 +201,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
         BoardAutomationRule rule,
         Card card,
         IUnitOfWork unitOfWork,
+        IClock clock,
         ILogger logger,
         CancellationToken ct)
     {
@@ -210,7 +211,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
             {
                 case AutomationAction.MoveCardToList when Guid.TryParse(rule.ActionArgument, out var listId):
                     {
-                        var result = card.Move(new BoardListId(listId), card.Position, DateTimeOffset.UtcNow);
+                        var result = card.Move(new BoardListId(listId), card.Position, clock.UtcNow);
                         if (result.IsFailure)
                         {
                             logger.LogWarning(
@@ -223,7 +224,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
                     }
                 case AutomationAction.AssignUser when Guid.TryParse(rule.ActionArgument, out var userId):
                     {
-                        var result = card.Assign(userId, DateTimeOffset.UtcNow);
+                        var result = card.Assign(userId, clock.UtcNow);
                         if (result.IsFailure)
                         {
                             logger.LogWarning(
@@ -237,7 +238,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
                 case AutomationAction.SetDueDate when DateTimeOffset.TryParse(
                     rule.ActionArgument, out var due):
                     {
-                        var result = card.SetDueDate(due, DateTimeOffset.UtcNow);
+                        var result = card.SetDueDate(due, clock.UtcNow);
                         if (result.IsFailure)
                         {
                             logger.LogWarning(
@@ -250,7 +251,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
                     }
                 case AutomationAction.MarkComplete:
                     {
-                        var result = card.Complete(DateTimeOffset.UtcNow);
+                        var result = card.Complete(clock.UtcNow);
                         if (result.IsFailure)
                         {
                             logger.LogWarning(
