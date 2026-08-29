@@ -36,6 +36,7 @@ public class CardDueDateCalendarSyncTests
             new CardDueDateSet(card.Id, ctx.Clock.UtcNow.AddDays(7), ctx.Clock.UtcNow),
             ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.GoogleCalendarConnections, ctx.GoogleCalendarSync,
+            ctx.Clock,
             NullLogger.Instance, CancellationToken.None);
 
         ctx.GoogleCalendarSync.PushCalls.Should().HaveCount(1);
@@ -77,6 +78,7 @@ public class CardDueDateCalendarSyncTests
             new CardDueDateSet(card.Id, ctx.Clock.UtcNow.AddDays(7), ctx.Clock.UtcNow),
             ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.GoogleCalendarConnections, ctx.GoogleCalendarSync,
+            ctx.Clock,
             NullLogger.Instance, CancellationToken.None);
 
         var updated = await ctx.GoogleCalendarConnections.FindByUserAsync(owner.Id.Value, TestContext.Current.CancellationToken);
@@ -98,6 +100,7 @@ public class CardDueDateCalendarSyncTests
             new CardDueDateSet(card.Id, ctx.Clock.UtcNow.AddDays(7), ctx.Clock.UtcNow),
             ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.GoogleCalendarConnections, ctx.GoogleCalendarSync,
+            ctx.Clock,
             NullLogger.Instance, CancellationToken.None);
 
         ctx.GoogleCalendarSync.PushCalls.Should().BeEmpty();
@@ -127,6 +130,7 @@ public class CardDueDateCalendarSyncTests
             new CardDueDateCleared(card.Id, ctx.Clock.UtcNow),
             ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.GoogleCalendarConnections, ctx.GoogleCalendarSync,
+            ctx.Clock,
             NullLogger.Instance, CancellationToken.None);
 
         ctx.GoogleCalendarSync.PushCalls.Should().HaveCount(1);
@@ -161,6 +165,7 @@ public class CardDueDateCalendarSyncTests
             new CardDueDateSet(card.Id, ctx.Clock.UtcNow.AddDays(7), ctx.Clock.UtcNow),
             ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.GoogleCalendarConnections, ctx.GoogleCalendarSync,
+            ctx.Clock,
             NullLogger.Instance, CancellationToken.None);
 
         ctx.GoogleCalendarSync.PushCalls.Should().HaveCount(2);

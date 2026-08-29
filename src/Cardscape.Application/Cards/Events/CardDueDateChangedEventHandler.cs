@@ -22,13 +22,14 @@ public static class CardDueDateCalendarSync
         IBoardRepository boards,
         IGoogleCalendarConnectionRepository connections,
         IGoogleCalendarSyncService sync,
+        IClock clock,
         ILogger logger,
         CancellationToken ct)
     {
         await PushAsync(
             @event.CardId,
             newDueDate: @event.DueDate,
-            cards, lists, boards, connections, sync, logger, ct);
+            cards, lists, boards, connections, sync, clock, logger, ct);
     }
 
     public static async Task Handle(
@@ -38,13 +39,14 @@ public static class CardDueDateCalendarSync
         IBoardRepository boards,
         IGoogleCalendarConnectionRepository connections,
         IGoogleCalendarSyncService sync,
+        IClock clock,
         ILogger logger,
         CancellationToken ct)
     {
         await PushAsync(
             @event.CardId,
             newDueDate: null,
-            cards, lists, boards, connections, sync, logger, ct);
+            cards, lists, boards, connections, sync, clock, logger, ct);
     }
 
     private static async Task PushAsync(
@@ -55,6 +57,7 @@ public static class CardDueDateCalendarSync
         IBoardRepository boards,
         IGoogleCalendarConnectionRepository connections,
         IGoogleCalendarSyncService sync,
+        IClock clock,
         ILogger logger,
         CancellationToken ct)
     {
@@ -101,12 +104,12 @@ public static class CardDueDateCalendarSync
 
                 if (result.IsSuccess)
                 {
-                    connection.RecordSyncSuccess(DateTimeOffset.UtcNow);
+                    connection.RecordSyncSuccess(clock.UtcNow);
                     await connections.UpdateAsync(connection, ct);
                 }
                 else
                 {
-                    connection.RecordSyncError(result.Error.Message, DateTimeOffset.UtcNow);
+                    connection.RecordSyncError(result.Error.Message, clock.UtcNow);
                     await connections.UpdateAsync(connection, ct);
                     logger.LogWarning(
                         "Google Calendar push for card {CardId} user {UserId} failed: {Code} {Message}",
@@ -115,7 +118,7 @@ public static class CardDueDateCalendarSync
             }
             catch (Exception ex)
             {
-                connection.RecordSyncError(ex.GetType().Name, DateTimeOffset.UtcNow);
+                connection.RecordSyncError(ex.GetType().Name, clock.UtcNow);
                 await connections.UpdateAsync(connection, ct);
                 logger.LogError(ex,
                     "Google Calendar push for card {CardId} user {UserId} threw.",
