@@ -684,3 +684,21 @@
 - [ ] Argumento inválido no muta ni persiste.
 - [ ] Reentrada durante `SaveChangesAsync` se descarta sin recursión.
 - [ ] Pruebas focalizadas pasan y assertions/gaps se revisan.
+
+## 2026-08-29 — BoardEventBroadcaster realtime fan-out
+
+### Inventario acotado
+
+- Producción: `src/Cardscape.Application/Realtime/BoardEventBroadcaster.cs`.
+- Destino: `tests/Cardscape.UnitTests/Application/Realtime/BoardEventBroadcasterTests.cs`.
+- Colaboradores: `IServiceScopeFactory`, `ICardRepository`, `IBoardListRepository`, `IBoardNotifier`, `IBoardClient` y logger.
+- Convenciones: xUnit v3, FluentAssertions, Moq estricto y nombres `Method_Condition_ExpectedBehavior`.
+- Hallazgo: los handlers basados en Card resuelven el board mediante un helper que devuelve `Guid.Empty` cuando falta la lista y publican igualmente.
+
+### Checklist
+
+- [x] `CardRenamed` publica el payload exacto al board propietario de la lista.
+- [x] Una Card existente cuya lista no existe no publica, especialmente nunca a `Guid.Empty`.
+- [x] Un evento no soportado no crea scope ni publica.
+- [x] Solo se modifican pruebas y artefactos `.testagent`; producción queda intacta por este agente.
+- [x] La validación focalizada documenta expresamente el comportamiento actual del caso de lista ausente.

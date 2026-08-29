@@ -510,3 +510,11 @@
 3. Probar `MoveCardToList` válido e inválido verificando estado y persistencia.
 4. Probar reentrada mediante callback de `IUnitOfWork` y verificar una única ejecución.
 5. Formatear, ejecutar pruebas focalizadas y releer cada assertion contra el checklist.
+
+## 2026-08-29 — BoardEventBroadcaster realtime fan-out
+
+1. [x] Crear un fixture unitario con `IServiceScopeFactory` estricto y dependencias scoped estrictas.
+2. [x] Implementar `BroadcastAsync_CardRenamed_PublishesExactPayloadToOwningBoard`, capturando board y payload mediante el dispatch real a `IBoardClient`.
+3. [x] Implementar `BroadcastAsync_CardRenamed_WhenListDoesNotExist_DoesNotPublish` para detectar publicaciones inválidas a `Guid.Empty`.
+4. [x] Implementar `BroadcastAsync_UnsupportedEvent_DoesNotCreateScopeOrPublish` con un `IDomainEvent` de prueba.
+5. [x] Ejecutar solo `BoardEventBroadcasterTests`, registrar el resultado del caso de lista ausente y no tocar producción.

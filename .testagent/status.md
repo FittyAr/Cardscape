@@ -580,3 +580,16 @@
 - [x] `git diff --check` limpio. La extensión anunciada `extensions/dotnet.md` no existe en el paquete local; clasificación xUnit/FluentAssertions realizada inline.
 - [x] Validación final: formatter limpio; build Release 0 advertencias/0 errores; regresiones 4/4; suite completa 916 superadas, 0 fallidas y 1 omitida.
 - [x] Cumplimiento: 0 APIs de SQL manual en `src` y 0 menciones de `Trello` fuera de artefactos ignorados.
+
+## 2026-08-29 — BoardEventBroadcaster realtime fan-out
+
+- [x] Investigación acotada y checklist trazable completados.
+- [x] Tres regresiones implementadas con Moq estricto y dispatch real del callback contra `IBoardClient`.
+- [x] Validación focalizada: 3/3 superadas, 0 fallos y 0 omitidas.
+- [x] El caso de Card existente/lista ausente no falla con la implementación actual: retorna antes de invocar `IBoardNotifier`, por lo que no publica a `Guid.Empty`.
+- [x] Revisión de assertions: 8 verificaciones significativas en igualdad/deep, null, side-effect y negativo; 0 tests assertion-free, triviales o autorreferenciales. Los tres tests verifican al menos un efecto observable preciso.
+- [x] Pseudo-mutación: board/list/card/title/timestamp incorrectos rompen la igualdad estructural; quitar el guard de lista ausente rompe las tres verificaciones negativas; tratar el evento desconocido como soportado rompe el mock estricto y las verificaciones de scope. Otros tipos de evento quedan fuera de este alcance acotado.
+- [x] La extensión anunciada `test-analysis-extensions/extensions/dotnet.md` no existe en el paquete local; clasificación xUnit/FluentAssertions/Moq realizada inline.
+- [x] Alcance respetado: este agente no editó producción, plan general, ni realizó commit/push.
+- [x] Validación final integrada: formatter limpio; build Release 0 advertencias/0 errores; regresiones 3/3; suite completa 919 superadas, 0 fallidas y 1 omitida.
+- [x] Cumplimiento final: `git diff --check` limpio; 0 APIs de SQL manual en `src`; 0 menciones de `Trello` fuera de artefactos ignorados.
