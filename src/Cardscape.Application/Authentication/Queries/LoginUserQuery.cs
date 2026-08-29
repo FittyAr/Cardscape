@@ -69,14 +69,10 @@ public static class LoginUserQueryHandler
             return Result.Failure<AuthResponse>(InvalidCredentials);
         }
 
-        // Check the 2FA status. The credential row can be soft-deleted
-        // (IsDeleted == true) when the user disabled 2FA; treat that
-        // as "no 2FA" so the user can log in with email+password alone.
         var credential = await totpCredentials.FindForUserAsync(user.Id, cancellationToken);
         bool hasActiveTotp = credential?.IsActive == true;
-        IReadOnlyList<Domain.Workspaces.Workspace> memberships =
-            await workspaces.ListForUserAsync(user.Id.Value, cancellationToken);
-        bool workspaceRequiresTotp = memberships.Any(workspace => workspace.RequireTwoFactor);
+        bool workspaceRequiresTotp = await workspaces.AnyForUserRequiresTwoFactorAsync(
+            user.Id.Value, cancellationToken);
 
         if (workspaceRequiresTotp && !hasActiveTotp)
         {
@@ -87,18 +83,10 @@ public static class LoginUserQueryHandler
         {
             if (string.IsNullOrWhiteSpace(query.TotpCode))
             {
-                // Step 1: hand the browser a one-shot challenge token
-                // and stop. The JWT is NOT issued here; the browser
-                // has to come back to /api/auth/login/totp with the
-                // token + the 6-digit code.
                 string pending = pendingLogins.Mint(user.Id);
                 return Result.Success(BuildChallenge(user, pending));
             }
 
-            // Step 1b: the caller submitted the code inline with
-            // email+password. Verify it before issuing the JWT.
-            // VerifyAsync updates LastUsedCounter and persists; that
-            // second SaveChangesAsync is intentional.
             var verifyResult = await totpService.VerifyAsync(user.Id, query.TotpCode.Trim(), cancellationToken);
             if (verifyResult.IsFailure)
             {

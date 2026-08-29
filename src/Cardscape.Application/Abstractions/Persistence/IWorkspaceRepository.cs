@@ -10,5 +10,7 @@ public interface IWorkspaceRepository : IRepository<Workspace, WorkspaceId>
         IReadOnlyList<WorkspaceId> ids,
         CancellationToken ct = default);
 
+    Task<bool> AnyForUserRequiresTwoFactorAsync(Guid userId, CancellationToken ct = default);
+
     Task<Workspace?> GetWithMembersAsync(WorkspaceId id, CancellationToken ct = default);
 }

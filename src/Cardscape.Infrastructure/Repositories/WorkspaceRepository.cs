@@ -35,6 +35,15 @@ public sealed class WorkspaceRepository(CardscapeDbContext db) : RepositoryBase<
             .ToListAsync(ct);
     }
 
+    public Task<bool> AnyForUserRequiresTwoFactorAsync(Guid userId, CancellationToken ct = default) =>
+        Db.Set<Workspace>()
+            .AsNoTracking()
+            .AnyAsync(
+                workspace => !workspace.IsDeleted
+                    && workspace.RequireTwoFactor
+                    && workspace.Members.Any(member => member.UserId == userId),
+                ct);
+
     public async Task<Workspace?> GetWithMembersAsync(WorkspaceId id, CancellationToken ct = default)
     {
         // Strongly-typed id comparison: EF Core 10's HasConversion

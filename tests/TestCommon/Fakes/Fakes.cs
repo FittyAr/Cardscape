@@ -188,6 +188,12 @@ public sealed class InMemoryWorkspaceRepository : InMemoryRepositoryBase<Workspa
         return Task.FromResult(rows);
     }
 
+    public Task<bool> AnyForUserRequiresTwoFactorAsync(Guid userId, CancellationToken ct = default) =>
+        Task.FromResult(Store.Values.Any(
+            workspace => !workspace.IsDeleted
+                && workspace.RequireTwoFactor
+                && workspace.Members.Any(member => member.UserId == userId)));
+
     public Task<Workspace?> GetWithMembersAsync(WorkspaceId id, CancellationToken ct = default) =>
         GetByIdAsync(id, ct);
 }
