@@ -20,6 +20,23 @@ public sealed class BoardRepository(CardscapeDbContext db) : RepositoryBase<Boar
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<BoardId>> ListIdsForWorkspacesAsync(
+        IReadOnlyList<WorkspaceId> workspaceIds,
+        CancellationToken ct = default)
+    {
+        if (workspaceIds.Count == 0)
+        {
+            return [];
+        }
+
+        HashSet<WorkspaceId> wanted = new(workspaceIds);
+        return await Db.Set<Board>()
+            .AsNoTracking()
+            .Where(board => !board.IsDeleted && wanted.Contains(board.WorkspaceId))
+            .Select(board => board.Id)
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<Board>> ListStarredByUserAsync(Guid userId, CancellationToken ct = default)
     {
         return await Db.Set<Board>()

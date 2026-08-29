@@ -7,6 +7,10 @@ public interface IBoardRepository : IRepository<Board, BoardId>
 {
     Task<IReadOnlyList<Board>> ListForWorkspaceAsync(WorkspaceId workspaceId, CancellationToken ct = default);
 
+    Task<IReadOnlyList<BoardId>> ListIdsForWorkspacesAsync(
+        IReadOnlyList<WorkspaceId> workspaceIds,
+        CancellationToken ct = default);
+
     Task<IReadOnlyList<Board>> ListStarredByUserAsync(Guid userId, CancellationToken ct = default);
 
     Task<Board?> GetWithMembersAsync(BoardId id, CancellationToken ct = default);
