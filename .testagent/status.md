@@ -570,3 +570,13 @@
 - Pseudo-mutation review: quitar/invertir el chequeo workspace-list cambia 400 a 201 y queda detectado; persistir antes de rechazar queda detectado por el listado posterior. No quedan mutaciones de alto riesgo sobrevivientes dentro del límite corregido.
 - Assertion review: 2 assertions significativas en 2 categorías — igualdad del contrato HTTP y colección negativa/efecto de estado. 0 triviales, 0 autorreferenciales, 0 assertion-free.
 - La extensión `test-analysis-extensions/extensions/dotnet.md` no está presente en el paquete instalado; se aplicó el fallback xUnit/FluentAssertions documentado por los skills.
+## 2026-08-29 — AutomationEventBroadcaster
+
+- [x] Investigación acotada y plan trazable completados.
+- [x] Cuatro pruebas implementadas para reloj, movimiento, argumento inválido y reentrada.
+- [x] Validación focalizada: 4/4 superadas, 0 fallos, 0 omitidas.
+- [x] Revisión de assertions: 12 verificaciones significativas en categorías boolean, igualdad, estado y side-effect; 0 tests sin assertions, triviales o autorreferenciales.
+- [x] Pseudo-mutación: quitar el reloj, cambiar/omitir el destino, aceptar un GUID inválido, persistir el default o eliminar el guard de reentrada rompe al menos una assertion. Las acciones AssignUser/SetDueDate y los early-return por entidades ausentes quedan fuera de este alcance y son gaps residuales de menor prioridad.
+- [x] `git diff --check` limpio. La extensión anunciada `extensions/dotnet.md` no existe en el paquete local; clasificación xUnit/FluentAssertions realizada inline.
+- [x] Validación final: formatter limpio; build Release 0 advertencias/0 errores; regresiones 4/4; suite completa 916 superadas, 0 fallidas y 1 omitida.
+- [x] Cumplimiento: 0 APIs de SQL manual en `src` y 0 menciones de `Trello` fuera de artefactos ignorados.

@@ -503,3 +503,10 @@
 1. Add `InboundEmail_Register_With_List_From_Another_Workspace_Returns_BadRequest` to the existing endpoint suite.
 2. Assert HTTP 400 and absence of the rejected email from the workspace listing.
 3. Run the new test before the production fix, then the complete inbound-email subset and full solution.
+## 2026-08-29 — AutomationEventBroadcaster
+
+1. Construir fixture unitario con scope DI, Moq y reloj fijo.
+2. Probar `MarkComplete` verificando estado, `UpdatedAt` y persistencia.
+3. Probar `MoveCardToList` válido e inválido verificando estado y persistencia.
+4. Probar reentrada mediante callback de `IUnitOfWork` y verificar una única ejecución.
+5. Formatear, ejecutar pruebas focalizadas y releer cada assertion contra el checklist.

@@ -668,3 +668,19 @@
   - [ ] Reject a target list whose board belongs to another workspace.
   - [ ] Do not persist an address under the supplied workspace after rejection.
   - [ ] Preserve valid register/list/unregister behavior.
+## 2026-08-29 — AutomationEventBroadcaster
+
+### Inventario acotado
+
+- Producción: `src/Cardscape.Application/Automation/AutomationEventBroadcaster.cs`.
+- Destino: `tests/Cardscape.UnitTests/Application/Automation/AutomationEventBroadcasterTests.cs`.
+- Colaboradores: repositorios de cards/listas/reglas, unit of work, reloj, scope factory y logger.
+- Convenciones: xUnit v3, FluentAssertions, Moq, `FakeClock` y nombres `Method_Condition_ExpectedBehavior`.
+
+### Checklist
+
+- [ ] `MarkComplete` usa el instante exacto del reloj inyectado.
+- [ ] `MoveCardToList` aplica el destino y persiste.
+- [ ] Argumento inválido no muta ni persiste.
+- [ ] Reentrada durante `SaveChangesAsync` se descarta sin recursión.
+- [ ] Pruebas focalizadas pasan y assertions/gaps se revisan.
