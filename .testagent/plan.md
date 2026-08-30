@@ -518,3 +518,11 @@
 3. [x] Implementar `BroadcastAsync_CardRenamed_WhenListDoesNotExist_DoesNotPublish` para detectar publicaciones inválidas a `Guid.Empty`.
 4. [x] Implementar `BroadcastAsync_UnsupportedEvent_DoesNotCreateScopeOrPublish` con un `IDomainEvent` de prueba.
 5. [x] Ejecutar solo `BoardEventBroadcasterTests`, registrar el resultado del caso de lista ausente y no tocar producción.
+
+## 2026-08-30 — WebhookEventBroadcaster board-scoped fan-out
+
+1. [x] Investigar el split final, contratos directos y convenciones unitarias existentes.
+2. [x] Implementar `BroadcastAsync_CardCreated_QueriesOwningBoardAndEnqueuesExactDelivery` para el query board-scoped y el contrato completo de delivery/job.
+3. [x] Implementar `BroadcastAsync_CardCreated_WhenSchedulerFails_PropagatesFailure` para el camino de error.
+4. [x] Implementar `BroadcastAsync_UnsupportedEvent_DoesNotCreateScope` para el fast path.
+5. [x] Ejecutar la clase focalizada y revisar gaps/assertions.

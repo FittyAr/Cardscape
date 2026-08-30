@@ -71,11 +71,18 @@ public sealed class WebhookDelivery : AggregateRoot<WebhookDeliveryId>
     }
 
     public static Result<WebhookDelivery> Create(
+        WebhookDeliveryId id,
         WebhookEndpointId endpointId,
         string eventType,
         string payloadJson,
         DateTimeOffset at)
     {
+        if (id is null)
+        {
+            return Result.Failure<WebhookDelivery>(DomainError.Validation(
+                "webhooks.delivery_required", "Delivery is required."));
+        }
+
         if (endpointId is null)
         {
             return Result.Failure<WebhookDelivery>(DomainError.Validation(
@@ -101,7 +108,7 @@ public sealed class WebhookDelivery : AggregateRoot<WebhookDeliveryId>
         }
 
         return Result.Success(new WebhookDelivery(
-            WebhookDeliveryId.New(), endpointId, eventType, payloadJson, at));
+            id, endpointId, eventType, payloadJson, at));
     }
 
     /// <summary>Records a successful attempt.</summary>

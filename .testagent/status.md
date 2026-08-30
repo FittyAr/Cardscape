@@ -593,3 +593,15 @@
 - [x] Alcance respetado: este agente no editó producción, plan general, ni realizó commit/push.
 - [x] Validación final integrada: formatter limpio; build Release 0 advertencias/0 errores; regresiones 3/3; suite completa 919 superadas, 0 fallidas y 1 omitida.
 - [x] Cumplimiento final: `git diff --check` limpio; 0 APIs de SQL manual en `src`; 0 menciones de `Trello` fuera de artefactos ignorados.
+
+## 2026-08-30 — WebhookEventBroadcaster board-scoped fan-out
+
+- [x] Investigación acotada y checklist trazable registrados contra la estructura partial final.
+- [x] Tres regresiones implementadas con Moq estricto, scope DI real, reloj fijo e inspección estructural del JSON.
+- [x] Validación focalizada: 3/3 superadas, 0 fallos y 0 omitidas.
+- [x] Assertion-quality: 3 tests, aproximadamente 25 assertions/verificaciones significativas en 7 categorías (igualdad/string, null, tipo, excepción, negativa, estado/side-effect y estructural); 0 assertion-free, triviales o autorreferenciales. El test de fast path es legítimamente de una sola categoría porque su contrato completo es la ausencia de interacción.
+- [x] Pseudo-mutación: cambiar/omitir board o event type, volver al query global, omitir/duplicar delivery o job, desacoplar cualquier ID/JSON/fecha/maxAttempts, tragar el failure del scheduler o crear scope para un evento desconocido rompe al menos una assertion. Los otros tres eventos soportados y los early-return por card/list/targets ausentes quedan como gaps residuales fuera del alcance acotado.
+- [x] La extensión anunciada `test-analysis-extensions/extensions/dotnet.md` no existe en el paquete local; se aplicó la clasificación xUnit/FluentAssertions/Moq inline.
+- [x] Alcance respetado: no se editó producción ni el plan general y no se realizó commit/push.
+- [x] Validación final integrada: formatter global limpio; build Release 0 advertencias/0 errores; regresiones 3/3; suite completa 922 superadas, 0 fallidas y 1 omitida.
+- [x] Cumplimiento final: `git diff --check` limpio; 0 referencias al comando eliminado; 0 APIs de SQL manual en `src`; 0 menciones de `Trello` fuera de artefactos ignorados.

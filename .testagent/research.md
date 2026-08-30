@@ -702,3 +702,20 @@
 - [x] Un evento no soportado no crea scope ni publica.
 - [x] Solo se modifican pruebas y artefactos `.testagent`; producción queda intacta por este agente.
 - [x] La validación focalizada documenta expresamente el comportamiento actual del caso de lista ausente.
+
+## 2026-08-30 — WebhookEventBroadcaster board-scoped fan-out
+
+### Inventario acotado
+
+- Producción observada: `WebhookEventBroadcaster.cs`, `.Events.cs` y `.FanOut.cs`; este agente no la modifica.
+- Destino: `tests/Cardscape.UnitTests/Application/Webhooks/WebhookEventBroadcasterTests.cs`.
+- Colaboradores: scope factory, repositorios de cards/listas/endpoints/deliveries, scheduler, reloj y logger.
+- Convenciones: xUnit v3, FluentAssertions, Moq estricto, `ServiceCollection`, `FakeClock` y `TestContext.Current.CancellationToken`.
+
+### Checklist
+
+- [x] Consultar endpoints con `BoardId` propietario y tipo de evento exactos.
+- [x] Agregar una única delivery y encolar un único job con IDs, evento, JSON, fecha y cinco intentos coherentes.
+- [x] Propagar el failure del scheduler sin registrarlo como enqueue exitoso.
+- [x] Evento no soportado no crea scope.
+- [x] No editar producción, plan general ni realizar commit/push.

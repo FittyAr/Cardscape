@@ -28,18 +28,22 @@ public sealed class WebhookEndpointRepository(CardscapeDbContext db)
     }
 
     public async Task<IReadOnlyList<WebhookEndpoint>> ListActiveForEventAsync(
-        string eventType, CancellationToken ct = default)
+        BoardId boardId,
+        string eventType,
+        CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(eventType))
         {
             return [];
         }
 
-        // Preserve exact comma-delimited token semantics while pushing the
-        // selective active/deleted predicate to the database.
+        // Preserve exact comma-delimited token semantics after EF Core has
+        // restricted the candidate set to the owning board and active rows.
         var candidates = await Db.Set<WebhookEndpoint>()
             .AsNoTracking()
-            .Where(endpoint => endpoint.Active && !endpoint.IsDeleted)
+            .Where(endpoint => endpoint.BoardId == boardId
+                && endpoint.Active
+                && !endpoint.IsDeleted)
             .ToListAsync(ct);
         return candidates.Where(endpoint => endpoint.SubscribesTo(eventType)).ToList();
     }

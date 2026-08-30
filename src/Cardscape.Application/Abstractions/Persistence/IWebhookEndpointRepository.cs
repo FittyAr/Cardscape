@@ -12,9 +12,10 @@ public interface IWebhookEndpointRepository : IRepository<WebhookEndpoint, Webho
     Task<IReadOnlyList<WebhookEndpoint>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default);
 
-    /// <summary>Lists every active endpoint subscribed to the given
-    /// event type across all boards. The dispatcher uses this to
-    /// fan out a single event to every matching endpoint.</summary>
+    /// <summary>Lists active endpoints on one board that subscribe to the
+    /// given event type.</summary>
     Task<IReadOnlyList<WebhookEndpoint>> ListActiveForEventAsync(
-        string eventType, CancellationToken ct = default);
+        BoardId boardId,
+        string eventType,
+        CancellationToken ct = default);
 }

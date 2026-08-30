@@ -74,6 +74,7 @@ internal sealed class WebhooksAndBackgroundSeedStep : SeedStepBase
                         string eventType = WebhookEventTypes.All[random.Next(0, WebhookEventTypes.All.Count)];
                         string payload = $"{{\"event\":\"{eventType}\",\"ts\":\"{now.AddMinutes(-random.Next(0, 600)):o}\",\"boardId\":\"{board.Id.Value:D}\"}}";
                         Result<WebhookDelivery> delivery = WebhookDelivery.Create(
+                            WebhookDeliveryId.New(),
                             endpoint.Value.Id, eventType, payload, now.AddMinutes(-random.Next(0, 600)));
                         if (delivery.IsSuccess)
                         {
