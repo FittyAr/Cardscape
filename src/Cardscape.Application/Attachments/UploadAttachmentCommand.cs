@@ -87,17 +87,15 @@ public static class UploadAttachmentCommandHandler
         //      safe basename and the storage key from a fresh
         //      GUID, with the user-supplied filename kept only
         //      as a metadata field.
-        string mimeType = string.IsNullOrWhiteSpace(command.MimeType)
-            ? "application/octet-stream"
-            : command.MimeType.Trim().ToLowerInvariant();
-        if (IsBlockedMimeType(mimeType))
+        string mimeType = AttachmentUploadPolicy.NormalizeMimeType(command.MimeType);
+        if (AttachmentUploadPolicy.IsBlockedMimeType(mimeType))
         {
             return Result.Failure<AttachmentDto>(DomainError.Validation(
                 "attachments.mime_blocked",
                 $"MIME type '{mimeType}' is not allowed for attachments."));
         }
 
-        string safeName = SanitizeFileName(command.FileName);
+        string safeName = AttachmentUploadPolicy.SanitizeFileName(command.FileName);
         if (string.IsNullOrWhiteSpace(safeName))
         {
             return Result.Failure<AttachmentDto>(DomainError.Validation(
@@ -105,8 +103,6 @@ public static class UploadAttachmentCommandHandler
         }
 
         string storageKey = $"cards/{command.CardId:N}/{Guid.NewGuid():N}/{safeName}";
-        await storage.SaveAsync(storageKey, command.Content, mimeType, ct);
-
         var creation = Attachment.Create(
             AttachmentId.New(),
             new CardId(command.CardId),
@@ -122,115 +118,27 @@ public static class UploadAttachmentCommandHandler
             return Result.Failure<AttachmentDto>(creation.Error);
         }
 
-        await attachments.AddAsync(creation.Value, ct);
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await storage.SaveAsync(storageKey, command.Content, mimeType, ct);
+            await attachments.AddAsync(creation.Value, ct);
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            try
+            {
+                await storage.DeleteAsync(storageKey, CancellationToken.None);
+            }
+            catch
+            {
+                // Preserve the original failure. The storage key is unique,
+                // so a later retention sweep can safely remove this orphan.
+            }
+
+            throw;
+        }
 
         return Result.Success(AttachmentDto.FromEntity(creation.Value));
-    }
-
-    // ── BETA-A5-R2-004 / BETA-A5-R2-005 helpers ───────────────
-    //
-    // `IsBlockedMimeType` rejects the formats that can be
-    // served back to the browser as executable / script content.
-    // The denylist mirrors what Kanban / Notion / Linear
-    // disallow: native executables, Office macros, script
-    // content, server-side includes, and HTML (which is a
-    // stored-XSS vector when served from a same-origin path).
-    // Everything else is allowed; the storage backend does
-    // not need to inspect content.
-    private static bool IsBlockedMimeType(string mimeType)
-    {
-        if (string.IsNullOrWhiteSpace(mimeType))
-        {
-            return false;
-        }
-
-        return mimeType switch
-        {
-            // Native executables / installers
-            "application/x-msdownload" => true,
-            "application/x-msdos-program" => true,
-            "application/x-exe" => true,
-            "application/exe" => true,
-            "application/x-dosexec" => true,
-            "application/x-winexe" => true,
-            "application/x-apple-diskimage" => true,
-            "application/vnd.microsoft.portable-executable" => true,
-            // Office macros
-            "application/vnd.ms-excel.addin.macroEnabled.12" => true,
-            "application/vnd.ms-word.document.macroEnabled.12" => true,
-            "application/vnd.ms-powerpoint.presentation.macroEnabled.12" => true,
-            "application/vnd.ms-excel.sheet.macroEnabled.12" => true,
-            // Scripts
-            "text/html" => true,
-            "application/xhtml+xml" => true,
-            "application/javascript" => true,
-            "application/x-javascript" => true,
-            "text/javascript" => true,
-            "text/x-shellscript" => true,
-            "application/x-shellscript" => true,
-            "application/x-perl" => true,
-            "application/x-python" => true,
-            "application/x-httpd-php" => true,
-            // Server-side includes
-            "text/x-server-parsed-html" => true,
-            "application/x-httpd-cgi" => true,
-            // Shell helpers
-            "application/x-shockwave-flash" => true,
-            "application/java-archive" => true,
-            "application/java-vm" => true,
-            _ => false
-        };
-    }
-
-    // BETA-A5-R2-005 — strip path components, control chars,
-    // reserved Windows / Unix names, and overly long names
-    // from the user-supplied filename. The result is safe to
-    // embed in a storage key. The original (untrusted) name is
-    // never written to disk.
-    private static readonly System.Buffers.SearchValues<char> PathSeparators =
-        System.Buffers.SearchValues.Create(new[] { '/', '\\' });
-
-    private static readonly System.Buffers.SearchValues<char> UnsafeChars =
-        System.Buffers.SearchValues.Create(new[] { ':', '*', '?', '"', '<', '>', '|' });
-
-    private static string SanitizeFileName(string? raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return string.Empty;
-        }
-
-        // Take only the basename — no directory components.
-        string name = raw;
-        int slash = name.AsSpan().LastIndexOfAny(PathSeparators);
-        if (slash >= 0)
-        {
-            name = name[(slash + 1)..];
-        }
-
-        // Strip control characters and a handful of
-        // shell-unsafe punctuation. Keep dots, dashes, spaces,
-        // underscores, parentheses, and Unicode letters.
-        var sb = new System.Text.StringBuilder(name.Length);
-        foreach (char c in name)
-        {
-            if (c < 0x20 || c == 0x7F)
-            {
-                continue;
-            }
-            if (UnsafeChars.Contains(c))
-            {
-                continue;
-            }
-            sb.Append(c);
-        }
-
-        string cleaned = sb.ToString().Trim();
-        if (cleaned.Length > 200)
-        {
-            cleaned = cleaned[..200];
-        }
-        return cleaned;
     }
 }

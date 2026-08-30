@@ -738,3 +738,14 @@
 - [x] Un fallo de envío se propaga y no guarda cambios.
 - [x] Un evento no soportado no crea scope.
 - [x] Usar mocks estrictos y no editar producción, plan general ni realizar commit/push.
+## 2026-08-30 — Attachment upload atomicity
+
+- Bounded targets: `UploadAttachmentCommandHandler` and `LocalFileStorageService`; no production edits, general-plan edits, commits, or pushes belong to this test-generator task.
+- Conventions: xUnit v3 `[Fact]`/`[Theory]`, FluentAssertions, strict Moq collaborators, `FakeClock`, and `TestContext.Current.CancellationToken`.
+- Acceptance checklist:
+  - [x] Handler validates and constructs valid metadata before external storage I/O; blocked input reaches neither storage nor persistence.
+  - [x] A metadata commit failure after blob storage calls `DeleteAsync(storageKey, CancellationToken.None)` and rethrows the original failure.
+  - [x] Success stores the blob, adds metadata, commits once, and returns a DTO with sanitized name, normalized MIME, exact size/uploader/time.
+  - [x] Blocked MIME touches neither storage, attachment repository, nor unit of work.
+  - [x] Local storage never exposes the final path during copy and publishes exact bytes after completion.
+  - [x] Copy failure and cancellation remove the temporary object and leave no final object.

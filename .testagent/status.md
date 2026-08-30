@@ -617,3 +617,13 @@
 - [x] Alcance respetado: no se editó producción ni el plan general y no se realizó commit/push.
 - [x] Validación final integrada: formatter global limpio; build Release 0 advertencias/0 errores; regresiones 3/3; suite completa 925 superadas, 0 fallidas y 1 omitida.
 - [x] Cumplimiento final: `git diff --check` limpio; 0 APIs de SQL manual en `src`; 0 menciones de `Trello` fuera de artefactos ignorados.
+## 2026-08-30 — Attachment upload atomicity
+
+- [x] Research and requirement-to-test mapping complete for the two bounded targets.
+- [x] Six discovered cases pass: three handler facts, one local-storage success fact, and two failure/cancellation theory rows.
+- [x] Narrow validation: `dotnet test tests/Cardscape.UnitTests/Cardscape.UnitTests.csproj -c Release --no-restore --filter "FullyQualifiedName~UploadAttachmentCommandHandlerTests|FullyQualifiedName~LocalFileStorageServiceTests" -m:1 -nr:false -v:minimal` -> 6 passed, 0 failed, 0 skipped.
+- [x] Assertion-quality review: approximately 29 meaningful assertions/verifications across boolean, equality/string, null, collection/deep, exception, negative, and state/side-effect categories; 0 assertion-free, trivial-only, self-referential, or unawaited assertion tests.
+- [x] Pseudo-mutation review: tests kill reordering validation after storage, wrong sanitized name/MIME/time/size/uploader, disconnected storage keys, missing/duplicate commit, swallowed commit exception, omitted cleanup, use of the request cancellation token for compensation, direct final-path writes, corrupted bytes, and leaked temporary/final files after failure or cancellation.
+- [x] Residual gaps outside this bounded block: cleanup failure intentionally preserves the original exception; existing-target collision and path-escape behavior are separate storage boundaries; size-limit/card/auth/membership guards predate this refactor.
+- [x] `test-analysis-extensions` advertises `extensions/dotnet.md`, but that file is absent from the installed skill package; xUnit v3/FluentAssertions/Moq classification was performed inline.
+- [x] Scope respected: no production/general-plan edit and no commit/push by this test agent.

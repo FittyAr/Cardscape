@@ -534,3 +534,11 @@
 3. [x] Implementar `BroadcastAsync_CardCreated_WhenSendFails_PropagatesFailureWithoutSaving`.
 4. [x] Implementar `BroadcastAsync_UnsupportedEvent_DoesNotCreateScope`.
 5. [x] Ejecutar la clase focalizada, releer cada requisito y registrar auditorías de gaps/assertions.
+## 2026-08-30 — Attachment upload atomicity
+
+- [x] `Handle_ValidUpload_PersistsBlobAndMetadataWithSanitizedName`: prove one coherent storage key, sanitized DTO/entity metadata, normalized MIME, deterministic clock, and one commit.
+- [x] `Handle_WhenMetadataSaveFails_DeletesStoredBlobWithoutCancellationAndRethrows`: prove compensating deletion uses the stored key and `CancellationToken.None` while preserving the database exception.
+- [x] `Handle_BlockedMimeType_DoesNotTouchStorageMetadataOrUnitOfWork`: prove validation precedes every external write.
+- [x] `SaveAsync_PublishesFinalFileOnlyAfterCopyCompletes`: inspect visibility during copy, then assert exact final bytes and absence of temporary files.
+- [x] `SaveAsync_WhenCopyFailsOrIsCancelled_LeavesNoFinalOrTemporaryFile(false/true)`: cover both I/O failure and cancellation cleanup.
+- [x] Run the narrow handler/storage filter and review assertions plus pseudo-mutations before handoff.

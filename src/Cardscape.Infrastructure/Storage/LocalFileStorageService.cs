@@ -19,10 +19,45 @@ public sealed class LocalFileStorageService : IStorageService
     public async Task<string> SaveAsync(string key, Stream content, string contentType, CancellationToken ct = default)
     {
         var path = ResolvePath(key);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        await using var fs = File.Create(path);
-        await content.CopyToAsync(fs, ct);
-        return key;
+        string directory = Path.GetDirectoryName(path)!;
+        Directory.CreateDirectory(directory);
+        string temporaryPath = Path.Combine(
+            directory,
+            $".{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
+        try
+        {
+            await using (var stream = new FileStream(
+                temporaryPath,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 81920,
+                useAsync: true))
+            {
+                await content.CopyToAsync(stream, ct);
+                await stream.FlushAsync(ct);
+            }
+
+            File.Move(temporaryPath, path, overwrite: false);
+            return key;
+        }
+        catch
+        {
+            try
+            {
+                if (File.Exists(temporaryPath))
+                {
+                    File.Delete(temporaryPath);
+                }
+            }
+            catch
+            {
+                // Preserve the write/cancellation failure. A dot-prefixed
+                // temporary file is never exposed as the requested object.
+            }
+
+            throw;
+        }
     }
 
     public Task<Stream> OpenReadAsync(string key, CancellationToken ct = default)
