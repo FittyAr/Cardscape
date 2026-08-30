@@ -719,3 +719,22 @@
 - [x] Propagar el failure del scheduler sin registrarlo como enqueue exitoso.
 - [x] Evento no soportado no crea scope.
 - [x] No editar producción, plan general ni realizar commit/push.
+
+## 2026-08-30 — SlackEventBroadcaster batched fan-out
+
+### Inventario acotado
+
+- Producción observada: refactor en curso de `src/Cardscape.Application/Integrations/Slack/SlackEventBroadcaster*.cs`; este agente no la modifica.
+- Destino: `tests/Cardscape.UnitTests/Application/Integrations/Slack/SlackEventBroadcasterTests.cs`.
+- Colaboradores: scope factory, repositorios de cards/listas/canales/workspaces, `ISlackNotificationService`, `IUnitOfWork`, `IClock` y logger.
+- Convenciones: xUnit v3, FluentAssertions, Moq estricto, `ServiceCollection`, `FakeClock`, nombres `Method_Condition_ExpectedBehavior` y token de `TestContext`.
+
+### Checklist
+
+- [x] Consultar canales por `BoardId` propietario y tipo de evento exactos.
+- [x] Cargar los IDs únicos de workspace mediante una única llamada batch `ListByIdsAsync`.
+- [x] Dos canales del mismo workspace reutilizan la misma entidad/credencial y producen dos envíos.
+- [x] Cada envío exitoso registra exactamente el instante del reloj inyectado y el unit of work guarda una sola vez.
+- [x] Un fallo de envío se propaga y no guarda cambios.
+- [x] Un evento no soportado no crea scope.
+- [x] Usar mocks estrictos y no editar producción, plan general ni realizar commit/push.

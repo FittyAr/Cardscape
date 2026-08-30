@@ -526,3 +526,11 @@
 3. [x] Implementar `BroadcastAsync_CardCreated_WhenSchedulerFails_PropagatesFailure` para el camino de error.
 4. [x] Implementar `BroadcastAsync_UnsupportedEvent_DoesNotCreateScope` para el fast path.
 5. [x] Ejecutar la clase focalizada y revisar gaps/assertions.
+
+## 2026-08-30 — SlackEventBroadcaster batched fan-out
+
+1. [x] Investigar contratos, agregados y convenciones unitarias mientras se estabiliza el split de producción.
+2. [x] Implementar `BroadcastAsync_CardCreated_BatchesWorkspaceLookupAndSendsEveryChannel` para probar query board/evento, IDs únicos, credencial compartida, dos envíos, reloj exacto y un único save.
+3. [x] Implementar `BroadcastAsync_CardCreated_WhenSendFails_PropagatesFailureWithoutSaving`.
+4. [x] Implementar `BroadcastAsync_UnsupportedEvent_DoesNotCreateScope`.
+5. [x] Ejecutar la clase focalizada, releer cada requisito y registrar auditorías de gaps/assertions.

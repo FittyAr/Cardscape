@@ -605,3 +605,15 @@
 - [x] Alcance respetado: no se editó producción ni el plan general y no se realizó commit/push.
 - [x] Validación final integrada: formatter global limpio; build Release 0 advertencias/0 errores; regresiones 3/3; suite completa 922 superadas, 0 fallidas y 1 omitida.
 - [x] Cumplimiento final: `git diff --check` limpio; 0 referencias al comando eliminado; 0 APIs de SQL manual en `src`; 0 menciones de `Trello` fuera de artefactos ignorados.
+
+## 2026-08-30 — SlackEventBroadcaster batched fan-out
+
+- [x] Investigación acotada, convenciones y checklist registrados.
+- [x] Tres regresiones implementadas con Moq estricto, dos scopes DI reales y reloj fijo.
+- [x] Validación focalizada: 3/3 superadas, 0 fallos y 0 omitidas.
+- [x] Assertion-quality: 3 tests y 15 assertions/verificaciones significativas en 7 categorías (igualdad/string, colección/deep, excepción, null, negativa y estado/side-effect); 0 assertion-free, triviales o autorreferenciales. El fast path de evento desconocido cubre íntegramente su contrato mediante ausencia de interacción.
+- [x] Pseudo-mutación: cambiar board/event type, volver a lookups individuales, omitir deduplicación, usar otra entidad workspace, omitir/duplicar envíos, ignorar el reloj, omitir/duplicar el save o tragar el failure rompe al menos una assertion. Quedan como gaps residuales los otros tres eventos soportados, card/list ausentes, targets vacíos y workspaces ausentes/inactivos.
+- [x] `test-analysis-extensions` fue consultado, pero `extensions/dotnet.md` no existe en el paquete local; se aplicó la clasificación xUnit/FluentAssertions/Moq inline.
+- [x] Alcance respetado: no se editó producción ni el plan general y no se realizó commit/push.
+- [x] Validación final integrada: formatter global limpio; build Release 0 advertencias/0 errores; regresiones 3/3; suite completa 925 superadas, 0 fallidas y 1 omitida.
+- [x] Cumplimiento final: `git diff --check` limpio; 0 APIs de SQL manual en `src`; 0 menciones de `Trello` fuera de artefactos ignorados.

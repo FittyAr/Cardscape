@@ -6,6 +6,11 @@ namespace Cardscape.Application.Abstractions.Persistence;
 /// <summary>Read/write repository for <see cref="SlackWorkspace"/>.</summary>
 public interface ISlackWorkspaceRepository : IRepository<SlackWorkspace, SlackWorkspaceId>
 {
+    /// <summary>Loads tracked Slack workspaces for one fan-out batch.</summary>
+    Task<IReadOnlyList<SlackWorkspace>> ListByIdsAsync(
+        IReadOnlyList<SlackWorkspaceId> ids,
+        CancellationToken ct = default);
+
     /// <summary>Loads the Slack workspace installed on a given
     /// Cardscape workspace. There is at most one active
     /// <see cref="SlackWorkspace"/> per <see cref="WorkspaceId"/>
