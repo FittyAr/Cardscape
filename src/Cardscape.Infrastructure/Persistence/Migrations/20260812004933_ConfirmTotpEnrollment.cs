@@ -3,27 +3,26 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Cardscape.Infrastructure.Persistence.Migrations
+namespace Cardscape.Infrastructure.Persistence.Migrations;
+
+/// <inheritdoc />
+public partial class ConfirmTotpEnrollment : Migration
 {
     /// <inheritdoc />
-    public partial class ConfirmTotpEnrollment : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<DateTimeOffset>(
-                name: "ConfirmedAt",
-                table: "totp_credentials",
-                type: "TEXT",
-                nullable: true);
-        }
+        migrationBuilder.AddColumn<DateTimeOffset>(
+            name: "ConfirmedAt",
+            table: "totp_credentials",
+            type: "TEXT",
+            nullable: true);
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "ConfirmedAt",
-                table: "totp_credentials");
-        }
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "ConfirmedAt",
+            table: "totp_credentials");
     }
 }

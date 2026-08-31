@@ -5,9 +5,8 @@
 // Defining it here is the canonical workaround.
 #if NETSTANDARD2_0
 #pragma warning disable IDE0130 // namespace does not match folder structure (intentional polyfill)
-namespace System.Runtime.CompilerServices
-{
-    internal static class IsExternalInit { }
-}
+namespace System.Runtime.CompilerServices;
+
+internal static class IsExternalInit { }
 #pragma warning restore IDE0130
 #endif
