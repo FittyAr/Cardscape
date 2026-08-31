@@ -3,7 +3,6 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace Cardscape.Infrastructure.Scim;
 
@@ -17,194 +16,30 @@ namespace Cardscape.Infrastructure.Scim;
 /// the time a request lands here, the workspace id is on
 /// <c>HttpContext.Items["scim.workspaceId"]</c>.
 /// </summary>
-public sealed class ScimService(
-    IRepository<User, UserId> users,
-    IUserRepository userRepository,
-    IRepository<Workspace, WorkspaceId> workspaces,
-    IUnitOfWork unitOfWork,
-    IClock clock) : IScimService
+public sealed partial class ScimService : IScimService
 {
-    private const string ScimUserSchema = "urn:ietf:params:scim:schemas:core:2.0:User";
     private const string ScimGroupSchema = "urn:ietf:params:scim:schemas:core:2.0:Group";
     private const string ScimListResponseSchema = "urn:ietf:params:scim:api:messages:2.0:ListResponse";
     private const string ScimGroupIdPrefix = "workspace-";
 
-    public async Task<Result<ScimUserResponse>> CreateUserAsync(
-        Guid workspaceId, ScimUserCreateRequest request, CancellationToken ct = default)
+    private readonly IRepository<User, UserId> users;
+    private readonly IUserRepository userRepository;
+    private readonly IRepository<Workspace, WorkspaceId> workspaces;
+    private readonly IUnitOfWork unitOfWork;
+    private readonly IClock clock;
+
+    public ScimService(
+        IRepository<User, UserId> users,
+        IUserRepository userRepository,
+        IRepository<Workspace, WorkspaceId> workspaces,
+        IUnitOfWork unitOfWork,
+        IClock clock)
     {
-        if (string.IsNullOrWhiteSpace(request.UserName))
-        {
-            return Result.Failure<ScimUserResponse>(DomainError.Validation(
-                "scim.user_name_required", "userName is required."));
-        }
-
-        var emailResult = EmailAddress.Create(request.UserName);
-        if (emailResult.IsFailure)
-        {
-            return Result.Failure<ScimUserResponse>(emailResult.Error);
-        }
-
-        // Provisioned users are created as external (no
-        // password) — the IdP owns their credentials.
-        var userResult = User.RegisterExternal(
-            UserId.New(),
-            emailResult.Value,
-            BuildDisplayName(request),
-            clock.UtcNow);
-        if (userResult.IsFailure)
-        {
-            return Result.Failure<ScimUserResponse>(userResult.Error);
-        }
-
-        await users.AddAsync(userResult.Value, ct);
-
-        // Add as a workspace member (Member role by default).
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
-        if (workspace is null)
-        {
-            return Result.Failure<ScimUserResponse>(DomainError.NotFound(
-                "scim.workspace_not_found",
-                $"Workspace {workspaceId} was not found."));
-        }
-
-        var addResult = workspace.AddMember(
-            userResult.Value.Id.Value,
-            WorkspaceRole.Member,
-            clock.UtcNow);
-        if (addResult.IsFailure)
-        {
-            return Result.Failure<ScimUserResponse>(addResult.Error);
-        }
-
-        await unitOfWork.SaveChangesAsync(ct);
-
-        return Result.Success(ToResponse(userResult.Value));
-    }
-
-    public async Task<Result<IReadOnlyList<ScimUserResponse>>> ListUsersAsync(
-        Guid workspaceId, int startIndex, int count, string? filter, CancellationToken ct = default)
-    {
-        // SCIM v2 (RFC 7644 §3.4.2.4) lets the client pass
-        // any positive integer for `count`; the spec
-        // recommends 10 as a default and 0 for "use the
-        // server default". We clamp at 200 so a misbehaving
-        // IdP cannot ask for the entire users table in one
-        // call (a 2B-row response would crush the API
-        // process and the IdP's UI in equal measure). The
-        // SCIM startIndex is one-based; values below one are
-        // normalized to the first result.
-        int pageSize = count <= 0 ? 50 : Math.Min(count, 200);
-        string? normalizedEmail = ParseSimpleUserNameFilter(filter);
-        IReadOnlyList<User> rows = await userRepository.ListWorkspaceUsersAsync(
-            new WorkspaceId(workspaceId),
-            normalizedEmail,
-            Math.Max(0, startIndex - 1),
-            pageSize,
-            ct);
-
-        IReadOnlyList<ScimUserResponse> page = rows
-            .Select(ToResponse)
-            .ToList();
-
-        return Result.Success<IReadOnlyList<ScimUserResponse>>(page);
-    }
-
-    public async Task<Result<ScimUserResponse>> GetUserAsync(
-        Guid workspaceId, Guid userId, CancellationToken ct = default)
-    {
-        var user = await FindWorkspaceUserAsync(workspaceId, userId, ct);
-        if (user is null)
-        {
-            return Result.Failure<ScimUserResponse>(DomainError.NotFound(
-                "scim.user_not_found", $"User {userId} was not found."));
-        }
-        return Result.Success(ToResponse(user));
-    }
-
-    public async Task<Result<ScimUserResponse>> ReplaceUserAsync(
-        Guid workspaceId, Guid userId, ScimUserCreateRequest request, CancellationToken ct = default)
-    {
-        var user = await FindWorkspaceUserAsync(workspaceId, userId, ct);
-        if (user is null)
-        {
-            return Result.Failure<ScimUserResponse>(DomainError.NotFound(
-                "scim.user_not_found", $"User {userId} was not found."));
-        }
-
-        var emailResult = EmailAddress.Create(request.UserName);
-        if (emailResult.IsFailure)
-        {
-            return Result.Failure<ScimUserResponse>(emailResult.Error);
-        }
-
-        var updateResult = user.UpdateProfile(BuildDisplayName(request), user.AvatarUrl, clock.UtcNow);
-        if (updateResult.IsFailure)
-        {
-            return Result.Failure<ScimUserResponse>(updateResult.Error);
-        }
-
-        await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(ToResponse(user));
-    }
-
-    public async Task<Result<ScimUserResponse>> PatchUserAsync(
-        Guid workspaceId, Guid userId, ScimPatchRequest request, CancellationToken ct = default)
-    {
-        var user = await FindWorkspaceUserAsync(workspaceId, userId, ct);
-        if (user is null)
-        {
-            return Result.Failure<ScimUserResponse>(DomainError.NotFound(
-                "scim.user_not_found", $"User {userId} was not found."));
-        }
-
-        // The minimal SCIM v2 patch implementation: the only
-        // operations the IdP issues today are
-        // `{ "op": "replace", "path": "active", "value": false }`
-        // for off-boarding. The Replace / Add variants are
-        // treated identically.
-        foreach (var op in request.Operations)
-        {
-            if (!string.Equals(op.Op, "replace", StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(op.Op, "add", StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            if (string.Equals(op.Path, "active", StringComparison.OrdinalIgnoreCase)
-                && op.Value is bool active)
-            {
-                if (active)
-                {
-                    user.Reactivate(clock.UtcNow);
-                }
-                else
-                {
-                    user.Deactivate(clock.UtcNow);
-                }
-            }
-        }
-
-        await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(ToResponse(user));
-    }
-
-    public async Task<Result> DeleteUserAsync(
-        Guid workspaceId, Guid userId, CancellationToken ct = default)
-    {
-        var user = await FindWorkspaceUserAsync(workspaceId, userId, ct);
-        if (user is null)
-        {
-            return Result.Failure(DomainError.NotFound(
-                "scim.user_not_found", $"User {userId} was not found."));
-        }
-
-        // Off-boarding via SCIM is a soft delete (deactivate),
-        // not a hard delete — the audit trail matters for
-        // compliance teams and a hard delete would cascade
-        // through the user's boards / comments / votes.
-        user.Deactivate(clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success();
+        this.users = users;
+        this.userRepository = userRepository;
+        this.workspaces = workspaces;
+        this.unitOfWork = unitOfWork;
+        this.clock = clock;
     }
 
     public async Task<ScimListResponse<ScimGroup>> ListGroupsAsync(
@@ -508,189 +343,4 @@ public sealed class ScimService(
         return Result.Success();
     }
 
-    private static string BuildGroupId(Guid workspaceGuid) => ScimGroupIdPrefix + workspaceGuid.ToString("D");
-
-    private static bool TryParseGroupId(string groupId, out Guid workspaceId)
-    {
-        workspaceId = Guid.Empty;
-        if (string.IsNullOrWhiteSpace(groupId)
-            || !groupId.StartsWith(ScimGroupIdPrefix, StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        return Guid.TryParse(groupId[ScimGroupIdPrefix.Length..], out workspaceId);
-    }
-
-    private async Task<IReadOnlyList<ScimGroupMember>> BuildMembersAsync(
-        Workspace workspace, CancellationToken ct)
-    {
-        IReadOnlyList<User> members = await userRepository.ListByIdsAsync(
-            workspace.Members.Select(member => new UserId(member.UserId)).ToList(),
-            ct);
-        Dictionary<Guid, User> usersById = members.ToDictionary(user => user.Id.Value);
-
-        return workspace.Members
-            .Select(member => new ScimGroupMember(
-                member.UserId.ToString("D"),
-                usersById.GetValueOrDefault(member.UserId)?.DisplayName.Value))
-            .ToList();
-    }
-
-    private async Task ReplaceMembersAsync(
-        Workspace workspace, IReadOnlyList<ScimGroupMember> desired, CancellationToken ct)
-    {
-        HashSet<Guid> desiredIds = new();
-        foreach (var member in desired)
-        {
-            if (Guid.TryParse(member.Value, out Guid userGuid))
-            {
-                desiredIds.Add(userGuid);
-            }
-        }
-
-        // Remove anyone not in the desired set, except the
-        // owner (the aggregate forbids removing them — that
-        // would also break every card in the workspace).
-        List<Guid> toRemove = new();
-        foreach (var m in workspace.Members)
-        {
-            if (!desiredIds.Contains(m.UserId) && m.UserId != workspace.OwnerId)
-            {
-                toRemove.Add(m.UserId);
-            }
-        }
-
-        foreach (var userGuid in toRemove)
-        {
-            workspace.RemoveMember(userGuid, clock.UtcNow);
-        }
-
-        // Add the rest. `AddMember` is a no-op on conflict
-        // (it returns `AlreadyMember`), which is exactly
-        // the idempotent behaviour PUT wants.
-        HashSet<Guid> missingIds = desiredIds
-            .Where(userGuid => !workspace.HasMember(userGuid))
-            .ToHashSet();
-        IReadOnlyList<User> usersToAdd = await userRepository.ListByIdsAsync(
-            missingIds.Select(userGuid => new UserId(userGuid)).ToList(),
-            ct);
-        foreach (var user in usersToAdd)
-        {
-            workspace.AddMember(user.Id.Value, WorkspaceRole.Member, clock.UtcNow);
-        }
-    }
-
-    private async Task<IReadOnlyList<User>> LoadValidUsersAsync(
-        IReadOnlyList<ScimGroupMember> members,
-        CancellationToken ct)
-    {
-        HashSet<UserId> ids = [];
-        foreach (var member in members)
-        {
-            if (Guid.TryParse(member.Value, out Guid userId))
-            {
-                ids.Add(new UserId(userId));
-            }
-        }
-
-        return await userRepository.ListByIdsAsync(ids.ToList(), ct);
-    }
-
-    private static IReadOnlyList<ScimGroupMember> ExtractMembers(object? value)
-    {
-        if (value is null)
-        {
-            return [];
-        }
-
-        // The IdP usually sends either a
-        // `IReadOnlyList<ScimGroupMember>` (System.Text.Json
-        // pre-binds it) or a JsonElement array. Handle
-        // both.
-        if (value is IReadOnlyList<ScimGroupMember> alreadyTyped)
-        {
-            return alreadyTyped;
-        }
-
-        if (value is System.Text.Json.JsonElement element
-            && element.ValueKind == System.Text.Json.JsonValueKind.Array)
-        {
-            List<ScimGroupMember> rows = new();
-            foreach (var item in element.EnumerateArray())
-            {
-                string? memberValue = null;
-                string? memberDisplay = null;
-                if (item.ValueKind == System.Text.Json.JsonValueKind.Object)
-                {
-                    if (item.TryGetProperty("value", out var v))
-                    {
-                        memberValue = v.ValueKind == System.Text.Json.JsonValueKind.String
-                            ? v.GetString()
-                            : v.GetRawText().Trim('"');
-                    }
-                    if (item.TryGetProperty("display", out var d)
-                        && d.ValueKind == System.Text.Json.JsonValueKind.String)
-                    {
-                        memberDisplay = d.GetString();
-                    }
-                }
-                if (!string.IsNullOrWhiteSpace(memberValue))
-                {
-                    rows.Add(new ScimGroupMember(memberValue!, memberDisplay));
-                }
-            }
-            return rows;
-        }
-
-        return [];
-    }
-
-    private static DisplayName BuildDisplayName(ScimUserCreateRequest request) =>
-        string.IsNullOrWhiteSpace(request.GivenName) && string.IsNullOrWhiteSpace(request.FamilyName)
-            ? DisplayName.Create(request.UserName).Value
-            : DisplayName.Create($"{request.GivenName} {request.FamilyName}".Trim()).Value;
-
-    private static ScimUserResponse ToResponse(User u) => new(
-        u.Id.Value,
-        ScimUserSchema,
-        u.Email.Value,
-        u.DisplayName.Value.Split(' ').FirstOrDefault(),
-        u.DisplayName.Value.Split(' ').Skip(1).FirstOrDefault(),
-        u.IsActive,
-        u.CreatedAt,
-        u.UpdatedAt);
-
-    private Task<User?> FindWorkspaceUserAsync(Guid workspaceId, Guid userId, CancellationToken ct) =>
-        userRepository.FindWorkspaceUserAsync(
-            new WorkspaceId(workspaceId),
-            new UserId(userId),
-            ct);
-
-    private static string? ParseSimpleUserNameFilter(string? filter)
-    {
-        // `userName eq "..."` is the only filter the IdP sends
-        // for v1.1.0. Anything else is a no-op (returns the
-        // full list), so a future PR can layer the full
-        // SCIM v2 filter grammar.
-        const string token = "userName eq \"";
-        if (string.IsNullOrWhiteSpace(filter))
-        {
-            return null;
-        }
-
-        int idx = filter.IndexOf(token, StringComparison.OrdinalIgnoreCase);
-        if (idx < 0)
-        {
-            return null;
-        }
-        int start = idx + token.Length;
-        int end = filter.IndexOf('"', start);
-        if (end <= start)
-        {
-            return null;
-        }
-
-        return filter[start..end].Trim().ToLowerInvariant();
-    }
 }
