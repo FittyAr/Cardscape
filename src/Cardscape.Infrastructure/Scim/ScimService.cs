@@ -84,27 +84,6 @@ public sealed class ScimService(
     public async Task<Result<IReadOnlyList<ScimUserResponse>>> ListUsersAsync(
         Guid workspaceId, int startIndex, int count, string? filter, CancellationToken ct = default)
     {
-        IReadOnlyList<WorkspaceMember> members = await userRepository
-            .ListWorkspaceMembersAsync(new WorkspaceId(workspaceId), ct);
-
-        List<User> rows = new();
-        foreach (var m in members)
-        {
-            var u = await users.GetByIdAsync(new UserId(m.UserId), ct);
-            if (u is not null)
-            {
-                rows.Add(u);
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(filter))
-        {
-            // SCIM v2 filters of the form
-            // `userName eq "alice@example.com"`.
-            // For v1.1.0 the parser is intentionally minimal.
-            rows = ApplySimpleUserNameFilter(rows, filter).ToList();
-        }
-
         // SCIM v2 (RFC 7644 §3.4.2.4) lets the client pass
         // any positive integer for `count`; the spec
         // recommends 10 as a default and 0 for "use the
@@ -112,15 +91,18 @@ public sealed class ScimService(
         // IdP cannot ask for the entire users table in one
         // call (a 2B-row response would crush the API
         // process and the IdP's UI in equal measure). The
-        // startIndex semantics are left at the v1.1.0
-        // behaviour; any change here must come with an
-        // explicit migration plan because IdP caches hold
-        // the cursor between reconciles.
+        // SCIM startIndex is one-based; values below one are
+        // normalized to the first result.
         int pageSize = count <= 0 ? 50 : Math.Min(count, 200);
+        string? normalizedEmail = ParseSimpleUserNameFilter(filter);
+        IReadOnlyList<User> rows = await userRepository.ListWorkspaceUsersAsync(
+            new WorkspaceId(workspaceId),
+            normalizedEmail,
+            Math.Max(0, startIndex - 1),
+            pageSize,
+            ct);
 
         IReadOnlyList<ScimUserResponse> page = rows
-            .Skip(Math.Max(0, startIndex))
-            .Take(pageSize)
             .Select(ToResponse)
             .ToList();
 
@@ -130,7 +112,7 @@ public sealed class ScimService(
     public async Task<Result<ScimUserResponse>> GetUserAsync(
         Guid workspaceId, Guid userId, CancellationToken ct = default)
     {
-        var user = await users.GetByIdAsync(new UserId(userId), ct);
+        var user = await FindWorkspaceUserAsync(workspaceId, userId, ct);
         if (user is null)
         {
             return Result.Failure<ScimUserResponse>(DomainError.NotFound(
@@ -142,7 +124,7 @@ public sealed class ScimService(
     public async Task<Result<ScimUserResponse>> ReplaceUserAsync(
         Guid workspaceId, Guid userId, ScimUserCreateRequest request, CancellationToken ct = default)
     {
-        var user = await users.GetByIdAsync(new UserId(userId), ct);
+        var user = await FindWorkspaceUserAsync(workspaceId, userId, ct);
         if (user is null)
         {
             return Result.Failure<ScimUserResponse>(DomainError.NotFound(
@@ -168,7 +150,7 @@ public sealed class ScimService(
     public async Task<Result<ScimUserResponse>> PatchUserAsync(
         Guid workspaceId, Guid userId, ScimPatchRequest request, CancellationToken ct = default)
     {
-        var user = await users.GetByIdAsync(new UserId(userId), ct);
+        var user = await FindWorkspaceUserAsync(workspaceId, userId, ct);
         if (user is null)
         {
             return Result.Failure<ScimUserResponse>(DomainError.NotFound(
@@ -209,7 +191,7 @@ public sealed class ScimService(
     public async Task<Result> DeleteUserAsync(
         Guid workspaceId, Guid userId, CancellationToken ct = default)
     {
-        var user = await users.GetByIdAsync(new UserId(userId), ct);
+        var user = await FindWorkspaceUserAsync(workspaceId, userId, ct);
         if (user is null)
         {
             return Result.Failure(DomainError.NotFound(
@@ -300,19 +282,9 @@ public sealed class ScimService(
         // not abort the whole create; the SCIM spec says
         // the IdP may keep stale references for users that
         // were just off-boarded.
-        foreach (var member in group.Members)
+        IReadOnlyList<User> requestedMembers = await LoadValidUsersAsync(group.Members, ct);
+        foreach (var user in requestedMembers)
         {
-            if (!Guid.TryParse(member.Value, out Guid userGuid))
-            {
-                continue;
-            }
-
-            var user = await users.GetByIdAsync(new UserId(userGuid), ct);
-            if (user is null)
-            {
-                continue;
-            }
-
             newWorkspace.AddMember(user.Id.Value, WorkspaceRole.Member, clock.UtcNow);
         }
 
@@ -464,19 +436,9 @@ public sealed class ScimService(
                 || op.Path.StartsWith("members", StringComparison.OrdinalIgnoreCase)))
             {
                 IReadOnlyList<ScimGroupMember> incoming = ExtractMembers(op.Value);
-                foreach (var member in incoming)
+                IReadOnlyList<User> incomingUsers = await LoadValidUsersAsync(incoming, ct);
+                foreach (var user in incomingUsers)
                 {
-                    if (!Guid.TryParse(member.Value, out Guid userGuid))
-                    {
-                        continue;
-                    }
-
-                    var user = await users.GetByIdAsync(new UserId(userGuid), ct);
-                    if (user is null)
-                    {
-                        continue;
-                    }
-
                     workspace.AddMember(user.Id.Value, WorkspaceRole.Member, clock.UtcNow);
                 }
                 continue;
@@ -563,15 +525,16 @@ public sealed class ScimService(
     private async Task<IReadOnlyList<ScimGroupMember>> BuildMembersAsync(
         Workspace workspace, CancellationToken ct)
     {
-        List<ScimGroupMember> rows = new(workspace.Members.Count);
-        foreach (var m in workspace.Members)
-        {
-            var user = await users.GetByIdAsync(new UserId(m.UserId), ct);
-            rows.Add(new ScimGroupMember(
-                m.UserId.ToString("D"),
-                user?.DisplayName.Value));
-        }
-        return rows;
+        IReadOnlyList<User> members = await userRepository.ListByIdsAsync(
+            workspace.Members.Select(member => new UserId(member.UserId)).ToList(),
+            ct);
+        Dictionary<Guid, User> usersById = members.ToDictionary(user => user.Id.Value);
+
+        return workspace.Members
+            .Select(member => new ScimGroupMember(
+                member.UserId.ToString("D"),
+                usersById.GetValueOrDefault(member.UserId)?.DisplayName.Value))
+            .ToList();
     }
 
     private async Task ReplaceMembersAsync(
@@ -606,21 +569,32 @@ public sealed class ScimService(
         // Add the rest. `AddMember` is a no-op on conflict
         // (it returns `AlreadyMember`), which is exactly
         // the idempotent behaviour PUT wants.
-        foreach (var userGuid in desiredIds)
+        HashSet<Guid> missingIds = desiredIds
+            .Where(userGuid => !workspace.HasMember(userGuid))
+            .ToHashSet();
+        IReadOnlyList<User> usersToAdd = await userRepository.ListByIdsAsync(
+            missingIds.Select(userGuid => new UserId(userGuid)).ToList(),
+            ct);
+        foreach (var user in usersToAdd)
         {
-            if (workspace.HasMember(userGuid))
-            {
-                continue;
-            }
-
-            var user = await users.GetByIdAsync(new UserId(userGuid), ct);
-            if (user is null)
-            {
-                continue;
-            }
-
             workspace.AddMember(user.Id.Value, WorkspaceRole.Member, clock.UtcNow);
         }
+    }
+
+    private async Task<IReadOnlyList<User>> LoadValidUsersAsync(
+        IReadOnlyList<ScimGroupMember> members,
+        CancellationToken ct)
+    {
+        HashSet<UserId> ids = [];
+        foreach (var member in members)
+        {
+            if (Guid.TryParse(member.Value, out Guid userId))
+            {
+                ids.Add(new UserId(userId));
+            }
+        }
+
+        return await userRepository.ListByIdsAsync(ids.ToList(), ct);
     }
 
     private static IReadOnlyList<ScimGroupMember> ExtractMembers(object? value)
@@ -687,25 +661,36 @@ public sealed class ScimService(
         u.CreatedAt,
         u.UpdatedAt);
 
-    private static IEnumerable<User> ApplySimpleUserNameFilter(IEnumerable<User> users, string filter)
+    private Task<User?> FindWorkspaceUserAsync(Guid workspaceId, Guid userId, CancellationToken ct) =>
+        userRepository.FindWorkspaceUserAsync(
+            new WorkspaceId(workspaceId),
+            new UserId(userId),
+            ct);
+
+    private static string? ParseSimpleUserNameFilter(string? filter)
     {
         // `userName eq "..."` is the only filter the IdP sends
         // for v1.1.0. Anything else is a no-op (returns the
         // full list), so a future PR can layer the full
         // SCIM v2 filter grammar.
         const string token = "userName eq \"";
+        if (string.IsNullOrWhiteSpace(filter))
+        {
+            return null;
+        }
+
         int idx = filter.IndexOf(token, StringComparison.OrdinalIgnoreCase);
         if (idx < 0)
         {
-            return users;
+            return null;
         }
         int start = idx + token.Length;
         int end = filter.IndexOf('"', start);
         if (end <= start)
         {
-            return users;
+            return null;
         }
-        string email = filter[start..end];
-        return users.Where(u => string.Equals(u.Email.Value, email, StringComparison.OrdinalIgnoreCase));
+
+        return filter[start..end].Trim().ToLowerInvariant();
     }
 }

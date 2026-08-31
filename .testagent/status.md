@@ -627,3 +627,13 @@
 - [x] Residual gaps outside this bounded block: cleanup failure intentionally preserves the original exception; existing-target collision and path-escape behavior are separate storage boundaries; size-limit/card/auth/membership guards predate this refactor.
 - [x] `test-analysis-extensions` advertises `extensions/dotnet.md`, but that file is absent from the installed skill package; xUnit v3/FluentAssertions/Moq classification was performed inline.
 - [x] Scope respected: no production/general-plan edit and no commit/push by this test agent.
+
+## 2026-08-31 — SCIM user tenant boundary and batched projections
+
+- [x] Eight unit regressions pass with strict Moq and a deterministic clock: four cross-tenant item operations, two valid same-tenant paths, filtered/paged listing and group-member batching.
+- [x] One SQLite integration regression passes through real token issuance, SCIM provisioning, filtered listing, repository lookup and cross-workspace HTTP read.
+- [x] Assertion-quality review: 9 tests contain meaningful error-code, state, DTO, collection and interaction assertions; 0 assertion-free, trivial-only or self-referential tests.
+- [x] Pseudo-mutation review: removing the workspace predicate, falling back to the global repository, persisting rejected mutations, failing to normalize/filter/page, restoring N+1 point lookups or applying zero-based SCIM semantics breaks at least one exact assertion.
+- [x] Root-cause regression recorded: a correlated `WorkspaceMember.UserId == User.Id.Value` expression is not translatable by SQLite; the final implementation uses bounded EF Core queries over member IDs and typed `Contains`, with no raw SQL or whole-table client evaluation.
+- [x] Focused validation: unit 8/8 and integration 1/1 passed, 0 failed and 0 skipped.
+- [x] The advertised `test-analysis-extensions/extensions/dotnet.md` file remains absent; xUnit v3/FluentAssertions/Moq classification was performed inline.

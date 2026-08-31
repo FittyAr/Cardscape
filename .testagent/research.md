@@ -749,3 +749,22 @@
   - [x] Blocked MIME touches neither storage, attachment repository, nor unit of work.
   - [x] Local storage never exposes the final path during copy and publishes exact bytes after completion.
   - [x] Copy failure and cancellation remove the temporary object and leave no final object.
+
+## 2026-08-30 — SCIM user tenant boundary and batched projections
+
+### Bounded target inventory
+
+- `ScimService`: user item operations must use the token workspace boundary; list and group projections must not issue per-member reads.
+- `IUserRepository.FindWorkspaceUserAsync`: final production seam for a single EF-translated tenant-scoped lookup.
+- `IUserRepository.ListWorkspaceUsersAsync`: final production seam for EF-translated filter and pagination.
+- `IUserRepository.ListByIdsAsync`: final batch seam for group member display projection.
+- New target: `tests/Cardscape.UnitTests/Infrastructure/Scim/ScimServiceTests.cs` using xUnit v3, FluentAssertions, strict Moq, `FakeClock`, and `TestContext.Current.CancellationToken`.
+
+### Acceptance checklist
+
+- [x] Get/replace/patch/delete return `NotFound` when the tenant-scoped repository cannot find the user.
+- [x] Rejected mutations leave the globally existing foreign-workspace user unchanged and never persist.
+- [x] List delegates normalized filtering, one-based skip and bounded take to one `ListWorkspaceUsersAsync` call.
+- [x] Group member projection performs one `ListByIdsAsync` call with the exact member ids and no point lookups.
+- [x] Valid same-workspace get and mutation behavior remains intact.
+- [x] SQLite integration proves repository translation, filtered listing and cross-token isolation through the real HTTP boundary.

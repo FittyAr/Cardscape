@@ -153,6 +153,20 @@ public sealed class InMemoryUserRepository : InMemoryRepositoryBase<User, UserId
         return Task.FromResult(matches);
     }
 
+    public Task<User?> FindWorkspaceUserAsync(
+        WorkspaceId workspaceId,
+        UserId userId,
+        CancellationToken ct = default) =>
+        Task.FromResult<User?>(null);
+
+    public Task<IReadOnlyList<User>> ListWorkspaceUsersAsync(
+        WorkspaceId workspaceId,
+        string? normalizedEmail,
+        int skip,
+        int take,
+        CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<User>>([]);
+
     public Task<IReadOnlyList<WorkspaceMember>> ListWorkspaceMembersAsync(
         WorkspaceId workspaceId, CancellationToken ct = default)
     {

@@ -43,6 +43,53 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
             .Where(u => wanted.Contains(u.Id))
             .ToListAsync(ct);
     }
+
+    public async Task<User?> FindWorkspaceUserAsync(
+        WorkspaceId workspaceId,
+        UserId userId,
+        CancellationToken ct = default)
+    {
+        bool isMember = await Db.Set<Workspace>()
+            .AnyAsync(workspace =>
+                workspace.Id == workspaceId
+                && workspace.Members.Any(member => member.UserId == userId.Value),
+                ct);
+
+        return isMember
+            ? await Db.Set<User>().FirstOrDefaultAsync(user => user.Id == userId, ct)
+            : null;
+    }
+
+    public async Task<IReadOnlyList<User>> ListWorkspaceUsersAsync(
+        WorkspaceId workspaceId,
+        string? normalizedEmail,
+        int skip,
+        int take,
+        CancellationToken ct = default)
+    {
+        List<Guid> memberIds = await Db.Set<Workspace>()
+            .Where(workspace => workspace.Id == workspaceId)
+            .SelectMany(workspace => workspace.Members)
+            .Select(member => member.UserId)
+            .ToListAsync(ct);
+        HashSet<UserId> typedMemberIds = memberIds
+            .Select(memberId => new UserId(memberId))
+            .ToHashSet();
+        IQueryable<User> query = Db.Set<User>()
+            .Where(user => typedMemberIds.Contains(user.Id));
+        if (!string.IsNullOrWhiteSpace(normalizedEmail))
+        {
+            EmailAddress email = EmailAddress.Create(normalizedEmail).Value;
+            query = query.Where(user => user.Email == email);
+        }
+
+        return await query
+            .OrderBy(user => user.Id)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<WorkspaceMember>> ListWorkspaceMembersAsync(
         WorkspaceId workspaceId, CancellationToken ct = default)
     {

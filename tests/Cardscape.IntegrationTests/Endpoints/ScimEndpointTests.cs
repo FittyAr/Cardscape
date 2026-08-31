@@ -1,9 +1,14 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.Workspaces.DTOs;
+using Cardscape.Domain.Members;
+using Cardscape.Domain.Workspaces;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Cardscape.IntegrationTests.Endpoints;
@@ -126,6 +131,66 @@ public class ScimEndpointTests
         List<ScimTokenListItemDto>? tokens = await originalList.Content
             .ReadFromJsonAsync<List<ScimTokenListItemDto>>(TestContext.Current.CancellationToken);
         tokens.Should().ContainSingle(t => t.Id == token.Token.Id && !t.IsRevoked);
+    }
+
+    [Fact]
+    public async Task ScimUserResource_WhenRequestedWithAnotherWorkspaceToken_ReturnsNotFound()
+    {
+        HttpClient administrator = _factory.CreateApiClient();
+        AuthResponse auth = await RegisterAndLogin(administrator);
+        administrator.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        WorkspaceDto first = await CreateWorkspaceAsync(administrator, "SCIM user tenant A");
+        WorkspaceDto second = await CreateWorkspaceAsync(administrator, "SCIM user tenant B");
+        ScimIssueResponseDto firstToken = await IssueTokenAsync(administrator, first.Id, "Tenant A IdP");
+        ScimIssueResponseDto secondToken = await IssueTokenAsync(administrator, second.Id, "Tenant B IdP");
+
+        HttpClient firstIdp = _factory.CreateApiClient();
+        firstIdp.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", firstToken.PlaintextToken);
+        string provisionedEmail = $"provisioned-{Guid.NewGuid():N}@cardscape.local";
+        HttpResponseMessage create = await firstIdp.PostAsJsonAsync(
+            "scim/v2/Users",
+            new
+            {
+                userName = provisionedEmail,
+                active = true,
+                name = new { givenName = "Provisioned", familyName = "Member" }
+            },
+            TestContext.Current.CancellationToken);
+        create.StatusCode.Should().Be(HttpStatusCode.Created);
+        ScimUserResponse provisioned = (await create.Content.ReadFromJsonAsync<ScimUserResponse>(
+            TestJson.Options,
+            TestContext.Current.CancellationToken))!;
+
+        HttpResponseMessage filteredList = await firstIdp.GetAsync(
+            $"scim/v2/Users?filter={Uri.EscapeDataString($"userName eq \"{provisionedEmail.ToUpperInvariant()}\"")}",
+            TestContext.Current.CancellationToken);
+        filteredList.StatusCode.Should().Be(HttpStatusCode.OK);
+        string filteredBody = await filteredList.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken);
+        filteredBody.Should().Contain(provisioned.Id.ToString());
+
+        await using (AsyncServiceScope scope = _factory.Services.CreateAsyncScope())
+        {
+            IUserRepository repository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+            User? crossTenantUser = await repository.FindWorkspaceUserAsync(
+                new WorkspaceId(second.Id),
+                new UserId(provisioned.Id),
+                TestContext.Current.CancellationToken);
+            crossTenantUser.Should().BeNull();
+        }
+
+        HttpClient secondIdp = _factory.CreateApiClient();
+        secondIdp.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", secondToken.PlaintextToken);
+        HttpResponseMessage crossTenantRead = await secondIdp.GetAsync(
+            $"scim/v2/Users/{provisioned.Id}",
+            TestContext.Current.CancellationToken);
+
+        string responseBody = await crossTenantRead.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken);
+        crossTenantRead.StatusCode.Should().Be(HttpStatusCode.NotFound, responseBody);
     }
 
     private static async Task<WorkspaceDto> CreateWorkspaceAsync(HttpClient client, string name)

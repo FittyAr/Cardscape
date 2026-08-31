@@ -542,3 +542,13 @@
 - [x] `SaveAsync_PublishesFinalFileOnlyAfterCopyCompletes`: inspect visibility during copy, then assert exact final bytes and absence of temporary files.
 - [x] `SaveAsync_WhenCopyFailsOrIsCancelled_LeavesNoFinalOrTemporaryFile(false/true)`: cover both I/O failure and cancellation cleanup.
 - [x] Run the narrow handler/storage filter and review assertions plus pseudo-mutations before handoff.
+
+## 2026-08-30 — SCIM user tenant boundary and batched projections
+
+1. [x] Inventory the service, final repository seams, aggregate membership semantics, and test conventions.
+2. [x] Build a strict-Moq fixture with a deterministic clock and tenant-scoped lookup outcomes.
+3. [x] Add separate get/replace/patch/delete cross-tenant regressions asserting `NotFound`, unchanged state, and zero persistence.
+4. [x] Add valid same-workspace get and mutation cases.
+5. [x] Add list and group projection tests proving one batch call with exact arguments and zero point lookups.
+6. [x] Add a real SQLite/HTTP regression for EF translation, filtered listing and cross-token isolation.
+7. [x] Run the narrow tests and perform test-gap/assertion-quality review.

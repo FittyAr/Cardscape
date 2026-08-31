@@ -15,6 +15,22 @@ public interface IUserRepository : IRepository<User, UserId>
     /// <summary>Batch lookup: returns the users whose ids are in the given list. Used by list projections that need a display name per row without an N+1.</summary>
     Task<IReadOnlyList<User>> ListByIdsAsync(IReadOnlyList<UserId> ids, CancellationToken ct = default);
 
+    /// <summary>Returns a user only when it belongs to the requested workspace.</summary>
+    Task<User?> FindWorkspaceUserAsync(
+        WorkspaceId workspaceId,
+        UserId userId,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Lists one workspace's users with filtering and paging translated by EF Core.
+    /// </summary>
+    Task<IReadOnlyList<User>> ListWorkspaceUsersAsync(
+        WorkspaceId workspaceId,
+        string? normalizedEmail,
+        int skip,
+        int take,
+        CancellationToken ct = default);
+
     /// <summary>Returns the workspace-member rows for a workspace.
     /// The caller joins with <see cref="User"/> to build a SCIM
     /// <c>List Users</c> response.</summary>
