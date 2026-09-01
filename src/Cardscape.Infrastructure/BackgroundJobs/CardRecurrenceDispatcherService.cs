@@ -23,8 +23,11 @@ public sealed class CardRecurrenceDispatcherService(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation(
-            "CardRecurrenceDispatcherService starting: poll={Poll}", PollInterval);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "CardRecurrenceDispatcherService starting: poll={Poll}", PollInterval);
+        }
 
         // Stagger the first tick across instances so we don't
         // all hammer the DB at boot.
@@ -95,6 +98,9 @@ public sealed class CardRecurrenceDispatcherService(
             }
         }
 
-        logger.LogInformation("CardRecurrenceDispatcherService enqueued {N} jobs.", due.Count);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation("CardRecurrenceDispatcherService enqueued {N} jobs.", due.Count);
+        }
     }
 }

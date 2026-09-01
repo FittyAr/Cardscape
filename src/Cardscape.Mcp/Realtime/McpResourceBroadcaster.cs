@@ -208,9 +208,12 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
             Detail: $"broadcast sent to {sent}/{targets.Count} subscribers" +
                 (deadSessions.Count > 0 ? $" ({deadSessions.Count} dropped: {string.Join(",", deadSessions)})" : string.Empty)));
 
-        logger.LogDebug(
-            "MCP ResourceUpdated notification for {Uri} sent to {Sent}/{Total} subscribers",
-            uri, sent, targets.Count);
+        if (logger.IsEnabled(LogLevel.Debug))
+        {
+            logger.LogDebug(
+                "MCP ResourceUpdated notification for {Uri} sent to {Sent}/{Total} subscribers",
+                uri, sent, targets.Count);
+        }
     }
 
     /// <summary>

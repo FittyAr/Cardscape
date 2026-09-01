@@ -270,9 +270,12 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
             }
 
             await unitOfWork.SaveChangesAsync(ct);
-            logger.LogInformation(
-                "Automation rule {RuleId} applied {Action} to card {CardId}",
-                rule.Id, rule.Action, card.Id);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "Automation rule {RuleId} applied {Action} to card {CardId}",
+                    rule.Id, rule.Action, card.Id);
+            }
         }
         catch (Exception ex)
         {

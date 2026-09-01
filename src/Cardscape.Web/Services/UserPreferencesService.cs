@@ -152,7 +152,10 @@ public sealed class UserPreferencesService
             }
             else
             {
-                _log.LogDebug("User preferences GET did not succeed ({Error}); falling back to cookie.", getResult.Error);
+                if (_log.IsEnabled(LogLevel.Debug))
+                {
+                    _log.LogDebug("User preferences GET did not succeed ({Error}); falling back to cookie.", getResult.Error);
+                }
             }
         }
         catch (Exception ex)
@@ -316,7 +319,10 @@ public sealed class UserPreferencesService
             // The cookie service's free-themes whitelist may
             // be narrower than our catalog. Swallow; the
             // CssPath + cookie write-through still work.
-            _log.LogDebug(ex, "ThemeService.SetTheme('{ThemeName}') threw; falling through to CssPath.", themeName);
+            if (_log.IsEnabled(LogLevel.Debug))
+            {
+                _log.LogDebug(ex, "ThemeService.SetTheme('{ThemeName}') threw; falling through to CssPath.", themeName);
+            }
         }
 
         CurrentCssPath = themeName switch

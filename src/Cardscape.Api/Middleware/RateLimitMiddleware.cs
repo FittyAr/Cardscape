@@ -71,9 +71,12 @@ public sealed class RateLimitMiddleware(
             return;
         }
 
-        logger.LogInformation(
-            "Rate limit exceeded for API token {TokenId} on {Path}; Retry-After={RetryAfter}s",
-            token.Id.Value, context.Request.Path, decision.RetryAfter);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "Rate limit exceeded for API token {TokenId} on {Path}; Retry-After={RetryAfter}s",
+                token.Id.Value, context.Request.Path, decision.RetryAfter);
+        }
 
         await WriteRateLimited(context, decision.RetryAfter);
     }

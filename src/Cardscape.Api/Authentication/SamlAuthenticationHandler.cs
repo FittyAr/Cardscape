@@ -43,6 +43,8 @@ namespace Cardscape.Api.Authentication;
 public sealed class SamlAuthenticationHandler
     : AuthenticationHandler<Saml2Options>, IAuthenticationRequestHandler
 {
+    private static readonly string[] UserScopes = ["user"];
+
     public const string SchemeName = "Saml";
     public const string SamlCallbackPath = "/saml/callback";
     public const string MetadataHttpClientName = "SamlMetadata";
@@ -246,7 +248,7 @@ public sealed class SamlAuthenticationHandler
             ?? throw new InvalidOperationException(
                 $"External login {resolved.Value.LoginId.Value} resolved to a missing user.");
 
-        string access = _tokens.IssueAccessToken(user, new[] { "user" });
+        string access = _tokens.IssueAccessToken(user, UserScopes);
         string redirect = _configuration["Cardscape:Web:ExternalLoginRedirectUrl"]
             ?? _configuration["Web:ExternalLoginRedirectUrl"]
             ?? "/saml/callback";
@@ -457,7 +459,10 @@ public sealed class SamlAuthenticationHandler
 
     private async Task<bool> WriteNotConfigured(string slug)
     {
-        Logger.LogInformation("SAML config not found for slug {Slug}.", slug);
+        if (Logger.IsEnabled(LogLevel.Information))
+        {
+            Logger.LogInformation("SAML config not found for slug {Slug}.", slug);
+        }
         await WriteProblem(StatusCodes.Status404NotFound, "saml.not_configured",
             $"No active SAML connection for workspace slug '{slug}'.");
         return true;

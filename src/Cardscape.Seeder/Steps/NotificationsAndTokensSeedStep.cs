@@ -11,6 +11,9 @@ namespace Cardscape.Seeder.Steps;
 /// something to list.</summary>
 internal sealed class NotificationsAndTokensSeedStep : SeedStepBase
 {
+    private static readonly string[] ReadScopes = ["read"];
+    private static readonly string[] ReadWriteScopes = ["read", "write"];
+
     public override string Name => "Notifications + API tokens";
     public override int Order => 100;
 
@@ -67,7 +70,7 @@ internal sealed class NotificationsAndTokensSeedStep : SeedStepBase
                 user.Id,
                 ApiTokenName.Create($"{user.DisplayName.Value} read token").Value,
                 readHash, readPrefix,
-                ApiTokenScopes.Create(new[] { "read" }).Value,
+                ApiTokenScopes.Create(ReadScopes).Value,
                 expiresAt: null,
                 at: now);
             if (readApiToken.IsSuccess)
@@ -80,7 +83,7 @@ internal sealed class NotificationsAndTokensSeedStep : SeedStepBase
                 user.Id,
                 ApiTokenName.Create($"{user.DisplayName.Value} write token").Value,
                 writeHash, writePrefix,
-                ApiTokenScopes.Create(new[] { "read", "write" }).Value,
+                ApiTokenScopes.Create(ReadWriteScopes).Value,
                 expiresAt: now.AddMonths(6),
                 at: now);
             if (writeApiToken.IsSuccess)

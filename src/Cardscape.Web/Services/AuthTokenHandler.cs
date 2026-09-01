@@ -58,7 +58,10 @@ public sealed class AuthTokenHandler(
             }
             else
             {
-                logger.LogDebug("Anonymous call to {Path} returned 401; ignored.", request.RequestUri.AbsolutePath);
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    logger.LogDebug("Anonymous call to {Path} returned 401; ignored.", request.RequestUri.AbsolutePath);
+                }
             }
         }
 

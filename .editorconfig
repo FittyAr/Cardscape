@@ -65,6 +65,16 @@ csharp_style_conditional_delegate_call = true:suggestion
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
 
+# EF Core generates inline column arrays in migration operations. Keep the
+# performance rule active for authored code without rewriting migration history.
+[src/**/Migrations/*.cs]
+dotnet_diagnostic.CA1861.severity = none
+
+# Inline arrays are independent test inputs. Hoisting them to mutable static
+# fields would couple test cases and trade a tiny allocation for shared state.
+[tests/**/*.cs]
+dotnet_diagnostic.CA1861.severity = none
+
 # ──────────────────────────────────────────────────────────────────
 # Naming conventions
 # ──────────────────────────────────────────────────────────────────

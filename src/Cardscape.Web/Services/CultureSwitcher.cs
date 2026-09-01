@@ -247,7 +247,10 @@ public sealed class CultureSwitcher
             {
                 IReadOnlyDictionary<string, string> translations = await LoadTranslationsAsync(culture);
                 _translationsByCulture[culture] = translations;
-                _logger.LogInformation("Loaded {Count} translations for culture {Culture}.", translations.Count, culture);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Loaded {Count} translations for culture {Culture}.", translations.Count, culture);
+                }
             }
             catch (Exception ex)
             {

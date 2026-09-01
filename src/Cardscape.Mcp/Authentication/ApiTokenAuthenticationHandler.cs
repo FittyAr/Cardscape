@@ -62,8 +62,11 @@ public sealed class ApiTokenAuthenticationHandler
         var validation = await Tokens.ValidateAsync(secret, Context.RequestAborted);
         if (validation.IsFailure)
         {
-            Logger.LogInformation(
-                "Rejected MCP API token: {ErrorCode}", validation.Error.Code);
+            if (Logger.IsEnabled(LogLevel.Information))
+            {
+                Logger.LogInformation(
+                    "Rejected MCP API token: {ErrorCode}", validation.Error.Code);
+            }
             return AuthenticateResult.Fail(validation.Error.Message);
         }
 

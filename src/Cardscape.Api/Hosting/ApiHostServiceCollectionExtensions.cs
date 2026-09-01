@@ -50,6 +50,8 @@ namespace Cardscape.Api.Hosting;
 
 internal static class ApiHostServiceCollectionExtensions
 {
+    private static readonly string[] SupportedCultureNames = ["en", "es"];
+
     public static WebApplicationBuilder AddCardscapeApiHost(this WebApplicationBuilder builder)
     {
         // ── JSON options ───────────────────────────────────────────
@@ -103,7 +105,7 @@ internal static class ApiHostServiceCollectionExtensions
         builder.Services.AddLocalization();
         builder.Services.Configure<Microsoft.AspNetCore.Builder.RequestLocalizationOptions>(options =>
         {
-            var supported = new[] { "en", "es" };
+            string[] supported = SupportedCultureNames;
             options.DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("en");
             options.SupportedCultures = supported.Select(c => new System.Globalization.CultureInfo(c)).ToList();
             options.SupportedUICultures = supported.Select(c => new System.Globalization.CultureInfo(c)).ToList();
@@ -167,4 +169,3 @@ internal static class ApiHostServiceCollectionExtensions
         return builder;
     }
 }
-

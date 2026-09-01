@@ -156,14 +156,18 @@ public static class ClientLogEndpoint
             // relaying browser logs — but the volume is
             // bounded by the body cap and the secret.
             ILogger logger = loggerFactory.CreateLogger(LogCategory);
-            logger.Log(
-                MapLevel(logEvent.Level),
-                logEvent.Exception,
-                "Browser log: {ClientMessage} {@ClientProperties}",
-                logEvent.RenderMessage(),
-                logEvent.Properties.ToDictionary(
-                    property => property.Key,
-                    property => CoercePropertyValue(property.Value)));
+            LogLevel level = MapLevel(logEvent.Level);
+            if (logger.IsEnabled(level))
+            {
+                logger.Log(
+                    level,
+                    logEvent.Exception,
+                    "Browser log: {ClientMessage} {@ClientProperties}",
+                    logEvent.RenderMessage(),
+                    logEvent.Properties.ToDictionary(
+                        property => property.Key,
+                        property => CoercePropertyValue(property.Value)));
+            }
 
             return Results.NoContent();
         });

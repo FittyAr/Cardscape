@@ -70,10 +70,13 @@ public sealed partial class WebhookEventBroadcaster
             }
         }
 
-        _logger.LogDebug(
-            "Queued {Count} webhook delivery job(s) for {EventType} on board {BoardId}",
-            targets.Count,
-            eventType,
-            boardId);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "Queued {Count} webhook delivery job(s) for {EventType} on board {BoardId}",
+                targets.Count,
+                eventType,
+                boardId);
+        }
     }
 }

@@ -11,6 +11,8 @@ namespace Cardscape.Seeder.Steps;
 /// table.</summary>
 internal sealed class BoardExtensionsSeedStep : SeedStepBase
 {
+    private static readonly string[] PriorityOptions = ["Low", "Medium", "High", "Critical"];
+
     public override string Name => "Board extensions + automation + custom fields";
     public override int Order => 40;
 
@@ -62,7 +64,7 @@ internal sealed class BoardExtensionsSeedStep : SeedStepBase
             // (dropdown), Effort (number), Due Window (date).
             Result<CustomFieldDefinition> priority = CustomFieldDefinition.Create(
                 board.Id, "Priority", CustomFieldKind.Dropdown,
-                new[] { "Low", "Medium", "High", "Critical" }, 0, now);
+                PriorityOptions, 0, now);
             if (priority.IsSuccess)
             {
                 context.Db.CustomFieldDefinitions.Add(priority.Value);

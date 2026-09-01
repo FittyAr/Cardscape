@@ -159,9 +159,12 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
             {
                 delivery.MarkSuccess(now);
                 await unitOfWork.SaveChangesAsync(ct);
-                _logger.LogInformation(
-                    "Delivered webhook {DeliveryId} ({Event}) to {Url} status {Status}.",
-                    delivery.Id.Value, delivery.EventType, endpoint.Url, (int)response.StatusCode);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
+                        "Delivered webhook {DeliveryId} ({Event}) to {Url} status {Status}.",
+                        delivery.Id.Value, delivery.EventType, endpoint.Url, (int)response.StatusCode);
+                }
                 return;
             }
 

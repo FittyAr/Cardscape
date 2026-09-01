@@ -69,9 +69,12 @@ public sealed class RevocationSweeper(
                 int purged = await PurgeOnceAsync(stoppingToken);
                 if (purged > 0)
                 {
-                    logger.LogInformation(
-                        "RevocationSweeper purged {Count} expired revoked-token row(s).",
-                        purged);
+                    if (logger.IsEnabled(LogLevel.Information))
+                    {
+                        logger.LogInformation(
+                            "RevocationSweeper purged {Count} expired revoked-token row(s).",
+                            purged);
+                    }
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

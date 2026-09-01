@@ -17,6 +17,11 @@ namespace Cardscape.Seeder.Steps;
 /// run.</summary>
 internal sealed class IntegrationsSeedStep(ISecretProtector secretProtector) : SeedStepBase
 {
+    private static readonly string[] ReadScopes = ["read"];
+    private static readonly string[] ReadWriteScopes = ["read", "write"];
+    private static readonly string[] RedirectUris =
+        ["https://cli.nexora.example/callback", "http://localhost:8765/callback"];
+
     public override string Name => "Integrations (Slack, GitHub, Google, inbound email)";
     public override int Order => 110;
 
@@ -152,8 +157,8 @@ internal sealed class IntegrationsSeedStep(ISecretProtector secretProtector) : S
             "cli-cardscape-demo",
             clientSecretHash,
             owner.Id.Value,
-            new[] { "read", "write" },
-            new[] { "https://cli.nexora.example/callback", "http://localhost:8765/callback" },
+            ReadWriteScopes,
+            RedirectUris,
             now);
         if (oa.IsSuccess)
         {
@@ -171,7 +176,7 @@ internal sealed class IntegrationsSeedStep(ISecretProtector secretProtector) : S
                 owner.Id,
                 "https://cli.nexora.example/callback",
                 codeHash,
-                new[] { "read" },
+                ReadScopes,
                 now.AddMinutes(5),
                 now);
             if (code.IsSuccess)
@@ -187,7 +192,7 @@ internal sealed class IntegrationsSeedStep(ISecretProtector secretProtector) : S
                 oa.Value.Id,
                 owner.Id,
                 accessTokenHash,
-                new[] { "read", "write" },
+                ReadWriteScopes,
                 now.AddDays(30),
                 now);
             if (access.IsSuccess)

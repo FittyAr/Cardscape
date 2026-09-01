@@ -72,9 +72,12 @@ public sealed class CloneCardHandler(
         // the card (or restores the parent list).
         if (source.IsArchived)
         {
-            logger.LogInformation(
-                "CloneCardJob: source card {CardId} is archived; deferring clone.",
-                cardGuid);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "CloneCardJob: source card {CardId} is archived; deferring clone.",
+                    cardGuid);
+            }
             return;
         }
 
@@ -95,9 +98,12 @@ public sealed class CloneCardHandler(
 
         if (parentList.IsArchived)
         {
-            logger.LogInformation(
-                "CloneCardJob: parent list of {CardId} is archived; deferring clone.",
-                cardGuid);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "CloneCardJob: parent list of {CardId} is archived; deferring clone.",
+                    cardGuid);
+            }
             return;
         }
 
@@ -152,8 +158,11 @@ public sealed class CloneCardHandler(
         }
 
         await uow.SaveChangesAsync(ct);
-        logger.LogInformation(
-            "Cloned card {SourceId} -> {CloneId} via recurrence.",
-            source.Id.Value, clone.Value.Id.Value);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "Cloned card {SourceId} -> {CloneId} via recurrence.",
+                source.Id.Value, clone.Value.Id.Value);
+        }
     }
 }

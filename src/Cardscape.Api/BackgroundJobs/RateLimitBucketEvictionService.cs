@@ -45,9 +45,12 @@ public sealed class RateLimitBucketEvictionService(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation(
-            "RateLimitBucketEvictionService starting: interval={Interval}, cutoff={Cutoff}",
-            EvictInterval, EvictionCutoff);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "RateLimitBucketEvictionService starting: interval={Interval}, cutoff={Cutoff}",
+                EvictInterval, EvictionCutoff);
+        }
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -57,9 +60,12 @@ public sealed class RateLimitBucketEvictionService(
                 int removed = rateLimiter.EvictStale(cutoff);
                 if (removed > 0)
                 {
-                    logger.LogInformation(
-                        "Rate-limit bucket eviction removed {Count} idle buckets (cutoff={Cutoff}).",
-                        removed, cutoff);
+                    if (logger.IsEnabled(LogLevel.Information))
+                    {
+                        logger.LogInformation(
+                            "Rate-limit bucket eviction removed {Count} idle buckets (cutoff={Cutoff}).",
+                            removed, cutoff);
+                    }
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

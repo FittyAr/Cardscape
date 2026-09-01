@@ -109,7 +109,10 @@ public sealed class BoardHubClient : IAsyncDisposable
         };
         _connection.Reconnected += connectionId =>
         {
-            _logger.LogInformation("Board hub reconnected: {ConnectionId}", connectionId);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Board hub reconnected: {ConnectionId}", connectionId);
+            }
             return Task.CompletedTask;
         };
         _connection.Reconnecting += error =>

@@ -164,9 +164,12 @@ public sealed class RetentionSweeper(
         if (deletedUsers.Count > 0)
         {
             await db.SaveChangesAsync(ct);
-            logger.LogInformation(
-                "RetentionSweeper: anonymised {Count} users past the grace period",
-                deletedUsers.Count);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "RetentionSweeper: anonymised {Count} users past the grace period",
+                    deletedUsers.Count);
+            }
         }
 
         // 2. Purge old activity feed entries. Same
@@ -182,9 +185,12 @@ public sealed class RetentionSweeper(
             ct);
         if (activityDeleted > 0)
         {
-            logger.LogInformation(
-                "RetentionSweeper: purged {Count} activity feed entries older than {Days} days",
-                activityDeleted, _activityRetentionDays);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "RetentionSweeper: purged {Count} activity feed entries older than {Days} days",
+                    activityDeleted, _activityRetentionDays);
+            }
         }
 
         // 3. Purge expired idempotency keys. The
@@ -203,9 +209,12 @@ public sealed class RetentionSweeper(
             ct);
         if (idempotencyDeleted > 0)
         {
-            logger.LogInformation(
-                "RetentionSweeper: purged {Count} expired idempotency keys",
-                idempotencyDeleted);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "RetentionSweeper: purged {Count} expired idempotency keys",
+                    idempotencyDeleted);
+            }
         }
 
         // 4. The audit log entries live in the Serilog

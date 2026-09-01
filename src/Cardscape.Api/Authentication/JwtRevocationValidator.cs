@@ -62,9 +62,12 @@ public sealed class JwtRevocationValidator(
             bool isRevoked = await repository.IsRevokedAsync(jti, context.HttpContext.RequestAborted);
             if (isRevoked)
             {
-                logger.LogInformation(
-                    "Rejecting revoked JWT (jti={Jti})",
-                    jti);
+                if (logger.IsEnabled(LogLevel.Information))
+                {
+                    logger.LogInformation(
+                        "Rejecting revoked JWT (jti={Jti})",
+                        jti);
+                }
                 context.Fail("The access token has been revoked.");
             }
         }

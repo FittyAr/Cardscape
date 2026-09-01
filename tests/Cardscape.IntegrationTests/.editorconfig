@@ -8,3 +8,6 @@ root = true
 # Underscores in method names are allowed for BDD-style test names.
 dotnet_diagnostic.CA1707.severity = none
 dotnet_diagnostic.CA1709.severity = none
+
+# Keep per-test literal arrays isolated instead of hoisting mutable shared data.
+dotnet_diagnostic.CA1861.severity = none

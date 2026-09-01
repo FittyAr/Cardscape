@@ -17,6 +17,9 @@ namespace Cardscape.Api.Endpoints.Scim;
 /// </summary>
 public static class ScimEndpoints
 {
+    private static readonly string[] ErrorSchemas = ["urn:ietf:params:scim:api:messages:2.0:Error"];
+    private static readonly string[] ListResponseSchemas = ["urn:ietf:params:scim:api:messages:2.0:ListResponse"];
+
     // Per RFC 7644 §3.4.2.4, the SCIM `filter` parameter is
     // unbounded. A misbehaving (or hostile) IdP can ship a
     // multi-megabyte string and pin the API process's CPU
@@ -54,7 +57,7 @@ public static class ScimEndpoints
             {
                 return Results.Json(new
                 {
-                    schemas = new[] { "urn:ietf:params:scim:api:messages:2.0:Error" },
+                    schemas = ErrorSchemas,
                     status = "400",
                     detail = $"filter is too long (max {MaxScimFilterLength} characters)."
                 }, statusCode: StatusCodes.Status400BadRequest);
@@ -73,7 +76,7 @@ public static class ScimEndpoints
 
             return Results.Json(new
             {
-                schemas = new[] { "urn:ietf:params:scim:api:messages:2.0:ListResponse" },
+                schemas = ListResponseSchemas,
                 totalResults = result.Value.Count,
                 Resources = result.Value
             });
@@ -311,7 +314,7 @@ public static class ScimEndpoints
         workspaceId = Guid.Empty;
         error = Results.Json(new
         {
-            schemas = new[] { "urn:ietf:params:scim:api:messages:2.0:Error" },
+            schemas = ErrorSchemas,
             status = "401",
             detail = "A valid SCIM bearer token is required."
         }, statusCode: StatusCodes.Status401Unauthorized);
@@ -320,7 +323,7 @@ public static class ScimEndpoints
 
     private static IResult MapError(DomainError error) => Results.Json(new
     {
-        schemas = new[] { "urn:ietf:params:scim:api:messages:2.0:Error" },
+        schemas = ErrorSchemas,
         status = ((int)error.Type).ToString(),
         detail = error.Message
     }, statusCode: error.Type switch

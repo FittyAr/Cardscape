@@ -174,9 +174,12 @@ public sealed class IdempotencyMiddleware(
 
                 if (!existing.IsPending)
                 {
-                    logger.LogInformation(
-                        "Idempotency-Key {Key} from {Owner} replayed; returning stored response (path={Path})",
-                        key, ownerId, context.Request.Path);
+                    if (logger.IsEnabled(LogLevel.Information))
+                    {
+                        logger.LogInformation(
+                            "Idempotency-Key {Key} from {Owner} replayed; returning stored response (path={Path})",
+                            key, ownerId, context.Request.Path);
+                    }
                     await ReplayAsync(context, existing, context.RequestAborted);
                     return;
                 }

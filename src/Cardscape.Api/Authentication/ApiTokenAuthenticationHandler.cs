@@ -81,8 +81,11 @@ public sealed class ApiTokenAuthenticationHandler
             await Tokens.ValidateAsync(secret, Context.RequestAborted);
         if (validation.IsFailure)
         {
-            Logger.LogInformation(
-                "Rejected API token: {ErrorCode}", validation.Error.Code);
+            if (Logger.IsEnabled(LogLevel.Information))
+            {
+                Logger.LogInformation(
+                    "Rejected API token: {ErrorCode}", validation.Error.Code);
+            }
             return AuthenticateResult.Fail(validation.Error.Message);
         }
 

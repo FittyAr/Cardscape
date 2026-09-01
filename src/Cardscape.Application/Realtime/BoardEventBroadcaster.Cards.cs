@@ -12,7 +12,10 @@ public sealed partial class BoardEventBroadcaster
 {
     private async Task HandleCardCreated(CardCreated @event, CancellationToken ct)
     {
-        _logger.LogDebug("BoardEventBroadcaster.CardCreated for {CardId}", @event.CardId);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("BoardEventBroadcaster.CardCreated for {CardId}", @event.CardId);
+        }
         using IServiceScope scope = _scopeFactory.CreateScope();
         IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
         IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();

@@ -88,7 +88,10 @@ public sealed class GlobalExceptionMiddleware(
             // global catch here closes every existing
             // endpoint at once without touching the
             // handler surface.
-            logger.LogInformation(ex, "Concurrency conflict at {Path}", context.Request.Path);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(ex, "Concurrency conflict at {Path}", context.Request.Path);
+            }
             await WriteProblem(
                 context,
                 StatusCodes.Status409Conflict,

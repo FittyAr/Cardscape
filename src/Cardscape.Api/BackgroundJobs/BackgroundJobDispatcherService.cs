@@ -36,9 +36,12 @@ public sealed class BackgroundJobDispatcherService(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation(
-            "BackgroundJobDispatcherService starting: poll={Interval}, batch={Batch}",
-            _options.PollInterval, _options.BatchSize);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation(
+                "BackgroundJobDispatcherService starting: poll={Interval}, batch={Batch}",
+                _options.PollInterval, _options.BatchSize);
+        }
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -71,7 +74,10 @@ public sealed class BackgroundJobDispatcherService(
 
                 if (batch.Count > 0)
                 {
-                    _logger.LogDebug("Dispatched {Count} background jobs", batch.Count);
+                    if (_logger.IsEnabled(LogLevel.Debug))
+                    {
+                        _logger.LogDebug("Dispatched {Count} background jobs", batch.Count);
+                    }
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
