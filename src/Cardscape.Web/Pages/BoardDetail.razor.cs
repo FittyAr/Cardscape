@@ -146,6 +146,8 @@ public partial class BoardDetail
         {
             // Best effort; connection might already be dead.
         }
+
+        GC.SuppressFinalize(this);
     }
 
     private bool subscribedToHub;
@@ -201,4 +203,3 @@ public partial class BoardDetail
         cardsByList = next;
     }
 }
-

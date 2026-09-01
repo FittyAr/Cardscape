@@ -276,5 +276,6 @@ public partial class CardDetail
         titleCts?.Cancel();
         titleCts?.Dispose();
         titleCts = null;
+        GC.SuppressFinalize(this);
     }
 }
