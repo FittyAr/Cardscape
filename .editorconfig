@@ -75,6 +75,21 @@ dotnet_diagnostic.CA1861.severity = none
 [tests/**/*.cs]
 dotnet_diagnostic.CA1861.severity = none
 
+# These closed generic value/result types intentionally expose cohesive static
+# factories. Moving them to unrelated non-generic holder classes would obscure
+# discovery without improving encapsulation.
+[src/Cardscape.Domain/Common/StronglyTypedId.cs]
+dotnet_diagnostic.CA1000.severity = none
+
+[src/Cardscape.Domain/Common/GuidId.cs]
+dotnet_diagnostic.CA1000.severity = none
+
+[src/Cardscape.Domain/Common/Result.cs]
+dotnet_diagnostic.CA1000.severity = none
+
+[src/Cardscape.Web/Services/AuthService.cs]
+dotnet_diagnostic.CA1000.severity = none
+
 # ──────────────────────────────────────────────────────────────────
 # Naming conventions
 # ──────────────────────────────────────────────────────────────────

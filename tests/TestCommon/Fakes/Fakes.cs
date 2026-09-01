@@ -116,7 +116,7 @@ public class InMemoryRepositoryBase<T, TId> : IRepository<T, TId>
     where T : Entity<TId>
     where TId : notnull
 {
-    protected readonly Dictionary<TId, T> Store = [];
+    protected Dictionary<TId, T> Store { get; } = [];
 
     public IReadOnlyCollection<T> All => Store.Values.ToList();
 
