@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -64,9 +65,9 @@ public sealed class AppleClientSecretGenerator : IAppleClientSecretGenerator
         var claims = new[]
         {
             new Claim("iss", _teamId),
-            new Claim("iat", new DateTimeOffset(now).ToUnixTimeSeconds().ToString(),
+            new Claim("iat", new DateTimeOffset(now).ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture),
                 ClaimValueTypes.Integer64),
-            new Claim("exp", new DateTimeOffset(expires).ToUnixTimeSeconds().ToString(),
+            new Claim("exp", new DateTimeOffset(expires).ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture),
                 ClaimValueTypes.Integer64),
             new Claim("aud", "https://appleid.apple.com"),
             new Claim("sub", _clientId)

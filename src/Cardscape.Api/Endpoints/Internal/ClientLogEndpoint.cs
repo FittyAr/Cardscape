@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -163,7 +164,7 @@ public static class ClientLogEndpoint
                     level,
                     logEvent.Exception,
                     "Browser log: {ClientMessage} {@ClientProperties}",
-                    logEvent.RenderMessage(),
+                    logEvent.RenderMessage(CultureInfo.InvariantCulture),
                     logEvent.Properties.ToDictionary(
                         property => property.Key,
                         property => CoercePropertyValue(property.Value)));
@@ -210,8 +211,8 @@ public static class ClientLogEndpoint
 
     private static string RenderFallback(LogEventPropertyValue value)
     {
-        var writer = new StringWriter();
-        value.Render(writer);
+        var writer = new StringWriter(CultureInfo.InvariantCulture);
+        value.Render(writer, format: null, formatProvider: CultureInfo.InvariantCulture);
         return writer.ToString();
     }
 }

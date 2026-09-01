@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -62,7 +63,9 @@ public static class SerilogServiceCollectionExtensions
               .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
               .MinimumLevel.Override("System", LogEventLevel.Warning)
               .Enrich.FromLogContext()
-              .WriteTo.Async(a => a.Console(outputTemplate: LoggingConstants.ConsoleTemplate))
+              .WriteTo.Async(a => a.Console(
+                  outputTemplate: LoggingConstants.ConsoleTemplate,
+                  formatProvider: CultureInfo.InvariantCulture))
               .WriteTo.Async(a => a.File(
                   formatter: new CompactJsonFormatter(),
                   path: RollingFilePathBuilder.BuildTemplate(fileSettings, LoggingConstants.AppFileSuffix),

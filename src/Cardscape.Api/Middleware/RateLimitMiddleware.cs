@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Cardscape.Api.Authentication;
 using Cardscape.Application.Abstractions;
@@ -128,7 +129,7 @@ public sealed class RateLimitMiddleware(
         context.Response.Clear();
         context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
         context.Response.ContentType = "application/json";
-        context.Response.Headers["Retry-After"] = retryAfter.ToString();
+        context.Response.Headers["Retry-After"] = retryAfter.ToString(CultureInfo.InvariantCulture);
 
         string body = JsonSerializer.Serialize(new
         {

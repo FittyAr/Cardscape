@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Cardscape.Web.Resources;
 using Cardscape.Web.Services;
@@ -87,17 +88,17 @@ public partial class CardDetail
             MetadataListItem.Text("Due date",
                 card.DueDate is null
                     ? "none"
-                    : card.DueDate.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm")),
+                    : card.DueDate.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture)),
             new("Members", MakeMembersValueFragment(card)),
-            MetadataListItem.Text("Labels", card.LabelCount.ToString()),
+            MetadataListItem.Text("Labels", card.LabelCount.ToString(CultureInfo.CurrentCulture)),
             // BUG-A5-003 — see test-results/beta/reports/A5-card-extras.md.
             // The header now surfaces comment / attachment /
             // checklist counts alongside the existing member /
             // label counts so the user can see at a glance which
             // cards carry attachments or open discussions.
-            MetadataListItem.Text("Comments", card.CommentCount.ToString()),
-            MetadataListItem.Text("Attachments", card.AttachmentCount.ToString()),
-            MetadataListItem.Text("Checklists", card.ChecklistCount.ToString())
+            MetadataListItem.Text("Comments", card.CommentCount.ToString(CultureInfo.CurrentCulture)),
+            MetadataListItem.Text("Attachments", card.AttachmentCount.ToString(CultureInfo.CurrentCulture)),
+            MetadataListItem.Text("Checklists", card.ChecklistCount.ToString(CultureInfo.CurrentCulture))
         };
 
     private IReadOnlyList<MetadataListItem> CustomFieldItems => fieldValues is null
@@ -109,7 +110,7 @@ public partial class CardDetail
     private RenderFragment MakeMembersValueFragment(CardDto cardRef) => __builder =>
     {
         __builder.OpenElement(0, "span");
-        __builder.AddContent(1, cardRef.MemberCount.ToString());
+        __builder.AddContent(1, cardRef.MemberCount.ToString(CultureInfo.CurrentCulture));
         __builder.AddContent(2, " ");
         __builder.OpenComponent<Radzen.Blazor.RadzenButton>(3);
         __builder.AddAttribute(4, "Text", $" {L["AiSuggestOwners"]}");

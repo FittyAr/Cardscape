@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -56,8 +57,8 @@ public static class SerilogBrowserLoggingExtensions
             .Enrich.WithProperty("Service", ServiceName)
             .Enrich.WithProperty("Application", "Cardscape.Web")
             .WriteTo.BrowserHttp(fullEndpoint)
-            .WriteTo.Console()
-            .WriteTo.Debug()
+            .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
+            .WriteTo.Debug(formatProvider: CultureInfo.InvariantCulture)
             .CreateLogger();
 
         builder.Logging.AddSerilog(dispose: true);

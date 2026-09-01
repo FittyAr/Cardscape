@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -281,7 +282,7 @@ public sealed class McpSubscriptionsCrossProcessTests
         if (!found)
         {
             var allCalls = _factory.RecordingSink.Snapshot()
-                .Select(c => $"{c.Method} {c.Uri} -> {c.StatusCode?.ToString() ?? c.Failure}")
+                .Select(c => $"{c.Method} {c.Uri} -> {c.StatusCode?.ToString(CultureInfo.InvariantCulture) ?? c.Failure}")
                 .ToList();
             throw new Xunit.Sdk.XunitException(
                 $"no Broadcast event for board {boardId} on the MCP after card creation. " +

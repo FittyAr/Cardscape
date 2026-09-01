@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Cards.DTOs;
@@ -56,12 +57,13 @@ public sealed class McpPrompts(IMessageBus bus)
                 {
                     break;
                 }
-                sb.AppendLine($"- {card.Title} (due {card.DueDate:yyyy-MM-dd}, status: {(card.IsCompleted ? "done" : "open")})");
+                sb.AppendLine(CultureInfo.InvariantCulture,
+                    $"- {card.Title} (due {card.DueDate:yyyy-MM-dd}, status: {(card.IsCompleted ? "done" : "open")})");
             }
         }
         else
         {
-            sb.AppendLine($"- (could not load cards: {result.Error.Message})");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- (could not load cards: {result.Error.Message})");
         }
         sb.AppendLine();
         sb.AppendLine("Produce a 3-bullet standup: what I finished yesterday, what I'm working on today, and what's blocked.");
@@ -80,12 +82,12 @@ public sealed class McpPrompts(IMessageBus bus)
         {
             foreach (NotificationDto n in result.Value)
             {
-                sb.AppendLine($"- [{n.Kind}] {n.PayloadJson}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"- [{n.Kind}] {n.PayloadJson}");
             }
         }
         else
         {
-            sb.AppendLine($"- (could not load inbox: {result.Error.Message})");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- (could not load inbox: {result.Error.Message})");
         }
         sb.AppendLine();
         sb.AppendLine("For each item, suggest one of:");
@@ -106,7 +108,8 @@ public sealed class McpPrompts(IMessageBus bus)
             new ListListsForBoardQuery(boardId, IncludeArchived: false), ct);
 
         var sb = new StringBuilder();
-        sb.AppendLine($"You are helping me plan the next sprint on board {boardId}.");
+        sb.AppendLine(CultureInfo.InvariantCulture,
+            $"You are helping me plan the next sprint on board {boardId}.");
         sb.AppendLine();
 
         BoardListDto? backlog = null;
@@ -121,7 +124,7 @@ public sealed class McpPrompts(IMessageBus bus)
             sb.AppendLine("Lists on this board:");
             foreach (BoardListDto list in listsResult.Value)
             {
-                sb.AppendLine($"- {list.Name} (id {list.Id})");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"- {list.Name} (id {list.Id})");
             }
             sb.AppendLine();
         }
@@ -130,7 +133,8 @@ public sealed class McpPrompts(IMessageBus bus)
         {
             Result<IReadOnlyList<CardSummaryDto>> cardsResult = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
                 new ListCardsForBoardQuery(boardId, IncludeArchived: false), ct);
-            sb.AppendLine($"Top {maxCards} cards in the backlog list ({backlog.Name}):");
+            sb.AppendLine(CultureInfo.InvariantCulture,
+                $"Top {maxCards} cards in the backlog list ({backlog.Name}):");
             if (cardsResult.IsSuccess)
             {
                 int count = 0;
@@ -140,7 +144,7 @@ public sealed class McpPrompts(IMessageBus bus)
                     {
                         break;
                     }
-                    sb.AppendLine($"- {card.Title} (id {card.Id})");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"- {card.Title} (id {card.Id})");
                 }
             }
         }
@@ -175,7 +179,8 @@ public sealed class McpPrompts(IMessageBus bus)
                     open++;
                 }
             }
-            sb.AppendLine($"- Total: {result.Value.Count} ({done} completed, {open} still open)");
+            sb.AppendLine(CultureInfo.InvariantCulture,
+                $"- Total: {result.Value.Count} ({done} completed, {open} still open)");
         }
         sb.AppendLine();
         sb.AppendLine("Produce a weekly review: 3 wins, 3 things to improve, and 1 focus for next week.");
@@ -191,9 +196,11 @@ public sealed class McpPrompts(IMessageBus bus)
         var sb = new StringBuilder();
         sb.AppendLine("You are helping me find stale cards in Cardscape.");
         sb.AppendLine();
-        sb.AppendLine($"A card is considered stale if it has had no activity in the last {staleAfterDays} days.");
+        sb.AppendLine(CultureInfo.InvariantCulture,
+            $"A card is considered stale if it has had no activity in the last {staleAfterDays} days.");
         sb.AppendLine();
-        sb.AppendLine("Use the cards_list and activities_list tools to walk the active boards and surface up to " + maxCards + " stale cards.");
+        sb.AppendLine(CultureInfo.InvariantCulture,
+            $"Use the cards_list and activities_list tools to walk the active boards and surface up to {maxCards} stale cards.");
         sb.AppendLine("For each card, suggest one of: archive, re-assign, or schedule a review.");
         return sb.ToString();
     }

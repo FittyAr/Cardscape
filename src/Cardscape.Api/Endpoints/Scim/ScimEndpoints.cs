@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Cardscape.Application.Abstractions;
 using Cardscape.Domain.Common;
@@ -324,7 +325,7 @@ public static class ScimEndpoints
     private static IResult MapError(DomainError error) => Results.Json(new
     {
         schemas = ErrorSchemas,
-        status = ((int)error.Type).ToString(),
+        status = ((int)error.Type).ToString(CultureInfo.InvariantCulture),
         detail = error.Message
     }, statusCode: error.Type switch
     {

@@ -78,10 +78,10 @@ public sealed class IcsCalendarService(
         var sb = new StringBuilder();
         sb.AppendLine("BEGIN:VCALENDAR");
         sb.AppendLine("VERSION:2.0");
-        sb.AppendLine("PRODID:-//Cardscape//Board " + boardId + "//EN");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"PRODID:-//Cardscape//Board {boardId}//EN");
         sb.AppendLine("CALSCALE:GREGORIAN");
         sb.AppendLine("METHOD:PUBLISH");
-        sb.AppendLine($"X-WR-CALNAME:{Escape(board.Name.Value)}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"X-WR-CALNAME:{Escape(board.Name.Value)}");
 
         DateTimeOffset stamp = clock.UtcNow;
         foreach (Card card in allCards.Where(c => c.DueDate.HasValue).OrderBy(c => c.DueDate))
@@ -89,14 +89,14 @@ public sealed class IcsCalendarService(
             DateTimeOffset due = card.DueDate!.Value;
             DateTimeOffset end = due.AddDays(1);
             sb.AppendLine("BEGIN:VEVENT");
-            sb.AppendLine($"UID:{card.Id.Value}@cardscape");
-            sb.AppendLine($"DTSTAMP:{FormatIcs(stamp)}");
-            sb.AppendLine($"DTSTART;VALUE=DATE:{FormatIcsDateOnly(due)}");
-            sb.AppendLine($"DTEND;VALUE=DATE:{FormatIcsDateOnly(end)}");
-            sb.AppendLine($"SUMMARY:{Escape(card.Title.Value)}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"UID:{card.Id.Value}@cardscape");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"DTSTAMP:{FormatIcs(stamp)}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"DTSTART;VALUE=DATE:{FormatIcsDateOnly(due)}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"DTEND;VALUE=DATE:{FormatIcsDateOnly(end)}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"SUMMARY:{Escape(card.Title.Value)}");
             if (!string.IsNullOrWhiteSpace(card.Description.Value))
             {
-                sb.AppendLine($"DESCRIPTION:{Escape(card.Description.Value)}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"DESCRIPTION:{Escape(card.Description.Value)}");
             }
             sb.AppendLine("END:VEVENT");
         }

@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.Globalization;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Repositories;
@@ -18,7 +19,7 @@ public sealed class BackgroundJobRepositoryClaimTests
         {
             CancellationToken ct = TestContext.Current.CancellationToken;
             DbContextOptions<CardscapeDbContext> options = Options(databasePath);
-            DateTimeOffset now = DateTimeOffset.Parse("2026-08-11T12:00:00Z");
+            DateTimeOffset now = DateTimeOffset.Parse("2026-08-11T12:00:00Z", CultureInfo.InvariantCulture);
             BackgroundJob oldest = Job("oldest", now.AddMinutes(-2), now);
             BackgroundJob newer = Job("newer", now.AddMinutes(-1), now);
             BackgroundJob future = Job("future", now.AddMinutes(1), now);
@@ -63,7 +64,7 @@ public sealed class BackgroundJobRepositoryClaimTests
         {
             CancellationToken ct = TestContext.Current.CancellationToken;
             DbContextOptions<CardscapeDbContext> options = Options(databasePath);
-            DateTimeOffset now = DateTimeOffset.Parse("2026-08-11T12:00:00Z");
+            DateTimeOffset now = DateTimeOffset.Parse("2026-08-11T12:00:00Z", CultureInfo.InvariantCulture);
             BackgroundJob[] jobs = Enumerable.Range(0, 20)
                 .Select(index => Job($"concurrent-{index}", now.AddSeconds(-index), now))
                 .ToArray();
@@ -107,7 +108,7 @@ public sealed class BackgroundJobRepositoryClaimTests
         {
             CancellationToken ct = TestContext.Current.CancellationToken;
             DbContextOptions<CardscapeDbContext> competingOptions = Options(databasePath);
-            DateTimeOffset now = DateTimeOffset.Parse("2026-08-11T12:00:00Z");
+            DateTimeOffset now = DateTimeOffset.Parse("2026-08-11T12:00:00Z", CultureInfo.InvariantCulture);
             DateTimeOffset rescheduledFor = now.AddMinutes(5);
             BackgroundJob job = Job("stale-candidate", now.AddMinutes(-1), now);
             await SeedAsync(competingOptions, ct, job);

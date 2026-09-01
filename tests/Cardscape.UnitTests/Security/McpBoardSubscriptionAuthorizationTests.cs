@@ -1,3 +1,4 @@
+using System.Globalization;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
@@ -70,7 +71,7 @@ public sealed class McpBoardSubscriptionAuthorizationTests
             BoardDescription.Create(null).Value,
             visibility,
             creatorId,
-            DateTimeOffset.Parse("2026-08-11T12:00:00Z")).Value;
+            DateTimeOffset.Parse("2026-08-11T12:00:00Z", CultureInfo.InvariantCulture)).Value;
 
     private static Mock<IBoardRepository> RepositoryReturning(Board board)
     {

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Workspaces;
@@ -24,7 +25,7 @@ public sealed class McpResourceBroadcasterAuthorizationTests
             BoardDescription.Create(null).Value,
             BoardVisibility.Private,
             Guid.NewGuid(),
-            DateTimeOffset.Parse("2026-08-11T12:00:00Z")).Value;
+            DateTimeOffset.Parse("2026-08-11T12:00:00Z", CultureInfo.InvariantCulture)).Value;
         var boards = new Mock<IBoardRepository>();
         boards.Setup(repository => repository.GetByIdAsync(
                 new BoardId(boardId), It.IsAny<CancellationToken>()))

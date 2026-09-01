@@ -1,3 +1,4 @@
+using System.Globalization;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
@@ -32,29 +33,29 @@ public sealed class DatabaseSearchServiceTests
                 await seedContext.Database.EnsureCreatedAsync(ct);
                 seedContext.Lists.Add(BoardList.Create(
                     seed.Card.ListId, new BoardId(boardId), ListName.Create("Search list").Value,
-                    Position.Start(), actorId, DateTimeOffset.Parse("2026-08-21T12:00:00Z")).Value);
+                    Position.Start(), actorId, DateTimeOffset.Parse("2026-08-21T12:00:00Z", CultureInfo.InvariantCulture)).Value);
                 seedContext.Cards.Add(seed.Card);
                 seedContext.Comments.Add(Comment.Create(
                     CommentId.New(), seed.Card.Id, actorId,
                     CommentBody.Create("Rehidratáble comment").Value,
-                    DateTimeOffset.Parse("2026-08-21T12:01:00Z")).Value);
+                    DateTimeOffset.Parse("2026-08-21T12:01:00Z", CultureInfo.InvariantCulture)).Value);
                 Checklist checklist = Checklist.Create(
                     ChecklistId.New(), seed.Card.Id,
                     ChecklistTitle.Create("Rehidratáble checklist").Value,
-                    actorId, DateTimeOffset.Parse("2026-08-21T12:02:00Z")).Value;
+                    actorId, DateTimeOffset.Parse("2026-08-21T12:02:00Z", CultureInfo.InvariantCulture)).Value;
                 checklist.AddItem(
                     ChecklistItemText.Create("Rehidratáble item").Value,
-                    Position.Start(), DateTimeOffset.Parse("2026-08-21T12:03:00Z"));
+                    Position.Start(), DateTimeOffset.Parse("2026-08-21T12:03:00Z", CultureInfo.InvariantCulture));
                 seedContext.Checklists.Add(checklist);
                 seedContext.Labels.Add(Label.Create(
                     LabelId.New(), new BoardId(boardId),
                     LabelName.Create("Rehidratáble label").Value,
                     Color.Create("#123456").Value, actorId,
-                    DateTimeOffset.Parse("2026-08-21T12:04:00Z")).Value);
+                    DateTimeOffset.Parse("2026-08-21T12:04:00Z", CultureInfo.InvariantCulture)).Value);
                 seedContext.Activities.Add(Activity.Create(
                     new BoardId(boardId), seed.Card.Id.Value, actorId,
                     ActivityKind.CardCreated, "{\"text\":\"Rehidratáble activity\"}",
-                    DateTimeOffset.Parse("2026-08-21T12:05:00Z")));
+                    DateTimeOffset.Parse("2026-08-21T12:05:00Z", CultureInfo.InvariantCulture)));
                 await seedContext.SaveChangesAsync(ct);
             }
 
@@ -161,10 +162,11 @@ public sealed class DatabaseSearchServiceTests
         Card card = Card.Create(
             CardId.New(), listId, CardTitle.Create(title).Value,
             CardDescription.Create("Searchable description").Value,
-            Position.Start(), Guid.NewGuid(), DateTimeOffset.Parse("2026-08-21T12:00:00Z")).Value;
+            Position.Start(), Guid.NewGuid(),
+            DateTimeOffset.Parse("2026-08-21T12:00:00Z", CultureInfo.InvariantCulture)).Value;
         if (archived)
         {
-            card.Archive(DateTimeOffset.Parse("2026-08-21T12:01:00Z"));
+            card.Archive(DateTimeOffset.Parse("2026-08-21T12:01:00Z", CultureInfo.InvariantCulture));
         }
 
         return new SeedCard(boardId, card);
@@ -182,7 +184,8 @@ public sealed class DatabaseSearchServiceTests
             context.Lists.Add(BoardList.Create(
                 seed.Card.ListId, new BoardId(seed.BoardId),
                 ListName.Create("Search list").Value, Position.Start(),
-                Guid.NewGuid(), DateTimeOffset.Parse("2026-08-21T12:00:00Z")).Value);
+                Guid.NewGuid(),
+                DateTimeOffset.Parse("2026-08-21T12:00:00Z", CultureInfo.InvariantCulture)).Value);
         }
 
         context.Cards.AddRange(cards.Select(seed => seed.Card));
