@@ -31,7 +31,7 @@ public static class CreateCustomFieldDefinitionCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        if (!Enum.IsDefined(typeof(CustomFieldKind), command.Kind))
+        if (!Enum.IsDefined((CustomFieldKind)command.Kind))
         {
             return Result.Failure<CustomFieldDefinitionDto>(DomainError.Validation(
                 "custom_fields.kind_unknown", $"Unknown custom field kind: {command.Kind}."));

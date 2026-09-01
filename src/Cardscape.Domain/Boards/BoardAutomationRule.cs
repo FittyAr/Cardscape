@@ -114,14 +114,14 @@ public sealed class BoardAutomationRule : AggregateRoot<BoardAutomationRuleId>
         // create a rule that the dispatcher can never fire.
         // Range-check the enums explicitly so the caller
         // gets a clear 400 instead of a silent zombie rule.
-        if (!Enum.IsDefined(typeof(AutomationTrigger), trigger))
+        if (!Enum.IsDefined(trigger))
         {
             return Result.Failure<BoardAutomationRule>(DomainError.Validation(
                 "automation.trigger_invalid",
                 "Trigger value is not a recognised AutomationTrigger."));
         }
 
-        if (!Enum.IsDefined(typeof(AutomationAction), action))
+        if (!Enum.IsDefined(action))
         {
             return Result.Failure<BoardAutomationRule>(DomainError.Validation(
                 "automation.action_invalid",

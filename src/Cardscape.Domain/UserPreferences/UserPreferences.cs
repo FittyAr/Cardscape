@@ -136,7 +136,7 @@ public sealed class UserPreferences : AggregateRoot<UserId>
 
         if (mode is not null && mode.Value != Mode)
         {
-            if (!Enum.IsDefined(typeof(AppearanceMode), mode.Value))
+            if (!Enum.IsDefined(mode.Value))
             {
                 return Result.Failure(InvalidMode);
             }

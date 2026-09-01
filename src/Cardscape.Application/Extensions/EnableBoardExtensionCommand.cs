@@ -29,7 +29,7 @@ public static class EnableBoardExtensionCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        if (!Enum.IsDefined(typeof(ExtensionKind), command.Kind))
+        if (!Enum.IsDefined((ExtensionKind)command.Kind))
         {
             return Result.Failure<BoardExtensionDto>(DomainError.Validation(
                 "extension.unknown_kind",
@@ -84,5 +84,3 @@ public static class EnableBoardExtensionCommandHandler
         return Result.Success(BoardExtensionDto.FromEntity(creation.Value));
     }
 }
-
-

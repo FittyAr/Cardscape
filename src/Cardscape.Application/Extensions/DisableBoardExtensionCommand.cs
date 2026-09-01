@@ -28,7 +28,7 @@ public static class DisableBoardExtensionCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        if (!Enum.IsDefined(typeof(ExtensionKind), command.Kind))
+        if (!Enum.IsDefined((ExtensionKind)command.Kind))
         {
             return Result.Failure(DomainError.Validation(
                 "extension.unknown_kind",
@@ -68,5 +68,3 @@ public static class DisableBoardExtensionCommandHandler
         return Result.Success();
     }
 }
-
-

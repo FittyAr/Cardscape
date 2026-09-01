@@ -59,7 +59,7 @@ public sealed class Dashcard : AggregateRoot<DashcardId>
                 "dashboards.title_required", "Dashcard title is required."));
         }
 
-        if (!Enum.IsDefined(typeof(DashcardKind), kind))
+        if (!Enum.IsDefined(kind))
         {
             return Result.Failure<Dashcard>(DomainError.Validation(
                 "dashboards.kind_invalid",

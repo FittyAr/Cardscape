@@ -158,10 +158,12 @@ public static class ClientLogEndpoint
             ILogger logger = loggerFactory.CreateLogger(LogCategory);
             logger.Log(
                 MapLevel(logEvent.Level),
-                logEvent.RenderMessage(),
                 logEvent.Exception,
-                logEvent.Properties.Select(p =>
-                    new KeyValuePair<string, object?>(p.Key, CoercePropertyValue(p.Value))));
+                "Browser log: {ClientMessage} {@ClientProperties}",
+                logEvent.RenderMessage(),
+                logEvent.Properties.ToDictionary(
+                    property => property.Key,
+                    property => CoercePropertyValue(property.Value)));
 
             return Results.NoContent();
         });

@@ -25,11 +25,11 @@ public sealed class CreateBoardAutomationRuleCommandValidator
             .MaximumLength(120);
 
         RuleFor(x => x.Trigger)
-            .Must(t => Enum.IsDefined(typeof(AutomationTrigger), t))
+            .Must(Enum.IsDefined)
             .WithMessage("Trigger value is not a recognised AutomationTrigger.");
 
         RuleFor(x => x.Action)
-            .Must(a => Enum.IsDefined(typeof(AutomationAction), a))
+            .Must(Enum.IsDefined)
             .WithMessage("Action value is not a recognised AutomationAction.");
     }
 }
