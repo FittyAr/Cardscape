@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Realtime;
+using Cardscape.Infrastructure.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -90,11 +91,7 @@ internal sealed class DomainEventOutboxProcessor(
             int nextAttempt = message.Attempts + 1;
             double delaySeconds = Math.Min(Math.Pow(2, nextAttempt), 300);
             message.Fail(exception.Message, clock.UtcNow.AddSeconds(delaySeconds));
-            logger.LogWarning(
-                exception,
-                "Domain event outbox delivery {DeliveryId} failed on attempt {Attempt}",
-                message.Id,
-                nextAttempt);
+            logger.OutboxDeliveryFailed(exception, message.Id, nextAttempt);
         }
 
         await db.SaveChangesAsync(cancellationToken);

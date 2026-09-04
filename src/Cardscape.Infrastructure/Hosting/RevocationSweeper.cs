@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Infrastructure.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -47,9 +48,7 @@ public sealed class RevocationSweeper(
         RevocationSweeperOptions opts = options.CurrentValue;
         if (!opts.Enabled)
         {
-            logger.LogInformation(
-                "RevocationSweeper is disabled (RevocationSweeper:Enabled=false). " +
-                "Expired rows will not be purged automatically.");
+            logger.RevocationSweeperDisabled();
             return;
         }
 
@@ -71,9 +70,7 @@ public sealed class RevocationSweeper(
                 {
                     if (logger.IsEnabled(LogLevel.Information))
                     {
-                        logger.LogInformation(
-                            "RevocationSweeper purged {Count} expired revoked-token row(s).",
-                            purged);
+                        logger.RevokedTokensPurged(purged);
                     }
                 }
             }
@@ -83,8 +80,7 @@ public sealed class RevocationSweeper(
             }
             catch (Exception ex)
             {
-                logger.LogError(
-                    ex, "RevocationSweeper failed; will retry after the next interval.");
+                logger.RevocationSweepFailed(ex);
             }
 
             try

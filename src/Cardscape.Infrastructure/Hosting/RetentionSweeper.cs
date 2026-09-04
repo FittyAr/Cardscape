@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Cardscape.Application.Abstractions;
 using Cardscape.Domain.Members;
+using Cardscape.Infrastructure.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -80,8 +81,7 @@ public sealed class RetentionSweeper(
                 // The sweeper must never crash the host.
                 // A failed sweep is logged; the next
                 // tick picks up where this one left off.
-                logger.LogError(ex,
-                    "RetentionSweeper iteration failed; the next tick will retry");
+                logger.RetentionIterationFailed(ex);
             }
 
             try
@@ -166,9 +166,7 @@ public sealed class RetentionSweeper(
             await db.SaveChangesAsync(ct);
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.LogInformation(
-                    "RetentionSweeper: anonymised {Count} users past the grace period",
-                    deletedUsers.Count);
+                logger.UsersAnonymised(deletedUsers.Count);
             }
         }
 
@@ -187,9 +185,7 @@ public sealed class RetentionSweeper(
         {
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.LogInformation(
-                    "RetentionSweeper: purged {Count} activity feed entries older than {Days} days",
-                    activityDeleted, _activityRetentionDays);
+                logger.ActivityEntriesPurged(activityDeleted, _activityRetentionDays);
             }
         }
 
@@ -211,9 +207,7 @@ public sealed class RetentionSweeper(
         {
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.LogInformation(
-                    "RetentionSweeper: purged {Count} expired idempotency keys",
-                    idempotencyDeleted);
+                logger.IdempotencyKeysPurged(idempotencyDeleted);
             }
         }
 

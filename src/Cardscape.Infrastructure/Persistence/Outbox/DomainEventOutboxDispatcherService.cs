@@ -1,3 +1,4 @@
+using Cardscape.Infrastructure.Logging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -22,7 +23,7 @@ internal sealed class DomainEventOutboxDispatcherService(
             }
             catch (Exception exception)
             {
-                logger.LogError(exception, "Domain event outbox dispatch cycle failed");
+                logger.OutboxDispatchCycleFailed(exception);
             }
         }
         while (await timer.WaitForNextTickAsync(stoppingToken));

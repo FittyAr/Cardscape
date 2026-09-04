@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Realtime;
 using Cardscape.Domain.Common;
+using Cardscape.Infrastructure.Logging;
 using Cardscape.Infrastructure.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -184,9 +185,7 @@ internal sealed class DomainEventsInterceptor(
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(
-                        ex,
-                        "Immediate domain event outbox dispatch failed; durable deliveries remain pending");
+                    logger.ImmediateOutboxDispatchFailed(ex);
                 }
             }
         }
