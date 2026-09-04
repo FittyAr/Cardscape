@@ -153,9 +153,9 @@ public sealed class DomainEventOutboxTests
     {
         public List<IDomainEvent> Events { get; } = [];
 
-        public Task BroadcastAsync(IDomainEvent @event, CancellationToken ct = default)
+        public Task BroadcastAsync(IDomainEvent domainEvent, CancellationToken ct = default)
         {
-            Events.Add(@event);
+            Events.Add(domainEvent);
             return Task.CompletedTask;
         }
     }
@@ -165,9 +165,9 @@ public sealed class DomainEventOutboxTests
         public Exception? Exception { get; set; }
         public List<IDomainEvent> Events { get; } = [];
 
-        public Task BroadcastAsync(IDomainEvent @event, CancellationToken ct = default)
+        public Task BroadcastAsync(IDomainEvent domainEvent, CancellationToken ct = default)
         {
-            Events.Add(@event);
+            Events.Add(domainEvent);
             return Exception is null ? Task.CompletedTask : Task.FromException(Exception);
         }
     }

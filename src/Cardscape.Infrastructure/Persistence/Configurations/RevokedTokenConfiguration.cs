@@ -7,13 +7,13 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class RevokedTokenConfiguration : IEntityTypeConfiguration<RevokedToken>
 {
-    public void Configure(EntityTypeBuilder<RevokedToken> b)
+    public void Configure(EntityTypeBuilder<RevokedToken> builder)
     {
-        b.ToTable("revoked_tokens");
-        b.HasKey(t => t.Id);
-        b.Property(t => t.Id).HasConversion(id => id.Value, v => new RevokedTokenId(v));
+        builder.ToTable("revoked_tokens");
+        builder.HasKey(t => t.Id);
+        builder.Property(t => t.Id).HasConversion(id => id.Value, v => new RevokedTokenId(v));
 
-        b.Property(t => t.Jti)
+        builder.Property(t => t.Jti)
             .HasMaxLength(64)
             .IsRequired();
         // Hot path: every authenticated JWT request asks
@@ -21,23 +21,23 @@ public sealed class RevokedTokenConfiguration : IEntityTypeConfiguration<Revoked
         // index on Jti makes the lookup a single-row seek;
         // the non-unique secondary index on TokenExpiresAt
         // makes the sweeper's purge query a range scan.
-        b.HasIndex(t => t.Jti).IsUnique();
+        builder.HasIndex(t => t.Jti).IsUnique();
 
-        b.Property(t => t.UserId)
+        builder.Property(t => t.UserId)
             .HasConversion(id => id.Value, v => new UserId(v))
             .IsRequired();
-        b.HasIndex(t => t.UserId);
+        builder.HasIndex(t => t.UserId);
 
-        b.Property(t => t.RevokedAt).IsRequired();
-        b.Property(t => t.TokenExpiresAt).IsRequired();
-        b.HasIndex(t => t.TokenExpiresAt);
+        builder.Property(t => t.RevokedAt).IsRequired();
+        builder.Property(t => t.TokenExpiresAt).IsRequired();
+        builder.HasIndex(t => t.TokenExpiresAt);
 
-        b.Property(t => t.Reason).HasMaxLength(200);
+        builder.Property(t => t.Reason).HasMaxLength(200);
 
-        b.Property(t => t.CreatedAt).IsRequired();
-        b.Property(t => t.UpdatedAt);
-        b.Property(t => t.CreatedBy);
-        b.Property(t => t.UpdatedBy);
-        b.Property(t => t.IsDeleted);
+        builder.Property(t => t.CreatedAt).IsRequired();
+        builder.Property(t => t.UpdatedAt);
+        builder.Property(t => t.CreatedBy);
+        builder.Property(t => t.UpdatedBy);
+        builder.Property(t => t.IsDeleted);
     }
 }

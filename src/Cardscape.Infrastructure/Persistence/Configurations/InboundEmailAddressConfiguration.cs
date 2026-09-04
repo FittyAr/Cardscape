@@ -8,30 +8,30 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class InboundEmailAddressConfiguration : IEntityTypeConfiguration<InboundEmailAddress>
 {
-    public void Configure(EntityTypeBuilder<InboundEmailAddress> b)
+    public void Configure(EntityTypeBuilder<InboundEmailAddress> builder)
     {
-        b.ToTable("inbound_email_addresses");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).HasConversion(id => id.Value, v => new InboundEmailAddressId(v));
+        builder.ToTable("inbound_email_addresses");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(id => id.Value, v => new InboundEmailAddressId(v));
 
-        b.Property(x => x.WorkspaceId)
+        builder.Property(x => x.WorkspaceId)
             .HasConversion(id => id.Value, v => new WorkspaceId(v))
             .IsRequired();
-        b.HasIndex(x => x.WorkspaceId);
+        builder.HasIndex(x => x.WorkspaceId);
 
-        b.Property(x => x.EmailAddress).HasMaxLength(320).IsRequired();
-        b.HasIndex(x => x.EmailAddress).IsUnique();
+        builder.Property(x => x.EmailAddress).HasMaxLength(320).IsRequired();
+        builder.HasIndex(x => x.EmailAddress).IsUnique();
 
-        b.Property(x => x.TargetListId)
+        builder.Property(x => x.TargetListId)
             .HasConversion(id => id.Value, v => new BoardListId(v))
             .IsRequired();
-        b.Property(x => x.Label).HasMaxLength(200).IsRequired();
-        b.Property(x => x.Active).IsRequired();
+        builder.Property(x => x.Label).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.Active).IsRequired();
 
-        b.Property(x => x.CreatedAt).IsRequired();
-        b.Property(x => x.UpdatedAt);
-        b.Property(x => x.CreatedBy);
-        b.Property(x => x.UpdatedBy);
-        b.Property(x => x.IsDeleted);
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedBy);
+        builder.Property(x => x.IsDeleted);
     }
 }

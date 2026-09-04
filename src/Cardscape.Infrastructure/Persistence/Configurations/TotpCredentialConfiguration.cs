@@ -7,34 +7,34 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class TotpCredentialConfiguration : IEntityTypeConfiguration<TotpCredential>
 {
-    public void Configure(EntityTypeBuilder<TotpCredential> b)
+    public void Configure(EntityTypeBuilder<TotpCredential> builder)
     {
-        b.ToTable("totp_credentials");
-        b.HasKey(c => c.Id);
-        b.Property(c => c.Id).HasConversion(id => id.Value, v => new TotpCredentialId(v));
+        builder.ToTable("totp_credentials");
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Id).HasConversion(id => id.Value, v => new TotpCredentialId(v));
 
-        b.Property(c => c.UserId)
+        builder.Property(c => c.UserId)
             .HasConversion(id => id.Value, v => new UserId(v))
             .IsRequired();
-        b.HasIndex(c => c.UserId).IsUnique();
+        builder.HasIndex(c => c.UserId).IsUnique();
 
-        b.Property(c => c.EncryptedSecret)
+        builder.Property(c => c.EncryptedSecret)
             .IsRequired();
 
-        b.Property(c => c.RecoveryCodesHash)
+        builder.Property(c => c.RecoveryCodesHash)
             .IsRequired();
 
-        b.Property(c => c.LastUsedCounter)
+        builder.Property(c => c.LastUsedCounter)
             .IsRequired()
             .HasDefaultValue(0L);
 
-        b.Property(c => c.ConfirmedAt);
-        b.Ignore(c => c.IsActive);
+        builder.Property(c => c.ConfirmedAt);
+        builder.Ignore(c => c.IsActive);
 
-        b.Property(c => c.CreatedAt).IsRequired();
-        b.Property(c => c.UpdatedAt);
-        b.Property(c => c.CreatedBy);
-        b.Property(c => c.UpdatedBy);
-        b.Property(c => c.IsDeleted);
+        builder.Property(c => c.CreatedAt).IsRequired();
+        builder.Property(c => c.UpdatedAt);
+        builder.Property(c => c.CreatedBy);
+        builder.Property(c => c.UpdatedBy);
+        builder.Property(c => c.IsDeleted);
     }
 }

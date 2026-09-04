@@ -7,26 +7,26 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class WebhookEndpointConfiguration : IEntityTypeConfiguration<WebhookEndpoint>
 {
-    public void Configure(EntityTypeBuilder<WebhookEndpoint> b)
+    public void Configure(EntityTypeBuilder<WebhookEndpoint> builder)
     {
-        b.ToTable("webhook_endpoints");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).HasConversion(id => id.Value, v => new WebhookEndpointId(v));
+        builder.ToTable("webhook_endpoints");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(id => id.Value, v => new WebhookEndpointId(v));
 
-        b.Property(x => x.BoardId)
+        builder.Property(x => x.BoardId)
             .HasConversion(id => id.Value, v => new BoardId(v))
             .IsRequired();
-        b.HasIndex(x => x.BoardId);
+        builder.HasIndex(x => x.BoardId);
 
-        b.Property(x => x.Url).HasMaxLength(500).IsRequired();
-        b.Property(x => x.ProtectedSecret).HasMaxLength(2048).IsRequired();
-        b.Property(x => x.Events).IsRequired();
-        b.Property(x => x.Active).IsRequired();
+        builder.Property(x => x.Url).HasMaxLength(500).IsRequired();
+        builder.Property(x => x.ProtectedSecret).HasMaxLength(2048).IsRequired();
+        builder.Property(x => x.Events).IsRequired();
+        builder.Property(x => x.Active).IsRequired();
 
-        b.Property(x => x.CreatedAt).IsRequired();
-        b.Property(x => x.UpdatedAt);
-        b.Property(x => x.CreatedBy);
-        b.Property(x => x.UpdatedBy);
-        b.Property(x => x.IsDeleted);
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedBy);
+        builder.Property(x => x.IsDeleted);
     }
 }

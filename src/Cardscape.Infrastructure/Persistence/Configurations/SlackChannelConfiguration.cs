@@ -7,34 +7,34 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class SlackChannelConfiguration : IEntityTypeConfiguration<SlackChannel>
 {
-    public void Configure(EntityTypeBuilder<SlackChannel> b)
+    public void Configure(EntityTypeBuilder<SlackChannel> builder)
     {
-        b.ToTable("slack_channels");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).HasConversion(id => id.Value, v => new SlackChannelId(v));
+        builder.ToTable("slack_channels");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(id => id.Value, v => new SlackChannelId(v));
 
-        b.Property(x => x.SlackWorkspaceId)
+        builder.Property(x => x.SlackWorkspaceId)
             .HasConversion(id => id.Value, v => new SlackWorkspaceId(v))
             .IsRequired();
-        b.HasIndex(x => x.SlackWorkspaceId);
+        builder.HasIndex(x => x.SlackWorkspaceId);
 
-        b.Property(x => x.BoardId)
+        builder.Property(x => x.BoardId)
             .HasConversion(id => id.Value, v => new BoardId(v))
             .IsRequired();
-        b.HasIndex(x => x.BoardId);
+        builder.HasIndex(x => x.BoardId);
 
-        b.Property(x => x.ChannelId).HasMaxLength(32).IsRequired();
-        b.Property(x => x.ChannelName).HasMaxLength(200).IsRequired();
-        b.Property(x => x.Events).IsRequired();
-        b.Property(x => x.Active).IsRequired();
+        builder.Property(x => x.ChannelId).HasMaxLength(32).IsRequired();
+        builder.Property(x => x.ChannelName).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.Events).IsRequired();
+        builder.Property(x => x.Active).IsRequired();
 
-        b.Property(x => x.CreatedAt).IsRequired();
-        b.Property(x => x.UpdatedAt);
-        b.Property(x => x.CreatedBy);
-        b.Property(x => x.UpdatedBy);
-        b.Property(x => x.IsDeleted);
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedBy);
+        builder.Property(x => x.IsDeleted);
 
-        b.HasIndex(x => new { x.SlackWorkspaceId, x.BoardId, x.ChannelId })
+        builder.HasIndex(x => new { x.SlackWorkspaceId, x.BoardId, x.ChannelId })
             .HasDatabaseName("IX_slack_channels_WorkspaceId_BoardId_ChannelId")
             .IsUnique();
     }

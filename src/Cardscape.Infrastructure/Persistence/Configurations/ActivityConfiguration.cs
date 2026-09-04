@@ -6,26 +6,26 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class ActivityConfiguration : IEntityTypeConfiguration<Activity>
 {
-    public void Configure(EntityTypeBuilder<Activity> b)
+    public void Configure(EntityTypeBuilder<Activity> builder)
     {
-        b.ToTable("activities");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).HasConversion(id => id.Value, v => new ActivityId(v));
-        b.Property(x => x.BoardId)
+        builder.ToTable("activities");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(id => id.Value, v => new ActivityId(v));
+        builder.Property(x => x.BoardId)
             .HasConversion(id => id.Value, v => new Domain.Boards.BoardId(v))
             .IsRequired();
-        b.Property(x => x.CardId);
-        b.Property(x => x.ActorId).IsRequired();
-        b.Property(x => x.Kind).HasConversion<int>().IsRequired();
-        b.Property(x => x.PayloadJson).IsRequired();
-        b.Property(x => x.OccurredAt).IsRequired();
-        b.Property(x => x.CreatedAt).IsRequired();
-        b.Property(x => x.CreatedBy);
-        b.Property(x => x.UpdatedAt);
-        b.Property(x => x.UpdatedBy);
-        b.Property(x => x.IsDeleted);
-        b.HasIndex(x => new { x.BoardId, x.OccurredAt, x.Id });
-        b.HasIndex(x => new { x.CardId, x.OccurredAt, x.Id });
-        b.HasIndex(x => new { x.ActorId, x.OccurredAt });
+        builder.Property(x => x.CardId);
+        builder.Property(x => x.ActorId).IsRequired();
+        builder.Property(x => x.Kind).HasConversion<int>().IsRequired();
+        builder.Property(x => x.PayloadJson).IsRequired();
+        builder.Property(x => x.OccurredAt).IsRequired();
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.UpdatedBy);
+        builder.Property(x => x.IsDeleted);
+        builder.HasIndex(x => new { x.BoardId, x.OccurredAt, x.Id });
+        builder.HasIndex(x => new { x.CardId, x.OccurredAt, x.Id });
+        builder.HasIndex(x => new { x.ActorId, x.OccurredAt });
     }
 }

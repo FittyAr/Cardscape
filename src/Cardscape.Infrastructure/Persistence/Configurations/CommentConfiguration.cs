@@ -6,25 +6,25 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class CommentConfiguration : IEntityTypeConfiguration<Comment>
 {
-    public void Configure(EntityTypeBuilder<Comment> b)
+    public void Configure(EntityTypeBuilder<Comment> builder)
     {
-        b.ToTable("comments");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).HasConversion(id => id.Value, v => new CommentId(v));
-        b.Property(x => x.CardId)
+        builder.ToTable("comments");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(id => id.Value, v => new CommentId(v));
+        builder.Property(x => x.CardId)
             .HasConversion(id => id.Value, v => new Domain.Cards.CardId(v))
             .IsRequired();
-        b.Property(x => x.AuthorId).IsRequired();
-        b.Property(x => x.Body)
-            .HasConversion(b => b.Value, v => CommentBody.Create(v).Value)
+        builder.Property(x => x.AuthorId).IsRequired();
+        builder.Property(x => x.Body)
+            .HasConversion(builder => builder.Value, v => CommentBody.Create(v).Value)
             .HasMaxLength(CommentBody.MaxLength)
             .IsRequired();
-        b.Property(x => x.CreatedAt).IsRequired();
-        b.Property(x => x.UpdatedAt);
-        b.Property(x => x.CreatedBy);
-        b.Property(x => x.UpdatedBy);
-        b.Property(x => x.IsDeleted);
-        b.HasIndex(x => new { x.CardId, x.IsDeleted, x.CreatedAt });
-        b.HasIndex(x => x.AuthorId);
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedBy);
+        builder.Property(x => x.IsDeleted);
+        builder.HasIndex(x => new { x.CardId, x.IsDeleted, x.CreatedAt });
+        builder.HasIndex(x => x.AuthorId);
     }
 }

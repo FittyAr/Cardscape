@@ -6,34 +6,34 @@ namespace Cardscape.Infrastructure.BackgroundJobs;
 
 public sealed class BackgroundJobConfiguration : IEntityTypeConfiguration<BackgroundJob>
 {
-    public void Configure(EntityTypeBuilder<BackgroundJob> b)
+    public void Configure(EntityTypeBuilder<BackgroundJob> builder)
     {
-        b.ToTable("background_jobs");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).HasConversion(id => id.Value, v => new BackgroundJobId(v));
+        builder.ToTable("background_jobs");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(id => id.Value, v => new BackgroundJobId(v));
 
-        b.Property(x => x.Type).HasMaxLength(200).IsRequired();
-        b.Property(x => x.PayloadJson).IsRequired();
-        b.Property(x => x.ScheduledFor).IsRequired();
-        b.Property(x => x.Status).HasConversion<int>().IsRequired();
-        b.Property(x => x.Attempts).IsRequired();
-        b.Property(x => x.MaxAttempts).IsRequired();
-        b.Property(x => x.StartedAt);
-        b.Property(x => x.CompletedAt);
-        b.Property(x => x.LastError);
+        builder.Property(x => x.Type).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.PayloadJson).IsRequired();
+        builder.Property(x => x.ScheduledFor).IsRequired();
+        builder.Property(x => x.Status).HasConversion<int>().IsRequired();
+        builder.Property(x => x.Attempts).IsRequired();
+        builder.Property(x => x.MaxAttempts).IsRequired();
+        builder.Property(x => x.StartedAt);
+        builder.Property(x => x.CompletedAt);
+        builder.Property(x => x.LastError);
 
-        b.Property(x => x.CreatedAt).IsRequired();
-        b.Property(x => x.UpdatedAt);
-        b.Property(x => x.CreatedBy);
-        b.Property(x => x.UpdatedBy);
-        b.Property(x => x.IsDeleted);
-        b.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedBy);
+        builder.Property(x => x.IsDeleted);
+        builder.Property(x => x.RowVersion).IsConcurrencyToken().HasDefaultValue(0u);
 
         // The dispatcher's hot-path query is "pending + due"; this
         // composite index makes that O(log n) instead of a full scan.
-        b.HasIndex(x => new { x.Status, x.ScheduledFor })
+        builder.HasIndex(x => new { x.Status, x.ScheduledFor })
             .HasDatabaseName("IX_background_jobs_Status_ScheduledFor");
-        b.HasIndex(x => new { x.Status, x.CompletedAt })
+        builder.HasIndex(x => new { x.Status, x.CompletedAt })
             .HasDatabaseName("IX_background_jobs_Status_CompletedAt");
     }
 }

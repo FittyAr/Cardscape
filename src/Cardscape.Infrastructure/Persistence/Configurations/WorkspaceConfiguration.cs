@@ -6,27 +6,27 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
 {
-    public void Configure(EntityTypeBuilder<Workspace> b)
+    public void Configure(EntityTypeBuilder<Workspace> builder)
     {
-        b.ToTable("workspaces");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).HasConversion(id => id.Value, v => new WorkspaceId(v));
-        b.Property(x => x.Name)
+        builder.ToTable("workspaces");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(id => id.Value, v => new WorkspaceId(v));
+        builder.Property(x => x.Name)
             .HasConversion(n => n.Value, v => WorkspaceName.Create(v).Value)
             .HasMaxLength(WorkspaceName.MaxLength)
             .IsRequired();
-        b.Property(x => x.OwnerId).IsRequired();
-        b.Property(x => x.IsArchived).IsRequired();
-        b.Property(x => x.Region).HasConversion<int>().IsRequired();
-        b.HasIndex(x => x.Region);
-        b.Property(x => x.RequireTwoFactor).IsRequired().HasDefaultValue(false);
-        b.Property(x => x.CreatedAt).IsRequired();
-        b.Property(x => x.UpdatedAt);
-        b.Property(x => x.CreatedBy);
-        b.Property(x => x.UpdatedBy);
-        b.Property(x => x.IsDeleted);
+        builder.Property(x => x.OwnerId).IsRequired();
+        builder.Property(x => x.IsArchived).IsRequired();
+        builder.Property(x => x.Region).HasConversion<int>().IsRequired();
+        builder.HasIndex(x => x.Region);
+        builder.Property(x => x.RequireTwoFactor).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedBy);
+        builder.Property(x => x.IsDeleted);
 
-        b.OwnsMany(x => x.Members, mb =>
+        builder.OwnsMany(x => x.Members, mb =>
         {
             mb.ToTable("workspace_members");
             mb.HasKey(m => m.Id);

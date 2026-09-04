@@ -6,32 +6,32 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class BoardConfiguration : IEntityTypeConfiguration<Board>
 {
-    public void Configure(EntityTypeBuilder<Board> b)
+    public void Configure(EntityTypeBuilder<Board> builder)
     {
-        b.ToTable("boards");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).HasConversion(id => id.Value, v => new BoardId(v));
-        b.Property(x => x.WorkspaceId)
+        builder.ToTable("boards");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(id => id.Value, v => new BoardId(v));
+        builder.Property(x => x.WorkspaceId)
             .HasConversion(id => id.Value, v => new Domain.Workspaces.WorkspaceId(v))
             .IsRequired();
-        b.Property(x => x.Name)
+        builder.Property(x => x.Name)
             .HasConversion(n => n.Value, v => BoardName.Create(v).Value)
             .HasMaxLength(BoardName.MaxLength)
             .IsRequired();
-        b.Property(x => x.Description)
+        builder.Property(x => x.Description)
             .HasConversion(d => d.Value, v => BoardDescription.Create(v).Value)
             .HasMaxLength(BoardDescription.MaxLength)
             .IsRequired();
-        b.Property(x => x.Visibility).HasConversion<int>().IsRequired();
-        b.Property(x => x.IsArchived).IsRequired();
-        b.Property(x => x.CreatedAt).IsRequired();
-        b.Property(x => x.UpdatedAt);
-        b.Property(x => x.CreatedBy);
-        b.Property(x => x.UpdatedBy);
-        b.Property(x => x.IsDeleted);
-        b.HasIndex(x => x.WorkspaceId);
+        builder.Property(x => x.Visibility).HasConversion<int>().IsRequired();
+        builder.Property(x => x.IsArchived).IsRequired();
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedBy);
+        builder.Property(x => x.IsDeleted);
+        builder.HasIndex(x => x.WorkspaceId);
 
-        b.OwnsMany(x => x.Members, mb =>
+        builder.OwnsMany(x => x.Members, mb =>
         {
             mb.ToTable("board_members");
             mb.HasKey(m => m.Id);
@@ -46,7 +46,7 @@ public sealed class BoardConfiguration : IEntityTypeConfiguration<Board>
         // BETA-5-#1 — see test-results/BETA-TEST-REPORT.md.
         //
         // The previous configuration declared Stars as an
-        // OWNED entity collection (b.OwnsMany(x => x.Stars, ...))
+        // OWNED entity collection (builder.OwnsMany(x => x.Stars, ...))
         // which made the rows addressable only through the
         // owning Board aggregate. The star toggle path in
         // BoardRepository.AddStarIfMissingAsync /
@@ -64,8 +64,8 @@ public sealed class BoardConfiguration : IEntityTypeConfiguration<Board>
         // intact. The Board aggregate still exposes the
         // Stars navigation property and EF Core still
         // hydrates it from the board_stars table when a
-        // Board is loaded with .Include(b => b.Stars).
-        b.HasMany(x => x.Stars).WithOne()
+        // Board is loaded with .Include(builder => builder.Stars).
+        builder.HasMany(x => x.Stars).WithOne()
             .HasForeignKey(s => s.BoardId)
             .OnDelete(DeleteBehavior.Cascade);
     }

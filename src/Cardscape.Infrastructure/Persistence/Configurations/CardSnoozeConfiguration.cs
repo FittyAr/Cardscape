@@ -6,13 +6,13 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class CardSnoozeConfiguration : IEntityTypeConfiguration<CardSnooze>
 {
-    public void Configure(EntityTypeBuilder<CardSnooze> b)
+    public void Configure(EntityTypeBuilder<CardSnooze> builder)
     {
-        b.ToTable("card_snoozes");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).HasConversion(id => id.Value, v => new CardId(v));
-        b.Property(x => x.Until);
-        b.Property(x => x.SnoozedBy);
-        b.Property(x => x.SnoozedAt);
+        builder.ToTable("card_snoozes");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(id => id.Value, v => new CardId(v));
+        builder.Property(x => x.Until);
+        builder.Property(x => x.SnoozedBy);
+        builder.Property(x => x.SnoozedAt);
     }
 }

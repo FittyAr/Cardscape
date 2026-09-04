@@ -12,28 +12,28 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 /// die with its owner without a foreign-key cascade dance.</summary>
 public sealed class UserPreferencesConfiguration : IEntityTypeConfiguration<UserPreferences>
 {
-    public void Configure(EntityTypeBuilder<UserPreferences> b)
+    public void Configure(EntityTypeBuilder<UserPreferences> builder)
     {
-        b.ToTable("user_preferences");
-        b.HasKey(p => p.Id);
-        b.Property(p => p.Id)
+        builder.ToTable("user_preferences");
+        builder.HasKey(p => p.Id);
+        builder.Property(p => p.Id)
             .HasConversion(id => id.Value, v => new UserId(v))
             .ValueGeneratedNever(); // user supplies the id (= UserId); no DB-generated PK
 
-        b.Property(p => p.ThemeName)
+        builder.Property(p => p.ThemeName)
             .HasMaxLength(50)
             .IsRequired()
             .HasDefaultValue(UserPreferences.DefaultThemeName);
 
-        b.Property(p => p.Mode)
+        builder.Property(p => p.Mode)
             .HasConversion<int>()
             .IsRequired()
             .HasDefaultValue(AppearanceMode.System);
 
-        b.Property(p => p.CreatedAt).IsRequired();
-        b.Property(p => p.UpdatedAt);
-        b.Property(p => p.CreatedBy);
-        b.Property(p => p.UpdatedBy);
-        b.Property(p => p.IsDeleted);
+        builder.Property(p => p.CreatedAt).IsRequired();
+        builder.Property(p => p.UpdatedAt);
+        builder.Property(p => p.CreatedBy);
+        builder.Property(p => p.UpdatedBy);
+        builder.Property(p => p.IsDeleted);
     }
 }

@@ -6,22 +6,22 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class NotificationConfiguration : IEntityTypeConfiguration<Notification>
 {
-    public void Configure(EntityTypeBuilder<Notification> b)
+    public void Configure(EntityTypeBuilder<Notification> builder)
     {
-        b.ToTable("notifications");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).HasConversion(id => id.Value, v => new NotificationId(v));
-        b.Property(x => x.UserId).IsRequired();
-        b.Property(x => x.Kind).HasConversion<int>().IsRequired();
-        b.Property(x => x.PayloadJson).IsRequired();
-        b.Property(x => x.IsRead).IsRequired();
-        b.Property(x => x.ReadAt);
-        b.Property(x => x.CreatedAt).IsRequired();
-        b.Property(x => x.UpdatedAt);
-        b.Property(x => x.CreatedBy);
-        b.Property(x => x.UpdatedBy);
-        b.Property(x => x.IsDeleted);
-        b.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedAt });
-        b.HasIndex(x => new { x.UserId, x.CreatedAt });
+        builder.ToTable("notifications");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(id => id.Value, v => new NotificationId(v));
+        builder.Property(x => x.UserId).IsRequired();
+        builder.Property(x => x.Kind).HasConversion<int>().IsRequired();
+        builder.Property(x => x.PayloadJson).IsRequired();
+        builder.Property(x => x.IsRead).IsRequired();
+        builder.Property(x => x.ReadAt);
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedBy);
+        builder.Property(x => x.IsDeleted);
+        builder.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedAt });
+        builder.HasIndex(x => new { x.UserId, x.CreatedAt });
     }
 }

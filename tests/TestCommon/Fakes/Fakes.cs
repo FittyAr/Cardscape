@@ -312,13 +312,13 @@ public sealed class InMemoryCardRepository : InMemoryRepositoryBase<Card, CardId
         Guid userId,
         BoardId? boardId,
         DateTimeOffset from,
-        DateTimeOffset to,
+        DateTimeOffset rangeEnd,
         CancellationToken ct = default)
     {
         IReadOnlyList<CalendarCardReadModel> rows = Store.Values
             .Where(c => c.DueDate is not null
                         && c.DueDate.Value >= from
-                        && c.DueDate.Value < to)
+                        && c.DueDate.Value < rangeEnd)
             .Select(c => new CalendarCardReadModel(
                 c.Id.Value,
                 c.ListId.Value,

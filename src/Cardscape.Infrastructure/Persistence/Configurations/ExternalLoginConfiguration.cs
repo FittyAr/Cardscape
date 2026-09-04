@@ -7,36 +7,36 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class ExternalLoginConfiguration : IEntityTypeConfiguration<ExternalLogin>
 {
-    public void Configure(EntityTypeBuilder<ExternalLogin> b)
+    public void Configure(EntityTypeBuilder<ExternalLogin> builder)
     {
-        b.ToTable("external_logins");
-        b.HasKey(l => l.Id);
-        b.Property(l => l.Id).HasConversion(id => id.Value, v => new ExternalLoginId(v));
+        builder.ToTable("external_logins");
+        builder.HasKey(l => l.Id);
+        builder.Property(l => l.Id).HasConversion(id => id.Value, v => new ExternalLoginId(v));
 
-        b.Property(l => l.UserId)
+        builder.Property(l => l.UserId)
             .HasConversion(id => id.Value, v => new UserId(v))
             .IsRequired();
-        b.HasIndex(l => new { l.UserId, l.LastUsedAt });
+        builder.HasIndex(l => new { l.UserId, l.LastUsedAt });
 
-        b.Property(l => l.Provider)
+        builder.Property(l => l.Provider)
             .HasConversion<int>()
             .IsRequired();
 
-        b.Property(l => l.Subject)
+        builder.Property(l => l.Subject)
             .HasConversion(s => s.Value, v => SubjectId.Create(v).Value)
             .HasMaxLength(SubjectId.MaxLength)
             .IsRequired();
 
-        b.HasIndex(l => new { l.Provider, l.Subject }).IsUnique();
+        builder.HasIndex(l => new { l.Provider, l.Subject }).IsUnique();
 
-        b.Property(l => l.Email).HasMaxLength(320);
-        b.Property(l => l.DisplayName).HasMaxLength(200);
-        b.Property(l => l.LastUsedAt).IsRequired();
+        builder.Property(l => l.Email).HasMaxLength(320);
+        builder.Property(l => l.DisplayName).HasMaxLength(200);
+        builder.Property(l => l.LastUsedAt).IsRequired();
 
-        b.Property(l => l.CreatedAt).IsRequired();
-        b.Property(l => l.UpdatedAt);
-        b.Property(l => l.CreatedBy);
-        b.Property(l => l.UpdatedBy);
-        b.Property(l => l.IsDeleted);
+        builder.Property(l => l.CreatedAt).IsRequired();
+        builder.Property(l => l.UpdatedAt);
+        builder.Property(l => l.CreatedBy);
+        builder.Property(l => l.UpdatedBy);
+        builder.Property(l => l.IsDeleted);
     }
 }

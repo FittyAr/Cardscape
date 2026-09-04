@@ -44,7 +44,7 @@ public sealed class CardRepository(CardscapeDbContext db) : RepositoryBase<Card,
         Guid userId,
         BoardId? boardId,
         DateTimeOffset from,
-        DateTimeOffset to,
+        DateTimeOffset rangeEnd,
         CancellationToken ct = default)
     {
         IQueryable<CalendarCardReadModel> candidates =
@@ -72,7 +72,7 @@ public sealed class CardRepository(CardscapeDbContext db) : RepositoryBase<Card,
         if (!Db.Database.IsSqlite())
         {
             rows = await candidates
-                .Where(row => row.DueDate >= from && row.DueDate < to)
+                .Where(row => row.DueDate >= from && row.DueDate < rangeEnd)
                 .OrderBy(row => row.DueDate)
                 .ToListAsync(ct);
         }
@@ -84,7 +84,7 @@ public sealed class CardRepository(CardscapeDbContext db) : RepositoryBase<Card,
             rows = [];
             await foreach (var row in candidates.AsAsyncEnumerable().WithCancellation(ct))
             {
-                if (row.DueDate < from || row.DueDate >= to)
+                if (row.DueDate < from || row.DueDate >= rangeEnd)
                 {
                     continue;
                 }

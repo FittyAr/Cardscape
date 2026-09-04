@@ -7,29 +7,29 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class PasswordResetConfiguration : IEntityTypeConfiguration<PasswordReset>
 {
-    public void Configure(EntityTypeBuilder<PasswordReset> b)
+    public void Configure(EntityTypeBuilder<PasswordReset> builder)
     {
-        b.ToTable("password_resets");
-        b.HasKey(p => p.Id);
-        b.Property(p => p.Id).HasConversion(id => id.Value, v => new PasswordResetId(v));
+        builder.ToTable("password_resets");
+        builder.HasKey(p => p.Id);
+        builder.Property(p => p.Id).HasConversion(id => id.Value, v => new PasswordResetId(v));
 
-        b.Property(p => p.UserId)
+        builder.Property(p => p.UserId)
             .HasConversion(id => id.Value, v => new UserId(v))
             .IsRequired();
-        b.HasIndex(p => p.UserId);
+        builder.HasIndex(p => p.UserId);
 
-        b.Property(p => p.TokenHash).HasMaxLength(128).IsRequired();
-        b.HasIndex(p => p.TokenHash).IsUnique();
+        builder.Property(p => p.TokenHash).HasMaxLength(128).IsRequired();
+        builder.HasIndex(p => p.TokenHash).IsUnique();
 
-        b.Property(p => p.IssuedAt).IsRequired();
-        b.Property(p => p.ExpiresAt).IsRequired();
-        b.Property(p => p.UsedAt);
-        b.Property(p => p.RequestedFromIp).HasMaxLength(64);
+        builder.Property(p => p.IssuedAt).IsRequired();
+        builder.Property(p => p.ExpiresAt).IsRequired();
+        builder.Property(p => p.UsedAt);
+        builder.Property(p => p.RequestedFromIp).HasMaxLength(64);
 
-        b.Property(p => p.CreatedAt).IsRequired();
-        b.Property(p => p.UpdatedAt);
-        b.Property(p => p.CreatedBy);
-        b.Property(p => p.UpdatedBy);
-        b.Property(p => p.IsDeleted);
+        builder.Property(p => p.CreatedAt).IsRequired();
+        builder.Property(p => p.UpdatedAt);
+        builder.Property(p => p.CreatedBy);
+        builder.Property(p => p.UpdatedBy);
+        builder.Property(p => p.IsDeleted);
     }
 }

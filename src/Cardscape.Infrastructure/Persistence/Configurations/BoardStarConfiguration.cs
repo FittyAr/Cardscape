@@ -18,18 +18,18 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 /// </summary>
 public sealed class BoardStarConfiguration : IEntityTypeConfiguration<BoardStar>
 {
-    public void Configure(EntityTypeBuilder<BoardStar> b)
+    public void Configure(EntityTypeBuilder<BoardStar> builder)
     {
-        b.ToTable("board_stars");
-        b.HasKey(s => s.Id);
-        b.Property(s => s.BoardId).HasConversion(id => id.Value, v => new BoardId(v));
-        b.Property(s => s.UserId).IsRequired();
-        b.Property(s => s.StarredAt).IsRequired();
-        b.Property(s => s.CreatedAt).IsRequired();
-        b.Property(s => s.UpdatedAt);
-        b.Property(s => s.CreatedBy);
-        b.Property(s => s.UpdatedBy);
-        b.Property(s => s.IsDeleted);
-        b.HasIndex(s => new { s.BoardId, s.UserId }).IsUnique();
+        builder.ToTable("board_stars");
+        builder.HasKey(s => s.Id);
+        builder.Property(s => s.BoardId).HasConversion(id => id.Value, v => new BoardId(v));
+        builder.Property(s => s.UserId).IsRequired();
+        builder.Property(s => s.StarredAt).IsRequired();
+        builder.Property(s => s.CreatedAt).IsRequired();
+        builder.Property(s => s.UpdatedAt);
+        builder.Property(s => s.CreatedBy);
+        builder.Property(s => s.UpdatedBy);
+        builder.Property(s => s.IsDeleted);
+        builder.HasIndex(s => new { s.BoardId, s.UserId }).IsUnique();
     }
 }

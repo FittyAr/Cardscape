@@ -24,7 +24,7 @@ public interface ICardRepository : IRepository<Card, CardId>
         Guid userId,
         BoardId? boardId,
         DateTimeOffset from,
-        DateTimeOffset to,
+        DateTimeOffset rangeEnd,
         CancellationToken ct = default);
 
     Task<Card?> GetWithDetailsAsync(CardId id, CancellationToken ct = default);

@@ -7,28 +7,28 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class GitHubRepoLinkConfiguration : IEntityTypeConfiguration<GitHubRepoLink>
 {
-    public void Configure(EntityTypeBuilder<GitHubRepoLink> b)
+    public void Configure(EntityTypeBuilder<GitHubRepoLink> builder)
     {
-        b.ToTable("github_repo_links");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).HasConversion(id => id.Value, v => new GitHubRepoLinkId(v));
+        builder.ToTable("github_repo_links");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(id => id.Value, v => new GitHubRepoLinkId(v));
 
-        b.Property(x => x.BoardId)
+        builder.Property(x => x.BoardId)
             .HasConversion(id => id.Value, v => new BoardId(v))
             .IsRequired();
-        b.HasIndex(x => x.BoardId);
+        builder.HasIndex(x => x.BoardId);
 
-        b.Property(x => x.RepoFullName).HasMaxLength(200).IsRequired();
-        b.Property(x => x.Events).IsRequired();
-        b.Property(x => x.Active).IsRequired();
+        builder.Property(x => x.RepoFullName).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.Events).IsRequired();
+        builder.Property(x => x.Active).IsRequired();
 
-        b.Property(x => x.CreatedAt).IsRequired();
-        b.Property(x => x.UpdatedAt);
-        b.Property(x => x.CreatedBy);
-        b.Property(x => x.UpdatedBy);
-        b.Property(x => x.IsDeleted);
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedBy);
+        builder.Property(x => x.IsDeleted);
 
-        b.HasIndex(x => new { x.BoardId, x.RepoFullName })
+        builder.HasIndex(x => new { x.BoardId, x.RepoFullName })
             .HasDatabaseName("IX_github_repo_links_BoardId_RepoFullName")
             .IsUnique();
     }
@@ -36,25 +36,25 @@ public sealed class GitHubRepoLinkConfiguration : IEntityTypeConfiguration<GitHu
 
 public sealed class GitHubPullRequestLinkConfiguration : IEntityTypeConfiguration<GitHubPullRequestLink>
 {
-    public void Configure(EntityTypeBuilder<GitHubPullRequestLink> b)
+    public void Configure(EntityTypeBuilder<GitHubPullRequestLink> builder)
     {
-        b.ToTable("github_pull_request_links");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).HasConversion(id => id.Value, v => new GitHubPullRequestLinkId(v));
+        builder.ToTable("github_pull_request_links");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(id => id.Value, v => new GitHubPullRequestLinkId(v));
 
-        b.Property(x => x.CardId)
+        builder.Property(x => x.CardId)
             .HasConversion(id => id.Value, v => new Cardscape.Domain.Cards.CardId(v))
             .IsRequired();
-        b.HasIndex(x => x.CardId);
+        builder.HasIndex(x => x.CardId);
 
-        b.Property(x => x.RepoFullName).HasMaxLength(200).IsRequired();
-        b.Property(x => x.PullRequestNumber).IsRequired();
-        b.Property(x => x.PullRequestUrl).HasMaxLength(500);
+        builder.Property(x => x.RepoFullName).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.PullRequestNumber).IsRequired();
+        builder.Property(x => x.PullRequestUrl).HasMaxLength(500);
 
-        b.Property(x => x.CreatedAt).IsRequired();
-        b.Property(x => x.UpdatedAt);
-        b.Property(x => x.CreatedBy);
-        b.Property(x => x.UpdatedBy);
-        b.Property(x => x.IsDeleted);
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedBy);
+        builder.Property(x => x.IsDeleted);
     }
 }

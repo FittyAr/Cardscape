@@ -13,5 +13,5 @@ public interface IDomainEventBroadcaster
     /// Delivers an event. Implementations throw on failure so the durable
     /// outbox can record the attempt and retry it independently.
     /// </summary>
-    Task BroadcastAsync(IDomainEvent @event, CancellationToken ct = default);
+    Task BroadcastAsync(IDomainEvent domainEvent, CancellationToken ct = default);
 }

@@ -25,132 +25,132 @@ internal static class StringArrayValueComparer
 
 public sealed class OAuthAppConfiguration : IEntityTypeConfiguration<OAuthApp>
 {
-    public void Configure(EntityTypeBuilder<OAuthApp> b)
+    public void Configure(EntityTypeBuilder<OAuthApp> builder)
     {
-        b.ToTable("oauth_apps");
-        b.HasKey(a => a.Id);
-        b.Property(a => a.Id).HasConversion(id => id.Value, v => new OAuthAppId(v));
+        builder.ToTable("oauth_apps");
+        builder.HasKey(a => a.Id);
+        builder.Property(a => a.Id).HasConversion(id => id.Value, v => new OAuthAppId(v));
 
-        b.Property(a => a.Name)
+        builder.Property(a => a.Name)
             .HasMaxLength(200)
             .IsRequired();
-        b.HasIndex(a => a.Name);
+        builder.HasIndex(a => a.Name);
 
-        b.Property(a => a.ClientId)
+        builder.Property(a => a.ClientId)
             .HasMaxLength(64)
             .IsRequired();
-        b.HasIndex(a => a.ClientId).IsUnique();
+        builder.HasIndex(a => a.ClientId).IsUnique();
 
-        b.Property(a => a.ClientSecretHash)
+        builder.Property(a => a.ClientSecretHash)
             .HasMaxLength(64)
             .IsRequired();
 
-        b.Property(a => a.OwnerId)
+        builder.Property(a => a.OwnerId)
             .HasConversion(id => id, v => v)
             .IsRequired();
-        b.HasIndex(a => a.OwnerId);
+        builder.HasIndex(a => a.OwnerId);
 
-        b.Property(a => a.AllowedScopes)
+        builder.Property(a => a.AllowedScopes)
             .HasConversion(
                 s => string.Join(';', s),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries))
             .Metadata.SetValueComparer(StringArrayValueComparer.Instance);
-        b.Property(a => a.AllowedScopes).IsRequired();
+        builder.Property(a => a.AllowedScopes).IsRequired();
 
-        b.Property(a => a.RedirectUris)
+        builder.Property(a => a.RedirectUris)
             .HasConversion(
                 s => string.Join(';', s),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries))
             .Metadata.SetValueComparer(StringArrayValueComparer.Instance);
-        b.Property(a => a.RedirectUris).IsRequired();
+        builder.Property(a => a.RedirectUris).IsRequired();
 
-        b.Property(a => a.IsRevoked).IsRequired();
+        builder.Property(a => a.IsRevoked).IsRequired();
 
-        b.Property(a => a.CreatedAt).IsRequired();
-        b.Property(a => a.UpdatedAt);
+        builder.Property(a => a.CreatedAt).IsRequired();
+        builder.Property(a => a.UpdatedAt);
     }
 }
 
 public sealed class OAuthAuthorizationCodeConfiguration : IEntityTypeConfiguration<OAuthAuthorizationCode>
 {
-    public void Configure(EntityTypeBuilder<OAuthAuthorizationCode> b)
+    public void Configure(EntityTypeBuilder<OAuthAuthorizationCode> builder)
     {
-        b.ToTable("oauth_authorization_codes");
-        b.HasKey(c => c.Id);
-        b.Property(c => c.Id).HasConversion(id => id.Value, v => new OAuthAuthorizationCodeId(v));
+        builder.ToTable("oauth_authorization_codes");
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Id).HasConversion(id => id.Value, v => new OAuthAuthorizationCodeId(v));
 
-        b.Property(c => c.AppId)
+        builder.Property(c => c.AppId)
             .HasConversion(id => id.Value, v => new OAuthAppId(v))
             .IsRequired();
-        b.HasIndex(c => c.AppId);
+        builder.HasIndex(c => c.AppId);
 
-        b.Property(c => c.UserId)
+        builder.Property(c => c.UserId)
             .HasConversion(id => id.Value, v => new UserId(v))
             .IsRequired();
-        b.HasIndex(c => c.UserId);
+        builder.HasIndex(c => c.UserId);
 
-        b.Property(c => c.RedirectUri)
+        builder.Property(c => c.RedirectUri)
             .HasMaxLength(2000)
             .IsRequired();
 
-        b.Property(c => c.CodeHash)
+        builder.Property(c => c.CodeHash)
             .HasMaxLength(64)
             .IsRequired();
-        b.HasIndex(c => c.CodeHash).IsUnique();
+        builder.HasIndex(c => c.CodeHash).IsUnique();
 
-        b.Property(c => c.Scopes)
+        builder.Property(c => c.Scopes)
             .HasConversion(
                 s => string.Join(';', s),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries))
             .Metadata.SetValueComparer(StringArrayValueComparer.Instance);
-        b.Property(c => c.Scopes).IsRequired();
+        builder.Property(c => c.Scopes).IsRequired();
 
-        b.Property(c => c.ExpiresAt).IsRequired();
-        b.Property(c => c.IsConsumed).IsRequired();
+        builder.Property(c => c.ExpiresAt).IsRequired();
+        builder.Property(c => c.IsConsumed).IsRequired();
 
-        b.Property(c => c.CreatedAt).IsRequired();
-        b.Property(c => c.UpdatedAt);
+        builder.Property(c => c.CreatedAt).IsRequired();
+        builder.Property(c => c.UpdatedAt);
     }
 }
 
 public sealed class OAuthAccessTokenConfiguration : IEntityTypeConfiguration<OAuthAccessToken>
 {
-    public void Configure(EntityTypeBuilder<OAuthAccessToken> b)
+    public void Configure(EntityTypeBuilder<OAuthAccessToken> builder)
     {
-        b.ToTable("oauth_access_tokens");
-        b.HasKey(t => t.Id);
-        b.Property(t => t.Id).HasConversion(id => id.Value, v => new OAuthAccessTokenId(v));
+        builder.ToTable("oauth_access_tokens");
+        builder.HasKey(t => t.Id);
+        builder.Property(t => t.Id).HasConversion(id => id.Value, v => new OAuthAccessTokenId(v));
 
-        b.Property(t => t.AppId)
+        builder.Property(t => t.AppId)
             .HasConversion(id => id.Value, v => new OAuthAppId(v))
             .IsRequired();
-        b.HasIndex(t => t.AppId);
+        builder.HasIndex(t => t.AppId);
 
-        b.Property(t => t.UserId)
+        builder.Property(t => t.UserId)
             .HasConversion(id => id.Value, v => new UserId(v))
             .IsRequired();
-        b.HasIndex(t => new { t.UserId, t.CreatedAt });
+        builder.HasIndex(t => new { t.UserId, t.CreatedAt });
 
-        b.Property(t => t.TokenHash)
+        builder.Property(t => t.TokenHash)
             .HasMaxLength(64)
             .IsRequired();
-        b.HasIndex(t => t.TokenHash).IsUnique();
+        builder.HasIndex(t => t.TokenHash).IsUnique();
 
-        b.Property(t => t.Scopes)
+        builder.Property(t => t.Scopes)
             .HasConversion(
                 s => string.Join(';', s),
                 v => v.Split(';', StringSplitOptions.RemoveEmptyEntries))
             .Metadata.SetValueComparer(StringArrayValueComparer.Instance);
-        b.Property(t => t.Scopes).IsRequired();
+        builder.Property(t => t.Scopes).IsRequired();
 
-        b.Property(t => t.ExpiresAt).IsRequired();
-        b.HasIndex(t => t.ExpiresAt);
+        builder.Property(t => t.ExpiresAt).IsRequired();
+        builder.HasIndex(t => t.ExpiresAt);
 
-        b.Property(t => t.RefreshedAt);
-        b.Property(t => t.RevokedAt);
-        b.HasIndex(t => t.RevokedAt);
+        builder.Property(t => t.RefreshedAt);
+        builder.Property(t => t.RevokedAt);
+        builder.HasIndex(t => t.RevokedAt);
 
-        b.Property(t => t.CreatedAt).IsRequired();
-        b.Property(t => t.UpdatedAt);
+        builder.Property(t => t.CreatedAt).IsRequired();
+        builder.Property(t => t.UpdatedAt);
     }
 }

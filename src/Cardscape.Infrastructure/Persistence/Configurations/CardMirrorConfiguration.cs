@@ -7,16 +7,16 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class CardMirrorConfiguration : IEntityTypeConfiguration<CardMirror>
 {
-    public void Configure(EntityTypeBuilder<CardMirror> b)
+    public void Configure(EntityTypeBuilder<CardMirror> builder)
     {
-        b.ToTable("card_mirrors");
-        b.HasKey(x => x.Id);
-        b.Property(x => x.SourceCardId).HasConversion(id => id.Value, v => new CardId(v));
-        b.Property(x => x.MirroredCardId).HasConversion(id => id.Value, v => new CardId(v));
-        b.Property(x => x.TargetListId).HasConversion(id => id.Value, v => new BoardListId(v));
-        b.Property(x => x.MirroredAt);
-        b.Property(x => x.MirroredBy);
-        b.HasIndex(x => x.SourceCardId);
-        b.HasIndex(x => x.MirroredCardId).IsUnique();
+        builder.ToTable("card_mirrors");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.SourceCardId).HasConversion(id => id.Value, v => new CardId(v));
+        builder.Property(x => x.MirroredCardId).HasConversion(id => id.Value, v => new CardId(v));
+        builder.Property(x => x.TargetListId).HasConversion(id => id.Value, v => new BoardListId(v));
+        builder.Property(x => x.MirroredAt);
+        builder.Property(x => x.MirroredBy);
+        builder.HasIndex(x => x.SourceCardId);
+        builder.HasIndex(x => x.MirroredCardId).IsUnique();
     }
 }

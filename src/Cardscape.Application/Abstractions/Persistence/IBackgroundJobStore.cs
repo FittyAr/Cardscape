@@ -31,7 +31,7 @@ public interface IBackgroundJobStore : IRepository<BackgroundJob, BackgroundJobI
     /// <see cref="BackgroundJobStatus.DeadLetter"/>.
     /// </summary>
     Task MarkFailedAsync(
-        BackgroundJobId id, string error, DateTimeOffset at, CancellationToken ct = default);
+        BackgroundJobId id, string failureMessage, DateTimeOffset at, CancellationToken ct = default);
 
     /// <summary>Lists every dead-lettered job, newest first. Operator/admin view.</summary>
     Task<IReadOnlyList<BackgroundJob>> ListDeadLetterAsync(

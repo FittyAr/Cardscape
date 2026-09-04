@@ -54,8 +54,8 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
         _logger = logger;
     }
 
-    public Task BroadcastAsync(IDomainEvent @event, CancellationToken ct = default) =>
-        @event switch
+    public Task BroadcastAsync(IDomainEvent domainEvent, CancellationToken ct = default) =>
+        domainEvent switch
         {
             // BETA-A7-R2-001 — see test-results/beta/round-2/reports/A7-advanced.md.
             // The automation broadcaster must ignore events

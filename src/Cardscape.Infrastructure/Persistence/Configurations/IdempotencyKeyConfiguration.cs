@@ -7,41 +7,41 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class IdempotencyKeyConfiguration : IEntityTypeConfiguration<IdempotencyKey>
 {
-    public void Configure(EntityTypeBuilder<IdempotencyKey> b)
+    public void Configure(EntityTypeBuilder<IdempotencyKey> builder)
     {
-        b.ToTable("idempotency_keys");
-        b.HasKey(k => k.Id);
-        b.Property(k => k.Id).HasConversion(id => id.Value, v => new IdempotencyKeyId(v));
+        builder.ToTable("idempotency_keys");
+        builder.HasKey(k => k.Id);
+        builder.Property(k => k.Id).HasConversion(id => id.Value, v => new IdempotencyKeyId(v));
 
-        b.Property(k => k.OwnerId)
+        builder.Property(k => k.OwnerId)
             .HasConversion(id => id.Value, v => new UserId(v))
             .IsRequired();
-        b.HasIndex(k => k.OwnerId);
+        builder.HasIndex(k => k.OwnerId);
 
-        b.Property(k => k.Key)
+        builder.Property(k => k.Key)
             .HasConversion(k => k.Value, v => IdempotencyKeyValue.Create(v).Value)
             .HasMaxLength(IdempotencyKeyValue.MaxLength)
             .IsRequired();
-        b.HasIndex(k => new { k.OwnerId, k.Key }).IsUnique();
+        builder.HasIndex(k => new { k.OwnerId, k.Key }).IsUnique();
 
-        b.Property(k => k.RequestHash)
+        builder.Property(k => k.RequestHash)
             .HasMaxLength(IdempotencyKey.RequestHashLength)
             .IsRequired();
 
-        b.Property(k => k.ResponseStatusCode)
+        builder.Property(k => k.ResponseStatusCode)
             .IsRequired()
             .HasDefaultValue(200);
 
-        b.Property(k => k.ResponseJson)
+        builder.Property(k => k.ResponseJson)
             .IsRequired();
 
-        b.Property(k => k.ExpiresAt).IsRequired();
-        b.HasIndex(k => k.ExpiresAt);
+        builder.Property(k => k.ExpiresAt).IsRequired();
+        builder.HasIndex(k => k.ExpiresAt);
 
-        b.Property(k => k.CreatedAt).IsRequired();
-        b.Property(k => k.UpdatedAt);
-        b.Property(k => k.CreatedBy);
-        b.Property(k => k.UpdatedBy);
-        b.Property(k => k.IsDeleted);
+        builder.Property(k => k.CreatedAt).IsRequired();
+        builder.Property(k => k.UpdatedAt);
+        builder.Property(k => k.CreatedBy);
+        builder.Property(k => k.UpdatedBy);
+        builder.Property(k => k.IsDeleted);
     }
 }

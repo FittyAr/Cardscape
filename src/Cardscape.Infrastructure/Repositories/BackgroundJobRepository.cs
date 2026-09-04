@@ -78,7 +78,7 @@ public sealed class BackgroundJobRepository(CardscapeDbContext db)
     }
 
     public async Task MarkFailedAsync(
-        BackgroundJobId id, string error, DateTimeOffset at, CancellationToken ct = default)
+        BackgroundJobId id, string failureMessage, DateTimeOffset at, CancellationToken ct = default)
     {
         BackgroundJob? job = await GetByIdAsync(id, ct);
         if (job is null)
@@ -86,7 +86,7 @@ public sealed class BackgroundJobRepository(CardscapeDbContext db)
             return;
         }
 
-        job.MarkFailed(error, at);
+        job.MarkFailed(failureMessage, at);
         await Db.SaveChangesAsync(ct);
     }
 

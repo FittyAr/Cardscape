@@ -7,26 +7,26 @@ namespace Cardscape.Infrastructure.Persistence.Configurations;
 
 public sealed class CardVoteConfiguration : IEntityTypeConfiguration<CardVote>
 {
-    public void Configure(EntityTypeBuilder<CardVote> b)
+    public void Configure(EntityTypeBuilder<CardVote> builder)
     {
-        b.ToTable("card_votes");
-        b.HasKey(v => v.Id);
-        b.Property(v => v.Id).HasConversion(id => id.Value, v => new CardVoteId(v));
+        builder.ToTable("card_votes");
+        builder.HasKey(v => v.Id);
+        builder.Property(v => v.Id).HasConversion(id => id.Value, v => new CardVoteId(v));
 
-        b.Property(v => v.CardId)
+        builder.Property(v => v.CardId)
             .HasConversion(id => id.Value, v => new CardId(v))
             .IsRequired();
-        b.HasIndex(v => v.CardId);
+        builder.HasIndex(v => v.CardId);
 
-        b.Property(v => v.UserId).IsRequired();
-        b.HasIndex(v => new { v.CardId, v.UserId }).IsUnique();
+        builder.Property(v => v.UserId).IsRequired();
+        builder.HasIndex(v => new { v.CardId, v.UserId }).IsUnique();
 
-        b.Property(v => v.VotedAt).IsRequired();
+        builder.Property(v => v.VotedAt).IsRequired();
 
-        b.Property(v => v.CreatedAt).IsRequired();
-        b.Property(v => v.UpdatedAt);
-        b.Property(v => v.CreatedBy);
-        b.Property(v => v.UpdatedBy);
-        b.Property(v => v.IsDeleted);
+        builder.Property(v => v.CreatedAt).IsRequired();
+        builder.Property(v => v.UpdatedAt);
+        builder.Property(v => v.CreatedBy);
+        builder.Property(v => v.UpdatedBy);
+        builder.Property(v => v.IsDeleted);
     }
 }

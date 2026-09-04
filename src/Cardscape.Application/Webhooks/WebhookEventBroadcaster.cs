@@ -28,8 +28,8 @@ public sealed partial class WebhookEventBroadcaster : IDomainEventBroadcaster
         _logger = logger;
     }
 
-    public Task BroadcastAsync(IDomainEvent @event, CancellationToken ct = default) =>
-        @event switch
+    public Task BroadcastAsync(IDomainEvent domainEvent, CancellationToken ct = default) =>
+        domainEvent switch
         {
             CardCreated e => HandleCardCreated(e, ct),
             CardMoved e => HandleCardMoved(e, ct),
