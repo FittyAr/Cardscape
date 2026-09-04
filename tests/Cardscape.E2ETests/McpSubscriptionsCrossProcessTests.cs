@@ -313,7 +313,7 @@ public sealed class McpSubscriptionsCrossProcessTests
         return client;
     }
 
-    private async Task<Guid> CreateWorkspaceAsync(HttpClient client)
+    private static async Task<Guid> CreateWorkspaceAsync(HttpClient client)
     {
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/workspaces/",
@@ -324,7 +324,7 @@ public sealed class McpSubscriptionsCrossProcessTests
         return doc.RootElement.GetProperty("id").GetGuid();
     }
 
-    private async Task<Guid> CreateBoardAsync(HttpClient client, Guid workspaceId)
+    private static async Task<Guid> CreateBoardAsync(HttpClient client, Guid workspaceId)
     {
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/boards/",
@@ -341,7 +341,7 @@ public sealed class McpSubscriptionsCrossProcessTests
         return doc.RootElement.GetProperty("id").GetGuid();
     }
 
-    private async Task<Guid> CreateListAsync(HttpClient client, Guid boardId)
+    private static async Task<Guid> CreateListAsync(HttpClient client, Guid boardId)
     {
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/lists/",
@@ -352,7 +352,7 @@ public sealed class McpSubscriptionsCrossProcessTests
         return doc.RootElement.GetProperty("id").GetGuid();
     }
 
-    private async Task<Guid> CreateCardAsync(HttpClient client, Guid listId, string title)
+    private static async Task<Guid> CreateCardAsync(HttpClient client, Guid listId, string title)
     {
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/cards/",

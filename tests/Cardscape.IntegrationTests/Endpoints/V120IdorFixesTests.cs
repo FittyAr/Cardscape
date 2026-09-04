@@ -271,7 +271,7 @@ public sealed class V120IdorFixesTests
         return (await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
     }
 
-    private async Task<BoardDto> CreateBoardAsync(HttpClient client, Guid workspaceId, string name)
+    private static async Task<BoardDto> CreateBoardAsync(HttpClient client, Guid workspaceId, string name)
     {
         HttpResponseMessage response = await client.PostAsJsonAsync(
             "api/boards/",
@@ -286,7 +286,7 @@ public sealed class V120IdorFixesTests
         return (await response.Content.ReadFromJsonAsync<BoardDto>(TestJson.Options))!;
     }
 
-    private async Task<(BoardDto Board, BoardListDto List, CardDto Card)> SeedBoardListCardAsync(HttpClient client)
+    private static async Task<(BoardDto Board, BoardListDto List, CardDto Card)> SeedBoardListCardAsync(HttpClient client)
     {
         WorkspaceDto workspace = await SeedWorkspaceAsync(client);
         BoardDto board = await CreateBoardAsync(client, workspace.Id, "Private");
@@ -337,7 +337,7 @@ public sealed class V120IdorFixesTests
         return doc.RootElement.GetProperty("id").GetGuid();
     }
 
-    private async Task<Guid> CreateCustomFieldOnOwnBoardAsync(HttpClient client, string name)
+    private static async Task<Guid> CreateCustomFieldOnOwnBoardAsync(HttpClient client, string name)
     {
         (BoardDto board, _, _) = await SeedBoardListCardAsync(client);
         return await CreateCustomFieldAsync(client, board.Id, name);

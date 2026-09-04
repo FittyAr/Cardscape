@@ -149,7 +149,7 @@ public sealed class CardSnoozeAndMirrorTests
         return client;
     }
 
-    private async Task<Seed> CreateSeedAsync(HttpClient client, string name)
+    private static async Task<Seed> CreateSeedAsync(HttpClient client, string name)
     {
         Guid boardId = await CreateBoardAsync(client, name);
         Guid listId = await CreateListAsync(client, boardId, "Todo");
@@ -157,7 +157,7 @@ public sealed class CardSnoozeAndMirrorTests
         return new Seed(boardId, listId, cardId);
     }
 
-    private async Task<Guid> CreateBoardAsync(HttpClient client, string name)
+    private static async Task<Guid> CreateBoardAsync(HttpClient client, string name)
     {
         HttpResponseMessage wsResp = await client.PostAsJsonAsync(
             "api/workspaces/", new { name = $"WS for {name}" });

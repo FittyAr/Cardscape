@@ -166,7 +166,7 @@ public sealed class BoardExtensionTests
         return client;
     }
 
-    private async Task<BoardDto> CreateBoardAsync(HttpClient client, string name)
+    private static async Task<BoardDto> CreateBoardAsync(HttpClient client, string name)
     {
         HttpResponseMessage wsResp = await client.PostAsJsonAsync(
             "api/workspaces/", new { name = $"WS for {name}" });

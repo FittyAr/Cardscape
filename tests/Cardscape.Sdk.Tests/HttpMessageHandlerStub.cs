@@ -12,6 +12,7 @@ internal sealed class HttpMessageHandlerStub : HttpMessageHandler
 {
     private readonly Func<HttpRequestMessage, HttpResponseMessage> _factory;
     private readonly Func<HttpRequestMessage, Task<HttpResponseMessage>>? _asyncFactory;
+    private bool _disposed;
 
     public HttpMessageHandlerStub()
         : this(_ => new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new StringContent("{}") })
@@ -29,7 +30,16 @@ internal sealed class HttpMessageHandlerStub : HttpMessageHandler
         _asyncFactory = asyncFactory;
     }
 
-    public void SendProbe() { }
+    public void SendProbe()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        _disposed = true;
+        base.Dispose(disposing);
+    }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {

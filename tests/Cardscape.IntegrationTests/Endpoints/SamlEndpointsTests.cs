@@ -332,7 +332,7 @@ public class SamlEndpointsTests
     /// code in <see cref="Cardscape.Api.Authentication.SamlAuthenticationHandler"/>
     /// without the network round trip.
     /// </summary>
-    private async Task<SamlConfigResult> ConfigureSamlConnectionWithInlineMetadata(
+    private static async Task<SamlConfigResult> ConfigureSamlConnectionWithInlineMetadata(
         HttpClient client,
         string slug,
         string spEntityId,

@@ -195,7 +195,7 @@ public sealed class BoardExportAndICalTests
         return client;
     }
 
-    private async Task<Guid> CreateBoardAsync(
+    private static async Task<Guid> CreateBoardAsync(
         HttpClient client, string name, string visibility = "private")
     {
         HttpResponseMessage wsResp = await client.PostAsJsonAsync(

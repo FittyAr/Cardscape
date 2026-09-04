@@ -204,7 +204,7 @@ public sealed class DashboardsEndpointTests
         return client;
     }
 
-    private async Task<Seed> CreateSeedAsync(HttpClient client, string name)
+    private static async Task<Seed> CreateSeedAsync(HttpClient client, string name)
     {
         HttpResponseMessage wsResp = await client.PostAsJsonAsync(
             "api/workspaces/", new { name = $"WS for {name}" });

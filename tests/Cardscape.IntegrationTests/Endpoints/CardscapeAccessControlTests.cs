@@ -140,7 +140,7 @@ public sealed class CardscapeAccessControlTests
         return (await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options))!;
     }
 
-    private async Task<(BoardDto Board, BoardListDto List, CardDto Card)> SeedBoardListCardAsync(HttpClient client)
+    private static async Task<(BoardDto Board, BoardListDto List, CardDto Card)> SeedBoardListCardAsync(HttpClient client)
     {
         WorkspaceDto workspace = await SeedWorkspaceAsync(client);
         HttpResponseMessage createBoard = await client.PostAsJsonAsync(
