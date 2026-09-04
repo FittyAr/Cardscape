@@ -8,6 +8,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Webhooks;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Webhooks;
+using Cardscape.Infrastructure.Logging;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -63,17 +64,14 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
             new WebhookDeliveryId(deliveryId), ct);
         if (delivery is null)
         {
-            _logger.LogWarning(
-                "Webhook delivery {DeliveryId} not found; skipping.", deliveryId);
+            _logger.WebhookDeliveryNotFound(deliveryId);
             return;
         }
 
         WebhookEndpoint? endpoint = await endpoints.GetByIdAsync(delivery.EndpointId, ct);
         if (endpoint is null)
         {
-            _logger.LogWarning(
-                "Webhook endpoint for delivery {DeliveryId} not found; dead-lettering.",
-                deliveryId);
+            _logger.WebhookEndpointNotFound(deliveryId);
             delivery.MarkDeadLettered("Endpoint not found.", clock.UtcNow);
             await unitOfWork.SaveChangesAsync(ct);
             return;
@@ -126,9 +124,7 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
                     $"URL no longer resolves to a public address: {ssrfCheck.Error.Message}",
                     clock.UtcNow);
                 await unitOfWork.SaveChangesAsync(ct);
-                _logger.LogWarning(
-                    "Webhook delivery {DeliveryId} dead-lettered by SSRF re-check: {Reason}",
-                    delivery.Id.Value, ssrfCheck.Error.Message);
+                _logger.WebhookRejectedBySsrf(delivery.Id.Value, ssrfCheck.Error.Message);
                 return;
             }
         }
@@ -161,8 +157,7 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
                 await unitOfWork.SaveChangesAsync(ct);
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
-                    _logger.LogInformation(
-                        "Delivered webhook {DeliveryId} ({Event}) to {Url} status {Status}.",
+                    _logger.WebhookDelivered(
                         delivery.Id.Value, delivery.EventType, endpoint.Url, (int)response.StatusCode);
                 }
                 return;
@@ -192,9 +187,8 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
             }
 
             await unitOfWork.SaveChangesAsync(ct);
-            _logger.LogWarning(ex,
-                "Webhook delivery {DeliveryId} attempt {Attempt} failed (deadLetter={WillDeadLetter}).",
-                delivery.Id.Value, delivery.AttemptCount, willDeadLetter);
+            _logger.WebhookDeliveryAttemptFailed(
+                ex, delivery.Id.Value, delivery.AttemptCount, willDeadLetter);
             throw;
         }
     }

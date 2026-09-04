@@ -87,7 +87,7 @@ Reglas permanentes:
 - [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia. Google Calendar ya no anuncia watch/webhook/pull ficticios; conserva únicamente el push saliente. Sus clientes OAuth/Calendar no siguen redirects, tienen timeouts y límites de respuesta, no reflejan cuerpos del proveedor y conservan el mapping card-event por conexión para ejecutar POST/PUT/DELETE reales. Google Drive fue eliminado por completo. Las rutas jerárquicas de adjuntos y webhooks ya exigen coincidencia entre URL y recurso persistido. Kanban separa preview/apply explícitamente, mantiene paridad de resumen y conserva asociaciones card-label. Los webhooks protegen el secreto de firma con Data Protection, firman con el secreto real, no revelan prefijos derivados, no siguen redirecciones y limitan la lectura de errores.
 - [ ] Wolverine/background jobs: scopes, retries, outbox/inbox, cancelación y consistencia de eventos. Claim multi-worker ya es atómico. Los eventos de dominio ahora crean en la misma transacción una entrega outbox por broadcaster; leases EF Core evitan doble claim, los fallos se aíslan y reintentan con backoff, y un hosted dispatcher recupera commits interrumpidos. Continúan inbox para mensajes externos y la auditoría integral de cancelación.
 - [x] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia. Scopes, lifetime/composición, Streamable HTTP autenticado, aislamiento de suscripciones y reservas idempotentes cross-process verificados.
-- [ ] Observabilidad: logs estructurados, correlación, trazas, métricas, health checks y ausencia de PII/secrets. Se eliminó el `DatabaseLogSink` placeholder que descartaba eventos; sólo se anuncian console, rolling JSON y OTLP funcionales. Application ya no usa extensiones `Log*`: sus 12 plantillas son contratos tipados generados con `[LoggerMessage]`. Hosted services, retención, revocación y outbox de Infrastructure migraron otras 10 plantillas con IDs estables, preservando niveles, excepciones y propiedades. Continúan background jobs, seguridad/integraciones y Web antes de retirar `CA1848` globalmente.
+- [ ] Observabilidad: logs estructurados, correlación, trazas, métricas, health checks y ausencia de PII/secrets. Se eliminó el `DatabaseLogSink` placeholder que descartaba eventos; sólo se anuncian console, rolling JSON y OTLP funcionales. Application ya no usa extensiones `Log*`: sus 12 plantillas son contratos tipados generados con `[LoggerMessage]`. Hosted services/outbox y background jobs de Infrastructure migraron otras 28 plantillas con IDs estables, preservando niveles, excepciones y propiedades. Continúan seguridad/integraciones y Web antes de retirar `CA1848` globalmente.
 
 ### Fase 3 — API y contratos
 
@@ -274,6 +274,18 @@ Reglas permanentes:
 | 2026-09-04 | Analizadores de argumentos, localización y excepciones | Se retiran `CA1062`, `CA1303` y `CA1031`. El análisis completo confirma que la nulabilidad de las superficies públicas, el flujo de textos visibles y las capturas de excepciones ya cumplen las tres reglas sin excepciones locales ni cambios funcionales | Rebuild Release forzado 0/0; suite secuencial 940 pass, 0 fail, 1 skip; `NoWarn` 9→6 | Incluido en este commit |
 | 2026-09-04 | LoggerMessage tipado en Application | Las 12 llamadas `LoggerExtensions.Log*` restantes de Application se reemplazan por contratos source-generated con `[LoggerMessage]`, IDs de evento estables y parámetros de dominio tipados. Se preservan exactamente niveles, excepciones, plantillas y propiedades estructuradas; no se añaden supresiones locales y `CA1848` seguirá global durante la transición de Infrastructure y Web | Build focalizado Application 0/0; 0 llamadas `Log*` legacy en el assembly | Incluido en este commit |
 | 2026-09-04 | LoggerMessage en hosted services y outbox | Las 10 llamadas de retención, revocación, dispatch inmediato y outbox durable de Infrastructure se convierten en contratos `[LoggerMessage]` tipados con IDs de evento estables. Se preservan plantillas, niveles, excepciones y propiedades; el alcance migrado queda con 0 extensiones `Log*` legacy y sin supresiones locales | Build focalizado Infrastructure 0/0; hosted/outbox con 0 llamadas legacy | Incluido en este commit |
+| 2026-09-04 | LoggerMessage en background jobs | Las 18 llamadas de recurrencia y entrega webhook se reemplazan por contratos `[LoggerMessage]` tipados. IDs de delivery/card/job, intentos, estado HTTP, razones SSRF, dead-letter y resultados de recurrencia siguen siendo propiedades estructuradas; el directorio completo queda sin extensiones `Log*` legacy | Rebuild Release completo 0/0; suite 940 pass, 0 fail, 1 skip; background jobs con 0 llamadas legacy | Incluido en este commit |
+
+### Migración LoggerMessage pendiente
+
+- [x] Application: 12 llamadas migradas.
+- [x] Infrastructure: hosted services/outbox (10) y background jobs (18) migrados.
+- [ ] Infrastructure: 14 llamadas en seguridad e integraciones.
+- [ ] Web: 18 llamadas.
+- [ ] API: 39 llamadas.
+- [ ] MCP: 6 llamadas.
+- [ ] Seeder: 2 llamadas.
+- [ ] Revisar también las llamadas a `ILogger.Log` con nivel dinámico y retirar la supresión global `CA1848` cuando compile toda la solución. El inventario de 79 llamadas pendientes corresponde a extensiones `LogTrace`/`LogDebug`/`LogInformation`/`LogWarning`/`LogError`/`LogCritical`, no sustituye esta verificación final.
 
 ## 5. Criterio de completitud
 

@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Infrastructure.Logging;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,8 +26,7 @@ public sealed class CardRecurrenceDispatcherService(
     {
         if (logger.IsEnabled(LogLevel.Information))
         {
-            logger.LogInformation(
-                "CardRecurrenceDispatcherService starting: poll={Poll}", PollInterval);
+            logger.RecurrenceDispatcherStarting(PollInterval);
         }
 
         // Stagger the first tick across instances so we don't
@@ -52,7 +52,7 @@ public sealed class CardRecurrenceDispatcherService(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "CardRecurrenceDispatcherService tick failed.");
+                logger.RecurrenceDispatcherTickFailed(ex);
             }
 
             try
@@ -65,7 +65,7 @@ public sealed class CardRecurrenceDispatcherService(
             }
         }
 
-        logger.LogInformation("CardRecurrenceDispatcherService stopping");
+        logger.RecurrenceDispatcherStopping();
     }
 
     private async Task TickAsync(CancellationToken ct)
@@ -92,15 +92,14 @@ public sealed class CardRecurrenceDispatcherService(
                 ct: ct);
             if (enqueue.IsFailure)
             {
-                logger.LogWarning(
-                    "Failed to enqueue clone for card {CardId}: {Code} {Msg}",
+                logger.RecurrenceEnqueueFailed(
                     rule.CardId.Value, enqueue.Error.Code, enqueue.Error.Message);
             }
         }
 
         if (logger.IsEnabled(LogLevel.Information))
         {
-            logger.LogInformation("CardRecurrenceDispatcherService enqueued {N} jobs.", due.Count);
+            logger.RecurrenceJobsEnqueued(due.Count);
         }
     }
 }

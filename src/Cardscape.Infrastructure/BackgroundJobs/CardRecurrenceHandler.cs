@@ -5,6 +5,7 @@ using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Recurrence;
+using Cardscape.Infrastructure.Logging;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -45,7 +46,7 @@ public sealed class CloneCardHandler(
         if (!payload.TryGetProperty("cardId", out JsonElement idElement)
             || !idElement.TryGetGuid(out Guid cardGuid))
         {
-            logger.LogWarning("CloneCardJob {JobId} missing or invalid cardId.", jobId);
+            logger.CloneJobCardIdInvalid(jobId);
             return;
         }
 
@@ -59,7 +60,7 @@ public sealed class CloneCardHandler(
         Card? source = await cards.GetByIdAsync(new CardId(cardGuid), ct);
         if (source is null)
         {
-            logger.LogWarning("CloneCardJob: source card {CardId} not found.", cardGuid);
+            logger.CloneSourceNotFound(cardGuid);
             return;
         }
 
@@ -74,9 +75,7 @@ public sealed class CloneCardHandler(
         {
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.LogInformation(
-                    "CloneCardJob: source card {CardId} is archived; deferring clone.",
-                    cardGuid);
+                logger.CloneSourceArchived(cardGuid);
             }
             return;
         }
@@ -90,9 +89,7 @@ public sealed class CloneCardHandler(
         BoardList? parentList = await lists.GetByIdAsync(source.ListId, ct);
         if (parentList is null)
         {
-            logger.LogWarning(
-                "CloneCardJob: source card {CardId} has no parent list; skipping.",
-                cardGuid);
+            logger.CloneParentListMissing(cardGuid);
             return;
         }
 
@@ -100,9 +97,7 @@ public sealed class CloneCardHandler(
         {
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.LogInformation(
-                    "CloneCardJob: parent list of {CardId} is archived; deferring clone.",
-                    cardGuid);
+                logger.CloneParentListArchived(cardGuid);
             }
             return;
         }
@@ -126,9 +121,7 @@ public sealed class CloneCardHandler(
         // audit and ownership checks would misattribute.
         if (source.CreatedBy is null || source.CreatedBy.Value == Guid.Empty)
         {
-            logger.LogWarning(
-                "CloneCardJob: source card {CardId} has no CreatedBy; skipping clone to avoid an unattributed row.",
-                source.Id.Value);
+            logger.CloneCreatorMissing(source.Id.Value);
             return;
         }
 
@@ -142,9 +135,7 @@ public sealed class CloneCardHandler(
             clock.UtcNow);
         if (clone.IsFailure)
         {
-            logger.LogWarning(
-                "CloneCardJob: failed to create clone for {CardId}: {Code} {Msg}",
-                source.Id.Value, clone.Error.Code, clone.Error.Message);
+            logger.CloneCreationFailed(source.Id.Value, clone.Error.Code, clone.Error.Message);
             return;
         }
 
@@ -160,9 +151,7 @@ public sealed class CloneCardHandler(
         await uow.SaveChangesAsync(ct);
         if (logger.IsEnabled(LogLevel.Information))
         {
-            logger.LogInformation(
-                "Cloned card {SourceId} -> {CloneId} via recurrence.",
-                source.Id.Value, clone.Value.Id.Value);
+            logger.CardCloned(source.Id.Value, clone.Value.Id.Value);
         }
     }
 }
