@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Integrations;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Logging;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Cards.Events;
@@ -111,8 +112,7 @@ public static class CardDueDateCalendarSync
                 {
                     connection.RecordSyncError(result.Error.Message, clock.UtcNow);
                     await connections.UpdateAsync(connection, ct);
-                    logger.LogWarning(
-                        "Google Calendar push for card {CardId} user {UserId} failed: {Code} {Message}",
+                    logger.CalendarPushFailed(
                         card.Id.Value, connection.UserId, result.Error.Code, result.Error.Message);
                 }
             }
@@ -120,9 +120,7 @@ public static class CardDueDateCalendarSync
             {
                 connection.RecordSyncError(ex.GetType().Name, clock.UtcNow);
                 await connections.UpdateAsync(connection, ct);
-                logger.LogError(ex,
-                    "Google Calendar push for card {CardId} user {UserId} threw.",
-                    card.Id.Value, connection.UserId);
+                logger.CalendarPushThrew(ex, card.Id.Value, connection.UserId);
             }
         }
     }

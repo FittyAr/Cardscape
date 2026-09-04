@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Logging;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Webhooks;
 using Microsoft.Extensions.DependencyInjection;
@@ -72,11 +73,7 @@ public sealed partial class WebhookEventBroadcaster
 
         if (_logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.LogDebug(
-                "Queued {Count} webhook delivery job(s) for {EventType} on board {BoardId}",
-                targets.Count,
-                eventType,
-                boardId);
+            _logger.WebhookDeliveriesQueued(targets.Count, eventType, boardId);
         }
     }
 }

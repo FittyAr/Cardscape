@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Realtime;
+using Cardscape.Application.Logging;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Cards.Events;
 using Cardscape.Domain.Lists;
@@ -14,7 +15,7 @@ public sealed partial class BoardEventBroadcaster
     {
         if (_logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.LogDebug("BoardEventBroadcaster.CardCreated for {CardId}", @event.CardId);
+            _logger.CardCreatedBroadcast(@event.CardId);
         }
         using IServiceScope scope = _scopeFactory.CreateScope();
         IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();

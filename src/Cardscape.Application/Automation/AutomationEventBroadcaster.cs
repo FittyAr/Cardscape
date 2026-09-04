@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Realtime;
+using Cardscape.Application.Logging;
 using Cardscape.Application.Realtime;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
@@ -182,10 +183,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                ex,
-                "AutomationEventBroadcaster failed while processing {Trigger} for card {CardId}",
-                trigger, cardId);
+            _logger.AutomationBroadcastFailed(ex, trigger, cardId);
             throw;
         }
         finally
@@ -214,9 +212,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
                         var result = card.Move(new BoardListId(listId), card.Position, clock.UtcNow);
                         if (result.IsFailure)
                         {
-                            logger.LogWarning(
-                                "Automation rule {RuleId} MoveCardToList failed: {Code} {Message}",
-                                rule.Id, result.Error.Code, result.Error.Message);
+                            logger.AutomationMoveFailed(rule.Id, result.Error.Code, result.Error.Message);
                             return;
                         }
 
@@ -227,9 +223,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
                         var result = card.Assign(userId, clock.UtcNow);
                         if (result.IsFailure)
                         {
-                            logger.LogWarning(
-                                "Automation rule {RuleId} AssignUser failed: {Code} {Message}",
-                                rule.Id, result.Error.Code, result.Error.Message);
+                            logger.AutomationAssignmentFailed(rule.Id, result.Error.Code, result.Error.Message);
                             return;
                         }
 
@@ -241,9 +235,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
                         var result = card.SetDueDate(due, clock.UtcNow);
                         if (result.IsFailure)
                         {
-                            logger.LogWarning(
-                                "Automation rule {RuleId} SetDueDate failed: {Code} {Message}",
-                                rule.Id, result.Error.Code, result.Error.Message);
+                            logger.AutomationDueDateFailed(rule.Id, result.Error.Code, result.Error.Message);
                             return;
                         }
 
@@ -254,32 +246,26 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
                         var result = card.Complete(clock.UtcNow);
                         if (result.IsFailure)
                         {
-                            logger.LogWarning(
-                                "Automation rule {RuleId} MarkComplete failed: {Code} {Message}",
-                                rule.Id, result.Error.Code, result.Error.Message);
+                            logger.AutomationCompletionFailed(rule.Id, result.Error.Code, result.Error.Message);
                             return;
                         }
 
                         break;
                     }
                 default:
-                    logger.LogWarning(
-                        "Automation rule {RuleId} has unknown action or missing argument: {Action} / {Arg}",
-                        rule.Id, rule.Action, rule.ActionArgument);
+                    logger.AutomationActionInvalid(rule.Id, rule.Action, rule.ActionArgument);
                     return;
             }
 
             await unitOfWork.SaveChangesAsync(ct);
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.LogInformation(
-                    "Automation rule {RuleId} applied {Action} to card {CardId}",
-                    rule.Id, rule.Action, card.Id);
+                logger.AutomationApplied(rule.Id, rule.Action, card.Id);
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Automation rule {RuleId} threw on card {CardId}", rule.Id, card.Id);
+            logger.AutomationActionThrew(ex, rule.Id, card.Id);
             throw;
         }
     }
