@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Cardscape.Api.Logging;
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -38,7 +39,7 @@ public sealed class GlobalExceptionMiddleware(
         }
         catch (ValidationException ex)
         {
-            logger.LogWarning(ex, "Validation failed for {Path}", context.Request.Path);
+            logger.RequestValidationFailed(ex, context.Request.Path);
             await WriteProblem(context, StatusCodes.Status400BadRequest, "Validation failed", ex.Message);
         }
         catch (System.Text.Json.JsonException ex)
@@ -49,7 +50,7 @@ public sealed class GlobalExceptionMiddleware(
             // these as 400 — they're a client-side problem,
             // not a server bug, and the rest of the API
             // contract treats bad request bodies as 400s.
-            logger.LogWarning(ex, "JSON deserialisation failed for {Path}", context.Request.Path);
+            logger.RequestJsonDeserializationFailed(ex, context.Request.Path);
             await WriteProblem(
                 context,
                 StatusCodes.Status400BadRequest,
@@ -62,7 +63,7 @@ public sealed class GlobalExceptionMiddleware(
             // required query / form parameters (e.g. an
             // endpoint that expects a `?foo=` string but the
             // caller forgot to include it). Treat as 400.
-            logger.LogWarning(ex, "Bad request at {Path}", context.Request.Path);
+            logger.BadRequestReceived(ex, context.Request.Path);
             await WriteProblem(
                 context,
                 StatusCodes.Status400BadRequest,
@@ -88,10 +89,7 @@ public sealed class GlobalExceptionMiddleware(
             // global catch here closes every existing
             // endpoint at once without touching the
             // handler surface.
-            if (logger.IsEnabled(LogLevel.Information))
-            {
-                logger.LogInformation(ex, "Concurrency conflict at {Path}", context.Request.Path);
-            }
+            logger.RequestConcurrencyConflict(ex, context.Request.Path);
             await WriteProblem(
                 context,
                 StatusCodes.Status409Conflict,
@@ -101,7 +99,7 @@ public sealed class GlobalExceptionMiddleware(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unhandled exception at {Path}", context.Request.Path);
+            logger.RequestUnhandledException(ex, context.Request.Path);
             await WriteProblem(context, StatusCodes.Status500InternalServerError, "Internal server error", "An unexpected error occurred.");
         }
     }

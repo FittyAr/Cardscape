@@ -87,7 +87,7 @@ Reglas permanentes:
 - [ ] Webhooks, importaciones, adjuntos y clientes HTTP: SSRF, validación, límites, reintentos, timeouts e idempotencia. Google Calendar ya no anuncia watch/webhook/pull ficticios; conserva únicamente el push saliente. Sus clientes OAuth/Calendar no siguen redirects, tienen timeouts y límites de respuesta, no reflejan cuerpos del proveedor y conservan el mapping card-event por conexión para ejecutar POST/PUT/DELETE reales. Google Drive fue eliminado por completo. Las rutas jerárquicas de adjuntos y webhooks ya exigen coincidencia entre URL y recurso persistido. Kanban separa preview/apply explícitamente, mantiene paridad de resumen y conserva asociaciones card-label. Los webhooks protegen el secreto de firma con Data Protection, firman con el secreto real, no revelan prefijos derivados, no siguen redirecciones y limitan la lectura de errores.
 - [ ] Wolverine/background jobs: scopes, retries, outbox/inbox, cancelación y consistencia de eventos. Claim multi-worker ya es atómico. Los eventos de dominio ahora crean en la misma transacción una entrega outbox por broadcaster; leases EF Core evitan doble claim, los fallos se aíslan y reintentan con backoff, y un hosted dispatcher recupera commits interrumpidos. Continúan inbox para mensajes externos y la auditoría integral de cancelación.
 - [x] MCP: autorización equivalente a REST, lifetimes, transporte, suscripciones e idempotencia. Scopes, lifetime/composición, Streamable HTTP autenticado, aislamiento de suscripciones y reservas idempotentes cross-process verificados.
-- [ ] Observabilidad: logs estructurados, correlación, trazas, métricas, health checks y ausencia de PII/secrets. Se eliminó el `DatabaseLogSink` placeholder que descartaba eventos; sólo se anuncian console, rolling JSON y OTLP funcionales. Application ya no usa extensiones `Log*`: sus 12 plantillas son contratos tipados generados con `[LoggerMessage]`. Infrastructure también quedó completamente migrado con 42 plantillas, y Web suma otras 18 para autenticación HTTP, preferencias, cultura y SignalR. Todos tienen IDs estables y preservan niveles, excepciones y propiedades. Continúan API, MCP y Seeder antes de retirar `CA1848` globalmente.
+- [ ] Observabilidad: logs estructurados, correlación, trazas, métricas, health checks y ausencia de PII/secrets. Se eliminó el `DatabaseLogSink` placeholder que descartaba eventos; sólo se anuncian console, rolling JSON y OTLP funcionales. Application, Infrastructure, Web y API ya usan contratos tipados generados con `[LoggerMessage]`: 111 plantillas con IDs estables preservan niveles, excepciones, value objects y propiedades estructuradas. Continúan MCP y Seeder antes de retirar `CA1848` globalmente.
 
 ### Fase 3 — API y contratos
 
@@ -277,16 +277,17 @@ Reglas permanentes:
 | 2026-09-04 | LoggerMessage en background jobs | Las 18 llamadas de recurrencia y entrega webhook se reemplazan por contratos `[LoggerMessage]` tipados. IDs de delivery/card/job, intentos, estado HTTP, razones SSRF, dead-letter y resultados de recurrencia siguen siendo propiedades estructuradas; el directorio completo queda sin extensiones `Log*` legacy | Rebuild Release completo 0/0; suite 940 pass, 0 fail, 1 skip; background jobs con 0 llamadas legacy | Incluido en este commit |
 | 2026-09-05 | LoggerMessage en seguridad e integraciones de Infrastructure | Las 14 llamadas restantes de OAuth, rate limiting Redis, pending TOTP y proveedor AI se convierten en contratos `[LoggerMessage]` tipados con IDs estables. Se preservan excepciones, niveles y propiedades estructuradas; todo el assembly Infrastructure queda sin extensiones `Log*` legacy | Rebuild Release completo 0/0; suite 940 pass, 0 fail, 1 skip; assembly con 0 llamadas legacy | Incluido en este commit |
 | 2026-09-05 | LoggerMessage en Web | Las 18 llamadas de autenticación HTTP, preferencias de usuario, cultura y ciclo de conexión SignalR se convierten en contratos `[LoggerMessage]` tipados con IDs estables. Se eliminan guards `IsEnabled` redundantes y se preservan excepciones, niveles y propiedades; todo el assembly Web queda sin extensiones `Log*` legacy | Rebuild Release completo 0/0; suite 940 pass, 0 fail, 1 skip; assembly con 0 llamadas legacy | Incluido en este commit |
+| 2026-09-05 | LoggerMessage en API | Las 39 llamadas de jobs, autenticación, SAML/SCIM, middleware HTTP, SignalR, MCP interno y OpenAPI se convierten en contratos `[LoggerMessage]` tipados con IDs estables. Rutas y claves idempotentes conservan `PathString` y value objects en vez de degradarse a texto; todo el assembly API queda sin extensiones `Log*` legacy | Rebuild Release completo 0/0; suite 940 pass, 0 fail, 1 skip; assembly con 0 llamadas legacy | Incluido en este commit |
 
 ### Migración LoggerMessage pendiente
 
 - [x] Application: 12 llamadas migradas.
 - [x] Infrastructure: 42 llamadas migradas (hosted services/outbox 10, background jobs 18, seguridad e integraciones 14).
 - [x] Web: 18 llamadas migradas.
-- [ ] API: 39 llamadas.
+- [x] API: 39 llamadas migradas.
 - [ ] MCP: 6 llamadas.
 - [ ] Seeder: 2 llamadas.
-- [ ] Revisar también las llamadas a `ILogger.Log` con nivel dinámico y retirar la supresión global `CA1848` cuando compile toda la solución. El inventario de 47 llamadas pendientes corresponde a extensiones `LogTrace`/`LogDebug`/`LogInformation`/`LogWarning`/`LogError`/`LogCritical`, no sustituye esta verificación final.
+- [ ] Revisar también las llamadas a `ILogger.Log` con nivel dinámico y retirar la supresión global `CA1848` cuando compile toda la solución. El inventario de 8 llamadas pendientes corresponde a extensiones `LogTrace`/`LogDebug`/`LogInformation`/`LogWarning`/`LogError`/`LogCritical`, no sustituye esta verificación final.
 
 ## 5. Criterio de completitud
 

@@ -1,3 +1,4 @@
+using Cardscape.Api.Logging;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
@@ -32,7 +33,7 @@ internal sealed class WebhookEventsSchemaTransformer : IOpenApiDocumentTransform
         CancellationToken cancellationToken)
     {
         var logger = context.ApplicationServices.GetService<ILoggerFactory>()?.CreateLogger("WebhookEvents");
-        logger?.LogInformation("WebhookEventsSchemaTransformer running");
+        logger?.WebhookEventsSchemaTransformerRunning();
 
         document.Components ??= new OpenApiComponents();
         if (document.Components.Schemas is null)

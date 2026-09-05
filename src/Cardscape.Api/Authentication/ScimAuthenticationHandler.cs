@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Microsoft.AspNetCore.Authentication;
@@ -81,10 +82,7 @@ public sealed class ScimAuthenticationHandler(
             // must not fail the auth — the operator's audit
             // trail is best-effort, the IdP's request
             // is not. Log loudly so a flaky DB is visible.
-            Logger.LogWarning(
-                ex,
-                "Failed to persist SCIM token LastUsedAt for token prefix {Prefix}.",
-                scimToken.TokenPrefix);
+            Logger.ScimTokenLastUsedPersistenceFailed(ex, scimToken.TokenPrefix);
         }
 
         Claim[] claims = [

@@ -1,3 +1,4 @@
+using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.BackgroundJobs;
@@ -36,12 +37,7 @@ public sealed class BackgroundJobDispatcherService(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (_logger.IsEnabled(LogLevel.Information))
-        {
-            _logger.LogInformation(
-                "BackgroundJobDispatcherService starting: poll={Interval}, batch={Batch}",
-                _options.PollInterval, _options.BatchSize);
-        }
+        _logger.BackgroundJobDispatcherStarting(_options.PollInterval, _options.BatchSize);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -74,10 +70,7 @@ public sealed class BackgroundJobDispatcherService(
 
                 if (batch.Count > 0)
                 {
-                    if (_logger.IsEnabled(LogLevel.Debug))
-                    {
-                        _logger.LogDebug("Dispatched {Count} background jobs", batch.Count);
-                    }
+                    _logger.BackgroundJobsDispatched(batch.Count);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -86,7 +79,7 @@ public sealed class BackgroundJobDispatcherService(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "BackgroundJobDispatcherService loop failed; will retry");
+                _logger.BackgroundJobDispatcherLoopFailed(ex);
             }
 
             try
@@ -99,7 +92,7 @@ public sealed class BackgroundJobDispatcherService(
             }
         }
 
-        _logger.LogInformation("BackgroundJobDispatcherService stopping");
+        _logger.BackgroundJobDispatcherStopping();
     }
 }
 

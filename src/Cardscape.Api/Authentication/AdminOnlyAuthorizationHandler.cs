@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Members;
 using Microsoft.AspNetCore.Authorization;
@@ -54,8 +55,7 @@ public sealed class AdminOnlyAuthorizationHandler(
             Claim? cached = context.User.FindFirst(IsAdminClaim);
             if (cached is null)
             {
-                logger.LogWarning(
-                    "AdminOnly requirement evaluated with claim caching enabled but without an is_admin claim. Returning failed (403).");
+                logger.AdminClaimMissing();
                 return;
             }
 
@@ -72,17 +72,14 @@ public sealed class AdminOnlyAuthorizationHandler(
         string? rawUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrWhiteSpace(rawUserId) || !Guid.TryParse(rawUserId, out Guid userIdGuid))
         {
-            logger.LogWarning(
-                "AdminOnly requirement evaluated for an authenticated principal without a parseable NameIdentifier claim. Returning failed (403).");
+            logger.AdminUserIdentifierInvalid();
             return;
         }
 
         User? user = await users.GetByIdAsync(new UserId(userIdGuid));
         if (user is null)
         {
-            logger.LogWarning(
-                "AdminOnly requirement evaluated for user id {UserId} that has no row in the users table. Returning failed (403).",
-                userIdGuid);
+            logger.AdminUserNotFound(userIdGuid);
             return;
         }
 

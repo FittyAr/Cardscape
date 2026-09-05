@@ -2,6 +2,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
+using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
@@ -134,7 +135,7 @@ public sealed class SamlAuthenticationHandler
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "SAML handler error for {Slug}/{Action}", slug, action);
+            Logger.SamlHandlerFailed(ex, slug, action);
             await WriteProblem(StatusCodes.Status500InternalServerError,
                 "saml.handler_error", "SAML handler error.");
             return true;
@@ -168,7 +169,7 @@ public sealed class SamlAuthenticationHandler
 
         if (result.Location is null)
         {
-            Logger.LogWarning("SAML SignIn returned no Location for {Slug}.", slug);
+            Logger.SamlSignInLocationMissing(slug);
             await WriteProblem(StatusCodes.Status502BadGateway, "saml.signin_no_location",
                 "Identity provider did not return a redirect URL.");
             return true;
@@ -195,7 +196,7 @@ public sealed class SamlAuthenticationHandler
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(ex, "SAML ACS processing failed for {Slug}.", slug);
+            Logger.SamlAcsProcessingFailed(ex, slug);
             await WriteProblem(StatusCodes.Status400BadRequest, "saml.acs_failed",
                 "SAML assertion processing failed.");
             return true;
@@ -328,7 +329,7 @@ public sealed class SamlAuthenticationHandler
             }
             catch (Exception ex)
             {
-                Logger.LogWarning(ex, "Failed to fetch IdP metadata for {Slug}.", slug);
+                Logger.SamlMetadataFetchFailed(ex, slug);
             }
         }
 
@@ -375,7 +376,7 @@ public sealed class SamlAuthenticationHandler
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(ex, "Failed to parse inline IdP metadata.");
+            Logger.SamlInlineMetadataParsingFailed(ex);
         }
     }
 
@@ -459,10 +460,7 @@ public sealed class SamlAuthenticationHandler
 
     private async Task<bool> WriteNotConfigured(string slug)
     {
-        if (Logger.IsEnabled(LogLevel.Information))
-        {
-            Logger.LogInformation("SAML config not found for slug {Slug}.", slug);
-        }
+        Logger.SamlConfigurationNotFound(slug);
         await WriteProblem(StatusCodes.Status404NotFound, "saml.not_configured",
             $"No active SAML connection for workspace slug '{slug}'.");
         return true;

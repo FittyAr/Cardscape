@@ -1,3 +1,4 @@
+using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Realtime;
@@ -53,9 +54,7 @@ public sealed class BoardHub : Hub<IBoardClient>
         Board? board = await _boards.GetWithMembersAsync(new BoardId(boardId));
         if (board is null || !board.IsMember(_currentUser.Id.Value))
         {
-            _logger.LogWarning(
-                "Rejected JoinBoard for board {BoardId}: user {UserId} is not a member.",
-                boardId, _currentUser.Id.Value);
+            _logger.BoardHubJoinRejected(boardId, _currentUser.Id.Value);
             // Generic message — we don't leak whether the
             // board exists or the user is just not a member.
             throw new HubException("You are not a member of that board.");

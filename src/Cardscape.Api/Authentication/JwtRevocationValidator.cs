@@ -1,3 +1,4 @@
+using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,12 +63,7 @@ public sealed class JwtRevocationValidator(
             bool isRevoked = await repository.IsRevokedAsync(jti, context.HttpContext.RequestAborted);
             if (isRevoked)
             {
-                if (logger.IsEnabled(LogLevel.Information))
-                {
-                    logger.LogInformation(
-                        "Rejecting revoked JWT (jti={Jti})",
-                        jti);
-                }
+                logger.RevokedJwtRejected(jti);
                 context.Fail("The access token has been revoked.");
             }
         }
@@ -78,8 +74,7 @@ public sealed class JwtRevocationValidator(
             // safe answer is "reject" (fail-closed). The
             // operator dashboard surfaces repeated look-up
             // failures so the deployer can intervene.
-            logger.LogError(
-                ex, "Failed to look up revocation for jti={Jti}; failing closed.", jti);
+            logger.JwtRevocationLookupFailed(ex, jti);
             context.Fail("Could not verify token revocation status.");
         }
     }

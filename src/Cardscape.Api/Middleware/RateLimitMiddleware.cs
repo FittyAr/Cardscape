@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using Cardscape.Api.Authentication;
+using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Security;
@@ -72,12 +73,7 @@ public sealed class RateLimitMiddleware(
             return;
         }
 
-        if (logger.IsEnabled(LogLevel.Information))
-        {
-            logger.LogInformation(
-                "Rate limit exceeded for API token {TokenId} on {Path}; Retry-After={RetryAfter}s",
-                token.Id.Value, context.Request.Path, decision.RetryAfter);
-        }
+        logger.ApiTokenRateLimitExceeded(token.Id.Value, context.Request.Path, decision.RetryAfter);
 
         await WriteRateLimited(context, decision.RetryAfter);
     }

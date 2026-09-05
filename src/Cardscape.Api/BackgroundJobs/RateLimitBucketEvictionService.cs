@@ -1,3 +1,4 @@
+using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Security;
 using Microsoft.Extensions.Hosting;
@@ -45,12 +46,7 @@ public sealed class RateLimitBucketEvictionService(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (logger.IsEnabled(LogLevel.Information))
-        {
-            logger.LogInformation(
-                "RateLimitBucketEvictionService starting: interval={Interval}, cutoff={Cutoff}",
-                EvictInterval, EvictionCutoff);
-        }
+        logger.RateLimitEvictionStarting(EvictInterval, EvictionCutoff);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -60,12 +56,7 @@ public sealed class RateLimitBucketEvictionService(
                 int removed = rateLimiter.EvictStale(cutoff);
                 if (removed > 0)
                 {
-                    if (logger.IsEnabled(LogLevel.Information))
-                    {
-                        logger.LogInformation(
-                            "Rate-limit bucket eviction removed {Count} idle buckets (cutoff={Cutoff}).",
-                            removed, cutoff);
-                    }
+                    logger.RateLimitBucketsEvicted(removed, cutoff);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -78,7 +69,7 @@ public sealed class RateLimitBucketEvictionService(
                 // single failure must not kill the
                 // background host. Log and retry on
                 // the next tick.
-                logger.LogError(ex, "Rate-limit bucket eviction sweep failed.");
+                logger.RateLimitEvictionFailed(ex);
             }
 
             try
@@ -91,6 +82,6 @@ public sealed class RateLimitBucketEvictionService(
             }
         }
 
-        logger.LogInformation("RateLimitBucketEvictionService stopping.");
+        logger.RateLimitEvictionStopping();
     }
 }

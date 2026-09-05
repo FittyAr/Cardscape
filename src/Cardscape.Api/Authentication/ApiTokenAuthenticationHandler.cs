@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Common;
@@ -81,11 +82,7 @@ public sealed class ApiTokenAuthenticationHandler
             await Tokens.ValidateAsync(secret, Context.RequestAborted);
         if (validation.IsFailure)
         {
-            if (Logger.IsEnabled(LogLevel.Information))
-            {
-                Logger.LogInformation(
-                    "Rejected API token: {ErrorCode}", validation.Error.Code);
-            }
+            Logger.ApiTokenRejected(validation.Error.Code);
             return AuthenticateResult.Fail(validation.Error.Message);
         }
 

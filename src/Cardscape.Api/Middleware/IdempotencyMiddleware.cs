@@ -1,6 +1,7 @@
 using System.IO;
 using System.Security.Claims;
 using System.Text;
+using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Idempotency;
 using Cardscape.Application.Abstractions.Persistence;
@@ -154,9 +155,7 @@ public sealed class IdempotencyMiddleware(
             {
                 if (!existing.MatchesRequest(requestHash))
                 {
-                    logger.LogWarning(
-                        "Idempotency-Key {Key} from {Owner} replayed with a different payload (path={Path})",
-                        key, ownerId, context.Request.Path);
+                    logger.IdempotencyPayloadMismatch(key, ownerId, context.Request.Path);
                     await WriteProblem(
                         context,
                         StatusCodes.Status422UnprocessableEntity,
@@ -174,12 +173,7 @@ public sealed class IdempotencyMiddleware(
 
                 if (!existing.IsPending)
                 {
-                    if (logger.IsEnabled(LogLevel.Information))
-                    {
-                        logger.LogInformation(
-                            "Idempotency-Key {Key} from {Owner} replayed; returning stored response (path={Path})",
-                            key, ownerId, context.Request.Path);
-                    }
+                    logger.IdempotencyResponseReplayed(key, ownerId, context.Request.Path);
                     await ReplayAsync(context, existing, context.RequestAborted);
                     return;
                 }
@@ -225,9 +219,7 @@ public sealed class IdempotencyMiddleware(
                 context.RequestAborted);
             if (!completed)
             {
-                logger.LogError(
-                    "Lost Idempotency-Key reservation {Key} from {Owner} for {Path} before completion",
-                    key, ownerId, context.Request.Path);
+                logger.IdempotencyReservationLost(key, ownerId, context.Request.Path);
             }
         }
         else

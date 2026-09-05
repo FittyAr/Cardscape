@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Cardscape.Api.Logging;
 
 namespace Cardscape.Api.Realtime;
 
@@ -52,17 +53,13 @@ public sealed class HttpMcpResourceNotifier
 
         if (string.IsNullOrWhiteSpace(_baseUrl))
         {
-            _logger.LogDebug(
-                "Cardscape:Mcp:BaseUrl is not set on the API. " +
-                "MCP resource subscription fan-out is disabled.");
+            _logger.McpResourceBaseUrlMissing();
             return;
         }
 
         if (string.IsNullOrWhiteSpace(_secret))
         {
-            _logger.LogDebug(
-                "Internal:Secret is not set on the API. " +
-                "MCP resource subscription fan-out is disabled.");
+            _logger.McpResourceSecretMissing();
             return;
         }
 
@@ -83,10 +80,7 @@ public sealed class HttpMcpResourceNotifier
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(
-                ex,
-                "API->MCP board-event for {BoardId} threw",
-                boardId);
+            _logger.McpBoardEventNotificationFailed(ex, boardId);
             throw;
         }
     }

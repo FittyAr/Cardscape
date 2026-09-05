@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Realtime;
 
@@ -55,17 +56,13 @@ public sealed class McpSubscriptionsClient
     {
         if (string.IsNullOrWhiteSpace(_baseUrl))
         {
-            _logger.LogWarning(
-                "Cardscape:Mcp:BaseUrl is not set on the API. " +
-                "MCP subscriptions snapshot is unavailable.");
+            _logger.McpSubscriptionsBaseUrlMissing();
             return null;
         }
 
         if (string.IsNullOrWhiteSpace(_secret))
         {
-            _logger.LogWarning(
-                "Internal:Secret is not set on the API. " +
-                "MCP subscriptions snapshot is unavailable.");
+            _logger.McpSubscriptionsSecretMissing();
             return null;
         }
 
@@ -79,9 +76,7 @@ public sealed class McpSubscriptionsClient
             using HttpResponseMessage response = await _http.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning(
-                    "MCP subscriptions snapshot returned {Status} {Reason}",
-                    (int)response.StatusCode, response.ReasonPhrase);
+                _logger.McpSubscriptionsSnapshotUnsuccessful((int)response.StatusCode, response.ReasonPhrase);
                 return null;
             }
 
@@ -89,9 +84,7 @@ public sealed class McpSubscriptionsClient
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(
-                ex,
-                "MCP subscriptions snapshot threw");
+            _logger.McpSubscriptionsSnapshotFailed(ex);
             return null;
         }
     }
