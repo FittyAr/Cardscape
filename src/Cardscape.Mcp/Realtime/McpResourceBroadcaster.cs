@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Common;
+using Cardscape.Mcp.Logging;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -191,10 +192,7 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
                 // of the fan-out. A closed transport will throw
                 // on SendNotificationAsync; we drop this
                 // subscriber and keep going.
-                logger.LogWarning(
-                    ex,
-                    "MCP ResourceUpdated notification for {Uri} failed for one session; dropping that subscriber",
-                    uri);
+                logger.ResourceNotificationFailed(ex, uri);
                 deadSessions.Add(GetSessionId(server));
                 Unsubscribe(uri, server);
             }
@@ -208,12 +206,7 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
             Detail: $"broadcast sent to {sent}/{targets.Count} subscribers" +
                 (deadSessions.Count > 0 ? $" ({deadSessions.Count} dropped: {string.Join(",", deadSessions)})" : string.Empty)));
 
-        if (logger.IsEnabled(LogLevel.Debug))
-        {
-            logger.LogDebug(
-                "MCP ResourceUpdated notification for {Uri} sent to {Sent}/{Total} subscribers",
-                uri, sent, targets.Count);
-        }
+        logger.ResourceNotificationSent(uri, sent, targets.Count);
     }
 
     /// <summary>

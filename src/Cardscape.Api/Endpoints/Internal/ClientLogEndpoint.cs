@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Cardscape.Api.Logging;
 using Cardscape.Infrastructure.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -160,10 +161,9 @@ public static class ClientLogEndpoint
             LogLevel level = MapLevel(logEvent.Level);
             if (logger.IsEnabled(level))
             {
-                logger.Log(
+                logger.BrowserLogReceived(
                     level,
                     logEvent.Exception,
-                    "Browser log: {ClientMessage} {@ClientProperties}",
                     logEvent.RenderMessage(CultureInfo.InvariantCulture),
                     logEvent.Properties.ToDictionary(
                         property => property.Key,

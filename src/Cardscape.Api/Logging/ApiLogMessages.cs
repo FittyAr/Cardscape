@@ -123,4 +123,12 @@ internal static partial class ApiLogMessages
 
     [LoggerMessage(EventId = 4090, Level = LogLevel.Information, Message = "WebhookEventsSchemaTransformer running")]
     internal static partial void WebhookEventsSchemaTransformerRunning(this ILogger logger);
+
+    [LoggerMessage(EventId = 4091, Message = "Browser log: {ClientMessage} {@ClientProperties}")]
+    internal static partial void BrowserLogReceived(
+        this ILogger logger,
+        LogLevel level,
+        Exception? exception,
+        string clientMessage,
+        IReadOnlyDictionary<string, object?> clientProperties);
 }

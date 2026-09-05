@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Realtime;
+using Cardscape.Mcp.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -69,9 +70,7 @@ public sealed class HttpBoardPushClient : IBoardPushClient
     {
         if (string.IsNullOrWhiteSpace(_secret))
         {
-            _logger.LogWarning(
-                "Cardscape:Internal:Secret is not set on the MCP server. " +
-                "Realtime broadcasts from the MCP will be rejected by the API.");
+            _logger.InternalSecretMissing();
             return;
         }
 
@@ -91,9 +90,7 @@ public sealed class HttpBoardPushClient : IBoardPushClient
             using HttpResponseMessage response = await _http.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning(
-                    "MCP->API broadcast {Method} failed: {Status}",
-                    method, (int)response.StatusCode);
+                _logger.ApiBroadcastUnsuccessful(method, (int)response.StatusCode);
             }
         }
         catch (Exception ex)
@@ -102,7 +99,7 @@ public sealed class HttpBoardPushClient : IBoardPushClient
             // succeeded in mutating the database, and the Web
             // client will pick up the new state on the next
             // refresh. We log and move on.
-            _logger.LogWarning(ex, "MCP->API broadcast {Method} threw", method);
+            _logger.ApiBroadcastFailed(ex, method);
         }
     }
 }

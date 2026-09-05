@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Persistence.Outbox;
 using Cardscape.Seeder.Configuration;
+using Cardscape.Seeder.Logging;
 using Cardscape.Seeder.Persistence;
 using Cardscape.Seeder.Reporting;
 using Cardscape.Seeder.Steps;
@@ -112,7 +113,7 @@ public sealed class SeedRunner : IDisposable
                 {
                     report.Log(new SeedLogEntry(DateTimeOffset.UtcNow, SeedLogLevel.Error, step.Name,
                         $"Step threw: {ex.Message}"));
-                    _logger.LogError(ex, "Seed step {Step} failed", step.Name);
+                    _logger.SeedStepFailed(ex, step.Name);
                     throw;
                 }
             }
@@ -137,7 +138,7 @@ public sealed class SeedRunner : IDisposable
         catch (Exception ex)
         {
             report.MarkFinished($"Failed: {ex.Message}");
-            _logger.LogError(ex, "Seed run failed");
+            _logger.SeedRunFailed(ex);
             throw;
         }
         finally

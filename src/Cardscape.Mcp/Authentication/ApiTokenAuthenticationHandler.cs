@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Mcp.Logging;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -62,11 +63,7 @@ public sealed class ApiTokenAuthenticationHandler
         var validation = await Tokens.ValidateAsync(secret, Context.RequestAborted);
         if (validation.IsFailure)
         {
-            if (Logger.IsEnabled(LogLevel.Information))
-            {
-                Logger.LogInformation(
-                    "Rejected MCP API token: {ErrorCode}", validation.Error.Code);
-            }
+            Logger.ApiTokenRejected(validation.Error.Code);
             return AuthenticateResult.Fail(validation.Error.Message);
         }
 
