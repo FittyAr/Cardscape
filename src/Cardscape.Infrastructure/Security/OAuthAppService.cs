@@ -7,6 +7,7 @@ using Cardscape.Domain.Common;
 using Cardscape.Domain.Integrations.OAuthApps;
 using Cardscape.Domain.Integrations.OAuthApps.Errors;
 using Cardscape.Domain.Members;
+using Cardscape.Infrastructure.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace Cardscape.Infrastructure.Security;
@@ -77,9 +78,7 @@ public sealed class OAuthAppService(
             // URI) used to be thrown as InvalidOperationException →
             // 500. They are expected failures (4xx), so return
             // the Result and let the endpoint map it to 400.
-            logger.LogWarning(
-                "OAuth app registration rejected: {Code} {Message}",
-                app.Error.Code, app.Error.Message);
+            logger.OAuthAppRegistrationRejected(app.Error.Code, app.Error.Message);
             return Result.Failure<OAuthAppRegistration>(app.Error);
         }
 
@@ -230,7 +229,7 @@ public sealed class OAuthAppService(
                 Encoding.ASCII.GetBytes(HashSecret(clientSecret)),
                 Encoding.ASCII.GetBytes(app.ClientSecretHash)))
         {
-            logger.LogWarning("OAuth app {ClientId} presented an invalid client secret.", clientId);
+            logger.OAuthClientSecretInvalid(clientId);
             return Result.Failure<OAuthAccessTokenIssuance>(OAuthAppErrors.InvalidClientSecret);
         }
 
@@ -344,7 +343,7 @@ public sealed class OAuthAppService(
         var app = await apps.FindByClientIdAsync(clientId, ct);
         if (app is null)
         {
-            logger.LogWarning("OAuth revoke for unknown client {ClientId}.", clientId);
+            logger.OAuthRevokeClientUnknown(clientId);
             return Result.Failure(OAuthAppErrors.InvalidClientSecret);
         }
 
@@ -357,7 +356,7 @@ public sealed class OAuthAppService(
                 Encoding.ASCII.GetBytes(HashSecret(clientSecret)),
                 Encoding.ASCII.GetBytes(app.ClientSecretHash)))
         {
-            logger.LogWarning("OAuth revoke for client {ClientId} presented an invalid secret.", clientId);
+            logger.OAuthRevokeSecretInvalid(clientId);
             return Result.Failure(OAuthAppErrors.InvalidClientSecret);
         }
 
@@ -380,9 +379,7 @@ public sealed class OAuthAppService(
         // leak the existence of.
         if (token.AppId != app.Id)
         {
-            logger.LogWarning(
-                "OAuth revoke rejected: client {ClientId} presented token owned by a different app.",
-                clientId);
+            logger.OAuthRevokeTokenOwnerMismatch(clientId);
             return Result.Failure(OAuthAppErrors.InvalidClientSecret);
         }
 

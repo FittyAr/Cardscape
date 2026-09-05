@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Cardscape.Application.Abstractions;
 using Cardscape.Domain.Common;
+using Cardscape.Infrastructure.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -70,9 +71,7 @@ public sealed class OpenAiCompatibleAiService : IAiService
                 httpRequest, HttpCompletionOption.ResponseHeadersRead, ct);
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning(
-                    "OpenAI-compatible provider returned HTTP {Status}",
-                    (int)response.StatusCode);
+                _logger.AiProviderReturnedFailure((int)response.StatusCode);
                 return Result<AiTextCompletion>.Failure(new DomainError(
                     ErrorType.External,
                     "ai.provider_error",
@@ -117,7 +116,7 @@ public sealed class OpenAiCompatibleAiService : IAiService
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "OpenAI-compatible provider call failed.");
+            _logger.AiProviderCallFailed(ex);
             return Result<AiTextCompletion>.Failure(new DomainError(
                 ErrorType.External,
                 "ai.network_error",

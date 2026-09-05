@@ -1,6 +1,7 @@
 using System.Globalization;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Domain.Members;
+using Cardscape.Infrastructure.Logging;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
@@ -93,9 +94,7 @@ public sealed class RedisPendingTotpLoginStore : IPendingTotpLoginStore
             string text = raw.ToString();
             if (!Guid.TryParse(text, out Guid userIdGuid))
             {
-                _logger.LogWarning(
-                    "Pending-2FA token {TokenPrefix} held a non-Guid value; ignoring.",
-                    token[..Math.Min(8, token.Length)]);
+                _logger.PendingTotpTokenValueInvalid(token[..Math.Min(8, token.Length)]);
                 return null;
             }
 
@@ -107,7 +106,7 @@ public sealed class RedisPendingTotpLoginStore : IPendingTotpLoginStore
             // access. Return null and let the caller surface
             // a generic "invalid TOTP" error to the client;
             // the operator sees the warning in the logs.
-            _logger.LogWarning(ex, "Redis Consume failed for pending-2FA token; refusing the request.");
+            _logger.PendingTotpConsumeFailed(ex);
             return null;
         }
     }

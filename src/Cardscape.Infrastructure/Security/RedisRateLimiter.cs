@@ -1,5 +1,6 @@
 using System.Globalization;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Infrastructure.Logging;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
@@ -152,9 +153,7 @@ end
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex,
-                "Redis Configure failed for token {TokenId}; in-memory state for this instance is unaffected.",
-                tokenId);
+            _logger.RedisRateLimitConfigureFailed(ex, tokenId);
         }
     }
 
@@ -217,8 +216,7 @@ end
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex,
-                "Redis GetStatus failed for token {TokenId}; returning null.", tokenId);
+            _logger.RedisRateLimitStatusFailed(ex, tokenId);
             return null;
         }
     }
@@ -261,17 +259,14 @@ end
 
             if (result.IsNull)
             {
-                _logger.LogWarning(
-                    "Redis script returned null for token {TokenId}; failing open.", tokenId);
+                _logger.RedisRateLimitScriptReturnedNull(tokenId);
                 return new RateLimitDecision(Allowed: true, RetryAfter: 0);
             }
 
             RedisResult[] arr = (RedisResult[])result!;
             if (arr.Length < 3)
             {
-                _logger.LogWarning(
-                    "Redis script returned unexpected shape for token {TokenId}; failing open.",
-                    tokenId);
+                _logger.RedisRateLimitScriptShapeInvalid(tokenId);
                 return new RateLimitDecision(Allowed: true, RetryAfter: 0);
             }
 
@@ -286,9 +281,7 @@ end
             // Fail open: rate limiting is a soft guard. Logging
             // is loud enough that operators see the regression
             // in their dashboards.
-            _logger.LogWarning(ex,
-                "Redis TryAcquire failed for token {TokenId}; allowing the request.",
-                tokenId);
+            _logger.RedisRateLimitAcquireFailed(ex, tokenId);
             return new RateLimitDecision(Allowed: true, RetryAfter: 0);
         }
     }
