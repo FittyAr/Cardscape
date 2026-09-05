@@ -1,3 +1,5 @@
+using Cardscape.Web.Logging;
+
 namespace Cardscape.Web.Services;
 
 /// <summary>
@@ -52,16 +54,13 @@ public sealed class AuthTokenHandler(
         {
             if (sentToken)
             {
-                logger.LogWarning("API call to {Path} returned 401; clearing stored token and notifying auth state.", request.RequestUri.AbsolutePath);
+                logger.AuthenticatedApiCallUnauthorized(request.RequestUri.AbsolutePath);
                 await tokens.ClearAsync();
                 stateProvider.Notify();
             }
             else
             {
-                if (logger.IsEnabled(LogLevel.Debug))
-                {
-                    logger.LogDebug("Anonymous call to {Path} returned 401; ignored.", request.RequestUri.AbsolutePath);
-                }
+                logger.AnonymousApiCallUnauthorized(request.RequestUri.AbsolutePath);
             }
         }
 

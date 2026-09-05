@@ -1,3 +1,4 @@
+using Cardscape.Web.Logging;
 using Cardscape.Web.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -104,20 +105,17 @@ public sealed class BoardHubClient : IAsyncDisposable
 
         _connection.Closed += error =>
         {
-            _logger.LogWarning(error, "Board hub connection closed.");
+            _logger.BoardHubConnectionClosed(error);
             return Task.CompletedTask;
         };
         _connection.Reconnected += connectionId =>
         {
-            if (_logger.IsEnabled(LogLevel.Information))
-            {
-                _logger.LogInformation("Board hub reconnected: {ConnectionId}", connectionId);
-            }
+            _logger.BoardHubReconnected(connectionId);
             return Task.CompletedTask;
         };
         _connection.Reconnecting += error =>
         {
-            _logger.LogInformation(error, "Board hub reconnecting.");
+            _logger.BoardHubReconnecting(error);
             return Task.CompletedTask;
         };
 

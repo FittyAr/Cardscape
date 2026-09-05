@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Xml.Linq;
+using Cardscape.Web.Logging;
 using Cardscape.Web.Resources;
 using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
@@ -226,7 +227,7 @@ public sealed class CultureSwitcher
             // Pre-render or JS not available yet. Fall back
             // to the default; the layout will call
             // SetCultureAsync on the first user interaction.
-            _logger.LogWarning(ex, "Could not read saved culture from localStorage; defaulting to {DefaultCulture}.", DefaultCulture);
+            _logger.SavedCultureReadFailed(ex, DefaultCulture);
         }
 
         await SetCultureAsync(saved, persist: false);
@@ -237,7 +238,7 @@ public sealed class CultureSwitcher
         culture = (culture ?? DefaultCulture).ToLowerInvariant();
         if (!AvailableCultures.Contains(culture, StringComparer.OrdinalIgnoreCase))
         {
-            _logger.LogWarning("Unknown culture {Culture}; defaulting to {DefaultCulture}.", culture, DefaultCulture);
+            _logger.UnknownCultureDefaulted(culture, DefaultCulture);
             culture = DefaultCulture;
         }
 
@@ -247,14 +248,11 @@ public sealed class CultureSwitcher
             {
                 IReadOnlyDictionary<string, string> translations = await LoadTranslationsAsync(culture);
                 _translationsByCulture[culture] = translations;
-                if (_logger.IsEnabled(LogLevel.Information))
-                {
-                    _logger.LogInformation("Loaded {Count} translations for culture {Culture}.", translations.Count, culture);
-                }
+                _logger.TranslationsLoaded(translations.Count, culture);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to load translations for culture {Culture}; falling back to embedded English.", culture);
+                _logger.TranslationsLoadFailed(ex, culture);
                 _translationsByCulture[culture] = EmptyTranslations;
             }
         }
@@ -269,7 +267,7 @@ public sealed class CultureSwitcher
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not persist culture to localStorage.");
+                _logger.CulturePersistenceFailed(ex);
             }
         }
 

@@ -28,6 +28,7 @@
 // cardscape-classic-dark.css for the brand colour
 // overrides on top of Radzen's Software base.
 
+using Cardscape.Web.Logging;
 using Cardscape.Web.Services.Api;
 using Cardscape.Web.Theming;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -152,15 +153,12 @@ public sealed class UserPreferencesService
             }
             else
             {
-                if (_log.IsEnabled(LogLevel.Debug))
-                {
-                    _log.LogDebug("User preferences GET did not succeed ({Error}); falling back to cookie.", getResult.Error);
-                }
+                _log.UserPreferencesFetchUnsuccessful(getResult.Error);
             }
         }
         catch (Exception ex)
         {
-            _log.LogWarning(ex, "User preferences fetch threw; reading from cookie instead.");
+            _log.UserPreferencesFetchFailed(ex);
         }
 
         if (serverPrefs is not null)
@@ -206,7 +204,7 @@ public sealed class UserPreferencesService
     {
         if (string.IsNullOrWhiteSpace(themeName) || !ThemeCatalog.IsKnown(themeName))
         {
-            _log.LogWarning("SetAsync called with unknown theme name '{ThemeName}'; ignored.", themeName);
+            _log.UnknownThemeIgnored(themeName);
             return;
         }
 
@@ -236,7 +234,7 @@ public sealed class UserPreferencesService
             var update = await _api.UpdateAsync(themeName, mode);
             if (!update.IsSuccess && update.StatusCode == 404)
             {
-                _log.LogDebug("Preferences row missing; POSTing default before retrying PUT.");
+                _log.UserPreferencesRowMissing();
                 var create = await _api.CreateDefaultAsync();
                 if (create.IsSuccess)
                 {
@@ -246,12 +244,12 @@ public sealed class UserPreferencesService
 
             if (!update.IsSuccess)
             {
-                _log.LogWarning("PUT /api/users/me/preferences failed: {Error}", update.Error);
+                _log.UserPreferencesUpdateUnsuccessful(update.Error);
             }
         }
         catch (Exception ex)
         {
-            _log.LogWarning(ex, "PUT /api/users/me/preferences threw; cookie still has the new value.");
+            _log.UserPreferencesUpdateFailed(ex);
         }
     }
 
@@ -284,7 +282,7 @@ public sealed class UserPreferencesService
         }
         catch (Exception ex)
         {
-            _log.LogWarning(ex, "SyncFromServerAfterLoginAsync failed; local state unchanged.");
+            _log.UserPreferencesLoginSyncFailed(ex);
         }
     }
 
@@ -319,10 +317,7 @@ public sealed class UserPreferencesService
             // The cookie service's free-themes whitelist may
             // be narrower than our catalog. Swallow; the
             // CssPath + cookie write-through still work.
-            if (_log.IsEnabled(LogLevel.Debug))
-            {
-                _log.LogDebug(ex, "ThemeService.SetTheme('{ThemeName}') threw; falling through to CssPath.", themeName);
-            }
+            _log.ThemeServiceUpdateFailed(ex, themeName);
         }
 
         CurrentCssPath = themeName switch
