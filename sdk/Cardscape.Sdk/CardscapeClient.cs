@@ -5,20 +5,42 @@ using System.Text.Json.Serialization;
 namespace Cardscape.Sdk;
 
 /// <summary>
-/// Configuration for <see cref="CardscapeClient"/>. <see cref="AccessToken"/>
-/// is a function (not a value) so the caller can rotate the token
-/// without rebuilding the client. <see cref="JsonOptions"/> lets
-/// callers plug in their own converters (custom date formats,
-/// snake_case ↔ camelCase policy, etc.) — defaults to
-/// <see cref="JsonSerializerDefaults.Web"/>.
+/// Configures the HTTP transport and JSON serialization used by <see cref="CardscapeClient"/>.
 /// </summary>
 public sealed class CardscapeClientOptions
 {
+    /// <summary>
+    /// Gets or sets the absolute base address of the Cardscape API.
+    /// </summary>
     public Uri BaseAddress { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the asynchronous access-token provider invoked immediately before each request.
+    /// </summary>
+    /// <remarks>
+    /// A provider is used instead of a fixed token so callers can refresh credentials without recreating the client.
+    /// Returning <see langword="null"/>, an empty string, or whitespace sends the request without an Authorization header.
+    /// </remarks>
     public Func<Task<string?>>? AccessToken { get; set; }
+
+    /// <summary>
+    /// Gets or sets the serializer options used for request and response JSON.
+    /// </summary>
     public JsonSerializerOptions JsonOptions { get; set; } = DefaultJsonOptions;
+
+    /// <summary>
+    /// Gets or sets the maximum duration of an HTTP request.
+    /// </summary>
+    /// <value>The request timeout. The default is 30 seconds.</value>
     public TimeSpan HttpTimeout { get; set; } = TimeSpan.FromSeconds(30);
 
+    /// <summary>
+    /// Provides the default web-oriented JSON serializer options used by the SDK.
+    /// </summary>
+    /// <remarks>
+    /// The defaults ignore null values when writing, match property names without regard to case, and serialize enums as
+    /// camel-case strings. Create a copy before customizing these shared options.
+    /// </remarks>
     public static readonly JsonSerializerOptions DefaultJsonOptions = new(JsonSerializerDefaults.Web)
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
@@ -31,23 +53,32 @@ public sealed class CardscapeClientOptions
 }
 
 /// <summary>
-/// Typed surface over the Cardscape REST API. Sub-clients
-/// (<see cref="Workspaces"/>, <see cref="Boards"/>, <see cref="Lists"/>,
-/// <see cref="Cards"/>, <see cref="Labels"/>, <see cref="Comments"/>,
-/// <see cref="Activities"/>) cover the 30 most-used endpoints. The
-/// rest of the surface stays reachable through
-/// <see cref="SendAsync"/> and <see cref="SendAsync{TResult}"/>.
+/// Provides typed resource clients and lower-level access to the Cardscape REST API.
 /// </summary>
+/// <remarks>
+/// The resource clients cover the most frequently used endpoints. Use <see cref="SendAsync(HttpRequestMessage, CancellationToken)"/>
+/// or <see cref="SendAsync{TResult}(HttpRequestMessage, CancellationToken)"/> for endpoints not exposed by a resource client.
+/// </remarks>
 public sealed class CardscapeClient : IAsyncDisposable
 {
     private readonly HttpClient _http;
     private readonly CardscapeClientOptions _options;
     private readonly bool _ownsHttp;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CardscapeClient"/> class with an internally owned HTTP client.
+    /// </summary>
+    /// <param name="options">The transport and serialization configuration.</param>
     public CardscapeClient(CardscapeClientOptions options) : this(new HttpClient(), options, ownsHttp: true)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CardscapeClient"/> class with the specified HTTP client.
+    /// </summary>
+    /// <param name="http">The HTTP client used to send API requests.</param>
+    /// <param name="options">The transport and serialization configuration.</param>
+    /// <param name="ownsHttp"><see langword="true"/> to dispose <paramref name="http"/> with this client; otherwise, <see langword="false"/>.</param>
     public CardscapeClient(HttpClient http, CardscapeClientOptions options, bool ownsHttp = false)
     {
         _http = http;
@@ -70,26 +101,44 @@ public sealed class CardscapeClient : IAsyncDisposable
         Activities = new ActivitiesClient(this);
     }
 
+    /// <summary>Gets the workspace resource client.</summary>
     public WorkspacesClient Workspaces { get; private set; } = null!;
+
+    /// <summary>Gets the board resource client.</summary>
     public BoardsClient Boards { get; private set; } = null!;
+
+    /// <summary>Gets the list resource client.</summary>
     public ListsClient Lists { get; private set; } = null!;
+
+    /// <summary>Gets the card resource client.</summary>
     public CardsClient Cards { get; private set; } = null!;
+
+    /// <summary>Gets the label resource client.</summary>
     public LabelsClient Labels { get; private set; } = null!;
+
+    /// <summary>Gets the comment resource client.</summary>
     public CommentsClient Comments { get; private set; } = null!;
+
+    /// <summary>Gets the activity resource client.</summary>
     public ActivitiesClient Activities { get; private set; } = null!;
 
-    /// <summary>Lower-level: send a request and return the raw
-    /// <see cref="HttpResponseMessage"/>. Use for endpoints the
-    /// typed sub-clients don't cover.</summary>
+    /// <summary>Sends a request and returns the raw HTTP response.</summary>
+    /// <param name="request">The request to send.</param>
+    /// <param name="ct">The token used to cancel the operation.</param>
+    /// <returns>The response returned by the Cardscape API.</returns>
+    /// <remarks>The caller owns and must dispose the returned response.</remarks>
     public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct = default)
         => SendCoreAsync(request, ct);
 
     internal JsonContent CreateJsonContent<T>(T value) =>
         JsonContent.Create(value, options: _options.JsonOptions);
 
-    /// <summary>Lower-level: send a request and deserialize the
-    /// JSON body to <typeparamref name="TResult"/>. Throws
-    /// <see cref="CardscapeApiException"/> on non-2xx.</summary>
+    /// <summary>Sends a request and deserializes its successful JSON response.</summary>
+    /// <typeparam name="TResult">The response-body contract.</typeparam>
+    /// <param name="request">The request to send.</param>
+    /// <param name="ct">The token used to cancel the operation.</param>
+    /// <returns>The deserialized response body.</returns>
+    /// <exception cref="CardscapeApiException">The API returns a non-success status code or an empty successful response.</exception>
     public async Task<TResult> SendAsync<TResult>(HttpRequestMessage request, CancellationToken ct = default)
     {
         HttpResponseMessage response = await SendCoreAsync(request, ct);
@@ -150,6 +199,7 @@ public sealed class CardscapeClient : IAsyncDisposable
 #endif
     }
 
+    /// <inheritdoc/>
     public ValueTask DisposeAsync()
     {
         if (_ownsHttp)
@@ -164,14 +214,25 @@ public sealed class CardscapeClient : IAsyncDisposable
     }
 }
 
-/// <summary>Raised when the Cardscape API returns a non-2xx status
-/// code. The body, when present, is exposed as <see cref="ResponseBody"/>.</summary>
+/// <summary>Represents an unsuccessful or invalid response from the Cardscape API.</summary>
 public sealed class CardscapeApiException : Exception
 {
+    /// <summary>Gets the stable machine-readable error code.</summary>
     public string Code { get; }
+
+    /// <summary>Gets the HTTP status code associated with the response.</summary>
     public int StatusCode { get; }
+
+    /// <summary>Gets the response body captured for diagnostics, when available.</summary>
     public string? ResponseBody { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CardscapeApiException"/> class.
+    /// </summary>
+    /// <param name="code">The stable machine-readable error code.</param>
+    /// <param name="message">The human-readable error description.</param>
+    /// <param name="statusCode">The HTTP status code associated with the response.</param>
+    /// <param name="responseBody">The response body captured for diagnostics, when available.</param>
     public CardscapeApiException(string code, string message, int statusCode, string? responseBody = null)
         : base(message)
     {
