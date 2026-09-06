@@ -21,11 +21,9 @@
     <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
     <RootNamespace>Cardscape.Sdk</RootNamespace>
     <AssemblyName>Cardscape.Sdk</AssemblyName>
-    <!-- The distributable SDK ships IntelliSense XML. CS1591 remains
-         scoped here only while its existing public surface is documented
-         incrementally; application assemblies no longer emit unused XML. -->
+    <!-- The distributable SDK ships IntelliSense XML and requires every
+         public contract to remain documented. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Cardscape.Sdk</PackageId>
     <Version>1.2.0</Version>

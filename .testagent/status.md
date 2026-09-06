@@ -579,7 +579,7 @@
 - [x] Pseudo-mutación: quitar el reloj, cambiar/omitir el destino, aceptar un GUID inválido, persistir el default o eliminar el guard de reentrada rompe al menos una assertion. Las acciones AssignUser/SetDueDate y los early-return por entidades ausentes quedan fuera de este alcance y son gaps residuales de menor prioridad.
 - [x] `git diff --check` limpio. La extensión anunciada `extensions/dotnet.md` no existe en el paquete local; clasificación xUnit/FluentAssertions realizada inline.
 - [x] Validación final: formatter limpio; build Release 0 advertencias/0 errores; regresiones 4/4; suite completa 916 superadas, 0 fallidas y 1 omitida.
-- [x] Cumplimiento: 0 APIs de SQL manual en `src` y 0 menciones de `Trello` fuera de artefactos ignorados.
+- [x] Cumplimiento: 0 APIs de SQL manual en `src` y 0 menciones del nombre externo prohibido fuera de artefactos ignorados.
 
 ## 2026-08-29 — BoardEventBroadcaster realtime fan-out
 
@@ -592,7 +592,7 @@
 - [x] La extensión anunciada `test-analysis-extensions/extensions/dotnet.md` no existe en el paquete local; clasificación xUnit/FluentAssertions/Moq realizada inline.
 - [x] Alcance respetado: este agente no editó producción, plan general, ni realizó commit/push.
 - [x] Validación final integrada: formatter limpio; build Release 0 advertencias/0 errores; regresiones 3/3; suite completa 919 superadas, 0 fallidas y 1 omitida.
-- [x] Cumplimiento final: `git diff --check` limpio; 0 APIs de SQL manual en `src`; 0 menciones de `Trello` fuera de artefactos ignorados.
+- [x] Cumplimiento final: `git diff --check` limpio; 0 APIs de SQL manual en `src`; 0 menciones del nombre externo prohibido fuera de artefactos ignorados.
 
 ## 2026-08-30 — WebhookEventBroadcaster board-scoped fan-out
 
@@ -604,7 +604,7 @@
 - [x] La extensión anunciada `test-analysis-extensions/extensions/dotnet.md` no existe en el paquete local; se aplicó la clasificación xUnit/FluentAssertions/Moq inline.
 - [x] Alcance respetado: no se editó producción ni el plan general y no se realizó commit/push.
 - [x] Validación final integrada: formatter global limpio; build Release 0 advertencias/0 errores; regresiones 3/3; suite completa 922 superadas, 0 fallidas y 1 omitida.
-- [x] Cumplimiento final: `git diff --check` limpio; 0 referencias al comando eliminado; 0 APIs de SQL manual en `src`; 0 menciones de `Trello` fuera de artefactos ignorados.
+- [x] Cumplimiento final: `git diff --check` limpio; 0 referencias al comando eliminado; 0 APIs de SQL manual en `src`; 0 menciones del nombre externo prohibido fuera de artefactos ignorados.
 
 ## 2026-08-30 — SlackEventBroadcaster batched fan-out
 
@@ -616,7 +616,7 @@
 - [x] `test-analysis-extensions` fue consultado, pero `extensions/dotnet.md` no existe en el paquete local; se aplicó la clasificación xUnit/FluentAssertions/Moq inline.
 - [x] Alcance respetado: no se editó producción ni el plan general y no se realizó commit/push.
 - [x] Validación final integrada: formatter global limpio; build Release 0 advertencias/0 errores; regresiones 3/3; suite completa 925 superadas, 0 fallidas y 1 omitida.
-- [x] Cumplimiento final: `git diff --check` limpio; 0 APIs de SQL manual en `src`; 0 menciones de `Trello` fuera de artefactos ignorados.
+- [x] Cumplimiento final: `git diff --check` limpio; 0 APIs de SQL manual en `src`; 0 menciones del nombre externo prohibido fuera de artefactos ignorados.
 ## 2026-08-30 — Attachment upload atomicity
 
 - [x] Research and requirement-to-test mapping complete for the two bounded targets.
@@ -637,3 +637,12 @@
 - [x] Root-cause regression recorded: a correlated `WorkspaceMember.UserId == User.Id.Value` expression is not translatable by SQLite; the final implementation uses bounded EF Core queries over member IDs and typed `Contains`, with no raw SQL or whole-table client evaluation.
 - [x] Focused validation: unit 8/8 and integration 1/1 passed, 0 failed and 0 skipped.
 - [x] The advertised `test-analysis-extensions/extensions/dotnet.md` file remains absent; xUnit v3/FluentAssertions/Moq classification was performed inline.
+
+## 2026-09-06 — SDK export response ownership
+
+- [x] `Boards_Export_Async_Returns_Readable_Stream_That_Owns_Response` verifies exact ZIP signature bytes, pre-disposal state and post-disposal ownership transition.
+- [x] `Boards_Export_Async_Disposes_NonSuccess_Response` verifies the exception type and disposal side effect on the failure branch.
+- [x] Assertion-quality review: 5 meaningful assertions across deep equality, boolean state/side effect, negative state and exception categories; 0 trivial, assertion-free, self-referential or unawaited cases.
+- [x] Pseudo-mutation review: returning the raw content stream, changing the payload, removing successful-response ownership or removing failure-path disposal breaks an exact assertion; no material ownership branch remains uncovered.
+- [x] Narrow validation: 15/15 passed independently on net8.0 and net10.0. Full suite: 957 passed, 0 failed, 1 skipped.
+- [x] The advertised `test-analysis-extensions/extensions/dotnet.md` file is absent; classification was performed inline against the repository's xUnit v3 and FluentAssertions APIs.

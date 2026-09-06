@@ -116,6 +116,54 @@ public sealed class SubClientTests
     }
 
     [Fact]
+    public async Task Boards_Export_Async_Returns_Readable_Stream_That_Owns_Response()
+    {
+        byte[] archive = [0x50, 0x4B, 0x03, 0x04];
+        TrackingByteArrayContent content = new(archive);
+        using HttpMessageHandlerStub handler = new(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = content
+        });
+        using HttpClient http = new(handler) { BaseAddress = new("https://api.example.test/") };
+        await using CardscapeClient client = new(http, new CardscapeClientOptions
+        {
+            BaseAddress = new("https://api.example.test/")
+        });
+
+        Stream export = await client.Boards.ExportAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+        using MemoryStream buffer = new();
+        await export.CopyToAsync(buffer, TestContext.Current.CancellationToken);
+
+        buffer.ToArray().Should().Equal(archive);
+        content.IsDisposed.Should().BeFalse();
+
+        await export.DisposeAsync();
+
+        content.IsDisposed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Boards_Export_Async_Disposes_NonSuccess_Response()
+    {
+        TrackingByteArrayContent content = new([0x7B, 0x7D]);
+        using HttpMessageHandlerStub handler = new(_ => new HttpResponseMessage(HttpStatusCode.NotFound)
+        {
+            Content = content
+        });
+        using HttpClient http = new(handler) { BaseAddress = new("https://api.example.test/") };
+        await using CardscapeClient client = new(http, new CardscapeClientOptions
+        {
+            BaseAddress = new("https://api.example.test/")
+        });
+
+        Func<Task> act = async () =>
+            await client.Boards.ExportAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        await act.Should().ThrowAsync<HttpRequestException>();
+        content.IsDisposed.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task Cards_Move_Async_Posts_The_Expected_Body()
     {
         RequestCapture capture = new();
@@ -307,6 +355,17 @@ public sealed class SubClientTests
                 request.Content.LoadIntoBufferAsync().GetAwaiter().GetResult();
                 Body = request.Content.ReadAsStringAsync().GetAwaiter().GetResult();
             }
+        }
+    }
+
+    private sealed class TrackingByteArrayContent(byte[] content) : ByteArrayContent(content)
+    {
+        public bool IsDisposed { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            IsDisposed = true;
+            base.Dispose(disposing);
         }
     }
 }

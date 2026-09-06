@@ -10,6 +10,7 @@
          catch target-conditional code paths at CI time. The
          target list is the same one in
          sdk/Cardscape.Sdk/Cardscape.Sdk.csproj. -->
+    <TargetFramework></TargetFramework>
     <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
     <Description>Multi-target smoke + serialization tests for the published Cardscape.Sdk package.</Description>
   </PropertyGroup>

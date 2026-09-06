@@ -768,3 +768,18 @@
 - [x] Group member projection performs one `ListByIdsAsync` call with the exact member ids and no point lookups.
 - [x] Valid same-workspace get and mutation behavior remains intact.
 - [x] SQLite integration proves repository translation, filtered listing and cross-token isolation through the real HTTP boundary.
+
+## 2026-09-06 — SDK export response ownership
+
+### Bounded target inventory
+
+- `BoardsClient.ExportAsync`: the returned content stream must keep its HTTP response alive and release it when disposed.
+- `BoardsClient.GetICalendarAsync`: the buffered response must be disposed before returning text.
+- `Cardscape.Sdk.Tests`: xUnit v3 with FluentAssertions and the in-process `HttpMessageHandlerStub`.
+
+### Acceptance checklist
+
+- [x] A successful export remains readable until its returned stream is disposed.
+- [x] Disposing the export stream disposes the owning response content.
+- [x] A non-success export disposes its response before propagating `HttpRequestException`.
+- [x] SDK tests execute on both net8.0 and net10.0.

@@ -552,3 +552,11 @@
 5. [x] Add list and group projection tests proving one batch call with exact arguments and zero point lookups.
 6. [x] Add a real SQLite/HTTP regression for EF translation, filtered listing and cross-token isolation.
 7. [x] Run the narrow tests and perform test-gap/assertion-quality review.
+
+## 2026-09-06 — SDK export response ownership
+
+1. [x] Wrap the exported content stream with ownership of its `HttpResponseMessage`.
+2. [x] Dispose buffered iCalendar responses locally.
+3. [x] Cover successful payload/read/dispose and unsuccessful response/dispose paths.
+4. [x] Correct the SDK test project so `TargetFrameworks` is not shadowed by the repository-wide target.
+5. [x] Run both SDK targets, the complete suite, and assertion/pseudo-mutation review.
