@@ -12,7 +12,7 @@ public sealed record DeleteBoardAutomationRuleCommand(Guid RuleId) : IMessage;
 
 public static class DeleteBoardAutomationRuleCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DeleteBoardAutomationRuleCommand command,
         IRepository<BoardAutomationRule, BoardAutomationRuleId> rules,
         IBoardRepository boards,
@@ -46,5 +46,4 @@ public static class DeleteBoardAutomationRuleCommandHandler
         return Result.Success();
     }
 }
-
 

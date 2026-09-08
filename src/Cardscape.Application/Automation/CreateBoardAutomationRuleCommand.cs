@@ -19,7 +19,7 @@ public sealed record CreateBoardAutomationRuleCommand(
 
 public static class CreateBoardAutomationRuleCommandHandler
 {
-    public static async Task<Result<BoardAutomationRuleDto>> Handle(
+    public static async Task<Result<BoardAutomationRuleDto>> HandleAsync(
         CreateBoardAutomationRuleCommand command,
         IRepository<BoardAutomationRule, BoardAutomationRuleId> rules,
         IBoardRepository boards,
@@ -68,5 +68,4 @@ public static class CreateBoardAutomationRuleCommandHandler
         return Result.Success(BoardAutomationRuleDto.FromEntity(creation.Value));
     }
 }
-
 

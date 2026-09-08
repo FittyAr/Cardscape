@@ -12,7 +12,7 @@ public sealed record ListBoardAutomationRulesQuery(Guid BoardId) : IMessage;
 
 public static class ListBoardAutomationRulesQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<BoardAutomationRuleDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<BoardAutomationRuleDto>>> HandleAsync(
         ListBoardAutomationRulesQuery query,
         IBoardRepository boards,
         IAutomationRuleRepository rules,
@@ -46,5 +46,4 @@ public static class ListBoardAutomationRulesQueryHandler
             rows.Select(BoardAutomationRuleDto.FromEntity).ToList());
     }
 }
-
 

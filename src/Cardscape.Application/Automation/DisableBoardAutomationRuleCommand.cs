@@ -12,7 +12,7 @@ public sealed record DisableBoardAutomationRuleCommand(Guid RuleId) : IMessage;
 
 public static class DisableBoardAutomationRuleCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DisableBoardAutomationRuleCommand command,
         IRepository<BoardAutomationRule, BoardAutomationRuleId> rules,
         IBoardRepository boards,
@@ -47,5 +47,4 @@ public static class DisableBoardAutomationRuleCommandHandler
         return Result.Success();
     }
 }
-
 

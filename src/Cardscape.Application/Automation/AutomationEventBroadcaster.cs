@@ -71,7 +71,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
             // the self-trigger is dropped without having to
             // thread an actor id through every Card method.
             var e when InAutomationBroadcast => Task.CompletedTask,
-            CardCreated e => HandleCardCreated(e, ct),
+            CardCreated e => HandleCardCreatedAsync(e, ct),
             CardMoved e => HandleCardMoved(e, ct),
             CardCompleted e => HandleCardCompleted(e, ct),
             CardReopened e => HandleCardReopened(e, ct),
@@ -94,7 +94,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
 
     private static bool InAutomationBroadcast => AutomationBroadcastState.Value;
 
-    private async Task HandleCardCreated(CardCreated @event, CancellationToken ct)
+    private async Task HandleCardCreatedAsync(CardCreated @event, CancellationToken ct)
     {
         if (@event.ListId is not BoardListId listId)
         {

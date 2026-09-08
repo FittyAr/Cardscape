@@ -12,7 +12,7 @@ public sealed record EnableBoardAutomationRuleCommand(Guid RuleId) : IMessage;
 
 public static class EnableBoardAutomationRuleCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         EnableBoardAutomationRuleCommand command,
         IRepository<BoardAutomationRule, BoardAutomationRuleId> rules,
         IBoardRepository boards,
@@ -47,5 +47,4 @@ public static class EnableBoardAutomationRuleCommandHandler
         return Result.Success();
     }
 }
-
 
