@@ -164,30 +164,30 @@ public partial class BoardDetail
     // IBoardsApiClient, so this is just glue.
     private async Task RenameBoard()
     {
-        if (string.IsNullOrWhiteSpace(renameModel.NewName)) return;
-        ApiResult<BoardDto> result = await BoardsApi.RenameAsync(BoardId, renameModel.NewName);
+        if (string.IsNullOrWhiteSpace(_renameModel.NewName)) return;
+        ApiResult<BoardDto> result = await BoardsApi.RenameAsync(BoardId, _renameModel.NewName);
         if (result.IsSuccess)
         {
             board = result.Value;
-            renameModel.NewName = string.Empty;
+            _renameModel.NewName = string.Empty;
         }
     }
 
     private async Task ChangeDescription()
     {
-        if (string.IsNullOrWhiteSpace(descriptionModel.NewDescription)) return;
+        if (string.IsNullOrWhiteSpace(_descriptionModel.NewDescription)) return;
         ApiResult<BoardDto> result = await BoardsApi.ChangeDescriptionAsync(
-            BoardId, descriptionModel.NewDescription);
+            BoardId, _descriptionModel.NewDescription);
         if (result.IsSuccess)
         {
             board = result.Value;
-            descriptionModel.NewDescription = string.Empty;
+            _descriptionModel.NewDescription = string.Empty;
         }
     }
 
     private async Task ChangeVisibility()
     {
-        ApiResult<BoardDto> result = await BoardsApi.ChangeVisibilityAsync(BoardId, newVisibility);
+        ApiResult<BoardDto> result = await BoardsApi.ChangeVisibilityAsync(BoardId, _newVisibility);
         if (result.IsSuccess)
         {
             board = result.Value;
@@ -209,4 +209,3 @@ public partial class BoardDetail
     private sealed class RenameBoardModel { public string NewName { get; set; } = string.Empty; }
     private sealed class DescriptionBoardModel { public string NewDescription { get; set; } = string.Empty; }
 }
-

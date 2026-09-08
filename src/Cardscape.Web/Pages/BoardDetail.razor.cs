@@ -26,11 +26,11 @@ public partial class BoardDetail
     private bool hubConnected;
 
     // BETA-6-#6 — board settings panel state.
-    private bool showSettings;
-    private readonly RenameBoardModel renameModel = new();
-    private readonly DescriptionBoardModel descriptionModel = new();
-    private readonly IReadOnlyList<string> visibilityOptions = new[] { "private", "workspace", "public" };
-    private string newVisibility = "private";
+    private bool _showSettings;
+    private readonly RenameBoardModel _renameModel = new();
+    private readonly DescriptionBoardModel _descriptionModel = new();
+    private readonly IReadOnlyList<string> _visibilityOptions = ["private", "workspace", "public"];
+    private string _newVisibility = "private";
 
     private Guid? openAddCardFor;
     private string newCardTitle = string.Empty;
