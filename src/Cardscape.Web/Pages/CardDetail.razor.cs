@@ -55,14 +55,14 @@ public partial class CardDetail
     private int _recurrenceIntervalDays = 7;
     private bool _addingComment;
     private bool _togglingVote;
-    private bool aiBusy;
+    private bool _aiBusy;
     private bool snoozing;
-    private string? aiGeneratedDescription;
-    private string? aiSummary;
+    private string? _aiGeneratedDescription;
+    private string? _aiSummary;
     // BUG-A5-002 — attachments list / upload / download state.
     private IReadOnlyList<AttachmentDto>? attachments;
     private bool uploadingAttachment;
-    private IReadOnlyList<AiOwnerSuggestionDto>? aiSuggestedOwners;
+    private IReadOnlyList<AiOwnerSuggestionDto>? _aiSuggestedOwners;
     private readonly AddCommentModel _addCommentModel = new();
 
     // P3.2 / G6b ” default the snooze picker to "tomorrow 9am"
@@ -120,8 +120,8 @@ public partial class CardDetail
         __builder.AddAttribute(8, "Click",
             EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(
                 this, SuggestOwnersAsync));
-        __builder.AddAttribute(9, "Disabled", aiBusy);
-        __builder.AddAttribute(10, "IsBusy", aiBusy);
+        __builder.AddAttribute(9, "Disabled", _aiBusy);
+        __builder.AddAttribute(10, "IsBusy", _aiBusy);
         __builder.AddAttribute(11, "Style", "margin-left:.5rem");
         __builder.CloseComponent();
         __builder.CloseElement();

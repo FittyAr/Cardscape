@@ -141,14 +141,14 @@ else
                 </RadzenCard>
             }
 
-            @if (aiSuggestedOwners is { Count: > 0 })
+            @if (_aiSuggestedOwners is { Count: > 0 })
             {
                 <RadzenCard>
                     <RadzenStack Gap="0.5rem">
                         <RadzenText Text="@L["AiSuggestOwners"]" TextStyle="TextStyle.Subtitle1"
                                     TagName="TagName.Span" />
                         <RadzenStack Gap="0.25rem">
-                            @foreach (AiOwnerSuggestionDto suggestion in aiSuggestedOwners)
+                            @foreach (AiOwnerSuggestionDto suggestion in _aiSuggestedOwners)
                             {
                                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
                                              Gap="0.5rem" Wrap="FlexWrap.Wrap">
@@ -159,7 +159,7 @@ else
                                     <RadzenButton Text="Add" Size="ButtonSize.ExtraSmall"
                                                   ButtonStyle="ButtonStyle.Success"
                                                   Click="@(() => AssignSuggestedOwnerAsync(suggestion))"
-                                                  Disabled="@aiBusy" />
+                                                  Disabled="@_aiBusy" />
                                 </RadzenStack>
                             }
                         </RadzenStack>
@@ -211,10 +211,10 @@ else
                                       Click="@StartEditingDescription" />
                         <RadzenButton Text="@($" {L["AiGenerateDescription"]}")" Icon="auto_awesome"
                                   ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                                  Click="@GenerateDescriptionAsync" Disabled="@aiBusy" IsBusy="@aiBusy" />
-                    @if (aiGeneratedDescription is not null)
+                                  Click="@GenerateDescriptionAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
+                    @if (_aiGeneratedDescription is not null)
                     {
-                        <RadzenText Text="@aiGeneratedDescription" TextStyle="TextStyle.Body2"
+                        <RadzenText Text="@_aiGeneratedDescription" TextStyle="TextStyle.Body2"
                                     TagName="TagName.Span" class="rz-color-text-secondary" />
                     }
                     </RadzenStack>
@@ -288,15 +288,15 @@ else
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                         <RadzenButton Text="@($" {L["AiSummarizeComments"]}")" Icon="auto_awesome"
                                       ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                                      Click="@SummarizeCommentsAsync" Disabled="@aiBusy" IsBusy="@aiBusy" />
+                                      Click="@SummarizeCommentsAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
                     </RadzenStack>
-                    @if (aiSummary is not null)
+                    @if (_aiSummary is not null)
                     {
                         <RadzenCard>
                             <RadzenStack Gap="0.25rem">
                                 <RadzenText Text="@L["AiSummaryTitle"]" TextStyle="TextStyle.Subtitle1"
                                             TagName="TagName.Span" />
-                                <RadzenText Text="@aiSummary" TextStyle="TextStyle.Body2" />
+                                <RadzenText Text="@_aiSummary" TextStyle="TextStyle.Body2" />
                             </RadzenStack>
                         </RadzenCard>
                     }
@@ -420,7 +420,7 @@ else
                                       Click="@CreateChecklistAsync" />
                         <RadzenButton Text="@($" {L["AiGenerateChecklist"]}")" Icon="auto_awesome"
                                       ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                                      Click="@MakeChecklistAsync" Disabled="@aiBusy" IsBusy="@aiBusy" />
+                                      Click="@MakeChecklistAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
                     </RadzenStack>
                 }
             </RadzenStack>

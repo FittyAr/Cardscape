@@ -17,55 +17,55 @@ public partial class CardDetail
 {
     private async Task GenerateDescriptionAsync()
     {
-        if (aiBusy)
+        if (_aiBusy)
         {
             return;
         }
 
-        aiBusy = true;
+        _aiBusy = true;
         try
         {
             ApiResult<AiGeneratedTextDto> result = await Ai.GenerateDescriptionAsync(CardId);
-            aiGeneratedDescription = result.IsSuccess && result.Value is not null
+            _aiGeneratedDescription = result.IsSuccess && result.Value is not null
                 ? result.Value.Text
                 : null;
         }
         finally
         {
-            aiBusy = false;
+            _aiBusy = false;
         }
     }
 
     private async Task SummarizeCommentsAsync()
     {
-        if (aiBusy || _comments is null || _comments.Count == 0)
+        if (_aiBusy || _comments is null || _comments.Count == 0)
         {
             return;
         }
 
-        aiBusy = true;
+        _aiBusy = true;
         try
         {
             IReadOnlyList<Guid> commentIds = _comments.Select(c => c.Id).ToList();
             ApiResult<AiGeneratedTextDto> result = await Ai.SummarizeCommentsAsync(commentIds);
-            aiSummary = result.IsSuccess && result.Value is not null
+            _aiSummary = result.IsSuccess && result.Value is not null
                 ? result.Value.Text
                 : null;
         }
         finally
         {
-            aiBusy = false;
+            _aiBusy = false;
         }
     }
 
     private async Task MakeChecklistAsync()
     {
-        if (aiBusy)
+        if (_aiBusy)
         {
             return;
         }
 
-        aiBusy = true;
+        _aiBusy = true;
         try
         {
             ApiResult<AiGeneratedChecklistDto> result = await Ai.GenerateChecklistAsync(CardId);
@@ -93,39 +93,39 @@ public partial class CardDetail
         }
         finally
         {
-            aiBusy = false;
+            _aiBusy = false;
         }
     }
 
     private async Task SuggestOwnersAsync()
     {
-        if (aiBusy)
+        if (_aiBusy)
         {
             return;
         }
 
-        aiBusy = true;
+        _aiBusy = true;
         try
         {
             ApiResult<AiOwnerSuggestionsDto> result = await Ai.SuggestOwnersAsync(CardId);
-            aiSuggestedOwners = result.IsSuccess && result.Value is not null
+            _aiSuggestedOwners = result.IsSuccess && result.Value is not null
                 ? result.Value.Suggestions
                 : null;
         }
         finally
         {
-            aiBusy = false;
+            _aiBusy = false;
         }
     }
 
     private async Task AssignSuggestedOwnerAsync(AiOwnerSuggestionDto suggestion)
     {
-        if (aiBusy || card is null)
+        if (_aiBusy || card is null)
         {
             return;
         }
 
-        aiBusy = true;
+        _aiBusy = true;
         try
         {
             ApiResult<CardDto> result = await Cards.AssignAsync(CardId, suggestion.UserId);
@@ -134,16 +134,16 @@ public partial class CardDetail
                 card = result.Value;
             }
 
-            if (aiSuggestedOwners is not null)
+            if (_aiSuggestedOwners is not null)
             {
-                aiSuggestedOwners = aiSuggestedOwners
+                _aiSuggestedOwners = _aiSuggestedOwners
                     .Where(s => s.UserId != suggestion.UserId)
                     .ToList();
             }
         }
         finally
         {
-            aiBusy = false;
+            _aiBusy = false;
         }
     }
 }
