@@ -48,11 +48,11 @@ public partial class CardDetail
     private IReadOnlyList<CustomFieldValueDto>? fieldValues;
     private IReadOnlyList<ActivityDto>? recentActivity;
     private CardVoteStateDto? voteState;
-    private IReadOnlyList<ChecklistDto>? checklists;
-    private string newChecklistTitle = string.Empty;
-    private string newChecklistItemText = string.Empty;
-    private CardRecurrenceDto? recurrence;
-    private int recurrenceIntervalDays = 7;
+    private IReadOnlyList<ChecklistDto>? _checklists;
+    private string _newChecklistTitle = string.Empty;
+    private string _newChecklistItemText = string.Empty;
+    private CardRecurrenceDto? _recurrence;
+    private int _recurrenceIntervalDays = 7;
     private bool addingComment;
     private bool togglingVote;
     private bool aiBusy;
@@ -131,7 +131,7 @@ public partial class CardDetail
     {
         ApiResult<IReadOnlyList<ChecklistDto>> checklistsResult =
             await Checklists.ListForCardAsync(CardId);
-        checklists = checklistsResult.IsSuccess ? checklistsResult.Value : [];
+        _checklists = checklistsResult.IsSuccess ? checklistsResult.Value : [];
         await Task.CompletedTask;
     }
 
@@ -168,10 +168,10 @@ public partial class CardDetail
         voteState = voteResult.IsSuccess ? voteResult.Value : null;
 
         ApiResult<IReadOnlyList<ChecklistDto>> checklistsResult = await Checklists.ListForCardAsync(CardId);
-        checklists = checklistsResult.IsSuccess ? checklistsResult.Value : [];
+        _checklists = checklistsResult.IsSuccess ? checklistsResult.Value : [];
 
         ApiResult<CardRecurrenceDto?> recurrenceResult = await Recurrence.GetAsync(CardId);
-        recurrence = recurrenceResult.IsSuccess ? recurrenceResult.Value : null;
+        _recurrence = recurrenceResult.IsSuccess ? recurrenceResult.Value : null;
 
         // BUG-A5-002 — fetch the attachments list alongside the
         // rest of the card data so the section is ready when

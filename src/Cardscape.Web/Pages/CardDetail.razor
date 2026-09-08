@@ -333,11 +333,11 @@ else
 
             <RadzenStack Gap="0.5rem">
                 <RadzenText Text="Recurrence" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @if (recurrence is { IsActive: true })
+                @if (_recurrence is { IsActive: true })
                 {
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                                  Wrap="FlexWrap.Wrap">
-                        <RadzenText Text="@($"Repeats every {recurrence.IntervalDays} day(s). Next: {recurrence.NextOccurrenceAt.LocalDateTime:yyyy-MM-dd HH:mm}")"
+                        <RadzenText Text="@($"Repeats every {_recurrence.IntervalDays} day(s). Next: {_recurrence.NextOccurrenceAt.LocalDateTime:yyyy-MM-dd HH:mm}")"
                                     TextStyle="TextStyle.Body2" />
                         <RadzenButton Text="Stop" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small"
                                       Click="@ClearRecurrenceAsync" />
@@ -346,7 +346,7 @@ else
                 else
                 {
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenNumeric @bind-Value="recurrenceIntervalDays" Min="1" Max="365"
+                        <RadzenNumeric @bind-Value="_recurrenceIntervalDays" Min="1" Max="365"
                                        ShowUpDown="true" Style="width:6rem" />
                         <RadzenText Text="day(s)" TextStyle="TextStyle.Body2" />
                         <RadzenButton Text="Set recurrence" ButtonStyle="ButtonStyle.Secondary"
@@ -357,13 +357,13 @@ else
 
             <RadzenStack Gap="0.5rem">
                 <RadzenText Text="Checklists" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @if (checklists is null)
+                @if (_checklists is null)
                 {
                     <RadzenText Text="Loading checklists…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
                 else
                 {
-                    @foreach (ChecklistDto cl in checklists)
+                    @foreach (ChecklistDto cl in _checklists)
                     {
                         <RadzenCard Variant="Variant.Flat">
                             <RadzenStack Gap="0.5rem">
@@ -402,7 +402,7 @@ else
                                 }
                                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
                                              Gap="0.5rem">
-                                    <RadzenTextBox @bind-Value="newChecklistItemText" Placeholder="Add an item…"
+                                    <RadzenTextBox @bind-Value="_newChecklistItemText" Placeholder="Add an item…"
                                                    Style="flex:1"
                                                    @onkeydown="@(e => OnAddItemKeyDown(e, cl.Id))" />
                                     <RadzenButton Text="Add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
@@ -413,7 +413,7 @@ else
                     }
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                                  Wrap="FlexWrap.Wrap">
-                        <RadzenTextBox @bind-Value="newChecklistTitle" Placeholder="New checklist title…"
+                        <RadzenTextBox @bind-Value="_newChecklistTitle" Placeholder="New checklist title…"
                                        Style="flex:1"
                                        @onkeydown="@OnCreateChecklistKeyDown" />
                         <RadzenButton Text="Create checklist" Icon="add" ButtonStyle="ButtonStyle.Secondary"

@@ -17,17 +17,17 @@ public partial class CardDetail
 {
     private async Task SaveRecurrenceAsync()
     {
-        if (recurrenceIntervalDays < 1) return;
-        DateTimeOffset firstOccurrence = DateTimeOffset.UtcNow.AddDays(recurrenceIntervalDays);
+        if (_recurrenceIntervalDays < 1) return;
+        DateTimeOffset firstOccurrence = DateTimeOffset.UtcNow.AddDays(_recurrenceIntervalDays);
         ApiResult<CardRecurrenceDto> result = await Recurrence.SetAsync(
-            CardId, recurrenceIntervalDays, firstOccurrence);
-        if (result.IsSuccess) recurrence = result.Value;
+            CardId, _recurrenceIntervalDays, firstOccurrence);
+        if (result.IsSuccess) _recurrence = result.Value;
     }
 
     private async Task ClearRecurrenceAsync()
     {
         ApiResult result = await Recurrence.DeleteAsync(CardId);
-        if (result.IsSuccess) recurrence = null;
+        if (result.IsSuccess) _recurrence = null;
     }
 
     // BETA-8-UI-#17 — see test-results/r8/r8-report.md.
@@ -52,26 +52,26 @@ public partial class CardDetail
 
     private async Task CreateChecklistAsync()
     {
-        if (string.IsNullOrWhiteSpace(newChecklistTitle)) return;
-        ApiResult<ChecklistDto> result = await Checklists.CreateAsync(CardId, newChecklistTitle);
-        if (result.IsSuccess && checklists is not null)
+        if (string.IsNullOrWhiteSpace(_newChecklistTitle)) return;
+        ApiResult<ChecklistDto> result = await Checklists.CreateAsync(CardId, _newChecklistTitle);
+        if (result.IsSuccess && _checklists is not null)
         {
-            checklists = [.. checklists, result.Value!];
-            newChecklistTitle = string.Empty;
+            _checklists = [.. _checklists, result.Value!];
+            _newChecklistTitle = string.Empty;
         }
     }
 
     private async Task AddItemAsync(Guid checklistId)
     {
-        if (string.IsNullOrWhiteSpace(newChecklistItemText)) return;
+        if (string.IsNullOrWhiteSpace(_newChecklistItemText)) return;
         // BETA-8-API-#3 — backend now returns the freshly-added
         // ChecklistItemDto alone, not the whole checklist. We
         // append the new item to the in-memory list so the UI
         // re-renders without a full GET.
-        ApiResult<ChecklistItemDto> result = await Checklists.AddItemAsync(checklistId, newChecklistItemText);
-        if (result.IsSuccess && result.Value is not null && checklists is not null)
+        ApiResult<ChecklistItemDto> result = await Checklists.AddItemAsync(checklistId, _newChecklistItemText);
+        if (result.IsSuccess && result.Value is not null && _checklists is not null)
         {
-            checklists = checklists
+            _checklists = _checklists
                 .Select(c => c.Id != checklistId
                     ? c
                     : new ChecklistDto(
@@ -81,7 +81,7 @@ public partial class CardDetail
                         TotalCount: c.TotalCount + 1))
                 .ToList();
         }
-        newChecklistItemText = string.Empty;
+        _newChecklistItemText = string.Empty;
     }
 
     private async Task ToggleItemAsync(Guid checklistId, Guid itemId)
@@ -99,19 +99,18 @@ public partial class CardDetail
     private async Task DeleteChecklistAsync(Guid checklistId)
     {
         ApiResult result = await Checklists.DeleteAsync(checklistId);
-        if (result.IsSuccess && checklists is not null)
+        if (result.IsSuccess && _checklists is not null)
         {
-            checklists = checklists.Where(c => c.Id != checklistId).ToList();
+            _checklists = _checklists.Where(c => c.Id != checklistId).ToList();
         }
     }
 
     private async Task ReplaceChecklistAsync(ChecklistDto updated)
     {
-        if (checklists is null) return;
-        checklists = checklists
+        if (_checklists is null) return;
+        _checklists = _checklists
             .Select(c => c.Id == updated.Id ? updated : c)
             .ToList();
         await Task.CompletedTask;
     }
 }
-
