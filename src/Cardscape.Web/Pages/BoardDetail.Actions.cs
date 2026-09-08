@@ -59,21 +59,21 @@ public partial class BoardDetail
 
     private async Task AddList()
     {
-        if (string.IsNullOrWhiteSpace(addListModel.Name)) return;
-        addingList = true;
+        if (string.IsNullOrWhiteSpace(_addListModel.Name)) return;
+        _addingList = true;
         try
         {
-            ApiResult<BoardListDto> result = await ListsApi.CreateAsync(BoardId, addListModel.Name);
+            ApiResult<BoardListDto> result = await ListsApi.CreateAsync(BoardId, _addListModel.Name);
             if (result.IsSuccess)
             {
                 lists = [.. (lists ?? Array.Empty<BoardListDto>()), result.Value!];
-                addListModel.Name = string.Empty;
-                showAddList = false;
+                _addListModel.Name = string.Empty;
+                _showAddList = false;
             }
         }
         finally
         {
-            addingList = false;
+            _addingList = false;
         }
     }
 
@@ -87,21 +87,21 @@ public partial class BoardDetail
     // so the user always starts from a clean textbox.
     private void ToggleAddList()
     {
-        if (!showAddList)
+        if (!_showAddList)
         {
-            addListModel.Name = string.Empty;
+            _addListModel.Name = string.Empty;
         }
-        showAddList = !showAddList;
+        _showAddList = !_showAddList;
     }
 
     private async Task ConfirmAddCard(Guid listId)
     {
-        if (string.IsNullOrWhiteSpace(newCardTitle)) return;
-        ApiResult<CardDto> result = await CardsApi.CreateAsync(listId, newCardTitle, null);
+        if (string.IsNullOrWhiteSpace(_newCardTitle)) return;
+        ApiResult<CardDto> result = await CardsApi.CreateAsync(listId, _newCardTitle, null);
         if (result.IsSuccess)
         {
-            newCardTitle = string.Empty;
-            openAddCardFor = null;
+            _newCardTitle = string.Empty;
+            _openAddCardFor = null;
             await ReloadListsAndCardsAsync();
         }
     }

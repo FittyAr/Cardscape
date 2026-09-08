@@ -20,9 +20,9 @@ public partial class BoardDetail
     private BoardDto? board;
     private IReadOnlyList<BoardListDto>? lists;
     private Dictionary<Guid, IReadOnlyList<CardSummaryDto>> cardsByList = new();
-    private bool showAddList;
-    private bool addingList;
-    private readonly AddListModel addListModel = new();
+    private bool _showAddList;
+    private bool _addingList;
+    private readonly AddListModel _addListModel = new();
     private bool hubConnected;
 
     // BETA-6-#6 — board settings panel state.
@@ -32,8 +32,8 @@ public partial class BoardDetail
     private readonly IReadOnlyList<string> _visibilityOptions = ["private", "workspace", "public"];
     private string _newVisibility = "private";
 
-    private Guid? openAddCardFor;
-    private string newCardTitle = string.Empty;
+    private Guid? _openAddCardFor;
+    private string _newCardTitle = string.Empty;
 
     // P3.2 / G6b — "show snoozed" toggle. Default off so the
     // board view matches the API default (snoozed cards are

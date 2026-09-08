@@ -40,10 +40,10 @@ else
         </Actions>
     </PageHeader>
 
-    @if (showAddList)
+    @if (_showAddList)
     {
         <RadzenCard>
-            <RadzenTemplateForm TItem="AddListModel" Data="@addListModel" Submit="@AddList">
+            <RadzenTemplateForm TItem="AddListModel" Data="@_addListModel" Submit="@AddList">
                 <RadzenStack Gap="0.5rem">
                     @* BETA-8-UI-#17 — see test-results/r8/r8-report.md.
                        RadzenTemplateForm's HTML <form> would submit on
@@ -52,13 +52,13 @@ else
                        next to several Light-style buttons above, so
                        we wire Enter explicitly through @onkeydown —
                        that works regardless of button order. *@
-                    <RadzenTextBox @bind-Value="addListModel.Name" Placeholder="List name…"
+                    <RadzenTextBox @bind-Value="_addListModel.Name" Placeholder="List name…"
                                    Style="width:100%"
                                    @onkeydown="@OnAddListKeyDown" />
                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
                                  Gap="0.5rem" Class="rz-mt-3">
-                        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => showAddList = false)" />
-                        <RadzenButton Text="Add" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" IsBusy="@addingList" />
+                        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => _showAddList = false)" />
+                        <RadzenButton Text="Add" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" IsBusy="@_addingList" />
                     </RadzenStack>
                 </RadzenStack>
             </RadzenTemplateForm>
@@ -231,17 +231,17 @@ else
                  @ondragover:preventDefault
                  @ondrop="@(() => OnColumnDrop(listId))">
             </div>
-            @if (openAddCardFor == listId)
+            @if (_openAddCardFor == listId)
             {
                 <RadzenStack Gap="0.5rem">
                     @* BETA-8-UI-#17 — see comment in AddList above. *@
-                    <RadzenTextBox @bind-Value="newCardTitle" Placeholder="Card title…"
+                    <RadzenTextBox @bind-Value="_newCardTitle" Placeholder="Card title…"
                                    Style="width:100%"
                                    @onkeydown="@(e => OnAddCardKeyDown(e, listId))" />
                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
                                  Gap="0.5rem">
                         <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                                      Click="@(() => { openAddCardFor = null; newCardTitle = string.Empty; })" />
+                                      Click="@(() => { _openAddCardFor = null; _newCardTitle = string.Empty; })" />
                         <RadzenButton Text="Add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
                                       Click="@(() => ConfirmAddCard(listId))" />
                     </RadzenStack>
@@ -250,7 +250,7 @@ else
             else
             {
                 <RadzenButton Text="+ Add card" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                              Click="@(() => openAddCardFor = listId)" />
+                              Click="@(() => _openAddCardFor = listId)" />
             }
         </ChildContent>
     </KanbanBoard>
