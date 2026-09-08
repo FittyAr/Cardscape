@@ -22,7 +22,7 @@ public sealed partial class ScimService
         Workspace workspace,
         CancellationToken ct)
     {
-        IReadOnlyList<User> members = await userRepository.ListByIdsAsync(
+        IReadOnlyList<User> members = await _userRepository.ListByIdsAsync(
             workspace.Members.Select(member => new UserId(member.UserId)).ToList(),
             ct);
         Dictionary<Guid, User> usersById = members.ToDictionary(user => user.Id.Value);
@@ -51,17 +51,17 @@ public sealed partial class ScimService
             .ToList();
         foreach (Guid userId in toRemove)
         {
-            workspace.RemoveMember(userId, clock.UtcNow);
+            workspace.RemoveMember(userId, _clock.UtcNow);
         }
 
         List<UserId> missingIds = desiredIds
             .Where(userId => !workspace.HasMember(userId))
             .Select(userId => new UserId(userId))
             .ToList();
-        IReadOnlyList<User> usersToAdd = await userRepository.ListByIdsAsync(missingIds, ct);
+        IReadOnlyList<User> usersToAdd = await _userRepository.ListByIdsAsync(missingIds, ct);
         foreach (var user in usersToAdd)
         {
-            workspace.AddMember(user.Id.Value, WorkspaceRole.Member, clock.UtcNow);
+            workspace.AddMember(user.Id.Value, WorkspaceRole.Member, _clock.UtcNow);
         }
     }
 
@@ -76,7 +76,7 @@ public sealed partial class ScimService
             .Select(userId => new UserId(userId))
             .ToList();
 
-        return await userRepository.ListByIdsAsync(ids, ct);
+        return await _userRepository.ListByIdsAsync(ids, ct);
     }
 
     private static IReadOnlyList<ScimGroupMember> ExtractMembers(object? value)

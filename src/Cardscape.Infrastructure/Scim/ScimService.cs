@@ -22,11 +22,11 @@ public sealed partial class ScimService : IScimService
     private const string ScimListResponseSchema = "urn:ietf:params:scim:api:messages:2.0:ListResponse";
     private const string ScimGroupIdPrefix = "workspace-";
 
-    private readonly IRepository<User, UserId> users;
-    private readonly IUserRepository userRepository;
-    private readonly IRepository<Workspace, WorkspaceId> workspaces;
-    private readonly IUnitOfWork unitOfWork;
-    private readonly IClock clock;
+    private readonly IRepository<User, UserId> _users;
+    private readonly IUserRepository _userRepository;
+    private readonly IRepository<Workspace, WorkspaceId> _workspaces;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IClock _clock;
 
     public ScimService(
         IRepository<User, UserId> users,
@@ -35,11 +35,11 @@ public sealed partial class ScimService : IScimService
         IUnitOfWork unitOfWork,
         IClock clock)
     {
-        this.users = users;
-        this.userRepository = userRepository;
-        this.workspaces = workspaces;
-        this.unitOfWork = unitOfWork;
-        this.clock = clock;
+        _users = users;
+        _userRepository = userRepository;
+        _workspaces = workspaces;
+        _unitOfWork = unitOfWork;
+        _clock = clock;
     }
 
     public async Task<ScimListResponse<ScimGroup>> ListGroupsAsync(
@@ -50,7 +50,7 @@ public sealed partial class ScimService : IScimService
         // group. If the workspace was deleted between token
         // issuance and this call we return an empty
         // list — the IdP will reconcile.
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        var workspace = await _workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
         if (workspace is null)
         {
             return new ScimListResponse<ScimGroup>(
@@ -84,7 +84,7 @@ public sealed partial class ScimService : IScimService
         // matches the "one organisation, one admin" mental
         // model IdPs have. The input `id` is server-assigned
         // and any value the IdP sent is ignored.
-        var parent = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        var parent = await _workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
         if (parent is null)
         {
             return Result.Failure<ScimGroup>(DomainError.NotFound(
@@ -103,14 +103,14 @@ public sealed partial class ScimService : IScimService
             nameResult.Value,
             parent.OwnerId,
             parent.Region,
-            clock.UtcNow);
+            _clock.UtcNow);
         if (createdResult.IsFailure)
         {
             return Result.Failure<ScimGroup>(createdResult.Error);
         }
 
         var newWorkspace = createdResult.Value;
-        await workspaces.AddAsync(newWorkspace, ct);
+        await _workspaces.AddAsync(newWorkspace, ct);
 
         // Best-effort member sync. We log-and-continue on a
         // missing user so a single bad id from the IdP does
@@ -120,10 +120,10 @@ public sealed partial class ScimService : IScimService
         IReadOnlyList<User> requestedMembers = await LoadValidUsersAsync(group.Members, ct);
         foreach (var user in requestedMembers)
         {
-            newWorkspace.AddMember(user.Id.Value, WorkspaceRole.Member, clock.UtcNow);
+            newWorkspace.AddMember(user.Id.Value, WorkspaceRole.Member, _clock.UtcNow);
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.SaveChangesAsync(ct);
 
         IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(newWorkspace, ct);
         return Result.Success(new ScimGroup(
@@ -143,7 +143,7 @@ public sealed partial class ScimService : IScimService
                 "scim.group_not_found", $"Group {groupId} was not found."));
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        var workspace = await _workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
         if (workspace is null)
         {
             return Result.Failure<ScimGroup>(DomainError.NotFound(
@@ -168,7 +168,7 @@ public sealed partial class ScimService : IScimService
                 "scim.group_not_found", $"Group {groupId} was not found."));
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        var workspace = await _workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
         if (workspace is null)
         {
             return Result.Failure<ScimGroup>(DomainError.NotFound(
@@ -181,7 +181,7 @@ public sealed partial class ScimService : IScimService
             return Result.Failure<ScimGroup>(nameResult.Error);
         }
 
-        var renameResult = workspace.Rename(nameResult.Value, clock.UtcNow);
+        var renameResult = workspace.Rename(nameResult.Value, _clock.UtcNow);
         if (renameResult.IsFailure)
         {
             return Result.Failure<ScimGroup>(renameResult.Error);
@@ -189,7 +189,7 @@ public sealed partial class ScimService : IScimService
 
         await ReplaceMembersAsync(workspace, group.Members, ct);
 
-        await unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.SaveChangesAsync(ct);
 
         IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(workspace, ct);
         return Result.Success(new ScimGroup(
@@ -209,7 +209,7 @@ public sealed partial class ScimService : IScimService
                 "scim.group_not_found", $"Group {groupId} was not found."));
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        var workspace = await _workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
         if (workspace is null)
         {
             return Result.Failure<ScimGroup>(DomainError.NotFound(
@@ -248,7 +248,7 @@ public sealed partial class ScimService : IScimService
                     return Result.Failure<ScimGroup>(nameResult.Error);
                 }
 
-                var renameResult = workspace.Rename(nameResult.Value, clock.UtcNow);
+                var renameResult = workspace.Rename(nameResult.Value, _clock.UtcNow);
                 if (renameResult.IsFailure)
                 {
                     return Result.Failure<ScimGroup>(renameResult.Error);
@@ -274,7 +274,7 @@ public sealed partial class ScimService : IScimService
                 IReadOnlyList<User> incomingUsers = await LoadValidUsersAsync(incoming, ct);
                 foreach (var user in incomingUsers)
                 {
-                    workspace.AddMember(user.Id.Value, WorkspaceRole.Member, clock.UtcNow);
+                    workspace.AddMember(user.Id.Value, WorkspaceRole.Member, _clock.UtcNow);
                 }
                 continue;
             }
@@ -302,12 +302,12 @@ public sealed partial class ScimService : IScimService
 
                 if (Guid.TryParse(tail, out Guid userGuid))
                 {
-                    workspace.RemoveMember(userGuid, clock.UtcNow);
+                    workspace.RemoveMember(userGuid, _clock.UtcNow);
                 }
             }
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.SaveChangesAsync(ct);
 
         IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(workspace, ct);
         return Result.Success(new ScimGroup(
@@ -327,7 +327,7 @@ public sealed partial class ScimService : IScimService
                 "scim.group_not_found", $"Group {groupId} was not found."));
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        var workspace = await _workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
         if (workspace is null)
         {
             return Result.Failure(DomainError.NotFound(
@@ -338,8 +338,8 @@ public sealed partial class ScimService : IScimService
         // not a hard delete — the audit trail matters and a
         // hard delete would cascade through the workspace's
         // boards / cards / comments / votes.
-        workspace.Archive(clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(ct);
+        workspace.Archive(_clock.UtcNow);
+        await _unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
 

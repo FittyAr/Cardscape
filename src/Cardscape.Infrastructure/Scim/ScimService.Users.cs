@@ -28,14 +28,14 @@ public sealed partial class ScimService
             UserId.New(),
             emailResult.Value,
             BuildDisplayName(request),
-            clock.UtcNow);
+            _clock.UtcNow);
         if (userResult.IsFailure)
         {
             return Result.Failure<ScimUserResponse>(userResult.Error);
         }
 
-        await users.AddAsync(userResult.Value, ct);
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
+        await _users.AddAsync(userResult.Value, ct);
+        var workspace = await _workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
         if (workspace is null)
         {
             return Result.Failure<ScimUserResponse>(DomainError.NotFound(
@@ -46,13 +46,13 @@ public sealed partial class ScimService
         var addResult = workspace.AddMember(
             userResult.Value.Id.Value,
             WorkspaceRole.Member,
-            clock.UtcNow);
+            _clock.UtcNow);
         if (addResult.IsFailure)
         {
             return Result.Failure<ScimUserResponse>(addResult.Error);
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.SaveChangesAsync(ct);
         return Result.Success(ToResponse(userResult.Value));
     }
 
@@ -61,7 +61,7 @@ public sealed partial class ScimService
     {
         int pageSize = count <= 0 ? 50 : Math.Min(count, 200);
         string? normalizedEmail = ParseSimpleUserNameFilter(filter);
-        IReadOnlyList<User> rows = await userRepository.ListWorkspaceUsersAsync(
+        IReadOnlyList<User> rows = await _userRepository.ListWorkspaceUsersAsync(
             new WorkspaceId(workspaceId),
             normalizedEmail,
             Math.Max(0, startIndex - 1),
@@ -99,13 +99,13 @@ public sealed partial class ScimService
             return Result.Failure<ScimUserResponse>(emailResult.Error);
         }
 
-        var updateResult = user.UpdateProfile(BuildDisplayName(request), user.AvatarUrl, clock.UtcNow);
+        var updateResult = user.UpdateProfile(BuildDisplayName(request), user.AvatarUrl, _clock.UtcNow);
         if (updateResult.IsFailure)
         {
             return Result.Failure<ScimUserResponse>(updateResult.Error);
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.SaveChangesAsync(ct);
         return Result.Success(ToResponse(user));
     }
 
@@ -131,15 +131,15 @@ public sealed partial class ScimService
 
             if (active)
             {
-                user.Reactivate(clock.UtcNow);
+                user.Reactivate(_clock.UtcNow);
             }
             else
             {
-                user.Deactivate(clock.UtcNow);
+                user.Deactivate(_clock.UtcNow);
             }
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.SaveChangesAsync(ct);
         return Result.Success(ToResponse(user));
     }
 
@@ -152,13 +152,13 @@ public sealed partial class ScimService
             return Result.Failure(UserNotFound(userId));
         }
 
-        user.Deactivate(clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(ct);
+        user.Deactivate(_clock.UtcNow);
+        await _unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
 
     private Task<User?> FindWorkspaceUserAsync(Guid workspaceId, Guid userId, CancellationToken ct) =>
-        userRepository.FindWorkspaceUserAsync(
+        _userRepository.FindWorkspaceUserAsync(
             new WorkspaceId(workspaceId),
             new UserId(userId),
             ct);

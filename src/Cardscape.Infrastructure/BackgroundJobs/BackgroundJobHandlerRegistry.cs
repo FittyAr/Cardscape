@@ -8,7 +8,7 @@ namespace Cardscape.Infrastructure.BackgroundJobs;
 /// </summary>
 public sealed class BackgroundJobHandlerRegistry : IBackgroundJobHandlerRegistry
 {
-    private readonly IReadOnlyDictionary<string, IBackgroundJobHandler> byType;
+    private readonly IReadOnlyDictionary<string, IBackgroundJobHandler> _byType;
 
     public BackgroundJobHandlerRegistry(IEnumerable<IBackgroundJobHandler> handlers)
     {
@@ -28,11 +28,11 @@ public sealed class BackgroundJobHandlerRegistry : IBackgroundJobHandlerRegistry
             }
         }
 
-        byType = registered;
+        _byType = registered;
     }
 
-    public IReadOnlyCollection<string> RegisteredTypes => byType.Keys.ToArray();
+    public IReadOnlyCollection<string> RegisteredTypes => _byType.Keys.ToArray();
 
     public IBackgroundJobHandler? Resolve(string type) =>
-        byType.TryGetValue(type, out IBackgroundJobHandler? handler) ? handler : null;
+        _byType.TryGetValue(type, out IBackgroundJobHandler? handler) ? handler : null;
 }

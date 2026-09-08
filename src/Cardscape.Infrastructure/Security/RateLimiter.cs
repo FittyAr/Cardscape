@@ -18,11 +18,11 @@ namespace Cardscape.Infrastructure.Security;
 /// </summary>
 public sealed class RateLimiter : IRateLimiter
 {
-    private readonly ConcurrentDictionary<Guid, Bucket> buckets = new();
+    private readonly ConcurrentDictionary<Guid, Bucket> _buckets = new();
 
     public RateLimitDecision TryAcquire(Guid tokenId, DateTimeOffset at)
     {
-        Bucket bucket = buckets.GetOrAdd(tokenId, _ => new Bucket());
+        Bucket bucket = _buckets.GetOrAdd(tokenId, _ => new Bucket());
         lock (bucket.SyncRoot)
         {
             bucket.Refill(at);
@@ -46,7 +46,7 @@ public sealed class RateLimiter : IRateLimiter
 
     public void Configure(Guid tokenId, int rateLimitPerHour, int burstSize)
     {
-        Bucket bucket = buckets.GetOrAdd(tokenId, _ => new Bucket());
+        Bucket bucket = _buckets.GetOrAdd(tokenId, _ => new Bucket());
         lock (bucket.SyncRoot)
         {
             bucket.ApplyConfiguration(rateLimitPerHour, burstSize);
@@ -65,7 +65,7 @@ public sealed class RateLimiter : IRateLimiter
 
     public RateLimitSnapshot? GetStatus(Guid tokenId, DateTimeOffset at)
     {
-        if (!buckets.TryGetValue(tokenId, out Bucket? bucket))
+        if (!_buckets.TryGetValue(tokenId, out Bucket? bucket))
         {
             return null;
         }
@@ -115,14 +115,14 @@ public sealed class RateLimiter : IRateLimiter
     public int EvictStale(DateTimeOffset cutoff)
     {
         int removed = 0;
-        foreach (KeyValuePair<Guid, Bucket> pair in buckets)
+        foreach (KeyValuePair<Guid, Bucket> pair in _buckets)
         {
             Bucket bucket = pair.Value;
             lock (bucket.SyncRoot)
             {
                 if (bucket.LastAccess is null || bucket.LastAccess < cutoff)
                 {
-                    if (buckets.TryRemove(pair.Key, out Bucket? _))
+                    if (_buckets.TryRemove(pair.Key, out Bucket? _))
                     {
                         removed++;
                     }
