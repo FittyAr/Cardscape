@@ -434,16 +434,10 @@ public sealed class InMemoryCustomFieldDefinitionRepository
 }
 
 /// <summary>In-memory <see cref="ICustomFieldValueRepository"/>.</summary>
-public sealed class InMemoryCustomFieldValueRepository
+public sealed class InMemoryCustomFieldValueRepository(
+    InMemoryCustomFieldDefinitionRepository definitions)
     : InMemoryRepositoryBase<CustomFieldValue, CustomFieldValueId>, ICustomFieldValueRepository
 {
-    private readonly InMemoryCustomFieldDefinitionRepository definitions;
-
-    public InMemoryCustomFieldValueRepository(InMemoryCustomFieldDefinitionRepository definitions)
-    {
-        this.definitions = definitions;
-    }
-
     public Task<IReadOnlyList<CustomFieldValue>> ListForCardAsync(
         CardId cardId, CancellationToken ct = default)
     {
@@ -978,28 +972,28 @@ public sealed class InMemoryPendingTotpLoginStore : IPendingTotpLoginStore
 /// <summary>In-memory <see cref="IGoogleCalendarConnectionRepository"/>.</summary>
 public sealed class InMemoryGoogleCalendarConnectionRepository : IGoogleCalendarConnectionRepository
 {
-    private readonly Dictionary<GoogleCalendarConnectionId, GoogleCalendarConnection> byId = [];
-    private readonly Dictionary<Guid, GoogleCalendarConnection> byUser = [];
+    private readonly Dictionary<GoogleCalendarConnectionId, GoogleCalendarConnection> _byId = [];
+    private readonly Dictionary<Guid, GoogleCalendarConnection> _byUser = [];
 
-    public IReadOnlyCollection<GoogleCalendarConnection> All => byId.Values.ToList();
+    public IReadOnlyCollection<GoogleCalendarConnection> All => _byId.Values.ToList();
 
     public Task<GoogleCalendarConnection?> FindByUserAsync(Guid userId, CancellationToken ct = default) =>
-        Task.FromResult(byUser.GetValueOrDefault(userId));
+        Task.FromResult(_byUser.GetValueOrDefault(userId));
 
     public Task<GoogleCalendarConnection?> FindByIdAsync(GoogleCalendarConnectionId id, CancellationToken ct = default) =>
-        Task.FromResult(byId.GetValueOrDefault(id));
+        Task.FromResult(_byId.GetValueOrDefault(id));
 
     public Task AddAsync(GoogleCalendarConnection connection, CancellationToken ct = default)
     {
-        byId[connection.Id] = connection;
-        byUser[connection.UserId] = connection;
+        _byId[connection.Id] = connection;
+        _byUser[connection.UserId] = connection;
         return Task.CompletedTask;
     }
 
     public Task<IReadOnlyList<GoogleCalendarConnection>> ListActiveForWorkspaceAsync(
         WorkspaceId workspaceId, CancellationToken ct = default)
     {
-        IReadOnlyList<GoogleCalendarConnection> rows = byId.Values
+        IReadOnlyList<GoogleCalendarConnection> rows = _byId.Values
             .Where(c => c.WorkspaceId == workspaceId && c.IsActive)
             .ToList();
         return Task.FromResult(rows);
@@ -1007,8 +1001,8 @@ public sealed class InMemoryGoogleCalendarConnectionRepository : IGoogleCalendar
 
     public Task UpdateAsync(GoogleCalendarConnection connection, CancellationToken ct = default)
     {
-        byId[connection.Id] = connection;
-        byUser[connection.UserId] = connection;
+        _byId[connection.Id] = connection;
+        _byUser[connection.UserId] = connection;
         return Task.CompletedTask;
     }
 }

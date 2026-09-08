@@ -323,11 +323,8 @@ public sealed record RecordedCall(
     int? StatusCode,
     string? Failure);
 
-public sealed class RecordingHandler : DelegatingHandler
+public sealed class RecordingHandler(RecordingSink sink) : DelegatingHandler
 {
-    private readonly RecordingSink sink;
-    public RecordingHandler(RecordingSink sink) => this.sink = sink;
-
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request, CancellationToken cancellationToken)
     {

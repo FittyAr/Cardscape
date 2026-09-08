@@ -53,10 +53,10 @@ public sealed class LocalFileStorageServiceTests
 
     private sealed class ControlledCopyStream : MemoryStream
     {
-        private readonly byte[] bytes;
-        private readonly Action? duringCopy;
-        private readonly bool failAfterWrite;
-        private readonly bool cancel;
+        private readonly byte[] _bytes;
+        private readonly Action? _duringCopy;
+        private readonly bool _failAfterWrite;
+        private readonly bool _cancel;
 
         public ControlledCopyStream(
             byte[] bytes,
@@ -65,10 +65,10 @@ public sealed class LocalFileStorageServiceTests
             bool cancel = false)
             : base(bytes)
         {
-            this.bytes = bytes;
-            this.duringCopy = duringCopy;
-            this.failAfterWrite = failAfterWrite;
-            this.cancel = cancel;
+            _bytes = bytes;
+            _duringCopy = duringCopy;
+            _failAfterWrite = failAfterWrite;
+            _cancel = cancel;
         }
 
         public override async Task CopyToAsync(
@@ -76,12 +76,12 @@ public sealed class LocalFileStorageServiceTests
             int bufferSize,
             CancellationToken cancellationToken)
         {
-            duringCopy?.Invoke();
-            await destination.WriteAsync(bytes, cancellationToken);
-            duringCopy?.Invoke();
-            if (failAfterWrite)
+            _duringCopy?.Invoke();
+            await destination.WriteAsync(_bytes, cancellationToken);
+            _duringCopy?.Invoke();
+            if (_failAfterWrite)
             {
-                if (cancel)
+                if (_cancel)
                 {
                     throw new OperationCanceledException();
                 }
