@@ -101,8 +101,8 @@ else
                                   Icon="content_copy"
                                   ButtonStyle="ButtonStyle.Light"
                                   Click="@OpenMirrorDialogAsync"
-                                  Disabled="@mirroring"
-                                  IsBusy="@mirroring"
+                                  Disabled="@_mirroring"
+                                  IsBusy="@_mirroring"
                                   title="@L["MirrorToTitle"]" />
                     <RadzenButton Text="@(voteState is { CurrentUserHasVoted: true } ? " " : " ")"
                                   ButtonStyle="@(voteState is { CurrentUserHasVoted: true } ? ButtonStyle.Danger : ButtonStyle.Light)"

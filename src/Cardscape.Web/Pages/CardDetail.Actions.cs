@@ -181,11 +181,11 @@ public partial class CardDetail
     // P3.3 / G6c ” open the "Mirror to..." dialog and, on
     // confirm, call the mirror endpoint. The dialog returns the
     // target list id; the card id is the page's [Parameter].
-    private bool mirroring;
+    private bool _mirroring;
 
     private async Task OpenMirrorDialogAsync()
     {
-        if (mirroring) return;
+        if (_mirroring) return;
 
         object? result = await DialogService.OpenAsync<MirrorCardDialog>(
             L["MirrorToTitle"],
@@ -197,7 +197,7 @@ public partial class CardDetail
             return;
         }
 
-        mirroring = true;
+        _mirroring = true;
         try
         {
             ApiResult<MirrorCardResultDto> mirrorResult =
@@ -215,7 +215,7 @@ public partial class CardDetail
         }
         finally
         {
-            mirroring = false;
+            _mirroring = false;
         }
     }
 
@@ -224,4 +224,3 @@ public partial class CardDetail
         public string Body { get; set; } = string.Empty;
     }
 }
-
