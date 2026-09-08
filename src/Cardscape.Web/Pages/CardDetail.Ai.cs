@@ -120,7 +120,7 @@ public partial class CardDetail
 
     private async Task AssignSuggestedOwnerAsync(AiOwnerSuggestionDto suggestion)
     {
-        if (_aiBusy || card is null)
+        if (_aiBusy || _card is null)
         {
             return;
         }
@@ -131,7 +131,7 @@ public partial class CardDetail
             ApiResult<CardDto> result = await Cards.AssignAsync(CardId, suggestion.UserId);
             if (result.IsSuccess && result.Value is not null)
             {
-                card = result.Value;
+                _card = result.Value;
             }
 
             if (_aiSuggestedOwners is not null)

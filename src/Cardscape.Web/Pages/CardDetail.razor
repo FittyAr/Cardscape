@@ -23,9 +23,9 @@
 @inject IJSRuntime JS
 @implements IDisposable
 
-<PageTitle>@(card?.Title ?? "Card") — Cardscape</PageTitle>
+<PageTitle>@(_card?.Title ?? "Card") — Cardscape</PageTitle>
 
-@if (notFound)
+@if (_notFound)
 {
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
@@ -38,7 +38,7 @@
         </RadzenStack>
     </RadzenCard>
 }
-else if (card is null)
+else if (_card is null)
 {
     <RadzenText Text="Loading card…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
@@ -58,7 +58,7 @@ else
                 else
                 {
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenText Text="@card.Title" TextStyle="TextStyle.H5" TagName="TagName.H1" />
+                        <RadzenText Text="@_card.Title" TextStyle="TextStyle.H5" TagName="TagName.H1" />
                         <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
                                       Click="@StartEditingTitle" title="@L["CardEditTitle"]" />
                     </RadzenStack>
@@ -67,7 +67,7 @@ else
                    title only when the card carries an active snooze
                    (Until > now). The unsnooze affordance is a small
                    link so the user can flip the toggle in one click. *@
-                @if (card.IsSnoozed && card.SnoozeUntil is { } snoozeUntil)
+                @if (_card.IsSnoozed && _card.SnoozeUntil is { } snoozeUntil)
                 {
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                         <RadzenBadge BadgeStyle="BadgeStyle.Warning"
@@ -81,7 +81,7 @@ else
                     <RadzenButton Text="Back to board" Icon="arrow_back"
                                   ButtonStyle="ButtonStyle.Light"
                                   Click="@GoBackToBoard" />
-                    @if (card.IsCompleted)
+                    @if (_card.IsCompleted)
                     {
                         <RadzenButton Text="Reopen" ButtonStyle="ButtonStyle.Light" Click="@Reopen" />
                     }
@@ -89,7 +89,7 @@ else
                     {
                         <RadzenButton Text="Complete" ButtonStyle="ButtonStyle.Success" Click="@Complete" />
                     }
-                    <RadzenButton Text="@(card.IsArchived ? "Restore" : "Archive")"
+                    <RadzenButton Text="@(_card.IsArchived ? "Restore" : "Archive")"
                                   ButtonStyle="ButtonStyle.Warning" Click="@ToggleArchive" />
                     <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger"
                                   Click="@DeleteCard" />
@@ -123,20 +123,20 @@ else
                would let the user stash the card twice). The
                datetime picker defaults to "tomorrow 9am" so the
                common case is one click. *@
-            @if (!card.IsSnoozed)
+            @if (!_card.IsSnoozed)
             {
                 <RadzenCard Variant="Variant.Flat">
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                         <RadzenText Text="Snooze" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                        <RadzenDatePicker @bind-Value="snoozeUntilLocal"
+                        <RadzenDatePicker @bind-Value="_snoozeUntilLocal"
                                           ShowTime="true"
                                           DateFormat="yyyy-MM-dd HH:mm" />
                         <RadzenButton Text="Snooze until…"
                                       Icon="schedule"
                                       ButtonStyle="ButtonStyle.Secondary"
                                       Click="@SnoozeAsync"
-                                      Disabled="@snoozing"
-                                      IsBusy="@snoozing" />
+                                      Disabled="@_snoozing"
+                                      IsBusy="@_snoozing" />
                     </RadzenStack>
                 </RadzenCard>
             }
@@ -202,7 +202,7 @@ else
                 }
                 else
                 {
-                    <RadzenText Text="@(string.IsNullOrWhiteSpace(card.Description) ? L["DescriptionEmpty"] : card.Description)"
+                    <RadzenText Text="@(string.IsNullOrWhiteSpace(_card.Description) ? L["DescriptionEmpty"] : _card.Description)"
                                 TextStyle="TextStyle.Body1" Style="white-space: pre-wrap" />
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                                  Wrap="FlexWrap.Wrap">
@@ -270,7 +270,7 @@ else
                 }
             </RadzenStack>
 
-            @if (fieldValues is not null && fieldValues.Count > 0)
+            @if (_fieldValues is not null && _fieldValues.Count > 0)
             {
                 <RadzenStack Gap="0.5rem">
                     <RadzenText Text="Custom fields" TextStyle="TextStyle.H6" TagName="TagName.H3" />
@@ -428,18 +428,18 @@ else
 
             <RadzenStack Gap="0.5rem">
                 <RadzenText Text="Activity" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @if (recentActivity is null)
+                @if (_recentActivity is null)
                 {
                     <RadzenText Text="Loading activity…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
-                else if (recentActivity.Count == 0)
+                else if (_recentActivity.Count == 0)
                 {
                     <RadzenText Text="No activity recorded for this card yet." TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
                 else
                 {
                     <RadzenStack Gap="0.25rem">
-                        @foreach (ActivityDto a in recentActivity)
+                        @foreach (ActivityDto a in _recentActivity)
                         {
                             // BETA-8-UI-#13 — see test-results/r8/r8-report.md.
                             // The backend now joins the actor's

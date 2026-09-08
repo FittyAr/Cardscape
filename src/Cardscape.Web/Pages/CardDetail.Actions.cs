@@ -35,25 +35,25 @@ public partial class CardDetail
 
     private async Task Complete()
     {
-        if (card is null) return;
+        if (_card is null) return;
         ApiResult<CardDto> result = await Cards.CompleteAsync(CardId);
-        if (result.IsSuccess) card = result.Value;
+        if (result.IsSuccess) _card = result.Value;
     }
 
     private async Task Reopen()
     {
-        if (card is null) return;
+        if (_card is null) return;
         ApiResult<CardDto> result = await Cards.ReopenAsync(CardId);
-        if (result.IsSuccess) card = result.Value;
+        if (result.IsSuccess) _card = result.Value;
     }
 
     private async Task ToggleArchive()
     {
-        if (card is null) return;
-        ApiResult<CardDto> result = card.IsArchived
+        if (_card is null) return;
+        ApiResult<CardDto> result = _card.IsArchived
             ? await Cards.RestoreAsync(CardId)
             : await Cards.ArchiveAsync(CardId);
-        if (result.IsSuccess) card = result.Value;
+        if (result.IsSuccess) _card = result.Value;
     }
 
     // BETA-6-#7 — see test-results/BETA-TEST-REPORT.md.
@@ -73,13 +73,13 @@ public partial class CardDetail
     // the wrong button doesn't drop a card.
     private async Task DeleteCard()
     {
-        if (card is null)
+        if (_card is null)
         {
             return;
         }
 
         bool confirmed = await DialogService.Confirm(
-            $"Delete card \"{card.Title}\"? This cannot be undone.",
+            $"Delete card \"{_card.Title}\"? This cannot be undone.",
             "Delete card",
             new ConfirmOptions
             {
@@ -104,18 +104,18 @@ public partial class CardDetail
 
     private async Task SnoozeAsync()
     {
-        if (snoozing || card is null) return;
-        if (snoozeUntilLocal <= DateTimeOffset.Now)
+        if (_snoozing || _card is null) return;
+        if (_snoozeUntilLocal <= DateTimeOffset.Now)
         {
             // The backend enforces this too, but failing fast
             // here keeps the user from clicking through a 400.
             return;
         }
 
-        snoozing = true;
+        _snoozing = true;
         try
         {
-            ApiResult<DateTimeOffset> result = await Cards.SnoozeAsync(CardId, snoozeUntilLocal);
+            ApiResult<DateTimeOffset> result = await Cards.SnoozeAsync(CardId, _snoozeUntilLocal);
             if (result.IsSuccess)
             {
                 // Refresh the card so the badge in the header
@@ -125,14 +125,14 @@ public partial class CardDetail
         }
         finally
         {
-            snoozing = false;
+            _snoozing = false;
         }
     }
 
     private async Task UnsnoozeAsync()
     {
-        if (snoozing || card is null) return;
-        snoozing = true;
+        if (_snoozing || _card is null) return;
+        _snoozing = true;
         try
         {
             ApiResult result = await Cards.UnsnoozeAsync(CardId);
@@ -143,7 +143,7 @@ public partial class CardDetail
         }
         finally
         {
-            snoozing = false;
+            _snoozing = false;
         }
     }
 
@@ -155,7 +155,7 @@ public partial class CardDetail
         ApiResult<CardDto> refreshed = await Cards.GetAsync(CardId);
         if (refreshed.IsSuccess && refreshed.Value is not null)
         {
-            card = refreshed.Value;
+            _card = refreshed.Value;
         }
     }
 

@@ -39,14 +39,14 @@ public partial class CardDetail
 
     private void GoBackToBoard() => Nav.NavigateTo(BackToBoardHref);
 
-    private CardDto? card;
-    private bool notFound;
+    private CardDto? _card;
+    private bool _notFound;
     private bool _editingTitle;
     private string _editingTitleValue = string.Empty;
     private CancellationTokenSource? _titleCts;
     private IReadOnlyList<CommentDto>? _comments;
-    private IReadOnlyList<CustomFieldValueDto>? fieldValues;
-    private IReadOnlyList<ActivityDto>? recentActivity;
+    private IReadOnlyList<CustomFieldValueDto>? _fieldValues;
+    private IReadOnlyList<ActivityDto>? _recentActivity;
     private CardVoteStateDto? _voteState;
     private IReadOnlyList<ChecklistDto>? _checklists;
     private string _newChecklistTitle = string.Empty;
@@ -56,7 +56,7 @@ public partial class CardDetail
     private bool _addingComment;
     private bool _togglingVote;
     private bool _aiBusy;
-    private bool snoozing;
+    private bool _snoozing;
     private string? _aiGeneratedDescription;
     private string? _aiSummary;
     // BUG-A5-002 — attachments list / upload / download state.
@@ -73,7 +73,7 @@ public partial class CardDetail
     // across re-renders within the same session). Named
     // `snoozeUntilLocal` to avoid clashing with the
     // `CardDto.SnoozeUntil` property in the markup.
-    private DateTimeOffset snoozeUntilLocal = DateTimeOffset.Now.AddDays(1)
+    private DateTimeOffset _snoozeUntilLocal = DateTimeOffset.Now.AddDays(1)
         .Date.AddHours(9);
 
     // P3.4 / MetadataList adapters ” translate the card projection
@@ -81,29 +81,29 @@ public partial class CardDetail
     // <MetadataList> shared component expects. The Members row
     // needs a custom RenderFragment because the AI "Suggest owners"
     // button lives next to the count; the other rows are plain text.
-    private IReadOnlyList<MetadataListItem> CardMetaItems => card is null
+    private IReadOnlyList<MetadataListItem> CardMetaItems => _card is null
         ? Array.Empty<MetadataListItem>()
         : new MetadataListItem[]
         {
             MetadataListItem.Text("Due date",
-                card.DueDate is null
+                _card.DueDate is null
                     ? "none"
-                    : card.DueDate.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture)),
-            new("Members", MakeMembersValueFragment(card)),
-            MetadataListItem.Text("Labels", card.LabelCount.ToString(CultureInfo.CurrentCulture)),
+                    : _card.DueDate.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture)),
+            new("Members", MakeMembersValueFragment(_card)),
+            MetadataListItem.Text("Labels", _card.LabelCount.ToString(CultureInfo.CurrentCulture)),
             // BUG-A5-003 — see test-results/beta/reports/A5-card-extras.md.
             // The header now surfaces comment / attachment /
             // checklist counts alongside the existing member /
             // label counts so the user can see at a glance which
             // cards carry attachments or open discussions.
-            MetadataListItem.Text("Comments", card.CommentCount.ToString(CultureInfo.CurrentCulture)),
-            MetadataListItem.Text("Attachments", card.AttachmentCount.ToString(CultureInfo.CurrentCulture)),
-            MetadataListItem.Text("Checklists", card.ChecklistCount.ToString(CultureInfo.CurrentCulture))
+            MetadataListItem.Text("Comments", _card.CommentCount.ToString(CultureInfo.CurrentCulture)),
+            MetadataListItem.Text("Attachments", _card.AttachmentCount.ToString(CultureInfo.CurrentCulture)),
+            MetadataListItem.Text("Checklists", _card.ChecklistCount.ToString(CultureInfo.CurrentCulture))
         };
 
-    private IReadOnlyList<MetadataListItem> CustomFieldItems => fieldValues is null
+    private IReadOnlyList<MetadataListItem> CustomFieldItems => _fieldValues is null
         ? Array.Empty<MetadataListItem>()
-        : fieldValues
+        : _fieldValues
             .Select(v => MetadataListItem.Text(FieldKindLabel(v.Kind), FormatFieldValue(v)))
             .ToList();
 
@@ -140,8 +140,8 @@ public partial class CardDetail
         ApiResult<CardDto> cardResult = await Cards.GetAsync(CardId);
         if (cardResult.IsSuccess)
         {
-            card = cardResult.Value;
-            notFound = false;
+            _card = cardResult.Value;
+            _notFound = false;
         }
         else
         {
@@ -149,8 +149,8 @@ public partial class CardDetail
             // "not found" for the page — we do not want to leak the
             // difference to a deep-linked user who has no business
             // knowing the card exists. BETA-8-UI-#5.
-            card = null;
-            notFound = true;
+            _card = null;
+            _notFound = true;
         }
 
         ApiResult<IReadOnlyList<CommentDto>> commentsResult = await Comments.ListForCardAsync(CardId);
@@ -158,11 +158,11 @@ public partial class CardDetail
 
         ApiResult<IReadOnlyList<CustomFieldValueDto>> valuesResult =
             await CustomFields.ListValuesForCardAsync(CardId);
-        fieldValues = valuesResult.IsSuccess ? valuesResult.Value : [];
+        _fieldValues = valuesResult.IsSuccess ? valuesResult.Value : [];
 
         ApiResult<ActivityPageDto> activityResult =
             await Activities.ListForCardAsync(CardId, cursor: null, limit: 20);
-        recentActivity = activityResult.IsSuccess ? activityResult.Value?.Items : [];
+        _recentActivity = activityResult.IsSuccess ? activityResult.Value?.Items : [];
 
         ApiResult<CardVoteStateDto> voteResult = await Votes.GetStateAsync(CardId);
         _voteState = voteResult.IsSuccess ? voteResult.Value : null;
@@ -182,11 +182,11 @@ public partial class CardDetail
 
     private void StartEditingTitle()
     {
-        if (card is null)
+        if (_card is null)
         {
             return;
         }
-        _editingTitleValue = card.Title;
+        _editingTitleValue = _card.Title;
         _editingTitle = true;
     }
 
@@ -199,17 +199,17 @@ public partial class CardDetail
 
     private void StartEditingDescription()
     {
-        if (card is null)
+        if (_card is null)
         {
             return;
         }
-        _editingDescriptionValue = card.Description ?? string.Empty;
+        _editingDescriptionValue = _card.Description ?? string.Empty;
         _editingDescription = true;
     }
 
     private async Task SaveDescriptionAsync()
     {
-        if (!_editingDescription || card is null || _savingDescription)
+        if (!_editingDescription || _card is null || _savingDescription)
         {
             return;
         }
@@ -227,7 +227,7 @@ public partial class CardDetail
                 CardId, value);
             if (result.IsSuccess && result.Value is not null)
             {
-                card = result.Value;
+                _card = result.Value;
             }
             _editingDescription = false;
         }
@@ -251,12 +251,12 @@ public partial class CardDetail
 
     private async Task SaveTitleAsync()
     {
-        if (!_editingTitle || card is null)
+        if (!_editingTitle || _card is null)
         {
             return;
         }
         string newTitle = (_editingTitleValue ?? string.Empty).Trim();
-        if (string.IsNullOrEmpty(newTitle) || newTitle == card.Title)
+        if (string.IsNullOrEmpty(newTitle) || newTitle == _card.Title)
         {
             _editingTitle = false;
             return;
@@ -267,7 +267,7 @@ public partial class CardDetail
         ApiResult<CardDto> result = await Cards.RenameAsync(CardId, newTitle, _titleCts.Token);
         if (result.IsSuccess && result.Value is not null)
         {
-            card = result.Value;
+            _card = result.Value;
         }
         _editingTitle = false;
     }
