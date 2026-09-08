@@ -90,9 +90,9 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
     /// re-entry is contained to the synchronous call
     /// tree of the original user action.
     /// </summary>
-    private static readonly AsyncLocal<bool> _inAutomationBroadcast = new();
+    private static readonly AsyncLocal<bool> AutomationBroadcastState = new();
 
-    private static bool InAutomationBroadcast => _inAutomationBroadcast.Value;
+    private static bool InAutomationBroadcast => AutomationBroadcastState.Value;
 
     private async Task HandleCardCreated(CardCreated @event, CancellationToken ct)
     {
@@ -146,8 +146,8 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
         // is reset when this method returns (after the
         // matching rule's SaveChanges), so a subsequent
         // user-originated event flows normally.
-        bool previous = _inAutomationBroadcast.Value;
-        _inAutomationBroadcast.Value = true;
+        bool previous = AutomationBroadcastState.Value;
+        AutomationBroadcastState.Value = true;
         try
         {
             using IServiceScope scope = _scopeFactory.CreateScope();
@@ -191,7 +191,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
             // BETA-A7-R2-001 — restore the prior flag so a
             // sibling call from a different request isn't
             // poisoned by our re-entry.
-            _inAutomationBroadcast.Value = previous;
+            AutomationBroadcastState.Value = previous;
         }
     }
 
