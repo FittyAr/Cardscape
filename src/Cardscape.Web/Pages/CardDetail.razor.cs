@@ -41,9 +41,9 @@ public partial class CardDetail
 
     private CardDto? card;
     private bool notFound;
-    private bool editingTitle;
-    private string editingTitleValue = string.Empty;
-    private CancellationTokenSource? titleCts;
+    private bool _editingTitle;
+    private string _editingTitleValue = string.Empty;
+    private CancellationTokenSource? _titleCts;
     private IReadOnlyList<CommentDto>? comments;
     private IReadOnlyList<CustomFieldValueDto>? fieldValues;
     private IReadOnlyList<ActivityDto>? recentActivity;
@@ -186,16 +186,16 @@ public partial class CardDetail
         {
             return;
         }
-        editingTitleValue = card.Title;
-        editingTitle = true;
+        _editingTitleValue = card.Title;
+        _editingTitle = true;
     }
 
     // BETA-8-UI-#15 - manual description editor. The state lives
     // on the page so a Cancel does not lose the original value
     // until the user clicks Edit again.
-    private bool editingDescription;
-    private string editingDescriptionValue = string.Empty;
-    private bool savingDescription;
+    private bool _editingDescription;
+    private string _editingDescriptionValue = string.Empty;
+    private bool _savingDescription;
 
     private void StartEditingDescription()
     {
@@ -203,17 +203,17 @@ public partial class CardDetail
         {
             return;
         }
-        editingDescriptionValue = card.Description ?? string.Empty;
-        editingDescription = true;
+        _editingDescriptionValue = card.Description ?? string.Empty;
+        _editingDescription = true;
     }
 
     private async Task SaveDescriptionAsync()
     {
-        if (!editingDescription || card is null || savingDescription)
+        if (!_editingDescription || card is null || _savingDescription)
         {
             return;
         }
-        savingDescription = true;
+        _savingDescription = true;
         try
         {
             // BUG-A4-005 — read the value through the form's
@@ -222,18 +222,18 @@ public partial class CardDetail
             // handler runs the Data parameter is guaranteed to
             // reflect what the user typed, even if the click
             // happened before the textarea blurred.
-            string value = editingDescriptionValue ?? string.Empty;
+            string value = _editingDescriptionValue ?? string.Empty;
             ApiResult<CardDto> result = await Cards.ChangeDescriptionAsync(
                 CardId, value);
             if (result.IsSuccess && result.Value is not null)
             {
                 card = result.Value;
             }
-            editingDescription = false;
+            _editingDescription = false;
         }
         finally
         {
-            savingDescription = false;
+            _savingDescription = false;
         }
     }
 
@@ -245,38 +245,38 @@ public partial class CardDetail
         }
         else if (string.Equals(args.Key, "Escape", StringComparison.Ordinal))
         {
-            editingTitle = false;
+            _editingTitle = false;
         }
     }
 
     private async Task SaveTitleAsync()
     {
-        if (!editingTitle || card is null)
+        if (!_editingTitle || card is null)
         {
             return;
         }
-        string newTitle = (editingTitleValue ?? string.Empty).Trim();
+        string newTitle = (_editingTitleValue ?? string.Empty).Trim();
         if (string.IsNullOrEmpty(newTitle) || newTitle == card.Title)
         {
-            editingTitle = false;
+            _editingTitle = false;
             return;
         }
-        titleCts?.Cancel();
-        titleCts?.Dispose();
-        titleCts = new CancellationTokenSource();
-        ApiResult<CardDto> result = await Cards.RenameAsync(CardId, newTitle, titleCts.Token);
+        _titleCts?.Cancel();
+        _titleCts?.Dispose();
+        _titleCts = new CancellationTokenSource();
+        ApiResult<CardDto> result = await Cards.RenameAsync(CardId, newTitle, _titleCts.Token);
         if (result.IsSuccess && result.Value is not null)
         {
             card = result.Value;
         }
-        editingTitle = false;
+        _editingTitle = false;
     }
 
     public void Dispose()
     {
-        titleCts?.Cancel();
-        titleCts?.Dispose();
-        titleCts = null;
+        _titleCts?.Cancel();
+        _titleCts?.Dispose();
+        _titleCts = null;
         GC.SuppressFinalize(this);
     }
 }

@@ -47,9 +47,9 @@ else
     <RadzenCard>
         <RadzenStack Gap="1rem">
             <RadzenStack Gap="0.5rem">
-                @if (editingTitle)
+                @if (_editingTitle)
                 {
-                    <RadzenTextBox @bind-Value="editingTitleValue"
+                    <RadzenTextBox @bind-Value="_editingTitleValue"
                                    Style="font-size: 1.5rem; font-weight: 600; width: 100%"
                                    autofocus
                                    @onkeydown="@HandleTitleKeyDown"
@@ -176,7 +176,7 @@ else
                    client since v1.0.0; this just wires the
                    editor so the field isn't read-only without
                    an AI round-trip. *@
-                @if (editingDescription)
+                @if (_editingDescription)
                 {
                     @* BUG-A4-005 — see test-results/beta/reports/A4-cards-lists.md.
                        Radzen's TextArea @bind-Value uses oninput semantics, so
@@ -186,17 +186,17 @@ else
                        with an explicit Submit button guarantees the value
                        is committed before the handler runs, the same way
                        the BETA-8-UI-#17 add-list / add-card forms do. *@
-                    <RadzenTemplateForm TItem="string" Data="@editingDescriptionValue" Submit="@SaveDescriptionAsync">
-                        <RadzenTextArea @bind-Value="editingDescriptionValue" Name="description-editor"
+                    <RadzenTemplateForm TItem="string" Data="@_editingDescriptionValue" Submit="@SaveDescriptionAsync">
+                        <RadzenTextArea @bind-Value="_editingDescriptionValue" Name="description-editor"
                                         Rows="4" Style="width:100%" Placeholder="@L["DescriptionEmpty"]" />
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Class="rz-mt-2">
                             <RadzenButton Text="@L["DescriptionSave"]" Icon="check"
                                           ButtonType="ButtonType.Submit"
                                           ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
-                                          IsBusy="@savingDescription" />
+                                          IsBusy="@_savingDescription" />
                             <RadzenButton Text="@L["DescriptionCancel"]" ButtonStyle="ButtonStyle.Light"
                                           Size="ButtonSize.Small"
-                                          Click="@(() => editingDescription = false)" />
+                                          Click="@(() => _editingDescription = false)" />
                         </RadzenStack>
                     </RadzenTemplateForm>
                 }
