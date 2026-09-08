@@ -60,8 +60,8 @@ public partial class CardDetail
     private string? _aiGeneratedDescription;
     private string? _aiSummary;
     // BUG-A5-002 — attachments list / upload / download state.
-    private IReadOnlyList<AttachmentDto>? attachments;
-    private bool uploadingAttachment;
+    private IReadOnlyList<AttachmentDto>? _attachments;
+    private bool _uploadingAttachment;
     private IReadOnlyList<AiOwnerSuggestionDto>? _aiSuggestedOwners;
     private readonly AddCommentModel _addCommentModel = new();
 
@@ -177,7 +177,7 @@ public partial class CardDetail
         // rest of the card data so the section is ready when
         // the user scrolls to it.
         ApiResult<IReadOnlyList<AttachmentDto>> attachmentsResult = await Attachments.ListAsync(CardId);
-        attachments = attachmentsResult.IsSuccess ? attachmentsResult.Value : [];
+        _attachments = attachmentsResult.IsSuccess ? attachmentsResult.Value : [];
     }
 
     private void StartEditingTitle()

@@ -4,7 +4,6 @@ using Cardscape.Web.Services;
 using Cardscape.Web.Services.Api;
 using Cardscape.Web.Shared;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
@@ -79,25 +78,26 @@ public partial class CardDetail
     // download triggers a browser save via JS interop. Both
     // re-fetch the list on success so the UI stays in lockstep
     // with the server.
-    private async Task OnAttachmentSelected(InputFileChangeEventArgs e)
+    private async Task OnAttachmentSelected(UploadChangeEventArgs e)
     {
-        if (uploadingAttachment) return;
-        IBrowserFile file = e.File;
+        if (_uploadingAttachment) return;
+        Radzen.FileInfo? file = e.Files?.FirstOrDefault();
+        if (file is null) return;
         if (file.Size <= 0) return;
-        uploadingAttachment = true;
+        _uploadingAttachment = true;
         try
         {
             await using Stream stream = file.OpenReadStream(maxAllowedSize: 25L * 1024L * 1024L);
             ApiResult<AttachmentDto> result = await Attachments.UploadAsync(
                 CardId, stream, file.Name, file.ContentType ?? "application/octet-stream");
-            if (result.IsSuccess && attachments is not null)
+            if (result.IsSuccess && _attachments is not null)
             {
-                attachments = [.. attachments, result.Value!];
+                _attachments = [.. _attachments, result.Value!];
             }
         }
         finally
         {
-            uploadingAttachment = false;
+            _uploadingAttachment = false;
         }
     }
 
@@ -118,9 +118,9 @@ public partial class CardDetail
     private async Task DeleteAttachmentAsync(AttachmentDto attachment)
     {
         ApiResult<bool> result = await Attachments.DeleteAsync(CardId, attachment.Id);
-        if (result.IsSuccess && attachments is not null)
+        if (result.IsSuccess && _attachments is not null)
         {
-            attachments = attachments.Where(a => a.Id != attachment.Id).ToList();
+            _attachments = _attachments.Where(a => a.Id != attachment.Id).ToList();
         }
     }
 
@@ -131,4 +131,3 @@ public partial class CardDetail
         return $"{bytes / (1024.0 * 1024.0):0.0} MB";
     }
 }
-

@@ -232,18 +232,19 @@ else
                 <RadzenText Text="Attachments" TextStyle="TextStyle.H6" TagName="TagName.H3" />
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                              Wrap="FlexWrap.Wrap">
-                    <InputFile OnChange="@OnAttachmentSelected" accept="*/*" disabled="@uploadingAttachment" />
-                    @if (uploadingAttachment)
+                    <RadzenUpload Change="@OnAttachmentSelected" Accept="*/*" Auto="false" Multiple="false"
+                                  Disabled="@_uploadingAttachment" ChooseText="Choose attachment" />
+                    @if (_uploadingAttachment)
                     {
                         <RadzenProgressBarCircular ProgressBarType="ProgressBarType.Indeterminate"
                                                    Size="ProgressBarCircularSize.Small" />
                     }
                 </RadzenStack>
-                @if (attachments is null)
+                @if (_attachments is null)
                 {
                     <RadzenText Text="Loading…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
-                else if (attachments.Count == 0)
+                else if (_attachments.Count == 0)
                 {
                     <RadzenText Text="No attachments yet." TextStyle="TextStyle.Body2"
                                 class="rz-color-text-secondary" />
@@ -251,7 +252,7 @@ else
                 else
                 {
                     <RadzenStack Gap="0.25rem">
-                        @foreach (AttachmentDto attachment in attachments)
+                        @foreach (AttachmentDto attachment in _attachments)
                         {
                             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
                                          Gap="0.5rem" Wrap="FlexWrap.Wrap">
