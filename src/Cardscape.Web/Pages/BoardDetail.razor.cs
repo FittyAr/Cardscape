@@ -13,17 +13,17 @@ public partial class BoardDetail
 
     [Inject] private NavigationManager Nav { get; set; } = default!;
 
-    private IReadOnlyList<KanbanColumn<CardSummaryDto>>? KanbanColumns => lists?.Select(l =>
-        new KanbanColumn<CardSummaryDto>(l.Id.ToString(), l.Name, cardsByList.GetValueOrDefault(l.Id, []))
+    private IReadOnlyList<KanbanColumn<CardSummaryDto>>? KanbanColumns => _lists?.Select(l =>
+        new KanbanColumn<CardSummaryDto>(l.Id.ToString(), l.Name, _cardsByList.GetValueOrDefault(l.Id, []))
     ).ToList();
 
-    private BoardDto? board;
-    private IReadOnlyList<BoardListDto>? lists;
-    private Dictionary<Guid, IReadOnlyList<CardSummaryDto>> cardsByList = new();
+    private BoardDto? _board;
+    private IReadOnlyList<BoardListDto>? _lists;
+    private Dictionary<Guid, IReadOnlyList<CardSummaryDto>> _cardsByList = new();
     private bool _showAddList;
     private bool _addingList;
     private readonly AddListModel _addListModel = new();
-    private bool hubConnected;
+    private bool _hubConnected;
 
     // BETA-6-#6 — board settings panel state.
     private bool _showSettings;
@@ -40,45 +40,45 @@ public partial class BoardDetail
     // hidden unless the caller asks for them via
     // ?includeSnoozed=true). Flipping the button re-fetches
     // the board cards with the new flag.
-    private bool showSnoozed;
-    private bool togglingSnoozed;
+    private bool _showSnoozed;
+    private bool _togglingSnoozed;
 
     // Card aging: the board-scoped CardAging extension stores the
     // chosen mode in its ConfigJson. We fetch it once with the rest
     // of the board data and apply the opacity in the card template.
     private const BoardExtensionKind CardAgingKind = BoardExtensionKind.CardAging;
-    private CardAgingMode agingMode = CardAgingMode.Disabled;
-    private DateTimeOffset now = DateTimeOffset.UtcNow;
+    private CardAgingMode _agingMode = CardAgingMode.Disabled;
+    private DateTimeOffset _now = DateTimeOffset.UtcNow;
 
-    private Guid lastSubscribedBoardId;
+    private Guid _lastSubscribedBoardId;
 
     protected override async Task OnParametersSetAsync()
     {
         ApiResult<BoardDto> boardResult = await BoardsApi.GetAsync(BoardId);
-        board = boardResult.IsSuccess ? boardResult.Value : null;
+        _board = boardResult.IsSuccess ? boardResult.Value : null;
 
         await ReloadListsAndCardsAsync();
         await ReloadAgingModeAsync();
 
-        if (lastSubscribedBoardId != BoardId)
+        if (_lastSubscribedBoardId != BoardId)
         {
             // BETA-8-UI-#4 - see test-results/r8/r8-report.md.
             // Reset the hub-subscription guard when the user
             // navigates to a different board; the unsubscribe
             // block in Dispose() handles the previous board.
-            subscribedToHub = false;
+            _subscribedToHub = false;
             await SubscribeToHubAsync();
-            lastSubscribedBoardId = BoardId;
+            _lastSubscribedBoardId = BoardId;
         }
     }
 
     private async Task SubscribeToHubAsync()
     {
-        if (subscribedToHub)
+        if (_subscribedToHub)
         {
             return;
         }
-        subscribedToHub = true;
+        _subscribedToHub = true;
         try
         {
             HubClient.CardCreated += OnHubCardCreated;
@@ -92,11 +92,11 @@ public partial class BoardDetail
 
             await HubClient.StartAsync();
             await HubClient.JoinBoardAsync(BoardId);
-            hubConnected = HubClient.IsConnected;
+            _hubConnected = HubClient.IsConnected;
         }
         catch
         {
-            hubConnected = false;
+            _hubConnected = false;
         }
     }
 
@@ -150,12 +150,12 @@ public partial class BoardDetail
         GC.SuppressFinalize(this);
     }
 
-    private bool subscribedToHub;
+    private bool _subscribedToHub;
 
     private async Task ReloadListsAndCardsAsync()
     {
         ApiResult<IReadOnlyList<BoardListDto>> listsResult = await ListsApi.ListForBoardAsync(BoardId);
-        lists = listsResult.IsSuccess ? listsResult.Value : [];
+        _lists = listsResult.IsSuccess ? listsResult.Value : [];
 
         // BETA-7-#12 / BETA-8-UI-#4 - see test-results/BETA-TEST-REPORT.md
         // and test-results/r8/r8-report.md.
@@ -174,7 +174,7 @@ public partial class BoardDetail
         // and gate the hub subscription so it happens exactly once
         // for the component's lifetime.
         ApiResult<IReadOnlyList<CardSummaryDto>> cardsResult = await CardsApi.ListForBoardAsync(
-            BoardId, includeArchived: false, includeSnoozed: showSnoozed);
+            BoardId, includeArchived: false, includeSnoozed: _showSnoozed);
         Dictionary<Guid, IReadOnlyList<CardSummaryDto>> next = new();
         if (cardsResult.IsSuccess && cardsResult.Value is not null)
         {
@@ -200,6 +200,6 @@ public partial class BoardDetail
                 next[kv.Key] = kv.Value;
             }
         }
-        cardsByList = next;
+        _cardsByList = next;
     }
 }

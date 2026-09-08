@@ -11,28 +11,28 @@ public partial class BoardDetail
 {
     private async Task ToggleSnoozedAsync()
     {
-        if (togglingSnoozed) return;
-        togglingSnoozed = true;
+        if (_togglingSnoozed) return;
+        _togglingSnoozed = true;
         try
         {
-            showSnoozed = !showSnoozed;
+            _showSnoozed = !_showSnoozed;
             await ReloadListsAndCardsAsync();
         }
         finally
         {
-            togglingSnoozed = false;
+            _togglingSnoozed = false;
         }
     }
 
     private async Task ToggleStar()
     {
-        if (board is null) return;
-        ApiResult<BoardDto> result = board.IsStarred
+        if (_board is null) return;
+        ApiResult<BoardDto> result = _board.IsStarred
             ? await BoardsApi.UnstarAsync(BoardId)
             : await BoardsApi.StarAsync(BoardId);
         if (result.IsSuccess)
         {
-            board = result.Value;
+            _board = result.Value;
         }
     }
 
@@ -66,7 +66,7 @@ public partial class BoardDetail
             ApiResult<BoardListDto> result = await ListsApi.CreateAsync(BoardId, _addListModel.Name);
             if (result.IsSuccess)
             {
-                lists = [.. (lists ?? Array.Empty<BoardListDto>()), result.Value!];
+                _lists = [.. (_lists ?? Array.Empty<BoardListDto>()), result.Value!];
                 _addListModel.Name = string.Empty;
                 _showAddList = false;
             }
@@ -168,7 +168,7 @@ public partial class BoardDetail
         ApiResult<BoardDto> result = await BoardsApi.RenameAsync(BoardId, _renameModel.NewName);
         if (result.IsSuccess)
         {
-            board = result.Value;
+            _board = result.Value;
             _renameModel.NewName = string.Empty;
         }
     }
@@ -180,7 +180,7 @@ public partial class BoardDetail
             BoardId, _descriptionModel.NewDescription);
         if (result.IsSuccess)
         {
-            board = result.Value;
+            _board = result.Value;
             _descriptionModel.NewDescription = string.Empty;
         }
     }
@@ -190,20 +190,20 @@ public partial class BoardDetail
         ApiResult<BoardDto> result = await BoardsApi.ChangeVisibilityAsync(BoardId, _newVisibility);
         if (result.IsSuccess)
         {
-            board = result.Value;
+            _board = result.Value;
         }
     }
 
     private async Task ArchiveBoard()
     {
         ApiResult<BoardDto> result = await BoardsApi.ArchiveAsync(BoardId);
-        if (result.IsSuccess) board = result.Value;
+        if (result.IsSuccess) _board = result.Value;
     }
 
     private async Task UnarchiveBoard()
     {
         ApiResult<BoardDto> result = await BoardsApi.UnarchiveAsync(BoardId);
-        if (result.IsSuccess) board = result.Value;
+        if (result.IsSuccess) _board = result.Value;
     }
 
     private sealed class RenameBoardModel { public string NewName { get; set; } = string.Empty; }

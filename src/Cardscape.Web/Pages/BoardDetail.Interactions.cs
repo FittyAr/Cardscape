@@ -72,16 +72,16 @@ public partial class BoardDetail
     // page never breaks for an unrelated API error.
     private async Task ReloadAgingModeAsync()
     {
-        now = DateTimeOffset.UtcNow;
+        _now = DateTimeOffset.UtcNow;
         ApiResult<IReadOnlyList<BoardExtensionDto>> result = await ExtensionsApi.ListAsync(BoardId);
         if (!result.IsSuccess)
         {
-            agingMode = CardAgingMode.Disabled;
+            _agingMode = CardAgingMode.Disabled;
             return;
         }
 
         BoardExtensionDto? match = result.Value?.FirstOrDefault(r => r.Kind == CardAgingKind);
-        agingMode = match is { IsEnabled: true }
+        _agingMode = match is { IsEnabled: true }
             ? ParseAgingMode(match.ConfigJson)
             : CardAgingMode.Disabled;
     }

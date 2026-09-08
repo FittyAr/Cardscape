@@ -11,20 +11,20 @@
 @inject DialogService DialogService
 @implements IAsyncDisposable
 
-<PageTitle>@(board?.Name ?? "Board") — Cardscape</PageTitle>
+<PageTitle>@(_board?.Name ?? "Board") — Cardscape</PageTitle>
 
-@if (board is null)
+@if (_board is null)
 {
     <RadzenText Text="Loading board…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else
 {
-    <PageHeader Title="@board.Name" Subtitle="@board.Description">
+    <PageHeader Title="@_board.Name" Subtitle="@_board.Description">
         <Actions>
-            <RadzenBadge BadgeStyle="@(hubConnected ? BadgeStyle.Success : BadgeStyle.Light)"
-                         Text="@(hubConnected ? "● Live" : "○ Offline")"
-                         title="@(hubConnected ? "Live updates on" : "Live updates off — refreshes on navigation only")" />
-            <RadzenButton Text="@(board.IsStarred ? "★ Starred" : "☆ Star")"
+            <RadzenBadge BadgeStyle="@(_hubConnected ? BadgeStyle.Success : BadgeStyle.Light)"
+                         Text="@(_hubConnected ? "● Live" : "○ Offline")"
+                         title="@(_hubConnected ? "Live updates on" : "Live updates off — refreshes on navigation only")" />
+            <RadzenButton Text="@(_board.IsStarred ? "★ Starred" : "☆ Star")"
                           ButtonStyle="ButtonStyle.Secondary"
                           Click="@ToggleStar" />
             <RadzenButton Text="Add list" Icon="add" ButtonStyle="ButtonStyle.Light"
@@ -106,7 +106,7 @@ else
                                     Change="@ChangeVisibility" Style="width:10rem" />
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                    @if (board.IsArchived)
+                    @if (_board.IsArchived)
                     {
                         <RadzenButton Text="Unarchive" Icon="unarchive" ButtonStyle="ButtonStyle.Warning"
                                       Click="@UnarchiveBoard" />
@@ -126,7 +126,7 @@ else
             @{
                 var column = context;
                 Guid listId = Guid.Parse(column.Id);
-                BoardListDto? listDto = lists?.FirstOrDefault(l => l.Id == listId);
+                BoardListDto? listDto = _lists?.FirstOrDefault(l => l.Id == listId);
             }
             @* BUG-A4-002 — see test-results/beta/reports/A4-cards-lists.md.
                The list API has supported rename / move / archive /
@@ -170,7 +170,7 @@ else
         <CardTemplate>
             @{
                 var card = context;
-                double opacity = ComputeCardOpacity(card, agingMode, now);
+                double opacity = ComputeCardOpacity(card, _agingMode, _now);
             }
             @* BETA-3-UI-#15 — see test-results/BETA-TEST-REPORT.md.
                The kanban card has both a mouse path (draggable=true
