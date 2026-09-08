@@ -17,15 +17,15 @@ namespace Cardscape.Api.Realtime;
 /// </summary>
 public sealed class CompositeBoardNotifier : IBoardNotifier
 {
-    private readonly IHubContext<BoardHub, IBoardClient> hub;
-    private readonly HttpMcpResourceNotifier mcpNotifier;
+    private readonly IHubContext<BoardHub, IBoardClient> _hub;
+    private readonly HttpMcpResourceNotifier _mcpNotifier;
 
     public CompositeBoardNotifier(
         IHubContext<BoardHub, IBoardClient> hub,
         HttpMcpResourceNotifier mcpNotifier)
     {
-        this.hub = hub;
-        this.mcpNotifier = mcpNotifier;
+        _hub = hub;
+        _mcpNotifier = mcpNotifier;
     }
 
     public async Task BroadcastAsync(
@@ -33,7 +33,7 @@ public sealed class CompositeBoardNotifier : IBoardNotifier
         Func<IBoardClient, Task> dispatch,
         CancellationToken ct = default)
     {
-        await dispatch(hub.Clients.Group($"board:{boardId:N}"));
-        await mcpNotifier.NotifyAsync(boardId, ct);
+        await dispatch(_hub.Clients.Group($"board:{boardId:N}"));
+        await _mcpNotifier.NotifyAsync(boardId, ct);
     }
 }
