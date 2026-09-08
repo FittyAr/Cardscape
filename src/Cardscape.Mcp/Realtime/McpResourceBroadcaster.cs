@@ -42,18 +42,18 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
     /// </summary>
     public const int MaxEventLogSize = 1000;
 
-    private readonly ILogger<McpResourceBroadcaster> logger;
-    private readonly ConcurrentDictionary<string, List<ResourceSubscription>> subscribers = new();
-    private readonly ConcurrentQueue<SubscriptionEvent> eventLog = new();
-    private readonly System.Threading.Lock gate = new();
-    private readonly IServiceScopeFactory scopeFactory;
+    private readonly ILogger<McpResourceBroadcaster> _logger;
+    private readonly ConcurrentDictionary<string, List<ResourceSubscription>> _subscribers = new();
+    private readonly ConcurrentQueue<SubscriptionEvent> _eventLog = new();
+    private readonly System.Threading.Lock _gate = new();
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public McpResourceBroadcaster(
         ILogger<McpResourceBroadcaster> logger,
         IServiceScopeFactory scopeFactory)
     {
-        this.logger = logger;
-        this.scopeFactory = scopeFactory;
+        _logger = logger;
+        _scopeFactory = scopeFactory;
     }
 
     /// <summary>
@@ -70,12 +70,12 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(server);
         ArgumentOutOfRangeException.ThrowIfEqual(userId, Guid.Empty);
 
-        lock (gate)
+        lock (_gate)
         {
-            if (!subscribers.TryGetValue(uri, out List<ResourceSubscription>? list))
+            if (!_subscribers.TryGetValue(uri, out List<ResourceSubscription>? list))
             {
                 list = [];
-                subscribers[uri] = list;
+                _subscribers[uri] = list;
             }
 
             if (!list.Any(subscription => ReferenceEquals(subscription.Server, server)))
@@ -96,9 +96,9 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(uri);
         ArgumentNullException.ThrowIfNull(server);
 
-        lock (gate)
+        lock (_gate)
         {
-            if (subscribers.TryGetValue(uri, out List<ResourceSubscription>? list))
+            if (_subscribers.TryGetValue(uri, out List<ResourceSubscription>? list))
             {
                 ResourceSubscription? subscription = list.FirstOrDefault(item =>
                     ReferenceEquals(item.Server, server));
@@ -114,7 +114,7 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
 
                 if (list.Count == 0)
                 {
-                    subscribers.TryRemove(uri, out _);
+                    _subscribers.TryRemove(uri, out _);
                 }
             }
         }
@@ -136,9 +136,9 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
         string uri = $"board://{boardId:N}";
 
         List<ResourceSubscription> targets;
-        lock (gate)
+        lock (_gate)
         {
-            if (!subscribers.TryGetValue(uri, out List<ResourceSubscription>? list) || list.Count == 0)
+            if (!_subscribers.TryGetValue(uri, out List<ResourceSubscription>? list) || list.Count == 0)
             {
                 RecordEvent(new SubscriptionEvent(
                     EventKind: SubscriptionEventKind.Broadcast,
@@ -154,7 +154,7 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
         var payload = new ResourceUpdatedNotificationParams { Uri = uri };
         int sent = 0;
         List<string> deadSessions = [];
-        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
+        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
         IBoardRepository boards = scope.ServiceProvider.GetRequiredService<IBoardRepository>();
         Dictionary<Guid, bool> accessByUser = [];
         foreach (ResourceSubscription subscription in targets)
@@ -192,7 +192,7 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
                 // of the fan-out. A closed transport will throw
                 // on SendNotificationAsync; we drop this
                 // subscriber and keep going.
-                logger.ResourceNotificationFailed(ex, uri);
+                _logger.ResourceNotificationFailed(ex, uri);
                 deadSessions.Add(GetSessionId(server));
                 Unsubscribe(uri, server);
             }
@@ -206,7 +206,7 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
             Detail: $"broadcast sent to {sent}/{targets.Count} subscribers" +
                 (deadSessions.Count > 0 ? $" ({deadSessions.Count} dropped: {string.Join(",", deadSessions)})" : string.Empty)));
 
-        logger.ResourceNotificationSent(uri, sent, targets.Count);
+        _logger.ResourceNotificationSent(uri, sent, targets.Count);
     }
 
     /// <summary>
@@ -222,14 +222,14 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
     public McpResourceBroadcasterSnapshot GetSnapshot()
     {
         Dictionary<string, IReadOnlyList<string>> snapshotSubscribers;
-        lock (gate)
+        lock (_gate)
         {
-            snapshotSubscribers = subscribers.ToDictionary(
+            snapshotSubscribers = _subscribers.ToDictionary(
                 kvp => kvp.Key,
                 kvp => (IReadOnlyList<string>)kvp.Value.Select(item => GetSessionId(item.Server)).ToList());
         }
 
-        IReadOnlyList<SubscriptionEvent> events = eventLog
+        IReadOnlyList<SubscriptionEvent> events = _eventLog
             .ToArray()
             .OrderByDescending(e => e.Timestamp)
             .ToList();
@@ -242,12 +242,12 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
 
     private void RecordEvent(SubscriptionEvent evt)
     {
-        eventLog.Enqueue(evt);
-        // Trim the ring. eventLog is unbounded otherwise
+        _eventLog.Enqueue(evt);
+        // Trim the ring. _eventLog is unbounded otherwise
         // (a long-running MCP server would grow it forever).
-        while (eventLog.Count > MaxEventLogSize)
+        while (_eventLog.Count > MaxEventLogSize)
         {
-            eventLog.TryDequeue(out _);
+            _eventLog.TryDequeue(out _);
         }
     }
 
@@ -279,8 +279,8 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
 
     public ValueTask DisposeAsync()
     {
-        subscribers.Clear();
-        eventLog.Clear();
+        _subscribers.Clear();
+        _eventLog.Clear();
         return ValueTask.CompletedTask;
     }
 }

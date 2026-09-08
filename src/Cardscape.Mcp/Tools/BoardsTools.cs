@@ -12,25 +12,12 @@ namespace Cardscape.Mcp.Tools;
 /// All operations reuse Application-layer commands and queries.
 /// </summary>
 [McpServerToolType]
-public sealed partial class BoardsTools
+public sealed partial class BoardsTools(
+    IMessageBus bus,
+    ICurrentUser currentUser,
+    IBoardPushClient push,
+    ICardRepository cards)
 {
-    private readonly IMessageBus bus;
-    private readonly ICurrentUser currentUser;
-    private readonly IBoardPushClient push;
-    private readonly ICardRepository cards;
-
-    public BoardsTools(
-        IMessageBus bus,
-        ICurrentUser currentUser,
-        IBoardPushClient push,
-        ICardRepository cards)
-    {
-        this.bus = bus;
-        this.currentUser = currentUser;
-        this.push = push;
-        this.cards = cards;
-    }
-
     private void RequireAuth()
     {
         if (!currentUser.IsAuthenticated)
