@@ -21,16 +21,16 @@ public partial class BoardDetail
     // cached id. The id is cleared at the end of a
     // successful drop so two interleaved drags do not
     // collide.
-    private Guid? draggingCardId;
+    private Guid? _draggingCardId;
 
     private void OnCardDragStart(CardSummaryDto card)
     {
-        draggingCardId = card.Id;
+        _draggingCardId = card.Id;
     }
 
     private void OnColumnDragOver(DragEventArgs args)
     {
-        if (draggingCardId is not null)
+        if (_draggingCardId is not null)
         {
             args.DataTransfer!.DropEffect = "move";
         }
@@ -38,8 +38,8 @@ public partial class BoardDetail
 
     private async Task OnColumnDrop(Guid destinationListId)
     {
-        Guid? cardId = draggingCardId;
-        draggingCardId = null;
+        Guid? cardId = _draggingCardId;
+        _draggingCardId = null;
         if (cardId is null)
         {
             return;
