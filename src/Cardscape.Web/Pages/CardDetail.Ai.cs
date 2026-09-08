@@ -38,7 +38,7 @@ public partial class CardDetail
 
     private async Task SummarizeCommentsAsync()
     {
-        if (aiBusy || comments is null || comments.Count == 0)
+        if (aiBusy || _comments is null || _comments.Count == 0)
         {
             return;
         }
@@ -46,7 +46,7 @@ public partial class CardDetail
         aiBusy = true;
         try
         {
-            IReadOnlyList<Guid> commentIds = comments.Select(c => c.Id).ToList();
+            IReadOnlyList<Guid> commentIds = _comments.Select(c => c.Id).ToList();
             ApiResult<AiGeneratedTextDto> result = await Ai.SummarizeCommentsAsync(commentIds);
             aiSummary = result.IsSuccess && result.Value is not null
                 ? result.Value.Text
@@ -147,4 +147,3 @@ public partial class CardDetail
         }
     }
 }
-

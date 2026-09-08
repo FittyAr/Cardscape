@@ -104,14 +104,14 @@ else
                                   Disabled="@_mirroring"
                                   IsBusy="@_mirroring"
                                   title="@L["MirrorToTitle"]" />
-                    <RadzenButton Text="@(voteState is { CurrentUserHasVoted: true } ? " " : " ")"
-                                  ButtonStyle="@(voteState is { CurrentUserHasVoted: true } ? ButtonStyle.Danger : ButtonStyle.Light)"
+                    <RadzenButton Text="@(_voteState is { CurrentUserHasVoted: true } ? " " : " ")"
+                                  ButtonStyle="@(_voteState is { CurrentUserHasVoted: true } ? ButtonStyle.Danger : ButtonStyle.Light)"
                                   Click="@ToggleVoteAsync"
-                                  Disabled="@togglingVote"
-                                  IsBusy="@togglingVote"
+                                  Disabled="@_togglingVote"
+                                  IsBusy="@_togglingVote"
                                   title="Vote on this card" />
                     <RadzenBadge BadgeStyle="BadgeStyle.Light"
-                                 Text="@($"Votes: {voteState?.VoteCount ?? 0}")" />
+                                 Text="@($"Votes: {_voteState?.VoteCount ?? 0}")" />
                 </RadzenStack>
             </RadzenStack>
 
@@ -279,7 +279,7 @@ else
 
             <RadzenStack Gap="0.5rem">
                 <RadzenText Text="Comments" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @if (comments is null)
+                @if (_comments is null)
                 {
                     <RadzenText Text="Loading comments…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
@@ -300,7 +300,7 @@ else
                             </RadzenStack>
                         </RadzenCard>
                     }
-                    @foreach (CommentDto c in comments)
+                    @foreach (CommentDto c in _comments)
                     {
                         // BETA-8-UI-#12 — see test-results/r8/r8-report.md.
                         // The backend now populates AuthorDisplayName
@@ -321,12 +321,12 @@ else
                     }
                 }
 
-                <RadzenTemplateForm TItem="AddCommentModel" Data="@addCommentModel" Submit="@AddComment">
+                <RadzenTemplateForm TItem="AddCommentModel" Data="@_addCommentModel" Submit="@AddComment">
                     <RadzenStack Gap="0.5rem" Class="rz-mt-2">
-                        <RadzenTextArea @bind-Value="addCommentModel.Body" Rows="2" Placeholder="Write a comment…"
+                        <RadzenTextArea @bind-Value="_addCommentModel.Body" Rows="2" Placeholder="Write a comment…"
                                         Style="width:100%" />
                         <RadzenButton Text="Comment" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
-                                      IsBusy="@addingComment" />
+                                      IsBusy="@_addingComment" />
                     </RadzenStack>
                 </RadzenTemplateForm>
             </RadzenStack>

@@ -44,17 +44,17 @@ public partial class CardDetail
     private bool _editingTitle;
     private string _editingTitleValue = string.Empty;
     private CancellationTokenSource? _titleCts;
-    private IReadOnlyList<CommentDto>? comments;
+    private IReadOnlyList<CommentDto>? _comments;
     private IReadOnlyList<CustomFieldValueDto>? fieldValues;
     private IReadOnlyList<ActivityDto>? recentActivity;
-    private CardVoteStateDto? voteState;
+    private CardVoteStateDto? _voteState;
     private IReadOnlyList<ChecklistDto>? _checklists;
     private string _newChecklistTitle = string.Empty;
     private string _newChecklistItemText = string.Empty;
     private CardRecurrenceDto? _recurrence;
     private int _recurrenceIntervalDays = 7;
-    private bool addingComment;
-    private bool togglingVote;
+    private bool _addingComment;
+    private bool _togglingVote;
     private bool aiBusy;
     private bool snoozing;
     private string? aiGeneratedDescription;
@@ -63,7 +63,7 @@ public partial class CardDetail
     private IReadOnlyList<AttachmentDto>? attachments;
     private bool uploadingAttachment;
     private IReadOnlyList<AiOwnerSuggestionDto>? aiSuggestedOwners;
-    private readonly AddCommentModel addCommentModel = new();
+    private readonly AddCommentModel _addCommentModel = new();
 
     // P3.2 / G6b ” default the snooze picker to "tomorrow 9am"
     // so the common case is one click. The backend rejects
@@ -154,7 +154,7 @@ public partial class CardDetail
         }
 
         ApiResult<IReadOnlyList<CommentDto>> commentsResult = await Comments.ListForCardAsync(CardId);
-        comments = commentsResult.IsSuccess ? commentsResult.Value : [];
+        _comments = commentsResult.IsSuccess ? commentsResult.Value : [];
 
         ApiResult<IReadOnlyList<CustomFieldValueDto>> valuesResult =
             await CustomFields.ListValuesForCardAsync(CardId);
@@ -165,7 +165,7 @@ public partial class CardDetail
         recentActivity = activityResult.IsSuccess ? activityResult.Value?.Items : [];
 
         ApiResult<CardVoteStateDto> voteResult = await Votes.GetStateAsync(CardId);
-        voteState = voteResult.IsSuccess ? voteResult.Value : null;
+        _voteState = voteResult.IsSuccess ? voteResult.Value : null;
 
         ApiResult<IReadOnlyList<ChecklistDto>> checklistsResult = await Checklists.ListForCardAsync(CardId);
         _checklists = checklistsResult.IsSuccess ? checklistsResult.Value : [];

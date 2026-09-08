@@ -17,19 +17,19 @@ public partial class CardDetail
 {
     private async Task ToggleVoteAsync()
     {
-        if (togglingVote) return;
-        togglingVote = true;
+        if (_togglingVote) return;
+        _togglingVote = true;
         try
         {
             ApiResult<CardVoteStateDto> result = await Votes.ToggleAsync(CardId);
             if (result.IsSuccess)
             {
-                voteState = result.Value;
+                _voteState = result.Value;
             }
         }
         finally
         {
-            togglingVote = false;
+            _togglingVote = false;
         }
     }
 
@@ -161,20 +161,20 @@ public partial class CardDetail
 
     private async Task AddComment()
     {
-        if (string.IsNullOrWhiteSpace(addCommentModel.Body)) return;
-        addingComment = true;
+        if (string.IsNullOrWhiteSpace(_addCommentModel.Body)) return;
+        _addingComment = true;
         try
         {
-            ApiResult<CommentDto> result = await Comments.AddAsync(CardId, addCommentModel.Body);
+            ApiResult<CommentDto> result = await Comments.AddAsync(CardId, _addCommentModel.Body);
             if (result.IsSuccess)
             {
-                comments = [.. (comments ?? Array.Empty<CommentDto>()), result.Value!];
-                addCommentModel.Body = string.Empty;
+                _comments = [.. (_comments ?? Array.Empty<CommentDto>()), result.Value!];
+                _addCommentModel.Body = string.Empty;
             }
         }
         finally
         {
-            addingComment = false;
+            _addingComment = false;
         }
     }
 
