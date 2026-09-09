@@ -102,7 +102,7 @@ Reglas permanentes:
 - [ ] Auditar todas las páginas por componente, estado, accesibilidad, responsive, loading/empty/error y navegación.
 - [x] Dividir `CardDetail.razor` y `BoardDetail.razor` en partials cohesionados por estado/carga, acciones y capacidades; los archivos monolíticos originales ya no existen.
 - [ ] Eliminar HTML/CSS/JS custom no autorizado cuando Radzen ofrezca equivalente. `WorkspaceImport` ya reemplazó el último `InputFile` por `RadzenUpload`, eliminó su `async void` y dispone la respuesta HTTP. No quedan `button`, `input`, `select`, `textarea`, `form`, `table` o `dialog` HTML nativos; continúa la revisión de contenedores puramente visuales, conservando HTML semántico y capacidades de navegador que Radzen no reemplaza.
-- [ ] Revisar formularios, validadores, dialogs, grids, virtualización y renderizado para evitar trabajo innecesario.
+- [ ] Revisar formularios, validadores, dialogs, grids, virtualización y renderizado para evitar trabajo innecesario. La auditoría directa de bloques `@code` detectó y eliminó los tres `async void`; quedan 39 handlers Razor `Task` sin sufijo `Async` que los analizadores C# no inspeccionan y se normalizarán por pantalla junto con sus bindings Radzen.
 - [ ] Validar temas, contraste, teclado, foco y localización.
 
 ### Fase 5 — Calidad y pruebas
