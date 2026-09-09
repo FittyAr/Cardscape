@@ -109,7 +109,7 @@ Reglas permanentes:
 
 - [ ] Auditar calidad de assertions, anti-patterns, gaps y cobertura de rutas críticas.
 - [ ] Incorporar tests sólo mediante el pipeline `code-testing-agent` exigido por el repositorio.
-- [ ] Resolver el test omitido o documentar técnicamente por qué no puede ejecutarse.
+- [x] Resolver el test omitido o documentar técnicamente por qué no puede ejecutarse. El único skip era `ModelDiagnostic.TranslateRetentionPredicate`: un método vacío marcado como diagnóstico temporal. Se eliminó por completo junto con el archivo `SwaggerTests.cs`, que sólo contenía una clase stub sin tests; la suite recompilada queda sin omitidos.
 - [x] Reducir supresiones globales de analyzers y mover excepciones inevitables al scope mínimo. Los 115 valores iniciales de `NoWarn` se redujeron a cero; `IDE1006`, última supresión temporal, fue retirada después de normalizar los 706 diagnósticos clasificados entre deuda real y falsos positivos de política.
 - [ ] Añadir validaciones de arquitectura para los defectos encontrados (lifetimes cuando sea comprobable, referencias y convenciones).
 - [ ] Revisar tests funcionales/E2E para que validen comportamiento y no detalles internos.
@@ -317,6 +317,7 @@ Reglas permanentes:
 | 2026-09-09 | Primer lote de naming async en herramientas MCP | Diecisiete herramientas de automatización, IA, actividad, búsqueda, voting y recurrencia adoptan sufijo `Async` en C#. Sus atributos conservan los nombres estables del protocolo y no se crean aliases | Métodos async 89 a 72; restore reproducible con SDK 10.0.401; build solución 0/0; Unit 609 pass, 1 skip; Architecture 26 pass | Incluido en este commit |
 | 2026-09-09 | Naming async de boards y checklists MCP | Treinta y seis herramientas de checklists, comentarios, labels, exportación, boards, lists y cards adoptan sufijo `Async` en C#. Los nombres MCP declarados permanecen estables y no se conserva API CLR legacy | Métodos async 72 a 36; build solución 0/0; Unit 609 pass, 1 skip; Architecture 26 pass | Incluido en este commit |
 | 2026-09-09 | Cierre de naming async MCP y supresiones globales | Las 36 herramientas restantes de integraciones, custom fields, extensiones, inbox, invitaciones y superficie V1.10 adoptan sufijo `Async`; los atributos preservan los nombres MCP. Se elimina `IDE1006` de `NoWarn` y el proyecto queda sin supresiones globales | Métodos async 36 a 0; `NoWarn` 1 a 0; rebuild Release 0/0; suite 957 pass, 0 fail, 1 skip | Incluido en este commit |
+| 2026-09-09 | Eliminación de tests ceremoniales | Se eliminan el diagnóstico temporal vacío que producía el único skip y el archivo Swagger stub sin casos ejecutables. La cobertura OpenAPI real permanece en `OpenApiTests` | Unit recompilado 609 pass, 0 fail, 0 skip; Integration 261 pass, 0 fail | Incluido en este commit |
 
 ### Migración LoggerMessage
 
