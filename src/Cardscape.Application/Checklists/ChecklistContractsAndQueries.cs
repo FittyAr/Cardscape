@@ -49,7 +49,7 @@ public sealed record ListCardChecklistsQuery(Guid CardId) : IMessage;
 
 public static class ListCardChecklistsQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<ChecklistDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<ChecklistDto>>> HandleAsync(
         ListCardChecklistsQuery query,
         IChecklistRepository checklists,
         ICardRepository cards,

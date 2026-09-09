@@ -15,7 +15,7 @@ public sealed record ToggleChecklistItemCommand(Guid ChecklistId, Guid ItemId) :
 
 public static class ToggleChecklistItemCommandHandler
 {
-    public static async Task<Result<ChecklistDto>> Handle(
+    public static async Task<Result<ChecklistDto>> HandleAsync(
         ToggleChecklistItemCommand command,
         IChecklistRepository checklists,
         ICardRepository cards,

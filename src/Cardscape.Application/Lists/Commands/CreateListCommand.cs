@@ -14,7 +14,7 @@ public sealed record CreateListCommand(Guid BoardId, string Name) : IMessage;
 
 public static class CreateListCommandHandler
 {
-    public static async Task<Result<BoardListDto>> Handle(
+    public static async Task<Result<BoardListDto>> HandleAsync(
         CreateListCommand command,
         IBoardRepository boards,
         IBoardListRepository lists,

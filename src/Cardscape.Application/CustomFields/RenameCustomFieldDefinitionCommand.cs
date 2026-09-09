@@ -11,7 +11,7 @@ public sealed record RenameCustomFieldDefinitionCommand(Guid FieldId, string New
 
 public static class RenameCustomFieldDefinitionCommandHandler
 {
-    public static async Task<Result<CustomFieldDefinitionDto>> Handle(
+    public static async Task<Result<CustomFieldDefinitionDto>> HandleAsync(
         RenameCustomFieldDefinitionCommand command,
         ICustomFieldDefinitionRepository definitions,
         IBoardRepository boards,

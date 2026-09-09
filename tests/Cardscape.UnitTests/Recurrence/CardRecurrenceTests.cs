@@ -93,7 +93,7 @@ public class CardRecurrenceTests
         var recurrences = new InMemoryCardRecurrenceRepository();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(owner);
 
-        var result = await SetCardRecurrenceCommandHandler.Handle(
+        var result = await SetCardRecurrenceCommandHandler.HandleAsync(
             new SetCardRecurrenceCommand(card.Id.Value, 7, DateTimeOffset.UtcNow.AddDays(7)),
             recurrences, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
@@ -117,11 +117,11 @@ public class CardRecurrenceTests
         var recurrences = new InMemoryCardRecurrenceRepository();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(owner);
 
-        await SetCardRecurrenceCommandHandler.Handle(
+        await SetCardRecurrenceCommandHandler.HandleAsync(
             new SetCardRecurrenceCommand(card.Id.Value, 7, DateTimeOffset.UtcNow.AddDays(7)),
             recurrences, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
-        var second = await SetCardRecurrenceCommandHandler.Handle(
+        var second = await SetCardRecurrenceCommandHandler.HandleAsync(
             new SetCardRecurrenceCommand(card.Id.Value, 14, DateTimeOffset.UtcNow.AddDays(14)),
             recurrences, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
@@ -143,12 +143,12 @@ public class CardRecurrenceTests
         var recurrences = new InMemoryCardRecurrenceRepository();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(owner);
 
-        await SetCardRecurrenceCommandHandler.Handle(
+        await SetCardRecurrenceCommandHandler.HandleAsync(
             new SetCardRecurrenceCommand(card.Id.Value, 7, DateTimeOffset.UtcNow.AddDays(7)),
             recurrences, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
 
-        var del = await DeleteCardRecurrenceCommandHandler.Handle(
+        var del = await DeleteCardRecurrenceCommandHandler.HandleAsync(
             new DeleteCardRecurrenceCommand(card.Id.Value),
             recurrences, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);

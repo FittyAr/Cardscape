@@ -13,7 +13,7 @@ public sealed record GetListQuery(Guid ListId) : IMessage;
 
 public static class GetListQueryHandler
 {
-    public static async Task<Result<BoardListDto>> Handle(
+    public static async Task<Result<BoardListDto>> HandleAsync(
         GetListQuery query,
         IBoardListRepository lists,
         IBoardRepository boards,
@@ -50,7 +50,7 @@ public sealed record ListListsForBoardQuery(Guid BoardId, bool IncludeArchived =
 
 public static class ListListsForBoardQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<BoardListDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<BoardListDto>>> HandleAsync(
         ListListsForBoardQuery query,
         IBoardListRepository lists,
         IBoardRepository boards,

@@ -15,7 +15,7 @@ public sealed record DeleteChecklistItemCommand(Guid ChecklistId, Guid ItemId) :
 
 public static class DeleteChecklistItemCommandHandler
 {
-    public static async Task<Result<ChecklistDto>> Handle(
+    public static async Task<Result<ChecklistDto>> HandleAsync(
         DeleteChecklistItemCommand command,
         IChecklistRepository checklists,
         ICardRepository cards,

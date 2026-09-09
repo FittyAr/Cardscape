@@ -13,7 +13,7 @@ public sealed record CreateChecklistCommand(Guid CardId, string Title) : IMessag
 
 public static class CreateChecklistCommandHandler
 {
-    public static async Task<Result<ChecklistDto>> Handle(
+    public static async Task<Result<ChecklistDto>> HandleAsync(
         CreateChecklistCommand command,
         IChecklistRepository checklists,
         ICardRepository cards,

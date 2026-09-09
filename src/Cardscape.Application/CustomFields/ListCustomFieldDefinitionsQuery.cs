@@ -10,7 +10,7 @@ public sealed record ListCustomFieldDefinitionsQuery(Guid BoardId) : IMessage;
 
 public static class ListCustomFieldDefinitionsQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<CustomFieldDefinitionDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<CustomFieldDefinitionDto>>> HandleAsync(
         ListCustomFieldDefinitionsQuery query,
         ICustomFieldDefinitionRepository definitions,
         IBoardRepository boards,

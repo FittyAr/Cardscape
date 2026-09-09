@@ -13,7 +13,7 @@ public sealed record ListCustomFieldValuesForCardQuery(Guid CardId) : IMessage;
 
 public static class ListCustomFieldValuesForCardQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<CustomFieldValueDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<CustomFieldValueDto>>> HandleAsync(
         ListCustomFieldValuesForCardQuery query,
         ICustomFieldValueRepository values,
         ICustomFieldDefinitionRepository definitions,
@@ -60,5 +60,4 @@ public static class ListCustomFieldValuesForCardQueryHandler
 }
 
 // ── shared helpers ─────────────────────────────────────────
-
 

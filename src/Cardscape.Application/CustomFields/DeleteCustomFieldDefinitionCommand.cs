@@ -10,7 +10,7 @@ public sealed record DeleteCustomFieldDefinitionCommand(Guid FieldId) : IMessage
 
 public static class DeleteCustomFieldDefinitionCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DeleteCustomFieldDefinitionCommand command,
         ICustomFieldDefinitionRepository definitions,
         ICustomFieldValueRepository values,

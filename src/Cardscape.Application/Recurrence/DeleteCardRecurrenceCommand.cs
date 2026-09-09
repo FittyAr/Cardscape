@@ -14,7 +14,7 @@ public sealed record DeleteCardRecurrenceCommand(Guid CardId) : IMessage;
 
 public static class DeleteCardRecurrenceCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DeleteCardRecurrenceCommand command,
         ICardRecurrenceRepository recurrences,
         ICardRepository cards,
@@ -74,5 +74,4 @@ public static class DeleteCardRecurrenceCommandHandler
         return Result.Success();
     }
 }
-
 

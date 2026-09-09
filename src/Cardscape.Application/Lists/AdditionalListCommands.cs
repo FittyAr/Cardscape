@@ -16,7 +16,7 @@ public sealed record SetListLimitCommand(Guid ListId, int? Limit, bool Soft) : I
 
 public static class SetListLimitCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         SetListLimitCommand command,
         IRepository<BoardList, BoardListId> lists,
         IUnitOfWork unitOfWork,

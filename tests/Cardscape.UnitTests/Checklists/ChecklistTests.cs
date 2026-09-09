@@ -150,7 +150,7 @@ public class ChecklistTests
         var checklists = new InMemoryChecklistRepository();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(owner);
 
-        var result = await CreateChecklistCommandHandler.Handle(
+        var result = await CreateChecklistCommandHandler.HandleAsync(
             new CreateChecklistCommand(card.Id.Value, "My checklist"),
             checklists, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
@@ -173,12 +173,12 @@ public class ChecklistTests
         var checklists = new InMemoryChecklistRepository();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(owner);
 
-        var created = await CreateChecklistCommandHandler.Handle(
+        var created = await CreateChecklistCommandHandler.HandleAsync(
             new CreateChecklistCommand(card.Id.Value, "Todos"),
             checklists, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
 
-        var withItem = await AddChecklistItemCommandHandler.Handle(
+        var withItem = await AddChecklistItemCommandHandler.HandleAsync(
             new AddChecklistItemCommand(created.Value!.Id, "Buy milk"),
             checklists, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
@@ -189,7 +189,7 @@ public class ChecklistTests
         withItem.Value!.Text.Should().Be("Buy milk");
         Guid itemId = withItem.Value.Id;
 
-        var toggled = await ToggleChecklistItemCommandHandler.Handle(
+        var toggled = await ToggleChecklistItemCommandHandler.HandleAsync(
             new ToggleChecklistItemCommand(created.Value.Id, itemId),
             checklists, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
@@ -212,20 +212,20 @@ public class ChecklistTests
         var checklists = new InMemoryChecklistRepository();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(owner);
 
-        var created = await CreateChecklistCommandHandler.Handle(
+        var created = await CreateChecklistCommandHandler.HandleAsync(
             new CreateChecklistCommand(card.Id.Value, "c"),
             checklists, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
-        await AddChecklistItemCommandHandler.Handle(
+        await AddChecklistItemCommandHandler.HandleAsync(
             new AddChecklistItemCommand(created.Value!.Id, "x"),
             checklists, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
-        await AddChecklistItemCommandHandler.Handle(
+        await AddChecklistItemCommandHandler.HandleAsync(
             new AddChecklistItemCommand(created.Value.Id, "y"),
             checklists, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
-        var listed = await ListCardChecklistsQueryHandler.Handle(
+        var listed = await ListCardChecklistsQueryHandler.HandleAsync(
             new ListCardChecklistsQuery(card.Id.Value),
             checklists, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, CancellationToken.None);

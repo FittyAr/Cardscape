@@ -13,7 +13,7 @@ public sealed record RenameListCommand(Guid ListId, string NewName) : IMessage;
 
 public static class RenameListCommandHandler
 {
-    public static async Task<Result<BoardListDto>> Handle(
+    public static async Task<Result<BoardListDto>> HandleAsync(
         RenameListCommand command,
         IBoardListRepository lists,
         IBoardRepository boards,

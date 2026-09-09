@@ -51,7 +51,7 @@ public class CardVoteTests
         var votes = new InMemoryCardVoteRepository();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(member);
 
-        var result = await ToggleCardVoteCommandHandler.Handle(
+        var result = await ToggleCardVoteCommandHandler.HandleAsync(
             new ToggleCardVoteCommand(card.Id.Value),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.Clock, CancellationToken.None);
@@ -76,12 +76,12 @@ public class CardVoteTests
         var votes = new InMemoryCardVoteRepository();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(member);
 
-        await ToggleCardVoteCommandHandler.Handle(
+        await ToggleCardVoteCommandHandler.HandleAsync(
             new ToggleCardVoteCommand(card.Id.Value),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
-        var result = await ToggleCardVoteCommandHandler.Handle(
+        var result = await ToggleCardVoteCommandHandler.HandleAsync(
             new ToggleCardVoteCommand(card.Id.Value),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.Clock, CancellationToken.None);
@@ -105,7 +105,7 @@ public class CardVoteTests
         var votes = new InMemoryCardVoteRepository();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(stranger);
 
-        var result = await ToggleCardVoteCommandHandler.Handle(
+        var result = await ToggleCardVoteCommandHandler.HandleAsync(
             new ToggleCardVoteCommand(card.Id.Value),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.Clock, CancellationToken.None);
@@ -122,7 +122,7 @@ public class CardVoteTests
         var votes = new InMemoryCardVoteRepository();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await ToggleCardVoteCommandHandler.Handle(
+        var result = await ToggleCardVoteCommandHandler.HandleAsync(
             new ToggleCardVoteCommand(Guid.NewGuid()),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.Clock, CancellationToken.None);
@@ -146,7 +146,7 @@ public class CardVoteTests
         var votes = new InMemoryCardVoteRepository();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(member);
 
-        var result = await ListCardVotesQueryHandler.Handle(
+        var result = await ListCardVotesQueryHandler.HandleAsync(
             new ListCardVotesQuery(card.Id.Value),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, CancellationToken.None);
@@ -171,12 +171,12 @@ public class CardVoteTests
         var votes = new InMemoryCardVoteRepository();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(member);
 
-        await ToggleCardVoteCommandHandler.Handle(
+        await ToggleCardVoteCommandHandler.HandleAsync(
             new ToggleCardVoteCommand(card.Id.Value),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
-        var result = await ListCardVotesQueryHandler.Handle(
+        var result = await ListCardVotesQueryHandler.HandleAsync(
             new ListCardVotesQuery(card.Id.Value),
             votes, ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.CurrentUser, CancellationToken.None);

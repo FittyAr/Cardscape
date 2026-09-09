@@ -13,7 +13,7 @@ public sealed record AddChecklistItemCommand(Guid ChecklistId, string Text) : IM
 
 public static class AddChecklistItemCommandHandler
 {
-    public static async Task<Result<ChecklistItemDto>> Handle(
+    public static async Task<Result<ChecklistItemDto>> HandleAsync(
         AddChecklistItemCommand command,
         IChecklistRepository checklists,
         ICardRepository cards,

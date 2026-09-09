@@ -11,7 +11,7 @@ public sealed record ListCardVotesQuery(Guid CardId) : IMessage;
 
 public static class ListCardVotesQueryHandler
 {
-    public static async Task<Result<CardVoteStateDto>> Handle(
+    public static async Task<Result<CardVoteStateDto>> HandleAsync(
         ListCardVotesQuery query,
         ICardVoteRepository votes,
         ICardRepository cards,

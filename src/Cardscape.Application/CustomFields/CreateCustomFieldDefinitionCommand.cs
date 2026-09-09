@@ -16,7 +16,7 @@ public sealed record CreateCustomFieldDefinitionCommand(
 
 public static class CreateCustomFieldDefinitionCommandHandler
 {
-    public static async Task<Result<CustomFieldDefinitionDto>> Handle(
+    public static async Task<Result<CustomFieldDefinitionDto>> HandleAsync(
         CreateCustomFieldDefinitionCommand command,
         ICustomFieldDefinitionRepository definitions,
         IBoardRepository boards,

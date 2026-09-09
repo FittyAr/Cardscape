@@ -12,7 +12,7 @@ public sealed record RenameChecklistItemCommand(Guid ChecklistId, Guid ItemId, s
 
 public static class RenameChecklistItemCommandHandler
 {
-    public static async Task<Result<ChecklistDto>> Handle(
+    public static async Task<Result<ChecklistDto>> HandleAsync(
         RenameChecklistItemCommand command,
         IChecklistRepository checklists,
         ICardRepository cards,

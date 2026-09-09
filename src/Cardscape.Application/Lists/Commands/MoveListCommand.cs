@@ -15,7 +15,7 @@ public sealed record MoveListCommand(Guid ListId, double NewPosition) : IMessage
 
 public static class MoveListCommandHandler
 {
-    public static async Task<Result<BoardListDto>> Handle(
+    public static async Task<Result<BoardListDto>> HandleAsync(
         MoveListCommand command,
         IBoardListRepository lists,
         IBoardRepository boards,

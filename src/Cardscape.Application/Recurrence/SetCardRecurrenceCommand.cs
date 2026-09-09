@@ -17,7 +17,7 @@ public sealed record SetCardRecurrenceCommand(
 
 public static class SetCardRecurrenceCommandHandler
 {
-    public static async Task<Result<CardRecurrenceDto>> Handle(
+    public static async Task<Result<CardRecurrenceDto>> HandleAsync(
         SetCardRecurrenceCommand command,
         ICardRecurrenceRepository recurrences,
         ICardRepository cards,
@@ -84,5 +84,4 @@ public static class SetCardRecurrenceCommandHandler
             existing ?? (await recurrences.GetForCardAsync(card.Id, ct))!));
     }
 }
-
 

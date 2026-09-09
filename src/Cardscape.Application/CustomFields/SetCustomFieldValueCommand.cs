@@ -16,7 +16,7 @@ public sealed record SetCustomFieldValueCommand(
 
 public static class SetCustomFieldValueCommandHandler
 {
-    public static async Task<Result<CustomFieldValueDto>> Handle(
+    public static async Task<Result<CustomFieldValueDto>> HandleAsync(
         SetCustomFieldValueCommand command,
         ICustomFieldValueRepository values,
         ICustomFieldDefinitionRepository definitions,
@@ -149,5 +149,4 @@ public static class SetCustomFieldValueCommandHandler
         }
     }
 }
-
 

@@ -12,7 +12,7 @@ public sealed record ToggleCardVoteCommand(Guid CardId) : IMessage;
 
 public static class ToggleCardVoteCommandHandler
 {
-    public static async Task<Result<CardVoteStateDto>> Handle(
+    public static async Task<Result<CardVoteStateDto>> HandleAsync(
         ToggleCardVoteCommand command,
         ICardVoteRepository votes,
         ICardRepository cards,

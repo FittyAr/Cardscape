@@ -11,7 +11,7 @@ public sealed record DeleteChecklistCommand(Guid ChecklistId) : IMessage;
 
 public static class DeleteChecklistCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DeleteChecklistCommand command,
         IChecklistRepository checklists,
         ICardRepository cards,

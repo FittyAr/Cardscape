@@ -14,7 +14,7 @@ public sealed record GetCardRecurrenceQuery(Guid CardId) : IMessage;
 
 public static class GetCardRecurrenceQueryHandler
 {
-    public static async Task<Result<CardRecurrenceDto?>> Handle(
+    public static async Task<Result<CardRecurrenceDto?>> HandleAsync(
         GetCardRecurrenceQuery query,
         ICardRecurrenceRepository recurrences,
         ICardRepository cards,
@@ -65,5 +65,4 @@ public static class GetCardRecurrenceQueryHandler
         return Result.Success<CardRecurrenceDto?>(CardRecurrenceDto.FromEntity(r));
     }
 }
-
 

@@ -22,7 +22,7 @@ public class CustomFieldCommandHandlerTests
         SutState state = await BuildSutAsync(seedBoard: true);
         Board board = state.Board!;
 
-        var result = await CreateCustomFieldDefinitionCommandHandler.Handle(
+        var result = await CreateCustomFieldDefinitionCommandHandler.HandleAsync(
             new CreateCustomFieldDefinitionCommand(
                 board.Id.Value, "Priority", 0, null, Position: 0),
             state.Definitions, state.Boards, state.UnitOfWork, state.CurrentUser, state.Clock, TestContext.Current.CancellationToken);
@@ -38,7 +38,7 @@ public class CustomFieldCommandHandlerTests
         SutState state = await BuildSutAsync(seedBoard: true);
         Board board = state.Board!;
 
-        var result = await CreateCustomFieldDefinitionCommandHandler.Handle(
+        var result = await CreateCustomFieldDefinitionCommandHandler.HandleAsync(
             new CreateCustomFieldDefinitionCommand(
                 board.Id.Value, "Foo", 99, null, Position: 0),
             state.Definitions, state.Boards, state.UnitOfWork, state.CurrentUser, state.Clock, TestContext.Current.CancellationToken);
@@ -56,7 +56,7 @@ public class CustomFieldCommandHandlerTests
         Board board = state.Board!;
         state.CurrentUser.Id = new UserId(Guid.NewGuid());
 
-        var result = await CreateCustomFieldDefinitionCommandHandler.Handle(
+        var result = await CreateCustomFieldDefinitionCommandHandler.HandleAsync(
             new CreateCustomFieldDefinitionCommand(
                 board.Id.Value, "Priority", 0, null, Position: 0),
             state.Definitions, state.Boards, state.UnitOfWork, state.CurrentUser, state.Clock, TestContext.Current.CancellationToken);
@@ -82,7 +82,7 @@ public class CustomFieldCommandHandlerTests
         await state.Values.AddAsync(value, TestContext.Current.CancellationToken);
         await state.UnitOfWork.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var delete = await DeleteCustomFieldDefinitionCommandHandler.Handle(
+        var delete = await DeleteCustomFieldDefinitionCommandHandler.HandleAsync(
             new DeleteCustomFieldDefinitionCommand(field.Id.Value),
             state.Definitions, state.Values, state.Boards, state.UnitOfWork, state.CurrentUser, TestContext.Current.CancellationToken);
 
@@ -103,12 +103,12 @@ public class CustomFieldCommandHandlerTests
         await state.Definitions.AddAsync(field, TestContext.Current.CancellationToken);
         await state.UnitOfWork.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        await SetCustomFieldValueCommandHandler.Handle(
+        await SetCustomFieldValueCommandHandler.HandleAsync(
             new SetCustomFieldValueCommand(card.Id.Value, field.Id.Value, "\"high\""),
             state.Values, state.Definitions, state.Cards, state.Boards, state.Lists,
             state.UnitOfWork, state.CurrentUser, state.Clock, TestContext.Current.CancellationToken);
 
-        var clear = await SetCustomFieldValueCommandHandler.Handle(
+        var clear = await SetCustomFieldValueCommandHandler.HandleAsync(
             new SetCustomFieldValueCommand(card.Id.Value, field.Id.Value, null),
             state.Values, state.Definitions, state.Cards, state.Boards, state.Lists,
             state.UnitOfWork, state.CurrentUser, state.Clock, TestContext.Current.CancellationToken);
@@ -131,7 +131,7 @@ public class CustomFieldCommandHandlerTests
         await state.Definitions.AddAsync(field, TestContext.Current.CancellationToken);
         await state.UnitOfWork.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var result = await SetCustomFieldValueCommandHandler.Handle(
+        var result = await SetCustomFieldValueCommandHandler.HandleAsync(
             new SetCustomFieldValueCommand(card.Id.Value, field.Id.Value, "\"Critical\""),
             state.Values, state.Definitions, state.Cards, state.Boards, state.Lists,
             state.UnitOfWork, state.CurrentUser, state.Clock, TestContext.Current.CancellationToken);
@@ -155,7 +155,7 @@ public class CustomFieldCommandHandlerTests
         await state.Definitions.AddAsync(b, TestContext.Current.CancellationToken);
         await state.UnitOfWork.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var result = await ListCustomFieldDefinitionsQueryHandler.Handle(
+        var result = await ListCustomFieldDefinitionsQueryHandler.HandleAsync(
             new ListCustomFieldDefinitionsQuery(board.Id.Value),
             state.Definitions, state.Boards, state.CurrentUser, TestContext.Current.CancellationToken);
 

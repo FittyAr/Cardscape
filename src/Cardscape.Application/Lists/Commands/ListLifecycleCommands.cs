@@ -15,7 +15,7 @@ public sealed record ArchiveListCommand(Guid ListId) : IMessage;
 
 public static class ArchiveListCommandHandler
 {
-    public static async Task<Result<BoardListDto>> Handle(
+    public static async Task<Result<BoardListDto>> HandleAsync(
         ArchiveListCommand command,
         IBoardListRepository lists,
         IBoardRepository boards,
@@ -57,7 +57,7 @@ public sealed record RestoreListCommand(Guid ListId) : IMessage;
 
 public static class RestoreListCommandHandler
 {
-    public static async Task<Result<BoardListDto>> Handle(
+    public static async Task<Result<BoardListDto>> HandleAsync(
         RestoreListCommand command,
         IBoardListRepository lists,
         IBoardRepository boards,
