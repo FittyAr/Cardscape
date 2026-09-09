@@ -11,7 +11,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
 {
     [McpServerTool(Name = "cards_list_checklists")]
-    public async Task<IReadOnlyList<ChecklistDto>> ListForCard(Guid cardId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<ChecklistDto>> ListForCardAsync(Guid cardId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_list_checklists");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
@@ -32,7 +32,7 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "cards_create_checklist")]
-    public async Task<ChecklistDto> Create(Guid cardId, string title, CancellationToken ct = default)
+    public async Task<ChecklistDto> CreateAsync(Guid cardId, string title, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_create_checklist");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
@@ -53,7 +53,7 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "cards_rename_checklist")]
-    public async Task<ChecklistDto> Rename(Guid checklistId, string title, CancellationToken ct = default)
+    public async Task<ChecklistDto> RenameAsync(Guid checklistId, string title, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_rename_checklist");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -74,7 +74,7 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "cards_delete_checklist")]
-    public async Task<string> Delete(Guid checklistId, CancellationToken ct = default)
+    public async Task<string> DeleteAsync(Guid checklistId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_delete_checklist");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -99,7 +99,7 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "cards_add_checklist_item")]
-    public async Task<ChecklistDto> AddItem(Guid checklistId, string text, CancellationToken ct = default)
+    public async Task<ChecklistDto> AddItemAsync(Guid checklistId, string text, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_add_checklist_item");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -120,7 +120,7 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "cards_rename_checklist_item")]
-    public async Task<ChecklistDto> RenameItem(
+    public async Task<ChecklistDto> RenameItemAsync(
         Guid checklistId, Guid itemId, string text, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_rename_checklist_item");
@@ -142,7 +142,7 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "cards_toggle_checklist_item")]
-    public async Task<ChecklistDto> ToggleItem(
+    public async Task<ChecklistDto> ToggleItemAsync(
         Guid checklistId, Guid itemId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_toggle_checklist_item");
@@ -164,7 +164,7 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "cards_delete_checklist_item")]
-    public async Task<ChecklistDto> DeleteItem(
+    public async Task<ChecklistDto> DeleteItemAsync(
         Guid checklistId, Guid itemId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_delete_checklist_item");

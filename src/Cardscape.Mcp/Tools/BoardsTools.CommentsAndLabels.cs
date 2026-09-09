@@ -15,7 +15,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed partial class BoardsTools
 {
     [McpServerTool(Name = "comments_add")]
-    public async Task<CommentDto> AddComment(Guid cardId, string body, CancellationToken ct)
+    public async Task<CommentDto> AddCommentAsync(Guid cardId, string body, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("comments_add");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
@@ -38,7 +38,7 @@ public sealed partial class BoardsTools
     }
 
     [McpServerTool(Name = "comments_list")]
-    public async Task<IReadOnlyList<CommentDto>> ListComments(Guid cardId, CancellationToken ct)
+    public async Task<IReadOnlyList<CommentDto>> ListCommentsAsync(Guid cardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("comments_list");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
@@ -66,7 +66,7 @@ public sealed partial class BoardsTools
     // handlers so the IDOR fix, search-index re-index, and
     // activity-feed write all stay in one place.
     [McpServerTool(Name = "comments_edit")]
-    public async Task<CommentDto> EditComment(Guid commentId, string newBody, CancellationToken ct)
+    public async Task<CommentDto> EditCommentAsync(Guid commentId, string newBody, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("comments_edit");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -87,7 +87,7 @@ public sealed partial class BoardsTools
     }
 
     [McpServerTool(Name = "comments_delete")]
-    public async Task<object> DeleteComment(Guid commentId, CancellationToken ct)
+    public async Task<object> DeleteCommentAsync(Guid commentId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("comments_delete");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -111,7 +111,7 @@ public sealed partial class BoardsTools
     }
 
     [McpServerTool(Name = "labels_list")]
-    public async Task<IReadOnlyList<LabelDto>> ListLabels(Guid boardId, CancellationToken ct)
+    public async Task<IReadOnlyList<LabelDto>> ListLabelsAsync(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("labels_list");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
@@ -132,7 +132,7 @@ public sealed partial class BoardsTools
     }
 
     [McpServerTool(Name = "labels_create")]
-    public async Task<LabelDto> CreateLabel(Guid boardId, string name, string color, CancellationToken ct)
+    public async Task<LabelDto> CreateLabelAsync(Guid boardId, string name, string color, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("labels_create");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
@@ -152,4 +152,3 @@ public sealed partial class BoardsTools
         }
     }
 }
-

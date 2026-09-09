@@ -10,7 +10,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed partial class BoardsTools
 {
     [McpServerTool(Name = "boards_get_icalendar")]
-    public async Task<string> GetBoardICalendar(Guid boardId, CancellationToken ct)
+    public async Task<string> GetBoardICalendarAsync(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_get_icalendar");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
@@ -37,7 +37,7 @@ public sealed partial class BoardsTools
     }
 
     [McpServerTool(Name = "boards_export")]
-    public async Task<byte[]> ExportBoard(Guid boardId, CancellationToken ct)
+    public async Task<byte[]> ExportBoardAsync(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_export");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);

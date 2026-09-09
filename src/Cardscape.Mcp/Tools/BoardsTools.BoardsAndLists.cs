@@ -17,7 +17,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed partial class BoardsTools
 {
     [McpServerTool(Name = "workspaces_list")]
-    public async Task<IReadOnlyList<WorkspaceDto>> ListWorkspaces(CancellationToken ct)
+    public async Task<IReadOnlyList<WorkspaceDto>> ListWorkspacesAsync(CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("workspaces_list");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -37,7 +37,7 @@ public sealed partial class BoardsTools
     }
 
     [McpServerTool(Name = "boards_list")]
-    public async Task<IReadOnlyList<BoardSummaryDto>> ListBoards(Guid workspaceId, CancellationToken ct)
+    public async Task<IReadOnlyList<BoardSummaryDto>> ListBoardsAsync(Guid workspaceId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_list");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -58,7 +58,7 @@ public sealed partial class BoardsTools
     }
 
     [McpServerTool(Name = "boards_get")]
-    public async Task<BoardDto> GetBoard(Guid boardId, CancellationToken ct)
+    public async Task<BoardDto> GetBoardAsync(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_get");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
@@ -78,7 +78,7 @@ public sealed partial class BoardsTools
     }
 
     [McpServerTool(Name = "boards_create")]
-    public async Task<BoardDto> CreateBoard(
+    public async Task<BoardDto> CreateBoardAsync(
         Guid workspaceId, string name, string? description, int visibility, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_create");
@@ -101,7 +101,7 @@ public sealed partial class BoardsTools
     }
 
     [McpServerTool(Name = "boards_star")]
-    public async Task<BoardDto> StarBoard(Guid boardId, CancellationToken ct)
+    public async Task<BoardDto> StarBoardAsync(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_star");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
@@ -121,7 +121,7 @@ public sealed partial class BoardsTools
     }
 
     [McpServerTool(Name = "boards_unstar")]
-    public async Task<BoardDto> UnstarBoard(Guid boardId, CancellationToken ct)
+    public async Task<BoardDto> UnstarBoardAsync(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_unstar");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
@@ -141,7 +141,7 @@ public sealed partial class BoardsTools
     }
 
     [McpServerTool(Name = "lists_list")]
-    public async Task<IReadOnlyList<BoardListDto>> ListLists(
+    public async Task<IReadOnlyList<BoardListDto>> ListListsAsync(
         Guid boardId, bool includeArchived, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("lists_list");
@@ -163,7 +163,7 @@ public sealed partial class BoardsTools
     }
 
     [McpServerTool(Name = "lists_create")]
-    public async Task<BoardListDto> CreateList(
+    public async Task<BoardListDto> CreateListAsync(
         Guid boardId,
         string name,
         CancellationToken ct = default)
@@ -188,4 +188,3 @@ public sealed partial class BoardsTools
         }
     }
 }
-
