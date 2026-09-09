@@ -24,7 +24,7 @@ public sealed record DeleteCardCommand(Guid CardId) : IMessage;
 
 public static class DeleteCardCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DeleteCardCommand command,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -107,5 +107,4 @@ public static class DeleteCardCommandHandler
         return Result.Success();
     }
 }
-
 

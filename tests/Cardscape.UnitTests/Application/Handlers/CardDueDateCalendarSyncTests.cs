@@ -32,7 +32,7 @@ public class CardDueDateCalendarSyncTests
             at: ctx.Clock.UtcNow);
         await ctx.GoogleCalendarConnections.AddAsync(connResult.Value, TestContext.Current.CancellationToken);
 
-        await CardDueDateCalendarSync.Handle(
+        await CardDueDateCalendarSync.HandleAsync(
             new CardDueDateSet(card.Id, ctx.Clock.UtcNow.AddDays(7), ctx.Clock.UtcNow),
             ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.GoogleCalendarConnections, ctx.GoogleCalendarSync,
@@ -74,7 +74,7 @@ public class CardDueDateCalendarSyncTests
                 "google_calendar.500",
                 "Google Calendar push failed (500): boom"));
 
-        await CardDueDateCalendarSync.Handle(
+        await CardDueDateCalendarSync.HandleAsync(
             new CardDueDateSet(card.Id, ctx.Clock.UtcNow.AddDays(7), ctx.Clock.UtcNow),
             ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.GoogleCalendarConnections, ctx.GoogleCalendarSync,
@@ -96,7 +96,7 @@ public class CardDueDateCalendarSyncTests
         var list = await ctx.SeedListAsync(board.Id);
         var card = await ctx.SeedCardAsync(list.Id, owner.Id.Value, "Buy milk");
 
-        await CardDueDateCalendarSync.Handle(
+        await CardDueDateCalendarSync.HandleAsync(
             new CardDueDateSet(card.Id, ctx.Clock.UtcNow.AddDays(7), ctx.Clock.UtcNow),
             ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.GoogleCalendarConnections, ctx.GoogleCalendarSync,
@@ -126,7 +126,7 @@ public class CardDueDateCalendarSyncTests
             at: ctx.Clock.UtcNow);
         await ctx.GoogleCalendarConnections.AddAsync(connResult.Value, TestContext.Current.CancellationToken);
 
-        await CardDueDateCalendarSync.Handle(
+        await CardDueDateCalendarSync.HandleAsync(
             new CardDueDateCleared(card.Id, ctx.Clock.UtcNow),
             ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.GoogleCalendarConnections, ctx.GoogleCalendarSync,
@@ -161,7 +161,7 @@ public class CardDueDateCalendarSyncTests
             await ctx.GoogleCalendarConnections.AddAsync(connResult.Value, TestContext.Current.CancellationToken);
         }
 
-        await CardDueDateCalendarSync.Handle(
+        await CardDueDateCalendarSync.HandleAsync(
             new CardDueDateSet(card.Id, ctx.Clock.UtcNow.AddDays(7), ctx.Clock.UtcNow),
             ctx.Cards, ctx.Lists, ctx.Boards,
             ctx.GoogleCalendarConnections, ctx.GoogleCalendarSync,

@@ -24,7 +24,7 @@ public sealed record AssignCardCommand(Guid CardId, Guid UserId) : IMessage;
 
 public static class AssignCardCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         AssignCardCommand command,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -114,5 +114,4 @@ public static class AssignCardCommandHandler
         return Result.Success(card.MapToDto());
     }
 }
-
 

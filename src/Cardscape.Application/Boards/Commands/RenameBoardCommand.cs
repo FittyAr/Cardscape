@@ -16,7 +16,7 @@ public sealed record RenameBoardCommand(Guid BoardId, string NewName) : IMessage
 
 public static class RenameBoardCommandHandler
 {
-    public static async Task<Result<BoardDto>> Handle(
+    public static async Task<Result<BoardDto>> HandleAsync(
         RenameBoardCommand command,
         IBoardRepository boards,
         IUnitOfWork unitOfWork,
@@ -67,5 +67,4 @@ public static class RenameBoardCommandHandler
             board.Members.Count));
     }
 }
-
 

@@ -24,7 +24,7 @@ public sealed record RestoreCardCommand(Guid CardId) : IMessage;
 
 public static class RestoreCardCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         RestoreCardCommand command,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -69,5 +69,4 @@ public static class RestoreCardCommandHandler
         return Result.Success(card.MapToDto());
     }
 }
-
 

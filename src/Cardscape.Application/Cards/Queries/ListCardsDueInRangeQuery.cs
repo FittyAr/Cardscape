@@ -17,7 +17,7 @@ public sealed record ListCardsDueInRangeQuery(DateTimeOffset From, DateTimeOffse
 
 public static class ListCardsDueInRangeQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<CalendarEntryDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<CalendarEntryDto>>> HandleAsync(
         ListCardsDueInRangeQuery query,
         ICardRepository cards,
         IBoardRepository boards,

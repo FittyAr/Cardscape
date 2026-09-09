@@ -15,7 +15,7 @@ public class CreateBoardCommandHandlerTests
         var workspace = await ctx.SeedWorkspaceAsync(user.Id.Value);
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await CreateBoardCommandHandler.Handle(
+        var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(workspace.Id.Value, "Sprint", "desc",
                                   BoardVisibility.Private),
             ctx.Boards, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
@@ -35,7 +35,7 @@ public class CreateBoardCommandHandlerTests
         var workspace = await ctx.SeedWorkspaceAsync(user.Id.Value);
         ctx.CurrentUser = FakeCurrentUser.Anonymous();
 
-        var result = await CreateBoardCommandHandler.Handle(
+        var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(workspace.Id.Value, "Sprint", "desc",
                                   BoardVisibility.Private),
             ctx.Boards, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
@@ -52,7 +52,7 @@ public class CreateBoardCommandHandlerTests
         var user = await ctx.SeedUserAsync();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await CreateBoardCommandHandler.Handle(
+        var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(Guid.NewGuid(), "Sprint", "desc",
                                   BoardVisibility.Private),
             ctx.Boards, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
@@ -70,7 +70,7 @@ public class CreateBoardCommandHandlerTests
         var intruder = await ctx.SeedUserAsync("intruder@example.com");
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(intruder);
 
-        var result = await CreateBoardCommandHandler.Handle(
+        var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(workspace.Id.Value, "Sprint", "desc",
                                   BoardVisibility.Private),
             ctx.Boards, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
@@ -87,7 +87,7 @@ public class CreateBoardCommandHandlerTests
         var workspace = await ctx.SeedWorkspaceAsync(user.Id.Value);
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await CreateBoardCommandHandler.Handle(
+        var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(workspace.Id.Value, "", "desc",
                                   BoardVisibility.Private),
             ctx.Boards, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);

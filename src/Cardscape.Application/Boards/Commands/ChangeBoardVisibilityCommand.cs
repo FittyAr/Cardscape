@@ -17,7 +17,7 @@ public sealed record ChangeBoardVisibilityCommand(Guid BoardId, BoardVisibility 
 
 public static class ChangeBoardVisibilityCommandHandler
 {
-    public static async Task<Result<BoardDto>> Handle(
+    public static async Task<Result<BoardDto>> HandleAsync(
         ChangeBoardVisibilityCommand command,
         IBoardRepository boards,
         IUnitOfWork unitOfWork,
@@ -74,5 +74,4 @@ public static class ChangeBoardVisibilityCommandHandler
             board.Members.Count));
     }
 }
-
 

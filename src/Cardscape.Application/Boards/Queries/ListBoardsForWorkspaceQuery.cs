@@ -13,7 +13,7 @@ public sealed record ListBoardsForWorkspaceQuery(Guid WorkspaceId, bool IncludeA
 
 public static class ListBoardsForWorkspaceQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<BoardSummaryDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<BoardSummaryDto>>> HandleAsync(
         ListBoardsForWorkspaceQuery query,
         IBoardRepository boards,
         IRepository<Workspace, WorkspaceId> workspaces,

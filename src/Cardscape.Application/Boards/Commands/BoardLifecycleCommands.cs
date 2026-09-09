@@ -16,7 +16,7 @@ public sealed record ArchiveBoardCommand(Guid BoardId) : IMessage;
 
 public static class ArchiveBoardCommandHandler
 {
-    public static async Task<Result<BoardDto>> Handle(
+    public static async Task<Result<BoardDto>> HandleAsync(
         ArchiveBoardCommand command,
         IBoardRepository boards,
         IUnitOfWork unitOfWork,
@@ -61,7 +61,7 @@ public sealed record UnarchiveBoardCommand(Guid BoardId) : IMessage;
 
 public static class UnarchiveBoardCommandHandler
 {
-    public static async Task<Result<BoardDto>> Handle(
+    public static async Task<Result<BoardDto>> HandleAsync(
         UnarchiveBoardCommand command,
         IBoardRepository boards,
         IUnitOfWork unitOfWork,
@@ -106,7 +106,7 @@ public sealed record DeleteBoardCommand(Guid BoardId) : IMessage;
 
 public static class DeleteBoardCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DeleteBoardCommand command,
         IBoardRepository boards,
         IUnitOfWork unitOfWork,

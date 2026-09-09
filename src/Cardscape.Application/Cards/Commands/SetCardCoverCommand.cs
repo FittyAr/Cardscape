@@ -15,7 +15,7 @@ public sealed record SetCardCoverCommand(Guid CardId, string? ColorName) : IMess
 
 public static class SetCardCoverCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         SetCardCoverCommand command,
         ICardRepository cards,
         IBoardListRepository lists,

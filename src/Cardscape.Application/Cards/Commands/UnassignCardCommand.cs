@@ -24,7 +24,7 @@ public sealed record UnassignCardCommand(Guid CardId, Guid UserId) : IMessage;
 
 public static class UnassignCardCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         UnassignCardCommand command,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -75,5 +75,4 @@ public static class UnassignCardCommandHandler
         return Result.Success(card.MapToDto());
     }
 }
-
 

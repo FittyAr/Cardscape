@@ -13,7 +13,7 @@ public sealed record GetBoardQuery(Guid BoardId) : IMessage;
 
 public static class GetBoardQueryHandler
 {
-    public static async Task<Result<BoardDto>> Handle(
+    public static async Task<Result<BoardDto>> HandleAsync(
         GetBoardQuery query,
         IBoardRepository boards,
         ICurrentUser currentUser,

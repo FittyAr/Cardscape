@@ -16,7 +16,7 @@ public class CreateCardCommandHandlerTests
         var list = await ctx.SeedListAsync(board.Id);
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await CreateCardCommandHandler.Handle(
+        var result = await CreateCardCommandHandler.HandleAsync(
             new CreateCardCommand(list.Id.Value, "Buy milk", "details"),
             ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
@@ -37,7 +37,7 @@ public class CreateCardCommandHandlerTests
         var list = await ctx.SeedListAsync(board.Id);
         ctx.CurrentUser = FakeCurrentUser.Anonymous();
 
-        var result = await CreateCardCommandHandler.Handle(
+        var result = await CreateCardCommandHandler.HandleAsync(
             new CreateCardCommand(list.Id.Value, "Buy milk", "details"),
             ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
@@ -52,7 +52,7 @@ public class CreateCardCommandHandlerTests
         var user = await ctx.SeedUserAsync();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await CreateCardCommandHandler.Handle(
+        var result = await CreateCardCommandHandler.HandleAsync(
             new CreateCardCommand(Guid.NewGuid(), "Buy milk", "details"),
             ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
@@ -70,7 +70,7 @@ public class CreateCardCommandHandlerTests
         var list = await ctx.SeedListAsync(board.Id);
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await CreateCardCommandHandler.Handle(
+        var result = await CreateCardCommandHandler.HandleAsync(
             new CreateCardCommand(list.Id.Value, "", "details"),
             ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
@@ -89,7 +89,7 @@ public class CreateCardCommandHandlerTests
         var list = await ctx.SeedListAsync(board.Id);
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(intruder);
 
-        var result = await CreateCardCommandHandler.Handle(
+        var result = await CreateCardCommandHandler.HandleAsync(
             new CreateCardCommand(list.Id.Value, "Sneaky", "details"),
             ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 

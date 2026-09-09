@@ -15,7 +15,7 @@ public sealed record SetCardDueDateCommand(Guid CardId, DateTimeOffset DueDate) 
 
 public static class SetCardDueDateCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         SetCardDueDateCommand command,
         ICardRepository cards,
         IBoardListRepository lists,

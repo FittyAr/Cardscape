@@ -25,7 +25,7 @@ public sealed record MoveCardCommand(Guid CardId, Guid NewListId, double NewPosi
 
 public static class MoveCardCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         MoveCardCommand command,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -127,5 +127,4 @@ public static class MoveCardCommandHandler
         return Result.Success(card.MapToDto());
     }
 }
-
 

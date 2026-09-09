@@ -20,7 +20,7 @@ public static partial class CardscapeExtensions
 
     public static class SnoozeCardCommandHandler
     {
-        public static async Task<Result<DateTimeOffset>> Handle(
+        public static async Task<Result<DateTimeOffset>> HandleAsync(
             SnoozeCardCommand command,
             ICardSnoozeRepository repo,
             ICardRepository cards,
@@ -68,7 +68,7 @@ public static partial class CardscapeExtensions
 
     public static class UnsnoozeCardCommandHandler
     {
-        public static async Task<Result> Handle(
+        public static async Task<Result> HandleAsync(
             UnsnoozeCardCommand command,
             ICardSnoozeRepository repo,
             ICardRepository cards,

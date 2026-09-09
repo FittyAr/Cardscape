@@ -27,7 +27,7 @@ public sealed record AddBoardMemberCommand(
 
 public static class AddBoardMemberCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         AddBoardMemberCommand command,
         IBoardRepository boards,
         IUserRepository users,

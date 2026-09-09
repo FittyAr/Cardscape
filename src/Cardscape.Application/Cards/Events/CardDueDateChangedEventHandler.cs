@@ -16,7 +16,7 @@ namespace Cardscape.Application.Cards.Events;
 /// </summary>
 public static class CardDueDateCalendarSync
 {
-    public static async Task Handle(
+    public static async Task HandleAsync(
         CardDueDateSet @event,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -33,7 +33,7 @@ public static class CardDueDateCalendarSync
             cards, lists, boards, connections, sync, clock, logger, ct);
     }
 
-    public static async Task Handle(
+    public static async Task HandleAsync(
         CardDueDateCleared @event,
         ICardRepository cards,
         IBoardListRepository lists,

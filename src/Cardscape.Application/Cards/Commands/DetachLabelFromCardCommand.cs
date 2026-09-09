@@ -24,7 +24,7 @@ public sealed record DetachLabelFromCardCommand(Guid CardId, Guid LabelId) : IMe
 
 public static class DetachLabelFromCardCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         DetachLabelFromCardCommand command,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -63,5 +63,4 @@ public static class DetachLabelFromCardCommandHandler
         return Result.Success(card.MapToDto());
     }
 }
-
 

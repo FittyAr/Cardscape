@@ -24,7 +24,7 @@ public sealed record RenameCardCommand(Guid CardId, string NewTitle) : IMessage;
 
 public static class RenameCardCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         RenameCardCommand command,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -80,5 +80,4 @@ public static class RenameCardCommandHandler
         return Result.Success(card.MapToDto());
     }
 }
-
 

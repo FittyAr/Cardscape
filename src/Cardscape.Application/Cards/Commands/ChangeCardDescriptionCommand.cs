@@ -25,7 +25,7 @@ public sealed record ChangeCardDescriptionCommand(Guid CardId, string NewDescrip
 
 public static class ChangeCardDescriptionCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         ChangeCardDescriptionCommand command,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -81,5 +81,4 @@ public static class ChangeCardDescriptionCommandHandler
         return Result.Success(card.MapToDto());
     }
 }
-
 

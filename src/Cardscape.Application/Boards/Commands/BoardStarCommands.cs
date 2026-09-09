@@ -16,7 +16,7 @@ public sealed record StarBoardCommand(Guid BoardId) : IMessage;
 
 public static class StarBoardCommandHandler
 {
-    public static async Task<Result<BoardDto>> Handle(
+    public static async Task<Result<BoardDto>> HandleAsync(
         StarBoardCommand command,
         IBoardRepository boards,
         IUnitOfWork unitOfWork,
@@ -73,7 +73,7 @@ public sealed record UnstarBoardCommand(Guid BoardId) : IMessage;
 
 public static class UnstarBoardCommandHandler
 {
-    public static async Task<Result<BoardDto>> Handle(
+    public static async Task<Result<BoardDto>> HandleAsync(
         UnstarBoardCommand command,
         IBoardRepository boards,
         IUnitOfWork unitOfWork,

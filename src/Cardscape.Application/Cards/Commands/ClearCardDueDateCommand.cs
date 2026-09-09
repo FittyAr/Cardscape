@@ -15,7 +15,7 @@ public sealed record ClearCardDueDateCommand(Guid CardId) : IMessage;
 
 public static class ClearCardDueDateCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         ClearCardDueDateCommand command,
         ICardRepository cards,
         IBoardListRepository lists,

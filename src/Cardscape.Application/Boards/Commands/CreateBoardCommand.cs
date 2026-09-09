@@ -20,7 +20,7 @@ public sealed record CreateBoardCommand(
 
 public static class CreateBoardCommandHandler
 {
-    public static async Task<Result<BoardDto>> Handle(
+    public static async Task<Result<BoardDto>> HandleAsync(
         CreateBoardCommand command,
         IBoardRepository boards,
         IRepository<WorkspaceEntity, WorkspaceId> workspaces,
@@ -97,5 +97,4 @@ public static class CreateBoardCommandHandler
             boardResult.Value.Members.Count));
     }
 }
-
 

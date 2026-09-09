@@ -16,7 +16,7 @@ public sealed record GetCardQuery(Guid CardId) : IMessage;
 
 public static class GetCardQueryHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         GetCardQuery query,
         ICardRepository cards,
         ICardSnoozeRepository snoozes,

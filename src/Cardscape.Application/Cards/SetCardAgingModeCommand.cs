@@ -15,7 +15,7 @@ public static class SetCardAgingModeCommandHandler
 {
     private const int DefaultStaleAfterDays = 30;
 
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         SetCardAgingModeCommand command,
         IRepository<Card, CardId> cards,
         IBoardListRepository lists,

@@ -20,7 +20,7 @@ public static partial class CardscapeExtensions
 
     public static class MirrorCardCommandHandler
     {
-        public static async Task<Result<MirrorCardResult>> Handle(
+        public static async Task<Result<MirrorCardResult>> HandleAsync(
             MirrorCardCommand command,
             ICardRepository cards,
             IBoardListRepository lists,

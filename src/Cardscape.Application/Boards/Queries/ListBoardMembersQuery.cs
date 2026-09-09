@@ -13,7 +13,7 @@ public sealed record ListBoardMembersQuery(Guid BoardId) : IMessage;
 
 public static class ListBoardMembersQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<BoardMemberDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<BoardMemberDto>>> HandleAsync(
         ListBoardMembersQuery query,
         IBoardRepository boards,
         IUserRepository users,

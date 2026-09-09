@@ -25,7 +25,7 @@ public sealed record CreateCardCommand(Guid ListId, string Title, string? Descri
 
 public static class CreateCardCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         CreateCardCommand command,
         IBoardListRepository lists,
         IBoardRepository boards,
@@ -110,5 +110,4 @@ public static class CreateCardCommandHandler
             cardResult.Value.CardLabels.Count));
     }
 }
-
 

@@ -13,7 +13,7 @@ public sealed record ListStarredBoardsQuery() : IMessage;
 
 public static class ListStarredBoardsQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<BoardSummaryDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<BoardSummaryDto>>> HandleAsync(
         ListStarredBoardsQuery query,
         IBoardRepository boards,
         ICurrentUser currentUser,

@@ -15,7 +15,7 @@ public class StarBoardCommandHandlerTests
         var board = await ctx.SeedBoardAsync(workspace.Id, user.Id.Value);
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await StarBoardCommandHandler.Handle(
+        var result = await StarBoardCommandHandler.HandleAsync(
             new StarBoardCommand(board.Id.Value),
             ctx.Boards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
@@ -32,7 +32,7 @@ public class StarBoardCommandHandlerTests
         var user = await ctx.SeedUserAsync();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await StarBoardCommandHandler.Handle(
+        var result = await StarBoardCommandHandler.HandleAsync(
             new StarBoardCommand(Guid.NewGuid()),
             ctx.Boards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
@@ -49,7 +49,7 @@ public class StarBoardCommandHandlerTests
         var board = await ctx.SeedBoardAsync(workspace.Id, user.Id.Value);
         ctx.CurrentUser = FakeCurrentUser.Anonymous();
 
-        var result = await StarBoardCommandHandler.Handle(
+        var result = await StarBoardCommandHandler.HandleAsync(
             new StarBoardCommand(board.Id.Value),
             ctx.Boards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 

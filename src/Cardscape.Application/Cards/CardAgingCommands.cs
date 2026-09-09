@@ -23,7 +23,7 @@ public static partial class CardscapeExtensions
 
     public static class SetCardAgingCommandHandler
     {
-        public static async Task<Result<SetCardAgingResult>> Handle(
+        public static async Task<Result<SetCardAgingResult>> HandleAsync(
             SetCardAgingCommand command,
             ICardRepository cards,
             IBoardListRepository lists,

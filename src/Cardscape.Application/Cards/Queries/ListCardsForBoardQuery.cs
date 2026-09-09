@@ -17,7 +17,7 @@ public sealed record ListCardsForBoardQuery(
 
 public static class ListCardsForBoardQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<CardSummaryDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<CardSummaryDto>>> HandleAsync(
         ListCardsForBoardQuery query,
         ICardRepository cards,
         ICardSnoozeRepository snoozes,

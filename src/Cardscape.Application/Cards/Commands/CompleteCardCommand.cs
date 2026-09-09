@@ -24,7 +24,7 @@ public sealed record CompleteCardCommand(Guid CardId) : IMessage;
 
 public static class CompleteCardCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         CompleteCardCommand command,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -75,5 +75,4 @@ public static class CompleteCardCommandHandler
         return Result.Success(card.MapToDto());
     }
 }
-
 

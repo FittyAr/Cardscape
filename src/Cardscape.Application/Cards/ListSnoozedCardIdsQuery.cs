@@ -10,7 +10,7 @@ public sealed record ListSnoozedCardIdsQuery(Guid BoardId) : IMessage;
 
 public static class ListSnoozedCardIdsQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<Guid>>> Handle(
+    public static async Task<Result<IReadOnlyList<Guid>>> HandleAsync(
         ListSnoozedCardIdsQuery query,
         ICardSnoozeRepository snoozes,
         IBoardRepository boards,

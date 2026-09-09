@@ -17,7 +17,7 @@ public sealed record ChangeBoardDescriptionCommand(Guid BoardId, string NewDescr
 
 public static class ChangeBoardDescriptionCommandHandler
 {
-    public static async Task<Result<BoardDto>> Handle(
+    public static async Task<Result<BoardDto>> HandleAsync(
         ChangeBoardDescriptionCommand command,
         IBoardRepository boards,
         IUnitOfWork unitOfWork,
@@ -68,5 +68,4 @@ public static class ChangeBoardDescriptionCommandHandler
             board.Members.Count));
     }
 }
-
 

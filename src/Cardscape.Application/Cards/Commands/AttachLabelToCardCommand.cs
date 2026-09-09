@@ -24,7 +24,7 @@ public sealed record AttachLabelToCardCommand(Guid CardId, Guid LabelId) : IMess
 
 public static class AttachLabelToCardCommandHandler
 {
-    public static async Task<Result<CardDto>> Handle(
+    public static async Task<Result<CardDto>> HandleAsync(
         AttachLabelToCardCommand command,
         ICardRepository cards,
         IBoardListRepository lists,
@@ -82,5 +82,4 @@ public static class AttachLabelToCardCommandHandler
         return Result.Success(card.MapToDto());
     }
 }
-
 
