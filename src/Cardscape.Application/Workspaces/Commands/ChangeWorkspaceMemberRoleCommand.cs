@@ -14,7 +14,7 @@ public sealed record ChangeWorkspaceMemberRoleCommand(
 
 public static class ChangeWorkspaceMemberRoleCommandHandler
 {
-    public static async Task<Result<WorkspaceDto>> Handle(
+    public static async Task<Result<WorkspaceDto>> HandleAsync(
         ChangeWorkspaceMemberRoleCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         IUnitOfWork unitOfWork,

@@ -12,7 +12,7 @@ public sealed record MarkNotificationReadCommand(Guid NotificationId) : IMessage
 
 public static class MarkNotificationReadCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         MarkNotificationReadCommand command,
         INotificationRepository notifications,
         IUnitOfWork unitOfWork,
@@ -49,7 +49,7 @@ public sealed record MarkAllNotificationsReadCommand : IMessage;
 
 public static class MarkAllNotificationsReadCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         MarkAllNotificationsReadCommand command,
         INotificationRepository notifications,
         ICurrentUser currentUser,

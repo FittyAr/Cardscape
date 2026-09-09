@@ -13,7 +13,7 @@ public sealed record SetWorkspaceRegionCommand(Guid WorkspaceId, Region Region) 
 
 public static class SetWorkspaceRegionCommandHandler
 {
-    public static async Task<Result<WorkspaceDto>> Handle(
+    public static async Task<Result<WorkspaceDto>> HandleAsync(
         SetWorkspaceRegionCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         IUnitOfWork unitOfWork,

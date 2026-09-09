@@ -11,7 +11,7 @@ public sealed record RevokeWorkspaceInvitationCommand(Guid InvitationId) : IMess
 
 public static class RevokeWorkspaceInvitationCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         RevokeWorkspaceInvitationCommand command,
         IWorkspaceRepository workspaces,
         IWorkspaceInvitationRepository repository,

@@ -11,7 +11,7 @@ public sealed record ListWorkspaceInvitationsQuery(Guid WorkspaceId, bool Includ
 
 public static class ListWorkspaceInvitationsQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<WorkspaceInvitationDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<WorkspaceInvitationDto>>> HandleAsync(
         ListWorkspaceInvitationsQuery query,
         IWorkspaceInvitationRepository repository,
         IWorkspaceRepository workspaces,

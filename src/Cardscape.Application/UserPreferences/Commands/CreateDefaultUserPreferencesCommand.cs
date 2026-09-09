@@ -23,7 +23,7 @@ public sealed record CreateDefaultUserPreferencesCommand() : IMessage;
 
 public static class CreateDefaultUserPreferencesCommandHandler
 {
-    public static async Task<Result<UserPreferencesDto>> Handle(
+    public static async Task<Result<UserPreferencesDto>> HandleAsync(
         CreateDefaultUserPreferencesCommand _,
         IUserPreferencesRepository preferences,
         IUnitOfWork unitOfWork,

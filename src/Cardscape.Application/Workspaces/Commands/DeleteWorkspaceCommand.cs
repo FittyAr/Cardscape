@@ -12,7 +12,7 @@ public sealed record DeleteWorkspaceCommand(Guid WorkspaceId) : IMessage;
 
 public static class DeleteWorkspaceCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DeleteWorkspaceCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         IUnitOfWork unitOfWork,

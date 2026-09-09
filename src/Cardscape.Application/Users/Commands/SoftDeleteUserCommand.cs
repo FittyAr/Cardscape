@@ -20,7 +20,7 @@ public sealed record SoftDeleteUserCommand(Guid UserId);
 
 public static class SoftDeleteUserCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         SoftDeleteUserCommand command,
         IUserRepository users,
         IWorkspaceRepository workspaces,
@@ -76,5 +76,4 @@ public static class SoftDeleteUserCommandHandler
         return Result.Success();
     }
 }
-
 

@@ -13,7 +13,7 @@ public sealed record ListWorkspaceMembersQuery(Guid WorkspaceId) : IMessage;
 
 public static class ListWorkspaceMembersQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<WorkspaceMemberDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<WorkspaceMemberDto>>> HandleAsync(
         ListWorkspaceMembersQuery query,
         IWorkspaceRepository workspaces,
         IUserRepository users,

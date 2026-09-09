@@ -13,7 +13,7 @@ public sealed record UnarchiveWorkspaceCommand(Guid WorkspaceId) : IMessage;
 
 public static class UnarchiveWorkspaceCommandHandler
 {
-    public static async Task<Result<WorkspaceDto>> Handle(
+    public static async Task<Result<WorkspaceDto>> HandleAsync(
         UnarchiveWorkspaceCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         IUnitOfWork unitOfWork,

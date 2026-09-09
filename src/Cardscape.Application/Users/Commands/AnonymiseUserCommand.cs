@@ -17,7 +17,7 @@ public sealed record AnonymiseUserCommand(Guid UserId);
 
 public static class AnonymiseUserCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         AnonymiseUserCommand command,
         IUserRepository users,
         IWorkspaceRepository workspaces,
@@ -68,5 +68,4 @@ public static class AnonymiseUserCommandHandler
         return Result.Success();
     }
 }
-
 

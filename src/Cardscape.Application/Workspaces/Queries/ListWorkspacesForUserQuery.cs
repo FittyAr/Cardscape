@@ -10,7 +10,7 @@ public sealed record ListWorkspacesForUserQuery() : IMessage;
 
 public static class ListWorkspacesForUserQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<WorkspaceDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<WorkspaceDto>>> HandleAsync(
         ListWorkspacesForUserQuery query,
         IWorkspaceRepository workspaces,
         ICurrentUser currentUser,

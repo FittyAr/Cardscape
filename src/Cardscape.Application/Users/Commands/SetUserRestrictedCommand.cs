@@ -15,7 +15,7 @@ public sealed record SetUserRestrictedCommand(Guid UserId, bool Restricted);
 
 public static class SetUserRestrictedCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         SetUserRestrictedCommand command,
         IUserRepository users,
         IUnitOfWork unitOfWork,
@@ -34,5 +34,4 @@ public static class SetUserRestrictedCommandHandler
         return Result.Success();
     }
 }
-
 

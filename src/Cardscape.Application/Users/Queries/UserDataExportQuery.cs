@@ -106,7 +106,7 @@ public sealed record GetUserDataExportQuery(Guid UserId);
 
 public static class GetUserDataExportQueryHandler
 {
-    public static async Task<UserDataExportDto?> Handle(
+    public static async Task<UserDataExportDto?> HandleAsync(
         GetUserDataExportQuery query,
         IUserDataExportService export,
         CancellationToken cancellation)

@@ -11,7 +11,7 @@ public sealed record ListNotificationsQuery(bool UnreadOnly = false, int Skip = 
 
 public static class ListNotificationsQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<NotificationDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<NotificationDto>>> HandleAsync(
         ListNotificationsQuery query,
         INotificationRepository notifications,
         ICurrentUser currentUser,
@@ -45,7 +45,7 @@ public sealed record UnreadNotificationsCountQuery : IMessage;
 
 public static class UnreadNotificationsCountQueryHandler
 {
-    public static async Task<Result<int>> Handle(
+    public static async Task<Result<int>> HandleAsync(
         UnreadNotificationsCountQuery query,
         INotificationRepository notifications,
         ICurrentUser currentUser,

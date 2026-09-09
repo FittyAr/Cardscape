@@ -23,7 +23,7 @@ public sealed record GetUserPreferencesQuery() : IMessage;
 
 public static class GetUserPreferencesQueryHandler
 {
-    public static async Task<Result<UserPreferencesDto?>> Handle(
+    public static async Task<Result<UserPreferencesDto?>> HandleAsync(
         GetUserPreferencesQuery _,
         IUserPreferencesRepository preferences,
         ICurrentUser currentUser,

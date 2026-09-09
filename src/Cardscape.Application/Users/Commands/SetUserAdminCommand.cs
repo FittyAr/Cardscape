@@ -16,7 +16,7 @@ public sealed record SetUserAdminCommand(Guid UserId, bool IsAdmin);
 
 public static class SetUserAdminCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         SetUserAdminCommand command,
         IUserRepository users,
         IUnitOfWork unitOfWork,
@@ -60,4 +60,3 @@ public static class SetUserAdminCommandHandler
         return Result.Success();
     }
 }
-

@@ -15,7 +15,7 @@ public sealed record AddWorkspaceMemberCommand(Guid WorkspaceId, Guid UserId, Wo
 
 public static class AddWorkspaceMemberCommandHandler
 {
-    public static async Task<Result<WorkspaceDto>> Handle(
+    public static async Task<Result<WorkspaceDto>> HandleAsync(
         AddWorkspaceMemberCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         IUserRepository users,

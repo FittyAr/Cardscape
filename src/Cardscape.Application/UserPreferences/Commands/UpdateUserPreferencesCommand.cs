@@ -50,7 +50,7 @@ public static class UpdateUserPreferencesCommandHandler
         "cardscape-classic", "cardscape-classic-dark",
     };
 
-    public static async Task<Result<UserPreferencesDto>> Handle(
+    public static async Task<Result<UserPreferencesDto>> HandleAsync(
         UpdateUserPreferencesCommand command,
         IUserPreferencesRepository preferences,
         IUnitOfWork unitOfWork,

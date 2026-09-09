@@ -21,7 +21,7 @@ public sealed record IssueWorkspaceInvitationCommand(
 
 public static class IssueWorkspaceInvitationCommandHandler
 {
-    public static async Task<Result<WorkspaceInvitationIssuanceDto>> Handle(
+    public static async Task<Result<WorkspaceInvitationIssuanceDto>> HandleAsync(
         IssueWorkspaceInvitationCommand command,
         IInvitationService invitations,
         IWorkspaceRepository workspaces,

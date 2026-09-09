@@ -15,7 +15,7 @@ public sealed class SetWorkspaceRequireTwoFactorCommandHandlerTests
         await ctx.SeedTotpCredentialAsync(owner, confirmed: false);
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(owner);
 
-        var result = await SetWorkspaceRequireTwoFactorCommandHandler.Handle(
+        var result = await SetWorkspaceRequireTwoFactorCommandHandler.HandleAsync(
             new SetWorkspaceRequireTwoFactorCommand(workspace.Id.Value, Require: true),
             ctx.Workspaces,
             ctx.TotpCredentials,
@@ -41,7 +41,7 @@ public sealed class SetWorkspaceRequireTwoFactorCommandHandlerTests
         await ctx.SeedTotpCredentialAsync(owner);
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(owner);
 
-        var result = await SetWorkspaceRequireTwoFactorCommandHandler.Handle(
+        var result = await SetWorkspaceRequireTwoFactorCommandHandler.HandleAsync(
             new SetWorkspaceRequireTwoFactorCommand(workspace.Id.Value, Require: true),
             ctx.Workspaces,
             ctx.TotpCredentials,

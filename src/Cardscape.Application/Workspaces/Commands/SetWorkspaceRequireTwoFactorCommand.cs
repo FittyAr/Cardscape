@@ -15,7 +15,7 @@ public sealed record SetWorkspaceRequireTwoFactorCommand(Guid WorkspaceId, bool 
 
 public static class SetWorkspaceRequireTwoFactorCommandHandler
 {
-    public static async Task<Result<WorkspaceDto>> Handle(
+    public static async Task<Result<WorkspaceDto>> HandleAsync(
         SetWorkspaceRequireTwoFactorCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         ITotpCredentialRepository totpCredentials,

@@ -13,7 +13,7 @@ public class CreateWorkspaceCommandHandlerTests
         var user = await ctx.SeedUserAsync();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await CreateWorkspaceCommandHandler.Handle(
+        var result = await CreateWorkspaceCommandHandler.HandleAsync(
             new CreateWorkspaceCommand("Acme"),
             ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
 
@@ -29,7 +29,7 @@ public class CreateWorkspaceCommandHandlerTests
     {
         var ctx = new HandlersTestContext { CurrentUser = FakeCurrentUser.Anonymous() };
 
-        var result = await CreateWorkspaceCommandHandler.Handle(
+        var result = await CreateWorkspaceCommandHandler.HandleAsync(
             new CreateWorkspaceCommand("Acme"),
             ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
 
@@ -44,7 +44,7 @@ public class CreateWorkspaceCommandHandlerTests
         var user = await ctx.SeedUserAsync();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await CreateWorkspaceCommandHandler.Handle(
+        var result = await CreateWorkspaceCommandHandler.HandleAsync(
             new CreateWorkspaceCommand(string.Empty),
             ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
 
@@ -59,7 +59,7 @@ public class CreateWorkspaceCommandHandlerTests
         var user = await ctx.SeedUserAsync();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await CreateWorkspaceCommandHandler.Handle(
+        var result = await CreateWorkspaceCommandHandler.HandleAsync(
             new CreateWorkspaceCommand("Acme", Region.NorthAmerica),
             ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
 
@@ -74,7 +74,7 @@ public class CreateWorkspaceCommandHandlerTests
         var user = await ctx.SeedUserAsync();
         ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
 
-        var result = await CreateWorkspaceCommandHandler.Handle(
+        var result = await CreateWorkspaceCommandHandler.HandleAsync(
             new CreateWorkspaceCommand("Acme"),
             ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
 

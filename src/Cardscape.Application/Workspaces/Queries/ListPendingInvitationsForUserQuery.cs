@@ -11,7 +11,7 @@ public sealed record ListPendingInvitationsForUserQuery() : IMessage;
 
 public static class ListPendingInvitationsForUserQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<WorkspaceInvitationDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<WorkspaceInvitationDto>>> HandleAsync(
         ListPendingInvitationsForUserQuery query,
         IWorkspaceInvitationRepository repository,
         IWorkspaceRepository workspaces,

@@ -13,7 +13,7 @@ public sealed record RenameWorkspaceCommand(Guid WorkspaceId, string NewName) : 
 
 public static class RenameWorkspaceCommandHandler
 {
-    public static async Task<Result<WorkspaceDto>> Handle(
+    public static async Task<Result<WorkspaceDto>> HandleAsync(
         RenameWorkspaceCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         IUnitOfWork unitOfWork,

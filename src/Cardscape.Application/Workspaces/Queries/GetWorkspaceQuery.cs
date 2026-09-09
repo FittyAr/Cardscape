@@ -12,7 +12,7 @@ public sealed record GetWorkspaceQuery(Guid WorkspaceId) : IMessage;
 
 public static class GetWorkspaceQueryHandler
 {
-    public static async Task<Result<WorkspaceDto>> Handle(
+    public static async Task<Result<WorkspaceDto>> HandleAsync(
         GetWorkspaceQuery query,
         IWorkspaceRepository workspaces,
         ICurrentUser currentUser,

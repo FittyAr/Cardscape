@@ -13,7 +13,7 @@ public sealed record RestoreUserCommand(Guid UserId);
 
 public static class RestoreUserCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         RestoreUserCommand command,
         IUserRepository users,
         IUnitOfWork unitOfWork,
@@ -37,5 +37,4 @@ public static class RestoreUserCommandHandler
         return Result.Success();
     }
 }
-
 

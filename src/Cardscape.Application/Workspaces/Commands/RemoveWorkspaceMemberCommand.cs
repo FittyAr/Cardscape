@@ -13,7 +13,7 @@ public sealed record RemoveWorkspaceMemberCommand(Guid WorkspaceId, Guid UserId)
 
 public static class RemoveWorkspaceMemberCommandHandler
 {
-    public static async Task<Result<WorkspaceDto>> Handle(
+    public static async Task<Result<WorkspaceDto>> HandleAsync(
         RemoveWorkspaceMemberCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         IUnitOfWork unitOfWork,

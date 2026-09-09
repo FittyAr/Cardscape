@@ -20,7 +20,7 @@ public sealed record AcceptWorkspaceInvitationCommand(string Token) : IMessage;
 
 public static class AcceptWorkspaceInvitationCommandHandler
 {
-    public static async Task<Result<WorkspaceDto>> Handle(
+    public static async Task<Result<WorkspaceDto>> HandleAsync(
         AcceptWorkspaceInvitationCommand command,
         IInvitationService invitations,
         IWorkspaceInvitationRepository repository,

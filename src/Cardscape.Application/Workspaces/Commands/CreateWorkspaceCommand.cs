@@ -12,7 +12,7 @@ public sealed record CreateWorkspaceCommand(string Name, Region? Region = null) 
 
 public static class CreateWorkspaceCommandHandler
 {
-    public static async Task<Result<WorkspaceDto>> Handle(
+    public static async Task<Result<WorkspaceDto>> HandleAsync(
         CreateWorkspaceCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         IUnitOfWork unitOfWork,
