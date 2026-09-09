@@ -14,7 +14,7 @@ through the lower-level `ICardscapeClient.SendAsync(...)` /
 ## Install
 
 ```bash
-dotnet add package Cardscape.Sdk --version 1.1.0
+dotnet add package Cardscape.Sdk --version 1.2.0
 ```
 
 ## Quickstart

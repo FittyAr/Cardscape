@@ -76,7 +76,7 @@ Reglas permanentes:
 - [x] Auditar composición DI de API, MCP y Seeder: lifetimes, duplicación, validación al arranque y opciones tipadas.
 - [ ] Revisar boundaries y vertical slices; dividir archivos monolíticos por caso de uso sin crear capas adicionales. El mirror de tarjetas ya tiene un único comando canónico compartido por REST/MCP; se eliminó el handler stub que no creaba la tarjeta destino. Card, Checklists, Workspaces, Boards, Webhooks, Custom Fields, Attachments, AI, extensiones Card, GitHub, Lists, mutaciones Card, ciclo de vida Card, endpoints Webhook, relaciones Card, mutaciones Board, extensiones Board, comentarios, reglas de automatización Board, ciclo de vida User, comandos Slack, conexiones SAML, estado de ítems Checklist, recurrencias Card, valores Custom Field, comandos Label, consultas Board, definiciones Custom Field, consultas Activity, ciclo de vida Checklist, membresía Workspace, consultas Card, planificación Card, recuperación de contraseña, mutaciones de ítems Checklist, comandos Dashcard, políticas Workspace, tokens SCIM, calendario Card, Voting, mutaciones List, Inbound Email, mutaciones Workspace, ciclo de vida Workspace, consultas Workspace, consultas de invitaciones Workspace, comandos adicionales Card, búsqueda y el servicio SCIM ya eliminaron o dividieron sus monolitos por responsabilidades de negocio o caso de uso. Conservan namespaces, contratos/nombres CLR y discovery de Wolverine; continúan los monolitos restantes.
 - [ ] Revisar el rol del SDK público y evitar duplicación de contratos con Web/API. El SDK ya es un cliente externo net10 exclusivo, no una biblioteca compartida interna: se eliminaron `netstandard2.0`, `net8.0`, el polyfill `IsExternalInit` y los tests duplicados por TFM. El paquete usa PDB portable para producir un `.snupkg` válido. Queda reemplazar la duplicación manual de DTOs Web/SDK por una fuente contractual única o generación OpenAPI.
-- [ ] Alinear solución, Docker, CI, scripts y documentación con el mismo conjunto de proyectos.
+- [x] Alinear solución, Docker, CI, scripts y documentación con el mismo conjunto de proyectos. `Cardscape.slnx` contiene los 17 proyectos efectivos bajo `src`, `sdk` y `tests`; CI restaura y compila esa solución, valida las migraciones PostgreSQL/MySQL y empaqueta el SDK. Docker construye el único host desplegable (`Cardscape.Api`) y la documentación del SDK coincide con su TFM y versión actuales.
 - [x] Reconciliar documentación normativa con Wolverine, .NET 10 y versiones instaladas.
 
 ### Fase 2 — Superficies críticas
@@ -117,7 +117,7 @@ Reglas permanentes:
 
 ### Fase 6 — Operación y cierre
 
-- [ ] Auditar Docker/Compose, configuración por ambiente, health checks, graceful shutdown y despliegue reproducible.
+- [ ] Auditar Docker/Compose, configuración por ambiente, health checks, graceful shutdown y despliegue reproducible. Los tres Compose usan el mismo Dockerfile/host y health check HTTP. El mirror de producción ahora falla cerrado si `CARDS_CAPE_JWT_KEY` no está definido, en lugar de arrancar con la clave pública de desarrollo pese a que su documentación afirmaba lo contrario. Continúa la verificación de imagen, shutdown y despliegue real.
 - [ ] Revisar CI, supply chain, dependencias vulnerables y actualizaciones compatibles con .NET 10.
 - [ ] Consolidar documentación operativa y eliminar contradicciones sin reescribir ADR históricos.
 - [ ] Ejecutar build, tests, análisis y smoke tests finales.
@@ -325,6 +325,7 @@ Reglas permanentes:
 | 2026-09-09 | Eliminación de `async void` en Razor | Los eventos Radzen de tema y cultura retornan `Task`; el evento síncrono obligatorio de `NavigationManager` delega a un método async que contiene su manejo de errores. Se elimina además un comentario de incidente beta ya resuelto | Web rebuild Release 0/0; 0 declaraciones `async void` en Web | Incluido en este commit |
 | 2026-09-09 | Naming Razor de workspaces e integraciones | Quince handlers de formularios y acciones Radzen adoptan sufijo `Async` en las pantallas de workspaces, miembros, seguridad, SCIM, SAML, Slack, GitHub e inbound email; también se actualizan llamadas internas de recarga | Handlers Razor pendientes 39 a 24; Web rebuild Release 0/0 | Incluido en este commit |
 | 2026-09-09 | Cierre de naming async en Razor | Los 24 handlers restantes de layout, tokens, automatización, dashboards, boards, calendario, inbox, autenticación y settings adoptan sufijo `Async`; todos los callbacks Radzen se actualizan directamente | Handlers Razor pendientes 24 a 0; `async void` 0; Web rebuild Release 0/0; E2E 7 pass | Incluido en este commit |
+| 2026-09-09 | Alineación de solución, SDK y Compose | Confirmados los 17 proyectos en la solución; retiradas dependencias centrales obsoletas del SDK multitarget y documentación 1.1.0; producción ya no admite una clave JWT insegura por defecto | `Compare-Object` sin diferencias; Compose prod válido; SDK net10 0/0 y paquetes 1.2.0 generados | Incluido en este commit |
 
 ### Migración LoggerMessage
 

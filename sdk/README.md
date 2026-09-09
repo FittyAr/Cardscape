@@ -18,7 +18,7 @@ sdk/
 The SDK is included in the root `Cardscape.slnx` under
 a `/sdk/` folder. The dedicated `sdk/Cardscape.Sdk.slnx`
 is the published package boundary: it builds the
-`Cardscape.Sdk.1.1.0.nupkg` / `.snupkg` artifacts
+`Cardscape.Sdk.1.2.0.nupkg` / `.snupkg` artifacts
 without dragging the rest of the solution into the
 package pipeline.
 
@@ -37,7 +37,7 @@ The build emits the package artifacts at
 ## Install
 
 ```bash
-dotnet add package Cardscape.Sdk --version 1.1.0
+dotnet add package Cardscape.Sdk --version 1.2.0
 ```
 
 ## Usage
@@ -62,7 +62,7 @@ See `sdk/Cardscape.Sdk/CardscapeClient.cs` and
 
 ## Versioning
 
-The SDK follows the API server's semantic version. The
-`Version` element in `Cardscape.Sdk.csproj` is bumped in
-the same commit that bumps the API's `Version` in
-`Directory.Build.props`.
+The SDK is versioned independently from the deployable application.
+Its package version is the `Version` declared in
+`Cardscape.Sdk.csproj`; API compatibility changes must update that
+version and the release notes together.

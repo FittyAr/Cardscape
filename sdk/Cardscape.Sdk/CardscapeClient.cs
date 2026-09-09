@@ -184,20 +184,8 @@ public sealed class CardscapeClient : IAsyncDisposable
         return await _http.SendAsync(request, ct);
     }
 
-    /// <summary>
-    /// netstandard2.0 does not expose
-    /// <c>HttpContent.ReadAsStringAsync(CancellationToken)</c>;
-    /// the multi-target SDK bridges to the net8.0+ overload
-    /// via a single helper so the call site is uniform.
-    /// </summary>
-    private static Task<string> ReadContentAsStringAsync(HttpContent content, CancellationToken ct)
-    {
-#if NETSTANDARD2_0
-        return content.ReadAsStringAsync();
-#else
-        return content.ReadAsStringAsync(ct);
-#endif
-    }
+    private static Task<string> ReadContentAsStringAsync(HttpContent content, CancellationToken ct) =>
+        content.ReadAsStringAsync(ct);
 
     /// <inheritdoc/>
     public ValueTask DisposeAsync()

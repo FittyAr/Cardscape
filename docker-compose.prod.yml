@@ -72,10 +72,10 @@ services:
       Database__Provider: Sqlite
       ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
       Storage__LocalRoot: /app/Storage
-      # Same insecure dev key fallback as the dev compose.
-      # Override with `CARDS_CAPE_JWT_KEY=...` in your .env
-      # for any non-toy use.
-      Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:-dev-only-insecure-signing-key-please-override-in-production-32+chars}
+      # Production must fail closed when no signing key is supplied.
+      # Generate one with `openssl rand -base64 48` and expose it
+      # through the shell or a non-versioned .env file.
+      Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:?Set CARDS_CAPE_JWT_KEY in your .env file (openssl rand -base64 48)}
       Jwt__Issuer: Cardscape
       Jwt__Audience: Cardscape
       Cors__AllowedOrigins__0: http://localhost:8080
