@@ -36,7 +36,7 @@ namespace Cardscape.Mcp.Prompts;
 public sealed class McpPrompts(IMessageBus bus)
 {
     [McpServerPrompt(Name = "standup-summary")]
-    public async Task<string> StandupSummary(
+    public async Task<string> StandupSummaryAsync(
         int maxCards = 5,
         int lookaheadDays = 7,
         CancellationToken ct = default)
@@ -71,7 +71,7 @@ public sealed class McpPrompts(IMessageBus bus)
     }
 
     [McpServerPrompt(Name = "triage-inbox")]
-    public async Task<string> TriageInbox(int maxCards = 20, CancellationToken ct = default)
+    public async Task<string> TriageInboxAsync(int maxCards = 20, CancellationToken ct = default)
     {
         Result<IReadOnlyList<NotificationDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<NotificationDto>>>(
             new ListNotificationsQuery(UnreadOnly: true, Skip: 0, Take: maxCards), ct);
@@ -99,7 +99,7 @@ public sealed class McpPrompts(IMessageBus bus)
     }
 
     [McpServerPrompt(Name = "sprint-planning")]
-    public async Task<string> SprintPlanning(
+    public async Task<string> SprintPlanningAsync(
         Guid boardId,
         int maxCards = 10,
         CancellationToken ct = default)
@@ -154,7 +154,7 @@ public sealed class McpPrompts(IMessageBus bus)
     }
 
     [McpServerPrompt(Name = "weekly-review")]
-    public async Task<string> WeeklyReview(CancellationToken ct = default)
+    public async Task<string> WeeklyReviewAsync(CancellationToken ct = default)
     {
         DateTimeOffset from = DateTimeOffset.UtcNow.AddDays(-7);
         DateTimeOffset to = DateTimeOffset.UtcNow;
@@ -188,7 +188,7 @@ public sealed class McpPrompts(IMessageBus bus)
     }
 
     [McpServerPrompt(Name = "stale-cards")]
-    public async Task<string> StaleCards(int staleAfterDays = 14, int maxCards = 25, CancellationToken ct = default)
+    public async Task<string> StaleCardsAsync(int staleAfterDays = 14, int maxCards = 25, CancellationToken ct = default)
     {
         // We don't have a "stale" query yet (Card Aging is the future home for it).
         // For now this prompt is a template; the AI sees the structure and

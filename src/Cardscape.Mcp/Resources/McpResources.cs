@@ -34,7 +34,7 @@ public sealed class McpResources(IMessageBus bus)
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     [McpServerResource(Name = "workspace", UriTemplate = "workspace://{workspaceId}")]
-    public async Task<string> GetWorkspace(Uri uri, CancellationToken ct = default)
+    public async Task<string> GetWorkspaceAsync(Uri uri, CancellationToken ct = default)
     {
         Guid workspaceId = McpResourceUriParser.ParseWorkspaceId(uri);
         Result<WorkspaceDto> result = await bus.InvokeAsync<Result<WorkspaceDto>>(
@@ -43,7 +43,7 @@ public sealed class McpResources(IMessageBus bus)
     }
 
     [McpServerResource(Name = "board", UriTemplate = "board://{boardId}")]
-    public async Task<string> GetBoard(Uri uri, CancellationToken ct = default)
+    public async Task<string> GetBoardAsync(Uri uri, CancellationToken ct = default)
     {
         Guid boardId = McpResourceUriParser.ParseBoardId(uri);
         Result<BoardDto> result = await bus.InvokeAsync<Result<BoardDto>>(
@@ -52,7 +52,7 @@ public sealed class McpResources(IMessageBus bus)
     }
 
     [McpServerResource(Name = "card", UriTemplate = "card://{cardId}")]
-    public async Task<string> GetCard(Uri uri, CancellationToken ct = default)
+    public async Task<string> GetCardAsync(Uri uri, CancellationToken ct = default)
     {
         Guid cardId = McpResourceUriParser.ParseCardId(uri);
         Result<CardDto> result = await bus.InvokeAsync<Result<CardDto>>(
@@ -61,7 +61,7 @@ public sealed class McpResources(IMessageBus bus)
     }
 
     [McpServerResource(Name = "cards-on-board", UriTemplate = "cards://board/{boardId}")]
-    public async Task<string> ListCardsOnBoard(Uri uri, CancellationToken ct = default)
+    public async Task<string> ListCardsOnBoardAsync(Uri uri, CancellationToken ct = default)
     {
         Guid boardId = McpResourceUriParser.ParseCardsBoardId(uri);
         Result<IReadOnlyList<CardSummaryDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
@@ -70,7 +70,7 @@ public sealed class McpResources(IMessageBus bus)
     }
 
     [McpServerResource(Name = "lists-on-board", UriTemplate = "lists://board/{boardId}")]
-    public async Task<string> ListListsOnBoard(Uri uri, CancellationToken ct = default)
+    public async Task<string> ListListsOnBoardAsync(Uri uri, CancellationToken ct = default)
     {
         Guid boardId = McpResourceUriParser.ParseListsBoardId(uri);
         Result<IReadOnlyList<BoardListDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<BoardListDto>>>(
