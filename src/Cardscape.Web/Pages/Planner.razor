@@ -11,11 +11,11 @@
 <PageHeader Title="@monthLabel"
             Subtitle="@($"Cards with a due date in {monthLabel}, grouped by list (one swimlane per list). Click a card to open it.")">
     <Actions>
-        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth"
+        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonthAsync"
                       aria-label="Previous month" title="Previous month" />
-        <RadzenButton Text="Today" ButtonStyle="ButtonStyle.Light" Click="@GoToCurrentMonth"
+        <RadzenButton Text="Today" ButtonStyle="ButtonStyle.Light" Click="@GoToCurrentMonthAsync"
                       aria-label="Jump to current month" title="Jump to current month" />
-        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth"
+        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonthAsync"
                       aria-label="Next month" title="Next month" />
     </Actions>
 </PageHeader>
@@ -95,19 +95,19 @@ else
             .ToList();
     }
 
-    private async Task PrevMonth()
+    private async Task PrevMonthAsync()
     {
         firstOfMonth = firstOfMonth.AddMonths(-1);
         await ReloadAsync();
     }
 
-    private async Task NextMonth()
+    private async Task NextMonthAsync()
     {
         firstOfMonth = firstOfMonth.AddMonths(1);
         await ReloadAsync();
     }
 
-    private async Task GoToCurrentMonth()
+    private async Task GoToCurrentMonthAsync()
     {
         DateTime utcNow = DateTime.UtcNow;
         firstOfMonth = new DateTimeOffset(utcNow.Year, utcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);

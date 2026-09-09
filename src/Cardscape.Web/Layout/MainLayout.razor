@@ -38,7 +38,7 @@
                             <InboxBell />
                             <AppearanceToggle />
                             <LanguageSwitcher />
-                            <RadzenProfileMenu Click="@ProfileMenuClick">
+                            <RadzenProfileMenu Click="@ProfileMenuClickAsync">
                                 <ChildContent>
                                     <RadzenProfileMenuItem Path="account/api-tokens" Icon="key" Text="@L["NavApiTokens"]" />
                                     <RadzenProfileMenuItem Path="settings/two-factor" Icon="security" Text="@L["SettingsTwoFactor"]" />
@@ -191,7 +191,7 @@
 
     void ToggleSidebar() => sidebarExpanded = !sidebarExpanded;
 
-    async Task ProfileMenuClick(RadzenProfileMenuItem args)
+    private async Task ProfileMenuClickAsync(RadzenProfileMenuItem args)
     {
         if (args.Value == "logout")
         {
@@ -205,4 +205,3 @@
         Nav.NavigateTo("login", forceLoad: true);
     }
 }
-

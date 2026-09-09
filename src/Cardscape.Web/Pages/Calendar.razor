@@ -11,11 +11,11 @@
 <PageHeader Title="@monthLabel"
             Subtitle="@($"Cards with a due date in {monthLabel}. Click a card to open it; click an empty day to add a new card (coming soon).")">
     <Actions>
-        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonth"
+        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonthAsync"
                       aria-label="@($"Previous month ({firstOfMonth.AddMonths(-1):MMMM yyyy})")" />
-        <RadzenButton Text="Today" ButtonStyle="ButtonStyle.Light" Click="@GoToCurrentMonth"
+        <RadzenButton Text="Today" ButtonStyle="ButtonStyle.Light" Click="@GoToCurrentMonthAsync"
                       aria-label="Jump to current month" />
-        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonth"
+        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonthAsync"
                       aria-label="@($"Next month ({firstOfMonth.AddMonths(1):MMMM yyyy})")" />
     </Actions>
 </PageHeader>
@@ -83,19 +83,19 @@
             : (IReadOnlyList<CalendarEntryDto>)Array.Empty<CalendarEntryDto>();
     }
 
-    private async Task PrevMonth()
+    private async Task PrevMonthAsync()
     {
         firstOfMonth = firstOfMonth.AddMonths(-1);
         await ReloadAsync();
     }
 
-    private async Task NextMonth()
+    private async Task NextMonthAsync()
     {
         firstOfMonth = firstOfMonth.AddMonths(1);
         await ReloadAsync();
     }
 
-    private async Task GoToCurrentMonth()
+    private async Task GoToCurrentMonthAsync()
     {
         DateTime utcNow = DateTime.UtcNow;
         firstOfMonth = new DateTimeOffset(utcNow.Year, utcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);

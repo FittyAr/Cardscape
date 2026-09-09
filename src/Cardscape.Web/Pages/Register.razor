@@ -19,7 +19,7 @@
         <RadzenText Text="@L["AuthCreateAccountSubtitle"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
     </RadzenStack>
 
-    <RadzenTemplateForm TItem="RegisterModel" Data="@model" Submit="@HandleSubmit">
+    <RadzenTemplateForm TItem="RegisterModel" Data="@model" Submit="@HandleSubmitAsync">
         <RadzenStack Gap="1rem">
             <RadzenFormField Text="@L["AuthDisplayName"]" Component="displayName">
                 <RadzenTextBox @bind-Value="model.DisplayName" Name="displayName" Style="width:100%"
@@ -94,7 +94,7 @@
         }
     }
 
-    private async Task HandleSubmit()
+    private async Task HandleSubmitAsync()
     {
         if (!CanSubmit())
         {

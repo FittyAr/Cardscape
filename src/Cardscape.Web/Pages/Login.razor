@@ -44,7 +44,7 @@
             <HorizontalRule />
         </RadzenStack>
 
-        <RadzenTemplateForm TItem="LoginModel" Data="@model" Submit="@HandleSubmit">
+        <RadzenTemplateForm TItem="LoginModel" Data="@model" Submit="@HandleSubmitAsync">
             <RadzenStack Gap="1rem">
                 <RadzenFormField Text="@L["AuthEmail"]" Component="email">
                     <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%"
@@ -74,7 +74,7 @@
         <RadzenText Text="@L["Login_TotpCode_Label"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
         <RadzenText Text="@L["Login_TotpCode_Required"]" TextStyle="TextStyle.Body1" />
 
-        <RadzenTemplateForm TItem="TotpModel" Data="@totpModel" Submit="@HandleTotpSubmit">
+        <RadzenTemplateForm TItem="TotpModel" Data="@totpModel" Submit="@HandleTotpSubmitAsync">
             <RadzenStack Gap="1rem">
                 <RadzenFormField Text="@L["Login_TotpCode_Label"]" Component="totp">
                     <RadzenTextBox @bind-Value="totpModel.Code" Name="totp"
@@ -136,7 +136,7 @@
         Nav.NavigateTo($"/api/auth/external/{provider}/start?returnUrl={returnUrl}", forceLoad: true);
     }
 
-    private async Task HandleSubmit()
+    private async Task HandleSubmitAsync()
     {
         busy = true;
         error = null;
@@ -163,7 +163,7 @@
         }
     }
 
-    private async Task HandleTotpSubmit()
+    private async Task HandleTotpSubmitAsync()
     {
         if (challenge is null)
         {

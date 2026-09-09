@@ -36,7 +36,7 @@
                     </RadzenAlert>
                 }
                 <RadzenButton Text="@L["SettingsTwoFactorEnrol"]"
-                              Click="@OnEnroll"
+                              Click="@OnEnrollAsync"
                               ButtonStyle="ButtonStyle.Primary" />
             </RadzenStack>
         </RadzenCard>
@@ -68,7 +68,7 @@
                     <RadzenText Text="@L["SettingsTwoFactorConfirmSetupTitle"]"
                                 TextStyle="TextStyle.H6" TagName="TagName.H3" Class="rz-mt-4" />
                     <RadzenText Text="@L["SettingsTwoFactorConfirmSetupBlurb"]" />
-                    <RadzenTemplateForm TItem="ConfirmationModel" Data="@confirmation" Submit="@OnConfirmEnrollment">
+                    <RadzenTemplateForm TItem="ConfirmationModel" Data="@confirmation" Submit="@OnConfirmEnrollmentAsync">
                         <RadzenStack Gap="0.75rem">
                             <RadzenFormField Text="@L["SettingsTwoFactorCurrentCode"]" Component="confirmation-code">
                                 <RadzenTextBox Name="confirmation-code"
@@ -95,7 +95,7 @@
                 <RadzenText Text="@string.Format(L["SettingsTwoFactorEnrolledAt"].Value, status.EnrolledAt?.ToString("u"))" />
                 <RadzenText Text="@string.Format(L["SettingsTwoFactorRecoveryCodesRemaining"].Value, status.RemainingRecoveryCodes)" />
                 <RadzenButton Text="@L["SettingsTwoFactorDisable"]"
-                              Click="@OnDisable"
+                              Click="@OnDisableAsync"
                               ButtonStyle="ButtonStyle.Danger" />
             </RadzenStack>
         </RadzenCard>
@@ -137,7 +137,7 @@
         }
     }
 
-    private async Task OnEnroll()
+    private async Task OnEnrollAsync()
     {
         message = null;
         try
@@ -157,7 +157,7 @@
         }
     }
 
-    private async Task OnDisable()
+    private async Task OnDisableAsync()
     {
         message = null;
         try
@@ -199,7 +199,7 @@
         }
     }
 
-    private async Task OnConfirmEnrollment()
+    private async Task OnConfirmEnrollmentAsync()
     {
         message = null;
         try

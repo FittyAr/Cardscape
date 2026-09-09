@@ -102,7 +102,7 @@ Reglas permanentes:
 - [ ] Auditar todas las páginas por componente, estado, accesibilidad, responsive, loading/empty/error y navegación.
 - [x] Dividir `CardDetail.razor` y `BoardDetail.razor` en partials cohesionados por estado/carga, acciones y capacidades; los archivos monolíticos originales ya no existen.
 - [ ] Eliminar HTML/CSS/JS custom no autorizado cuando Radzen ofrezca equivalente. `WorkspaceImport` ya reemplazó el último `InputFile` por `RadzenUpload`, eliminó su `async void` y dispone la respuesta HTTP. No quedan `button`, `input`, `select`, `textarea`, `form`, `table` o `dialog` HTML nativos; continúa la revisión de contenedores puramente visuales, conservando HTML semántico y capacidades de navegador que Radzen no reemplaza.
-- [ ] Revisar formularios, validadores, dialogs, grids, virtualización y renderizado para evitar trabajo innecesario. La auditoría directa de bloques `@code` detectó y eliminó los tres `async void`; quince handlers de workspaces, miembros, seguridad, SCIM, SAML, Slack, GitHub e inbound email ya adoptaron sufijo `Async` junto con sus bindings Radzen. Quedan 24 handlers Razor `Task` sin sufijo que los analizadores C# no inspeccionan.
+- [ ] Revisar formularios, validadores, dialogs, grids, virtualización y renderizado para evitar trabajo innecesario. La auditoría directa de bloques `@code` eliminó los tres `async void` y normalizó los 39 handlers `Task` que los analizadores C# no inspeccionan, junto con todos sus bindings Radzen. No queda deuda async en Razor; continúa la auditoría funcional de grids, validación y renderizado.
 - [ ] Validar temas, contraste, teclado, foco y localización.
 
 ### Fase 5 — Calidad y pruebas
@@ -324,6 +324,7 @@ Reglas permanentes:
 | 2026-09-09 | Importación de workspace en Radzen | `WorkspaceImport` reemplaza `InputFile` por `RadzenUpload`, usa un handler `Task` en lugar de `async void`, bloquea nuevas selecciones durante operaciones y dispone la respuesta HTTP | Web rebuild Release 0/0; E2E 7 pass; 0 controles HTML/Blazor nativos de formulario en Web | Incluido en este commit |
 | 2026-09-09 | Eliminación de `async void` en Razor | Los eventos Radzen de tema y cultura retornan `Task`; el evento síncrono obligatorio de `NavigationManager` delega a un método async que contiene su manejo de errores. Se elimina además un comentario de incidente beta ya resuelto | Web rebuild Release 0/0; 0 declaraciones `async void` en Web | Incluido en este commit |
 | 2026-09-09 | Naming Razor de workspaces e integraciones | Quince handlers de formularios y acciones Radzen adoptan sufijo `Async` en las pantallas de workspaces, miembros, seguridad, SCIM, SAML, Slack, GitHub e inbound email; también se actualizan llamadas internas de recarga | Handlers Razor pendientes 39 a 24; Web rebuild Release 0/0 | Incluido en este commit |
+| 2026-09-09 | Cierre de naming async en Razor | Los 24 handlers restantes de layout, tokens, automatización, dashboards, boards, calendario, inbox, autenticación y settings adoptan sufijo `Async`; todos los callbacks Radzen se actualizan directamente | Handlers Razor pendientes 24 a 0; `async void` 0; Web rebuild Release 0/0; E2E 7 pass | Incluido en este commit |
 
 ### Migración LoggerMessage
 

@@ -37,7 +37,7 @@
             <RadzenText Text="@L["OAuthAppsRegister"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
             <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["OAuthAppsRegisterBlurb"]</RadzenText>
 
-            <RadzenTemplateForm TItem="RegisterFormModel" Data="@form" Submit="@OnSubmit">
+            <RadzenTemplateForm TItem="RegisterFormModel" Data="@form" Submit="@OnSubmitAsync">
                 <LabeledField Text="@L["OAuthAppsNameLabel"]" Component="name">
                     <RadzenTextBox Name="name" @bind-Value="form.Name" Style="width:100%" />
                 </LabeledField>
@@ -148,7 +148,7 @@
 
     protected override async Task OnInitializedAsync() => await ReloadAsync();
 
-    private async Task OnSubmit()
+    private async Task OnSubmitAsync()
     {
         if (busy)
         {

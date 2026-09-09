@@ -11,7 +11,7 @@
 
 <PageHeader Title="Inbox">
     <Actions>
-        <RadzenSelectBar @bind-Value="filter" TValue="string" Change="@OnFilterChanged">
+        <RadzenSelectBar @bind-Value="filter" TValue="string" Change="@OnFilterChangedAsync">
             <Items>
                 <RadzenSelectBarItem Text="All" Value="@("all")" />
                 <RadzenSelectBarItem Text="Unread" Value="@("unread")" />
@@ -104,7 +104,7 @@ else
         }
     }
 
-    private async Task OnFilterChanged()
+    private async Task OnFilterChangedAsync()
     {
         await ReloadAsync();
     }

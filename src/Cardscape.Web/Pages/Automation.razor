@@ -20,7 +20,7 @@
     @if (showCreate)
     {
         <RadzenCard>
-            <RadzenTemplateForm TItem="NewRuleModel" Data="@newRule" Submit="@CreateRule">
+            <RadzenTemplateForm TItem="NewRuleModel" Data="@newRule" Submit="@CreateRuleAsync">
                 <LabeledField Text="Name" Component="rule-name">
                     <RadzenTextBox @bind-Value="newRule.Name" Name="rule-name" Style="width:100%" />
                 </LabeledField>
@@ -167,7 +167,7 @@
         }
     }
 
-    private async Task CreateRule()
+    private async Task CreateRuleAsync()
     {
         busy = true;
         error = null;

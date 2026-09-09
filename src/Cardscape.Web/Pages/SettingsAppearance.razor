@@ -24,7 +24,7 @@
             <RadzenText Text="@L["AppearanceMode"]" TextStyle="TextStyle.H6" TagName="TagName.H2" />
             <RadzenRadioButtonList TValue="string"
                                    Value="@UserPreferences.CurrentMode"
-                                   Change="@OnModeChanged">
+                                   Change="@OnModeChangedAsync">
                 <Items>
                     <RadzenRadioButtonListItem Text="@L["AppearanceModeLight"]" Value="@("Light")" />
                     <RadzenRadioButtonListItem Text="@L["AppearanceModeDark"]" Value="@("Dark")" />
@@ -138,7 +138,7 @@
         await UserPreferences.SetAsync(themeName, UserPreferences.CurrentMode);
     }
 
-    private async Task OnModeChanged()
+    private async Task OnModeChangedAsync()
     {
         string? themeName = UserPreferences.CurrentThemeName;
         if (string.IsNullOrEmpty(themeName))

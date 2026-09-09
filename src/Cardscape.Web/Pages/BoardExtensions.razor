@@ -55,7 +55,7 @@ else
                 {
                     <RadzenSelectBar TValue="string"
                                      Value="@agingMode.ToString()"
-                                     Change="@OnAgingModeChanged"
+                                     Change="@OnAgingModeChangedAsync"
                                      Size="ButtonSize.Small"
                                      Class="rz-mt-3">
                         <Items>
@@ -180,7 +180,7 @@ else
         }
     }
 
-    private async Task OnAgingModeChanged(object value)
+    private async Task OnAgingModeChangedAsync(object value)
     {
         if (value is null
             || !Enum.TryParse<CardAgingMode>(value.ToString(), ignoreCase: false, out CardAgingMode parsed)

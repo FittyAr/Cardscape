@@ -36,7 +36,7 @@
                               Click="@(() => { showCreate = false; error = null; })" />
                 <RadzenButton Text="@L["ActionCreate"]" ButtonType="ButtonType.Submit"
                               ButtonStyle="ButtonStyle.Primary" IsBusy="@busy"
-                              Click="@CreateDashcard" />
+                              Click="@CreateDashcardAsync" />
             </RadzenStack>
         </RadzenStack>
     </RadzenCard>
@@ -64,7 +64,7 @@ else
                         <RadzenText Text="@d.ConfigurationJson" TextStyle="TextStyle.Body2"
                                     class="rz-color-text-secondary" />
                         <RadzenButton Text="@L["ActionDelete"]" ButtonStyle="ButtonStyle.Danger"
-                                      Size="ButtonSize.Small" Click="@(() => Delete(d.Id))" />
+                                      Size="ButtonSize.Small" Click="@(() => DeleteAsync(d.Id))" />
                     </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
@@ -103,7 +103,7 @@ else
         dashcards = result.IsSuccess ? result.Value : [];
     }
 
-    private async Task CreateDashcard()
+    private async Task CreateDashcardAsync()
     {
         busy = true;
         error = null;
@@ -129,7 +129,7 @@ else
         }
     }
 
-    private async Task Delete(Guid id)
+    private async Task DeleteAsync(Guid id)
     {
         var result = await DashboardsApi.DeleteAsync(BoardId, id);
         if (!result.IsSuccess)
