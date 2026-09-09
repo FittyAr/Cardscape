@@ -14,7 +14,12 @@
 
     <RadzenCard>
         <LabeledField Text="@L["ImportKanbanFile"]" Component="file">
-            <InputFile OnChange="@OnFileSelected" accept="application/json,.json" />
+            <RadzenUpload Change="@OnFileSelectedAsync"
+                          Accept="application/json,.json"
+                          Auto="false"
+                          Multiple="false"
+                          Disabled="@(previewing || applying)"
+                          ChooseText="@L["ImportKanbanFile"]" />
         </LabeledField>
 
         @if (previewing)
@@ -84,7 +89,7 @@
                                       ButtonStyle="ButtonStyle.Primary"
                                       IsBusy="@applying"
                                       Disabled="@applying"
-                                      Click="@ApplyImport" />
+                                      Click="@ApplyImportAsync" />
                         <RadzenButton Text="@L["ImportCancel"]"
                                       ButtonStyle="ButtonStyle.Light"
                                       Click="@CancelPreview" />
@@ -125,9 +130,9 @@
     // without overwriting the current preview / error.
     private int selectionVersion;
 
-    private async void OnFileSelected(InputFileChangeEventArgs e)
+    private async Task OnFileSelectedAsync(UploadChangeEventArgs e)
     {
-        form.File = e.File;
+        form.File = e.Files?.FirstOrDefault();
         preview = null;
         applied = null;
         error = null;
@@ -171,7 +176,7 @@
         }
     }
 
-    private async Task ApplyImport()
+    private async Task ApplyImportAsync()
     {
         if (form.File is null)
         {
@@ -211,7 +216,7 @@
         content.Add(fileContent, "file", form.File.Name);
         content.Add(new StringContent(Id.ToString()), "targetWorkspaceId");
         string action = previewOnly ? "preview" : "apply";
-        HttpResponseMessage response = await Http.PostAsync($"api/imports/kanban/{action}", content);
+        using HttpResponseMessage response = await Http.PostAsync($"api/imports/kanban/{action}", content);
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<ImportResultDto>()
@@ -225,7 +230,7 @@
 
     private sealed class ImportForm
     {
-        public Microsoft.AspNetCore.Components.Forms.IBrowserFile? File { get; set; }
+        public Radzen.FileInfo? File { get; set; }
     }
 
     private sealed class ImportResultDto

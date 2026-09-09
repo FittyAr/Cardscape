@@ -98,10 +98,10 @@ Reglas permanentes:
 
 ### Fase 4 — Blazor WebAssembly y UI Radzen
 
-- [ ] Leer la skill local `radzen-blazor` antes del primer cambio UI.
+- [x] Leer la skill local `radzen-blazor` antes del primer cambio UI de esta fase; se aplicó su patrón `RadzenUpload` y su contrato `UploadChangeEventArgs`.
 - [ ] Auditar todas las páginas por componente, estado, accesibilidad, responsive, loading/empty/error y navegación.
 - [x] Dividir `CardDetail.razor` y `BoardDetail.razor` en partials cohesionados por estado/carga, acciones y capacidades; los archivos monolíticos originales ya no existen.
-- [ ] Eliminar HTML/CSS/JS custom no autorizado cuando Radzen ofrezca equivalente.
+- [ ] Eliminar HTML/CSS/JS custom no autorizado cuando Radzen ofrezca equivalente. `WorkspaceImport` ya reemplazó el último `InputFile` por `RadzenUpload`, eliminó su `async void` y dispone la respuesta HTTP. No quedan `button`, `input`, `select`, `textarea`, `form`, `table` o `dialog` HTML nativos; continúa la revisión de contenedores puramente visuales, conservando HTML semántico y capacidades de navegador que Radzen no reemplaza.
 - [ ] Revisar formularios, validadores, dialogs, grids, virtualización y renderizado para evitar trabajo innecesario.
 - [ ] Validar temas, contraste, teclado, foco y localización.
 
@@ -321,6 +321,7 @@ Reglas permanentes:
 | 2026-09-09 | Limpieza de descripciones obsoletas | MCP deja de presentarse como scaffold de fases pasadas y elimina `IDE0005`, `IDE0060` e `IDE0028` de su `NoWarn` local. Seeder, API y CardEndpoints describen únicamente comportamiento vigente | Rebuild MCP Release 0/0; rebuild API Release 0/0; 0 supresiones en MCP | Incluido en este commit |
 | 2026-09-09 | SDK alineado con .NET 10 | El SDK y sus tests abandonan targets legacy `netstandard2.0`/`net8.0`; se elimina el polyfill condicionado y la documentación operativa queda alineada con net10. El símbolo pasa de PDB embebido a portable para que el paquete de símbolos no quede vacío | SDK build/pack Release 0/0; `.nupkg` y `.snupkg` generados; SDK tests 15 pass, 0 fail | Incluido en este commit |
 | 2026-09-09 | Jerarquía documental y estado no ficticio | El índice documental distingue fuentes normativas de snapshots históricos y apunta al plan de modernización vigente. Se elimina la página que declaraba producción, réplica, soporte e incidentes inexistentes | ADR preservados; 1 documento ficticio eliminado; índice y workstream actual reconciliados | Incluido en este commit |
+| 2026-09-09 | Importación de workspace en Radzen | `WorkspaceImport` reemplaza `InputFile` por `RadzenUpload`, usa un handler `Task` en lugar de `async void`, bloquea nuevas selecciones durante operaciones y dispone la respuesta HTTP | Web rebuild Release 0/0; E2E 7 pass; 0 controles HTML/Blazor nativos de formulario en Web | Incluido en este commit |
 
 ### Migración LoggerMessage
 
