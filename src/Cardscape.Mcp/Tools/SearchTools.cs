@@ -23,7 +23,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed class SearchTools(IMessageBus bus, ICurrentUser currentUser)
 {
     [McpServerTool(Name = "cards_search")]
-    public async Task<SearchPageDto> Search(
+    public async Task<SearchPageDto> SearchAsync(
         string query,
         Guid? boardId = null,
         SearchHitKind? kind = null,

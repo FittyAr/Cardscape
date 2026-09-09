@@ -11,7 +11,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed class VotingTools(IMessageBus bus, ICurrentUser currentUser)
 {
     [McpServerTool(Name = "cards_toggle_vote")]
-    public async Task<CardVoteStateDto> ToggleVote(Guid cardId, CancellationToken ct = default)
+    public async Task<CardVoteStateDto> ToggleVoteAsync(Guid cardId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_toggle_vote");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
@@ -32,7 +32,7 @@ public sealed class VotingTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "cards_get_votes")]
-    public async Task<CardVoteStateDto> GetVotes(Guid cardId, CancellationToken ct = default)
+    public async Task<CardVoteStateDto> GetVotesAsync(Guid cardId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_get_votes");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);

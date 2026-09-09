@@ -16,7 +16,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed class ActivitiesTools(IMessageBus bus, ICurrentUser currentUser)
 {
     [McpServerTool(Name = "boards_list_activities")]
-    public async Task<ActivityPage> ListForBoard(
+    public async Task<ActivityPage> ListForBoardAsync(
         Guid boardId, string? cursor = null, int? limit = null, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_list_activities");
@@ -38,7 +38,7 @@ public sealed class ActivitiesTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "cards_list_activities")]
-    public async Task<ActivityPage> ListForCard(
+    public async Task<ActivityPage> ListForCardAsync(
         Guid cardId, string? cursor = null, int? limit = null, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_list_activities");

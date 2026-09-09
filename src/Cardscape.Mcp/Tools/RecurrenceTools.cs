@@ -11,7 +11,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed class RecurrenceTools(IMessageBus bus, ICurrentUser currentUser)
 {
     [McpServerTool(Name = "cards_get_recurrence")]
-    public async Task<CardRecurrenceDto?> Get(Guid cardId, CancellationToken ct = default)
+    public async Task<CardRecurrenceDto?> GetAsync(Guid cardId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_get_recurrence");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
@@ -32,7 +32,7 @@ public sealed class RecurrenceTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "cards_set_recurrence")]
-    public async Task<CardRecurrenceDto> Set(
+    public async Task<CardRecurrenceDto> SetAsync(
         Guid cardId, int intervalDays, DateTimeOffset firstOccurrenceAt,
         CancellationToken ct = default)
     {
@@ -55,7 +55,7 @@ public sealed class RecurrenceTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "cards_delete_recurrence")]
-    public async Task<string> Delete(Guid cardId, CancellationToken ct = default)
+    public async Task<string> DeleteAsync(Guid cardId, CancellationToken ct = default)
     {
         using var __mcpSpan = McpToolSpan.Begin("cards_delete_recurrence");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);

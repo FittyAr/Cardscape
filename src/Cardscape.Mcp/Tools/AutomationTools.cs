@@ -19,7 +19,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
 {
     [McpServerTool(Name = "automation_list_rules")]
-    public async Task<IReadOnlyList<BoardAutomationRuleDto>> ListRules(Guid boardId, CancellationToken ct)
+    public async Task<IReadOnlyList<BoardAutomationRuleDto>> ListRulesAsync(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("automation_list_rules");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
@@ -40,7 +40,7 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "automation_create_rule")]
-    public async Task<BoardAutomationRuleDto> CreateRule(
+    public async Task<BoardAutomationRuleDto> CreateRuleAsync(
         Guid boardId,
         string name,
         int trigger,
@@ -72,7 +72,7 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "automation_enable_rule")]
-    public async Task<string> EnableRule(Guid ruleId, CancellationToken ct)
+    public async Task<string> EnableRuleAsync(Guid ruleId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("automation_enable_rule");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -92,7 +92,7 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "automation_disable_rule")]
-    public async Task<string> DisableRule(Guid ruleId, CancellationToken ct)
+    public async Task<string> DisableRuleAsync(Guid ruleId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("automation_disable_rule");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -112,7 +112,7 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "automation_delete_rule")]
-    public async Task<string> DeleteRule(Guid ruleId, CancellationToken ct)
+    public async Task<string> DeleteRuleAsync(Guid ruleId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("automation_delete_rule");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);

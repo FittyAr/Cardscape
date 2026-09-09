@@ -15,7 +15,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed class AiTools(IMessageBus bus, ICurrentUser currentUser)
 {
     [McpServerTool(Name = "ai_generate_card_description")]
-    public async Task<AiFeatures.AiGeneratedText> GenerateCardDescription(
+    public async Task<AiFeatures.AiGeneratedText> GenerateCardDescriptionAsync(
         Guid cardId,
         string? extraContext = null,
         CancellationToken ct = default)
@@ -42,7 +42,7 @@ public sealed class AiTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "ai_summarize_thread")]
-    public async Task<AiFeatures.AiGeneratedText> SummarizeThread(
+    public async Task<AiFeatures.AiGeneratedText> SummarizeThreadAsync(
         Guid[] commentIds,
         CancellationToken ct = default)
     {
@@ -68,7 +68,7 @@ public sealed class AiTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "ai_make_checklist")]
-    public async Task<AiFeatures.AiGeneratedChecklist> MakeChecklist(
+    public async Task<AiFeatures.AiGeneratedChecklist> MakeChecklistAsync(
         Guid cardId,
         CancellationToken ct = default)
     {
@@ -94,7 +94,7 @@ public sealed class AiTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "ai_suggest_owners")]
-    public async Task<AiFeatures.AiOwnerSuggestions> SuggestOwners(
+    public async Task<AiFeatures.AiOwnerSuggestions> SuggestOwnersAsync(
         Guid cardId,
         int maxSuggestions = 3,
         CancellationToken ct = default)
