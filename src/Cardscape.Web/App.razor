@@ -1,11 +1,13 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 @using Cardscape.Web.Layout
+@using Cardscape.Web.Logging
 @using Cardscape.Web.Services
 @using Radzen
 @implements IDisposable
 @inject NavigationManager Nav
 @inject UserPreferencesService UserPreferences
+@inject ILogger<App> Logger
 
 <!--
   v1.2.0 theming — the RadzenTheme tag replaces the two static
@@ -123,7 +125,7 @@
             // path now, so a throw here just leaves the
             // Radzen default in place — same outcome as the
             // original OnInitializedAsync catch block.
-            Console.Error.WriteLine($"[App] UserPreferences.InitializeAsync threw: {ex.Message}");
+            Logger.UserPreferencesBackgroundHydrationFailed(ex);
         }
     }
 

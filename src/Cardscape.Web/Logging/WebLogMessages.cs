@@ -57,4 +57,7 @@ internal static partial class WebLogMessages
 
     [LoggerMessage(EventId = 3032, Level = LogLevel.Information, Message = "Board hub reconnecting.")]
     internal static partial void BoardHubReconnecting(this ILogger logger, Exception? exception);
+
+    [LoggerMessage(EventId = 3040, Level = LogLevel.Warning, Message = "Background user-preferences hydration failed; the default theme remains active.")]
+    internal static partial void UserPreferencesBackgroundHydrationFailed(this ILogger logger, Exception exception);
 }
