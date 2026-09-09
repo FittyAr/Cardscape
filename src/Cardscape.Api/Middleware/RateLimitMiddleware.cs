@@ -75,7 +75,7 @@ public sealed class RateLimitMiddleware(
 
         logger.ApiTokenRateLimitExceeded(token.Id.Value, context.Request.Path, decision.RetryAfter);
 
-        await WriteRateLimited(context, decision.RetryAfter);
+        await WriteRateLimitedAsync(context, decision.RetryAfter);
     }
 
     private static bool ShouldSkip(HttpContext context)
@@ -115,7 +115,7 @@ public sealed class RateLimitMiddleware(
         return false;
     }
 
-    private static async Task WriteRateLimited(HttpContext context, int retryAfter)
+    private static async Task WriteRateLimitedAsync(HttpContext context, int retryAfter)
     {
         if (context.Response.HasStarted)
         {

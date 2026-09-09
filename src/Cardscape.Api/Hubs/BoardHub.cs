@@ -12,7 +12,7 @@ namespace Cardscape.Api.Hubs;
 
 /// <summary>
 /// Real-time hub for one board. Clients join the
-/// <c>board:{boardId}</c> group on <see cref="JoinBoard"/>; the
+/// <c>board:{boardId}</c> group on <see cref="JoinBoardAsync"/>; the
 /// <see cref="IBoardNotifier"/> (driven by the
 /// <c>BoardEventBroadcaster</c> in the Application layer) pushes
 /// the actual events to every group member.
@@ -34,7 +34,7 @@ public sealed class BoardHub : Hub<IBoardClient>
         _logger = logger;
     }
 
-    public async Task JoinBoard(Guid boardId)
+    public async Task JoinBoardAsync(Guid boardId)
     {
         // SECURITY: a logged-in user is not, by default, a
         // member of every board. The hub MUST check board
@@ -63,7 +63,7 @@ public sealed class BoardHub : Hub<IBoardClient>
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(boardId));
     }
 
-    public async Task LeaveBoard(Guid boardId)
+    public async Task LeaveBoardAsync(Guid boardId)
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupName(boardId));
     }

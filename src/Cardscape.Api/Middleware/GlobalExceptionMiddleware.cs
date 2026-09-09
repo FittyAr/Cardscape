@@ -40,7 +40,7 @@ public sealed class GlobalExceptionMiddleware(
         catch (ValidationException ex)
         {
             logger.RequestValidationFailed(ex, context.Request.Path);
-            await WriteProblem(context, StatusCodes.Status400BadRequest, "Validation failed", ex.Message);
+            await WriteProblemAsync(context, StatusCodes.Status400BadRequest, "Validation failed", ex.Message);
         }
         catch (System.Text.Json.JsonException ex)
         {
@@ -51,7 +51,7 @@ public sealed class GlobalExceptionMiddleware(
             // not a server bug, and the rest of the API
             // contract treats bad request bodies as 400s.
             logger.RequestJsonDeserializationFailed(ex, context.Request.Path);
-            await WriteProblem(
+            await WriteProblemAsync(
                 context,
                 StatusCodes.Status400BadRequest,
                 "Malformed request body",
@@ -64,7 +64,7 @@ public sealed class GlobalExceptionMiddleware(
             // endpoint that expects a `?foo=` string but the
             // caller forgot to include it). Treat as 400.
             logger.BadRequestReceived(ex, context.Request.Path);
-            await WriteProblem(
+            await WriteProblemAsync(
                 context,
                 StatusCodes.Status400BadRequest,
                 "Bad request",
@@ -90,7 +90,7 @@ public sealed class GlobalExceptionMiddleware(
             // endpoint at once without touching the
             // handler surface.
             logger.RequestConcurrencyConflict(ex, context.Request.Path);
-            await WriteProblem(
+            await WriteProblemAsync(
                 context,
                 StatusCodes.Status409Conflict,
                 "Concurrency conflict",
@@ -100,11 +100,11 @@ public sealed class GlobalExceptionMiddleware(
         catch (Exception ex)
         {
             logger.RequestUnhandledException(ex, context.Request.Path);
-            await WriteProblem(context, StatusCodes.Status500InternalServerError, "Internal server error", "An unexpected error occurred.");
+            await WriteProblemAsync(context, StatusCodes.Status500InternalServerError, "Internal server error", "An unexpected error occurred.");
         }
     }
 
-    private static async Task WriteProblem(HttpContext context, int statusCode, string title, string detail)
+    private static async Task WriteProblemAsync(HttpContext context, int statusCode, string title, string detail)
     {
         if (context.Response.HasStarted)
         {

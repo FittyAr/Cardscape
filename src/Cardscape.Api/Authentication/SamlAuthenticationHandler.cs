@@ -104,7 +104,7 @@ public sealed class SamlAuthenticationHandler
         {
             // BETA-2-#12 — see test-results/BETA-TEST-REPORT.md.
             //
-            // The original WriteNotConfigured() helper wrote a
+            // The original WriteNotConfiguredAsync() helper wrote a
             // 404. That hides the failure mode: the operator
             // dashboard surfaces the URL space as "endpoint
             // missing" and spends the next hour wondering why
@@ -114,7 +114,7 @@ public sealed class SamlAuthenticationHandler
             // for this workspace, so the request cannot be
             // processed. The 501 makes the failure mode
             // self-explanatory in the operator log.
-            await WriteProblem(
+            await WriteProblemAsync(
                 StatusCodes.Status501NotImplemented,
                 "saml.not_configured",
                 $"No active SAML connection is configured for workspace slug '{slug}'. " +
@@ -127,16 +127,16 @@ public sealed class SamlAuthenticationHandler
         {
             return action switch
             {
-                "login" or "login-init" => await HandleLogin(connection, slug),
-                "acs" => await HandleAcs(connection, slug),
-                "metadata" => await HandleMetadata(connection, slug),
-                _ => await WriteNotFound(slug, action)
+                "login" or "login-init" => await HandleLoginAsync(connection, slug),
+                "acs" => await HandleAcsAsync(connection, slug),
+                "metadata" => await HandleMetadataAsync(connection, slug),
+                _ => await WriteNotFoundAsync(slug, action)
             };
         }
         catch (Exception ex)
         {
             Logger.SamlHandlerFailed(ex, slug, action);
-            await WriteProblem(StatusCodes.Status500InternalServerError,
+            await WriteProblemAsync(StatusCodes.Status500InternalServerError,
                 "saml.handler_error", "SAML handler error.");
             return true;
         }
@@ -151,11 +151,11 @@ public sealed class SamlAuthenticationHandler
     protected override Task HandleForbiddenAsync(AuthenticationProperties properties) =>
         Task.CompletedTask;
 
-    private async Task<bool> HandleLogin(
+    private async Task<bool> HandleLoginAsync(
         Domain.Authentication.Saml.SamlConnection connection, string slug)
     {
         (Saml2ConfigurationOptions options, Saml2IdentityProvider idp) =
-            await BuildSustainsysOptions(connection, slug);
+            await BuildSustainsysOptionsAsync(connection, slug);
 
         Saml2HttpRequestData requestData = BuildRequestData();
         string returnPath = $"/saml/{slug}/login-init";
@@ -170,7 +170,7 @@ public sealed class SamlAuthenticationHandler
         if (result.Location is null)
         {
             Logger.SamlSignInLocationMissing(slug);
-            await WriteProblem(StatusCodes.Status502BadGateway, "saml.signin_no_location",
+            await WriteProblemAsync(StatusCodes.Status502BadGateway, "saml.signin_no_location",
                 "Identity provider did not return a redirect URL.");
             return true;
         }
@@ -180,11 +180,11 @@ public sealed class SamlAuthenticationHandler
         return true;
     }
 
-    private async Task<bool> HandleAcs(
+    private async Task<bool> HandleAcsAsync(
         Domain.Authentication.Saml.SamlConnection connection, string slug)
     {
         (Saml2ConfigurationOptions options, _) =
-            await BuildSustainsysOptions(connection, slug);
+            await BuildSustainsysOptionsAsync(connection, slug);
 
         Saml2HttpRequestData requestData = BuildRequestData();
         Saml2CommandResult result;
@@ -197,7 +197,7 @@ public sealed class SamlAuthenticationHandler
         catch (Exception ex)
         {
             Logger.SamlAcsProcessingFailed(ex, slug);
-            await WriteProblem(StatusCodes.Status400BadRequest, "saml.acs_failed",
+            await WriteProblemAsync(StatusCodes.Status400BadRequest, "saml.acs_failed",
                 "SAML assertion processing failed.");
             return true;
         }
@@ -206,7 +206,7 @@ public sealed class SamlAuthenticationHandler
             || result.Principal.Identity is null
             || !result.Principal.Identity.IsAuthenticated)
         {
-            await WriteProblem(StatusCodes.Status401Unauthorized, "saml.no_principal",
+            await WriteProblemAsync(StatusCodes.Status401Unauthorized, "saml.no_principal",
                 "SAML response did not contain an authenticated principal.");
             return true;
         }
@@ -216,7 +216,7 @@ public sealed class SamlAuthenticationHandler
             ?? result.Principal.FindFirstValue(Saml2ClaimTypes.NameId);
         if (string.IsNullOrWhiteSpace(nameId))
         {
-            await WriteProblem(StatusCodes.Status400BadRequest, "saml.no_name_id",
+            await WriteProblemAsync(StatusCodes.Status400BadRequest, "saml.no_name_id",
                 "SAML response did not contain a NameID.");
             return true;
         }
@@ -224,7 +224,7 @@ public sealed class SamlAuthenticationHandler
         var subjectResult = SubjectId.Create(nameId);
         if (subjectResult.IsFailure)
         {
-            await WriteProblem(StatusCodes.Status400BadRequest,
+            await WriteProblemAsync(StatusCodes.Status400BadRequest,
                 subjectResult.Error.Code, subjectResult.Error.Message);
             return true;
         }
@@ -240,7 +240,7 @@ public sealed class SamlAuthenticationHandler
             Context.RequestAborted);
         if (resolved.IsFailure)
         {
-            await WriteProblem(StatusCodes.Status400BadRequest,
+            await WriteProblemAsync(StatusCodes.Status400BadRequest,
                 resolved.Error.Code, resolved.Error.Message);
             return true;
         }
@@ -264,11 +264,11 @@ public sealed class SamlAuthenticationHandler
         return true;
     }
 
-    private async Task<bool> HandleMetadata(
+    private async Task<bool> HandleMetadataAsync(
         Domain.Authentication.Saml.SamlConnection connection, string slug)
     {
         (Saml2ConfigurationOptions options, _) =
-            await BuildSustainsysOptions(connection, slug);
+            await BuildSustainsysOptionsAsync(connection, slug);
 
         Saml2HttpRequestData requestData = BuildRequestData();
         Saml2CommandResult result = (Saml2CommandResult)Sustainsys.Saml2.WebSso.CommandFactory
@@ -286,7 +286,7 @@ public sealed class SamlAuthenticationHandler
         return true;
     }
 
-    private async Task<(Saml2ConfigurationOptions, Saml2IdentityProvider)> BuildSustainsysOptions(
+    private async Task<(Saml2ConfigurationOptions, Saml2IdentityProvider)> BuildSustainsysOptionsAsync(
         Domain.Authentication.Saml.SamlConnection connection, string slug)
     {
         var spOptions = new SPOptions
@@ -324,7 +324,7 @@ public sealed class SamlAuthenticationHandler
             // ourselves and run the same inline parser.
             try
             {
-                string metadataXml = await ReadMetadataFromLocation(connection.IdpMetadataUrl);
+                string metadataXml = await ReadMetadataFromLocationAsync(connection.IdpMetadataUrl);
                 TryApplyInlineMetadata(idp, metadataXml);
             }
             catch (Exception ex)
@@ -380,7 +380,7 @@ public sealed class SamlAuthenticationHandler
         }
     }
 
-    private async Task<string> ReadMetadataFromLocation(string location)
+    private async Task<string> ReadMetadataFromLocationAsync(string location)
     {
         if (!Uri.TryCreate(location, UriKind.Absolute, out Uri? uri)
             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
@@ -458,22 +458,22 @@ public sealed class SamlAuthenticationHandler
             _ => []);
     }
 
-    private async Task<bool> WriteNotConfigured(string slug)
+    private async Task<bool> WriteNotConfiguredAsync(string slug)
     {
         Logger.SamlConfigurationNotFound(slug);
-        await WriteProblem(StatusCodes.Status404NotFound, "saml.not_configured",
+        await WriteProblemAsync(StatusCodes.Status404NotFound, "saml.not_configured",
             $"No active SAML connection for workspace slug '{slug}'.");
         return true;
     }
 
-    private async Task<bool> WriteNotFound(string slug, string action)
+    private async Task<bool> WriteNotFoundAsync(string slug, string action)
     {
-        await WriteProblem(StatusCodes.Status404NotFound, "saml.unknown_action",
+        await WriteProblemAsync(StatusCodes.Status404NotFound, "saml.unknown_action",
             $"Unknown SAML action '{action}' for workspace slug '{slug}'.");
         return true;
     }
 
-    private async Task WriteProblem(int statusCode, string code, string message)
+    private async Task WriteProblemAsync(int statusCode, string code, string message)
     {
         Response.StatusCode = statusCode;
         Response.ContentType = "application/json";

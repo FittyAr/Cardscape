@@ -128,7 +128,7 @@ public sealed class IdempotencyMiddleware(
         var keyResult = IdempotencyKeyValue.Create(rawKey);
         if (keyResult.IsFailure)
         {
-            await WriteProblem(
+            await WriteProblemAsync(
                 context,
                 StatusCodes.Status400BadRequest,
                 keyResult.Error.Code,
@@ -156,7 +156,7 @@ public sealed class IdempotencyMiddleware(
                 if (!existing.MatchesRequest(requestHash))
                 {
                     logger.IdempotencyPayloadMismatch(key, ownerId, context.Request.Path);
-                    await WriteProblem(
+                    await WriteProblemAsync(
                         context,
                         StatusCodes.Status422UnprocessableEntity,
                         "idempotency.key.payload_mismatch",
@@ -275,7 +275,7 @@ public sealed class IdempotencyMiddleware(
         await context.Response.Body.WriteAsync(bytes, ct);
     }
 
-    private static async Task WriteProblem(
+    private static async Task WriteProblemAsync(
         HttpContext context, int statusCode, string code, string detail)
     {
         if (context.Response.HasStarted)

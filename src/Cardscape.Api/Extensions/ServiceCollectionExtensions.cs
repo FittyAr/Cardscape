@@ -273,7 +273,7 @@ public static class ServiceCollectionExtensions
             options.Events.OnTokenValidated = ctx =>
                 ctx.HttpContext.RequestServices
                     .GetRequiredService<JwtRevocationValidator>()
-                    .OnTokenValidated(ctx);
+                    .OnTokenValidatedAsync(ctx);
         });
 
         services.AddSingleton<JwtRevocationValidator>();

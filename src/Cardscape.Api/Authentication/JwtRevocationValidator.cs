@@ -27,7 +27,7 @@ public sealed class JwtRevocationValidator(
     IServiceScopeFactory scopeFactory,
     ILogger<JwtRevocationValidator> logger)
 {
-    public async Task OnTokenValidated(TokenValidatedContext context)
+    public async Task OnTokenValidatedAsync(TokenValidatedContext context)
     {
         // The /api/auth/revoke endpoint must remain
         // reachable with an already-revoked token so a

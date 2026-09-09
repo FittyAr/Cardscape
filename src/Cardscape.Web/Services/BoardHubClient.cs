@@ -129,14 +129,14 @@ public sealed class BoardHubClient : IAsyncDisposable
             throw new InvalidOperationException("Call StartAsync before JoinBoardAsync.");
         }
 
-        await _connection.InvokeAsync("JoinBoard", boardId, ct);
+        await _connection.InvokeAsync("JoinBoardAsync", boardId, ct);
     }
 
     public async Task LeaveBoardAsync(Guid boardId, CancellationToken ct = default)
     {
         if (_connection is not null)
         {
-            await _connection.InvokeAsync("LeaveBoard", boardId, ct);
+            await _connection.InvokeAsync("LeaveBoardAsync", boardId, ct);
         }
     }
 
