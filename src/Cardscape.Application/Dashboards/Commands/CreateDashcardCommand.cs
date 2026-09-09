@@ -18,7 +18,7 @@ public sealed record CreateDashcardCommand(
 
 public static class CreateDashcardCommandHandler
 {
-    public static async Task<Result<DashcardDto>> Handle(
+    public static async Task<Result<DashcardDto>> HandleAsync(
         CreateDashcardCommand command,
         IBoardRepository boards,
         IDashboardRepository repo,

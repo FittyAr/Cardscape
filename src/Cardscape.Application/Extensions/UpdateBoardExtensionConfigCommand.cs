@@ -14,7 +14,7 @@ public sealed record UpdateBoardExtensionConfigCommand(
 
 public static class UpdateBoardExtensionConfigCommandHandler
 {
-    public static async Task<Result<BoardExtensionDto>> Handle(
+    public static async Task<Result<BoardExtensionDto>> HandleAsync(
         UpdateBoardExtensionConfigCommand command,
         IBoardExtensionRepository extensions,
         IBoardRepository boards,

@@ -11,7 +11,7 @@ public sealed record ListLabelsForBoardQuery(Guid BoardId) : IMessage;
 
 public static class ListLabelsForBoardQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<LabelDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<LabelDto>>> HandleAsync(
         ListLabelsForBoardQuery query,
         ILabelRepository labels,
         CancellationToken cancellationToken)

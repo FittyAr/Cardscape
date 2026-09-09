@@ -13,7 +13,7 @@ public sealed record UpdateDashcardConfigCommand(Guid DashcardId, string Configu
 
 public static class UpdateDashcardConfigCommandHandler
 {
-    public static async Task<Result<DashcardDto>> Handle(
+    public static async Task<Result<DashcardDto>> HandleAsync(
         UpdateDashcardConfigCommand command,
         IBoardRepository boards,
         IDashboardRepository repo,

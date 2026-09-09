@@ -16,7 +16,7 @@ public sealed record CreateLabelCommand(Guid BoardId, string Name, string Color)
 
 public static class CreateLabelCommandHandler
 {
-    public static async Task<Result<LabelDto>> Handle(
+    public static async Task<Result<LabelDto>> HandleAsync(
         CreateLabelCommand command,
         IBoardRepository boards,
         ILabelRepository labels,
@@ -93,5 +93,4 @@ public static class CreateLabelCommandHandler
             labelResult.Value.Color.Value));
     }
 }
-
 

@@ -16,7 +16,7 @@ public sealed record UpdateLabelCommand(Guid LabelId, string Name, string Color)
 
 public static class UpdateLabelCommandHandler
 {
-    public static async Task<Result<LabelDto>> Handle(
+    public static async Task<Result<LabelDto>> HandleAsync(
         UpdateLabelCommand command,
         ILabelRepository labels,
         IUnitOfWork unitOfWork,
@@ -74,5 +74,4 @@ public static class UpdateLabelCommandHandler
             label.Color.Value));
     }
 }
-
 

@@ -16,7 +16,7 @@ public sealed record AddCommentCommand(Guid CardId, string Body) : IMessage;
 
 public static class AddCommentCommandHandler
 {
-    public static async Task<Result<CommentDto>> Handle(
+    public static async Task<Result<CommentDto>> HandleAsync(
         AddCommentCommand command,
         ICardRepository cards,
         IBoardRepository boards,
@@ -111,5 +111,4 @@ public static class AddCommentCommandHandler
             commentResult.Value.UpdatedAt));
     }
 }
-
 

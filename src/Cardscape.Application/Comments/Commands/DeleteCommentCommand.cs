@@ -16,7 +16,7 @@ public sealed record DeleteCommentCommand(Guid CommentId) : IMessage;
 
 public static class DeleteCommentCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DeleteCommentCommand command,
         ICardRepository cards,
         IBoardRepository boards,
@@ -73,5 +73,4 @@ public static class DeleteCommentCommandHandler
         return Result.Success();
     }
 }
-
 

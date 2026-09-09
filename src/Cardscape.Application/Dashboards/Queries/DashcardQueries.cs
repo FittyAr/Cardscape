@@ -13,7 +13,7 @@ public sealed record ListDashcardsForBoardQuery(Guid BoardId) : IMessage;
 
 public static class ListDashcardsForBoardQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<DashcardDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<DashcardDto>>> HandleAsync(
         ListDashcardsForBoardQuery query,
         IBoardRepository boards,
         IDashboardRepository repo,

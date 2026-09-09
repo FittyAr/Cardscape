@@ -15,7 +15,7 @@ public sealed record DeleteLabelCommand(Guid LabelId) : IMessage;
 
 public static class DeleteLabelCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DeleteLabelCommand command,
         ILabelRepository labels,
         IUnitOfWork unitOfWork,
@@ -52,5 +52,4 @@ public static class DeleteLabelCommandHandler
         return Result.Success();
     }
 }
-
 

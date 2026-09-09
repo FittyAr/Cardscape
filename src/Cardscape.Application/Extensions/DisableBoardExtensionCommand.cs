@@ -13,7 +13,7 @@ public sealed record DisableBoardExtensionCommand(
 
 public static class DisableBoardExtensionCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DisableBoardExtensionCommand command,
         IBoardExtensionRepository extensions,
         IBoardRepository boards,

@@ -12,7 +12,7 @@ public sealed record ListCommentsForCardQuery(Guid CardId) : IMessage;
 
 public static class ListCommentsForCardQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<CommentDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<CommentDto>>> HandleAsync(
         ListCommentsForCardQuery query,
         ICardRepository cards,
         IBoardRepository boards,

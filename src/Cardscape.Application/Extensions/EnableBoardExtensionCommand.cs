@@ -14,7 +14,7 @@ public sealed record EnableBoardExtensionCommand(
 
 public static class EnableBoardExtensionCommandHandler
 {
-    public static async Task<Result<BoardExtensionDto>> Handle(
+    public static async Task<Result<BoardExtensionDto>> HandleAsync(
         EnableBoardExtensionCommand command,
         IBoardExtensionRepository extensions,
         IBoardRepository boards,

@@ -16,7 +16,7 @@ public sealed record EditCommentCommand(Guid CommentId, string NewBody) : IMessa
 
 public static class EditCommentCommandHandler
 {
-    public static async Task<Result<CommentDto>> Handle(
+    public static async Task<Result<CommentDto>> HandleAsync(
         EditCommentCommand command,
         ICardRepository cards,
         IBoardRepository boards,
@@ -98,5 +98,4 @@ public static class EditCommentCommandHandler
             comment.Body.Value, comment.CreatedAt, comment.UpdatedAt));
     }
 }
-
 

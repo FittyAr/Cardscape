@@ -11,7 +11,7 @@ public sealed record ListBoardExtensionsQuery(Guid BoardId) : IMessage;
 
 public static class ListBoardExtensionsQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<BoardExtensionDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<BoardExtensionDto>>> HandleAsync(
         ListBoardExtensionsQuery query,
         IBoardExtensionRepository extensions,
         IBoardRepository boards,
@@ -43,5 +43,4 @@ public static class ListBoardExtensionsQueryHandler
             rows.Select(BoardExtensionDto.FromEntity).ToList());
     }
 }
-
 

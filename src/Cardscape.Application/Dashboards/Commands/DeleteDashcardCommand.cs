@@ -12,7 +12,7 @@ public sealed record DeleteDashcardCommand(Guid DashcardId) : IMessage;
 
 public static class DeleteDashcardCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DeleteDashcardCommand command,
         IBoardRepository boards,
         IDashboardRepository repo,
