@@ -16,7 +16,7 @@ public sealed record LinkGitHubPullRequestCommand(
 
 public static class LinkGitHubPullRequestCommandHandler
 {
-    public static async Task<Result<GitHubPullRequestLinkDto>> Handle(
+    public static async Task<Result<GitHubPullRequestLinkDto>> HandleAsync(
         LinkGitHubPullRequestCommand command,
         IGitHubPullRequestLinkRepository links,
         ICardRepository cards,

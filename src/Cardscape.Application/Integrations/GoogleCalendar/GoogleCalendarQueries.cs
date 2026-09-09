@@ -13,7 +13,7 @@ public sealed record GoogleCalendarOAuthAuthorization(Guid UserId, Guid Workspac
 
 public static class AuthorizeGoogleCalendarOAuthQueryHandler
 {
-    public static async Task<Result<GoogleCalendarOAuthAuthorization>> Handle(
+    public static async Task<Result<GoogleCalendarOAuthAuthorization>> HandleAsync(
         AuthorizeGoogleCalendarOAuthQuery query,
         IRepository<Workspace, WorkspaceId> workspaces,
         ICurrentUser currentUser,
@@ -47,7 +47,7 @@ public sealed record GetGoogleCalendarConnectionQuery : IMessage;
 
 public static class GetGoogleCalendarConnectionQueryHandler
 {
-    public static async Task<Result<GoogleCalendarConnectionDto?>> Handle(
+    public static async Task<Result<GoogleCalendarConnectionDto?>> HandleAsync(
         GetGoogleCalendarConnectionQuery query,
         IGoogleCalendarConnectionRepository connections,
         ICurrentUser currentUser,

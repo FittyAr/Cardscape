@@ -21,7 +21,7 @@ public sealed record ExecuteBackgroundJobCommand(
 
 public static class ExecuteBackgroundJobCommandHandler
 {
-    public static async Task Handle(
+    public static async Task HandleAsync(
         ExecuteBackgroundJobCommand command,
         IBackgroundJobHandlerRegistry registry,
         IBackgroundJobStore store,
@@ -62,7 +62,7 @@ public sealed record ListDeadLetterBackgroundJobsQuery(int Skip, int Take) : IMe
 
 public static class ListDeadLetterBackgroundJobsQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<BackgroundJobSummaryDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<BackgroundJobSummaryDto>>> HandleAsync(
         ListDeadLetterBackgroundJobsQuery query,
         IBackgroundJobStore store,
         ICurrentUser currentUser,

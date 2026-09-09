@@ -18,7 +18,7 @@ public sealed record RegisterInboundEmailAddressCommand(
 
 public static class RegisterInboundEmailAddressCommandHandler
 {
-    public static async Task<Result<InboundEmailAddressDto>> Handle(
+    public static async Task<Result<InboundEmailAddressDto>> HandleAsync(
         RegisterInboundEmailAddressCommand command,
         IInboundEmailAddressRepository addresses,
         IWorkspaceRepository workspaces,

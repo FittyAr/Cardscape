@@ -12,7 +12,7 @@ public sealed record ListInboundEmailAddressesQuery(Guid WorkspaceId) : IMessage
 
 public static class ListInboundEmailAddressesQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<InboundEmailAddressDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<InboundEmailAddressDto>>> HandleAsync(
         ListInboundEmailAddressesQuery query,
         IInboundEmailAddressRepository addresses,
         IWorkspaceRepository workspaces,

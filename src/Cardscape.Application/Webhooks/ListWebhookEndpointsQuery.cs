@@ -15,7 +15,7 @@ public sealed record ListWebhookEndpointsQuery(Guid BoardId) : IMessage;
 
 public static class ListWebhookEndpointsQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<WebhookEndpointDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<WebhookEndpointDto>>> HandleAsync(
         ListWebhookEndpointsQuery query,
         IWebhookEndpointRepository endpoints,
         IBoardRepository boards,
@@ -47,5 +47,4 @@ public static class ListWebhookEndpointsQueryHandler
             rows.Select(WebhookEndpointDto.FromEntity).ToList());
     }
 }
-
 

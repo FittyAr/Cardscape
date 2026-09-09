@@ -10,7 +10,7 @@ namespace Cardscape.Application.Integrations.Slack;
 
 public sealed partial class SlackEventBroadcaster
 {
-    private async Task HandleCardCreated(CardCreated @event, CancellationToken ct)
+    private async Task HandleCardCreatedAsync(CardCreated @event, CancellationToken ct)
     {
         (Card Card, BoardList List)? context = await ResolveCardContextAsync(@event.CardId, ct);
         if (context is not { } resolved)
@@ -25,7 +25,7 @@ public sealed partial class SlackEventBroadcaster
             ct);
     }
 
-    private async Task HandleCardMoved(CardMoved @event, CancellationToken ct)
+    private async Task HandleCardMovedAsync(CardMoved @event, CancellationToken ct)
     {
         (Card Card, BoardList List)? context = await ResolveCardContextAsync(@event.CardId, ct);
         if (context is not { } resolved)
@@ -40,7 +40,7 @@ public sealed partial class SlackEventBroadcaster
             ct);
     }
 
-    private async Task HandleCardCompleted(CardCompleted @event, CancellationToken ct)
+    private async Task HandleCardCompletedAsync(CardCompleted @event, CancellationToken ct)
     {
         (Card Card, BoardList List)? context = await ResolveCardContextAsync(@event.CardId, ct);
         if (context is not { } resolved)
@@ -55,7 +55,7 @@ public sealed partial class SlackEventBroadcaster
             ct);
     }
 
-    private async Task HandleCommentAdded(CommentAdded @event, CancellationToken ct)
+    private async Task HandleCommentAddedAsync(CommentAdded @event, CancellationToken ct)
     {
         (Card Card, BoardList List)? context = await ResolveCardContextAsync(@event.CardId, ct);
         if (context is not { } resolved)

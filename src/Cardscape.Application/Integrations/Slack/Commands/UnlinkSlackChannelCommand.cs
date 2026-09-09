@@ -17,7 +17,7 @@ public sealed record UnlinkSlackChannelCommand(Guid WorkspaceId, Guid ChannelId)
 
 public static class UnlinkSlackChannelCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         UnlinkSlackChannelCommand command,
         ISlackChannelRepository channels,
         ISlackWorkspaceRepository workspaces,
@@ -66,5 +66,4 @@ public static class UnlinkSlackChannelCommandHandler
         return Result.Success();
     }
 }
-
 

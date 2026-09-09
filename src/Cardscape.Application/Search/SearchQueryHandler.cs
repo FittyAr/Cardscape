@@ -11,7 +11,7 @@ public static class SearchQueryHandler
 {
     public const int MaxQueryLength = 4 * 1024;
 
-    public static async Task<Result<SearchPageDto>> Handle(
+    public static async Task<Result<SearchPageDto>> HandleAsync(
         SearchQuery query,
         ISearchService searchService,
         ICurrentUser currentUser,

@@ -12,7 +12,7 @@ public sealed record UnregisterInboundEmailAddressCommand(Guid AddressId) : IMes
 
 public static class UnregisterInboundEmailAddressCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         UnregisterInboundEmailAddressCommand command,
         IInboundEmailAddressRepository addresses,
         IWorkspaceRepository workspaces,

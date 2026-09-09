@@ -21,7 +21,7 @@ public sealed record ConnectSlackWorkspaceCommand(
 
 public static class ConnectSlackWorkspaceCommandHandler
 {
-    public static async Task<Result<SlackWorkspaceDto>> Handle(
+    public static async Task<Result<SlackWorkspaceDto>> HandleAsync(
         ConnectSlackWorkspaceCommand command,
         ISlackWorkspaceRepository workspaces,
         IWorkspaceRepository workspaceRepo,
@@ -96,5 +96,4 @@ public static class ConnectSlackWorkspaceCommandHandler
     }
 
 }
-
 

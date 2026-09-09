@@ -15,7 +15,7 @@ public sealed record DeleteWebhookEndpointCommand(Guid BoardId, Guid EndpointId)
 
 public static class DeleteWebhookEndpointCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DeleteWebhookEndpointCommand command,
         IWebhookEndpointRepository endpoints,
         IBoardRepository boards,
@@ -55,5 +55,4 @@ public static class DeleteWebhookEndpointCommandHandler
         return Result.Success();
     }
 }
-
 

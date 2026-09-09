@@ -32,7 +32,7 @@ public sealed partial class BoardEventBroadcaster
             c => c.ListRestored,
             ct);
 
-    private async Task HandleListCreated(ListCreated @event, CancellationToken ct)
+    private async Task HandleListCreatedAsync(ListCreated @event, CancellationToken ct)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();

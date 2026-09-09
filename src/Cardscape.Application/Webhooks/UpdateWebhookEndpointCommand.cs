@@ -19,7 +19,7 @@ public sealed record UpdateWebhookEndpointCommand(
 
 public static class UpdateWebhookEndpointCommandHandler
 {
-    public static async Task<Result<WebhookEndpointDto>> Handle(
+    public static async Task<Result<WebhookEndpointDto>> HandleAsync(
         UpdateWebhookEndpointCommand command,
         IWebhookEndpointRepository endpoints,
         IBoardRepository boards,
@@ -80,5 +80,4 @@ public static class UpdateWebhookEndpointCommandHandler
         return Result.Success(WebhookEndpointDto.FromEntity(endpoint));
     }
 }
-
 

@@ -22,7 +22,7 @@ public sealed record CompleteGoogleCalendarOAuthCommand(
 
 public static class CompleteGoogleCalendarOAuthCommandHandler
 {
-    public static async Task<Result<GoogleCalendarConnectionDto>> Handle(
+    public static async Task<Result<GoogleCalendarConnectionDto>> HandleAsync(
         CompleteGoogleCalendarOAuthCommand command,
         IGoogleCalendarConnectionRepository connections,
         IRepository<Workspace, WorkspaceId> workspaces,
@@ -88,7 +88,7 @@ public sealed record RevokeGoogleCalendarConnectionCommand : IMessage;
 
 public static class RevokeGoogleCalendarConnectionCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         RevokeGoogleCalendarConnectionCommand command,
         IGoogleCalendarConnectionRepository connections,
         IUnitOfWork unitOfWork,

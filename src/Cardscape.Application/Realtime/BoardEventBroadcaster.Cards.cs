@@ -11,7 +11,7 @@ namespace Cardscape.Application.Realtime;
 
 public sealed partial class BoardEventBroadcaster
 {
-    private async Task HandleCardCreated(CardCreated @event, CancellationToken ct)
+    private async Task HandleCardCreatedAsync(CardCreated @event, CancellationToken ct)
     {
         if (_logger.IsEnabled(LogLevel.Debug))
         {
@@ -38,7 +38,7 @@ public sealed partial class BoardEventBroadcaster
             ct);
     }
 
-    private async Task HandleCardRenamed(CardRenamed @event, CancellationToken ct)
+    private async Task HandleCardRenamedAsync(CardRenamed @event, CancellationToken ct)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
@@ -68,7 +68,7 @@ public sealed partial class BoardEventBroadcaster
             ct);
     }
 
-    private async Task HandleCardMoved(CardMoved @event, CancellationToken ct)
+    private async Task HandleCardMovedAsync(CardMoved @event, CancellationToken ct)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
@@ -99,7 +99,7 @@ public sealed partial class BoardEventBroadcaster
             ct);
     }
 
-    private async Task BroadcastSimpleCard(
+    private async Task BroadcastSimpleCardAsync(
         CardId cardId,
         DateTimeOffset at,
         Func<IBoardClient, Func<CardEventPayload, Task>> select,

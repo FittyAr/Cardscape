@@ -10,7 +10,7 @@ namespace Cardscape.Application.Realtime;
 
 public sealed partial class BoardEventBroadcaster
 {
-    private async Task HandleCommentAdded(CommentAdded @event, CancellationToken ct)
+    private async Task HandleCommentAddedAsync(CommentAdded @event, CancellationToken ct)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
@@ -40,7 +40,7 @@ public sealed partial class BoardEventBroadcaster
             ct);
     }
 
-    private async Task HandleLabelCreated(LabelCreated @event, CancellationToken ct)
+    private async Task HandleLabelCreatedAsync(LabelCreated @event, CancellationToken ct)
     {
         using IServiceScope scope = _scopeFactory.CreateScope();
         IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();

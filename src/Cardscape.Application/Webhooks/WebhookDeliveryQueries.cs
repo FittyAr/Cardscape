@@ -20,7 +20,7 @@ public sealed record ListWebhookDeliveriesQuery(
 
 public static class ListWebhookDeliveriesQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<WebhookDeliveryDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<WebhookDeliveryDto>>> HandleAsync(
         ListWebhookDeliveriesQuery query,
         IWebhookDeliveryRepository deliveries,
         IWebhookEndpointRepository endpoints,

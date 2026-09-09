@@ -13,7 +13,7 @@ public sealed record ListSlackChannelsForBoardQuery(Guid WorkspaceId, Guid Board
 
 public static class ListSlackChannelsForBoardQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<SlackChannelDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<SlackChannelDto>>> HandleAsync(
         ListSlackChannelsForBoardQuery query,
         ISlackChannelRepository channels,
         IBoardRepository boards,
@@ -56,7 +56,7 @@ public sealed record GetSlackWorkspaceForWorkspaceQuery(Guid WorkspaceId) : IMes
 
 public static class GetSlackWorkspaceForWorkspaceQueryHandler
 {
-    public static async Task<Result<SlackWorkspaceDto?>> Handle(
+    public static async Task<Result<SlackWorkspaceDto?>> HandleAsync(
         GetSlackWorkspaceForWorkspaceQuery query,
         ISlackWorkspaceRepository workspaces,
         IWorkspaceRepository workspaceRepo,

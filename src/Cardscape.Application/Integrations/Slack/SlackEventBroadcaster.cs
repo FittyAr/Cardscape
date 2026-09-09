@@ -19,10 +19,10 @@ public sealed partial class SlackEventBroadcaster(
     public Task BroadcastAsync(IDomainEvent domainEvent, CancellationToken ct = default) =>
         domainEvent switch
         {
-            CardCreated e => HandleCardCreated(e, ct),
-            CardMoved e => HandleCardMoved(e, ct),
-            CardCompleted e => HandleCardCompleted(e, ct),
-            CommentAdded e => HandleCommentAdded(e, ct),
+            CardCreated e => HandleCardCreatedAsync(e, ct),
+            CardMoved e => HandleCardMovedAsync(e, ct),
+            CardCompleted e => HandleCardCompletedAsync(e, ct),
+            CommentAdded e => HandleCommentAddedAsync(e, ct),
             _ => Task.CompletedTask
         };
 }

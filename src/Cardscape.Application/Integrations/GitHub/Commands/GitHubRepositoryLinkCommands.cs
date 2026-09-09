@@ -15,7 +15,7 @@ public sealed record LinkGitHubRepoCommand(Guid BoardId, string RepoFullName, IR
 
 public static class LinkGitHubRepoCommandHandler
 {
-    public static async Task<Result<GitHubRepoLink>> Handle(
+    public static async Task<Result<GitHubRepoLink>> HandleAsync(
         LinkGitHubRepoCommand command,
         IGitHubRepoLinkRepository links,
         IBoardRepository boards,
@@ -64,7 +64,7 @@ public sealed record UnlinkGitHubRepoCommand(Guid LinkId) : IMessage;
 
 public static class UnlinkGitHubRepoCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         UnlinkGitHubRepoCommand command,
         IGitHubRepoLinkRepository links,
         IBoardRepository boards,

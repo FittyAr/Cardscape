@@ -23,7 +23,7 @@ public sealed record LinkSlackChannelCommand(
 
 public static class LinkSlackChannelCommandHandler
 {
-    public static async Task<Result<SlackChannelDto>> Handle(
+    public static async Task<Result<SlackChannelDto>> HandleAsync(
         LinkSlackChannelCommand command,
         ISlackWorkspaceRepository workspaces,
         ISlackChannelRepository channels,
@@ -91,5 +91,4 @@ public static class LinkSlackChannelCommandHandler
         return Result.Success(SlackChannelDto.FromEntity(creation.Value));
     }
 }
-
 

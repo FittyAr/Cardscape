@@ -16,7 +16,7 @@ public sealed record CreateGitHubIssueFromCardCommand(
 
 public static class CreateGitHubIssueFromCardCommandHandler
 {
-    public static async Task<Result<GitHubIssueDto>> Handle(
+    public static async Task<Result<GitHubIssueDto>> HandleAsync(
         CreateGitHubIssueFromCardCommand command,
         IGitHubService github,
         ICardRepository cards,

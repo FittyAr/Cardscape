@@ -30,19 +30,19 @@ public sealed partial class BoardEventBroadcaster : IDomainEventBroadcaster
     public Task BroadcastAsync(IDomainEvent domainEvent, CancellationToken ct = default) =>
         domainEvent switch
         {
-            CardCreated e => HandleCardCreated(e, ct),
-            CardRenamed e => HandleCardRenamed(e, ct),
-            CardMoved e => HandleCardMoved(e, ct),
-            CardCompleted e => BroadcastSimpleCard(e.CardId, e.OccurredAt, c => c.CardCompleted, ct),
-            CardReopened e => BroadcastSimpleCard(e.CardId, e.OccurredAt, c => c.CardReopened, ct),
-            CardArchived e => BroadcastSimpleCard(e.CardId, e.OccurredAt, c => c.CardArchived, ct),
-            CardRestored e => BroadcastSimpleCard(e.CardId, e.OccurredAt, c => c.CardRestored, ct),
-            ListCreated e => HandleListCreated(e, ct),
+            CardCreated e => HandleCardCreatedAsync(e, ct),
+            CardRenamed e => HandleCardRenamedAsync(e, ct),
+            CardMoved e => HandleCardMovedAsync(e, ct),
+            CardCompleted e => BroadcastSimpleCardAsync(e.CardId, e.OccurredAt, c => c.CardCompleted, ct),
+            CardReopened e => BroadcastSimpleCardAsync(e.CardId, e.OccurredAt, c => c.CardReopened, ct),
+            CardArchived e => BroadcastSimpleCardAsync(e.CardId, e.OccurredAt, c => c.CardArchived, ct),
+            CardRestored e => BroadcastSimpleCardAsync(e.CardId, e.OccurredAt, c => c.CardRestored, ct),
+            ListCreated e => HandleListCreatedAsync(e, ct),
             ListRenamed e => HandleListRenamed(e, ct),
             ListArchived e => HandleListArchived(e, ct),
             ListRestored e => HandleListRestored(e, ct),
-            CommentAdded e => HandleCommentAdded(e, ct),
-            LabelCreated e => HandleLabelCreated(e, ct),
+            CommentAdded e => HandleCommentAddedAsync(e, ct),
+            LabelCreated e => HandleLabelCreatedAsync(e, ct),
             _ => Task.CompletedTask
         };
 }

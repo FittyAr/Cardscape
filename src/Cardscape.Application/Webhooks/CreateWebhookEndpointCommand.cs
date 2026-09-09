@@ -19,7 +19,7 @@ public sealed record CreateWebhookEndpointCommand(
 
 public static class CreateWebhookEndpointCommandHandler
 {
-    public static async Task<Result<WebhookEndpointIssuance>> Handle(
+    public static async Task<Result<WebhookEndpointIssuance>> HandleAsync(
         CreateWebhookEndpointCommand command,
         IWebhookEndpointRepository endpoints,
         IBoardRepository boards,
@@ -144,5 +144,4 @@ public static class CreateWebhookEndpointCommandHandler
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 }
-
 

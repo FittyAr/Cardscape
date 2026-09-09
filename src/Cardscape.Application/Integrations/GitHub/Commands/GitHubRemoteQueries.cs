@@ -16,7 +16,7 @@ public sealed record ListGitHubPullRequestsQuery(
 
 public static class ListGitHubPullRequestsQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<GitHubPullRequestDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<GitHubPullRequestDto>>> HandleAsync(
         ListGitHubPullRequestsQuery query,
         IGitHubService github,
         IGitHubRepoLinkRepository links,
@@ -60,7 +60,7 @@ public sealed record ListGitHubIssuesQuery(
 
 public static class ListGitHubIssuesQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<GitHubIssueDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<GitHubIssueDto>>> HandleAsync(
         ListGitHubIssuesQuery query,
         IGitHubService github,
         IGitHubRepoLinkRepository links,
