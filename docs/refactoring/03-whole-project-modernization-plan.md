@@ -99,10 +99,10 @@ Reglas permanentes:
 ### Fase 4 — Blazor WebAssembly y UI Radzen
 
 - [x] Leer la skill local `radzen-blazor` antes del primer cambio UI de esta fase; se aplicó su patrón `RadzenUpload` y su contrato `UploadChangeEventArgs`.
-- [ ] Auditar todas las páginas por componente, estado, accesibilidad, responsive, loading/empty/error y navegación.
+- [ ] Auditar todas las páginas por componente, estado, accesibilidad, responsive, loading/empty/error y navegación. `AdminSeeder` ya bloquea las acciones cuando el subsistema está deshabilitado, en consonancia con el estado que muestra; eliminó una dependencia JS sin uso y espera explícitamente la notificación de render durante el polling.
 - [x] Dividir `CardDetail.razor` y `BoardDetail.razor` en partials cohesionados por estado/carga, acciones y capacidades; los archivos monolíticos originales ya no existen.
 - [ ] Eliminar HTML/CSS/JS custom no autorizado cuando Radzen ofrezca equivalente. `WorkspaceImport` ya reemplazó el último `InputFile` por `RadzenUpload`, eliminó su `async void` y dispone la respuesta HTTP. No quedan `button`, `input`, `select`, `textarea`, `form`, `table` o `dialog` HTML nativos; continúa la revisión de contenedores puramente visuales, conservando HTML semántico y capacidades de navegador que Radzen no reemplaza.
-- [ ] Revisar formularios, validadores, dialogs, grids, virtualización y renderizado para evitar trabajo innecesario. La auditoría directa de bloques `@code` eliminó los tres `async void` y normalizó los 39 handlers `Task` que los analizadores C# no inspeccionan, junto con todos sus bindings Radzen. No queda deuda async en Razor; continúa la auditoría funcional de grids, validación y renderizado.
+- [ ] Revisar formularios, validadores, dialogs, grids, virtualización y renderizado para evitar trabajo innecesario. La auditoría directa de bloques `@code` eliminó los tres `async void` y normalizó los 39 handlers `Task` que los analizadores C# no inspeccionan, junto con todos sus bindings Radzen. `AdminSeeder` ya no dispara `InvokeAsync(StateHasChanged)` sin observar su `Task`, y sus acciones respetan la disponibilidad real del backend. No queda deuda async en Razor; continúa la auditoría funcional de grids, validación y renderizado.
 - [ ] Validar temas, contraste, teclado, foco y localización.
 
 ### Fase 5 — Calidad y pruebas
@@ -326,6 +326,7 @@ Reglas permanentes:
 | 2026-09-09 | Naming Razor de workspaces e integraciones | Quince handlers de formularios y acciones Radzen adoptan sufijo `Async` en las pantallas de workspaces, miembros, seguridad, SCIM, SAML, Slack, GitHub e inbound email; también se actualizan llamadas internas de recarga | Handlers Razor pendientes 39 a 24; Web rebuild Release 0/0 | Incluido en este commit |
 | 2026-09-09 | Cierre de naming async en Razor | Los 24 handlers restantes de layout, tokens, automatización, dashboards, boards, calendario, inbox, autenticación y settings adoptan sufijo `Async`; todos los callbacks Radzen se actualizan directamente | Handlers Razor pendientes 24 a 0; `async void` 0; Web rebuild Release 0/0; E2E 7 pass | Incluido en este commit |
 | 2026-09-09 | Alineación de solución, SDK y Compose | Confirmados los 17 proyectos en la solución; retiradas dependencias centrales obsoletas del SDK multitarget y documentación 1.1.0; producción ya no admite una clave JWT insegura por defecto | `Compare-Object` sin diferencias; Compose prod válido; SDK net10 0/0 y paquetes 1.2.0 generados | Incluido en este commit |
+| 2026-09-09 | Estado y polling del Seeder UI | Acciones deshabilitadas si el Seeder no está disponible; render del polling esperado; inyección JS muerta retirada y propiedades enum Radzen explícitas | WebAssembly Release 0/0 | Incluido en este commit |
 
 ### Migración LoggerMessage
 

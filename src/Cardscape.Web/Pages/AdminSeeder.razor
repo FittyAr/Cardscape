@@ -6,7 +6,6 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> L
 @inject ISeederApiClient Seeder
-@inject IJSRuntime JS
 @inject DialogService DialogService
 @implements IAsyncDisposable
 
@@ -16,46 +15,46 @@
     <PageHeader Title="@L["SeederTitle"]" Subtitle="@L["SeederSubtitle"]" />
 
     <RadzenCard>
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
-            <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@StatusBadge" />
+        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.75rem" Wrap="@FlexWrap.Wrap">
+            <RadzenBadge BadgeStyle="@BadgeStyle.Info" Text="@StatusBadge" />
             @if (_options is not null)
             {
                 @if (_options.WipeBeforeSeed)
                 {
-                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="wipe on seed" />
+                    <RadzenBadge BadgeStyle="@BadgeStyle.Warning" Text="wipe on seed" />
                 }
             }
             <span style="flex:1"></span>
-            <RadzenButton Text="@L["SeederRun"]" Icon="play_arrow" ButtonStyle="ButtonStyle.Primary"
-                          Disabled="@_busy" Click="@(() => RunAsync(wipe:false))" />
-            <RadzenButton Text="@L["SeederForceReseed"]" Icon="refresh" ButtonStyle="ButtonStyle.Danger"
-                          Disabled="@_busy" Click="@(() => RunAsync(wipe:true))" />
-            <RadzenButton Text="@L["SeederWipe"]" Icon="delete_sweep" ButtonStyle="ButtonStyle.Warning"
-                          Disabled="@_busy" Click="@WipeAsync" />
+            <RadzenButton Text="@L["SeederRun"]" Icon="play_arrow" ButtonStyle="@ButtonStyle.Primary"
+                          Disabled="@ActionsDisabled" Click="@(() => RunAsync(wipe:false))" />
+            <RadzenButton Text="@L["SeederForceReseed"]" Icon="refresh" ButtonStyle="@ButtonStyle.Danger"
+                          Disabled="@ActionsDisabled" Click="@(() => RunAsync(wipe:true))" />
+            <RadzenButton Text="@L["SeederWipe"]" Icon="delete_sweep" ButtonStyle="@ButtonStyle.Warning"
+                          Disabled="@ActionsDisabled" Click="@WipeAsync" />
         </RadzenStack>
     </RadzenCard>
 
     @if (_error is not null)
     {
-        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" Close="@(() => _error = null)">
-            <RadzenText TextStyle="TextStyle.Body2">@_error</RadzenText>
+        <RadzenAlert AlertStyle="@AlertStyle.Danger" ShowIcon="true" Close="@(() => _error = null)">
+            <RadzenText TextStyle="@TextStyle.Body2">@_error</RadzenText>
         </RadzenAlert>
     }
 
     @if (_initialLoading)
     {
-        <RadzenCard><RadzenText TextStyle="TextStyle.Body1">@L["CommonLoading"]</RadzenText></RadzenCard>
+        <RadzenCard><RadzenText TextStyle="@TextStyle.Body1">@L["CommonLoading"]</RadzenText></RadzenCard>
     }
     else
     {
         <div class="rz-display-flex rz-flex-row rz-gap-2" style="flex-wrap: wrap;">
             <RadzenCard Style="flex: 1 1 60%; min-width: 28rem;">
                 <RadzenStack Gap="0.5rem">
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H3">@L["SeederLog"]</RadzenText>
-                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@($"{_entries.Count} lines")" />
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
+                        <RadzenText TextStyle="@TextStyle.H5" TagName="@TagName.H3">@L["SeederLog"]</RadzenText>
+                        <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="@($"{_entries.Count} lines")" />
                     </RadzenStack>
-                    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                    <RadzenText TextStyle="@TextStyle.Caption" class="rz-color-text-secondary">
                         @StepLine
                     </RadzenText>
                     <RadzenProgressBar Value="@ProgressValue" Max="100" Style="margin: 0.25rem 0 0.75rem 0;" />
@@ -82,20 +81,20 @@
 
             <RadzenCard Style="flex: 1 1 35%; min-width: 24rem;">
                 <RadzenStack Gap="0.5rem">
-                    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H3">@L["SeederTableStatus"]</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                    <RadzenText TextStyle="@TextStyle.H5" TagName="@TagName.H3">@L["SeederTableStatus"]</RadzenText>
+                    <RadzenText TextStyle="@TextStyle.Caption" class="rz-color-text-secondary">
                         @TableSummary
                     </RadzenText>
                     @if (_tables.Count == 0)
                     {
-                        <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["SeederNoTables"]</RadzenText>
+                        <RadzenText TextStyle="@TextStyle.Body2" class="rz-color-text-secondary">@L["SeederNoTables"]</RadzenText>
                     }
                     else
                     {
                         <div style="max-height: 28rem; overflow: auto;">
                             <RadzenDataGrid Data="@_tables" TItem="SeederTableStatusDto"
                                             AllowSorting="false" AllowPaging="false"
-                                            Density="Density.Compact">
+                                            Density="@Density.Compact">
                                 <Columns>
                                     <RadzenDataGridColumn TItem="SeederTableStatusDto" Property="Aggregate" Title="@L["SeederTableAggregate"]" />
                                     <RadzenDataGridColumn TItem="SeederTableStatusDto" Property="Key" Title="@L["SeederTableTable"]">
@@ -128,6 +127,8 @@
     private string? _error;
     private CancellationTokenSource? _pollCts;
     private Task? _pollTask;
+
+    private bool ActionsDisabled => _busy || _options is null;
 
     private string StatusBadge => _status is null
         ? "—"
@@ -188,7 +189,7 @@
             ApiResult<SeederStatusDto> status = await Seeder.GetStatusAsync();
             if (status.IsSuccess)
             {
-                ApplyStatus(status.Value!);
+                await ApplyStatusAsync(status.Value!);
             }
         }
         catch (Exception ex)
@@ -210,7 +211,7 @@
                 ApiResult<SeederStatusDto> status = await Seeder.GetStatusAsync(ct);
                 if (status.IsSuccess)
                 {
-                    ApplyStatus(status.Value!);
+                    await ApplyStatusAsync(status.Value!);
                 }
             }
             catch (OperationCanceledException) { return; }
@@ -232,16 +233,16 @@
         }
     }
 
-    private void ApplyStatus(SeederStatusDto s)
+    private async Task ApplyStatusAsync(SeederStatusDto status)
     {
-        _status = s;
+        _status = status;
         // The endpoints return every log entry the
         // server has ever emitted. A full seed run is
         // ~80 entries; the full live grid is the
         // operator's view, so we render verbatim.
-        _entries = s.Report.Entries.OrderBy(e => e.At).ToList();
-        _tables = s.Report.Tables.OrderBy(t => t.Key, StringComparer.OrdinalIgnoreCase).ToList();
-        InvokeAsync(StateHasChanged);
+        _entries = status.Report.Entries.OrderBy(e => e.At).ToList();
+        _tables = status.Report.Tables.OrderBy(t => t.Key, StringComparer.OrdinalIgnoreCase).ToList();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task RunAsync(bool wipe)
