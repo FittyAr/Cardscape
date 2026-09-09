@@ -5,14 +5,7 @@
     <RootNamespace>Cardscape.Sdk.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <!-- The SDK is a multi-target package; the test project
-         runs against every supported consumer target so we
-         catch target-conditional code paths at CI time. The
-         target list is the same one in
-         sdk/Cardscape.Sdk/Cardscape.Sdk.csproj. -->
-    <TargetFramework></TargetFramework>
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
-    <Description>Multi-target smoke + serialization tests for the published Cardscape.Sdk package.</Description>
+    <Description>Smoke and serialization tests for the .NET 10 Cardscape SDK package.</Description>
   </PropertyGroup>
 
   <ItemGroup>

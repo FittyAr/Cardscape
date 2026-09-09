@@ -2,7 +2,7 @@
 
 > The `sdk/Cardscape.Sdk` package is the hand-written C#
 > client for the Cardscape REST API. The package is
-> **multi-target** (`netstandard2.0` + `net8.0` + `net10.0`)
+> targets **.NET 10**
 > and ships as a `.nupkg` + `.snupkg` pair. This document is
 > the recipe the maintainer follows to ship a release; it is
 > the same recipe the CI uses, in the same order.
@@ -25,13 +25,13 @@ The pre-release suffix follows NuGet's standard (`-alpha.1`,
 1. `Directory.Packages.props` — every PackageReference the
    SDK depends on is pinned to a known-good version.
 2. `sdk/Cardscape.Sdk/Cardscape.Sdk.csproj` — `<Version>` is
-   bumped and the multi-target line-up is correct.
+   bumped and the target framework is `net10.0`.
 3. `sdk/Cardscape.Sdk/Models.cs` + `SubClients.cs` — every
    DTO and method matches the API surface the SDK is supposed
    to cover. The round-trip test project
    `tests/Cardscape.Sdk.Tests` exercises both.
 4. `tests/Cardscape.Sdk.Tests` — all 11 tests are green on
-   every target (`net8.0` + `net10.0`). Run:
+   .NET 10. Run:
    ```pwsh
    dotnet test sdk/Cardscape.Sdk.slnx -c Release
    ```
@@ -62,14 +62,12 @@ Expand-Archive `
   -Path sdk/Cardscape.Sdk/bin/Release/Cardscape.Sdk.<version>.nupkg `
   -DestinationPath /tmp/sdk-pkg -Force
 Get-ChildItem /tmp/sdk-pkg
-# Expect: lib/netstandard2.0/, lib/net8.0/, lib/net10.0/,
+# Expect: lib/net10.0/,
 #         Cardscape.Sdk.nuspec, README.md, [Content_Types].xml
 ```
 
-`lib/net*` should contain `Cardscape.Sdk.dll` for every
-target. The nuspec's `<dependencies>` should NOT pin
-`System.Text.Json` for the net8.0/net10.0 targets (it lives
-in the BCL on those targets).
+`lib/net10.0` should contain `Cardscape.Sdk.dll`. The nuspec
+must not pin `System.Text.Json`; it is supplied by .NET 10.
 
 ## 5. Publish to NuGet
 

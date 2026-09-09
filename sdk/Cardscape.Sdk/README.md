@@ -1,8 +1,8 @@
 # Cardscape.Sdk
 
 Typed C# client for the [Cardscape](https://github.com/cardscape/cardscape)
-REST API. Targets `netstandard2.0` and `net8.0` for the broadest
-reach. Built and published automatically by
+REST API. It targets .NET 10, matching the server and the rest of
+the maintained solution. Built and published automatically by
 `dotnet pack` (see `GeneratePackageOnBuild=true` in
 `Cardscape.Sdk.csproj`).
 

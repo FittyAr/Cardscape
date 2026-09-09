@@ -8,11 +8,10 @@ The hand-written C# client for the Cardscape REST API.
 sdk/
 ├── Cardscape.Sdk.slnx         # dedicated solution for the SDK package
 └── Cardscape.Sdk/
-    ├── Cardscape.Sdk.csproj   # multi-targets netstandard2.0 + net8.0
+    ├── Cardscape.Sdk.csproj   # .NET 10 package definition
     ├── CardscapeClient.cs     # top-level typed client (HttpClient-based)
     ├── Models.cs               # DTOs
     ├── SubClients.cs           # per-resource sub-clients (boards, cards, …)
-    ├── IsExternalInit.cs      # polyfill for C# 9 init-only setters
     └── README.md               # this file
 ```
 
