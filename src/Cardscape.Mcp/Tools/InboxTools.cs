@@ -19,7 +19,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed class InboxTools(IMessageBus bus, ICurrentUser currentUser)
 {
     [McpServerTool(Name = "inbox_list")]
-    public async Task<IReadOnlyList<NotificationDto>> List(
+    public async Task<IReadOnlyList<NotificationDto>> ListAsync(
         bool unreadOnly, int skip, int take, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("inbox_list");
@@ -41,7 +41,7 @@ public sealed class InboxTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "inbox_unread_count")]
-    public async Task<int> UnreadCount(CancellationToken ct)
+    public async Task<int> UnreadCountAsync(CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("inbox_unread_count");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -61,7 +61,7 @@ public sealed class InboxTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "inbox_mark_read")]
-    public async Task<string> MarkRead(Guid notificationId, CancellationToken ct)
+    public async Task<string> MarkReadAsync(Guid notificationId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("inbox_mark_read");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -82,7 +82,7 @@ public sealed class InboxTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "inbox_mark_all_read")]
-    public async Task<string> MarkAllRead(CancellationToken ct)
+    public async Task<string> MarkAllReadAsync(CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("inbox_mark_all_read");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);

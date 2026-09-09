@@ -17,7 +17,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUser)
 {
     [McpServerTool(Name = "boards_list_extensions")]
-    public async Task<IReadOnlyList<BoardExtensionDto>> ListExtensions(Guid boardId, CancellationToken ct)
+    public async Task<IReadOnlyList<BoardExtensionDto>> ListExtensionsAsync(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_list_extensions");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
@@ -38,7 +38,7 @@ public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUs
     }
 
     [McpServerTool(Name = "boards_enable_extension")]
-    public async Task<BoardExtensionDto> EnableExtension(
+    public async Task<BoardExtensionDto> EnableExtensionAsync(
         Guid boardId,
         int kind,
         string? configJson,
@@ -63,7 +63,7 @@ public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUs
     }
 
     [McpServerTool(Name = "boards_disable_extension")]
-    public async Task<string> DisableExtension(Guid boardId, int kind, CancellationToken ct)
+    public async Task<string> DisableExtensionAsync(Guid boardId, int kind, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("boards_disable_extension");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
@@ -84,7 +84,7 @@ public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUs
     }
 
     [McpServerTool(Name = "boards_update_extension_config")]
-    public async Task<BoardExtensionDto> UpdateExtensionConfig(
+    public async Task<BoardExtensionDto> UpdateExtensionConfigAsync(
         Guid boardId,
         int kind,
         string? configJson,

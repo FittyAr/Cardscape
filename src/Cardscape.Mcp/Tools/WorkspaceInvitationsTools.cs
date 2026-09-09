@@ -22,7 +22,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser currentUser)
 {
     [McpServerTool(Name = "workspaces_invite")]
-    public async Task<WorkspaceInvitationIssuanceDto> Invite(
+    public async Task<WorkspaceInvitationIssuanceDto> InviteAsync(
         Guid workspaceId, string email, int role, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("workspaces_invite");
@@ -46,7 +46,7 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
     }
 
     [McpServerTool(Name = "workspaces_list_invitations")]
-    public async Task<IReadOnlyList<WorkspaceInvitationDto>> ListInvitations(
+    public async Task<IReadOnlyList<WorkspaceInvitationDto>> ListInvitationsAsync(
         Guid workspaceId, bool includeTerminal, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("workspaces_list_invitations");
@@ -68,7 +68,7 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
     }
 
     [McpServerTool(Name = "workspaces_revoke_invitation")]
-    public async Task<string> RevokeInvitation(Guid invitationId, CancellationToken ct)
+    public async Task<string> RevokeInvitationAsync(Guid invitationId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("workspaces_revoke_invitation");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -89,7 +89,7 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
     }
 
     [McpServerTool(Name = "invitations_list_pending")]
-    public async Task<IReadOnlyList<WorkspaceInvitationDto>> ListPendingInvitations(
+    public async Task<IReadOnlyList<WorkspaceInvitationDto>> ListPendingInvitationsAsync(
         CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("invitations_list_pending");
@@ -111,7 +111,7 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
     }
 
     [McpServerTool(Name = "invitations_accept")]
-    public async Task<WorkspaceDto> AcceptInvitation(string token, CancellationToken ct)
+    public async Task<WorkspaceDto> AcceptInvitationAsync(string token, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("invitations_accept");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);

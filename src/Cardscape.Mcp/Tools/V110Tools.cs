@@ -32,7 +32,7 @@ public sealed class V110Tools
 {
     // ── Card Aging (P3.1) ────────────────────────────────
     [McpServerTool(Name = "cards_set_aging_mode")]
-    public async Task<Result> SetAgingMode(
+    public async Task<Result> SetAgingModeAsync(
         Guid cardId,
         string mode,
         IMessageBus bus,
@@ -59,7 +59,7 @@ public sealed class V110Tools
         bus.InvokeAsync<Result>(new Cardscape.Application.Cards.CardscapeExtensions.UnsnoozeCardCommand(cardId), ct);
 
     [McpServerTool(Name = "cards_list_snoozed")]
-    public async Task<Result<IReadOnlyList<Guid>>> ListSnoozed(Guid boardId, IMessageBus bus, CancellationToken ct)
+    public async Task<Result<IReadOnlyList<Guid>>> ListSnoozedAsync(Guid boardId, IMessageBus bus, CancellationToken ct)
     {
         var result = await bus.InvokeAsync<Result<IReadOnlyList<Guid>>>(
             new ListSnoozedCardIdsQuery(boardId), ct);
@@ -80,13 +80,13 @@ public sealed class V110Tools
 
     // ── Dashcards (P3.5) ─────────────────────────────────
     [McpServerTool(Name = "boards_list_dashcards")]
-    public async Task<Result<IReadOnlyList<DashcardDto>>> ListDashcards(
+    public async Task<Result<IReadOnlyList<DashcardDto>>> ListDashcardsAsync(
         Guid boardId, IMessageBus bus, CancellationToken ct) =>
         await bus.InvokeAsync<Result<IReadOnlyList<DashcardDto>>>(
             new ListDashcardsForBoardQuery(boardId), ct);
 
     [McpServerTool(Name = "boards_create_dashcard")]
-    public async Task<Result<DashcardDto>> CreateDashcard(
+    public async Task<Result<DashcardDto>> CreateDashcardAsync(
         Guid boardId, string kind, string title, string configurationJson, int position,
         IMessageBus bus, CancellationToken ct)
     {
@@ -107,7 +107,7 @@ public sealed class V110Tools
 
     // ── Imports (P5.6) ───────────────────────────────────
     [McpServerTool(Name = "imports_kanban_preview")]
-    public async Task<Result<ImportResult>> KanbanPreview(
+    public async Task<Result<ImportResult>> KanbanPreviewAsync(
         string boardsJson, Guid targetWorkspaceId, IImportService import, CancellationToken ct)
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes(boardsJson);
@@ -117,7 +117,7 @@ public sealed class V110Tools
     }
 
     [McpServerTool(Name = "imports_kanban_apply")]
-    public async Task<Result<ImportResult>> KanbanApply(
+    public async Task<Result<ImportResult>> KanbanApplyAsync(
         string boardsJson, Guid targetWorkspaceId, IImportService import, CancellationToken ct)
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes(boardsJson);
@@ -138,13 +138,13 @@ public sealed class V110Tools
     // auth + audit + cleartext-secret-only-once rules all
     // stay in one place.
     [McpServerTool(Name = "oauth_apps_list")]
-    public async Task<Result<IReadOnlyList<OAuthAppSummaryDto>>> ListOAuthApps(
+    public async Task<Result<IReadOnlyList<OAuthAppSummaryDto>>> ListOAuthAppsAsync(
         IMessageBus bus, CancellationToken ct) =>
         await bus.InvokeAsync<Result<IReadOnlyList<OAuthAppSummaryDto>>>(
             new ListOAuthAppsForOwnerQuery(), ct);
 
     [McpServerTool(Name = "oauth_apps_create")]
-    public async Task<Result<OAuthAppRegistrationDto>> CreateOAuthApp(
+    public async Task<Result<OAuthAppRegistrationDto>> CreateOAuthAppAsync(
         string name,
         string[]? allowedScopes,
         string[]? redirectUris,
@@ -158,6 +158,6 @@ public sealed class V110Tools
             ct);
 
     [McpServerTool(Name = "oauth_apps_revoke")]
-    public async Task<Result> RevokeOAuthApp(Guid appId, IMessageBus bus, CancellationToken ct) =>
+    public async Task<Result> RevokeOAuthAppAsync(Guid appId, IMessageBus bus, CancellationToken ct) =>
         await bus.InvokeAsync<Result>(new RevokeOAuthAppCommand(appId), ct);
 }

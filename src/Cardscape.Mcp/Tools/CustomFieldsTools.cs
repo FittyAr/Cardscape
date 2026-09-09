@@ -17,7 +17,7 @@ namespace Cardscape.Mcp.Tools;
 public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
 {
     [McpServerTool(Name = "custom_fields_list_definitions")]
-    public async Task<IReadOnlyList<CustomFieldDefinitionDto>> ListDefinitions(Guid boardId, CancellationToken ct)
+    public async Task<IReadOnlyList<CustomFieldDefinitionDto>> ListDefinitionsAsync(Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("custom_fields_list_definitions");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
@@ -38,7 +38,7 @@ public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "custom_fields_create_definition")]
-    public async Task<CustomFieldDefinitionDto> CreateDefinition(
+    public async Task<CustomFieldDefinitionDto> CreateDefinitionAsync(
         Guid boardId,
         string name,
         int kind,
@@ -65,7 +65,7 @@ public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "custom_fields_rename_definition")]
-    public async Task<CustomFieldDefinitionDto> RenameDefinition(
+    public async Task<CustomFieldDefinitionDto> RenameDefinitionAsync(
         Guid fieldId,
         string newName,
         CancellationToken ct)
@@ -89,7 +89,7 @@ public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "custom_fields_delete_definition")]
-    public async Task<string> DeleteDefinition(Guid fieldId, CancellationToken ct)
+    public async Task<string> DeleteDefinitionAsync(Guid fieldId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("custom_fields_delete_definition");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -110,7 +110,7 @@ public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "custom_fields_list_values_for_card")]
-    public async Task<IReadOnlyList<CustomFieldValueDto>> ListValues(Guid cardId, CancellationToken ct)
+    public async Task<IReadOnlyList<CustomFieldValueDto>> ListValuesAsync(Guid cardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("custom_fields_list_values_for_card");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
@@ -131,7 +131,7 @@ public sealed class CustomFieldsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "custom_fields_set_value")]
-    public async Task<CustomFieldValueDto> SetValue(
+    public async Task<CustomFieldValueDto> SetValueAsync(
         Guid cardId,
         Guid fieldId,
         string? valueJson,

@@ -25,7 +25,7 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
     // ── Slack ───────────────────────────────────────────────
 
     [McpServerTool(Name = "integrations_slack_connect")]
-    public async Task<SlackWorkspaceDto> SlackConnect(
+    public async Task<SlackWorkspaceDto> SlackConnectAsync(
         Guid workspaceId, string teamId, string teamName, string botToken, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_slack_connect");
@@ -47,7 +47,7 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "integrations_slack_list_channels")]
-    public async Task<IReadOnlyList<SlackChannelDto>> SlackListChannels(
+    public async Task<IReadOnlyList<SlackChannelDto>> SlackListChannelsAsync(
         Guid workspaceId, Guid boardId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_slack_list_channels");
@@ -69,7 +69,7 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "integrations_slack_unlink_channel")]
-    public async Task<string> SlackUnlinkChannel(Guid workspaceId, Guid channelId, CancellationToken ct)
+    public async Task<string> SlackUnlinkChannelAsync(Guid workspaceId, Guid channelId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_slack_unlink_channel");
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
@@ -92,7 +92,7 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
     // ── GitHub ──────────────────────────────────────────────
 
     [McpServerTool(Name = "integrations_github_list_prs")]
-    public async Task<IReadOnlyList<GitHubPullRequestDto>> GitHubListPullRequests(
+    public async Task<IReadOnlyList<GitHubPullRequestDto>> GitHubListPullRequestsAsync(
         Guid boardId, string repoFullName, string state, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_github_list_prs");
@@ -114,7 +114,7 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "integrations_github_list_issues")]
-    public async Task<IReadOnlyList<GitHubIssueDto>> GitHubListIssues(
+    public async Task<IReadOnlyList<GitHubIssueDto>> GitHubListIssuesAsync(
         Guid boardId, string repoFullName, string state, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_github_list_issues");
@@ -136,7 +136,7 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "integrations_github_link_pr")]
-    public async Task<GitHubPullRequestLinkDto> GitHubLinkPullRequest(
+    public async Task<GitHubPullRequestLinkDto> GitHubLinkPullRequestAsync(
         Guid cardId, string repoFullName, int pullRequestNumber, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_github_link_pr");
@@ -158,7 +158,7 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     [McpServerTool(Name = "integrations_github_create_issue")]
-    public async Task<GitHubIssueDto> GitHubCreateIssue(
+    public async Task<GitHubIssueDto> GitHubCreateIssueAsync(
         Guid cardId, string repoFullName, string? title, string? body, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_github_create_issue");
@@ -182,7 +182,7 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
     // ── Inbound email ───────────────────────────────────────
 
     [McpServerTool(Name = "integrations_email_list_addresses")]
-    public async Task<IReadOnlyList<InboundEmailAddressDto>> EmailListAddresses(
+    public async Task<IReadOnlyList<InboundEmailAddressDto>> EmailListAddressesAsync(
         Guid workspaceId, CancellationToken ct)
     {
         using var __mcpSpan = McpToolSpan.Begin("integrations_email_list_addresses");
