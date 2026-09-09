@@ -6,8 +6,26 @@ full feature surface (kanban + calendar + automation + extensions +
 Inbox + AI) and a **Model Context Protocol (MCP) server** that
 lets any AI-compatible client drive the boards conversationally.
 
-Every file here is meant to be read in order the first time you
-join the project, and then referenced individually as needed.
+The documentation is split between current normative guidance and
+dated historical records. Do not treat audit snapshots, closed
+roadmaps, changelogs, or superseded implementation plans as a
+description of the current code.
+
+## Documentation authority
+
+When documents disagree, use this order:
+
+1. accepted ADRs and `AGENTS.md` for architectural and working rules;
+2. `refactoring/03-whole-project-modernization-plan.md` for the active
+   modernization workstream and its verified evidence;
+3. current architecture, development, API, security and operations
+   guides for maintained behavior;
+4. roadmap files explicitly marked current.
+
+Files under `audits/`, closed version roadmaps, `community/CHANGELOG.md`,
+and `refactoring/01-audit.md` / `02-plan.md` are historical evidence.
+They intentionally describe earlier states and must not override current
+code or the sources above.
 
 ## 1. Read me first (onboarding path)
 
@@ -25,11 +43,9 @@ If you are a new contributor (human or AI agent), follow this order:
 3. [`roadmap/00-feature-inventory.md`](roadmap/00-feature-inventory.md)
    — the feature inventory Cardscape is building toward.
    Tells you what's in scope.
-4. [`roadmap/01-implementation-plan.md`](roadmap/01-implementation-plan.md)
-   — the phased delivery plan. Tells you what's next and
-   what's deferred. The MCP server ships in **Phase 2**.
-   The current workstream is **v1.2.0** (see
-   [`05-plan-v1.2.0.md`](roadmap/05-plan-v1.2.0.md)).
+4. [`refactoring/03-whole-project-modernization-plan.md`](refactoring/03-whole-project-modernization-plan.md)
+   — the active whole-project review, completion criteria and
+   evidence log. Closed version roadmaps remain historical records.
 5. [`architecture/00-overview.md`](architecture/00-overview.md) —
    the Clean Architecture layers, the directory layout (now
    including `Cardscape.Mcp/`), and the dependency rules.
@@ -111,7 +127,7 @@ docs/
 │   ├── 02-product-positioning.md     # name, tagline, pillars, vocabulary, voice
 │   ├── 03-execution-plan-v1.1.0.md   # the closed v1.1.0 workstream (42 features + 14 audit gaps)
 │   ├── 04-audit-gaps-2026-07-30.md  # the v1.1.0 per-area audit report
-│   └── 05-plan-v1.2.0.md             # the current workstream (doc reconciliation + next chunk)
+│   └── 05-plan-v1.2.0.md             # closed v1.2.0 workstream (historical)
 ├── community/                         # community-facing reference docs
 │   ├── CHANGELOG.md                   # Keep a Changelog format
 │   ├── ROADMAP.md                     # community-readable version of the implementation plan
@@ -153,7 +169,7 @@ the right starting point.
 | Designer (UI, marketing, social) | [`brand/00-brand-kit.md`](brand/00-brand-kit.md) — palette, typography, logo concept |
 | Release manager | [`development/04-release-process.md`](development/04-release-process.md) — versioning, tags, NuGet, Docker |
 | Self-hoster (deploying Cardscape) | [`operations/01-deployment.md`](operations/01-deployment.md) — the Docker Compose setup, then [`operations/02-backup-restore.md`](operations/02-backup-restore.md) for backups |
-| Maintainer doing the phased plan review | [`roadmap/01-implementation-plan.md`](roadmap/01-implementation-plan.md) — the canonical plan |
+| Maintainer doing the modernization review | [`refactoring/03-whole-project-modernization-plan.md`](refactoring/03-whole-project-modernization-plan.md) — the active canonical plan |
 | Implementer working on the MCP server | [`ai/01-mcp-deep-dive.md`](ai/01-mcp-deep-dive.md) — the "how to add a tool" recipe |
 | Implementer working on errors, logging, auth, accessibility, performance, or feature flags | the matching file in [`design/`](design/) — the pattern the implementation will follow |
 | Security reviewer | [`security/01-threat-model.md`](security/01-threat-model.md) — STRIDE per bounded context, then [`security/02-secure-coding-checklist.md`](security/02-secure-coding-checklist.md) — the reviewer checklist |
