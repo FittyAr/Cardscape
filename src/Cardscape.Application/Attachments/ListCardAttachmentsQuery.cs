@@ -14,7 +14,7 @@ public sealed record ListCardAttachmentsQuery(Guid CardId) : IMessage;
 
 public static class ListCardAttachmentsQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<AttachmentDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<AttachmentDto>>> HandleAsync(
         ListCardAttachmentsQuery query,
         IAttachmentRepository attachments,
         ICardRepository cards,

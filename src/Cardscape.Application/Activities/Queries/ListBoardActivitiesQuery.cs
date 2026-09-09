@@ -14,7 +14,7 @@ public sealed record ListBoardActivitiesQuery(
 
 public static class ListBoardActivitiesQueryHandler
 {
-    public static async Task<Result<ActivityPage>> Handle(
+    public static async Task<Result<ActivityPage>> HandleAsync(
         ListBoardActivitiesQuery query,
         IActivityRepository activities,
         IBoardRepository boards,

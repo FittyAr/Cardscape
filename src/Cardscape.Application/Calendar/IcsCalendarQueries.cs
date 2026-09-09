@@ -14,7 +14,7 @@ public sealed record RenderBoardCalendarQuery(Guid BoardId) : IMessage;
 
 public static class RenderBoardCalendarQueryHandler
 {
-    public static async Task<Result<Stream>> Handle(
+    public static async Task<Result<Stream>> HandleAsync(
         RenderBoardCalendarQuery query,
         ICalendarFeedRenderer calendar,
         CancellationToken ct) =>
@@ -25,7 +25,7 @@ public sealed record ExportBoardQuery(Guid BoardId) : IMessage;
 
 public static class ExportBoardQueryHandler
 {
-    public static async Task<Result<Stream>> Handle(
+    public static async Task<Result<Stream>> HandleAsync(
         ExportBoardQuery query,
         Application.Abstractions.Export.IExportService export,
         CancellationToken ct) =>

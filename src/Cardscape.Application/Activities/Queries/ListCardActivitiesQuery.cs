@@ -15,7 +15,7 @@ public sealed record ListCardActivitiesQuery(
 
 public static class ListCardActivitiesQueryHandler
 {
-    public static async Task<Result<ActivityPage>> Handle(
+    public static async Task<Result<ActivityPage>> HandleAsync(
         ListCardActivitiesQuery query,
         IActivityRepository activities,
         ICardRepository cards,

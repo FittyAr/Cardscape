@@ -151,7 +151,7 @@ public sealed class UploadAttachmentCommandHandlerTests
         public string? SavedKey => SavedKeyAccessor();
 
         public Task<Result<AttachmentDto>> HandleAsync(UploadAttachmentCommand command) =>
-            UploadAttachmentCommandHandler.Handle(
+            UploadAttachmentCommandHandler.HandleAsync(
                 command, Attachments.Object, Cards.Object, Lists.Object, Boards.Object,
                 UnitOfWork.Object, Storage.Object, Clock, CurrentUser,
                 TestContext.Current.CancellationToken);

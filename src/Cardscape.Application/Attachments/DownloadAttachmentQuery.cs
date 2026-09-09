@@ -20,7 +20,7 @@ public sealed record AttachmentDownload(
 
 public static class DownloadAttachmentQueryHandler
 {
-    public static async Task<Result<AttachmentDownload>> Handle(
+    public static async Task<Result<AttachmentDownload>> HandleAsync(
         DownloadAttachmentQuery query,
         IAttachmentRepository attachments,
         ICardRepository cards,

@@ -19,7 +19,7 @@ public sealed record UploadAttachmentCommand(
 
 public static class UploadAttachmentCommandHandler
 {
-    public static async Task<Result<AttachmentDto>> Handle(
+    public static async Task<Result<AttachmentDto>> HandleAsync(
         UploadAttachmentCommand command,
         IAttachmentRepository attachments,
         ICardRepository cards,

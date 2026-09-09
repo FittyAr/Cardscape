@@ -14,7 +14,7 @@ public sealed record DeleteAttachmentCommand(Guid CardId, Guid AttachmentId) : I
 
 public static class DeleteAttachmentCommandHandler
 {
-    public static async Task<Result<bool>> Handle(
+    public static async Task<Result<bool>> HandleAsync(
         DeleteAttachmentCommand command,
         IAttachmentRepository attachments,
         ICardRepository cards,
