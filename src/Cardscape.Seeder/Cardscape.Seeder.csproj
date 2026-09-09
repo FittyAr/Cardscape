@@ -5,7 +5,7 @@
     <RootNamespace>Cardscape.Seeder</RootNamespace>
     <Description>
       Optional, feature-gated database seeder for development and demo
-      environments. Scaffolds a representative slice of every persisted
+      environments. Creates a representative slice of every persisted
       aggregate so the Web client, REST API, and MCP server all have
       realistic data to render. Mounted under /admin/seeder.
     </Description>

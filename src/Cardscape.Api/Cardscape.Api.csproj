@@ -65,7 +65,7 @@
     <ProjectReference Include="..\Cardscape.Migrations.MySql\Cardscape.Migrations.MySql.csproj" />
     <ProjectReference Include="..\Cardscape.Web\Cardscape.Web.csproj" />
     <!--
-      Optional, feature-gated seeder. Scaffolds a demo dataset
+      Optional, feature-gated seeder. Creates a demo dataset
       on demand. The whole pipeline returns 404 when the
       Cardscape:Seeder:Enabled toggle is false, so this
       reference has no effect outside the admin surface.

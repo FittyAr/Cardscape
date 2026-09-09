@@ -11,11 +11,9 @@ using Wolverine;
 // its CardMirror pointer. REST and MCP share this exact contract.
 using MirrorCmd = Cardscape.Application.Cards.CardscapeExtensions.MirrorCardCommand;
 using MirrorResult = Cardscape.Application.Cards.CardscapeExtensions.MirrorCardResult;
-// G6b — disambiguate the snooze commands that live inside the
-// `CardscapeExtensions` static class (consolidated command
-// bucket). The aliases also make it clear that the endpoint is
-// binding the canonical (Wolverine-handler-backed) command and
-// not a stray test stub.
+// Disambiguate the snooze commands that live inside the
+// `CardscapeExtensions` static class. The aliases make the
+// canonical Wolverine contracts explicit at the endpoint boundary.
 using SnoozeCmd = Cardscape.Application.Cards.CardscapeExtensions.SnoozeCardCommand;
 using UnsnoozeCmd = Cardscape.Application.Cards.CardscapeExtensions.UnsnoozeCardCommand;
 
