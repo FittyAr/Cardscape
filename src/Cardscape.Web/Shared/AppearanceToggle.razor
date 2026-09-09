@@ -30,7 +30,7 @@
     <RadzenIcon Icon="palette" Style="color: var(--rz-text-secondary-color);" />
     <RadzenDropDown TValue="string"
                     Value="@UserPreferences.CurrentThemeName"
-                    Change="@OnThemeChanged"
+                    Change="@OnThemeChangedAsync"
                     Data="@(_themes)"
                     TextProperty="DisplayName"
                     ValueProperty="Name"
@@ -47,7 +47,7 @@
     /// state changes, not on every service-property read.</summary>
     private IReadOnlyList<ThemeEntry> _themes = ThemeCatalog.All;
 
-    private async void OnThemeChanged()
+    private async Task OnThemeChangedAsync()
     {
         // RadzenDropDown<TValue>.Change is a non-generic
         // Action; the bound Value is already updated to

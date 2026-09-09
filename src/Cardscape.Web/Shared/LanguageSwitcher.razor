@@ -14,7 +14,7 @@
 
 <RadzenDropDown TValue="string"
                 Value="@Culture.CurrentCulture"
-                Change="@OnChange"
+                Change="@OnChangeAsync"
                 Data="@(Culture.AvailableCultures)"
                 Placeholder="@L["CommonLanguage"]"
                 Style="width: 7rem;"
@@ -28,17 +28,9 @@
 </RadzenDropDown>
 
 @code {
-    // BETA-8-I18N-#1 — see test-results/r8/A8-settings.md.
-    //
-    // The previous `Change="@OnChange"` handler was parameterless,
-    // so the new selection the user picked was discarded — the
-    // handler then re-read `Culture.CurrentCulture` (the singleton,
-    // still on the OLD value) and called SetCultureAsync with it.
-    // The result: picking "Spanish" kept the UI in English, the
-    // localStorage key was never written, and a hard refresh
-    // re-loaded English from the empty default. The signature
-    // here accepts the new `value` RadzenDropDown passes to Change
-    // and forwards it to the picker.
+    // Radzen supplies the selected value to Change. Forwarding that
+    // value avoids re-reading stale singleton state during the same
+    // render cycle.
     //
     // BETA-8-I18N-#2 — see test-results/r8/A8-settings.md.
     //
@@ -66,7 +58,7 @@
 
     private void OnCultureChanged() => InvokeAsync(StateHasChanged);
 
-    private async void OnChange(object value)
+    private async Task OnChangeAsync(object value)
     {
         string newCulture = value?.ToString() ?? "en";
         await Culture.SetCultureAsync(newCulture);

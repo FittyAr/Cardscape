@@ -140,7 +140,10 @@
 
     private void OnUserPreferencesChanged() => InvokeAsync(StateHasChanged);
 
-    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
+        _ = HideErrorUiAsync();
+
+    private async Task HideErrorUiAsync()
     {
         // Defer one tick so we don't fight the framework
         // when the navigation itself triggered the error
