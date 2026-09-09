@@ -24,7 +24,7 @@ public sealed record ConsumePendingTotpLoginQuery(
 
 public static class ConsumePendingTotpLoginQueryHandler
 {
-    public static async Task<Result<AuthResponse>> Handle(
+    public static async Task<Result<AuthResponse>> HandleAsync(
         ConsumePendingTotpLoginQuery query,
         IPendingTotpLoginStore pendingLogins,
         IUserRepository users,

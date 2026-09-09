@@ -13,7 +13,7 @@ public sealed record DisableSamlConnectionCommand(Guid WorkspaceId) : IMessage;
 
 public static class DisableSamlConnectionCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         DisableSamlConnectionCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         ISamlConnectionRepository connections,
@@ -55,5 +55,4 @@ public static class DisableSamlConnectionCommandHandler
         return Result.Success();
     }
 }
-
 

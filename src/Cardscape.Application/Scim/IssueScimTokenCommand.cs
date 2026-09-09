@@ -14,7 +14,7 @@ public sealed record IssueScimTokenResult(ScimTokenDto Token, string PlaintextTo
 
 public static class IssueScimTokenCommandHandler
 {
-    public static async Task<Result<IssueScimTokenResult>> Handle(
+    public static async Task<Result<IssueScimTokenResult>> HandleAsync(
         IssueScimTokenCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         IScimTokenRepository tokens,

@@ -19,7 +19,7 @@ public sealed class SuggestCardOwnersCommandHandler(
     ICurrentUser currentUser,
     IAiService ai) : IWolverineHandler
 {
-    public async Task<Result<AiFeatures.AiOwnerSuggestions>> Handle(
+    public async Task<Result<AiFeatures.AiOwnerSuggestions>> HandleAsync(
         AiFeatures.SuggestCardOwnersCommand request,
         CancellationToken ct)
     {

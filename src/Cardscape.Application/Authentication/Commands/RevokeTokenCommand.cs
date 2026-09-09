@@ -28,7 +28,7 @@ public sealed record RevokeCurrentTokenCommand(
 
 public static class RevokeCurrentTokenCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         RevokeCurrentTokenCommand command,
         ICurrentUser currentUser,
         IRevokedTokenRepository revocations,

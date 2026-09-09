@@ -20,7 +20,7 @@ public sealed record ConfigureSamlConnectionCommand(
 
 public static class ConfigureSamlConnectionCommandHandler
 {
-    public static async Task<Result<SamlConnectionDto>> Handle(
+    public static async Task<Result<SamlConnectionDto>> HandleAsync(
         ConfigureSamlConnectionCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         ISamlConnectionRepository connections,
@@ -120,5 +120,4 @@ public static class ConfigureSamlConnectionCommandHandler
         c.IdpEntityId, c.IdpMetadataUrl, c.IdpMetadataXml, c.SpEntityId,
         c.IsActive, c.CreatedAt, c.UpdatedAt);
 }
-
 

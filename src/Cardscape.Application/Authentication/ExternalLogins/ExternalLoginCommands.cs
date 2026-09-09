@@ -28,7 +28,7 @@ public sealed record ResolveExternalLoginCommand(
 
 public static class ResolveExternalLoginCommandHandler
 {
-    public static async Task<Result<AuthResponse>> Handle(
+    public static async Task<Result<AuthResponse>> HandleAsync(
         ResolveExternalLoginCommand command,
         IExternalLoginService service,
         IUserRepository users,

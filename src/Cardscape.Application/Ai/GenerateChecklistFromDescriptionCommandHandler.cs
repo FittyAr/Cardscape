@@ -18,7 +18,7 @@ public sealed class GenerateChecklistFromDescriptionCommandHandler(
     ICurrentUser currentUser,
     IAiService ai) : IWolverineHandler
 {
-    public async Task<Result<AiFeatures.AiGeneratedChecklist>> Handle(
+    public async Task<Result<AiFeatures.AiGeneratedChecklist>> HandleAsync(
         AiFeatures.GenerateChecklistFromDescriptionCommand request,
         CancellationToken ct)
     {

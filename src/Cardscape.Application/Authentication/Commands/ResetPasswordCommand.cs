@@ -12,7 +12,7 @@ public sealed record ResetPasswordCommand(string Token, string NewPassword) : IM
 
 public static class ResetPasswordCommandHandler
 {
-    public static async Task<Result<bool>> Handle(
+    public static async Task<Result<bool>> HandleAsync(
         ResetPasswordCommand command,
         IPasswordResetRepository resets,
         IUserRepository users,

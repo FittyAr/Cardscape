@@ -18,7 +18,7 @@ public sealed class GenerateCardDescriptionCommandHandler(
     ICurrentUser currentUser,
     IAiService ai) : IWolverineHandler
 {
-    public async Task<Result<AiFeatures.AiGeneratedText>> Handle(
+    public async Task<Result<AiFeatures.AiGeneratedText>> HandleAsync(
         AiFeatures.GenerateCardDescriptionCommand request,
         CancellationToken ct)
     {

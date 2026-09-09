@@ -18,7 +18,7 @@ public sealed record RegisterOAuthAppCommand(
 
 public static class RegisterOAuthAppCommandHandler
 {
-    public static async Task<Result<OAuthAppRegistrationDto>> Handle(
+    public static async Task<Result<OAuthAppRegistrationDto>> HandleAsync(
         RegisterOAuthAppCommand command,
         IOAuthAppService service,
         ICurrentUser currentUser,
@@ -72,7 +72,7 @@ public sealed record RevokeOAuthAppCommand(Guid AppId) : IMessage;
 
 public static class RevokeOAuthAppCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         RevokeOAuthAppCommand command,
         IOAuthAppService service,
         ICurrentUser currentUser,

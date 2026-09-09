@@ -13,7 +13,7 @@ public class LoginUserQueryHandlerTests
         var ctx = new HandlersTestContext();
         var user = await ctx.SeedUserAsync("alice@example.com", "Alice", "Passw0rd!");
 
-        var result = await LoginUserQueryHandler.Handle(
+        var result = await LoginUserQueryHandler.HandleAsync(
             new LoginUserQuery("alice@example.com", "Passw0rd!"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
             ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
@@ -33,7 +33,7 @@ public class LoginUserQueryHandlerTests
     {
         var ctx = new HandlersTestContext();
 
-        var result = await LoginUserQueryHandler.Handle(
+        var result = await LoginUserQueryHandler.HandleAsync(
             new LoginUserQuery("ghost@example.com", "Passw0rd!"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
             ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
@@ -49,7 +49,7 @@ public class LoginUserQueryHandlerTests
         var ctx = new HandlersTestContext();
         await ctx.SeedUserAsync("alice@example.com", "Alice", "Passw0rd!");
 
-        var result = await LoginUserQueryHandler.Handle(
+        var result = await LoginUserQueryHandler.HandleAsync(
             new LoginUserQuery("alice@example.com", "wrong-pass"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
             ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
@@ -64,7 +64,7 @@ public class LoginUserQueryHandlerTests
         var ctx = new HandlersTestContext();
         await ctx.SeedUserAsync("alice@example.com", "Alice", "Passw0rd!", active: false);
 
-        var result = await LoginUserQueryHandler.Handle(
+        var result = await LoginUserQueryHandler.HandleAsync(
             new LoginUserQuery("alice@example.com", "Passw0rd!"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
             ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
@@ -82,7 +82,7 @@ public class LoginUserQueryHandlerTests
         await ctx.SeedTotpCredentialAsync(user);
 
         // Act
-        var result = await LoginUserQueryHandler.Handle(
+        var result = await LoginUserQueryHandler.HandleAsync(
             new LoginUserQuery("alice@example.com", "Passw0rd!"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
             ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
@@ -113,7 +113,7 @@ public class LoginUserQueryHandlerTests
         string code = totp.ComputeTotp();
 
         // Act
-        var result = await LoginUserQueryHandler.Handle(
+        var result = await LoginUserQueryHandler.HandleAsync(
             new LoginUserQuery("alice@example.com", "Passw0rd!", code),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
             ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
@@ -134,7 +134,7 @@ public class LoginUserQueryHandlerTests
         var user = await ctx.SeedUserAsync("alice@example.com", "Alice", "Passw0rd!");
         await ctx.SeedTotpCredentialAsync(user);
 
-        var result = await LoginUserQueryHandler.Handle(
+        var result = await LoginUserQueryHandler.HandleAsync(
             new LoginUserQuery("alice@example.com", "Passw0rd!", "000000"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
             ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins, CancellationToken.None);
@@ -158,7 +158,7 @@ public class LoginUserQueryHandlerTests
         var workspace = await ctx.SeedWorkspaceAsync(user.Id.Value);
         workspace.SetRequireTwoFactor(true, user.Id.Value, ctx.Clock.UtcNow);
 
-        var result = await LoginUserQueryHandler.Handle(
+        var result = await LoginUserQueryHandler.HandleAsync(
             new LoginUserQuery("alice@example.com", "Passw0rd!"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
             ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins,
@@ -180,7 +180,7 @@ public class LoginUserQueryHandlerTests
         workspace.SetRequireTwoFactor(true, user.Id.Value, ctx.Clock.UtcNow);
         await ctx.SeedTotpCredentialAsync(user, confirmed: false);
 
-        var result = await LoginUserQueryHandler.Handle(
+        var result = await LoginUserQueryHandler.HandleAsync(
             new LoginUserQuery("pending@example.com", "Passw0rd!"),
             ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens, ctx.Clock,
             ctx.TotpCredentials, ctx.Workspaces, ctx.TotpService, ctx.PendingTotpLogins,

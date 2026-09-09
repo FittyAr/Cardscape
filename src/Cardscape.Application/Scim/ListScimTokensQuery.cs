@@ -11,7 +11,7 @@ public sealed record ListScimTokensQuery(Guid WorkspaceId) : IMessage;
 
 public static class ListScimTokensQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<ScimTokenDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<ScimTokenDto>>> HandleAsync(
         ListScimTokensQuery query,
         IRepository<Workspace, WorkspaceId> workspaces,
         IScimTokenRepository tokens,

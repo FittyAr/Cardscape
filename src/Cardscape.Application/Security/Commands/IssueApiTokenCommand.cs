@@ -25,7 +25,7 @@ public static class IssueApiTokenCommandHandler
     private const int DefaultRateLimitPerHour = 1_000;
     private const int DefaultBurstSize = 100;
 
-    public static async Task<Result<ApiTokenIssuanceDto>> Handle(
+    public static async Task<Result<ApiTokenIssuanceDto>> HandleAsync(
         IssueApiTokenCommand command,
         IApiTokenService tokens,
         ICurrentUser currentUser,

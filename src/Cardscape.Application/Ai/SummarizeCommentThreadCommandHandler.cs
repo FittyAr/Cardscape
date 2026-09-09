@@ -19,7 +19,7 @@ public sealed class SummarizeCommentThreadCommandHandler(
     ICurrentUser currentUser,
     IAiService ai) : IWolverineHandler
 {
-    public async Task<Result<AiFeatures.AiGeneratedText>> Handle(
+    public async Task<Result<AiFeatures.AiGeneratedText>> HandleAsync(
         AiFeatures.SummarizeCommentThreadCommand request,
         CancellationToken ct)
     {

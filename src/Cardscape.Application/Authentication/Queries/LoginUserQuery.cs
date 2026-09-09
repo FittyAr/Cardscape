@@ -37,7 +37,7 @@ public sealed record LoginUserQuery(
 
 public static class LoginUserQueryHandler
 {
-    public static async Task<Result<AuthResponse>> Handle(
+    public static async Task<Result<AuthResponse>> HandleAsync(
         LoginUserQuery query,
         IUserRepository users,
         IPasswordHasher hasher,

@@ -24,7 +24,7 @@ public static class RequestPasswordResetCommandHandler
 {
     private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(2);
 
-    public static async Task<Result<PasswordResetRequestResult>> Handle(
+    public static async Task<Result<PasswordResetRequestResult>> HandleAsync(
         RequestPasswordResetCommand command,
         IUserRepository users,
         IPasswordResetRepository resets,

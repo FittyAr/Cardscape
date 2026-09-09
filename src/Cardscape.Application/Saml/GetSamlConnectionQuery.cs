@@ -13,7 +13,7 @@ public sealed record GetSamlConnectionQuery(Guid WorkspaceId) : IMessage;
 
 public static class GetSamlConnectionQueryHandler
 {
-    public static async Task<Result<SamlConnectionDto?>> Handle(
+    public static async Task<Result<SamlConnectionDto?>> HandleAsync(
         GetSamlConnectionQuery query,
         IRepository<Workspace, WorkspaceId> workspaces,
         ISamlConnectionRepository connections,
@@ -51,5 +51,4 @@ public static class GetSamlConnectionQueryHandler
             existing.SpEntityId, existing.IsActive, existing.CreatedAt, existing.UpdatedAt));
     }
 }
-
 

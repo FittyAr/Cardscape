@@ -13,7 +13,7 @@ public sealed record UpdateApiTokenRateLimitCommand(
 
 public static class UpdateApiTokenRateLimitCommandHandler
 {
-    public static async Task<Result<ApiTokenRateLimitDto>> Handle(
+    public static async Task<Result<ApiTokenRateLimitDto>> HandleAsync(
         UpdateApiTokenRateLimitCommand command,
         IApiTokenService tokens,
         ICurrentUser currentUser,

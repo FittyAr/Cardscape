@@ -11,7 +11,7 @@ public sealed record RevokeApiTokenCommand(Guid TokenId, string? Reason) : IMess
 
 public static class RevokeApiTokenCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         RevokeApiTokenCommand command,
         IApiTokenService tokens,
         IApiTokenRepository repository,

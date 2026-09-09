@@ -9,7 +9,7 @@ public sealed record ListApiTokensForUserQuery() : IMessage;
 
 public static class ListApiTokensForUserQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<ApiTokenSummaryDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<ApiTokenSummaryDto>>> HandleAsync(
         ListApiTokensForUserQuery query,
         IApiTokenService tokens,
         ICurrentUser currentUser,

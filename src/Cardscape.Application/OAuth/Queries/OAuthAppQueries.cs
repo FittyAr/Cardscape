@@ -12,7 +12,7 @@ public sealed record ListOAuthAppsForOwnerQuery : IMessage;
 
 public static class ListOAuthAppsForOwnerQueryHandler
 {
-    public static async Task<Result<IReadOnlyList<OAuthAppSummaryDto>>> Handle(
+    public static async Task<Result<IReadOnlyList<OAuthAppSummaryDto>>> HandleAsync(
         ListOAuthAppsForOwnerQuery _,
         IOAuthAppService service,
         ICurrentUser currentUser,

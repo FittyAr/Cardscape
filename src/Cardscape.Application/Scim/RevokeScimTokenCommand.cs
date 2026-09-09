@@ -12,7 +12,7 @@ public sealed record RevokeScimTokenCommand(Guid WorkspaceId, Guid TokenId) : IM
 
 public static class RevokeScimTokenCommandHandler
 {
-    public static async Task<Result> Handle(
+    public static async Task<Result> HandleAsync(
         RevokeScimTokenCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
         IScimTokenRepository tokens,

@@ -10,7 +10,7 @@ public sealed record GetApiTokenRateLimitStatusQuery(Guid TokenId) : IMessage;
 
 public static class GetApiTokenRateLimitStatusQueryHandler
 {
-    public static async Task<Result<ApiTokenRateLimitStatusDto>> Handle(
+    public static async Task<Result<ApiTokenRateLimitStatusDto>> HandleAsync(
         GetApiTokenRateLimitStatusQuery query,
         IApiTokenService tokens,
         ICurrentUser currentUser,

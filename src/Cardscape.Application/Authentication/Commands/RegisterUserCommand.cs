@@ -19,7 +19,7 @@ public sealed record RegisterUserCommand(
 
 public static class RegisterUserCommandHandler
 {
-    public static async Task<Result<AuthResponse>> Handle(
+    public static async Task<Result<AuthResponse>> HandleAsync(
         RegisterUserCommand command,
         IUserRepository users,
         IPasswordHasher hasher,

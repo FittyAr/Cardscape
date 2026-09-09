@@ -13,7 +13,7 @@ public class RegisterUserCommandHandlerTests
         var ctx = new HandlersTestContext();
         var cmd = new RegisterUserCommand("alice@example.com", "Alice", "Goodpass123!");
 
-        var result = await RegisterUserCommandHandler.Handle(
+        var result = await RegisterUserCommandHandler.HandleAsync(
             cmd, ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens,
             ctx.Clock, ctx.RegisterUserCommandValidator, CancellationToken.None);
 
@@ -31,7 +31,7 @@ public class RegisterUserCommandHandlerTests
         var ctx = new HandlersTestContext();
         var cmd = new RegisterUserCommand("not-an-email", "Alice", "Goodpass123!");
 
-        var result = await RegisterUserCommandHandler.Handle(
+        var result = await RegisterUserCommandHandler.HandleAsync(
             cmd, ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens,
             ctx.Clock, ctx.RegisterUserCommandValidator, CancellationToken.None);
 
@@ -53,7 +53,7 @@ public class RegisterUserCommandHandlerTests
         var ctx = new HandlersTestContext();
         var cmd = new RegisterUserCommand("alice@example.com", displayName, "Goodpass123!");
 
-        var result = await RegisterUserCommandHandler.Handle(
+        var result = await RegisterUserCommandHandler.HandleAsync(
             cmd, ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens,
             ctx.Clock, ctx.RegisterUserCommandValidator, CancellationToken.None);
 
@@ -69,7 +69,7 @@ public class RegisterUserCommandHandlerTests
         var ctx = new HandlersTestContext();
         var cmd = new RegisterUserCommand("alice@example.com", "Alice", password);
 
-        var result = await RegisterUserCommandHandler.Handle(
+        var result = await RegisterUserCommandHandler.HandleAsync(
             cmd, ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens,
             ctx.Clock, ctx.RegisterUserCommandValidator, CancellationToken.None);
 
@@ -84,7 +84,7 @@ public class RegisterUserCommandHandlerTests
         await ctx.SeedUserAsync(email: "alice@example.com", password: "Goodpass123!");
         var cmd = new RegisterUserCommand("alice@example.com", "Alice2", "Goodpass123!");
 
-        var result = await RegisterUserCommandHandler.Handle(
+        var result = await RegisterUserCommandHandler.HandleAsync(
             cmd, ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens,
             ctx.Clock, ctx.RegisterUserCommandValidator, CancellationToken.None);
 
@@ -104,7 +104,7 @@ public class RegisterUserCommandHandlerTests
         var ctx = new HandlersTestContext();
         var cmd = new RegisterUserCommand("alice@example.com", "Alice", "12345678");
 
-        var result = await RegisterUserCommandHandler.Handle(
+        var result = await RegisterUserCommandHandler.HandleAsync(
             cmd, ctx.Users, ctx.PasswordHasher, ctx.UnitOfWork, ctx.Tokens,
             ctx.Clock, ctx.RegisterUserCommandValidator, CancellationToken.None);
 
