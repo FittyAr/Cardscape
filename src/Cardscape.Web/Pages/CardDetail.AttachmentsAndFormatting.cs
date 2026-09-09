@@ -78,7 +78,7 @@ public partial class CardDetail
     // download triggers a browser save via JS interop. Both
     // re-fetch the list on success so the UI stays in lockstep
     // with the server.
-    private async Task OnAttachmentSelected(UploadChangeEventArgs e)
+    private async Task OnAttachmentSelectedAsync(UploadChangeEventArgs e)
     {
         if (_uploadingAttachment) return;
         Radzen.FileInfo? file = e.Files?.FirstOrDefault();

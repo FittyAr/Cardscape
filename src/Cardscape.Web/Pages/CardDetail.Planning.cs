@@ -34,7 +34,7 @@ public partial class CardDetail
     // Wire Enter on the inline TextBoxes to the same handlers
     // the buttons use, so the user can submit the form without
     // leaving the keyboard.
-    private async Task OnCreateChecklistKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    private async Task OnCreateChecklistKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
     {
         if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
         {
@@ -42,7 +42,7 @@ public partial class CardDetail
         }
     }
 
-    private async Task OnAddItemKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, Guid checklistId)
+    private async Task OnAddItemKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, Guid checklistId)
     {
         if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
         {

@@ -24,7 +24,7 @@ public partial class BoardDetail
         }
     }
 
-    private async Task ToggleStar()
+    private async Task ToggleStarAsync()
     {
         if (_board is null) return;
         ApiResult<BoardDto> result = _board.IsStarred
@@ -41,23 +41,23 @@ public partial class BoardDetail
     // we dispatch to the same handler the submit button uses so
     // both paths converge. The @onkeydown attribute is wired in
     // the markup above (AddList form + AddCard inline).
-    private async Task OnAddListKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    private async Task OnAddListKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
     {
         if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
         {
-            await AddList();
+            await AddListAsync();
         }
     }
 
-    private async Task OnAddCardKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, Guid listId)
+    private async Task OnAddCardKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, Guid listId)
     {
         if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
         {
-            await ConfirmAddCard(listId);
+            await ConfirmAddCardAsync(listId);
         }
     }
 
-    private async Task AddList()
+    private async Task AddListAsync()
     {
         if (string.IsNullOrWhiteSpace(_addListModel.Name)) return;
         _addingList = true;
@@ -94,7 +94,7 @@ public partial class BoardDetail
         _showAddList = !_showAddList;
     }
 
-    private async Task ConfirmAddCard(Guid listId)
+    private async Task ConfirmAddCardAsync(Guid listId)
     {
         if (string.IsNullOrWhiteSpace(_newCardTitle)) return;
         ApiResult<CardDto> result = await CardsApi.CreateAsync(listId, _newCardTitle, null);
@@ -110,7 +110,7 @@ public partial class BoardDetail
     // the corresponding IListsApiClient method (added in this
     // pass) and re-fetches the board so the column reorder /
     // archive state stays in lockstep with the SignalR hub.
-    private async Task PromptRenameList(Guid listId, string currentName)
+    private async Task PromptRenameListAsync(Guid listId, string currentName)
     {
         object? result = await DialogService.OpenAsync<RenameListDialog>(
             "Rename list",
@@ -119,11 +119,11 @@ public partial class BoardDetail
 
         if (result is string newName && !string.IsNullOrWhiteSpace(newName))
         {
-            await RenameList(listId, newName);
+            await RenameListAsync(listId, newName);
         }
     }
 
-    private async Task RenameList(Guid listId, string newName)
+    private async Task RenameListAsync(Guid listId, string newName)
     {
         ApiResult<BoardListDto> result = await ListsApi.RenameAsync(listId, newName);
         if (result.IsSuccess)
@@ -132,7 +132,7 @@ public partial class BoardDetail
         }
     }
 
-    private async Task MoveListToPosition(Guid listId, double newPosition)
+    private async Task MoveListToPositionAsync(Guid listId, double newPosition)
     {
         ApiResult<BoardListDto> result = await ListsApi.MoveAsync(listId, newPosition);
         if (result.IsSuccess)
@@ -141,7 +141,7 @@ public partial class BoardDetail
         }
     }
 
-    private async Task ArchiveList(Guid listId)
+    private async Task ArchiveListAsync(Guid listId)
     {
         ApiResult<BoardListDto> result = await ListsApi.ArchiveAsync(listId);
         if (result.IsSuccess)
@@ -150,7 +150,7 @@ public partial class BoardDetail
         }
     }
 
-    private async Task RestoreList(Guid listId)
+    private async Task RestoreListAsync(Guid listId)
     {
         ApiResult<BoardListDto> result = await ListsApi.RestoreAsync(listId);
         if (result.IsSuccess)
@@ -162,7 +162,7 @@ public partial class BoardDetail
     // BETA-6-#6 — board settings handlers. All four back the
     // settings panel above; every call already exists on
     // IBoardsApiClient, so this is just glue.
-    private async Task RenameBoard()
+    private async Task RenameBoardAsync()
     {
         if (string.IsNullOrWhiteSpace(_renameModel.NewName)) return;
         ApiResult<BoardDto> result = await BoardsApi.RenameAsync(BoardId, _renameModel.NewName);
@@ -173,7 +173,7 @@ public partial class BoardDetail
         }
     }
 
-    private async Task ChangeDescription()
+    private async Task ChangeDescriptionAsync()
     {
         if (string.IsNullOrWhiteSpace(_descriptionModel.NewDescription)) return;
         ApiResult<BoardDto> result = await BoardsApi.ChangeDescriptionAsync(
@@ -185,7 +185,7 @@ public partial class BoardDetail
         }
     }
 
-    private async Task ChangeVisibility()
+    private async Task ChangeVisibilityAsync()
     {
         ApiResult<BoardDto> result = await BoardsApi.ChangeVisibilityAsync(BoardId, _newVisibility);
         if (result.IsSuccess)
@@ -194,13 +194,13 @@ public partial class BoardDetail
         }
     }
 
-    private async Task ArchiveBoard()
+    private async Task ArchiveBoardAsync()
     {
         ApiResult<BoardDto> result = await BoardsApi.ArchiveAsync(BoardId);
         if (result.IsSuccess) _board = result.Value;
     }
 
-    private async Task UnarchiveBoard()
+    private async Task UnarchiveBoardAsync()
     {
         ApiResult<BoardDto> result = await BoardsApi.UnarchiveAsync(BoardId);
         if (result.IsSuccess) _board = result.Value;

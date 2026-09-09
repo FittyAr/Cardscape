@@ -26,7 +26,7 @@ else
                          title="@(_hubConnected ? "Live updates on" : "Live updates off — refreshes on navigation only")" />
             <RadzenButton Text="@(_board.IsStarred ? "★ Starred" : "☆ Star")"
                           ButtonStyle="ButtonStyle.Secondary"
-                          Click="@ToggleStar" />
+                          Click="@ToggleStarAsync" />
             <RadzenButton Text="Add list" Icon="add" ButtonStyle="ButtonStyle.Light"
                           Click="@ToggleAddList" />
             <RadzenButton Text="Custom fields" Icon="list" ButtonStyle="ButtonStyle.Light"
@@ -43,7 +43,7 @@ else
     @if (_showAddList)
     {
         <RadzenCard>
-            <RadzenTemplateForm TItem="AddListModel" Data="@_addListModel" Submit="@AddList">
+            <RadzenTemplateForm TItem="AddListModel" Data="@_addListModel" Submit="@AddListAsync">
                 <RadzenStack Gap="0.5rem">
                     @* BETA-8-UI-#17 — see test-results/r8/r8-report.md.
                        RadzenTemplateForm's HTML <form> would submit on
@@ -54,7 +54,7 @@ else
                        that works regardless of button order. *@
                     <RadzenTextBox @bind-Value="_addListModel.Name" Placeholder="List name…"
                                    Style="width:100%"
-                                   @onkeydown="@OnAddListKeyDown" />
+                                   @onkeydown="@OnAddListKeyDownAsync" />
                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
                                  Gap="0.5rem" Class="rz-mt-3">
                         <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => _showAddList = false)" />
@@ -79,7 +79,7 @@ else
         <RadzenCard>
             <RadzenStack Gap="0.75rem">
                 <RadzenText Text="Board settings" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                <RadzenTemplateForm TItem="RenameBoardModel" Data="@_renameModel" Submit="@RenameBoard">
+                <RadzenTemplateForm TItem="RenameBoardModel" Data="@_renameModel" Submit="@RenameBoardAsync">
                     <RadzenStack Gap="0.5rem">
                         <RadzenTextBox @bind-Value="_renameModel.NewName" Placeholder="New board name…"
                                        Style="width:100%" />
@@ -89,7 +89,7 @@ else
                         </RadzenStack>
                     </RadzenStack>
                 </RadzenTemplateForm>
-                <RadzenTemplateForm TItem="DescriptionBoardModel" Data="@_descriptionModel" Submit="@ChangeDescription">
+                <RadzenTemplateForm TItem="DescriptionBoardModel" Data="@_descriptionModel" Submit="@ChangeDescriptionAsync">
                     <RadzenStack Gap="0.5rem">
                         <RadzenTextArea @bind-Value="_descriptionModel.NewDescription" Rows="2"
                                          Placeholder="New description…" Style="width:100%" />
@@ -103,18 +103,18 @@ else
                              Wrap="FlexWrap.Wrap">
                     <RadzenText Text="Visibility" TextStyle="TextStyle.Body2" />
                     <RadzenDropDown TValue="string" @bind-Value="_newVisibility" Data="@_visibilityOptions"
-                                    Change="@ChangeVisibility" Style="width:10rem" />
+                                    Change="@ChangeVisibilityAsync" Style="width:10rem" />
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
                     @if (_board.IsArchived)
                     {
                         <RadzenButton Text="Unarchive" Icon="unarchive" ButtonStyle="ButtonStyle.Warning"
-                                      Click="@UnarchiveBoard" />
+                                      Click="@UnarchiveBoardAsync" />
                     }
                     else
                     {
                         <RadzenButton Text="Archive" Icon="archive" ButtonStyle="ButtonStyle.Warning"
-                                      Click="@ArchiveBoard" />
+                                      Click="@ArchiveBoardAsync" />
                     }
                 </RadzenStack>
             </RadzenStack>
@@ -146,20 +146,20 @@ else
                         <RadzenMenu>
                             <RadzenMenuItem Text="…" Icon="more_horiz">
                                 <RadzenMenuItem Text="Rename" Icon="edit"
-                                                Click="@(() => PromptRenameList(listId, listDto.Name))" />
+                                                Click="@(() => PromptRenameListAsync(listId, listDto.Name))" />
                                 <RadzenMenuItem Text="Move to start" Icon="first_page"
-                                                Click="@(() => MoveListToPosition(listId, 0.0d))" />
+                                                Click="@(() => MoveListToPositionAsync(listId, 0.0d))" />
                                 <RadzenMenuItem Text="Move to end" Icon="last_page"
-                                                Click="@(() => MoveListToPosition(listId, double.MaxValue / 2))" />
+                                                Click="@(() => MoveListToPositionAsync(listId, double.MaxValue / 2))" />
                                 @if (listDto.IsArchived)
                                 {
                                     <RadzenMenuItem Text="Restore" Icon="unarchive"
-                                                    Click="@(() => RestoreList(listId))" />
+                                                    Click="@(() => RestoreListAsync(listId))" />
                                 }
                                 else
                                 {
                                     <RadzenMenuItem Text="Archive" Icon="archive"
-                                                    Click="@(() => ArchiveList(listId))" />
+                                                    Click="@(() => ArchiveListAsync(listId))" />
                                 }
                             </RadzenMenuItem>
                         </RadzenMenu>
@@ -229,7 +229,7 @@ else
             <div class="cs-kanban-column-dropzone"
                  @ondragover="@OnColumnDragOver"
                  @ondragover:preventDefault
-                 @ondrop="@(() => OnColumnDrop(listId))">
+                 @ondrop="@(() => OnColumnDropAsync(listId))">
             </div>
             @if (_openAddCardFor == listId)
             {
@@ -237,13 +237,13 @@ else
                     @* BETA-8-UI-#17 — see comment in AddList above. *@
                     <RadzenTextBox @bind-Value="_newCardTitle" Placeholder="Card title…"
                                    Style="width:100%"
-                                   @onkeydown="@(e => OnAddCardKeyDown(e, listId))" />
+                                   @onkeydown="@(e => OnAddCardKeyDownAsync(e, listId))" />
                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
                                  Gap="0.5rem">
                         <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
                                       Click="@(() => { _openAddCardFor = null; _newCardTitle = string.Empty; })" />
                         <RadzenButton Text="Add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
-                                      Click="@(() => ConfirmAddCard(listId))" />
+                                      Click="@(() => ConfirmAddCardAsync(listId))" />
                     </RadzenStack>
                 </RadzenStack>
             }

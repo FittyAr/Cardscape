@@ -36,7 +36,7 @@ public partial class BoardDetail
         }
     }
 
-    private async Task OnColumnDrop(Guid destinationListId)
+    private async Task OnColumnDropAsync(Guid destinationListId)
     {
         Guid? cardId = _draggingCardId;
         _draggingCardId = null;

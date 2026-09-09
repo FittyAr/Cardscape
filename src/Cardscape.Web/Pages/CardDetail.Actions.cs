@@ -33,21 +33,21 @@ public partial class CardDetail
         }
     }
 
-    private async Task Complete()
+    private async Task CompleteAsync()
     {
         if (_card is null) return;
         ApiResult<CardDto> result = await Cards.CompleteAsync(CardId);
         if (result.IsSuccess) _card = result.Value;
     }
 
-    private async Task Reopen()
+    private async Task ReopenAsync()
     {
         if (_card is null) return;
         ApiResult<CardDto> result = await Cards.ReopenAsync(CardId);
         if (result.IsSuccess) _card = result.Value;
     }
 
-    private async Task ToggleArchive()
+    private async Task ToggleArchiveAsync()
     {
         if (_card is null) return;
         ApiResult<CardDto> result = _card.IsArchived
@@ -71,7 +71,7 @@ public partial class CardDetail
     // a single click. We gate the action on a
     // `ConfirmAsync` dialog so an accidental click on
     // the wrong button doesn't drop a card.
-    private async Task DeleteCard()
+    private async Task DeleteCardAsync()
     {
         if (_card is null)
         {
@@ -159,7 +159,7 @@ public partial class CardDetail
         }
     }
 
-    private async Task AddComment()
+    private async Task AddCommentAsync()
     {
         if (string.IsNullOrWhiteSpace(_addCommentModel.Body)) return;
         _addingComment = true;

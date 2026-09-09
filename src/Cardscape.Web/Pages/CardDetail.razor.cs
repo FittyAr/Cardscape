@@ -237,7 +237,7 @@ public partial class CardDetail
         }
     }
 
-    private async Task HandleTitleKeyDown(KeyboardEventArgs args)
+    private async Task HandleTitleKeyDownAsync(KeyboardEventArgs args)
     {
         if (string.Equals(args.Key, "Enter", StringComparison.Ordinal))
         {

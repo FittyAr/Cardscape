@@ -81,14 +81,14 @@ public partial class BoardDetail
         _subscribedToHub = true;
         try
         {
-            HubClient.CardCreated += OnHubCardCreated;
-            HubClient.CardMoved += OnHubCardMoved;
-            HubClient.CardCompleted += OnHubCardCompleted;
-            HubClient.CardReopened += OnHubCardReopened;
-            HubClient.CardArchived += OnHubCardArchived;
-            HubClient.CardRestored += OnHubCardRestored;
-            HubClient.ListCreated += OnHubListCreated;
-            HubClient.CommentAdded += OnHubCommentAdded;
+            HubClient.CardCreated += OnHubCardCreatedAsync;
+            HubClient.CardMoved += OnHubCardMovedAsync;
+            HubClient.CardCompleted += OnHubCardCompletedAsync;
+            HubClient.CardReopened += OnHubCardReopenedAsync;
+            HubClient.CardArchived += OnHubCardArchivedAsync;
+            HubClient.CardRestored += OnHubCardRestoredAsync;
+            HubClient.ListCreated += OnHubListCreatedAsync;
+            HubClient.CommentAdded += OnHubCommentAddedAsync;
 
             await HubClient.StartAsync();
             await HubClient.JoinBoardAsync(BoardId);
@@ -100,43 +100,43 @@ public partial class BoardDetail
         }
     }
 
-    private async Task OnHubCardCreated(CardEventPayload _)
+    private async Task OnHubCardCreatedAsync(CardEventPayload _)
     {
         await ReloadListsAndCardsAsync();
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task OnHubCardMoved(CardMovedPayload _) =>
-        await OnHubCardCreated(default!);
+    private async Task OnHubCardMovedAsync(CardMovedPayload _) =>
+        await OnHubCardCreatedAsync(default!);
 
-    private async Task OnHubCardCompleted(CardEventPayload _) =>
-        await OnHubCardCreated(default!);
+    private async Task OnHubCardCompletedAsync(CardEventPayload _) =>
+        await OnHubCardCreatedAsync(default!);
 
-    private async Task OnHubCardReopened(CardEventPayload _) =>
-        await OnHubCardCreated(default!);
+    private async Task OnHubCardReopenedAsync(CardEventPayload _) =>
+        await OnHubCardCreatedAsync(default!);
 
-    private async Task OnHubCardArchived(CardEventPayload _) =>
-        await OnHubCardCreated(default!);
+    private async Task OnHubCardArchivedAsync(CardEventPayload _) =>
+        await OnHubCardCreatedAsync(default!);
 
-    private async Task OnHubCardRestored(CardEventPayload _) =>
-        await OnHubCardCreated(default!);
+    private async Task OnHubCardRestoredAsync(CardEventPayload _) =>
+        await OnHubCardCreatedAsync(default!);
 
-    private async Task OnHubListCreated(ListEventPayload _) =>
-        await OnHubCardCreated(default!);
+    private async Task OnHubListCreatedAsync(ListEventPayload _) =>
+        await OnHubCardCreatedAsync(default!);
 
-    private async Task OnHubCommentAdded(CommentEventPayload _) =>
-        await OnHubCardCreated(default!);
+    private async Task OnHubCommentAddedAsync(CommentEventPayload _) =>
+        await OnHubCardCreatedAsync(default!);
 
     public async ValueTask DisposeAsync()
     {
-        HubClient.CardCreated -= OnHubCardCreated;
-        HubClient.CardMoved -= OnHubCardMoved;
-        HubClient.CardCompleted -= OnHubCardCompleted;
-        HubClient.CardReopened -= OnHubCardReopened;
-        HubClient.CardArchived -= OnHubCardArchived;
-        HubClient.CardRestored -= OnHubCardRestored;
-        HubClient.ListCreated -= OnHubListCreated;
-        HubClient.CommentAdded -= OnHubCommentAdded;
+        HubClient.CardCreated -= OnHubCardCreatedAsync;
+        HubClient.CardMoved -= OnHubCardMovedAsync;
+        HubClient.CardCompleted -= OnHubCardCompletedAsync;
+        HubClient.CardReopened -= OnHubCardReopenedAsync;
+        HubClient.CardArchived -= OnHubCardArchivedAsync;
+        HubClient.CardRestored -= OnHubCardRestoredAsync;
+        HubClient.ListCreated -= OnHubListCreatedAsync;
+        HubClient.CommentAdded -= OnHubCommentAddedAsync;
 
         try
         {
@@ -163,7 +163,7 @@ public partial class BoardDetail
         //   (a) the SignalR `CardCreated` event fires after the
         //       HTTP 201 returns, so the create-card flow ends up
         //       calling ReloadListsAndCardsAsync twice (once from
-        //       ConfirmAddCard, once from OnHubCardCreated) and the
+        //       ConfirmAddCardAsync, once from OnHubCardCreatedAsync) and the
         //       in-place append could duplicate cards if the two
         //       reloads interleaved with Clear() in between;
         //   (b) the hub subscriptions were re-wired on every

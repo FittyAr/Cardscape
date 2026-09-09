@@ -52,7 +52,7 @@ else
                     <RadzenTextBox @bind-Value="_editingTitleValue"
                                    Style="font-size: 1.5rem; font-weight: 600; width: 100%"
                                    autofocus
-                                   @onkeydown="@HandleTitleKeyDown"
+                                   @onkeydown="@HandleTitleKeyDownAsync"
                                    @onblur="@SaveTitleAsync" />
                 }
                 else
@@ -83,16 +83,16 @@ else
                                   Click="@GoBackToBoard" />
                     @if (_card.IsCompleted)
                     {
-                        <RadzenButton Text="Reopen" ButtonStyle="ButtonStyle.Light" Click="@Reopen" />
+                        <RadzenButton Text="Reopen" ButtonStyle="ButtonStyle.Light" Click="@ReopenAsync" />
                     }
                     else
                     {
-                        <RadzenButton Text="Complete" ButtonStyle="ButtonStyle.Success" Click="@Complete" />
+                        <RadzenButton Text="Complete" ButtonStyle="ButtonStyle.Success" Click="@CompleteAsync" />
                     }
                     <RadzenButton Text="@(_card.IsArchived ? "Restore" : "Archive")"
-                                  ButtonStyle="ButtonStyle.Warning" Click="@ToggleArchive" />
+                                  ButtonStyle="ButtonStyle.Warning" Click="@ToggleArchiveAsync" />
                     <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger"
-                                  Click="@DeleteCard" />
+                                  Click="@DeleteCardAsync" />
                     @* P3.3 / G6c ” "Mirror to..." entry. Opens a RadzenDialog
                        with a board picker + a list picker. On confirm the
                        dialog returns the target list id and the parent
@@ -232,7 +232,7 @@ else
                 <RadzenText Text="Attachments" TextStyle="TextStyle.H6" TagName="TagName.H3" />
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                              Wrap="FlexWrap.Wrap">
-                    <RadzenUpload Change="@OnAttachmentSelected" Accept="*/*" Auto="false" Multiple="false"
+                    <RadzenUpload Change="@OnAttachmentSelectedAsync" Accept="*/*" Auto="false" Multiple="false"
                                   Disabled="@_uploadingAttachment" ChooseText="Choose attachment" />
                     @if (_uploadingAttachment)
                     {
@@ -322,7 +322,7 @@ else
                     }
                 }
 
-                <RadzenTemplateForm TItem="AddCommentModel" Data="@_addCommentModel" Submit="@AddComment">
+                <RadzenTemplateForm TItem="AddCommentModel" Data="@_addCommentModel" Submit="@AddCommentAsync">
                     <RadzenStack Gap="0.5rem" Class="rz-mt-2">
                         <RadzenTextArea @bind-Value="_addCommentModel.Body" Rows="2" Placeholder="Write a comment…"
                                         Style="width:100%" />
@@ -405,7 +405,7 @@ else
                                              Gap="0.5rem">
                                     <RadzenTextBox @bind-Value="_newChecklistItemText" Placeholder="Add an item…"
                                                    Style="flex:1"
-                                                   @onkeydown="@(e => OnAddItemKeyDown(e, cl.Id))" />
+                                                   @onkeydown="@(e => OnAddItemKeyDownAsync(e, cl.Id))" />
                                     <RadzenButton Text="Add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
                                                   Click="@(() => AddItemAsync(cl.Id))" />
                                 </RadzenStack>
@@ -416,7 +416,7 @@ else
                                  Wrap="FlexWrap.Wrap">
                         <RadzenTextBox @bind-Value="_newChecklistTitle" Placeholder="New checklist title…"
                                        Style="flex:1"
-                                       @onkeydown="@OnCreateChecklistKeyDown" />
+                                       @onkeydown="@OnCreateChecklistKeyDownAsync" />
                         <RadzenButton Text="Create checklist" Icon="add" ButtonStyle="ButtonStyle.Secondary"
                                       Click="@CreateChecklistAsync" />
                         <RadzenButton Text="@($" {L["AiGenerateChecklist"]}")" Icon="auto_awesome"

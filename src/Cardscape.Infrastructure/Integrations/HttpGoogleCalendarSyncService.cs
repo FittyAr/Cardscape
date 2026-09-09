@@ -63,7 +63,7 @@ public sealed class HttpGoogleCalendarSyncService(
                     $"calendars/{Uri.EscapeDataString(connection.CalendarId)}/events/{Uri.EscapeDataString(eventId)}", ct);
                 if (!delete.IsSuccessStatusCode && delete.StatusCode != System.Net.HttpStatusCode.NotFound)
                 {
-                    return Result.Failure<string>(await MapHttpError(delete, "delete", ct));
+                    return Result.Failure<string>(await MapHttpErrorAsync(delete, "delete", ct));
                 }
                 connection.RemoveEventId(cardId, clock.UtcNow);
                 await connections.UpdateAsync(connection, ct);
@@ -88,7 +88,7 @@ public sealed class HttpGoogleCalendarSyncService(
 
         if (!response.IsSuccessStatusCode)
         {
-            return Result.Failure<string>(await MapHttpError(response, eventId is null ? "create" : "update", ct));
+            return Result.Failure<string>(await MapHttpErrorAsync(response, eventId is null ? "create" : "update", ct));
         }
 
         JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
@@ -134,7 +134,7 @@ public sealed class HttpGoogleCalendarSyncService(
         return body.GetProperty("access_token").GetString() ?? string.Empty;
     }
 
-    private static async Task<DomainError> MapHttpError(
+    private static async Task<DomainError> MapHttpErrorAsync(
         HttpResponseMessage response, string verb, CancellationToken ct)
     {
         await using Stream stream = await response.Content.ReadAsStreamAsync(ct);
