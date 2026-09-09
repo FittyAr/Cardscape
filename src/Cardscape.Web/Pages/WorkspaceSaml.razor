@@ -20,7 +20,7 @@
         <RadzenCard>
             <RadzenStack Gap="0.5rem">
                 <RadzenText Text="@L["SamlConfigure"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
-                <RadzenTemplateForm TItem="SamlModel" Data="@model" Submit="@Configure">
+                <RadzenTemplateForm TItem="SamlModel" Data="@model" Submit="@ConfigureAsync">
                     <LabeledField Text="@L["SamlSlug"]" Component="s-slug">
                         <RadzenTextBox @bind-Value="model.Slug" Name="s-slug" Style="width:100%" />
                     </LabeledField>
@@ -64,7 +64,7 @@
                     <RadzenBadge Text="@L["SamlInactive"]" BadgeStyle="BadgeStyle.Warning" />
                 }
                 <RadzenButton Text="@L["SamlDisable"]" ButtonStyle="ButtonStyle.Danger"
-                              Click="@Disable" />
+                              Click="@DisableAsync" />
             </RadzenStack>
         </RadzenCard>
     }
@@ -100,7 +100,7 @@
         Guid.Empty, Guid.Empty, string.Empty, string.Empty, string.Empty, string.Empty,
         null, string.Empty, false, DateTimeOffset.UtcNow, null);
 
-    private async Task Configure()
+    private async Task ConfigureAsync()
     {
         busy = true;
         error = null;
@@ -121,7 +121,7 @@
         }
     }
 
-    private async Task Disable()
+    private async Task DisableAsync()
     {
         var result = await SamlApi.DisableAsync(WorkspaceId);
         if (!result.IsSuccess)

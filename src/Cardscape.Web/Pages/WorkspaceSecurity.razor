@@ -44,7 +44,7 @@
                         @L["WorkspaceSecurityRequireTwoFactorBlurb"]
                     </RadzenText>
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenSwitch @bind-Value="requireTwoFactor" Change="@OnToggleChanged" Disabled="@busy" />
+                        <RadzenSwitch @bind-Value="requireTwoFactor" Change="@OnToggleChangedAsync" Disabled="@busy" />
                         <RadzenText TextStyle="TextStyle.Body1">
                             @(requireTwoFactor
                                 ? L["WorkspaceSecurityRequireTwoFactorOn"]
@@ -131,7 +131,7 @@
         }
     }
 
-    private async Task OnToggleChanged(bool newValue)
+    private async Task OnToggleChangedAsync(bool newValue)
     {
         if (workspace is null)
         {

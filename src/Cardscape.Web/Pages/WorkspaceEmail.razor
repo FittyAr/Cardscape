@@ -24,7 +24,7 @@
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
             <RadzenText Text="@L["EmailAddAddress"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
-            <RadzenTemplateForm TItem="AddModel" Data="@addModel" Submit="@Add">
+            <RadzenTemplateForm TItem="AddModel" Data="@addModel" Submit="@AddAsync">
                 <LabeledField Text="@L["EmailAddressLabel"]" Component="email-address">
                     <RadzenTextBox @bind-Value="addModel.EmailAddress" Name="email-address"
                                    Placeholder="board-123@cardscape.example.com" Style="width:100%" />
@@ -64,7 +64,7 @@
                     <Template Context="address">
                         <RadzenButton Text="@L["EmailRemove"]" ButtonStyle="ButtonStyle.Danger"
                                       Size="ButtonSize.Small"
-                                      Click="@(() => Remove(address.Id))" />
+                                      Click="@(() => RemoveAsync(address.Id))" />
                     </Template>
                 </RadzenDataGridColumn>
             </Columns>
@@ -93,16 +93,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await Reload();
+        await ReloadAsync();
     }
 
-    private async Task Reload()
+    private async Task ReloadAsync()
     {
         var result = await EmailApi.ListAddressesAsync(WorkspaceId);
         addresses = result.IsSuccess ? result.Value : [];
     }
 
-    private async Task Add()
+    private async Task AddAsync()
     {
         if (string.IsNullOrWhiteSpace(addModel.EmailAddress)
             || !Guid.TryParse(addModel.TargetListIdText, out Guid listId))
@@ -123,7 +123,7 @@
             if (result.IsSuccess)
             {
                 addModel.Reset();
-                await Reload();
+                await ReloadAsync();
             }
             else
             {
@@ -136,13 +136,13 @@
         }
     }
 
-    private async Task Remove(Guid addressId)
+    private async Task RemoveAsync(Guid addressId)
     {
         error = null;
         var result = await EmailApi.UnregisterAddressAsync(WorkspaceId, addressId);
         if (result.IsSuccess)
         {
-            await Reload();
+            await ReloadAsync();
         }
         else
         {

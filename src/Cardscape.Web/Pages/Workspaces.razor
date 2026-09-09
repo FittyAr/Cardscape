@@ -21,7 +21,7 @@
 @if (showCreate)
 {
     <RadzenCard>
-        <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateWorkspace">
+        <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateWorkspaceAsync">
             <LabeledField Text="@L["WorkspacesName"]" Component="ws-name">
                 <RadzenTextBox @bind-Value="createModel.Name" Name="ws-name" Style="width:100%" />
             </LabeledField>
@@ -138,7 +138,7 @@ else
         }
     }
 
-    private async Task CreateWorkspace()
+    private async Task CreateWorkspaceAsync()
     {
         busy = true;
         error = null;

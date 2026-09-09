@@ -16,7 +16,7 @@
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
             <RadzenText Text="@L["ScimIssueToken"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
-            <RadzenTemplateForm TItem="IssueModel" Data="@issueModel" Submit="@IssueToken">
+            <RadzenTemplateForm TItem="IssueModel" Data="@issueModel" Submit="@IssueTokenAsync">
                 <LabeledField Text="@L["ScimTokenName"]" Component="scim-name">
                     <RadzenTextBox @bind-Value="issueModel.Name" Name="scim-name" Style="width:100%" />
                 </LabeledField>
@@ -67,7 +67,7 @@
                         @if (!t.IsRevoked)
                         {
                             <RadzenButton Text="@L["ScimRevoke"]" ButtonStyle="ButtonStyle.Danger"
-                                          Click="@(() => Revoke(t.Id))" />
+                                          Click="@(() => RevokeAsync(t.Id))" />
                         }
                     </RadzenStack>
                 </RadzenCard>
@@ -94,7 +94,7 @@
         tokens = result.IsSuccess ? result.Value : [];
     }
 
-    private async Task IssueToken()
+    private async Task IssueTokenAsync()
     {
         if (string.IsNullOrWhiteSpace(issueModel.Name))
         {
@@ -119,7 +119,7 @@
         }
     }
 
-    private async Task Revoke(Guid tokenId)
+    private async Task RevokeAsync(Guid tokenId)
     {
         var result = await ScimApi.RevokeTokenAsync(WorkspaceId, tokenId);
         if (result.IsSuccess)

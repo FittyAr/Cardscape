@@ -16,7 +16,7 @@
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
             <RadzenText Text="@L["GitHubLinkRepo"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
-            <RadzenTemplateForm TItem="LinkRepoModel" Data="@linkModel" Submit="@LinkRepo">
+            <RadzenTemplateForm TItem="LinkRepoModel" Data="@linkModel" Submit="@LinkRepoAsync">
                 <LabeledField Text="@L["GitHubBoard"]" Component="gh-board">
                     <RadzenDropDown @bind-Value="linkModel.BoardId" Name="gh-board" Style="width:100%"
                                     Data="@boards" TextProperty="Name" ValueProperty="Id"
@@ -52,7 +52,7 @@
             </LabeledField>
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
                 <RadzenButton Text="@L["GitHubListPulls"]" ButtonStyle="ButtonStyle.Primary"
-                              Click="@ListPulls" IsBusy="@listingPulls" />
+                              Click="@ListPullsAsync" IsBusy="@listingPulls" />
             </RadzenStack>
 
             @if (pullsError is not null)
@@ -97,7 +97,7 @@
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
             <RadzenText Text="@L["GitHubCreateIssue"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
-            <RadzenTemplateForm TItem="CreateIssueModel" Data="@issueModel" Submit="@CreateIssue">
+            <RadzenTemplateForm TItem="CreateIssueModel" Data="@issueModel" Submit="@CreateIssueAsync">
                 <LabeledField Text="@L["GitHubCardId"]" Component="gh-issue-card">
                     <RadzenTextBox @bind-Value="issueModel.CardIdText" Name="gh-issue-card" Style="width:100%" />
                 </LabeledField>
@@ -161,7 +161,7 @@
         boards = result.IsSuccess ? result.Value : [];
     }
 
-    private async Task LinkRepo()
+    private async Task LinkRepoAsync()
     {
         if (linkModel.BoardId is null || string.IsNullOrWhiteSpace(linkModel.RepoFullName))
         {
@@ -186,7 +186,7 @@
         }
     }
 
-    private async Task ListPulls()
+    private async Task ListPullsAsync()
     {
         if (listModel.BoardId is null || string.IsNullOrWhiteSpace(listModel.RepoFullName))
         {
@@ -215,7 +215,7 @@
         }
     }
 
-    private async Task CreateIssue()
+    private async Task CreateIssueAsync()
     {
         if (!Guid.TryParse(issueModel.CardIdText, out Guid cardId)
             || string.IsNullOrWhiteSpace(issueModel.RepoFullName))

@@ -17,7 +17,7 @@
     @if (showInvite)
     {
         <RadzenCard>
-            <RadzenTemplateForm TItem="InviteModel" Data="@inviteModel" Submit="@SendInvite">
+            <RadzenTemplateForm TItem="InviteModel" Data="@inviteModel" Submit="@SendInviteAsync">
                 <LabeledField Text="Email" Component="invite-email">
                     <RadzenTextBox @bind-Value="inviteModel.Email" Name="invite-email" Style="width:100%" />
                 </LabeledField>
@@ -163,7 +163,7 @@
         invitations = (await invitationsTask).IsSuccess ? (await invitationsTask).Value : [];
     }
 
-    private async Task SendInvite()
+    private async Task SendInviteAsync()
     {
         busy = true;
         error = null;

@@ -22,7 +22,7 @@
             <RadzenStack Gap="0.5rem">
                 <RadzenText Text="@L["SlackNotConnected"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
                 <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["SlackConnectBlurb"]</RadzenText>
-                <RadzenTemplateForm TItem="SlackConnectModel" Data="@connectModel" Submit="@Connect">
+                <RadzenTemplateForm TItem="SlackConnectModel" Data="@connectModel" Submit="@ConnectAsync">
                     <LabeledField Text="@L["SlackTeamId"]" Component="slack-team-id">
                         <RadzenTextBox @bind-Value="connectModel.TeamId" Name="slack-team-id" Style="width:100%" />
                     </LabeledField>
@@ -55,7 +55,7 @@
                     </RadzenText>
                 }
                 <RadzenButton Text="@L["SlackDisconnect"]" ButtonStyle="ButtonStyle.Danger"
-                              Click="@Disconnect" Disabled="@disconnecting" />
+                              Click="@DisconnectAsync" Disabled="@disconnecting" />
             </RadzenStack>
         </RadzenCard>
     }
@@ -96,7 +96,7 @@
         Guid.Empty, Guid.Empty, string.Empty, string.Empty,
         null, false, DateTimeOffset.UtcNow);
 
-    private async Task Connect()
+    private async Task ConnectAsync()
     {
         if (string.IsNullOrWhiteSpace(connectModel.TeamId)
             || string.IsNullOrWhiteSpace(connectModel.TeamName)
@@ -130,7 +130,7 @@
         }
     }
 
-    private async Task Disconnect()
+    private async Task DisconnectAsync()
     {
         disconnecting = true;
         error = null;
