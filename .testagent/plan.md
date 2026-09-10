@@ -581,3 +581,10 @@
 - [x] Add anonymous/non-admin/admin integration coverage for dead-letter inspection.
 - [x] Run the narrow unit and integration filters.
 - [x] Review assertions and pseudo-mutations.
+
+# SAML handler boundary extraction (2026-09-10)
+
+- [x] Preserve the three bounded-response cases while moving them to the dedicated metadata reader.
+- [x] Recompile the unit tests against the new owner; do not rely on a stale test assembly.
+- [x] Run metadata HTTP security and the complete SAML endpoint slice.
+- [x] Review assertions and pseudo-mutations; no new test case is required for the source-only ownership change.

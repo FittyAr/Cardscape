@@ -15,7 +15,7 @@ public sealed class SamlMetadataDownloadTests
             Content = new StringContent(xml, Encoding.UTF8, "application/xml")
         };
 
-        string result = await SamlAuthenticationHandler.ReadMetadataResponseAsync(
+        string result = await SamlMetadataReader.ReadResponseAsync(
             response, TestContext.Current.CancellationToken);
 
         result.Should().Be(xml);
@@ -26,10 +26,10 @@ public sealed class SamlMetadataDownloadTests
     {
         using var response = new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new ByteArrayContent(new byte[SamlAuthenticationHandler.MaxMetadataBytes + 1])
+            Content = new ByteArrayContent(new byte[SamlMetadataReader.MaxMetadataBytes + 1])
         };
 
-        Func<Task> act = () => SamlAuthenticationHandler.ReadMetadataResponseAsync(
+        Func<Task> act = () => SamlMetadataReader.ReadResponseAsync(
             response, TestContext.Current.CancellationToken);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -42,11 +42,11 @@ public sealed class SamlMetadataDownloadTests
         using var response = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new UnknownLengthContent(
-                new byte[SamlAuthenticationHandler.MaxMetadataBytes + 1])
+                new byte[SamlMetadataReader.MaxMetadataBytes + 1])
         };
         response.Content.Headers.ContentLength.Should().BeNull();
 
-        Func<Task> act = () => SamlAuthenticationHandler.ReadMetadataResponseAsync(
+        Func<Task> act = () => SamlMetadataReader.ReadResponseAsync(
             response, TestContext.Current.CancellationToken);
 
         await act.Should().ThrowAsync<InvalidOperationException>()

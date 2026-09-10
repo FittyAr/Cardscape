@@ -671,3 +671,10 @@
 - [x] Focused validation: pagination 8/8 and dead-letter authorization 3/3; 0 failed and 0 skipped.
 - [x] Assertion review: every pagination boundary asserts an exact normalized value; authorization tests assert 401/403/200 and the admin response collection. No assertion-free or self-referential cases.
 - [x] Pseudo-mutation review: removing `AdminOnly` changes the non-admin 403; replacing it with anonymous changes 401; removing either clamp breaks negative/default/max rows; returning a non-collection breaks the admin deserialization assertion.
+
+# SAML handler boundary extraction (2026-09-10)
+
+- [x] Metadata transport, SSRF validation and the 1 MiB reader are owned by `SamlMetadataReader`; the handler dropped 64 lines and its unreachable 404 fallback.
+- [x] SAML errors now use RFC 7807 Problem Details with a stable `code` extension instead of hand-built JSON.
+- [x] Focused validation: bounded reader 3/3, HTTP client security 1/1 and functional SAML endpoints 8/8; 0 failed and 0 skipped.
+- [x] Assertion review: exact XML round-trip, both independent size-limit paths, redirect hardening and all route outcomes remain covered.

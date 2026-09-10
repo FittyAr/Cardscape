@@ -823,3 +823,10 @@
 - [x] SQLite unique and non-unique native codes.
 - [x] PostgreSQL unique and foreign-key SQLSTATE values.
 - [x] Unknown exception text must not be treated as provider evidence.
+
+# SAML handler boundary extraction (2026-09-10)
+
+- Scope: `SamlAuthenticationHandler`, metadata download/size validation and existing SAML unit/integration coverage.
+- Finding: the authentication handler mixed protocol routing with SSRF validation, HTTP download and bounded stream reading; it also retained an unused 404 helper and manually escaped an obsolete JSON error envelope.
+- Decision: move metadata transport concerns to an internal `SamlMetadataReader`, keep the named-client identifier public on the handler for composition/tests, and emit RFC 7807 Problem Details with a stable `code` extension.
+- Test impact: the existing three reader tests change owner only. Their assertions still kill removal of declared-length and streaming limits; SAML integration covers named-client redirect policy and all handler routes.

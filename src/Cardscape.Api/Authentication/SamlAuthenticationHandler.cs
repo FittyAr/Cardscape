@@ -9,7 +9,6 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Webhooks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -48,8 +47,7 @@ public sealed class SamlAuthenticationHandler
 
     public const string SchemeName = "Saml";
     public const string SamlCallbackPath = "/saml/callback";
-    public const string MetadataHttpClientName = "SamlMetadata";
-    internal const int MaxMetadataBytes = 1024 * 1024;
+    public const string MetadataHttpClientName = SamlMetadataReader.HttpClientName;
 
     private readonly ISamlConnectionRepository _connections;
     private readonly IExternalLoginService _externalLogins;
@@ -324,7 +322,11 @@ public sealed class SamlAuthenticationHandler
             // ourselves and run the same inline parser.
             try
             {
-                string metadataXml = await ReadMetadataFromLocationAsync(connection.IdpMetadataUrl);
+                HttpClient httpClient = _httpClientFactory.CreateClient(SamlMetadataReader.HttpClientName);
+                string metadataXml = await SamlMetadataReader.DownloadAsync(
+                    httpClient,
+                    connection.IdpMetadataUrl,
+                    Context.RequestAborted);
                 TryApplyInlineMetadata(idp, metadataXml);
             }
             catch (Exception ex)
@@ -380,58 +382,6 @@ public sealed class SamlAuthenticationHandler
         }
     }
 
-    private async Task<string> ReadMetadataFromLocationAsync(string location)
-    {
-        if (!Uri.TryCreate(location, UriKind.Absolute, out Uri? uri)
-            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-        {
-            throw new InvalidOperationException("SAML metadata URL must be absolute HTTP(S).");
-        }
-
-        Result addressCheck = WebhookUrlValidator.ValidateNotInternalHost(uri);
-        if (addressCheck.IsFailure)
-        {
-            throw new InvalidOperationException(addressCheck.Error.Message);
-        }
-
-        HttpClient http = _httpClientFactory.CreateClient(MetadataHttpClientName);
-        using HttpResponseMessage response = await http.GetAsync(
-            uri, HttpCompletionOption.ResponseHeadersRead, Context.RequestAborted);
-        response.EnsureSuccessStatusCode();
-        return await ReadMetadataResponseAsync(response, Context.RequestAborted);
-    }
-
-    internal static async Task<string> ReadMetadataResponseAsync(
-        HttpResponseMessage response,
-        CancellationToken ct)
-    {
-        if (response.Content.Headers.ContentLength > MaxMetadataBytes)
-        {
-            throw new InvalidOperationException("SAML metadata exceeds the 1 MiB limit.");
-        }
-
-        await using Stream source = await response.Content.ReadAsStreamAsync(ct);
-        using var buffer = new MemoryStream();
-        byte[] chunk = new byte[16 * 1024];
-        while (true)
-        {
-            int count = await source.ReadAsync(chunk, ct);
-            if (count == 0)
-            {
-                break;
-            }
-
-            if (buffer.Length + count > MaxMetadataBytes)
-            {
-                throw new InvalidOperationException("SAML metadata exceeds the 1 MiB limit.");
-            }
-
-            buffer.Write(chunk, 0, count);
-        }
-
-        return Encoding.UTF8.GetString(buffer.GetBuffer(), 0, checked((int)buffer.Length));
-    }
-
     private Saml2HttpRequestData BuildRequestData()
     {
         List<KeyValuePair<string, IEnumerable<string>>> form = [];
@@ -458,14 +408,6 @@ public sealed class SamlAuthenticationHandler
             _ => []);
     }
 
-    private async Task<bool> WriteNotConfiguredAsync(string slug)
-    {
-        Logger.SamlConfigurationNotFound(slug);
-        await WriteProblemAsync(StatusCodes.Status404NotFound, "saml.not_configured",
-            $"No active SAML connection for workspace slug '{slug}'.");
-        return true;
-    }
-
     private async Task<bool> WriteNotFoundAsync(string slug, string action)
     {
         await WriteProblemAsync(StatusCodes.Status404NotFound, "saml.unknown_action",
@@ -475,19 +417,13 @@ public sealed class SamlAuthenticationHandler
 
     private async Task WriteProblemAsync(int statusCode, string code, string message)
     {
-        Response.StatusCode = statusCode;
-        Response.ContentType = "application/json";
-        string json =
-            $"{{\"error\":{{\"code\":\"{code}\",\"message\":\"{Escape(message)}\"}}}}";
-        await Response.Body.WriteAsync(
-            Encoding.UTF8.GetBytes(json), Context.RequestAborted);
+        IResult problem = Results.Problem(
+            detail: message,
+            statusCode: statusCode,
+            title: "SAML request failed",
+            extensions: new Dictionary<string, object?> { ["code"] = code });
+        await problem.ExecuteAsync(Context);
     }
-
-    private static string Escape(string s) => s
-        .Replace("\\", "\\\\")
-        .Replace("\"", "\\\"")
-        .Replace("\n", "\\n")
-        .Replace("\r", "\\r");
 }
 
 public static class Saml2ClaimTypes
