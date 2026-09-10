@@ -1,5 +1,20 @@
 # Test research
 
+## Background-job authorization and offset pagination (2026-09-10)
+
+### Bounded target inventory
+
+- `/api/background-jobs/dead-letter`: operator data containing failure details; previously required only authentication.
+- `ListDeadLetterBackgroundJobsQueryHandler`, webhook delivery queries and notifications endpoint: three independent skip/take normalization implementations.
+- `OffsetPagination`: proposed common Application policy with default 50, maximum 200 and non-negative offset.
+
+### Acceptance checklist
+
+- [x] Dead-letter HTTP surface requires `AdminOnly`.
+- [x] Offset defaults, negative inputs, ordinary values and maximum boundary share one policy.
+- [x] Enforcement occurs in Application handlers where alternate transports cannot bypass it.
+- [x] Focused unit and authorization integration regressions pass.
+
 ## Canonical DomainError Problem Details (2026-09-10)
 
 ### Bounded target inventory

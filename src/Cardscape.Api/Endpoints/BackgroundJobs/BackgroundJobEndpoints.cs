@@ -12,7 +12,7 @@ public static class BackgroundJobEndpoints
     public static IEndpointRouteBuilder MapBackgroundJobEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/background-jobs")
-            .RequireAuthorization()
+            .RequireAuthorization("AdminOnly")
             .WithTags("Background jobs");
 
         group.MapGet("/dead-letter", async (int? skip, int? take, IMessageBus bus, CancellationToken ct) =>

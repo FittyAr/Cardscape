@@ -663,3 +663,11 @@
 - [x] Pseudo-mutation review: changing any status/title, dropping the detail/code extension, collapsing a mapping or returning a non-Problem result breaks at least one exact assertion. SCIM remains an explicit protocol boundary.
 - [x] Expanded transport-error matrix: 3/3 rows passed; full canonical matrix is 9/9.
 - [x] Assertion review: transport rows assert exact status/title, non-empty detail and the single stable machine-code extension. Removing a helper mapping or reverting any endpoint to an anonymous JSON error makes result-type/shape assertions fail.
+# Background-job authorization and offset pagination (2026-09-10)
+
+- [x] Production policy and pagination consolidation implemented.
+- [x] Eight pagination boundary rows implemented.
+- [x] Three authorization/response regressions implemented for dead-letter inspection.
+- [x] Focused validation: pagination 8/8 and dead-letter authorization 3/3; 0 failed and 0 skipped.
+- [x] Assertion review: every pagination boundary asserts an exact normalized value; authorization tests assert 401/403/200 and the admin response collection. No assertion-free or self-referential cases.
+- [x] Pseudo-mutation review: removing `AdminOnly` changes the non-admin 403; replacing it with anonymous changes 401; removing either clamp breaks negative/default/max rows; returning a non-collection breaks the admin deserialization assertion.

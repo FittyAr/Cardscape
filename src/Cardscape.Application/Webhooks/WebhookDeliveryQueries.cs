@@ -4,6 +4,7 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Common;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Webhooks;
@@ -58,8 +59,8 @@ public static class ListWebhookDeliveriesQueryHandler
         WebhookDeliveryStatus? statusFilter = query.StatusFilter is int s
             ? (WebhookDeliveryStatus)s
             : null;
-        int skip = Math.Max(0, query.Skip);
-        int take = Math.Clamp(query.Take, 1, 200);
+        int skip = OffsetPagination.NormalizeSkip(query.Skip);
+        int take = OffsetPagination.NormalizeTake(query.Take);
 
         IReadOnlyList<WebhookDelivery> rows = await deliveries.ListForEndpointAsync(
             endpoint.Id, statusFilter, skip, take, ct);

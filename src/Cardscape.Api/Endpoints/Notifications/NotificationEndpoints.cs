@@ -1,3 +1,4 @@
+using Cardscape.Application.Common;
 using Cardscape.Application.Notifications.Commands;
 using Cardscape.Application.Notifications.DTOs;
 using Cardscape.Application.Notifications.Queries;
@@ -36,8 +37,8 @@ public static class NotificationEndpoints
             IMessageBus bus,
             CancellationToken ct) =>
         {
-            int effectiveTake = take is null or <= 0 ? 50 : Math.Min(take.Value, 200);
-            int effectiveSkip = skip is null or < 0 ? 0 : skip.Value;
+            int effectiveTake = OffsetPagination.NormalizeTake(take);
+            int effectiveSkip = OffsetPagination.NormalizeSkip(skip);
             var result = await bus.InvokeAsync<Result<IReadOnlyList<NotificationDto>>>(
                 new ListNotificationsQuery(unreadOnly ?? false, effectiveSkip, effectiveTake), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);

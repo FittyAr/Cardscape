@@ -2,6 +2,7 @@ using System.Text.Json;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Common;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Common;
 using Wolverine;
@@ -68,16 +69,15 @@ public static class ListDeadLetterBackgroundJobsQueryHandler
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
-        // Dead-letter inspection is operator-grade; for v0.7 we keep it
-        // open to any authenticated user (no admin gate yet — it's
-        // effectively a log of failures, no destructive surface).
         if (currentUser.Id is null)
         {
             return Result.Failure<IReadOnlyList<BackgroundJobSummaryDto>>(DomainError.Unauthenticated(
                 "auth.required", "Authentication is required."));
         }
 
-        IReadOnlyList<BackgroundJob> rows = await store.ListDeadLetterAsync(query.Skip, query.Take, cancellationToken);
+        int skip = OffsetPagination.NormalizeSkip(query.Skip);
+        int take = OffsetPagination.NormalizeTake(query.Take);
+        IReadOnlyList<BackgroundJob> rows = await store.ListDeadLetterAsync(skip, take, cancellationToken);
         return Result.Success<IReadOnlyList<BackgroundJobSummaryDto>>(
             rows.Select(BackgroundJobSummaryDto.FromEntity).ToList());
     }

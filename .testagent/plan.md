@@ -575,3 +575,9 @@
 - [x] Review assertions and pseudo-mutations, then record final status.
 - [x] Extend the matrix to transport-level bad-request, not-found and conflict helpers.
 - [x] Rebuild and rerun the expanded narrow matrix.
+# Background-job authorization and offset pagination (2026-09-10)
+
+- [x] Add a boundary matrix for canonical skip/take normalization.
+- [x] Add anonymous/non-admin/admin integration coverage for dead-letter inspection.
+- [x] Run the narrow unit and integration filters.
+- [x] Review assertions and pseudo-mutations.
