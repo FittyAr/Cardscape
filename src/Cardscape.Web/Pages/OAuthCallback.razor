@@ -16,21 +16,21 @@
 
 @if (error is null)
 {
-    <RadzenStack Gap="1rem" AlignItems="AlignItems.Center">
-        <RadzenText Text="@L["AuthOauthWorking"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
-        <RadzenText Text="@L["AuthOauthHoldOn"]" TextStyle="TextStyle.Body1" />
-        <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Medium" />
+    <RadzenStack Gap="1rem" AlignItems="@AlignItems.Center">
+        <RadzenText Text="@L["AuthOauthWorking"]" TextStyle="@TextStyle.H4" TagName="@TagName.H1" />
+        <RadzenText Text="@L["AuthOauthHoldOn"]" TextStyle="@TextStyle.Body1" />
+        <RadzenProgressBarCircular Mode="@ProgressBarMode.Indeterminate" Size="@ProgressBarCircularSize.Medium" />
     </RadzenStack>
 }
 else
 {
-    <RadzenStack Gap="1rem" AlignItems="AlignItems.Center">
-        <RadzenText Text="@L["AuthOauthFailed"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
-        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" Style="width: 100%;">
+    <RadzenStack Gap="1rem" AlignItems="@AlignItems.Center">
+        <RadzenText Text="@L["AuthOauthFailed"]" TextStyle="@TextStyle.H4" TagName="@TagName.H1" />
+        <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false" Style="width: 100%;">
             @error
         </RadzenAlert>
         <RadzenButton Text="@L["AuthBackToSignIn"]"
-                      ButtonStyle="ButtonStyle.Primary"
+                      ButtonStyle="@ButtonStyle.Primary"
                       Click="@(() => Nav.NavigateTo("login"))" />
     </RadzenStack>
 }
@@ -38,7 +38,7 @@ else
 @code {
     private string? error;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         // Read the OAuth fragment from the browser URL via
         // `NavigationManager.Uri`. The Blazor router populates it before
@@ -69,9 +69,9 @@ else
                 DisplayName: query["user_name"] ?? string.Empty);
 
             // Persist the token and notify the auth state provider. The
-            // token store is in-memory + cookie-backed; we don't await
-            // here because the navigation away happens right after.
-            _ = Tokens.SetAsync(access, user);
+            // Persist before notifying or navigating: the forced reload
+            // must not race the cookie-backed token write.
+            await Tokens.SetAsync(access, user);
             Auth.Notify();
             string returnUrl = NormalizeReturnUrl(query["return_url"]);
             Nav.NavigateTo(returnUrl, forceLoad: true);
