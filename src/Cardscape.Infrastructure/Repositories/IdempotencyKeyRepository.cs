@@ -2,10 +2,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Idempotency;
 using Cardscape.Domain.Members;
 using Cardscape.Infrastructure.Persistence;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using MySql.Data.MySqlClient;
-using Npgsql;
 
 namespace Cardscape.Infrastructure.Repositories;
 
@@ -41,7 +38,7 @@ public sealed class IdempotencyKeyRepository(CardscapeDbContext db)
             await Db.SaveChangesAsync(ct);
             return true;
         }
-        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+        catch (DbUpdateException ex) when (DatabaseExceptionClassifier.IsUniqueConstraintViolation(ex))
         {
             Db.Entry(reservation).State = EntityState.Detached;
             return false;
@@ -78,25 +75,4 @@ public sealed class IdempotencyKeyRepository(CardscapeDbContext db)
     public async Task ReleaseAsync(IdempotencyKeyId id, CancellationToken ct = default) =>
         _ = await Set.Where(record => record.Id == id).ExecuteDeleteAsync(ct);
 
-    private static bool IsUniqueConstraintViolation(DbUpdateException exception)
-    {
-        if (exception.InnerException is SqliteException sqlite)
-        {
-            return sqlite.SqliteErrorCode == 19 && sqlite.SqliteExtendedErrorCode == 2067;
-        }
-
-        if (exception.InnerException is PostgresException postgres)
-        {
-            return postgres.SqlState == PostgresErrorCodes.UniqueViolation;
-        }
-
-        if (exception.InnerException is MySqlException mysql)
-        {
-            return mysql.Number == 1062;
-        }
-
-        string message = exception.InnerException?.Message ?? exception.Message;
-        return message.Contains("duplicate", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("unique constraint", StringComparison.OrdinalIgnoreCase);
-    }
 }

@@ -105,7 +105,7 @@ public sealed class BoardRepository(CardscapeDbContext db) : RepositoryBase<Boar
             await Db.SaveChangesAsync(ct);
             return true;
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex) when (DatabaseExceptionClassifier.IsUniqueConstraintViolation(ex))
         {
             // Lost a race with a concurrent INSERT: the
             // unique (BoardId, UserId) index rejected our
