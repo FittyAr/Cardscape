@@ -12,10 +12,9 @@ namespace Cardscape.Web.Logging;
 /// The Web project is its own assembly and cannot take a
 /// project reference to <c>Cardscape.Infrastructure</c>, so the
 /// configuration is duplicated here as a thin extension method
-/// on <see cref="WebAssemblyHostBuilder"/>. Behaviour matches
-/// the server-side <c>UseCardscapeSerilog</c>: structured
-/// console, the same enrichers, and a relay sink that POSTs
-/// events to <c>/api/internal/client-log</c> on the API.
+/// on <see cref="WebAssemblyHostBuilder"/>. Browser events stay
+/// local so arbitrary client messages and properties never
+/// become trusted server telemetry.
 /// </summary>
 /// <remarks>
 /// The <see cref="ILoggerFactory"/> that ships with
@@ -28,8 +27,6 @@ namespace Cardscape.Web.Logging;
 public static class SerilogBrowserLoggingExtensions
 {
     private const string ServiceName = "web";
-    private const string DefaultClientLogEndpoint = "api/internal/client-log";
-
     /// <summary>
     /// Wires Serilog as the Web client's logging backend.
     /// Called from <c>Program.cs</c> immediately after
@@ -41,11 +38,6 @@ public static class SerilogBrowserLoggingExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        WebAssemblyHostConfiguration configuration = builder.Configuration;
-        string baseAddress = builder.HostEnvironment.BaseAddress;
-        string endpoint = configuration["Serilog:ClientLogEndpoint"] ?? DefaultClientLogEndpoint;
-        string fullEndpoint = new Uri(new Uri(baseAddress), endpoint).ToString();
-
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -56,7 +48,6 @@ public static class SerilogBrowserLoggingExtensions
             .Enrich.WithThreadId()
             .Enrich.WithProperty("Service", ServiceName)
             .Enrich.WithProperty("Application", "Cardscape.Web")
-            .WriteTo.BrowserHttp(fullEndpoint)
             .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
             .WriteTo.Debug(formatProvider: CultureInfo.InvariantCulture)
             .CreateLogger();

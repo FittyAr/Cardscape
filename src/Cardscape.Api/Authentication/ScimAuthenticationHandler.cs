@@ -82,7 +82,7 @@ public sealed class ScimAuthenticationHandler(
             // must not fail the auth — the operator's audit
             // trail is best-effort, the IdP's request
             // is not. Log loudly so a flaky DB is visible.
-            Logger.ScimTokenLastUsedPersistenceFailed(ex, scimToken.TokenPrefix);
+            Logger.ScimTokenLastUsedPersistenceFailed(ex);
         }
 
         Claim[] claims = [

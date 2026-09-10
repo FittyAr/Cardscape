@@ -126,8 +126,7 @@ public static class IntegrationsEndpoints
 
         // Public webhook surface — no authorization at the
         // routing layer, but the endpoint requires the same
-        // shared internal secret the broadcast and client-log
-        // endpoints use. The intent is for the operator to
+        // configured inbound-email signing secret. The intent is for the operator to
         // place a small reverse-proxy (or a provider-specific
         // signature-verification relay) in front of the API
         // that injects <c>X-Cardscape-Inbound-Signature</c> on
@@ -154,7 +153,7 @@ public static class IntegrationsEndpoints
         // 1 MB cap gives generous headroom for the
         // attachment-less payload (text + headers + envelope,
         // well under 64 KB in practice) while keeping the
-        // endpoint as cheap as the client-log relay. Content-
+        // endpoint cheap under hostile input. Content-
         // Length is checked first to short-circuit without
         // allocating the read buffer; chunked / unknown-
         // length requests fall through to the read-loop guard.
@@ -167,8 +166,7 @@ public static class IntegrationsEndpoints
             CancellationToken ct) =>
         {
             // The shared secret is a different value from
-            // Internal:Secret (the broadcast / client-log
-            // secret) so a leak of one does not cascade to
+            // Internal:Secret (used by internal broadcasts) so a leak of one does not cascade to
             // the other. The signature header carries the
             // HMAC-SHA256 of the request body keyed with the
             // shared secret, hex-encoded. A constant-time

@@ -62,7 +62,7 @@ public sealed class BoardHubClient : IAsyncDisposable
         // became the bare path `/hubs/board`. SignalR's
         // HubConnectionBuilder does NOT resolve that path against
         // the document base like HttpClient does — it goes
-        // through the BrowserHttpMessageHandler which inherits
+        // through the browser HTTP handler which inherits
         // the *window* base (often `file:///` for a Blazor WASM
         // document fetched via the API's static-asset path), so
         // the negotiate call ended up at

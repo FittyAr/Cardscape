@@ -1,4 +1,3 @@
-using Cardscape.Domain.Idempotency;
 using Cardscape.Domain.Members;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -43,8 +42,8 @@ internal static partial class ApiLogMessages
     [LoggerMessage(EventId = 4030, Level = LogLevel.Information, Message = "Rejected API token: {ErrorCode}")]
     internal static partial void ApiTokenRejected(this ILogger logger, string errorCode);
 
-    [LoggerMessage(EventId = 4031, Level = LogLevel.Warning, Message = "Failed to persist SCIM token LastUsedAt for token prefix {Prefix}.")]
-    internal static partial void ScimTokenLastUsedPersistenceFailed(this ILogger logger, Exception exception, string prefix);
+    [LoggerMessage(EventId = 4031, Level = LogLevel.Warning, Message = "Failed to persist SCIM token LastUsedAt.")]
+    internal static partial void ScimTokenLastUsedPersistenceFailed(this ILogger logger, Exception exception);
 
     [LoggerMessage(EventId = 4032, Level = LogLevel.Information, Message = "Rejecting revoked JWT (jti={Jti})")]
     internal static partial void RevokedJwtRejected(this ILogger logger, string jti);
@@ -73,14 +72,14 @@ internal static partial class ApiLogMessages
     [LoggerMessage(EventId = 4050, Level = LogLevel.Information, Message = "Rate limit exceeded for API token {TokenId} on {Path}; Retry-After={RetryAfter}s")]
     internal static partial void ApiTokenRateLimitExceeded(this ILogger logger, Guid tokenId, PathString path, int retryAfter);
 
-    [LoggerMessage(EventId = 4051, Level = LogLevel.Warning, Message = "Idempotency-Key {Key} from {Owner} replayed with a different payload (path={Path})")]
-    internal static partial void IdempotencyPayloadMismatch(this ILogger logger, IdempotencyKeyValue key, UserId owner, PathString path);
+    [LoggerMessage(EventId = 4051, Level = LogLevel.Warning, Message = "Idempotent request from {Owner} was replayed with a different payload (path={Path})")]
+    internal static partial void IdempotencyPayloadMismatch(this ILogger logger, UserId owner, PathString path);
 
-    [LoggerMessage(EventId = 4052, Level = LogLevel.Information, Message = "Idempotency-Key {Key} from {Owner} replayed; returning stored response (path={Path})")]
-    internal static partial void IdempotencyResponseReplayed(this ILogger logger, IdempotencyKeyValue key, UserId owner, PathString path);
+    [LoggerMessage(EventId = 4052, Level = LogLevel.Information, Message = "Idempotent request from {Owner} was replayed; returning stored response (path={Path})")]
+    internal static partial void IdempotencyResponseReplayed(this ILogger logger, UserId owner, PathString path);
 
-    [LoggerMessage(EventId = 4053, Level = LogLevel.Error, Message = "Lost Idempotency-Key reservation {Key} from {Owner} for {Path} before completion")]
-    internal static partial void IdempotencyReservationLost(this ILogger logger, IdempotencyKeyValue key, UserId owner, PathString path);
+    [LoggerMessage(EventId = 4053, Level = LogLevel.Error, Message = "Lost idempotency reservation from {Owner} for {Path} before completion")]
+    internal static partial void IdempotencyReservationLost(this ILogger logger, UserId owner, PathString path);
 
     [LoggerMessage(EventId = 4060, Level = LogLevel.Warning, Message = "Validation failed for {Path}")]
     internal static partial void RequestValidationFailed(this ILogger logger, Exception exception, PathString path);
@@ -123,14 +122,6 @@ internal static partial class ApiLogMessages
 
     [LoggerMessage(EventId = 4090, Level = LogLevel.Information, Message = "WebhookEventsSchemaTransformer running")]
     internal static partial void WebhookEventsSchemaTransformerRunning(this ILogger logger);
-
-    [LoggerMessage(EventId = 4091, Message = "Browser log: {ClientMessage} {@ClientProperties}")]
-    internal static partial void BrowserLogReceived(
-        this ILogger logger,
-        LogLevel level,
-        Exception? exception,
-        string clientMessage,
-        IReadOnlyDictionary<string, object?> clientProperties);
 
     [LoggerMessage(EventId = 4100, Level = LogLevel.Error, Message = "Seeder background operation failed (wipeOnly={WipeOnly}).")]
     internal static partial void SeederBackgroundOperationFailed(this ILogger logger, Exception exception, bool wipeOnly);

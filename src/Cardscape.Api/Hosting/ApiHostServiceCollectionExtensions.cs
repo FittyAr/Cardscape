@@ -69,9 +69,8 @@ internal static class ApiHostServiceCollectionExtensions
         // Serilog is wired before every other service so config
         // providers, EF Core, the hosted background dispatcher, and
         // the rest of the request pipeline all see the structured
-        // logger. The browser side POSTs to /api/internal/client-log
-        // (mapped below) and the file / OTel / (future) DB sinks
-        // receive those events through the standard pipeline.
+        // logger. Browser logs remain local to the client; server
+        // sinks receive only telemetry produced in trusted processes.
         builder.UseCardscapeSerilog(ServiceType.Api);
 
         // ── Services ─────────────────────────────────────────────

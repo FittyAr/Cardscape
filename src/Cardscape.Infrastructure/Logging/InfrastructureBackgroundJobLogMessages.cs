@@ -13,11 +13,11 @@ internal static partial class InfrastructureBackgroundJobLogMessages
     [LoggerMessage(EventId = 2102, Level = LogLevel.Warning, Message = "Webhook delivery {DeliveryId} dead-lettered by SSRF re-check: {Reason}")]
     internal static partial void WebhookRejectedBySsrf(this ILogger logger, Guid deliveryId, string reason);
 
-    [LoggerMessage(EventId = 2103, Level = LogLevel.Information, Message = "Delivered webhook {DeliveryId} ({Event}) to {Url} status {Status}.")]
-    internal static partial void WebhookDelivered(this ILogger logger, Guid deliveryId, string @event, string url, int status);
+    [LoggerMessage(EventId = 2103, Level = LogLevel.Information, Message = "Delivered webhook {DeliveryId} ({Event}) with status {Status}.")]
+    internal static partial void WebhookDelivered(this ILogger logger, Guid deliveryId, string @event, int status);
 
-    [LoggerMessage(EventId = 2104, Level = LogLevel.Warning, Message = "Webhook delivery {DeliveryId} attempt {Attempt} failed (deadLetter={WillDeadLetter}).")]
-    internal static partial void WebhookDeliveryAttemptFailed(this ILogger logger, Exception exception, Guid deliveryId, int attempt, bool willDeadLetter);
+    [LoggerMessage(EventId = 2104, Level = LogLevel.Warning, Message = "Webhook delivery {DeliveryId} attempt {Attempt} failed with {FailureKind} (deadLetter={WillDeadLetter}).")]
+    internal static partial void WebhookDeliveryAttemptFailed(this ILogger logger, Guid deliveryId, int attempt, string failureKind, bool willDeadLetter);
 
     [LoggerMessage(EventId = 2110, Level = LogLevel.Warning, Message = "CloneCardJob {JobId} missing or invalid cardId.")]
     internal static partial void CloneJobCardIdInvalid(this ILogger logger, Guid jobId);

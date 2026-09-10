@@ -158,14 +158,15 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.WebhookDelivered(
-                        delivery.Id.Value, delivery.EventType, endpoint.Url, (int)response.StatusCode);
+                        delivery.Id.Value, delivery.EventType, (int)response.StatusCode);
                 }
                 return;
             }
 
-            string body = await ReadBodySafeAsync(response, ct);
             throw new HttpRequestException(
-                $"Webhook endpoint returned {(int)response.StatusCode} {response.ReasonPhrase}: {Truncate(body, 500)}");
+                "Webhook endpoint returned a non-success status code.",
+                inner: null,
+                response.StatusCode);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -177,18 +178,20 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
             // share the same 5-attempt cap so a delivery's audit
             // trail matches the underlying job's lifecycle.
             bool willDeadLetter = delivery.AttemptCount + 1 >= BackgroundJobMaxAttempts;
+            string failureKind = ex.GetType().Name;
+            string persistedFailure = $"Delivery failed ({failureKind}).";
             if (willDeadLetter)
             {
-                delivery.MarkDeadLettered(ex.Message, now);
+                delivery.MarkDeadLettered(persistedFailure, now);
             }
             else
             {
-                delivery.MarkFailed(ex.Message, now);
+                delivery.MarkFailed(persistedFailure, now);
             }
 
             await unitOfWork.SaveChangesAsync(ct);
             _logger.WebhookDeliveryAttemptFailed(
-                ex, delivery.Id.Value, delivery.AttemptCount, willDeadLetter);
+                delivery.Id.Value, delivery.AttemptCount, failureKind, willDeadLetter);
             throw;
         }
     }
@@ -221,24 +224,5 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
         return id;
     }
 
-    private static async Task<string> ReadBodySafeAsync(HttpResponseMessage response, CancellationToken ct)
-    {
-        try
-        {
-            await using Stream stream = await response.Content.ReadAsStreamAsync(ct);
-            byte[] buffer = new byte[MaxErrorBodyBytes];
-            int count = await stream.ReadAsync(buffer, ct);
-            return Encoding.UTF8.GetString(buffer, 0, count);
-        }
-        catch
-        {
-            return string.Empty;
-        }
-    }
-
-    private static string Truncate(string value, int maxLength) =>
-        value.Length <= maxLength ? value : value[..maxLength];
-
     public const string WebhookHttpClientName = "WebhookDelivery";
-    private const int MaxErrorBodyBytes = 4096;
 }

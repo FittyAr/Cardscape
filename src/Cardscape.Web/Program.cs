@@ -18,11 +18,10 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // ── Logging ────────────────────────────────────────────────
-// Serilog routes every ILogger<T> in the client through
-// BrowserHttp (POSTs CLEF events to /api/internal/client-log
-// on the API), the browser console, and the dev tools
-// "Debug" sink. The API re-emits the received events so the
-// file / OTel / (future) DB sinks all see browser-side logs.
+// Serilog routes every ILogger<T> in the client to the browser
+// console and development tools. Browser events deliberately
+// stay client-side: relaying arbitrary client messages and
+// properties would create a PII and log-injection surface.
 builder.UseCardscapeBrowserSerilog();
 
 // ── Configuration (reads from wwwroot/appsettings.json) ─────────────

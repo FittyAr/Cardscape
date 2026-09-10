@@ -17,8 +17,6 @@ public static class LoggingConstants
     // ── HTTP / endpoint surface ─────────────────────────────────
     public const string CorrelationIdHeader = "X-Correlation-ID";
     public const string InternalSecretHeader = "X-Internal-Secret";
-    public const string ClientLogEndpoint = "/api/internal/client-log";
-
     // ── Path layout ─────────────────────────────────────────────
     /// <summary>yyyy/MM/dd sub-folder appended under the log root.</summary>
     public const string LogPathDateFormat = "yyyy/MM/dd";

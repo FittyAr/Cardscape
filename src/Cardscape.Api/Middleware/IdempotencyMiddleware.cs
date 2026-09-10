@@ -155,7 +155,7 @@ public sealed class IdempotencyMiddleware(
             {
                 if (!existing.MatchesRequest(requestHash))
                 {
-                    logger.IdempotencyPayloadMismatch(key, ownerId, context.Request.Path);
+                    logger.IdempotencyPayloadMismatch(ownerId, context.Request.Path);
                     await WriteProblemAsync(
                         context,
                         StatusCodes.Status422UnprocessableEntity,
@@ -173,7 +173,7 @@ public sealed class IdempotencyMiddleware(
 
                 if (!existing.IsPending)
                 {
-                    logger.IdempotencyResponseReplayed(key, ownerId, context.Request.Path);
+                    logger.IdempotencyResponseReplayed(ownerId, context.Request.Path);
                     await ReplayAsync(context, existing, context.RequestAborted);
                     return;
                 }
@@ -219,7 +219,7 @@ public sealed class IdempotencyMiddleware(
                 context.RequestAborted);
             if (!completed)
             {
-                logger.IdempotencyReservationLost(key, ownerId, context.Request.Path);
+                logger.IdempotencyReservationLost(ownerId, context.Request.Path);
             }
         }
         else
