@@ -27,7 +27,7 @@ public static class WorkspaceEndpoints
         group.MapGet("/", async (IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceDto>>>(new ListWorkspacesForUserQuery(), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapGet("/{workspaceId:guid}", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>

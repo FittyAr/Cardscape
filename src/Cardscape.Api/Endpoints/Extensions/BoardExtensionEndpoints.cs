@@ -80,11 +80,9 @@ public static class BoardExtensionEndpoints
                 .FirstOrDefault(e => e.Id == extensionId);
             if (row is null)
             {
-                return Results.NotFound(new
-                {
-                    error = "extensions.not_found",
-                    message = "No board extension with that id is enabled on this board."
-                });
+                return ApiProblemResults.NotFound(
+                    "extensions.not_found",
+                    "No board extension with that id is enabled on this board.");
             }
 
             var disable = await bus.InvokeAsync<Result>(
@@ -124,10 +122,8 @@ public static class BoardExtensionEndpoints
     private static string ToRouteValue(ExtensionKind kind) =>
         char.ToLowerInvariant(kind.ToString()[0]) + kind.ToString()[1..];
 
-    private static IResult InvalidKind(string kind) => Results.BadRequest(new
-    {
-        code = "extensions.kind_invalid",
-        message = $"Unknown extension kind '{kind}'. Valid values: {string.Join(", ", Enum.GetValues<ExtensionKind>().Select(ToRouteValue))}."
-    });
+    private static IResult InvalidKind(string kind) => ApiProblemResults.BadRequest(
+        "extensions.kind_invalid",
+        $"Unknown extension kind '{kind}'. Valid values: {string.Join(", ", Enum.GetValues<ExtensionKind>().Select(ToRouteValue))}.");
 
 }

@@ -81,11 +81,9 @@ public static class UserPreferencesEndpoints
             {
                 if (!Enum.TryParse<AppearanceMode>(body.Mode, ignoreCase: false, out var parsed))
                 {
-                    return Results.BadRequest(new
-                    {
-                        code = "members.user_preferences.invalid_mode",
-                        message = "Mode must be Light, Dark, or System."
-                    });
+                    return ApiProblemResults.BadRequest(
+                        "members.user_preferences.invalid_mode",
+                        "Mode must be Light, Dark, or System.");
                 }
                 mode = parsed;
             }

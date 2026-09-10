@@ -107,27 +107,31 @@ public static class BoardBroadcastEndpoints
             }
             catch (JsonException)
             {
-                return Results.BadRequest(new { error = "Request body must be valid broadcast JSON." });
+                return ApiProblemResults.BadRequest(
+                    "broadcast.invalid_json",
+                    "Request body must be valid broadcast JSON.");
             }
 
             if (request is null)
             {
-                return Results.BadRequest(new { error = "Request body is required." });
+                return ApiProblemResults.BadRequest(
+                    "broadcast.body_required",
+                    "Request body is required.");
             }
 
             if (string.IsNullOrWhiteSpace(request.Method))
             {
-                return Results.BadRequest(new { error = "method is required." });
+                return ApiProblemResults.BadRequest(
+                    "broadcast.method_required",
+                    "method is required.");
             }
 
             Guid? resolvedBoardId = await ResolveBoardIdAsync(request, db, ct);
             if (resolvedBoardId is null)
             {
-                return Results.BadRequest(new
-                {
-                    error = "Could not resolve the board for this broadcast. " +
-                            "Pass boardId, listId, or cardId."
-                });
+                return ApiProblemResults.BadRequest(
+                    "broadcast.board_unresolved",
+                    "Could not resolve the board for this broadcast. Pass boardId, listId, or cardId.");
             }
 
             string? raw = request.Payload.ValueKind == JsonValueKind.Undefined
@@ -140,11 +144,15 @@ public static class BoardBroadcastEndpoints
             }
             catch (JsonException)
             {
-                return Results.BadRequest(new { error = "Payload does not match the broadcast method." });
+                return ApiProblemResults.BadRequest(
+                    "broadcast.payload_invalid",
+                    "Payload does not match the broadcast method.");
             }
             return success
                 ? Results.Accepted()
-                : Results.BadRequest(new { error = $"Unknown method '{request.Method}'." });
+                : ApiProblemResults.BadRequest(
+                    "broadcast.method_unknown",
+                    $"Unknown method '{request.Method}'.");
         }).Accepts<BroadcastRequest>("application/json");
 
         return app;

@@ -573,3 +573,5 @@
 - [x] Assert concrete RFC 7807 result type, status, title, detail and stable code extension.
 - [x] Build and run the narrow `DomainErrorResultsTests` filter.
 - [x] Review assertions and pseudo-mutations, then record final status.
+- [x] Extend the matrix to transport-level bad-request, not-found and conflict helpers.
+- [x] Rebuild and rerun the expanded narrow matrix.

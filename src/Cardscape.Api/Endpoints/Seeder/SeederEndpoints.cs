@@ -79,7 +79,9 @@ public static class SeederEndpoints
             bool wipe = request?.Wipe ?? runner.CurrentOptions.WipeBeforeSeed;
             if (!queue.TryEnqueueRun(wipe))
             {
-                return Results.Conflict(new { error = "seeder.already_running" });
+                return ApiProblemResults.Conflict(
+                    "seeder.already_running",
+                    "A Seeder operation is already running.");
             }
 
             return Results.Accepted(value: new
@@ -98,7 +100,9 @@ public static class SeederEndpoints
             }
             if (!queue.TryEnqueueWipe())
             {
-                return Results.Conflict(new { error = "seeder.already_running" });
+                return ApiProblemResults.Conflict(
+                    "seeder.already_running",
+                    "A Seeder operation is already running.");
             }
 
             return Results.Accepted(value: new

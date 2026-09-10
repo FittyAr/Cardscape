@@ -237,7 +237,9 @@ public static class IntegrationsEndpoints
             string body = System.Text.Encoding.UTF8.GetString(signedBytes);
             if (string.IsNullOrWhiteSpace(body))
             {
-                return Results.BadRequest(new { error = "Inbound email body was empty." });
+                return ApiProblemResults.BadRequest(
+                    "inbound_email.body_required",
+                    "Inbound email body was empty.");
             }
 
             Dictionary<string, string> headers = new(StringComparer.OrdinalIgnoreCase);

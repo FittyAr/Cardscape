@@ -39,13 +39,17 @@ public static class TranslationEndpoint
         {
             if (string.IsNullOrWhiteSpace(culture))
             {
-                return Results.BadRequest(new { error = "Culture is required." });
+                return ApiProblemResults.BadRequest(
+                    "translations.culture_required",
+                    "Culture is required.");
             }
 
             culture = culture.ToLowerInvariant();
             if (!IsSupportedCulture(culture))
             {
-                return Results.BadRequest(new { error = $"Culture '{culture}' is not supported." });
+                return ApiProblemResults.BadRequest(
+                    "translations.culture_unsupported",
+                    $"Culture '{culture}' is not supported.");
             }
 
             IReadOnlyDictionary<string, string> translations = LoadEmbeddedTranslations(culture);

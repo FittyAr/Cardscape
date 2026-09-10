@@ -15,6 +15,7 @@
 - [x] Stable machine code is preserved in the `code` extension.
 - [x] Safe domain detail is preserved and titles are canonical.
 - [x] SCIM protocol errors remain outside this mapper.
+- [x] Transport-level 400/404/409 failures use the same RFC 7807 shape through `ApiProblemResults`.
 
 ## Application public-port namespace boundary (2026-08-22)
 

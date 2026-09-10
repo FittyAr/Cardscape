@@ -661,3 +661,5 @@
 - [x] Focused validation: six theory rows passed, 0 failed and 0 skipped.
 - [x] Assertion-quality review: each row asserts concrete RFC 7807 type, transport/body status parity, canonical title, exact detail and stable code; no assertion-free, trivial or self-referential case.
 - [x] Pseudo-mutation review: changing any status/title, dropping the detail/code extension, collapsing a mapping or returning a non-Problem result breaks at least one exact assertion. SCIM remains an explicit protocol boundary.
+- [x] Expanded transport-error matrix: 3/3 rows passed; full canonical matrix is 9/9.
+- [x] Assertion review: transport rows assert exact status/title, non-empty detail and the single stable machine-code extension. Removing a helper mapping or reverting any endpoint to an anonymous JSON error makes result-type/shape assertions fail.

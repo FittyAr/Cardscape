@@ -34,22 +34,18 @@ public static class AttachmentEndpoints
         {
             if (!request.HasFormContentType)
             {
-                return Results.BadRequest(new
-                {
-                    code = "attachments.multipart_required",
-                    message = "Upload must use multipart/form-data."
-                });
+                return ApiProblemResults.BadRequest(
+                    "attachments.multipart_required",
+                    "Upload must use multipart/form-data.");
             }
 
             IFormCollection form = await request.ReadFormAsync(ct);
             IFormFile? file = form.Files["file"];
             if (file is null || file.Length == 0)
             {
-                return Results.BadRequest(new
-                {
-                    code = "attachments.file_required",
-                    message = "A non-empty 'file' field is required."
-                });
+                return ApiProblemResults.BadRequest(
+                    "attachments.file_required",
+                    "A non-empty 'file' field is required.");
             }
 
             await using Stream stream = file.OpenReadStream();

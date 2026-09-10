@@ -49,32 +49,26 @@ public static class ImportEndpoints
     {
         if (!request.HasFormContentType)
         {
-            return Results.BadRequest(new
-            {
-                error = "imports.invalid_content_type",
-                message = "Expected a multipart/form-data upload with a 'file' part and a 'targetWorkspaceId' field."
-            });
+            return ApiProblemResults.BadRequest(
+                "imports.invalid_content_type",
+                "Expected a multipart/form-data upload with a 'file' part and a 'targetWorkspaceId' field.");
         }
 
         IFormCollection form = await request.ReadFormAsync(ct);
         string? workspaceIdRaw = form["targetWorkspaceId"];
         if (!Guid.TryParse(workspaceIdRaw, out Guid workspaceId))
         {
-            return Results.BadRequest(new
-            {
-                error = "imports.invalid_workspace",
-                message = "The 'targetWorkspaceId' form field is required and must be a GUID."
-            });
+            return ApiProblemResults.BadRequest(
+                "imports.invalid_workspace",
+                "The 'targetWorkspaceId' form field is required and must be a GUID.");
         }
 
         IFormFile? file = form.Files.GetFile("file");
         if (file is null || file.Length == 0)
         {
-            return Results.BadRequest(new
-            {
-                error = "imports.no_file",
-                message = "The 'file' form part is required and must contain a Kanban boards.json payload."
-            });
+            return ApiProblemResults.BadRequest(
+                "imports.no_file",
+                "The 'file' form part is required and must contain a Kanban boards.json payload.");
         }
 
         if (file.Length > MaxUploadBytes)

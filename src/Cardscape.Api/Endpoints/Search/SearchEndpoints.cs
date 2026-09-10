@@ -36,11 +36,9 @@ public static class SearchEndpoints
                 }
                 else
                 {
-                    return Results.BadRequest(new
-                    {
-                        code = "search.kind_invalid",
-                        message = $"Unknown kind '{kind}'. Valid values: {string.Join(", ", Enum.GetNames<SearchHitKind>())}."
-                    });
+                    return ApiProblemResults.BadRequest(
+                        "search.kind_invalid",
+                        $"Unknown kind '{kind}'. Valid values: {string.Join(", ", Enum.GetNames<SearchHitKind>())}.");
                 }
             }
 
