@@ -30,7 +30,6 @@ public sealed class HttpGoogleCalendarSyncService(
 {
     private const string OauthTokenEndpoint = "https://oauth2.googleapis.com/token";
     private const int MaxGoogleResponseBytes = 1024 * 1024;
-    private const int MaxGoogleErrorBytes = 4096;
 
     public async Task<Result<string>> PushCardDueDateAsync(
         Guid userId, Guid cardId, string cardTitle, string? cardDescription,
@@ -59,11 +58,11 @@ public sealed class HttpGoogleCalendarSyncService(
         {
             if (eventId is not null)
             {
-                HttpResponseMessage delete = await http.DeleteAsync(
+                using HttpResponseMessage delete = await http.DeleteAsync(
                     $"calendars/{Uri.EscapeDataString(connection.CalendarId)}/events/{Uri.EscapeDataString(eventId)}", ct);
                 if (!delete.IsSuccessStatusCode && delete.StatusCode != System.Net.HttpStatusCode.NotFound)
                 {
-                    return Result.Failure<string>(await MapHttpErrorAsync(delete, "delete", ct));
+                    return Result.Failure<string>(MapHttpError(delete, "delete"));
                 }
                 connection.RemoveEventId(cardId, clock.UtcNow);
                 await connections.UpdateAsync(connection, ct);
@@ -79,7 +78,7 @@ public sealed class HttpGoogleCalendarSyncService(
             end = new { dateTime = dueDate.Value.AddHours(1).UtcDateTime.ToString("o") }
         };
 
-        HttpResponseMessage response = eventId is null
+        using HttpResponseMessage response = eventId is null
             ? await http.PostAsJsonAsync(
                 $"calendars/{Uri.EscapeDataString(connection.CalendarId)}/events", eventBody, ct)
             : await http.PutAsJsonAsync(
@@ -88,9 +87,10 @@ public sealed class HttpGoogleCalendarSyncService(
 
         if (!response.IsSuccessStatusCode)
         {
-            return Result.Failure<string>(await MapHttpErrorAsync(response, eventId is null ? "create" : "update", ct));
+            return Result.Failure<string>(MapHttpError(response, eventId is null ? "create" : "update"));
         }
 
+        await response.Content.LoadIntoBufferAsync(MaxGoogleResponseBytes, ct);
         JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
         string newEventId = body.TryGetProperty("id", out JsonElement id) ? id.GetString() ?? string.Empty : string.Empty;
         if (string.IsNullOrWhiteSpace(newEventId))
@@ -134,16 +134,9 @@ public sealed class HttpGoogleCalendarSyncService(
         return body.GetProperty("access_token").GetString() ?? string.Empty;
     }
 
-    private static async Task<DomainError> MapHttpErrorAsync(
-        HttpResponseMessage response, string verb, CancellationToken ct)
-    {
-        await using Stream stream = await response.Content.ReadAsStreamAsync(ct);
-        byte[] buffer = new byte[MaxGoogleErrorBytes];
-        int count = await stream.ReadAsync(buffer, ct);
-        string body = System.Text.Encoding.UTF8.GetString(buffer, 0, count);
-        return DomainError.External(
+    private static DomainError MapHttpError(HttpResponseMessage response, string verb) =>
+        DomainError.External(
             $"google_calendar.{(int)response.StatusCode}",
-            $"Google Calendar {verb} failed ({(int)response.StatusCode}): {body}");
-    }
+            $"Google Calendar {verb} failed with HTTP {(int)response.StatusCode}.");
 
 }
