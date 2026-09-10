@@ -131,4 +131,7 @@ internal static partial class ApiLogMessages
         Exception? exception,
         string clientMessage,
         IReadOnlyDictionary<string, object?> clientProperties);
+
+    [LoggerMessage(EventId = 4100, Level = LogLevel.Error, Message = "Seeder background operation failed (wipeOnly={WipeOnly}).")]
+    internal static partial void SeederBackgroundOperationFailed(this ILogger logger, Exception exception, bool wipeOnly);
 }

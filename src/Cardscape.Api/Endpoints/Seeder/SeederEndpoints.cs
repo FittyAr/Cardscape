@@ -1,3 +1,4 @@
+using Cardscape.Api.BackgroundJobs;
 using Cardscape.Api.Extensions;
 using Cardscape.Seeder;
 using Cardscape.Seeder.Configuration;
@@ -38,12 +39,12 @@ public static class SeederEndpoints
             .WithTags("Seeder")
             .RequireAuthorization(AdminOnlyPolicy.Name);
 
-        group.MapGet("/status", (SeedReport report, SeedRunner runner) =>
+        group.MapGet("/status", (SeedReport report, SeedRunner runner, SeederOperationQueue queue) =>
         {
             return Results.Ok(new
             {
                 enabled = runner.IsEnabled,
-                running = runner.IsRunning,
+                running = queue.IsBusy,
                 report = ToStatus(report)
             });
         });
@@ -67,6 +68,7 @@ public static class SeederEndpoints
         // a long seed (3-6 s) does not freeze the admin
         // page.
         group.MapPost("/run", (SeedRunner runner,
+                               SeederOperationQueue queue,
                                SeedReport report,
                                SeederRunRequest? request) =>
         {
@@ -74,38 +76,11 @@ public static class SeederEndpoints
             {
                 return Results.NotFound();
             }
-            if (runner.IsRunning)
+            bool wipe = request?.Wipe ?? runner.CurrentOptions.WipeBeforeSeed;
+            if (!queue.TryEnqueueRun(wipe))
             {
                 return Results.Conflict(new { error = "seeder.already_running" });
             }
-
-            bool wipe = request?.Wipe ?? runner.CurrentOptions.WipeBeforeSeed;
-
-            // Fire-and-forget on the runner's task scheduler.
-            // The runner's own SemaphoreSlim rejects a
-            // second RunAsync while the first is in flight,
-            // so concurrent POST /run callers do not race.
-            // Exceptions are caught inside the runner and
-            // surfaced through the report (status =
-            // "Failed: ...").
-            //
-            // We deliberately pass CancellationToken.None
-            // here instead of the request's CT: as soon as
-            // the browser navigates away (e.g. an auth
-            // redirect that triggers Blazor's forceLoad, or
-            // a curl that closed the connection), the
-            // request CT fires and cancels the seed 2 ms
-            // into step 1, leaving the database empty and
-            // the report stuck on "Failed: The operation
-            // was canceled." The runner's own internal
-            // cancellation is the only meaningful signal;
-            // tying it to the HTTP request lifetime is
-            // the bug that produced the redirect loop on
-            // /admin/seeder (no admin user -> the page
-            // bounces to /login -> /login returns the
-            // returnUrl -> /admin/seeder -> still no admin
-            // -> /login -> ...).
-            _ = Task.Run(() => _ = runner.RunAsync(wipe, CancellationToken.None));
 
             return Results.Accepted(value: new
             {
@@ -115,21 +90,16 @@ public static class SeederEndpoints
             });
         });
 
-        group.MapPost("/wipe", (SeedRunner runner) =>
+        group.MapPost("/wipe", (SeedRunner runner, SeederOperationQueue queue) =>
         {
             if (!runner.IsEnabled)
             {
                 return Results.NotFound();
             }
-            if (runner.IsRunning)
+            if (!queue.TryEnqueueWipe())
             {
                 return Results.Conflict(new { error = "seeder.already_running" });
             }
-
-            // Same reason as /run: don't tie the wipe to
-            // the request's CT or the operator gets a 2 ms
-            // wipe followed by a "Failed: canceled" report.
-            _ = Task.Run(() => _ = runner.WipeAsync(CancellationToken.None));
 
             return Results.Accepted(value: new
             {
