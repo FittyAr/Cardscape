@@ -783,3 +783,11 @@
 - [x] Disposing the export stream disposes the owning response content.
 - [x] A non-success export disposes its response before propagating `HttpRequestException`.
 - [x] SDK tests execute on both net8.0 and net10.0.
+
+## 2026-09-10 — Database unique-constraint classification
+
+- Target: `DatabaseExceptionClassifier` and its Board/idempotency consumers.
+- Tests: xUnit v3 + FluentAssertions in `DatabaseExceptionClassifierTests`.
+- [x] SQLite unique and non-unique native codes.
+- [x] PostgreSQL unique and foreign-key SQLSTATE values.
+- [x] Unknown exception text must not be treated as provider evidence.

@@ -646,3 +646,11 @@
 - [x] Pseudo-mutation review: returning the raw content stream, changing the payload, removing successful-response ownership or removing failure-path disposal breaks an exact assertion; no material ownership branch remains uncovered.
 - [x] Narrow validation: 15/15 passed independently on net8.0 and net10.0. Full suite: 957 passed, 0 failed, 1 skipped.
 - [x] The advertised `test-analysis-extensions/extensions/dotnet.md` file is absent; classification was performed inline against the repository's xUnit v3 and FluentAssertions APIs.
+
+## 2026-09-10 — Database unique-constraint classification
+
+- [x] Positive/negative SQLite and PostgreSQL matrix implemented.
+- [x] Message-heuristic regression implemented.
+- [x] Focused validation: 6/6 passed, 0 failed, 0 skipped.
+- [x] Assertion review: every row asserts the exact boolean classification; no assertion-free, trivial or self-referential tests.
+- [x] Pseudo-mutation review: changing SQLite extended code, PostgreSQL SQLSTATE, accepting FK/general errors or restoring message heuristics breaks a concrete case.

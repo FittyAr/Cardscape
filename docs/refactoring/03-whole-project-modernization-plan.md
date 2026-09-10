@@ -335,7 +335,7 @@ Reglas permanentes:
 | 2026-09-10 | Callback OAuth determinista | El callback espera `TokenStore.SetAsync` antes de notificar el estado y ejecutar `forceLoad`; se elimina la carrera entre cookie y primera petición autenticada | Sin tarea de token descartada; WebAssembly Release 0/0 | Incluido en este commit |
 | 2026-09-10 | Propiedad de respuestas HTTP Web | `ApiClientBase` dispone las respuestas que consume y los flujos fuera de esa abstracción hacen lo mismo explícitamente; lecturas de cultura/importación usan overloads con token | WebAssembly Release 0/0; `git diff --check` limpio | Incluido en este commit |
 | 2026-09-10 | Cliente Google Calendar | Todas las respuestas quedan dispuestas, payload exitoso limitado a 1 MiB y errores externos reducidos a status seguro sin reflejar cuerpos no confiables | Infrastructure Release 0/0; sin respuestas HTTP sin `using` | Incluido en este commit |
-| 2026-09-10 | Clasificación de unicidad multi-provider | Helper único por códigos nativos SQLite 2067, PostgreSQL 23505 y MySQL 1062; stars/idempotencia sólo absorben duplicados reales y propagan el resto | Infrastructure Release 0/0; `git diff --check` limpio | Incluido en este commit |
+| 2026-09-10 | Clasificación de unicidad multi-provider | Helper único por códigos nativos SQLite 2067, PostgreSQL 23505 y MySQL 1062; stars/idempotencia sólo absorben duplicados reales y propagan el resto | Infrastructure Release 0/0; regresiones focalizadas 6 pass | `ea560d1` + incluido en este commit |
 
 ### Migración LoggerMessage
 

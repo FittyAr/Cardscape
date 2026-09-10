@@ -560,3 +560,10 @@
 3. [x] Cover successful payload/read/dispose and unsuccessful response/dispose paths.
 4. [x] Correct the SDK test project so `TargetFrameworks` is not shadowed by the repository-wide target.
 5. [x] Run both SDK targets, the complete suite, and assertion/pseudo-mutation review.
+
+## 2026-09-10 — Database unique-constraint classification
+
+1. [x] Cover positive and negative SQLite codes with real provider exceptions.
+2. [x] Cover positive and negative PostgreSQL states with real provider exceptions.
+3. [x] Prove provider-unknown text does not revive message heuristics.
+4. [x] Build, run the focused tests and review assertions/pseudo-mutations.
