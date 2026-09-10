@@ -192,7 +192,7 @@ public sealed class CultureSwitcher
         _logger = logger;
     }
 
-    public event Action? Changed;
+    public event Func<Task>? Changed;
 
     public string CurrentCulture => _currentCulture;
 
@@ -271,7 +271,20 @@ public sealed class CultureSwitcher
             }
         }
 
-        Changed?.Invoke();
+        await NotifyChangedAsync();
+    }
+
+    private async Task NotifyChangedAsync()
+    {
+        if (Changed is null)
+        {
+            return;
+        }
+
+        foreach (Func<Task> handler in Changed.GetInvocationList().Cast<Func<Task>>())
+        {
+            await handler();
+        }
     }
 
     private async Task<IReadOnlyDictionary<string, string>> LoadTranslationsAsync(string culture)

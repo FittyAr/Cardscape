@@ -48,15 +48,15 @@
     // with the singleton.
     protected override void OnInitialized()
     {
-        Culture.Changed += OnCultureChanged;
+        Culture.Changed += OnCultureChangedAsync;
     }
 
     public void Dispose()
     {
-        Culture.Changed -= OnCultureChanged;
+        Culture.Changed -= OnCultureChangedAsync;
     }
 
-    private void OnCultureChanged() => InvokeAsync(StateHasChanged);
+    private Task OnCultureChangedAsync() => InvokeAsync(StateHasChanged);
 
     private async Task OnChangeAsync(object value)
     {

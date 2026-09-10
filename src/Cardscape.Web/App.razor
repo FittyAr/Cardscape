@@ -45,7 +45,7 @@
   Radzen component (no custom JS interop needed).
 *@
 <RadzenMediaQuery Query="(prefers-color-scheme: dark)"
-                   Change="@OnSystemDarkChanged" />
+                   Change="@OnSystemDarkChangedAsync" />
 
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
@@ -83,7 +83,7 @@
     protected override void OnInitialized()
     {
         Nav.LocationChanged += OnLocationChanged;
-        UserPreferences.Changed += OnUserPreferencesChanged;
+        UserPreferences.Changed += OnUserPreferencesChangedAsync;
 
         // BETA-SW-008 — see test-results/beta/round-2/sw-caching.md.
         // The original code awaited UserPreferences.InitializeAsync()
@@ -135,12 +135,10 @@
     /// matching sibling of the user's chosen theme
     /// (only when the mode is "System"; explicit Light /
     /// Dark ignores the OS preference).</summary>
-    private void OnSystemDarkChanged(bool prefersDark)
-    {
-        UserPreferences.NotifySystemDarkChanged(prefersDark);
-    }
+    private Task OnSystemDarkChangedAsync(bool prefersDark) =>
+        UserPreferences.NotifySystemDarkChangedAsync(prefersDark);
 
-    private void OnUserPreferencesChanged() => InvokeAsync(StateHasChanged);
+    private Task OnUserPreferencesChangedAsync() => InvokeAsync(StateHasChanged);
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
         _ = HideErrorUiAsync();
@@ -167,6 +165,6 @@
     public void Dispose()
     {
         Nav.LocationChanged -= OnLocationChanged;
-        UserPreferences.Changed -= OnUserPreferencesChanged;
+        UserPreferences.Changed -= OnUserPreferencesChangedAsync;
     }
 }

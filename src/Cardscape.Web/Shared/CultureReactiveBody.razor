@@ -29,14 +29,14 @@
     /// against the new key).</summary>
     protected override void OnInitialized()
     {
-        Culture.Changed += OnCultureChanged;
+        Culture.Changed += OnCultureChangedAsync;
     }
 
     public void Dispose()
     {
-        Culture.Changed -= OnCultureChanged;
+        Culture.Changed -= OnCultureChangedAsync;
         GC.SuppressFinalize(this);
     }
 
-    private void OnCultureChanged() => InvokeAsync(StateHasChanged);
+    private Task OnCultureChangedAsync() => InvokeAsync(StateHasChanged);
 }

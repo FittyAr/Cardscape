@@ -82,7 +82,7 @@
         // may replace it with the saved culture once JS
         // interop is available.
         _bodyKey = $"body-default-{Guid.NewGuid():N}";
-        Culture.Changed += OnCultureChanged;
+        Culture.Changed += OnCultureChangedAsync;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -101,11 +101,11 @@
 
     public void Dispose()
     {
-        Culture.Changed -= OnCultureChanged;
+        Culture.Changed -= OnCultureChangedAsync;
         GC.SuppressFinalize(this);
     }
 
-    private void OnCultureChanged()
+    private Task OnCultureChangedAsync()
     {
         // Re-create the body wrapper on every culture change. We
         // bump the key with a fresh GUID so Blazor's diff renderer
@@ -113,6 +113,6 @@
         // one, which in turn re-invokes the @Body RenderFragment
         // with the now-Spanish dictionary.
         _bodyKey = $"body-{Culture.CurrentCulture}-{Guid.NewGuid():N}";
-        InvokeAsync(StateHasChanged);
+        return InvokeAsync(StateHasChanged);
     }
 }

@@ -117,7 +117,7 @@ public sealed class UserPreferencesService
     /// the bound <c>&lt;RadzenTheme&gt;</c> tag and any
     /// dependent UI (the toggle's selected value, the
     /// settings page's swatches, etc.).</summary>
-    public event Action? Changed;
+    public event Func<Task>? Changed;
 
     /// <summary>
     /// Initialise the service on app start. The order is:
@@ -163,7 +163,7 @@ public sealed class UserPreferencesService
 
         if (serverPrefs is not null)
         {
-            ApplyServerPreferences(serverPrefs);
+            await ApplyServerPreferencesAsync(serverPrefs);
             return;
         }
 
@@ -178,7 +178,7 @@ public sealed class UserPreferencesService
         }
 
         ApplyThemeName(cookieName!);
-        Changed?.Invoke();
+        await NotifyChangedAsync();
     }
 
     /// <summary>
@@ -187,7 +187,7 @@ public sealed class UserPreferencesService
     /// 1. Update the local state.
     /// 2. If the mode is <c>System</c>, resolve the matching
     ///    sibling of the chosen theme for the current OS
-    ///    preference (set by <see cref="NotifySystemDarkChanged"/>).
+    ///    preference (set by <see cref="NotifySystemDarkChangedAsync"/>).
     ///    The user's *intent* (the theme name) is preserved
     ///    on the server, but the locally-applied theme
     ///    (and the cookie) reflects the OS-driven choice.
@@ -220,7 +220,7 @@ public sealed class UserPreferencesService
             : themeName;
 
         ApplyThemeName(appliedThemeName);
-        Changed?.Invoke();
+        await NotifyChangedAsync();
 
         // R10-UI-#1 — beta test r10. For a user who has not
         // yet had their preferences row created (e.g. a brand-new
@@ -266,7 +266,7 @@ public sealed class UserPreferencesService
             {
                 if (getResult.Value is not null)
                 {
-                    ApplyServerPreferences(getResult.Value);
+                    await ApplyServerPreferencesAsync(getResult.Value);
                 }
                 else
                 {
@@ -275,7 +275,7 @@ public sealed class UserPreferencesService
                     var create = await _api.CreateDefaultAsync();
                     if (create.IsSuccess && create.Value is not null)
                     {
-                        ApplyServerPreferences(create.Value);
+                        await ApplyServerPreferencesAsync(create.Value);
                     }
                 }
             }
@@ -286,12 +286,12 @@ public sealed class UserPreferencesService
         }
     }
 
-    private void ApplyServerPreferences(UserPreferencesDto prefs)
+    private async Task ApplyServerPreferencesAsync(UserPreferencesDto prefs)
     {
         CurrentThemeName = prefs.ThemeName;
         CurrentMode = prefs.Mode;
         ApplyThemeName(prefs.ThemeName);
-        Changed?.Invoke();
+        await NotifyChangedAsync();
     }
 
     /// <summary>Single source of truth for "the user picked
@@ -339,7 +339,7 @@ public sealed class UserPreferencesService
     /// cookie write only — we do not PUT to the server
     /// because the user's *intent* (the theme name) has
     /// not changed, only the OS-derived sibling.</summary>
-    public void NotifySystemDarkChanged(bool prefersDark)
+    public async Task NotifySystemDarkChangedAsync(bool prefersDark)
     {
         if (SystemPrefersDark == prefersDark)
         {
@@ -353,8 +353,21 @@ public sealed class UserPreferencesService
             if (sibling != CurrentThemeName)
             {
                 ApplyThemeName(sibling);
-                Changed?.Invoke();
+                await NotifyChangedAsync();
             }
+        }
+    }
+
+    private async Task NotifyChangedAsync()
+    {
+        if (Changed is null)
+        {
+            return;
+        }
+
+        foreach (Func<Task> handler in Changed.GetInvocationList().Cast<Func<Task>>())
+        {
+            await handler();
         }
     }
 
