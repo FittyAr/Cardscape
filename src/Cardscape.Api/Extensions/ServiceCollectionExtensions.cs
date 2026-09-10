@@ -2,13 +2,10 @@ using System.Text;
 using Cardscape.Api.Authentication;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -221,113 +218,8 @@ public static partial class ServiceCollectionExtensions
             ApiTokenAuthenticationHandler.SchemeName,
             _ => { });
 
-        // ── OAuth 2.0 / OIDC external login (P4.1) ──────────
-        // Google and Microsoft are wired in full. Apple
-        // requires generating a JWT client_secret per Apple's
-        // spec (see IAppleClientSecretGenerator + AppleClientSecretGenerator).
-        string? googleClientId = configuration["Authentication:Google:ClientId"];
-        string? googleClientSecret = configuration["Authentication:Google:ClientSecret"];
-        if (!string.IsNullOrWhiteSpace(googleClientId)
-            && !string.IsNullOrWhiteSpace(googleClientSecret))
-        {
-            authBuilder.AddGoogle(options =>
-            {
-                options.SignInScheme = ExternalCookieScheme;
-                options.ClientId = googleClientId;
-                options.ClientSecret = googleClientSecret;
-                options.Scope.Add("email");
-                options.Scope.Add("profile");
-            });
-        }
-
-        string? microsoftClientId = configuration["Authentication:Microsoft:ClientId"];
-        string? microsoftClientSecret = configuration["Authentication:Microsoft:ClientSecret"];
-        if (!string.IsNullOrWhiteSpace(microsoftClientId)
-            && !string.IsNullOrWhiteSpace(microsoftClientSecret))
-        {
-            authBuilder.AddMicrosoftAccount(options =>
-            {
-                options.SignInScheme = ExternalCookieScheme;
-                options.ClientId = microsoftClientId;
-                options.ClientSecret = microsoftClientSecret;
-                options.Scope.Add("email");
-                options.Scope.Add("profile");
-            });
-        }
-
-        // Apple "Sign in with Apple" uses the OIDC handler with
-        // a JWT client_secret that's regenerated per token
-        // request (Apple's spec, see IAppleClientSecretGenerator).
-        // The handler is only registered when the full
-        // Apple block is configured (TeamId + ClientId + KeyId
-        // + PrivateKeyPem); otherwise the IsImplemented
-        // check on ExternalProvider.Apple keeps the
-        // /api/auth/external/apple/start endpoint out of
-        // the menu.
-        string? appleClientId = configuration["Authentication:Apple:ClientId"];
-        string? appleTeamId = configuration["Authentication:Apple:TeamId"];
-        string? appleKeyId = configuration["Authentication:Apple:KeyId"];
-        string? applePrivateKeyPem = configuration["Authentication:Apple:PrivateKeyPem"];
-        if (!string.IsNullOrWhiteSpace(appleClientId)
-            && !string.IsNullOrWhiteSpace(appleTeamId)
-            && !string.IsNullOrWhiteSpace(appleKeyId)
-            && !string.IsNullOrWhiteSpace(applePrivateKeyPem))
-        {
-            services.AddSingleton<IAppleClientSecretGenerator, AppleClientSecretGenerator>();
-            authBuilder.AddOpenIdConnect(ExternalProvider.Apple.WireName(), options =>
-            {
-                options.SignInScheme = ExternalCookieScheme;
-                options.Authority = "https://appleid.apple.com";
-                options.ClientId = appleClientId;
-                // The client_secret is generated per request
-                // by the AppleClientSecretGenerator, but the
-                // OIDC handler insists on a static value at
-                // registration time. We register a sentinel
-                // here and replace it on every challenge via
-                // OnRedirectToIdentityProvider.
-                options.ClientSecret = "placeholder-replaced-on-redirect";
-                options.CallbackPath = "/signin-apple";
-                options.Scope.Add("openid");
-                options.Scope.Add("email");
-                options.Scope.Add("name");
-                options.ResponseType = "code";
-                options.UsePkce = true;
-                options.SaveTokens = true;
-
-                options.Events.OnRedirectToIdentityProvider = ctx =>
-                {
-                    var generator = ctx.HttpContext.RequestServices
-                        .GetRequiredService<IAppleClientSecretGenerator>();
-                    ctx.ProtocolMessage.ClientSecret = generator.GenerateClientSecret(
-                        TimeSpan.FromDays(180));
-                    return Task.CompletedTask;
-                };
-            });
-        }
-
-        // ── SCIM v2 bearer auth (P4.4) ──────────────────────
-        // Distinct scheme from JWT / API token / OAuth so the
-        // ForwardDefaultSelector above doesn't intercept SCIM
-        // requests — SCIM tokens are random 256-bit secrets
-        // (no dots) that would otherwise land on the API
-        // token scheme, where they wouldn't verify.
-        authBuilder.AddScheme<ScimAuthenticationOptions, ScimAuthenticationHandler>(
-            ScimAuthenticationHandler.SchemeName,
-            _ => { });
-
-        // ── SAML 2.0 SSO (P4.2) ───────────────────────────────
-        // The custom handler intercepts the
-        // /saml/{workspaceSlug}/{login,login-init,acs,metadata}
-        // routes via IAuthenticationRequestHandler. The
-        // Sustainsys.Saml2.AspNetCore2 package is referenced
-        // for the type surface (Saml2Options + WebSso
-        // SignInCommand / AcsCommand / MetadataCommand); the
-        // stock Sustainsys.Saml2Handler is intentionally not
-        // registered because the per-workspace IdP and ACS
-        // URL make a single static scheme insufficient.
-        authBuilder.AddScheme<Sustainsys.Saml2.AspNetCore2.Saml2Options, SamlAuthenticationHandler>(
-            SamlAuthenticationHandler.SchemeName,
-            _ => { });
+        AddExternalAuthenticationProviders(services, authBuilder, configuration);
+        AddFederationSchemes(authBuilder);
 
         AddApiAuthorization(services, configuration);
         return services;
