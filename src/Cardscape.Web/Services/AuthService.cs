@@ -119,45 +119,48 @@ public sealed class AuthService(
     private async Task<ApiResult<UserSummaryDto>> ParseAuthAsync(
         HttpResponseMessage response, CancellationToken ct)
     {
-        if (!response.IsSuccessStatusCode)
+        using (response)
         {
-            string? error = await ExtractErrorAsync(response, ct);
-            return ApiResult<UserSummaryDto>.Fail(error ?? $"HTTP {(int)response.StatusCode}");
-        }
-
-        AuthResponseDto? payload = await response.Content.ReadFromJsonAsync<AuthResponseDto>(cancellationToken: ct);
-        if (payload is null)
-        {
-            return ApiResult<UserSummaryDto>.Fail("Empty response from server.");
-        }
-
-        // 2FA challenge: password check passed, but the JWT is
-        // gated on a TOTP code. Hand the partial info back to
-        // the page so it can render the code input; do NOT
-        // touch the TokenStore (we have no token to store).
-        if (payload.RequiresTotp)
-        {
-            if (string.IsNullOrWhiteSpace(payload.PendingTotpToken))
+            if (!response.IsSuccessStatusCode)
             {
-                return ApiResult<UserSummaryDto>.Fail(
-                    "Server asked for a 2FA code but did not return a challenge token.");
+                string? error = await ExtractErrorAsync(response, ct);
+                return ApiResult<UserSummaryDto>.Fail(error ?? $"HTTP {(int)response.StatusCode}");
             }
 
-            return ApiResult<UserSummaryDto>.NeedsTotp(new LoginChallenge(
-                RequiresTotp: true,
-                PendingTotpToken: payload.PendingTotpToken,
-                User: payload.User));
-        }
+            AuthResponseDto? payload = await response.Content.ReadFromJsonAsync<AuthResponseDto>(cancellationToken: ct);
+            if (payload is null)
+            {
+                return ApiResult<UserSummaryDto>.Fail("Empty response from server.");
+            }
 
-        if (string.IsNullOrWhiteSpace(payload.AccessToken))
-        {
-            return ApiResult<UserSummaryDto>.Fail(
-                "Server returned an empty access token.");
-        }
+            // 2FA challenge: password check passed, but the JWT is
+            // gated on a TOTP code. Hand the partial info back to
+            // the page so it can render the code input; do NOT
+            // touch the TokenStore (we have no token to store).
+            if (payload.RequiresTotp)
+            {
+                if (string.IsNullOrWhiteSpace(payload.PendingTotpToken))
+                {
+                    return ApiResult<UserSummaryDto>.Fail(
+                        "Server asked for a 2FA code but did not return a challenge token.");
+                }
 
-        await tokens.SetAsync(payload.AccessToken, payload.User);
-        stateProvider.Notify();
-        return ApiResult<UserSummaryDto>.Ok(payload.User);
+                return ApiResult<UserSummaryDto>.NeedsTotp(new LoginChallenge(
+                    RequiresTotp: true,
+                    PendingTotpToken: payload.PendingTotpToken,
+                    User: payload.User));
+            }
+
+            if (string.IsNullOrWhiteSpace(payload.AccessToken))
+            {
+                return ApiResult<UserSummaryDto>.Fail(
+                    "Server returned an empty access token.");
+            }
+
+            await tokens.SetAsync(payload.AccessToken, payload.User);
+            stateProvider.Notify();
+            return ApiResult<UserSummaryDto>.Ok(payload.User);
+        }
     }
 
     /// <summary>Public so integration tests can pin the three error

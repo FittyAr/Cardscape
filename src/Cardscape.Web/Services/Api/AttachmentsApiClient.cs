@@ -34,7 +34,7 @@ public sealed class AttachmentsApiClient(IHttpClientFactory http)
     public async Task<ApiResult<IReadOnlyList<AttachmentDto>>> ListAsync(
         Guid cardId, CancellationToken ct = default)
     {
-        HttpResponseMessage response = await CreateClient().GetAsync(
+        using HttpResponseMessage response = await CreateClient().GetAsync(
             $"api/cards/{cardId}/attachments/", ct);
         return await ReadAsync<IReadOnlyList<AttachmentDto>>(response, ct);
     }
@@ -70,7 +70,7 @@ public sealed class AttachmentsApiClient(IHttpClientFactory http)
     public async Task<ApiResult<bool>> DeleteAsync(
         Guid cardId, Guid attachmentId, CancellationToken ct = default)
     {
-        HttpResponseMessage response = await CreateClient().DeleteAsync(
+        using HttpResponseMessage response = await CreateClient().DeleteAsync(
             $"api/cards/{cardId}/attachments/{attachmentId}", ct);
         if (response.IsSuccessStatusCode)
         {

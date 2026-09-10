@@ -215,14 +215,15 @@
         content.Add(fileContent, "file", form.File.Name);
         content.Add(new StringContent(Id.ToString()), "targetWorkspaceId");
         string action = previewOnly ? "preview" : "apply";
-        using HttpResponseMessage response = await Http.PostAsync($"api/imports/kanban/{action}", content);
+        using HttpResponseMessage response = await Http.PostAsync(
+            $"api/imports/kanban/{action}", content, CancellationToken.None);
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<ImportResultDto>()
                    ?? new ImportResultDto();
         }
 
-        string body = await response.Content.ReadAsStringAsync();
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
         throw new InvalidOperationException(
             $"{(int)response.StatusCode}: {body}");
     }

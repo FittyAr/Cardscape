@@ -308,9 +308,9 @@ public sealed class CultureSwitcher
 
         string url = $"api/internal/translate/{culture}";
         using HttpRequestMessage request = new(HttpMethod.Get, url);
-        using HttpResponseMessage response = await _http.SendAsync(request);
+        using HttpResponseMessage response = await _http.SendAsync(request, CancellationToken.None);
         response.EnsureSuccessStatusCode();
-        await using Stream stream = await response.Content.ReadAsStreamAsync();
+        await using Stream stream = await response.Content.ReadAsStreamAsync(CancellationToken.None);
         TranslationResponse? payload = await JsonSerializer.DeserializeAsync<TranslationResponse>(
             stream,
             TranslationJsonOptions);
