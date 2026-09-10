@@ -7,16 +7,16 @@
 
 <div class="topbar-search rz-display-flex rz-align-items-center" style="position: relative;">
     <RadzenTextBox @bind-Value="query"
-                   @oninput="@OnInputChanged"
+                   @oninput="@OnInputChangedAsync"
                    @onkeydown="@OnKeyDown"
                    @onfocus="@ShowResults"
-                   @onblur="@HideResults"
+                   @onblur="@HideResultsAsync"
                    Placeholder="@Placeholder"
                    aria-label="Search"
                    Style="width: 240px;" />
     @if (resultsVisible && results is not null && results.Count > 0)
     {
-        <RadzenCard Variant="Variant.Outlined"
+        <RadzenCard Variant="@Variant.Outlined"
                     class="rz-position-absolute"
                     Style="top: 38px; left: 0; right: 0; z-index: 1000; max-height: 360px; overflow-y: auto; min-width: 320px;">
             <RadzenStack Gap="0.25rem">
@@ -24,13 +24,13 @@
                 {
                     <a href="@hit.Url" @onclick="@(() => NavigateTo(hit))" @onclick:preventDefault="true"
                        style="text-decoration: none; color: inherit;">
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Class="rz-p-2">
-                            <RadzenBadge Text="@KindLabel(hit.Kind)" BadgeStyle="BadgeStyle.Info" />
+                        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem" Class="rz-p-2">
+                            <RadzenBadge Text="@KindLabel(hit.Kind)" BadgeStyle="@BadgeStyle.Info" />
                             <RadzenStack Gap="0">
-                                <RadzenText Text="@hit.Title" TextStyle="TextStyle.Body2" />
+                                <RadzenText Text="@hit.Title" TextStyle="@TextStyle.Body2" />
                                 @if (!string.IsNullOrWhiteSpace(hit.Snippet))
                                 {
-                                    <RadzenText Text="@hit.Snippet" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
+                                    <RadzenText Text="@hit.Snippet" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
                                 }
                             </RadzenStack>
                         </RadzenStack>
@@ -41,10 +41,10 @@
     }
     else if (resultsVisible && results is not null && results.Count == 0 && !string.IsNullOrWhiteSpace(query) && searched)
     {
-        <RadzenCard Variant="Variant.Outlined"
+        <RadzenCard Variant="@Variant.Outlined"
                     class="rz-position-absolute"
                     Style="top: 38px; left: 0; right: 0; z-index: 1000; min-width: 320px;">
-            <RadzenText Text="No matches." TextStyle="TextStyle.Body2" class="rz-color-text-secondary rz-p-2" />
+            <RadzenText Text="No matches." TextStyle="@TextStyle.Body2" class="rz-color-text-secondary rz-p-2" />
         </RadzenCard>
     }
 </div>
@@ -65,25 +65,30 @@
     private List<SearchHitDto>? results;
     private bool resultsVisible;
     private bool searched;
-    private System.Timers.Timer? debounceTimer;
+    private CancellationTokenSource? debounceCts;
+    private CancellationTokenSource? hideCts;
 
-    protected override void OnInitialized()
-    {
-        debounceTimer = new System.Timers.Timer(250) { AutoReset = false };
-        debounceTimer.Elapsed += async (_, _) => await InvokeAsync(RunSearchAsync);
-    }
-
-    private void OnInputChanged(ChangeEventArgs args)
+    private async Task OnInputChangedAsync(ChangeEventArgs args)
     {
         query = args.Value?.ToString() ?? string.Empty;
-        if (debounceTimer is not null)
+
+        debounceCts?.Cancel();
+        debounceCts?.Dispose();
+        debounceCts = new CancellationTokenSource();
+        CancellationToken ct = debounceCts.Token;
+
+        try
         {
-            debounceTimer.Stop();
-            debounceTimer.Start();
+            await Task.Delay(250, ct);
+            await RunSearchAsync(ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // A newer keystroke or component disposal superseded this search.
         }
     }
 
-    private async Task RunSearchAsync()
+    private async Task RunSearchAsync(CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
@@ -93,7 +98,7 @@
             return;
         }
 
-        ApiResult<SearchPageDto> result = await Search.SearchAsync(query, pageSize: 8);
+        ApiResult<SearchPageDto> result = await Search.SearchAsync(query, pageSize: 8, ct: ct);
         if (result.IsSuccess && result.Value is not null)
         {
             results = result.Value.Items.ToList();
@@ -117,16 +122,30 @@
 
     private void ShowResults()
     {
+        hideCts?.Cancel();
         if (!string.IsNullOrWhiteSpace(query) && results is not null)
         {
             resultsVisible = true;
         }
     }
 
-    private void HideResults()
+    private async Task HideResultsAsync()
     {
         // Small delay so a click on a result still fires.
-        System.Threading.Tasks.Task.Delay(200).ContinueWith(_ => InvokeAsync(() => resultsVisible = false));
+        hideCts?.Cancel();
+        hideCts?.Dispose();
+        hideCts = new CancellationTokenSource();
+        CancellationToken ct = hideCts.Token;
+
+        try
+        {
+            await Task.Delay(200, ct);
+            resultsVisible = false;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // Focus returned before the delayed close completed.
+        }
     }
 
     private void NavigateTo(SearchHitDto hit)
@@ -148,6 +167,9 @@
 
     public void Dispose()
     {
-        debounceTimer?.Dispose();
+        debounceCts?.Cancel();
+        debounceCts?.Dispose();
+        hideCts?.Cancel();
+        hideCts?.Dispose();
     }
 }
