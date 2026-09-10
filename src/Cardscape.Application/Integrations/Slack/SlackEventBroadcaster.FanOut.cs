@@ -15,7 +15,7 @@ public sealed partial class SlackEventBroadcaster
         string message,
         CancellationToken ct)
     {
-        using IServiceScope scope = _scopeFactory.CreateScope();
+        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
         ISlackChannelRepository channels = scope.ServiceProvider.GetRequiredService<ISlackChannelRepository>();
         ISlackWorkspaceRepository workspaces = scope.ServiceProvider.GetRequiredService<ISlackWorkspaceRepository>();
         ISlackNotificationService notifier = scope.ServiceProvider.GetRequiredService<ISlackNotificationService>();

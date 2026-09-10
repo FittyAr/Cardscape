@@ -70,7 +70,7 @@ public sealed class CardRecurrenceDispatcherService(
 
     private async Task TickAsync(CancellationToken ct)
     {
-        using IServiceScope scope = scopes.CreateScope();
+        await using AsyncServiceScope scope = scopes.CreateAsyncScope();
         var recurrences = scope.ServiceProvider.GetRequiredService<ICardRecurrenceRepository>();
         var scheduler = scope.ServiceProvider.GetRequiredService<IBackgroundJobScheduler>();
         var clock = scope.ServiceProvider.GetRequiredService<IClock>();

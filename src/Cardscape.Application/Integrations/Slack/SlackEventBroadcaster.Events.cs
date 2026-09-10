@@ -74,7 +74,7 @@ public sealed partial class SlackEventBroadcaster
         CardId cardId,
         CancellationToken ct)
     {
-        using IServiceScope scope = _scopeFactory.CreateScope();
+        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
         ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
         IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
         Card? card = await cards.GetByIdAsync(cardId, ct);

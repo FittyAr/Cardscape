@@ -150,7 +150,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
         AutomationBroadcastState.Value = true;
         try
         {
-            using IServiceScope scope = _scopeFactory.CreateScope();
+            await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
             ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
             IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
             IAutomationRuleRepository rules = scope.ServiceProvider.GetRequiredService<IAutomationRuleRepository>();

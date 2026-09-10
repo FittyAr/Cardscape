@@ -110,7 +110,7 @@ public sealed class RetentionSweeper(
         DateTimeOffset anonymiseCutoff = now.AddDays(-_userGracePeriodDays);
         DateTimeOffset activityCutoff = now.AddDays(-_activityRetentionDays);
 
-        using IServiceScope scope = services.CreateScope();
+        await using AsyncServiceScope scope = services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<Persistence.CardscapeDbContext>();
 
         // 1. Anonymise users that have been soft-deleted

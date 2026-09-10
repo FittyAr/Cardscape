@@ -47,7 +47,7 @@ public sealed class BackgroundJobDispatcherService(
                 // IBackgroundJobStore and IMessageBus are properly
                 // disposed and Entity Framework's per-request DbContext
                 // lifetime is honored.
-                using IServiceScope tickScope = _scopeFactory.CreateScope();
+                await using AsyncServiceScope tickScope = _scopeFactory.CreateAsyncScope();
                 IBackgroundJobStore store = tickScope.ServiceProvider
                     .GetRequiredService<IBackgroundJobStore>();
                 IMessageBus bus = tickScope.ServiceProvider

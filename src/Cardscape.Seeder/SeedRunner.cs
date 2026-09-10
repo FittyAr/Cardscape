@@ -68,7 +68,7 @@ public sealed class SeedRunner : IDisposable
 
         try
         {
-            using IServiceScope scope = _scopeFactory.CreateScope();
+            await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
             CardscapeDbContext db = scope.ServiceProvider.GetRequiredService<CardscapeDbContext>();
             SeederOptions options = _options.CurrentValue;
             DateTimeOffset now = options.FixedNow ?? startWallClock;
@@ -159,7 +159,7 @@ public sealed class SeedRunner : IDisposable
         report.MarkStarted(1);
         try
         {
-            using IServiceScope scope = _scopeFactory.CreateScope();
+            await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
             CardscapeDbContext db = scope.ServiceProvider.GetRequiredService<CardscapeDbContext>();
             await WipeAsync(db, report, cancellationToken);
             await PopulateTableSnapshotAsync(db, report, cancellationToken);

@@ -54,7 +54,7 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
     {
         Guid deliveryId = ReadGuid(payload, "deliveryId");
 
-        using IServiceScope scope = _scopes.CreateScope();
+        await using AsyncServiceScope scope = _scopes.CreateAsyncScope();
         var deliveries = scope.ServiceProvider.GetRequiredService<IWebhookDeliveryRepository>();
         var endpoints = scope.ServiceProvider.GetRequiredService<IWebhookEndpointRepository>();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();

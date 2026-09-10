@@ -34,7 +34,7 @@ public sealed partial class BoardEventBroadcaster
 
     private async Task HandleListCreatedAsync(ListCreated @event, CancellationToken ct)
     {
-        using IServiceScope scope = _scopeFactory.CreateScope();
+        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
         IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
         await notifier.BroadcastAsync(
             @event.BoardId.Value,
@@ -53,7 +53,7 @@ public sealed partial class BoardEventBroadcaster
         Func<IBoardClient, Func<ListEventPayload, Task>> select,
         CancellationToken ct)
     {
-        using IServiceScope scope = _scopeFactory.CreateScope();
+        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
         IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
         IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
         BoardList? list = await lists.GetByIdAsync(listId, ct);

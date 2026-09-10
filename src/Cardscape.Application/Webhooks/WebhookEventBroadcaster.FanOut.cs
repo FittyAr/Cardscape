@@ -17,7 +17,7 @@ public sealed partial class WebhookEventBroadcaster
         object data,
         CancellationToken ct)
     {
-        using IServiceScope scope = _scopeFactory.CreateScope();
+        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
         IWebhookEndpointRepository endpoints = scope.ServiceProvider.GetRequiredService<IWebhookEndpointRepository>();
         IWebhookDeliveryRepository deliveries = scope.ServiceProvider.GetRequiredService<IWebhookDeliveryRepository>();
         IBackgroundJobScheduler scheduler = scope.ServiceProvider.GetRequiredService<IBackgroundJobScheduler>();

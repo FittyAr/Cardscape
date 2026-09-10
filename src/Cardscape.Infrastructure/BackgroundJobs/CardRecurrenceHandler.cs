@@ -50,7 +50,7 @@ public sealed class CloneCardHandler(
             return;
         }
 
-        using IServiceScope scope = scopes.CreateScope();
+        await using AsyncServiceScope scope = scopes.CreateAsyncScope();
         var cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
         var lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
         var recurrences = scope.ServiceProvider.GetRequiredService<ICardRecurrenceRepository>();

@@ -96,7 +96,7 @@ public sealed class RevocationSweeper(
 
     private async Task<int> PurgeOnceAsync(CancellationToken ct)
     {
-        using IServiceScope scope = scopeFactory.CreateScope();
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
         IRevokedTokenRepository repository =
             scope.ServiceProvider.GetRequiredService<IRevokedTokenRepository>();
         return await repository.PurgeExpiredAsync(clock.UtcNow, ct);

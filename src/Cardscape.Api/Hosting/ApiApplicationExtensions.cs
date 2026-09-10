@@ -50,7 +50,7 @@ namespace Cardscape.Api.Hosting;
 
 internal static class ApiApplicationExtensions
 {
-    public static WebApplication ConfigureCardscapePipeline(this WebApplication app)
+    public static async Task<WebApplication> ConfigureCardscapePipelineAsync(this WebApplication app)
     {
         // ── Middleware pipeline ─────────────────────────────────
         app.UseMiddleware<GlobalExceptionMiddleware>();
@@ -107,7 +107,7 @@ internal static class ApiApplicationExtensions
             app.Environment.IsDevelopment());
         if (runMigrations)
         {
-            app.ApplyMigrations();
+            await app.ApplyMigrationsAsync();
         }
 
         app.UseHttpsRedirection();
@@ -159,14 +159,12 @@ internal static class ApiApplicationExtensions
         return app;
     }
 
-    private static WebApplication ApplyMigrations(this WebApplication app)
+    private static async Task ApplyMigrationsAsync(this WebApplication app)
     {
-        using var scope = app.Services.CreateScope();
+        await using AsyncServiceScope scope = app.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<CardscapeDbContext>();
-        db.Database.Migrate();
-        return app;
+        await db.Database.MigrateAsync();
     }
 }
-
 
 

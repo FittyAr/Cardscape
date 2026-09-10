@@ -12,7 +12,7 @@ public sealed partial class BoardEventBroadcaster
 {
     private async Task HandleCommentAddedAsync(CommentAdded @event, CancellationToken ct)
     {
-        using IServiceScope scope = _scopeFactory.CreateScope();
+        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
         ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
         IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
         IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
@@ -42,7 +42,7 @@ public sealed partial class BoardEventBroadcaster
 
     private async Task HandleLabelCreatedAsync(LabelCreated @event, CancellationToken ct)
     {
-        using IServiceScope scope = _scopeFactory.CreateScope();
+        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
         IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
         await notifier.BroadcastAsync(
             @event.BoardId.Value,

@@ -57,7 +57,7 @@ public sealed class JwtRevocationValidator(
 
         try
         {
-            using IServiceScope scope = scopeFactory.CreateScope();
+            await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
             IRevokedTokenRepository repository =
                 scope.ServiceProvider.GetRequiredService<IRevokedTokenRepository>();
             bool isRevoked = await repository.IsRevokedAsync(jti, context.HttpContext.RequestAborted);

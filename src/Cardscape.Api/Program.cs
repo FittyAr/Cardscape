@@ -4,8 +4,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddCardscapeApiHost();
 
 var app = builder.Build();
-app.ConfigureCardscapePipeline();
-app.Run();
+await app.ConfigureCardscapePipelineAsync();
+await app.RunAsync();
 
 namespace Cardscape.Api
 {

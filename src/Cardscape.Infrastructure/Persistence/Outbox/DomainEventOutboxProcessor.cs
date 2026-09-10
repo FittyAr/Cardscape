@@ -20,7 +20,7 @@ internal sealed class DomainEventOutboxProcessor(
     {
         DateTimeOffset now = clock.UtcNow;
         long nowTicks = now.UtcTicks;
-        using IServiceScope scope = scopeFactory.CreateScope();
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
         CardscapeDbContext db = scope.ServiceProvider.GetRequiredService<CardscapeDbContext>();
         Guid[] candidates = await db.Set<DomainEventOutboxMessage>()
             .AsNoTracking()
@@ -51,7 +51,7 @@ internal sealed class DomainEventOutboxProcessor(
         DateTimeOffset now = clock.UtcNow;
         long nowTicks = now.UtcTicks;
         Guid lockId = Guid.NewGuid();
-        using (IServiceScope claimScope = scopeFactory.CreateScope())
+        await using (AsyncServiceScope claimScope = scopeFactory.CreateAsyncScope())
         {
             CardscapeDbContext claimDb = claimScope.ServiceProvider.GetRequiredService<CardscapeDbContext>();
             int claimed = await claimDb.Set<DomainEventOutboxMessage>()
@@ -68,7 +68,7 @@ internal sealed class DomainEventOutboxProcessor(
             }
         }
 
-        using IServiceScope deliveryScope = scopeFactory.CreateScope();
+        await using AsyncServiceScope deliveryScope = scopeFactory.CreateAsyncScope();
         CardscapeDbContext db = deliveryScope.ServiceProvider.GetRequiredService<CardscapeDbContext>();
         DomainEventOutboxMessage message = await db.Set<DomainEventOutboxMessage>()
             .SingleAsync(x => x.Id == id && x.LockId == lockId, cancellationToken);
