@@ -9,14 +9,13 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Cardscape.Api.Extensions;
 
-public static class ServiceCollectionExtensions
+public static partial class ServiceCollectionExtensions
 {
     /// <summary>
     /// Name of the policy scheme that fronts the real JWT and API
@@ -57,13 +56,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddHttpClient(SamlAuthenticationHandler.MetadataHttpClientName, client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(10);
-        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-            AllowAutoRedirect = false
-        });
+        AddSamlMetadataClient(services);
 
         // The signing key is non-negotiable. A hard-coded fallback
         // (the previous behaviour) is a critical security risk: if
@@ -72,36 +65,7 @@ public static class ServiceCollectionExtensions
         // forge. Refuse to start instead. Development still gets a
         // stable default so the smoke tests have a known secret;
         // the host environment check is what differentiates the two.
-        string? signingKey = configuration["Jwt:SigningKey"];
-        string hostEnv = configuration["ASPNETCORE_ENVIRONMENT"]
-            ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-            ?? "Production";
-        bool jwtEnvIsDevelopment = string.Equals(
-            hostEnv, "Development", StringComparison.OrdinalIgnoreCase);
-
-        if (string.IsNullOrWhiteSpace(signingKey))
-        {
-            if (jwtEnvIsDevelopment)
-            {
-                signingKey = "dev-only-insecure-signing-key-please-override-in-production-32+chars";
-            }
-            else
-            {
-                throw new InvalidOperationException(
-                    "Jwt:SigningKey is required outside the Development environment. "
-                    + "Configure it via appsettings, environment variables, or a "
-                    + "secret store before starting the API.");
-            }
-        }
-        else if (Encoding.UTF8.GetByteCount(signingKey) < 32)
-        {
-            // RFC 7518 §3.2 requires keys for HS256 to be at least
-            // 256 bits. A shorter key weakens the signature; refuse
-            // to start so a misconfiguration is loud, not silent.
-            throw new InvalidOperationException(
-                "Jwt:SigningKey must be at least 32 bytes (256 bits) for HS256. "
-                + $"Current length: {Encoding.UTF8.GetByteCount(signingKey)} bytes.");
-        }
+        string signingKey = ResolveJwtSigningKey(configuration);
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
@@ -121,32 +85,7 @@ public static class ServiceCollectionExtensions
         // Development, we refuse to start with the dev-only
         // localhost defaults so a missing operator override
         // is loud, not silent.
-        string[]? configuredOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
-        bool isDevelopment = string.Equals(
-            configuration["ASPNETCORE_ENVIRONMENT"]
-                ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-                ?? "Production",
-            "Development",
-            StringComparison.OrdinalIgnoreCase);
-
-        string[] allowedOrigins = configuredOrigins
-            ?? (isDevelopment
-                ? new[] { "http://localhost:5206", "https://localhost:7188" }
-                : throw new InvalidOperationException(
-                    "Cors:AllowedOrigins is required outside the Development environment. " +
-                    "Configure the list of origins allowed to call this API with credentials."));
-
-        if (allowedOrigins.Length == 0)
-        {
-            throw new InvalidOperationException(
-                "Cors:AllowedOrigins is empty. List at least one origin or remove the section entirely.");
-        }
-
-        services.AddCors(options => options.AddDefaultPolicy(policy =>
-            policy.WithOrigins(allowedOrigins)
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials()));
+        AddApiCors(services, configuration);
 
         // Default scheme is a policy that picks the inner scheme
         // per request. The selector below dispatches to JWT or
@@ -390,56 +329,7 @@ public static class ServiceCollectionExtensions
             SamlAuthenticationHandler.SchemeName,
             _ => { });
 
-        services.AddAuthorization(options =>
-        {
-            // AdminOnly policy: a request passes when the
-            // authenticated principal carries the
-            // <c>is_admin</c> claim embedded in the JWT
-            // at mint time (no DB lookup) — unless the
-            // operator has flipped
-            // Cardscape:Api:AdminAuthorization:CacheAdminClaim
-            // to false, in which case the handler always
-            // reads users.IsAdmin from the database. Cached
-            // mode fails closed when the claim is absent;
-            // there is no compatibility lookup. Used
-            // by the /api/admin/* endpoints (GDPR DSR,
-            // SOC 2 control evidence export, etc.).
-            options.AddPolicy(
-                AdminOnlyPolicy.Name,
-                policy => policy
-                    .RequireAuthenticatedUser()
-                    .AddRequirements(new AdminOnlyRequirement()));
-
-            // McpSubscriptionsAdmin: dedicated policy name
-            // for the /api/admin/mcp-subscriptions endpoint
-            // (subscription snapshot the Web UI's admin
-            // page reads). Reuses the AdminOnlyRequirement
-            // + cached-claim path; the distinct name is the
-            // seam the operator uses to attach dedicated
-            // telemetry, rate limits, or audit hooks in
-            // future v1.3.0 work without affecting the
-            // rest of the admin surface.
-            options.AddPolicy(
-                McpSubscriptionsAdminPolicy.Name,
-                policy => policy
-                    .RequireAuthenticatedUser()
-                    .AddRequirements(new AdminOnlyRequirement()));
-        });
-        services.Configure<AdminAuthorizationOptions>(
-            configuration.GetSection(AdminAuthorizationOptions.SectionName));
-        services.AddScoped<IAuthorizationHandler, AdminOnlyAuthorizationHandler>();
+        AddApiAuthorization(services, configuration);
         return services;
     }
-}
-
-/// <summary>
-/// Name of the AdminOnly authorisation policy. Use
-/// <c>[Authorize(Policy = AdminOnlyPolicy.Name)]</c> on a
-/// minimal-API group or controller to gate the surface
-/// behind an <c>IsAdmin = true</c> user. The corresponding
-/// handler is <see cref="AdminOnlyAuthorizationHandler"/>.
-/// </summary>
-public static class AdminOnlyPolicy
-{
-    public const string Name = "AdminOnly";
 }
