@@ -588,3 +588,14 @@
 - [x] Recompile the unit tests against the new owner; do not rely on a stale test assembly.
 - [x] Run metadata HTTP security and the complete SAML endpoint slice.
 - [x] Review assertions and pseudo-mutations; no new test case is required for the source-only ownership change.
+
+# Kanban archive bounded reader (2026-09-10)
+
+- [x] `ReadAsync_WhenArchiveIsValid_ReturnsParsedBoard` proves the happy-path shape.
+- [x] `ReadAsync_WhenJsonIsInvalid_ReturnsStableValidationError` fixes the safe error contract.
+- [x] `ReadAsync_WhenArchiveIsEmpty_ReturnsStableValidationError` fixes empty-array handling.
+- [x] `ReadAsync_WhenSeekablePayloadExceedsLimit_RejectsWithoutReading` fixes early length rejection.
+- [x] `ReadAsync_WhenPayloadIsExactlyLimit_ReturnsArchive` fixes the inclusive 10 MiB boundary.
+- [x] `ReadAsync_WhenNonSeekablePayloadExceedsLimit_StopsAtBoundary` proves the memory bound is enforced during streaming.
+- [x] Build and run the narrow class, then run import fidelity integration coverage.
+- [x] Review assertion depth and pseudo-mutations.

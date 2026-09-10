@@ -678,3 +678,11 @@
 - [x] SAML errors now use RFC 7807 Problem Details with a stable `code` extension instead of hand-built JSON.
 - [x] Focused validation: bounded reader 3/3, HTTP client security 1/1 and functional SAML endpoints 8/8; 0 failed and 0 skipped.
 - [x] Assertion review: exact XML round-trip, both independent size-limit paths, redirect hardening and all route outcomes remain covered.
+
+# Kanban archive bounded reader (2026-09-10)
+
+- [x] Parsing, buffering and loose transport DTOs moved out of `KanbanImportService` into `KanbanArchiveReader`; authorization, aggregate construction and repository/unit-of-work persistence remain in the service.
+- [x] Non-seekable input is rejected during streaming instead of after an unbounded `CopyToAsync`; malformed JSON no longer reflects parser internals to clients.
+- [x] Focused validation: reader 6/6 and import fidelity 2/2; 0 failed and 0 skipped.
+- [x] Assertion review: happy path verifies nested mapping; failures verify stable codes; seekable fast-path verifies zero bytes consumed; non-seekable boundary verifies early termination; exact-limit success kills `>` to `>=` mutations.
+- [x] Pseudo-mutation review: removing either size check, deserializing the drained source, changing boundary comparison, dropping empty handling or conflating validation codes breaks at least one concrete assertion.

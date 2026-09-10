@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Import;
 using Cardscape.Application.Abstractions.Persistence;
@@ -71,65 +70,13 @@ public sealed class KanbanImportService(
             return Result.Failure<ImportResult>(NotMember);
         }
 
-        // Hard cap on the JSON payload so a direct service
-        // call (e.g. from the MCP, or a future internal
-        // pipeline) cannot bypass the endpoint-level cap on
-        // ImportEndpoints.MaxUploadBytes. A real Kanban
-        // boards.json is well under 1 MB; 10 MB is generous
-        // and keeps a single request from becoming a DoS
-        // amplifier. We read once into a MemoryStream to
-        // measure length, then feed System.Text.Json the
-        // buffered bytes so a caller that supplies a
-        // non-seekable stream still gets a deterministic
-        // cap.
-        const int MaxBytes = 10 * 1024 * 1024;
-        if (json.CanSeek && json.Length - json.Position > MaxBytes)
+        Result<KanbanBoard[]> archive = await KanbanArchiveReader.ReadAsync(json, ct);
+        if (archive.IsFailure)
         {
-            return Result.Failure<ImportResult>(DomainError.Validation(
-                "imports.payload_too_large",
-                $"Kanban boards.json exceeds the {MaxBytes}-byte cap."));
+            return Result.Failure<ImportResult>(archive.Error);
         }
 
-        await using var buffer = new MemoryStream();
-        await json.CopyToAsync(buffer, ct);
-        if (buffer.Length > MaxBytes)
-        {
-            return Result.Failure<ImportResult>(DomainError.Validation(
-                "imports.payload_too_large",
-                $"Kanban boards.json exceeds the {MaxBytes}-byte cap."));
-        }
-        buffer.Position = 0;
-
-        // BETA-A3-R2-008 — see test-results/beta/round-2/reports/A3-boards.md.
-        // The previous code buffered the inbound stream into
-        // `buffer` and then deserialised from the ORIGINAL
-        // `json` stream. `CopyToAsync` had already drained the
-        // source, so the deserialiser saw an empty body and
-        // every import returned 400
-        // `imports.invalid_json` ("The input does not contain
-        // any JSON tokens"). Deserialise from `buffer`
-        // instead — the comment above the buffer creation
-        // already explains the buffering is for the
-        // non-seekable-stream cap; this is the matching fix.
-        KanbanBoard[]? kanbanBoards;
-        try
-        {
-            kanbanBoards = await JsonSerializer.DeserializeAsync<KanbanBoard[]>(
-                buffer, JsonOptions, ct);
-        }
-        catch (JsonException ex)
-        {
-            return Result.Failure<ImportResult>(DomainError.Validation(
-                "imports.invalid_json",
-                $"Kanban export is not valid JSON: {ex.Message}"));
-        }
-
-        if (kanbanBoards is null || kanbanBoards.Length == 0)
-        {
-            return Result.Failure<ImportResult>(DomainError.Validation(
-                "imports.empty_archive",
-                "Kanban export contains no boards."));
-        }
+        KanbanBoard[] kanbanBoards = archive.Value;
 
         var importedBoardIds = new List<Guid>();
         var importedListIds = new List<Guid>();
@@ -423,54 +370,4 @@ public sealed class KanbanImportService(
         };
     }
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNameCaseInsensitive = true,
-        ReadCommentHandling = JsonCommentHandling.Skip,
-        AllowTrailingCommas = true
-    };
-
-    // ── Kanban JSON shape (loose, only the fields we need) ────
-
-    private sealed class KanbanBoard
-    {
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public KanbanLabel[]? Labels { get; set; }
-        public KanbanList[]? Lists { get; set; }
-        public KanbanCard[]? Cards { get; set; }
-        public KanbanMember[]? Members { get; set; }
-    }
-
-    private sealed class KanbanLabel
-    {
-        public string Id { get; set; } = string.Empty;
-        public string? Name { get; set; }
-        public string? Color { get; set; }
-    }
-
-    private sealed class KanbanList
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-    }
-
-    private sealed class KanbanCard
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public string ListId { get; set; } = string.Empty;
-        public string? DueDate { get; set; }
-        public string[]? LabelIds { get; set; }
-        public string[]? MemberIds { get; set; }
-    }
-
-    private sealed class KanbanMember
-    {
-        public string Id { get; set; } = string.Empty;
-        public string? FullName { get; set; }
-        public string? Username { get; set; }
-        public string? Email { get; set; }
-    }
 }

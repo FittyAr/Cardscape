@@ -830,3 +830,10 @@
 - Finding: the authentication handler mixed protocol routing with SSRF validation, HTTP download and bounded stream reading; it also retained an unused 404 helper and manually escaped an obsolete JSON error envelope.
 - Decision: move metadata transport concerns to an internal `SamlMetadataReader`, keep the named-client identifier public on the handler for composition/tests, and emit RFC 7807 Problem Details with a stable `code` extension.
 - Test impact: the existing three reader tests change owner only. Their assertions still kill removal of declared-length and streaming limits; SAML integration covers named-client redirect policy and all handler routes.
+
+# Kanban archive bounded reader (2026-09-10)
+
+- Target inventory: `KanbanArchiveReader` owns transport-independent buffering, JSON parsing and the loose import DTO shape; `KanbanImportService` retains authorization, aggregate construction and EF-backed persistence.
+- Existing conventions: xUnit v3, FluentAssertions, `TestContext.Current.CancellationToken`, internal production access from UnitTests.
+- Acceptance checklist: accept a valid archive; classify invalid and empty JSON with stable codes; reject an oversized seekable stream before reading; stop an oversized non-seekable stream near the configured boundary instead of copying its entire payload.
+- Risk: the previous `CopyToAsync` checked length only after EOF, so the advertised 10 MiB limit did not bound memory consumption for non-seekable input.
