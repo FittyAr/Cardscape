@@ -22,7 +22,7 @@ public static class BoardEndpoints
         group.MapGet("/starred", async (IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(new ListStarredBoardsQuery(), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapGet("/", async (Guid workspaceId, [FromQuery] bool? includeArchived, IMessageBus bus, CancellationToken ct) =>
@@ -34,13 +34,13 @@ public static class BoardEndpoints
             // landing).
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(
                 new ListBoardsForWorkspaceQuery(workspaceId, includeArchived ?? false), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapGet("/{boardId:guid}", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new GetBoardQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         // BETA-A3-R2-001 — see
@@ -57,7 +57,7 @@ public static class BoardEndpoints
         group.MapDelete("/{boardId:guid}", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new DeleteBoardCommand(boardId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/", async (CreateBoardRequestBody body, IMessageBus bus, CancellationToken ct) =>
@@ -66,49 +66,49 @@ public static class BoardEndpoints
                 body.WorkspaceId, body.Name, body.Description, body.Visibility), ct);
             return result.IsSuccess
                 ? Results.Created($"/api/boards/{result.Value.Id}", result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{boardId:guid}/rename", async (Guid boardId, RenameRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new RenameBoardCommand(boardId, body.Name), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{boardId:guid}/description", async (Guid boardId, DescriptionRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardDescriptionCommand(boardId, body.Description), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{boardId:guid}/visibility", async (Guid boardId, VisibilityRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardVisibilityCommand(boardId, body.Visibility), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{boardId:guid}/archive", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new ArchiveBoardCommand(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{boardId:guid}/unarchive", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new UnarchiveBoardCommand(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{boardId:guid}/star", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new StarBoardCommand(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/{boardId:guid}/star", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new UnstarBoardCommand(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         // BETA-5-#12 — see test-results/BETA-TEST-REPORT.md.
@@ -127,7 +127,7 @@ public static class BoardEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new AddBoardMemberCommand(boardId, body.UserId, body.Role), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         // BETA-8-API-#1 - see test-results/r8/r8-report.md.
@@ -146,7 +146,7 @@ public static class BoardEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardMemberDto>>>(
                 new ListBoardMembersQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         // Export the board as a ZIP archive (board.json + attachments).
@@ -158,7 +158,7 @@ public static class BoardEndpoints
             var result = await exportService.ExportBoardAsync(boardId, ct);
             if (result.IsFailure)
             {
-                return MapError(result.Error);
+                return DomainErrorResults.ToProblem(result.Error);
             }
 
             string fileName = $"board-{boardId}.zip";
@@ -195,7 +195,7 @@ public static class BoardEndpoints
             var result = await calendar.RenderBoardAsync(boardId, ct);
             if (result.IsFailure)
             {
-                return MapError(result.Error);
+                return DomainErrorResults.ToProblem(result.Error);
             }
 
             return Results.File(result.Value, "text/calendar", $"board-{boardId}.ics");
@@ -209,12 +209,4 @@ public static class BoardEndpoints
     public sealed record VisibilityRequest(BoardVisibility Visibility);
     public sealed record AddBoardMemberBody(Guid UserId, BoardMemberRole Role);
 
-    private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
-    {
-        Cardscape.Domain.Common.ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        Cardscape.Domain.Common.ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        Cardscape.Domain.Common.ErrorType.Forbidden => Results.Forbid(),
-        Cardscape.Domain.Common.ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

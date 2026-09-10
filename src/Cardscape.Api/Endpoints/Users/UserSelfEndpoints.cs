@@ -43,18 +43,10 @@ public static class UserSelfEndpoints
                 new SoftDeleteUserCommand(currentUser.Id.Value), ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         }).RequireAuthorization();
 
         return app;
     }
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

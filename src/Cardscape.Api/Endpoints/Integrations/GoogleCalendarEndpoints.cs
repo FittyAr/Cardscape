@@ -23,7 +23,7 @@ public static class GoogleCalendarEndpoints
                 new GetGoogleCalendarConnectionQuery(), ct);
             if (!result.IsSuccess)
             {
-                return MapError(result.Error);
+                return DomainErrorResults.ToProblem(result.Error);
             }
 
             // BETA-2-UI-#6 — see test-results/ui/beta-test-r2-ui.md.
@@ -61,19 +61,10 @@ public static class GoogleCalendarEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new RevokeGoogleCalendarConnectionCommand(), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
     }
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        ErrorType.External => Results.Json(new { error.Code, error.Message }, statusCode: StatusCodes.Status502BadGateway),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

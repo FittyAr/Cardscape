@@ -654,3 +654,10 @@
 - [x] Focused validation: 6/6 passed, 0 failed, 0 skipped.
 - [x] Assertion review: every row asserts the exact boolean classification; no assertion-free, trivial or self-referential tests.
 - [x] Pseudo-mutation review: changing SQLite extended code, PostgreSQL SQLSTATE, accepting FK/general errors or restoring message heuristics breaks a concrete case.
+# Canonical DomainError Problem Details (2026-09-10)
+
+- [x] Research and requirement-to-test mapping complete.
+- [x] Six theory rows implemented against the public wire semantics of the central mapper.
+- [x] Focused validation: six theory rows passed, 0 failed and 0 skipped.
+- [x] Assertion-quality review: each row asserts concrete RFC 7807 type, transport/body status parity, canonical title, exact detail and stable code; no assertion-free, trivial or self-referential case.
+- [x] Pseudo-mutation review: changing any status/title, dropping the detail/code extension, collapsing a mapping or returning a non-Problem result breaks at least one exact assertion. SCIM remains an explicit protocol boundary.

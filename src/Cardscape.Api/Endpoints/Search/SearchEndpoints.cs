@@ -52,16 +52,10 @@ public static class SearchEndpoints
                     Page: page ?? 1,
                     PageSize: pageSize ?? 20),
                 ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
     }
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

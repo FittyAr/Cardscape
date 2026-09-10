@@ -29,7 +29,7 @@ public static class CardEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
                 new ListCardsForBoardQuery(boardId, includeArchived, includeSnoozed), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         // Calendar / planner view: cards with a due date in the
@@ -44,7 +44,7 @@ public static class CardEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CalendarEntryDto>>>(
                 new ListCardsDueInRangeQuery(from, to, boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         // Snoozed-cards list for a single board. The Web UI uses
@@ -55,49 +55,49 @@ public static class CardEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<Guid>>>(
                 new ListSnoozedCardIdsQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapGet("/{cardId:guid}", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new GetCardQuery(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/", async (CreateCardBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new CreateCardCommand(body.ListId, body.Title, body.Description), ct);
-            return result.IsSuccess ? Results.Created($"/api/cards/{result.Value.Id}", result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Created($"/api/cards/{result.Value.Id}", result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{cardId:guid}/rename", async (Guid cardId, RenameBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new RenameCardCommand(cardId, body.Title), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{cardId:guid}/description", async (Guid cardId, DescriptionBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new ChangeCardDescriptionCommand(cardId, body.Description), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{cardId:guid}/move", async (Guid cardId, MoveBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new MoveCardCommand(cardId, body.ListId, body.Position), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{cardId:guid}/due-date", async (Guid cardId, DueDateBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new SetCardDueDateCommand(cardId, body.DueDate), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/{cardId:guid}/due-date", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new ClearCardDueDateCommand(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         // BETA-A4-009 — see
@@ -112,38 +112,38 @@ public static class CardEndpoints
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(
                 new SetCardCoverCommand(cardId, body.Color), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/{cardId:guid}/cover", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(
                 new SetCardCoverCommand(cardId, null), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{cardId:guid}/complete", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new CompleteCardCommand(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{cardId:guid}/reopen", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new ReopenCardCommand(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{cardId:guid}/archive", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new ArchiveCardCommand(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{cardId:guid}/restore", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new RestoreCardCommand(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         // BETA-5-#5 — see test-results/BETA-TEST-REPORT.md. The card
@@ -155,31 +155,31 @@ public static class CardEndpoints
         group.MapDelete("/{cardId:guid}", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new DeleteCardCommand(cardId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{cardId:guid}/assign/{userId:guid}", async (Guid cardId, Guid userId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new AssignCardCommand(cardId, userId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/{cardId:guid}/assign/{userId:guid}", async (Guid cardId, Guid userId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new UnassignCardCommand(cardId, userId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{cardId:guid}/labels/{labelId:guid}", async (Guid cardId, Guid labelId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new AttachLabelToCardCommand(cardId, labelId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/{cardId:guid}/labels/{labelId:guid}", async (Guid cardId, Guid labelId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new DetachLabelFromCardCommand(cardId, labelId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         // P3.3 / G6c — mirror the card to a different list. The
@@ -194,7 +194,7 @@ public static class CardEndpoints
                 new MirrorCmd(cardId, body.TargetListId), ct);
             return result.IsSuccess
                 ? Results.Created($"/api/cards/{result.Value.MirrorCardId}", result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         // Card Snooze (G6b / §3.2). The backing command lives
@@ -208,13 +208,13 @@ public static class CardEndpoints
                 new SnoozeCmd(cardId, body.Until), ct);
             return result.IsSuccess
                 ? Results.Ok(new { until = result.Value })
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/{cardId:guid}/snooze", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new UnsnoozeCmd(cardId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -229,12 +229,4 @@ public static class CardEndpoints
     public sealed record SnoozeBody(DateTimeOffset Until);
     public sealed record CoverBody(string? Color);
 
-    private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
-    {
-        Cardscape.Domain.Common.ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        Cardscape.Domain.Common.ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        Cardscape.Domain.Common.ErrorType.Forbidden => Results.Forbid(),
-        Cardscape.Domain.Common.ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

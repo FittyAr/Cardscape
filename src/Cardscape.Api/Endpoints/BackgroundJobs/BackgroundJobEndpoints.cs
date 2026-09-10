@@ -19,18 +19,10 @@ public static class BackgroundJobEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BackgroundJobSummaryDto>>>(
                 new ListDeadLetterBackgroundJobsQuery(skip ?? 0, take ?? 50), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
     }
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

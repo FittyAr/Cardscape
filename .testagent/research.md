@@ -1,5 +1,21 @@
 # Test research
 
+## Canonical DomainError Problem Details (2026-09-10)
+
+### Bounded target inventory
+
+- `Cardscape.Api.Http.DomainErrorResults`: single RFC 7807 mapping for the six `ErrorType` values used by ordinary REST endpoints.
+- `ScimEndpoints`: intentionally retains its SCIM v2 error representation and is outside the generic RFC 7807 mapper.
+- Existing conventions: xUnit v3 theories, FluentAssertions, exact behavior-oriented names, and direct testing of Minimal API result objects.
+
+### Acceptance checklist
+
+- [x] Validation maps to 422; not-found to 404; conflict to 409; forbidden to 403; unauthenticated to 401; external dependency failure to 502.
+- [x] Every mapping returns `ProblemHttpResult` with matching `Status` and HTTP status.
+- [x] Stable machine code is preserved in the `code` extension.
+- [x] Safe domain detail is preserved and titles are canonical.
+- [x] SCIM protocol errors remain outside this mapper.
+
 ## Application public-port namespace boundary (2026-08-22)
 
 ### Bounded target inventory

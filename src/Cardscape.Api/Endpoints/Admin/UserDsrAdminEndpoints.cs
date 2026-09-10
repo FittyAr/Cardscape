@@ -65,7 +65,7 @@ public static class UserDsrAdminEndpoints
                 new SoftDeleteUserCommand(userId), ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{userId:guid}/restore", async Task<IResult> (
@@ -75,7 +75,7 @@ public static class UserDsrAdminEndpoints
                 new RestoreUserCommand(userId), ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{userId:guid}/anonymise", async Task<IResult> (
@@ -85,7 +85,7 @@ public static class UserDsrAdminEndpoints
                 new AnonymiseUserCommand(userId), ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{userId:guid}/restrict", async Task<IResult> (
@@ -95,7 +95,7 @@ public static class UserDsrAdminEndpoints
                 new SetUserRestrictedCommand(userId, true), ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{userId:guid}/unrestrict", async Task<IResult> (
@@ -105,7 +105,7 @@ public static class UserDsrAdminEndpoints
                 new SetUserRestrictedCommand(userId, false), ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{userId:guid}/admin", async Task<IResult> (
@@ -115,7 +115,7 @@ public static class UserDsrAdminEndpoints
                 new SetUserAdminCommand(userId, true), ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{userId:guid}/unadmin", async Task<IResult> (
@@ -125,18 +125,10 @@ public static class UserDsrAdminEndpoints
                 new SetUserAdminCommand(userId, false), ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
     }
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

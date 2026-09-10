@@ -27,7 +27,7 @@ public static class OAuthAppEndpoints
                 new ListOAuthAppsForOwnerQuery(), ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/", async (
@@ -43,7 +43,7 @@ public static class OAuthAppEndpoints
                 ct);
             return result.IsSuccess
                 ? Results.Created($"/api/oauth-apps/{result.Value.Id}", result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/{appId:guid}", async (
@@ -55,7 +55,7 @@ public static class OAuthAppEndpoints
                 new RevokeOAuthAppCommand(appId), ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -66,12 +66,4 @@ public static class OAuthAppEndpoints
         IReadOnlyCollection<string>? AllowedScopes,
         IReadOnlyCollection<string>? RedirectUris);
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

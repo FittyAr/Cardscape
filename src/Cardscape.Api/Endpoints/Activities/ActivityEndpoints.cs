@@ -24,7 +24,7 @@ public static class ActivityEndpoints
         {
             var result = await bus.InvokeAsync<Result<ActivityPage>>(
                 new ListBoardActivitiesQuery(boardId, cursor, limit), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         var cardGroup = app.MapGroup("/api/cards/{cardId:guid}/activities")
@@ -40,18 +40,10 @@ public static class ActivityEndpoints
         {
             var result = await bus.InvokeAsync<Result<ActivityPage>>(
                 new ListCardActivitiesQuery(cardId, cursor, limit), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
     }
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

@@ -25,7 +25,7 @@ public static class BoardExtensionEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardExtensionDto>>>(
                 new ListBoardExtensionsQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/", async (
@@ -40,7 +40,7 @@ public static class BoardExtensionEndpoints
                 ? Results.Created(
                     $"/api/boards/{boardId}/extensions/{ToRouteValue(body.Kind)}",
                     result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/{kind}", async (Guid boardId, string kind, IMessageBus bus, CancellationToken ct) =>
@@ -51,7 +51,7 @@ public static class BoardExtensionEndpoints
             }
             var result = await bus.InvokeAsync<Result>(
                 new DisableBoardExtensionCommand(boardId, (int)parsedKind), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         // BETA-9-#3 — see test-results/r9/r9-report.md.
@@ -73,7 +73,7 @@ public static class BoardExtensionEndpoints
                 new ListBoardExtensionsQuery(boardId), ct);
             if (lookup.IsFailure)
             {
-                return MapError(lookup.Error);
+                return DomainErrorResults.ToProblem(lookup.Error);
             }
 
             BoardExtensionDto? row = lookup.Value
@@ -89,7 +89,7 @@ public static class BoardExtensionEndpoints
 
             var disable = await bus.InvokeAsync<Result>(
                 new DisableBoardExtensionCommand(boardId, row.Kind), ct);
-            return disable.IsSuccess ? Results.NoContent() : MapError(disable.Error);
+            return disable.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(disable.Error);
         });
 
         group.MapPut("/{kind}/config", async (
@@ -105,7 +105,7 @@ public static class BoardExtensionEndpoints
             }
             var result = await bus.InvokeAsync<Result<BoardExtensionDto>>(
                 new UpdateBoardExtensionConfigCommand(boardId, (int)parsedKind, body.ConfigJson), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -130,12 +130,4 @@ public static class BoardExtensionEndpoints
         message = $"Unknown extension kind '{kind}'. Valid values: {string.Join(", ", Enum.GetValues<ExtensionKind>().Select(ToRouteValue))}."
     });
 
-    private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

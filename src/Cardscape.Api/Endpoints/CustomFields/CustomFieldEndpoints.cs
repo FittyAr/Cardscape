@@ -20,7 +20,7 @@ public static class CustomFieldEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CustomFieldDefinitionDto>>>(
                 new ListCustomFieldDefinitionsQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/", async (
@@ -37,7 +37,7 @@ public static class CustomFieldEndpoints
                 ? Results.Created(
                     $"/api/boards/{boardId}/custom-fields/{result.Value.Id}",
                     result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPatch("/{fieldId:guid}", async (
@@ -49,7 +49,7 @@ public static class CustomFieldEndpoints
         {
             var result = await bus.InvokeAsync<Result<CustomFieldDefinitionDto>>(
                 new RenameCustomFieldDefinitionCommand(fieldId, body.NewName), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/{fieldId:guid}", async (
@@ -60,7 +60,7 @@ public static class CustomFieldEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new DeleteCustomFieldDefinitionCommand(fieldId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -77,7 +77,7 @@ public static class CustomFieldEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CustomFieldValueDto>>>(
                 new ListCustomFieldValuesForCardQuery(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPut("/{fieldId:guid}", async (
@@ -89,7 +89,7 @@ public static class CustomFieldEndpoints
         {
             var result = await bus.InvokeAsync<Result<CustomFieldValueDto>>(
                 new SetCustomFieldValueCommand(cardId, fieldId, body.ValueJson), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -105,12 +105,4 @@ public static class CustomFieldEndpoints
 
     public sealed record SetValueBody(string? ValueJson);
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

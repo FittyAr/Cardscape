@@ -20,7 +20,7 @@ public static class AttachmentEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<AttachmentDto>>>(
                 new ListCardAttachmentsQuery(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         // BUG-A5-002 — direct multipart upload. Bounded to
@@ -66,7 +66,7 @@ public static class AttachmentEndpoints
                 ? Results.Created(
                     $"/api/cards/{cardId}/attachments/{result.Value.Id}",
                     result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         }).DisableAntiforgery();
 
         // Per-attachment operations live under a second group so
@@ -82,7 +82,7 @@ public static class AttachmentEndpoints
                 new DownloadAttachmentQuery(cardId, attachmentId), ct);
             if (result.IsFailure)
             {
-                return MapError(result.Error);
+                return DomainErrorResults.ToProblem(result.Error);
             }
 
             return Results.File(
@@ -97,19 +97,10 @@ public static class AttachmentEndpoints
                 new DeleteAttachmentCommand(cardId, attachmentId), ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
     }
 
-    private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        ErrorType.Validation => Results.UnprocessableEntity(new { error.Code, error.Message }),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

@@ -87,15 +87,7 @@ public static class ImportEndpoints
         await using Stream stream = file.OpenReadStream();
         Result<Domain.Import.ImportResult> result = await import.ImportKanbanJsonAsync(
             stream, workspaceId, previewOnly, ct);
-        return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+        return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
     }
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

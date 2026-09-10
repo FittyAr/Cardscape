@@ -26,7 +26,7 @@ public static class ScimAdminEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<ScimTokenDto>>>(
                 new ListScimTokensQuery(workspaceId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/tokens", async (
@@ -40,7 +40,7 @@ public static class ScimAdminEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/workspaces/{workspaceId}/scim/tokens/{result.Value.Token.Id}",
                                  result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/tokens/{tokenId:guid}", async (
@@ -48,7 +48,7 @@ public static class ScimAdminEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new RevokeScimTokenCommand(workspaceId, tokenId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -56,12 +56,4 @@ public static class ScimAdminEndpoints
 
     public sealed record IssueScimTokenBody(string Name);
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

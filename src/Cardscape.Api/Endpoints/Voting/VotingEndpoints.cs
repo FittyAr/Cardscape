@@ -22,7 +22,7 @@ public static class VotingEndpoints
         {
             var result = await bus.InvokeAsync<Result<CardVoteStateDto>>(
                 new ToggleCardVoteCommand(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         // Read-only fetch of the current vote state for the card.
@@ -30,18 +30,10 @@ public static class VotingEndpoints
         {
             var result = await bus.InvokeAsync<Result<CardVoteStateDto>>(
                 new ListCardVotesQuery(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
     }
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

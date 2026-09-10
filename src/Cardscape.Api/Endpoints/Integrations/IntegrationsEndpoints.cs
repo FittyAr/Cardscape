@@ -33,7 +33,7 @@ public static class IntegrationsEndpoints
                 new LinkGitHubRepoCommand(
                     body.BoardId, body.RepoFullName, body.Events),
                 ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         // BETA-2-#11 — see test-results/BETA-TEST-REPORT.md.
@@ -65,7 +65,7 @@ public static class IntegrationsEndpoints
 
             var result = await bus.InvokeAsync<Result<IReadOnlyList<GitHubPullRequestDto>>>(
                 new ListGitHubPullRequestsQuery(boardId, repoFullName, state ?? "open"), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/pulls/link", async ([FromBody] LinkGitHubPullRequestRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -75,7 +75,7 @@ public static class IntegrationsEndpoints
                     body.CardId, body.RepoFullName, body.PullRequestNumber), ct);
             return result.IsSuccess
                 ? Results.Created($"/api/cards/{body.CardId}/github-links/{result.Value.Id}", result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/issues", async ([FromBody] CreateGitHubIssueRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -83,7 +83,7 @@ public static class IntegrationsEndpoints
             var result = await bus.InvokeAsync<Result<GitHubIssueDto>>(
                 new CreateGitHubIssueFromCardCommand(
                     body.CardId, body.RepoFullName, body.Title, body.Body), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -104,7 +104,7 @@ public static class IntegrationsEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<InboundEmailAddressDto>>>(
                 new ListInboundEmailAddressesQuery(workspaceId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         authed.MapPost("/addresses", async ([FromBody] RegisterInboundEmailAddressRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -114,14 +114,14 @@ public static class IntegrationsEndpoints
                     body.WorkspaceId, body.EmailAddress, body.TargetListId, body.Label), ct);
             return result.IsSuccess
                 ? Results.Created($"/api/integrations/email/addresses/{result.Value.Id}", result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         authed.MapDelete("/addresses/{addressId:guid}", async (Guid addressId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new UnregisterInboundEmailAddressCommand(addressId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         // Public webhook surface — no authorization at the
@@ -254,7 +254,7 @@ public static class IntegrationsEndpoints
                 new HandleInboundEmailCommand(provider, body, headers), ct);
             return result.IsSuccess
                 ? Results.Ok(new { cardId = result.Value })
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -269,13 +269,4 @@ public static class IntegrationsEndpoints
     public sealed record RegisterInboundEmailAddressRequest(
         Guid WorkspaceId, string EmailAddress, Guid TargetListId, string Label);
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        ErrorType.External => Results.Json(new { error.Code, error.Message }, statusCode: StatusCodes.Status502BadGateway),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

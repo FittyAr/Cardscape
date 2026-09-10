@@ -18,27 +18,27 @@ public static class CommentEndpoints
         group.MapGet("/", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CommentDto>>>(new ListCommentsForCardQuery(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/", async (Guid cardId, AddCommentBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CommentDto>>(new AddCommentCommand(cardId, body.Body), ct);
-            return result.IsSuccess ? Results.Created($"/api/cards/{cardId}/comments/{result.Value.Id}", result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Created($"/api/cards/{cardId}/comments/{result.Value.Id}", result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPut("/{commentId:guid}", async (Guid cardId, Guid commentId, EditCommentBody body, IMessageBus bus, CancellationToken ct) =>
         {
             _ = cardId; // path-anchored for consistency; the comment carries its own cardId.
             var result = await bus.InvokeAsync<Result<CommentDto>>(new EditCommentCommand(commentId, body.NewBody), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/{commentId:guid}", async (Guid cardId, Guid commentId, IMessageBus bus, CancellationToken ct) =>
         {
             _ = cardId;
             var result = await bus.InvokeAsync<Result>(new DeleteCommentCommand(commentId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -47,12 +47,4 @@ public static class CommentEndpoints
     public sealed record AddCommentBody(string Body);
     public sealed record EditCommentBody(string NewBody);
 
-    private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
-    {
-        Cardscape.Domain.Common.ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        Cardscape.Domain.Common.ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        Cardscape.Domain.Common.ErrorType.Forbidden => Results.Forbid(),
-        Cardscape.Domain.Common.ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

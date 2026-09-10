@@ -28,7 +28,7 @@ public static class AiEndpoints
                 new AiFeatures.GenerateCardDescriptionCommand(cardId), ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/cards/{cardId:guid}/generate-checklist",
@@ -39,7 +39,7 @@ public static class AiEndpoints
                 new AiFeatures.GenerateChecklistFromDescriptionCommand(cardId), ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/cards/{cardId:guid}/suggest-owners",
@@ -50,7 +50,7 @@ public static class AiEndpoints
                 new AiFeatures.SuggestCardOwnersCommand(cardId), ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/comments/summarize",
@@ -61,7 +61,7 @@ public static class AiEndpoints
                 new AiFeatures.SummarizeCommentThreadCommand(body.CommentIds ?? []), ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -69,12 +69,4 @@ public static class AiEndpoints
 
     public sealed record SummarizeRequest(IReadOnlyList<Guid>? CommentIds);
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

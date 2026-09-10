@@ -44,7 +44,7 @@ public static class SlackEndpoints
                 ? result.Value is null
                     ? Results.NoContent()
                     : Results.Ok(result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/connect", async (Guid workspaceId, [FromBody] ConnectSlackRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -55,14 +55,14 @@ public static class SlackEndpoints
                 ct);
             return result.IsSuccess
                 ? Results.Created($"/api/workspaces/{workspaceId}/integrations/slack", result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapGet("/channels", async (Guid workspaceId, [FromQuery] Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<SlackChannelDto>>>(
                 new ListSlackChannelsForBoardQuery(workspaceId, boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/channels", async (Guid workspaceId, [FromBody] LinkSlackChannelRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -74,14 +74,14 @@ public static class SlackEndpoints
                 ct);
             return result.IsSuccess
                 ? Results.Created($"/api/workspaces/{workspaceId}/integrations/slack/channels/{result.Value.Id}", result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/channels/{channelId:guid}", async (Guid workspaceId, Guid channelId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new UnlinkSlackChannelCommand(workspaceId, channelId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -91,13 +91,4 @@ public static class SlackEndpoints
     public sealed record LinkSlackChannelRequest(
         Guid SlackWorkspaceId, Guid BoardId, string ChannelId, string ChannelName, IReadOnlyList<string> Events);
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        ErrorType.External => Results.Json(new { error.Code, error.Message }, statusCode: StatusCodes.Status502BadGateway),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

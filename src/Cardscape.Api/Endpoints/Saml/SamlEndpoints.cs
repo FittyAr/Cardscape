@@ -47,7 +47,7 @@ public static class SamlEndpoints
                 ? result.Value is null
                     ? Results.NoContent()
                     : Results.Ok(result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         admin.MapPost("/", async (
@@ -63,14 +63,14 @@ public static class SamlEndpoints
                 ct);
             return result.IsSuccess
                 ? Results.Created($"/api/workspaces/{workspaceId}/saml", result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         admin.MapDelete("/", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new DisableSamlConnectionCommand(workspaceId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -84,12 +84,4 @@ public static class SamlEndpoints
         string? IdpMetadataXml,
         string SpEntityId);
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

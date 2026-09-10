@@ -20,7 +20,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<ChecklistDto>>>(
                 new ListCardChecklistsQuery(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         cardGroup.MapPost("/", async (
@@ -28,7 +28,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new CreateChecklistCommand(cardId, body.Title), ct);
-            return result.IsSuccess ? Results.Created($"/api/checklists/{result.Value.Id}", result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Created($"/api/checklists/{result.Value.Id}", result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         var itemGroup = app.MapGroup("/api/checklists/{checklistId:guid}")
@@ -40,7 +40,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new RenameChecklistCommand(checklistId, body.Title), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         itemGroup.MapDelete("/", async (
@@ -48,7 +48,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new DeleteChecklistCommand(checklistId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         itemGroup.MapPost("/items/", async (
@@ -62,7 +62,7 @@ public static class ChecklistEndpoints
             // itself. The handler now returns ChecklistItemDto.
             var result = await bus.InvokeAsync<Result<ChecklistItemDto>>(
                 new AddChecklistItemCommand(checklistId, body.Text), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         itemGroup.MapPatch("/items/{itemId:guid}/toggle", async (
@@ -70,7 +70,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new ToggleChecklistItemCommand(checklistId, itemId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         itemGroup.MapPatch("/items/{itemId:guid}/rename", async (
@@ -78,7 +78,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new RenameChecklistItemCommand(checklistId, itemId, body.Text), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         itemGroup.MapDelete("/items/{itemId:guid}", async (
@@ -86,7 +86,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new DeleteChecklistItemCommand(checklistId, itemId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -97,12 +97,4 @@ public static class ChecklistEndpoints
     public sealed record AddItemBody(string Text);
     public sealed record RenameItemBody(string Text);
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

@@ -46,7 +46,7 @@ public static class UserPreferencesEndpoints
                 new GetUserPreferencesQuery(), ct);
             if (result.IsFailure)
             {
-                return MapError(result.Error);
+                return DomainErrorResults.ToProblem(result.Error);
             }
 
             // 200 with null body when the user has no row;
@@ -65,7 +65,7 @@ public static class UserPreferencesEndpoints
                 new CreateDefaultUserPreferencesCommand(), ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPut("/", async (
@@ -94,7 +94,7 @@ public static class UserPreferencesEndpoints
                 new UpdateUserPreferencesCommand(body.ThemeName, mode), ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -105,12 +105,4 @@ public static class UserPreferencesEndpoints
     /// unchanged".</summary>
     public sealed record UpdatePreferencesBody(string? ThemeName, string? Mode);
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

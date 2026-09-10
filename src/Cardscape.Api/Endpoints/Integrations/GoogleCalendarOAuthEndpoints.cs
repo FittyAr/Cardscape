@@ -56,7 +56,7 @@ public static class GoogleCalendarOAuthEndpoints
                 new AuthorizeGoogleCalendarOAuthQuery(workspaceId), ct);
             if (authorization.IsFailure)
             {
-                return MapError(authorization.Error);
+                return DomainErrorResults.ToProblem(authorization.Error);
             }
 
             string clientId = configuration["Integrations:GoogleCalendar:ClientId"] ?? string.Empty;
@@ -179,7 +179,7 @@ public static class GoogleCalendarOAuthEndpoints
             Result<JsonElement> tokenBodyResult = await ReadGoogleJsonAsync(tokenResponse.Content, ct);
             if (tokenBodyResult.IsFailure)
             {
-                return MapError(tokenBodyResult.Error);
+                return DomainErrorResults.ToProblem(tokenBodyResult.Error);
             }
 
             JsonElement tokenBody = tokenBodyResult.Value;
@@ -207,7 +207,7 @@ public static class GoogleCalendarOAuthEndpoints
                     Result<JsonElement> userBodyResult = await ReadGoogleJsonAsync(userResponse.Content, ct);
                     if (userBodyResult.IsFailure)
                     {
-                        return MapError(userBodyResult.Error);
+                        return DomainErrorResults.ToProblem(userBodyResult.Error);
                     }
 
                     JsonElement userBody = userBodyResult.Value;
@@ -236,7 +236,7 @@ public static class GoogleCalendarOAuthEndpoints
 
             if (result.IsFailure)
             {
-                return MapError(result.Error);
+                return DomainErrorResults.ToProblem(result.Error);
             }
 
             return Results.Redirect(state.ReturnUrl);
@@ -285,15 +285,6 @@ public static class GoogleCalendarOAuthEndpoints
         }
     }
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        ErrorType.External => Results.Json(new { error.Code, error.Message }, statusCode: StatusCodes.Status502BadGateway),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }
 
 internal sealed record GoogleCalendarOAuthState(Guid UserId, Guid WorkspaceId, string ReturnUrl);

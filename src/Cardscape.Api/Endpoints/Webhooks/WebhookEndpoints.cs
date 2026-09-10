@@ -36,7 +36,7 @@ public static class WebhookEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WebhookEndpointDto>>>(
                 new ListWebhookEndpointsQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         boardGroup.MapPost("/", async (
@@ -50,7 +50,7 @@ public static class WebhookEndpoints
                     boardId, body.Url, body.Secret, body.Events), ct);
             return result.IsSuccess
                 ? Results.Created($"/api/boards/{boardId}/webhooks/{result.Value.Endpoint.Id}", result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         boardGroup.MapPatch("/{endpointId:guid}", async (
@@ -63,7 +63,7 @@ public static class WebhookEndpoints
             var result = await bus.InvokeAsync<Result<WebhookEndpointDto>>(
                 new UpdateWebhookEndpointCommand(
                     boardId, endpointId, body.Url, body.Active), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         boardGroup.MapDelete("/{endpointId:guid}", async (
@@ -74,7 +74,7 @@ public static class WebhookEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new DeleteWebhookEndpointCommand(boardId, endpointId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         boardGroup.MapGet("/{endpointId:guid}/deliveries", async (
@@ -86,7 +86,7 @@ public static class WebhookEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WebhookDeliveryDto>>>(
                 new ListWebhookDeliveriesQuery(boardId, endpointId, null, 0, take ?? 50), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -95,12 +95,4 @@ public static class WebhookEndpoints
     public sealed record CreateWebhookBody(string Url, string? Secret, IReadOnlyList<string> Events);
     public sealed record UpdateWebhookBody(string? Url, bool? Active);
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

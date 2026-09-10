@@ -40,7 +40,7 @@ public static class NotificationEndpoints
             int effectiveSkip = skip is null or < 0 ? 0 : skip.Value;
             var result = await bus.InvokeAsync<Result<IReadOnlyList<NotificationDto>>>(
                 new ListNotificationsQuery(unreadOnly ?? false, effectiveSkip, effectiveTake), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapGet("/unread-count", async (IMessageBus bus, CancellationToken ct) =>
@@ -48,7 +48,7 @@ public static class NotificationEndpoints
             var result = await bus.InvokeAsync<Result<int>>(new UnreadNotificationsCountQuery(), ct);
             return result.IsSuccess
                 ? Results.Ok(new UnreadCountResponse(result.Value))
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         // Returns the unread notification count for the authenticated user.
@@ -62,25 +62,18 @@ public static class NotificationEndpoints
         group.MapPost("/mark-all-read", async (IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new MarkAllNotificationsReadCommand(), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{notificationId:guid}/read", async (Guid notificationId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new MarkNotificationReadCommand(notificationId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
     }
 
-    private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
-    {
-        Cardscape.Domain.Common.ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        Cardscape.Domain.Common.ErrorType.Forbidden => Results.Forbid(),
-        Cardscape.Domain.Common.ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }
 
 /// <summary>Response shape for <c>GET /api/notifications/unread-count</c>.</summary>

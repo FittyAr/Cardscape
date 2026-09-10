@@ -567,3 +567,9 @@
 2. [x] Cover positive and negative PostgreSQL states with real provider exceptions.
 3. [x] Prove provider-unknown text does not revive message heuristics.
 4. [x] Build, run the focused tests and review assertions/pseudo-mutations.
+# Canonical DomainError Problem Details (2026-09-10)
+
+- [x] Add one data-driven case per `ErrorType` to prevent missing or collapsed mappings.
+- [x] Assert concrete RFC 7807 result type, status, title, detail and stable code extension.
+- [x] Build and run the narrow `DomainErrorResultsTests` filter.
+- [x] Review assertions and pseudo-mutations, then record final status.

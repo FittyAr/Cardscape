@@ -21,7 +21,7 @@ public static class RecurrenceEndpoints
                 new GetCardRecurrenceQuery(cardId), ct);
             if (!result.IsSuccess)
             {
-                return MapError(result.Error);
+                return DomainErrorResults.ToProblem(result.Error);
             }
 
             // BETA-6-#3 — see test-results/BETA-TEST-REPORT.md.
@@ -45,14 +45,14 @@ public static class RecurrenceEndpoints
         {
             var result = await bus.InvokeAsync<Result<CardRecurrenceDto>>(
                 new SetCardRecurrenceCommand(cardId, body.IntervalDays, body.FirstOccurrenceAt), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new DeleteCardRecurrenceCommand(cardId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -60,12 +60,4 @@ public static class RecurrenceEndpoints
 
     public sealed record RecurrenceBody(int IntervalDays, DateTimeOffset FirstOccurrenceAt);
 
-    private static IResult MapError(DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

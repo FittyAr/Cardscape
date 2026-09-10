@@ -25,7 +25,7 @@ public static class AutomationEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardAutomationRuleDto>>>(
                 new ListBoardAutomationRulesQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/", async (
@@ -43,28 +43,28 @@ public static class AutomationEndpoints
                 ? Results.Created(
                     $"/api/boards/{boardId}/automation/{result.Value.Id}",
                     result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{ruleId:guid}/enable", async (Guid boardId, Guid ruleId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new EnableBoardAutomationRuleCommand(ruleId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapPost("/{ruleId:guid}/disable", async (Guid boardId, Guid ruleId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new DisableBoardAutomationRuleCommand(ruleId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         group.MapDelete("/{ruleId:guid}", async (Guid boardId, Guid ruleId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new DeleteBoardAutomationRuleCommand(ruleId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -78,12 +78,4 @@ public static class AutomationEndpoints
         string? ActionArgument,
         int Position = 0);
 
-    private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }

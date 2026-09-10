@@ -91,7 +91,7 @@ Reglas permanentes:
 
 ### Fase 3 — API y contratos
 
-- [ ] Revisar semántica HTTP, Problem Details, validación, cancelación y códigos de estado de todos los endpoints.
+- [ ] Revisar semántica HTTP, Problem Details, validación, cancelación y códigos de estado de todos los endpoints. Los 33 grupos REST que repetían `MapError` ahora usan una única política RFC 7807: Validation 422, NotFound 404, Conflict 409, Forbidden 403, Unauthenticated 401 y External 502, preservando el código estable como extensión. SCIM conserva deliberadamente su error wire-format específico del protocolo. Continúa la auditoría de respuestas ad hoc y metadata OpenAPI.
 - [ ] Eliminar endpoints legacy y contratos duplicados porque no se exige retrocompatibilidad. Retirados aliases `new*` de mutaciones Board/List/Card, rutas planas legacy de Comments, `/auth/logout`, `members_assign`, la ruta corta de Google Calendar, enums numéricos en JSON/rutas/query, el comando/store `AddAsync` de idempotencia, el fallback admin para JWT antiguos y cuatro mappings SAML inalcanzables; continúa la auditoría del resto de la API.
 - [ ] Verificar OpenAPI/Scalar y sincronía con SDK/Web.
 - [ ] Normalizar paginación, filtros, límites y errores.
@@ -339,6 +339,7 @@ Reglas permanentes:
 | 2026-09-10 | Cierre de persistencia y pipeline de tests | Auditoría final sin SQL manual ni catches generales de `DbUpdateException`; outbox transaccional y migraciones por provider verificadas; pipeline `.testagent` aplicado al nuevo bloque | Build completo por hook 0/0; regresiones classifier 6 pass | Incluido en este commit |
 | 2026-09-10 | Privacidad de logs y webhooks | Claves idempotentes, prefijos SCIM, URLs y cuerpos externos dejan de registrarse o persistirse como errores. Se elimina el relay CLEF no autenticable y el sink BrowserHttp prerelease; el navegador conserva logging local | Build solución Release 0/0; Unit focalizados 2 pass; Integration webhook security 2 pass; `git diff --check` limpio | Incluido en este commit |
 | 2026-09-10 | Scopes y arranque asíncronos | Todos los scopes dentro de flujos async usan `CreateAsyncScope`; outbox, jobs, sweepers, realtime, integraciones, Seeder y validación JWT liberan correctamente servicios `IAsyncDisposable`. El host aplica migraciones y ejecuta la aplicación sin bloqueo síncrono | 0 `CreateScope` en flujos async; build solución Release 0/0 | Incluido en este commit |
+| 2026-09-10 | Problem Details de errores de dominio | 33 grupos REST eliminan copias divergentes de `MapError` y comparten una política RFC 7807 exhaustiva; SCIM mantiene su contrato protocolar | API/Unit build Release 0/0; matriz de seis errores 6 pass; sólo queda `MapError` en SCIM | Incluido en este commit |
 
 ### Migración LoggerMessage
 

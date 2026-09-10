@@ -44,7 +44,7 @@ public static class WorkspaceInvitationEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
                 new ListWorkspaceInvitationsQuery(workspaceId, includeTerminal), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         wsGroup.MapPost("/", async (
@@ -58,7 +58,7 @@ public static class WorkspaceInvitationEndpoints
                     workspaceId, body.Email, body.Role, body.Lifetime), ct);
             return result.IsSuccess
                 ? Results.Created($"/api/workspaces/{workspaceId}/invitations/{result.Value.Id}", result.Value)
-                : MapError(result.Error);
+                : DomainErrorResults.ToProblem(result.Error);
         });
 
         wsGroup.MapDelete("/{invitationId:guid}", async (
@@ -69,7 +69,7 @@ public static class WorkspaceInvitationEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new RevokeWorkspaceInvitationCommand(invitationId), ct);
-            return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
         });
 
         var inboxGroup = app.MapGroup("/api/invitations")
@@ -80,7 +80,7 @@ public static class WorkspaceInvitationEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
                 new ListPendingInvitationsForUserQuery(), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         inboxGroup.MapPost("/accept", async (
@@ -90,7 +90,7 @@ public static class WorkspaceInvitationEndpoints
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
                 new AcceptWorkspaceInvitationCommand(body.Token), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : MapError(result.Error);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         });
 
         return app;
@@ -103,12 +103,4 @@ public static class WorkspaceInvitationEndpoints
 
     public sealed record AcceptWorkspaceInvitationBody(string Token);
 
-    private static IResult MapError(Cardscape.Domain.Common.DomainError error) => error.Type switch
-    {
-        ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-        ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-        ErrorType.Forbidden => Results.Forbid(),
-        ErrorType.Unauthenticated => Results.Unauthorized(),
-        _ => Results.BadRequest(new { error.Code, error.Message })
-    };
 }
