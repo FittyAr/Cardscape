@@ -14,6 +14,7 @@ public sealed class OAuthApp : AggregateRoot<OAuthAppId>
     public string Name { get; private set; } = string.Empty;
     public string ClientId { get; private set; } = string.Empty;
     public string ClientSecretHash { get; private set; } = string.Empty;
+    public string ClientSecretPrefix { get; private set; } = string.Empty;
     public Guid OwnerId { get; private set; }
     public IReadOnlyList<string> AllowedScopes { get; private set; } = [];
     public IReadOnlyList<string> RedirectUris { get; private set; } = [];
@@ -26,6 +27,7 @@ public sealed class OAuthApp : AggregateRoot<OAuthAppId>
         string name,
         string clientId,
         string clientSecretHash,
+        string clientSecretPrefix,
         Guid ownerId,
         IReadOnlyList<string> allowedScopes,
         IReadOnlyList<string> redirectUris,
@@ -35,6 +37,7 @@ public sealed class OAuthApp : AggregateRoot<OAuthAppId>
         Name = name;
         ClientId = clientId;
         ClientSecretHash = clientSecretHash;
+        ClientSecretPrefix = clientSecretPrefix;
         OwnerId = ownerId;
         AllowedScopes = allowedScopes;
         RedirectUris = redirectUris;
@@ -46,6 +49,7 @@ public sealed class OAuthApp : AggregateRoot<OAuthAppId>
         string name,
         string clientId,
         string clientSecretHash,
+        string clientSecretPrefix,
         Guid ownerId,
         IReadOnlyList<string> allowedScopes,
         IReadOnlyList<string> redirectUris,
@@ -67,6 +71,12 @@ public sealed class OAuthApp : AggregateRoot<OAuthAppId>
         {
             return Result.Failure<OAuthApp>(DomainError.Validation(
                 "oauth.client_secret_required", "Client secret hash is required."));
+        }
+
+        if (string.IsNullOrWhiteSpace(clientSecretPrefix))
+        {
+            return Result.Failure<OAuthApp>(DomainError.Validation(
+                "oauth.client_secret_prefix_required", "Client secret prefix is required."));
         }
 
         if (ownerId == Guid.Empty)
@@ -111,6 +121,7 @@ public sealed class OAuthApp : AggregateRoot<OAuthAppId>
             name.Trim(),
             clientId.Trim(),
             clientSecretHash,
+            clientSecretPrefix,
             ownerId,
             allowedScopes,
             redirectUris,

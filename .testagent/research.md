@@ -837,3 +837,9 @@
 - Existing conventions: xUnit v3, FluentAssertions, `TestContext.Current.CancellationToken`, internal production access from UnitTests.
 - Acceptance checklist: accept a valid archive; classify invalid and empty JSON with stable codes; reject an oversized seekable stream before reading; stop an oversized non-seekable stream near the configured boundary instead of copying its entire payload.
 - Risk: the previous `CopyToAsync` checked length only after EOF, so the advertised 10 MiB limit did not bound memory consumption for non-seekable input.
+
+# OAuth client-secret prefix fidelity (2026-09-10)
+
+- Finding: registration returned the first eight characters of the issued secret, but listing recomputed the display prefix from the SHA-256 hash. The values could never identify the same credential.
+- Scope: OAuth aggregate, EF configuration and three provider migrations, infrastructure service, Seeder and existing endpoint integration.
+- Acceptance: persist only the non-sensitive eight-character prefix, never the cleartext; listing must equal both registration prefix and `ClientSecret[..8]`.

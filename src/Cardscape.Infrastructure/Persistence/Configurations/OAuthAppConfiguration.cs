@@ -45,6 +45,10 @@ public sealed class OAuthAppConfiguration : IEntityTypeConfiguration<OAuthApp>
             .HasMaxLength(64)
             .IsRequired();
 
+        builder.Property(a => a.ClientSecretPrefix)
+            .HasMaxLength(8)
+            .IsRequired();
+
         builder.Property(a => a.OwnerId)
             .HasConversion(id => id, v => v)
             .IsRequired();

@@ -54,6 +54,8 @@ public sealed class OAuthAppEndpointTests
             (await listed.Content.ReadFromJsonAsync<OAuthAppSummaryDto[]>(TestContext.Current.CancellationToken))!;
         OAuthAppSummaryDto summary = summaries.Single(s => s.Id == appId);
         summary.Name.Should().Be("My Third-Party App");
+        summary.SecretPrefix.Should().Be(registered_app.SecretPrefix);
+        summary.SecretPrefix.Should().Be(registered_app.ClientSecret[..8]);
         summary.AllowedScopes.Should().Contain("cards.read");
         summary.IsRevoked.Should().BeFalse();
     }

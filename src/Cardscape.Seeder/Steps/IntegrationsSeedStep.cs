@@ -150,12 +150,14 @@ internal sealed class IntegrationsSeedStep(ISecretProtector secretProtector) : S
         // 6. OAuth apps: two demo apps so the OAuth app
         //    management page has something to show.
         User owner = context.Users[0];
-        string clientSecretHash = Generators.PasswordGenerator.Sha256Hex(Generators.PasswordGenerator.RandomUrlSafeToken(32));
+        string clientSecret = Generators.PasswordGenerator.RandomUrlSafeToken(32);
+        string clientSecretHash = Generators.PasswordGenerator.Sha256Hex(clientSecret);
         Result<OAuthApp> oa = OAuthApp.Register(
             OAuthAppId.New(),
             "Cardscape CLI",
             "cli-cardscape-demo",
             clientSecretHash,
+            clientSecret[..8],
             owner.Id.Value,
             ReadWriteScopes,
             RedirectUris,

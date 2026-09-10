@@ -599,3 +599,9 @@
 - [x] `ReadAsync_WhenNonSeekablePayloadExceedsLimit_StopsAtBoundary` proves the memory bound is enforced during streaming.
 - [x] Build and run the narrow class, then run import fidelity integration coverage.
 - [x] Review assertion depth and pseudo-mutations.
+
+# OAuth client-secret prefix fidelity (2026-09-10)
+
+- [x] Extend `Register_Then_List_Adds_OAuthApp_To_Owner` to compare list prefix with registration and cleartext prefix.
+- [x] Generate SQLite, PostgreSQL and MySQL migrations through EF Core tooling.
+- [x] Run the OAuth app endpoint slice and build all provider assemblies.
