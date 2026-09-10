@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
@@ -39,7 +37,7 @@ public sealed class OAuthAppService(
     /// and of the random authorization code / access token.
     /// 32 bytes = 256 bits, the recommended minimum for a
     /// high-entropy bearer credential.</summary>
-    public const int SecretByteLength = 32;
+    public const int SecretByteLength = OAuthCredential.SecretByteLength;
 
     public async Task<Result<OAuthAppRegistration>> RegisterAsync(
         UserId ownerId,
@@ -57,9 +55,9 @@ public sealed class OAuthAppService(
             ?? throw new InvalidOperationException(
                 $"Cannot register OAuth app for non-existent user {ownerId}.");
 
-        string clientId = GenerateClientId();
-        string clientSecret = GenerateSecret();
-        string hashed = HashSecret(clientSecret);
+        string clientId = OAuthCredential.GenerateClientId();
+        string clientSecret = OAuthCredential.GenerateSecret();
+        string hashed = OAuthCredential.Hash(clientSecret);
         string prefix = clientSecret[..8];
 
         var app = OAuthApp.Register(
@@ -182,8 +180,8 @@ public sealed class OAuthAppService(
                 $"Redirect URI {redirectUri} is not an absolute http(s) URL.");
         }
 
-        string cleartext = GenerateSecret();
-        string codeHash = HashSecret(cleartext);
+        string cleartext = OAuthCredential.GenerateSecret();
+        string codeHash = OAuthCredential.Hash(cleartext);
         DateTimeOffset now = clock.UtcNow;
         DateTimeOffset expiresAt = now + AuthorizationCodeLifetime;
 
@@ -226,15 +224,13 @@ public sealed class OAuthAppService(
             return Result.Failure<OAuthAccessTokenIssuance>(OAuthAppErrors.AppRevoked);
         }
 
-        if (!CryptographicOperations.FixedTimeEquals(
-                Encoding.ASCII.GetBytes(HashSecret(clientSecret)),
-                Encoding.ASCII.GetBytes(app.ClientSecretHash)))
+        if (!OAuthCredential.MatchesHash(clientSecret, app.ClientSecretHash))
         {
             logger.OAuthClientSecretInvalid(clientId);
             return Result.Failure<OAuthAccessTokenIssuance>(OAuthAppErrors.InvalidClientSecret);
         }
 
-        string codeHash = HashSecret(code);
+        string codeHash = OAuthCredential.Hash(code);
         var authCode = await codes.FindByCodeHashAsync(codeHash, ct);
         if (authCode is null)
         {
@@ -257,8 +253,8 @@ public sealed class OAuthAppService(
             return Result.Failure<OAuthAccessTokenIssuance>(consumeResult.Error);
         }
 
-        string cleartextToken = GenerateSecret();
-        string tokenHash = HashSecret(cleartextToken);
+        string cleartextToken = OAuthCredential.GenerateSecret();
+        string tokenHash = OAuthCredential.Hash(cleartextToken);
         DateTimeOffset now = clock.UtcNow;
         DateTimeOffset expiresAt = now + AccessTokenLifetime;
 
@@ -294,7 +290,7 @@ public sealed class OAuthAppService(
             return Result.Failure<OAuthAccessTokenValidation>(OAuthAppErrors.UnknownAccessToken);
         }
 
-        string tokenHash = HashSecret(cleartextToken);
+        string tokenHash = OAuthCredential.Hash(cleartextToken);
         var token = await tokens.FindByTokenHashAsync(tokenHash, ct);
         if (token is null)
         {
@@ -353,15 +349,13 @@ public sealed class OAuthAppService(
             return Result.Failure(OAuthAppErrors.AppRevoked);
         }
 
-        if (!CryptographicOperations.FixedTimeEquals(
-                Encoding.ASCII.GetBytes(HashSecret(clientSecret)),
-                Encoding.ASCII.GetBytes(app.ClientSecretHash)))
+        if (!OAuthCredential.MatchesHash(clientSecret, app.ClientSecretHash))
         {
             logger.OAuthRevokeSecretInvalid(clientId);
             return Result.Failure(OAuthAppErrors.InvalidClientSecret);
         }
 
-        string tokenHash = HashSecret(cleartextToken);
+        string tokenHash = OAuthCredential.Hash(cleartextToken);
         var token = await tokens.FindByTokenHashAsync(tokenHash, ct);
         if (token is null)
         {
@@ -413,32 +407,4 @@ public sealed class OAuthAppService(
             user.DisplayName.Value));
     }
 
-    // ── helpers ────────────────────────────────────────────────
-
-    /// <summary>Generates a public, opaque, base64url-encoded
-    /// <c>clientId</c> (24 random bytes → 32-char string,
-    /// URL-safe). Unique with overwhelming probability.</summary>
-    private static string GenerateClientId()
-    {
-        Span<byte> bytes = stackalloc byte[24];
-        RandomNumberGenerator.Fill(bytes);
-        return Base64UrlEncode(bytes);
-    }
-
-    private static string GenerateSecret()
-    {
-        Span<byte> bytes = stackalloc byte[SecretByteLength];
-        RandomNumberGenerator.Fill(bytes);
-        return Base64UrlEncode(bytes);
-    }
-
-    private static string HashSecret(string cleartext) =>
-        Convert.ToHexString(
-            SHA256.HashData(Encoding.ASCII.GetBytes(cleartext))).ToLowerInvariant();
-
-    private static string Base64UrlEncode(ReadOnlySpan<byte> bytes) =>
-        Convert.ToBase64String(bytes)
-            .Replace('+', '-')
-            .Replace('/', '_')
-            .TrimEnd('=');
 }
