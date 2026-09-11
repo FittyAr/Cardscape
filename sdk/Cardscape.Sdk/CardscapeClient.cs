@@ -194,11 +194,7 @@ public sealed class CardscapeClient : IAsyncDisposable
         {
             _http.Dispose();
         }
-#if NETSTANDARD2_0
-        return new ValueTask(Task.CompletedTask);
-#else
         return ValueTask.CompletedTask;
-#endif
     }
 }
 

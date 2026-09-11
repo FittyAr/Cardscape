@@ -726,3 +726,21 @@
   OpenAPI and hosted Web; SQLite still reports its explicit historical
   non-transactional table-rebuild warning while applying a fresh schema. The
   final aggregate suite passes 979/979.
+
+# SDK/OpenAPI contract synchronization — 2026-09-11
+
+- [x] Implementation complete: typed endpoint metadata and canonical SDK
+  routes/models applied; obsolete TFM branches and the nonexistent generic
+  card update operation removed.
+- [x] Regression coverage fixes board card listing, route identifiers,
+  board-scoped label creation and cursor-based activities.
+- [x] OpenAPI-to-SDK gate compares the exact public JSON property set for 18
+  success contracts and verifies collections are published as arrays.
+- [x] Focused validation: OpenAPI 3/3 and SDK 19/19; 0 failed and 0 skipped.
+- [x] Assertion review: client tests assert exact HTTP method, URI, serialized
+  body and deserialized envelope; the contract gate asserts exact schema shape
+  and property equality rather than mere response success.
+- [x] Pseudo-mutation review: restoring any stale route/body, removing a DTO
+  property, changing an activity envelope, documenting a collection as an
+  object or reintroducing the removed update method breaks a named test or the
+  SDK public compilation surface.

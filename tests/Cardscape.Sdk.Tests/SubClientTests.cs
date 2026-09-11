@@ -205,6 +205,133 @@ public sealed class SubClientTests
     }
 
     [Fact]
+    public async Task Cards_List_Async_Uses_The_Canonical_Board_Query()
+    {
+        RequestCapture capture = new();
+        using HttpMessageHandlerStub handler = new(req =>
+        {
+            capture.CaptureSync(req);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(Array.Empty<CardSummaryDto>())
+            };
+        });
+        using HttpClient http = new(handler) { BaseAddress = new("https://api.example.test/") };
+        await using CardscapeClient client = new(http, new CardscapeClientOptions
+        {
+            BaseAddress = new("https://api.example.test/")
+        });
+
+        Guid boardId = Guid.NewGuid();
+        IReadOnlyList<CardSummaryDto> cards = await client.Cards.ListAsync(
+            boardId, TestContext.Current.CancellationToken);
+
+        cards.Should().BeEmpty();
+        capture.Method.Should().Be(HttpMethod.Get);
+        capture.Path.Should().Be("/api/cards");
+        capture.Query.Should().Be($"?boardId={boardId}");
+    }
+
+    [Fact]
+    public async Task Cards_Assign_And_AttachLabel_Put_Identifiers_In_The_Route()
+    {
+        List<string> paths = [];
+        using HttpMessageHandlerStub handler = new(req =>
+        {
+            paths.Add(req.RequestUri!.AbsolutePath);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { })
+            };
+        });
+        using HttpClient http = new(handler) { BaseAddress = new("https://api.example.test/") };
+        await using CardscapeClient client = new(http, new CardscapeClientOptions
+        {
+            BaseAddress = new("https://api.example.test/")
+        });
+        Guid cardId = Guid.NewGuid();
+        Guid userId = Guid.NewGuid();
+        Guid labelId = Guid.NewGuid();
+
+        await client.Cards.AssignAsync(cardId, userId, TestContext.Current.CancellationToken);
+        await client.Cards.AttachLabelAsync(cardId, labelId, TestContext.Current.CancellationToken);
+
+        paths.Should().Equal(
+            $"/api/cards/{cardId}/assign/{userId}",
+            $"/api/cards/{cardId}/labels/{labelId}");
+    }
+
+    [Fact]
+    public async Task Labels_Create_Async_Uses_The_Board_Scoped_Route()
+    {
+        RequestCapture capture = new();
+        using HttpMessageHandlerStub handler = new(req =>
+        {
+            capture.CaptureSync(req);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { id = Guid.NewGuid(), boardId = Guid.NewGuid(), name = "Bug", color = "red" })
+            };
+        });
+        using HttpClient http = new(handler) { BaseAddress = new("https://api.example.test/") };
+        await using CardscapeClient client = new(http, new CardscapeClientOptions
+        {
+            BaseAddress = new("https://api.example.test/")
+        });
+        Guid boardId = Guid.NewGuid();
+
+        await client.Labels.CreateAsync(
+            new CreateLabelRequest(boardId, "Bug", "red"),
+            TestContext.Current.CancellationToken);
+
+        capture.Path.Should().Be($"/api/boards/{boardId}/labels");
+        JsonElement body = JsonDocument.Parse(capture.Body).RootElement;
+        body.TryGetProperty("boardId", out _).Should().BeFalse();
+        body.GetProperty("name").GetString().Should().Be("Bug");
+        body.GetProperty("color").GetString().Should().Be("red");
+    }
+
+    [Fact]
+    public async Task Activities_ListForBoard_Deserializes_The_Cursor_Page()
+    {
+        Guid activityId = Guid.NewGuid();
+        Guid boardId = Guid.NewGuid();
+        using HttpMessageHandlerStub handler = new(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                items = new[]
+                {
+                    new
+                    {
+                        id = activityId,
+                        boardId,
+                        cardId = (Guid?)null,
+                        actorId = Guid.NewGuid(),
+                        actorDisplayName = "Ada",
+                        kind = "boardCreated",
+                        payloadJson = "{}",
+                        occurredAt = DateTimeOffset.UtcNow
+                    }
+                },
+                nextCursor = "cursor-2"
+            })
+        });
+        using HttpClient http = new(handler) { BaseAddress = new("https://api.example.test/") };
+        await using CardscapeClient client = new(http, new CardscapeClientOptions
+        {
+            BaseAddress = new("https://api.example.test/")
+        });
+
+        ActivityPageDto page = await client.Activities.ListForBoardAsync(
+            boardId, ct: TestContext.Current.CancellationToken);
+
+        page.NextCursor.Should().Be("cursor-2");
+        page.Items.Should().ContainSingle().Which.Id.Should().Be(activityId);
+        page.Items[0].Kind.Should().Be(ActivityKind.BoardCreated);
+    }
+
+    [Fact]
     public async Task Lists_Create_Async_Posts_Name()
     {
         RequestCapture capture = new();
@@ -340,12 +467,14 @@ public sealed class SubClientTests
     {
         public HttpMethod Method { get; private set; } = HttpMethod.Get;
         public string Path { get; private set; } = string.Empty;
+        public string Query { get; private set; } = string.Empty;
         public string Body { get; private set; } = string.Empty;
 
         public void CaptureSync(HttpRequestMessage request)
         {
             Method = request.Method;
             Path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            Query = request.RequestUri?.Query ?? string.Empty;
             if (request.Content is not null)
             {
                 // The HttpClient materialises the content before

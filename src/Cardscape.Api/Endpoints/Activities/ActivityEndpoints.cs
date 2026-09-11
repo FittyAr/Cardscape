@@ -25,7 +25,7 @@ public static class ActivityEndpoints
             var result = await bus.InvokeAsync<Result<ActivityPage>>(
                 new ListBoardActivitiesQuery(boardId, cursor, limit), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<ActivityPage>();
 
         var cardGroup = app.MapGroup("/api/cards/{cardId:guid}/activities")
             .RequireAuthorization()
@@ -41,7 +41,7 @@ public static class ActivityEndpoints
             var result = await bus.InvokeAsync<Result<ActivityPage>>(
                 new ListCardActivitiesQuery(cardId, cursor, limit), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<ActivityPage>();
 
         return app;
     }

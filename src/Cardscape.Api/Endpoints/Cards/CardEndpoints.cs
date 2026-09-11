@@ -30,7 +30,7 @@ public static class CardEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
                 new ListCardsForBoardQuery(boardId, includeArchived, includeSnoozed), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardSummaryDto[]>();
 
         // Calendar / planner view: cards with a due date in the
         // given range. `boardId` is optional; when null, the query
@@ -45,7 +45,7 @@ public static class CardEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CalendarEntryDto>>>(
                 new ListCardsDueInRangeQuery(from, to, boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CalendarEntryDto[]>();
 
         // Snoozed-cards list for a single board. The Web UI uses
         // this to render the "Show snoozed" toggle; the MCP
@@ -56,19 +56,19 @@ public static class CardEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<Guid>>>(
                 new ListSnoozedCardIdsQuery(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<Guid[]>();
 
         group.MapGet("/{cardId:guid}", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new GetCardQuery(cardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapPost("/", async (CreateCardBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new CreateCardCommand(body.ListId, body.Title, body.Description), ct);
             return result.IsSuccess ? Results.Created($"/api/cards/{result.Value.Id}", result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>(StatusCodes.Status201Created);
 
         group.MapPost("/{cardId:guid}/rename", async (Guid cardId, RenameBody body, IMessageBus bus, CancellationToken ct) =>
         {

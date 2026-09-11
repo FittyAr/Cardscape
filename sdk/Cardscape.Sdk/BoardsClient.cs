@@ -97,11 +97,7 @@ public sealed class BoardsClient
         try
         {
             response.EnsureSuccessStatusCode();
-#if NETSTANDARD2_0
-            Stream content = await response.Content.ReadAsStreamAsync();
-#else
             Stream content = await response.Content.ReadAsStreamAsync(ct);
-#endif
             return new HttpResponseStream(content, response);
         }
         catch
@@ -120,10 +116,6 @@ public sealed class BoardsClient
         using HttpResponseMessage response = await _parent.SendAsync(
             new HttpRequestMessage(HttpMethod.Get, $"api/boards/{boardId}/ics"), ct);
         response.EnsureSuccessStatusCode();
-#if NETSTANDARD2_0
-        return await response.Content.ReadAsStringAsync();
-#else
         return await response.Content.ReadAsStringAsync(ct);
-#endif
     }
 }

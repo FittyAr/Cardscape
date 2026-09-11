@@ -632,3 +632,13 @@
 2. Generate one migration per supported provider using `dotnet ef`.
 3. Add a metadata assertion that distinguishes no default from the former value.
 4. Rebuild, run the focused regression, verify all snapshots, then repeat the API smoke.
+
+# SDK/OpenAPI contract synchronization — 2026-09-11
+
+1. Add typed success metadata to every endpoint used by the public SDK.
+2. Remove nonexistent SDK operations and correct route/envelope drift.
+3. Align public SDK models with the canonical application response records.
+4. Add exact request-route/body and activity-page regression tests.
+5. Add an OpenAPI contract test and run API integration plus SDK suites.
+
+Status: complete. All five steps are implemented and validated.

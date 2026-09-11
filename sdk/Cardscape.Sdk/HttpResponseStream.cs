@@ -32,12 +32,10 @@ internal sealed class HttpResponseStream(Stream content, HttpResponseMessage res
         CancellationToken cancellationToken) =>
         content.ReadAsync(buffer, offset, count, cancellationToken);
 
-#if !NETSTANDARD2_0
     public override ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default) =>
         content.ReadAsync(buffer, cancellationToken);
-#endif
 
     public override long Seek(long offset, SeekOrigin origin) => content.Seek(offset, origin);
 
@@ -53,12 +51,10 @@ internal sealed class HttpResponseStream(Stream content, HttpResponseMessage res
         CancellationToken cancellationToken) =>
         content.WriteAsync(buffer, offset, count, cancellationToken);
 
-#if !NETSTANDARD2_0
     public override ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default) =>
         content.WriteAsync(buffer, cancellationToken);
-#endif
 
     protected override void Dispose(bool disposing)
     {

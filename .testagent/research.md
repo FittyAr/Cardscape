@@ -907,3 +907,25 @@
 - [x] The common model has no database-generated default for `UserPreferences.Mode`.
 - [x] SQLite, PostgreSQL and MySQL histories contain provider-native EF Core migrations.
 - [x] A model regression test rejects restoration of the ambiguous default.
+
+# SDK/OpenAPI contract synchronization — 2026-09-11
+
+## Bounded inventory
+
+- OpenAPI exposed SDK-covered success responses as untyped 200 entries, so it
+  could not act as a source contract.
+- SDK routes had drifted for card listing, assignment, label attachment and
+  label creation; the removed generic card PUT remained publicly callable.
+- Activity endpoints return a cursor page, while the SDK expected a raw list;
+  several response records also omitted current wire properties.
+- Obsolete `NETSTANDARD2_0` compilation branches remained after the SDK became
+  net10-only.
+
+## Acceptance checklist
+
+- [x] SDK-covered endpoints publish typed OpenAPI success responses.
+- [x] SDK methods use only canonical API routes and response envelopes.
+- [x] SDK models match the current response properties and activity enum.
+- [x] No pre-net10 compatibility branches remain.
+- [x] OpenAPI schemas and public SDK JSON properties are checked together in
+  an executable integration gate; collection schemas are explicitly arrays.

@@ -1,6 +1,9 @@
 using System.Net;
+using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Cardscape.IntegrationTests.Fixtures;
+using Sdk = Cardscape.Sdk;
 
 namespace Cardscape.IntegrationTests.Endpoints;
 
@@ -64,5 +67,86 @@ public sealed class OpenApiTests
         bearer.GetProperty("type").GetString().Should().Be("http");
         bearer.GetProperty("scheme").GetString().Should().Be("bearer");
         bearer.GetProperty("bearerFormat").GetString().Should().Be("JWT");
+    }
+
+    [Fact]
+    public async Task OpenApi_SdkSuccessSchemas_Match_PublicSdkModels()
+    {
+        (string Path, string Method, string Status, Type Model, bool Collection)[] contracts =
+        [
+            ("/api/workspaces", "get", "200", typeof(Sdk.WorkspaceDto), true),
+            ("/api/workspaces/{workspaceId}", "get", "200", typeof(Sdk.WorkspaceDto), false),
+            ("/api/workspaces", "post", "201", typeof(Sdk.WorkspaceDto), false),
+            ("/api/workspaces/{workspaceId}/members", "get", "200", typeof(Sdk.WorkspaceMemberDto), true),
+            ("/api/boards", "get", "200", typeof(Sdk.BoardSummaryDto), true),
+            ("/api/boards/{boardId}", "get", "200", typeof(Sdk.BoardDto), false),
+            ("/api/boards", "post", "201", typeof(Sdk.BoardDto), false),
+            ("/api/lists", "get", "200", typeof(Sdk.BoardListDto), true),
+            ("/api/lists/{listId}", "get", "200", typeof(Sdk.BoardListDto), false),
+            ("/api/lists", "post", "201", typeof(Sdk.BoardListDto), false),
+            ("/api/cards", "get", "200", typeof(Sdk.CardSummaryDto), true),
+            ("/api/cards/{cardId}", "get", "200", typeof(Sdk.CardDto), false),
+            ("/api/cards", "post", "201", typeof(Sdk.CardDto), false),
+            ("/api/boards/{boardId}/labels", "get", "200", typeof(Sdk.LabelDto), true),
+            ("/api/boards/{boardId}/labels", "post", "201", typeof(Sdk.LabelDto), false),
+            ("/api/cards/{cardId}/comments", "get", "200", typeof(Sdk.CommentDto), true),
+            ("/api/cards/{cardId}/comments", "post", "201", typeof(Sdk.CommentDto), false),
+            ("/api/boards/{boardId}/activities", "get", "200", typeof(Sdk.ActivityPageDto), false),
+        ];
+
+        HttpClient client = _factory.CreateApiClient();
+        using HttpResponseMessage response = await client.GetAsync(
+            "openapi/v1.json", TestContext.Current.CancellationToken);
+        using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken));
+
+        foreach ((string path, string method, string status, Type sdkModel, bool collection) in contracts)
+        {
+            JsonElement schema = doc.RootElement
+                .GetProperty("paths")
+                .GetProperty(path)
+                .GetProperty(method)
+                .GetProperty("responses")
+                .GetProperty(status)
+                .GetProperty("content")
+                .GetProperty("application/json")
+                .GetProperty("schema");
+            schema = ResolveSchema(doc, schema);
+            if (collection)
+            {
+                schema.GetProperty("type").GetString().Should().Be(
+                    "array", $"{method.ToUpperInvariant()} {path} {status} returns a JSON collection");
+                schema = ResolveSchema(doc, schema.GetProperty("items"));
+            }
+
+            string[] openApiProperties = schema
+                .GetProperty("properties")
+                .EnumerateObject()
+                .Select(property => property.Name)
+                .Order(StringComparer.Ordinal)
+                .ToArray();
+            string[] sdkProperties = sdkModel.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Select(property => property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
+                    ?? JsonNamingPolicy.CamelCase.ConvertName(property.Name))
+                .Order(StringComparer.Ordinal)
+                .ToArray();
+
+            openApiProperties.Should().Equal(sdkProperties,
+                $"{method.ToUpperInvariant()} {path} {status} is the canonical SDK wire contract");
+        }
+    }
+
+    private static JsonElement ResolveSchema(JsonDocument document, JsonElement schema)
+    {
+        while (schema.TryGetProperty("$ref", out JsonElement reference))
+        {
+            string componentName = reference.GetString()!.Split('/')[^1];
+            schema = document.RootElement
+                .GetProperty("components")
+                .GetProperty("schemas")
+                .GetProperty(componentName);
+        }
+
+        return schema;
     }
 }

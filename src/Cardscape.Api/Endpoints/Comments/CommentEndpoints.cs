@@ -19,27 +19,27 @@ public static class CommentEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CommentDto>>>(new ListCommentsForCardQuery(cardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CommentDto[]>();
 
         group.MapPost("/", async (Guid cardId, AddCommentBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CommentDto>>(new AddCommentCommand(cardId, body.Body), ct);
             return result.IsSuccess ? Results.Created($"/api/cards/{cardId}/comments/{result.Value.Id}", result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CommentDto>(StatusCodes.Status201Created);
 
         group.MapPut("/{commentId:guid}", async (Guid cardId, Guid commentId, EditCommentBody body, IMessageBus bus, CancellationToken ct) =>
         {
             _ = cardId; // path-anchored for consistency; the comment carries its own cardId.
             var result = await bus.InvokeAsync<Result<CommentDto>>(new EditCommentCommand(commentId, body.NewBody), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CommentDto>();
 
         group.MapDelete("/{commentId:guid}", async (Guid cardId, Guid commentId, IMessageBus bus, CancellationToken ct) =>
         {
             _ = cardId;
             var result = await bus.InvokeAsync<Result>(new DeleteCommentCommand(commentId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }

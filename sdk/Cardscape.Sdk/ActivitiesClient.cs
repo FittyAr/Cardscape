@@ -16,8 +16,8 @@ public sealed class ActivitiesClient
     /// <param name="limit">The maximum number of activities to return. The default is 50.</param>
     /// <param name="ct">The token used to cancel the operation.</param>
     /// <returns>The board activities in server-defined order.</returns>
-    public Task<IReadOnlyList<ActivityDto>> ListForBoardAsync(Guid boardId, int limit = 50, CancellationToken ct = default) =>
-        _parent.SendAsync<IReadOnlyList<ActivityDto>>(
+    public Task<ActivityPageDto> ListForBoardAsync(Guid boardId, int limit = 50, CancellationToken ct = default) =>
+        _parent.SendAsync<ActivityPageDto>(
             new HttpRequestMessage(HttpMethod.Get, $"api/boards/{boardId}/activities?limit={limit}"), ct);
 
     /// <summary>Lists the most recent activities recorded for a card.</summary>
@@ -25,7 +25,7 @@ public sealed class ActivitiesClient
     /// <param name="limit">The maximum number of activities to return. The default is 50.</param>
     /// <param name="ct">The token used to cancel the operation.</param>
     /// <returns>The card activities in server-defined order.</returns>
-    public Task<IReadOnlyList<ActivityDto>> ListForCardAsync(Guid cardId, int limit = 50, CancellationToken ct = default) =>
-        _parent.SendAsync<IReadOnlyList<ActivityDto>>(
+    public Task<ActivityPageDto> ListForCardAsync(Guid cardId, int limit = 50, CancellationToken ct = default) =>
+        _parent.SendAsync<ActivityPageDto>(
             new HttpRequestMessage(HttpMethod.Get, $"api/cards/{cardId}/activities?limit={limit}"), ct);
 }

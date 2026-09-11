@@ -23,7 +23,7 @@ public static class BoardEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(new ListStarredBoardsQuery(), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardSummaryDto[]>();
 
         group.MapGet("/", async (Guid workspaceId, [FromQuery] bool? includeArchived, IMessageBus bus, CancellationToken ct) =>
         {
@@ -35,13 +35,13 @@ public static class BoardEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(
                 new ListBoardsForWorkspaceQuery(workspaceId, includeArchived ?? false), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardSummaryDto[]>();
 
         group.MapGet("/{boardId:guid}", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new GetBoardQuery(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardDto>();
 
         // BETA-A3-R2-001 — see
         // test-results/beta/round-2/reports/A3-boards.md.
@@ -58,7 +58,7 @@ public static class BoardEndpoints
         {
             var result = await bus.InvokeAsync<Result>(new DeleteBoardCommand(boardId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/", async (CreateBoardRequestBody body, IMessageBus bus, CancellationToken ct) =>
         {
@@ -67,7 +67,7 @@ public static class BoardEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/boards/{result.Value.Id}", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardDto>(StatusCodes.Status201Created);
 
         group.MapPost("/{boardId:guid}/rename", async (Guid boardId, RenameRequest body, IMessageBus bus, CancellationToken ct) =>
         {

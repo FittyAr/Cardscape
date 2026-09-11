@@ -25,7 +25,10 @@ public sealed class LabelsClient
     /// <returns>The created label.</returns>
     public Task<LabelDto> CreateAsync(CreateLabelRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Post, "api/labels/") { Content = _parent.CreateJsonContent(body) };
+        HttpRequestMessage req = new(HttpMethod.Post, $"api/boards/{body.BoardId}/labels")
+        {
+            Content = _parent.CreateJsonContent(new { body.Name, body.Color })
+        };
         return _parent.SendAsync<LabelDto>(req, ct);
     }
 }

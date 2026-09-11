@@ -48,6 +48,61 @@ public enum WorkspaceRole
     Observer = 2
 }
 
+/// <summary>Categories emitted by the activity timeline.</summary>
+public enum ActivityKind
+{
+    /// <summary>A board was created.</summary>
+    BoardCreated = 0,
+    /// <summary>A board was renamed.</summary>
+    BoardRenamed = 1,
+    /// <summary>A board was archived.</summary>
+    BoardArchived = 2,
+    /// <summary>A board was restored.</summary>
+    BoardUnarchived = 3,
+    /// <summary>A list was created.</summary>
+    ListCreated = 4,
+    /// <summary>A list was renamed.</summary>
+    ListRenamed = 5,
+    /// <summary>A list was moved.</summary>
+    ListMoved = 6,
+    /// <summary>A list was archived.</summary>
+    ListArchived = 7,
+    /// <summary>A card was created.</summary>
+    CardCreated = 8,
+    /// <summary>A card was renamed.</summary>
+    CardRenamed = 9,
+    /// <summary>A card was moved.</summary>
+    CardMoved = 10,
+    /// <summary>A card was archived.</summary>
+    CardArchived = 11,
+    /// <summary>A card was restored.</summary>
+    CardRestored = 12,
+    /// <summary>A user was assigned to a card.</summary>
+    CardAssigned = 13,
+    /// <summary>A user was unassigned from a card.</summary>
+    CardUnassigned = 14,
+    /// <summary>A card due date was set.</summary>
+    CardDueDateSet = 15,
+    /// <summary>A card due date was cleared.</summary>
+    CardDueDateCleared = 16,
+    /// <summary>A label was attached.</summary>
+    LabelAdded = 17,
+    /// <summary>A label was detached.</summary>
+    LabelRemoved = 18,
+    /// <summary>A comment was added.</summary>
+    CommentAdded = 19,
+    /// <summary>A checklist was created.</summary>
+    ChecklistCreated = 20,
+    /// <summary>A checklist item was completed.</summary>
+    ChecklistItemCompleted = 21,
+    /// <summary>A checklist item was reopened.</summary>
+    ChecklistItemUncompleted = 22,
+    /// <summary>An attachment was added.</summary>
+    AttachmentAdded = 23,
+    /// <summary>An attachment was removed.</summary>
+    AttachmentRemoved = 24
+}
+
 // ── Workspaces ─────────────────────────────────────────
 /// <summary>Represents a workspace returned by the Cardscape API.</summary>
 /// <param name="Id">The workspace identifier.</param>
@@ -55,6 +110,7 @@ public enum WorkspaceRole
 /// <param name="OwnerId">The identifier of the owning user.</param>
 /// <param name="Region">The data-hosting region.</param>
 /// <param name="IsArchived"><see langword="true"/> when the workspace is archived; otherwise, <see langword="false"/>.</param>
+/// <param name="RequireTwoFactor"><see langword="true"/> when workspace members must use two-factor authentication.</param>
 /// <param name="CreatedAt">The creation timestamp in UTC.</param>
 /// <param name="MemberCount">The number of workspace members.</param>
 public sealed record WorkspaceDto(
@@ -63,6 +119,7 @@ public sealed record WorkspaceDto(
     [property: JsonPropertyName("ownerId")] Guid OwnerId,
     [property: JsonPropertyName("region")] Region Region,
     [property: JsonPropertyName("isArchived")] bool IsArchived,
+    [property: JsonPropertyName("requireTwoFactor")] bool RequireTwoFactor,
     [property: JsonPropertyName("createdAt")] DateTimeOffset CreatedAt,
     [property: JsonPropertyName("memberCount")] int MemberCount);
 
@@ -150,7 +207,6 @@ public sealed record RenameBoardRequest(
 /// <param name="BoardId">The owning board identifier.</param>
 /// <param name="Name">The display name.</param>
 /// <param name="Position">The relative ordering value within the board.</param>
-/// <param name="WipLimit">The optional maximum number of active cards.</param>
 /// <param name="IsArchived"><see langword="true"/> when the list is archived; otherwise, <see langword="false"/>.</param>
 /// <param name="CreatedAt">The creation timestamp in UTC.</param>
 /// <param name="CardCount">The number of cards in the list.</param>
@@ -159,7 +215,6 @@ public sealed record BoardListDto(
     [property: JsonPropertyName("boardId")] Guid BoardId,
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("position")] double Position,
-    [property: JsonPropertyName("wipLimit")] int? WipLimit,
     [property: JsonPropertyName("isArchived")] bool IsArchived,
     [property: JsonPropertyName("createdAt")] DateTimeOffset CreatedAt,
     [property: JsonPropertyName("cardCount")] int CardCount);
@@ -182,16 +237,47 @@ public sealed record CreateListRequest(
 /// <param name="IsCompleted"><see langword="true"/> when the card is completed; otherwise, <see langword="false"/>.</param>
 /// <param name="IsArchived"><see langword="true"/> when the card is archived; otherwise, <see langword="false"/>.</param>
 /// <param name="CreatedAt">The creation timestamp in UTC.</param>
+/// <param name="CoverColor">The optional card cover color.</param>
+/// <param name="MemberCount">The assigned member count.</param>
+/// <param name="LabelCount">The attached label count.</param>
+/// <param name="CommentCount">The comment count.</param>
+/// <param name="AttachmentCount">The attachment count.</param>
+/// <param name="ChecklistCount">The checklist count.</param>
+/// <param name="IsSnoozed"><see langword="true"/> when the card is currently snoozed.</param>
+/// <param name="SnoozeUntil">The optional snooze expiration.</param>
+/// <param name="MirrorOfCardId">The source card identifier when this card is a mirror.</param>
 public sealed record CardDto(
     [property: JsonPropertyName("id")] Guid Id,
     [property: JsonPropertyName("listId")] Guid ListId,
     [property: JsonPropertyName("title")] string Title,
-    [property: JsonPropertyName("description")] string? Description,
+    [property: JsonPropertyName("description")] string Description,
     [property: JsonPropertyName("position")] double Position,
     [property: JsonPropertyName("dueDate")] DateTimeOffset? DueDate,
     [property: JsonPropertyName("isCompleted")] bool IsCompleted,
     [property: JsonPropertyName("isArchived")] bool IsArchived,
-    [property: JsonPropertyName("createdAt")] DateTimeOffset CreatedAt);
+    [property: JsonPropertyName("createdAt")] DateTimeOffset CreatedAt,
+    [property: JsonPropertyName("coverColor")] string? CoverColor,
+    [property: JsonPropertyName("memberCount")] int MemberCount,
+    [property: JsonPropertyName("labelCount")] int LabelCount,
+    [property: JsonPropertyName("commentCount")] int CommentCount,
+    [property: JsonPropertyName("attachmentCount")] int AttachmentCount,
+    [property: JsonPropertyName("checklistCount")] int ChecklistCount,
+    [property: JsonPropertyName("isSnoozed")] bool IsSnoozed,
+    [property: JsonPropertyName("snoozeUntil")] DateTimeOffset? SnoozeUntil,
+    [property: JsonPropertyName("mirrorOfCardId")] Guid? MirrorOfCardId);
+
+/// <summary>Represents the compact card projection returned by board lists.</summary>
+public sealed record CardSummaryDto(
+    [property: JsonPropertyName("id")] Guid Id,
+    [property: JsonPropertyName("listId")] Guid ListId,
+    [property: JsonPropertyName("title")] string Title,
+    [property: JsonPropertyName("position")] double Position,
+    [property: JsonPropertyName("dueDate")] DateTimeOffset? DueDate,
+    [property: JsonPropertyName("isCompleted")] bool IsCompleted,
+    [property: JsonPropertyName("updatedAt")] DateTimeOffset UpdatedAt,
+    [property: JsonPropertyName("isSnoozed")] bool IsSnoozed,
+    [property: JsonPropertyName("snoozeUntil")] DateTimeOffset? SnoozeUntil,
+    [property: JsonPropertyName("mirrorOfCardId")] Guid? MirrorOfCardId);
 
 /// <summary>Provides the values required to create a card.</summary>
 /// <param name="ListId">The list that will contain the card.</param>
@@ -201,16 +287,6 @@ public sealed record CreateCardRequest(
     [property: JsonPropertyName("listId")] Guid ListId,
     [property: JsonPropertyName("title")] string Title,
     [property: JsonPropertyName("description")] string? Description = null);
-
-/// <summary>Provides optional replacement values for mutable card fields.</summary>
-/// <param name="Title">The replacement title, or <see langword="null"/> to leave the current title unchanged.</param>
-/// <param name="Description">The replacement description, or <see langword="null"/> to leave the current description unchanged.</param>
-/// <param name="DueDate">The replacement due timestamp, or <see langword="null"/> to leave the current due date unchanged.</param>
-/// <remarks>This contract cannot distinguish an omitted nullable field from an explicit request to clear that field.</remarks>
-public sealed record UpdateCardRequest(
-    [property: JsonPropertyName("title")] string? Title = null,
-    [property: JsonPropertyName("description")] string? Description = null,
-    [property: JsonPropertyName("dueDate")] DateTimeOffset? DueDate = null);
 
 /// <summary>Provides the destination and ordering value used to move a card.</summary>
 /// <param name="ListId">The destination list identifier.</param>
@@ -245,14 +321,18 @@ public sealed record CreateLabelRequest(
 /// <param name="Id">The comment identifier.</param>
 /// <param name="CardId">The commented card identifier.</param>
 /// <param name="AuthorId">The authoring user identifier.</param>
+/// <param name="AuthorDisplayName">The current display name of the author, when available.</param>
 /// <param name="Body">The comment content.</param>
 /// <param name="CreatedAt">The creation timestamp in UTC.</param>
+/// <param name="UpdatedAt">The last edit timestamp, when edited.</param>
 public sealed record CommentDto(
     [property: JsonPropertyName("id")] Guid Id,
     [property: JsonPropertyName("cardId")] Guid CardId,
     [property: JsonPropertyName("authorId")] Guid AuthorId,
+    [property: JsonPropertyName("authorDisplayName")] string? AuthorDisplayName,
     [property: JsonPropertyName("body")] string Body,
-    [property: JsonPropertyName("createdAt")] DateTimeOffset CreatedAt);
+    [property: JsonPropertyName("createdAt")] DateTimeOffset CreatedAt,
+    [property: JsonPropertyName("updatedAt")] DateTimeOffset? UpdatedAt);
 
 /// <summary>Provides the content required to add a comment.</summary>
 /// <param name="Body">The comment content.</param>
@@ -265,14 +345,21 @@ public sealed record AddCommentRequest(
 /// <param name="BoardId">The associated board identifier.</param>
 /// <param name="CardId">The associated card identifier, when the action targets a card.</param>
 /// <param name="ActorId">The identifier of the user who performed the action.</param>
-/// <param name="Verb">The machine-readable action name.</param>
-/// <param name="Payload">The optional serialized action metadata.</param>
+/// <param name="ActorDisplayName">The current display name of the actor, when available.</param>
+/// <param name="Kind">The machine-readable activity category.</param>
+/// <param name="PayloadJson">The serialized action metadata.</param>
 /// <param name="OccurredAt">The action timestamp in UTC.</param>
 public sealed record ActivityDto(
     [property: JsonPropertyName("id")] Guid Id,
     [property: JsonPropertyName("boardId")] Guid BoardId,
     [property: JsonPropertyName("cardId")] Guid? CardId,
     [property: JsonPropertyName("actorId")] Guid ActorId,
-    [property: JsonPropertyName("verb")] string Verb,
-    [property: JsonPropertyName("payload")] string? Payload,
+    [property: JsonPropertyName("actorDisplayName")] string? ActorDisplayName,
+    [property: JsonPropertyName("kind")] ActivityKind Kind,
+    [property: JsonPropertyName("payloadJson")] string PayloadJson,
     [property: JsonPropertyName("occurredAt")] DateTimeOffset OccurredAt);
+
+/// <summary>Represents one cursor-based page of activity events.</summary>
+public sealed record ActivityPageDto(
+    [property: JsonPropertyName("items")] IReadOnlyList<ActivityDto> Items,
+    [property: JsonPropertyName("nextCursor")] string? NextCursor);

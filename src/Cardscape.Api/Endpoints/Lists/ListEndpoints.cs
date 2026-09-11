@@ -36,19 +36,19 @@ public static class ListEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardListDto>>>(
                 new ListListsForBoardQuery(boardId, includeArchived ?? false), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardListDto[]>();
 
         group.MapGet("/{listId:guid}", async (Guid listId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardListDto>>(new GetListQuery(listId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardListDto>();
 
         group.MapPost("/", async (CreateListBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardListDto>>(new CreateListCommand(body.BoardId, body.Name), ct);
             return result.IsSuccess ? Results.Created($"/api/lists/{result.Value.Id}", result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardListDto>(StatusCodes.Status201Created);
 
         group.MapPost("/{listId:guid}/rename", async (Guid listId, RenameBody body, IMessageBus bus, CancellationToken ct) =>
         {
