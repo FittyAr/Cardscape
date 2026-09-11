@@ -136,6 +136,66 @@ public sealed class OpenApiTests
         }
     }
 
+    [Fact]
+    public async Task OpenApi_AuthSuccessResponses_Match_Their_WireContracts()
+    {
+        (string Path, string Method, string Status, Type? Model)[] contracts =
+        [
+            ("/api/auth/register", "post", "201", typeof(Cardscape.Application.Authentication.DTOs.AuthResponse)),
+            ("/api/auth/login", "post", "200", typeof(Cardscape.Application.Authentication.DTOs.AuthResponse)),
+            ("/api/auth/forgot-password", "post", "200", typeof(Cardscape.Application.Authentication.Commands.PasswordResetRequestResult)),
+            ("/api/auth/reset-password", "post", "204", null),
+            ("/api/auth/login/totp", "post", "200", typeof(Cardscape.Application.Authentication.DTOs.AuthResponse)),
+            ("/api/auth/me", "get", "200", typeof(Cardscape.Application.Authentication.DTOs.UserSummary)),
+            ("/api/auth/revoke", "post", "204", null),
+            ("/api/auth/2fa/status", "get", "200", typeof(Cardscape.Application.Abstractions.Authentication.TotpStatus)),
+            ("/api/auth/2fa/enroll", "post", "200", typeof(Cardscape.Api.Endpoints.Auth.TotpEnrollmentResponse)),
+            ("/api/auth/2fa/verify", "post", "200", typeof(Cardscape.Api.Endpoints.Auth.TotpVerificationResponse)),
+            ("/api/auth/2fa/confirm", "post", "204", null),
+            ("/api/auth/2fa/disable", "post", "204", null),
+        ];
+
+        HttpClient client = _factory.CreateApiClient();
+        using HttpResponseMessage response = await client.GetAsync(
+            "openapi/v1.json", TestContext.Current.CancellationToken);
+        using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken));
+
+        foreach ((string path, string method, string status, Type? model) in contracts)
+        {
+            JsonElement success = document.RootElement
+                .GetProperty("paths")
+                .GetProperty(path)
+                .GetProperty(method)
+                .GetProperty("responses")
+                .GetProperty(status);
+            if (model is null)
+            {
+                success.TryGetProperty("content", out _).Should().BeFalse(
+                    $"{method.ToUpperInvariant()} {path} {status} has no response body");
+                continue;
+            }
+
+            JsonElement schema = ResolveSchema(document, success
+                .GetProperty("content")
+                .GetProperty("application/json")
+                .GetProperty("schema"));
+            string[] openApiProperties = schema.GetProperty("properties")
+                .EnumerateObject()
+                .Select(property => property.Name)
+                .Order(StringComparer.Ordinal)
+                .ToArray();
+            string[] modelProperties = model.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Select(property => property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
+                    ?? JsonNamingPolicy.CamelCase.ConvertName(property.Name))
+                .Order(StringComparer.Ordinal)
+                .ToArray();
+
+            openApiProperties.Should().Equal(modelProperties,
+                $"{method.ToUpperInvariant()} {path} {status} is the canonical auth wire contract");
+        }
+    }
+
     private static JsonElement ResolveSchema(JsonDocument document, JsonElement schema)
     {
         while (schema.TryGetProperty("$ref", out JsonElement reference))

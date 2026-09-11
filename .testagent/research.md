@@ -929,3 +929,13 @@
 - [x] No pre-net10 compatibility branches remain.
 - [x] OpenAPI schemas and public SDK JSON properties are checked together in
   an executable integration gate; collection schemas are explicitly arrays.
+
+# Auth/TOTP HTTP semantics — 2026-09-11
+
+- Auth and TOTP duplicated manual Problem Details creation and omitted the
+  stable `code` extension enforced by `DomainErrorResults`.
+- Duplicate registration is a domain conflict (409), not a generic 400;
+  revocation reason length is domain validation (422).
+- TOTP verification remains 401 for invalid credentials even when the lower
+  service reports a more specific enrollment state.
+- The anonymous verification payload prevented a named OpenAPI contract.

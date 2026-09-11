@@ -47,7 +47,7 @@ public static class TotpEndpoints
 
             var status = await totp.GetStatusAsync(currentUser.Id, ct);
             return Results.Ok(status);
-        });
+        }).Produces<TotpStatus>();
 
         group.MapPost("/enroll", async (
             ITotpService totp,
@@ -66,11 +66,8 @@ public static class TotpEndpoints
                     result.Value.Secret,
                     result.Value.QrCodeUrl,
                     result.Value.RecoveryCodes))
-                : Results.Problem(
-                    title: result.Error.Code,
-                    detail: result.Error.Message,
-                    statusCode: MapStatusCode(result.Error.Type));
-        });
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces<TotpEnrollmentResponse>();
 
         group.MapPost("/verify", async (
             [FromBody] TotpVerifyRequest body,
@@ -86,20 +83,19 @@ public static class TotpEndpoints
             var codeResult = await totp.VerifyAsync(currentUser.Id, body.Code, ct);
             if (codeResult.IsSuccess)
             {
-                return Results.Ok(new { valid = true });
+                return Results.Ok(new TotpVerificationResponse(true, false));
             }
 
             var recoveryResult = await totp.ConsumeRecoveryCodeAsync(currentUser.Id, body.Code, ct);
             if (recoveryResult.IsSuccess)
             {
-                return Results.Ok(new { valid = true, used_recovery_code = true });
+                return Results.Ok(new TotpVerificationResponse(true, true));
             }
 
-            return Results.Problem(
-                title: codeResult.Error.Code,
-                detail: codeResult.Error.Message,
-                statusCode: StatusCodes.Status401Unauthorized);
-        });
+            return DomainErrorResults.ToProblem(DomainError.Unauthenticated(
+                codeResult.Error.Code,
+                codeResult.Error.Message));
+        }).Produces<TotpVerificationResponse>();
 
         group.MapPost("/confirm", async (
             [FromBody] TotpVerifyRequest body,
@@ -115,11 +111,8 @@ public static class TotpEndpoints
             var result = await totp.ConfirmEnrollmentAsync(currentUser.Id, body.Code, ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : Results.Problem(
-                    title: result.Error.Code,
-                    detail: result.Error.Message,
-                    statusCode: MapStatusCode(result.Error.Type));
-        });
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/disable", async (
             [FromBody] TotpDisableRequest body,
@@ -135,25 +128,12 @@ public static class TotpEndpoints
             var result = await totp.DisableAsync(currentUser.Id, body.Code, ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : Results.Problem(
-                    title: result.Error.Code,
-                    detail: result.Error.Message,
-                    statusCode: MapStatusCode(result.Error.Type));
-        });
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }
 
-    private static int MapStatusCode(ErrorType type) => type switch
-    {
-        ErrorType.Validation => StatusCodes.Status400BadRequest,
-        ErrorType.NotFound => StatusCodes.Status404NotFound,
-        ErrorType.Conflict => StatusCodes.Status409Conflict,
-        ErrorType.Forbidden => StatusCodes.Status403Forbidden,
-        ErrorType.Unauthenticated => StatusCodes.Status401Unauthorized,
-        ErrorType.External => StatusCodes.Status502BadGateway,
-        _ => StatusCodes.Status500InternalServerError
-    };
 }
 
 /// <summary>Body for <c>POST /api/auth/2fa/verify</c>.</summary>
@@ -161,6 +141,9 @@ public sealed record TotpVerifyRequest(string Code);
 
 /// <summary>Body for <c>POST /api/auth/2fa/disable</c>.</summary>
 public sealed record TotpDisableRequest(string Code);
+
+/// <summary>Response for a successful TOTP or recovery-code verification.</summary>
+public sealed record TotpVerificationResponse(bool Valid, bool UsedRecoveryCode);
 
 /// <summary>Response for <c>POST /api/auth/2fa/enroll</c>.</summary>
 public sealed record TotpEnrollmentResponse(

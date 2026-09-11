@@ -744,3 +744,16 @@
   property, changing an activity envelope, documenting a collection as an
   object or reintroducing the removed update method breaks a named test or the
   SDK public compilation surface.
+
+# Auth/TOTP HTTP semantics — 2026-09-11
+
+- [x] Implementation complete: canonical Problem Details mapper, named TOTP
+  verification DTO and typed success/no-content metadata applied.
+- [x] Focused validation: Auth, TOTP, JWT revocation, workspace 2FA and OpenAPI
+  regressions 23/23; 0 failed and 0 skipped. The OpenAPI subset passes 4/4.
+- [x] Assertion review: duplicate email and long revoke reason assert exact
+  HTTP status, Problem Details body status/title and stable code; enrollment
+  tests retain exact unauthorized behavior.
+- [x] Pseudo-mutation review: restoring 400 for conflicts/validation, dropping
+  the `code` extension, leaking enrollment state through a 404, or removing
+  success metadata breaks an exact regression or OpenAPI contract check.

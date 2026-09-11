@@ -642,3 +642,14 @@
 5. Add an OpenAPI contract test and run API integration plus SDK suites.
 
 Status: complete. All five steps are implemented and validated.
+
+# Auth/TOTP HTTP semantics — 2026-09-11
+
+1. Replace manual domain-error mapping with the canonical RFC 7807 mapper.
+2. Preserve the security boundary of invalid TOTP verification as 401.
+3. Replace anonymous success JSON with a named response contract.
+4. Publish exact success/no-content metadata for Auth, TOTP and the omitted
+   Workspace membership operation.
+5. Update exact status/problem assertions and run all affected regressions.
+
+Status: complete. All five steps are implemented and validated.

@@ -135,7 +135,7 @@ public static class WorkspaceEndpoints
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(new RemoveWorkspaceMemberCommand(workspaceId, userId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<WorkspaceDto>();
 
         return app;
     }

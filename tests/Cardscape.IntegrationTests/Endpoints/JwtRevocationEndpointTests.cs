@@ -114,14 +114,19 @@ public sealed class JwtRevocationEndpointTests
     }
 
     [Fact]
-    public async Task Revoke_Long_Reason_Returns_400()
+    public async Task Revoke_Long_Reason_Returns_Canonical_Validation_Problem()
     {
         HttpClient client = await CreateAuthenticatedClientAsync();
 
         string tooLong = new('x', 201);
         HttpResponseMessage response = await client.PostAsJsonAsync(
             "api/auth/revoke", new { reason = tooLong }, TestContext.Current.CancellationToken);
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        using JsonDocument problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken));
+        problem.RootElement.GetProperty("status").GetInt32().Should().Be(422);
+        problem.RootElement.GetProperty("title").GetString().Should().Be("Validation failed");
+        problem.RootElement.GetProperty("code").GetString().Should().Be("auth.revoke.reason_too_long");
     }
 
     [Fact]

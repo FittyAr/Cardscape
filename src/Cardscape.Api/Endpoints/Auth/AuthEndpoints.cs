@@ -27,8 +27,8 @@ public static class AuthEndpoints
                 request.Email, request.DisplayName, request.Password), ct);
             return result.IsSuccess
                 ? Results.Created("/api/auth/me", result.Value)
-                : Results.Problem(result.Error.Message, statusCode: StatusCodes.Status400BadRequest, title: result.Error.Code);
-        });
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces<AuthResponse>(StatusCodes.Status201Created);
 
         group.MapPost("/login", async (LoginRequest request, IMessageBus bus, CancellationToken ct) =>
         {
@@ -36,8 +36,8 @@ public static class AuthEndpoints
                 request.Email, request.Password), ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
-                : Results.Problem(result.Error.Message, statusCode: StatusCodes.Status401Unauthorized, title: result.Error.Code);
-        });
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces<AuthResponse>();
 
         group.MapPost("/forgot-password", async (
             ForgotPasswordRequest request,
@@ -51,8 +51,8 @@ public static class AuthEndpoints
                 new RequestPasswordResetCommand(request.Email, ip, environment.IsDevelopment()), ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
-                : Results.Problem(result.Error.Message, statusCode: StatusCodes.Status400BadRequest, title: result.Error.Code);
-        });
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces<PasswordResetRequestResult>();
 
         group.MapPost("/reset-password", async (ResetPasswordRequest request, IMessageBus bus, CancellationToken ct) =>
         {
@@ -60,8 +60,8 @@ public static class AuthEndpoints
                 new ResetPasswordCommand(request.Token, request.NewPassword), ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : Results.Problem(result.Error.Message, statusCode: StatusCodes.Status400BadRequest, title: result.Error.Code);
-        });
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces(StatusCodes.Status204NoContent);
 
         // Second step of a 2FA-protected login. The browser hands
         // over the PendingTotpToken it received from POST /api/auth/login
@@ -76,8 +76,8 @@ public static class AuthEndpoints
                 new ConsumePendingTotpLoginQuery(request.PendingTotpToken, request.Code), ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
-                : Results.Problem(result.Error.Message, statusCode: StatusCodes.Status401Unauthorized, title: result.Error.Code);
-        });
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces<AuthResponse>();
 
         // GET /api/auth/me — the conventional "who am I" endpoint that
         // takes the JWT access token from the Authorization header and
@@ -110,7 +110,8 @@ public static class AuthEndpoints
 
             return Results.Ok(new UserSummary(
                 user.Id.Value, user.Email.Value, user.DisplayName.Value));
-        }).RequireAuthorization();
+        }).Produces<UserSummary>()
+            .RequireAuthorization();
 
         // Revoke the JWT access token carried in the
         // Authorization header. The next request that
@@ -124,19 +125,17 @@ public static class AuthEndpoints
             string? reason = request?.Reason;
             if (reason is { Length: > 200 })
             {
-                return Results.Problem(
-                    title: "auth.revoke.reason_too_long",
-                    detail: "The reason must be 200 characters or fewer.",
-                    statusCode: StatusCodes.Status400BadRequest);
+                return DomainErrorResults.ToProblem(DomainError.Validation(
+                    "auth.revoke.reason_too_long",
+                    "The reason must be 200 characters or fewer."));
             }
 
             var result = await bus.InvokeAsync<Result>(new RevokeCurrentTokenCommand(reason), ct);
             return result.IsSuccess
                 ? Results.NoContent()
-                : Results.Problem(result.Error.Message,
-                    statusCode: StatusCodes.Status400BadRequest,
-                    title: result.Error.Code);
-        }).RequireAuthorization();
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces(StatusCodes.Status204NoContent)
+            .RequireAuthorization();
 
         return app;
     }

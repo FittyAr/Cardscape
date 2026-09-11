@@ -53,7 +53,7 @@ public sealed class AuthEndpointTests
     }
 
     [Fact]
-    public async Task Register_With_Duplicate_Email_Returns_400()
+    public async Task Register_With_Duplicate_Email_Returns_Canonical_Conflict_Problem()
     {
         HttpClient client = _factory.CreateApiClient();
         string email = $"it-dup-{Guid.NewGuid():N}@cardscape.local";
@@ -63,7 +63,12 @@ public sealed class AuthEndpointTests
 
         RegisterRequest second = new(email, "Second", "Password123!");
         HttpResponseMessage dup = await client.PostAsJsonAsync("api/auth/register", second, TestContext.Current.CancellationToken);
-        dup.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        dup.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        using JsonDocument problem = JsonDocument.Parse(await dup.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken));
+        problem.RootElement.GetProperty("status").GetInt32().Should().Be(409);
+        problem.RootElement.GetProperty("title").GetString().Should().Be("Conflict");
+        problem.RootElement.GetProperty("code").GetString().Should().Be("members.user.email_taken");
     }
 
     [Fact]
