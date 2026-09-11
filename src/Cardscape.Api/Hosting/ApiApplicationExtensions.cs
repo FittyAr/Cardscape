@@ -167,4 +167,3 @@ internal static class ApiApplicationExtensions
         await db.Database.MigrateAsync();
     }
 }
-

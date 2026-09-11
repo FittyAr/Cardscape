@@ -757,3 +757,13 @@
 - [x] Pseudo-mutation review: restoring 400 for conflicts/validation, dropping
   the `code` extension, leaking enrollment state through a 404, or removing
   success metadata breaks an exact regression or OpenAPI contract check.
+
+# OpenAPI/Scalar/Web synchronization — 2026-09-11
+
+- [x] The 18 SDK response contracts also compare their exact JSON property set
+  with the corresponding Blazor Web records.
+- [x] Scalar returns HTML and references the canonical `/openapi/v1.json` URL.
+- [x] Focused validation: OpenAPI/Scalar 5/5; 0 failed and 0 skipped.
+- [x] Assertion/pseudo-mutation review: adding, removing or renaming a shared
+  Web property, changing Scalar's document URL, disabling its endpoint or
+  breaking the OpenAPI document fails an exact assertion.

@@ -70,7 +70,21 @@ public sealed class OpenApiTests
     }
 
     [Fact]
-    public async Task OpenApi_SdkSuccessSchemas_Match_PublicSdkModels()
+    public async Task Scalar_Reference_Is_Served_From_The_Canonical_OpenApi_Document()
+    {
+        HttpClient client = _factory.CreateApiClient();
+
+        using HttpResponseMessage response = await client.GetAsync(
+            "scalar", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.Content.Headers.ContentType?.MediaType.Should().Be("text/html");
+        string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        body.Should().Contain("\"url\":\"openapi/v1.json\"");
+    }
+
+    [Fact]
+    public async Task OpenApi_ClientSuccessSchemas_Match_Sdk_And_Web_Models()
     {
         (string Path, string Method, string Status, Type Model, bool Collection)[] contracts =
         [
@@ -93,6 +107,19 @@ public sealed class OpenApiTests
             ("/api/cards/{cardId}/comments", "post", "201", typeof(Sdk.CommentDto), false),
             ("/api/boards/{boardId}/activities", "get", "200", typeof(Sdk.ActivityPageDto), false),
         ];
+        Dictionary<Type, Type> webModels = new()
+        {
+            [typeof(Sdk.WorkspaceDto)] = typeof(Cardscape.Web.Shared.WorkspaceDto),
+            [typeof(Sdk.WorkspaceMemberDto)] = typeof(Cardscape.Web.Shared.WorkspaceMemberDto),
+            [typeof(Sdk.BoardSummaryDto)] = typeof(Cardscape.Web.Shared.BoardSummaryDto),
+            [typeof(Sdk.BoardDto)] = typeof(Cardscape.Web.Shared.BoardDto),
+            [typeof(Sdk.BoardListDto)] = typeof(Cardscape.Web.Shared.BoardListDto),
+            [typeof(Sdk.CardSummaryDto)] = typeof(Cardscape.Web.Shared.CardSummaryDto),
+            [typeof(Sdk.CardDto)] = typeof(Cardscape.Web.Shared.CardDto),
+            [typeof(Sdk.LabelDto)] = typeof(Cardscape.Web.Shared.LabelDto),
+            [typeof(Sdk.CommentDto)] = typeof(Cardscape.Web.Shared.CommentDto),
+            [typeof(Sdk.ActivityPageDto)] = typeof(Cardscape.Web.Shared.ActivityPageDto),
+        };
 
         HttpClient client = _factory.CreateApiClient();
         using HttpResponseMessage response = await client.GetAsync(
@@ -133,6 +160,14 @@ public sealed class OpenApiTests
 
             openApiProperties.Should().Equal(sdkProperties,
                 $"{method.ToUpperInvariant()} {path} {status} is the canonical SDK wire contract");
+            string[] webProperties = webModels[sdkModel]
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Select(property => property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
+                    ?? JsonNamingPolicy.CamelCase.ConvertName(property.Name))
+                .Order(StringComparer.Ordinal)
+                .ToArray();
+            openApiProperties.Should().Equal(webProperties,
+                $"{method.ToUpperInvariant()} {path} {status} is the canonical Web wire contract");
         }
     }
 

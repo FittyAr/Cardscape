@@ -939,3 +939,11 @@
 - TOTP verification remains 401 for invalid credentials even when the lower
   service reports a more specific enrollment state.
 - The anonymous verification payload prevented a named OpenAPI contract.
+
+# OpenAPI/Scalar/Web synchronization — 2026-09-11
+
+- The Web response records cover the same 18 core contracts consumed by the
+  SDK, but previously had no executable drift detector.
+- Scalar's generated bootstrap normalizes its canonical document source to
+  `openapi/v1.json`; an explicit leading-slash option produces the same output
+  and is therefore unnecessary configuration.

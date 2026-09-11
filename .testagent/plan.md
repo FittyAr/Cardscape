@@ -643,6 +643,15 @@
 
 Status: complete. All five steps are implemented and validated.
 
+# OpenAPI/Scalar/Web synchronization — 2026-09-11
+
+1. Compare every SDK-covered OpenAPI response with its Web response record.
+2. Exercise the actual Scalar HTML endpoint and pin its OpenAPI v1 source.
+3. Keep the default Scalar configuration when its normalized output is exact.
+4. Update the modernization plan and validate the complete OpenAPI suite.
+
+Status: complete. All four steps are implemented and validated.
+
 # Auth/TOTP HTTP semantics — 2026-09-11
 
 1. Replace manual domain-error mapping with the canonical RFC 7807 mapper.
