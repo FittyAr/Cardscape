@@ -18,9 +18,10 @@
 
 The simplest self-hostable Cardscape deployment is a
 single Linux host with Docker and Docker Compose. The host
-runs the API, the web client, and the database (SQLite
-for solo/dev, PostgreSQL for production). The MCP server
-shares the same host when Phase 2 ships.
+runs the API, its hosted Blazor WebAssembly client, and SQLite.
+PostgreSQL and MySQL/MariaDB are supported release targets through
+their provider-specific EF Core migrations. The MCP server is a
+separate deployable and is not part of the default Compose stack.
 
 ### 1.1 Requirements
 
@@ -39,69 +40,55 @@ shares the same host when Phase 2 ships.
 
 ### 1.2 The `docker-compose.yml`
 
-The maintainer publishes a `docker-compose.yml` at
-`https://cardscape.fitty.ar/releases/v0.1.0-mvp/docker-compose.yml`
-(the path is added with the first release). The file looks
-like:
+The repository-root `docker-compose.yml` is the normative
+self-hosted stack. It builds the current source tree and hosts both
+the API and Blazor client in one non-root container. Its named
+volumes persist the SQLite database, uploaded files, and Data
+Protection keys; preserving the key volume is required to decrypt
+stored integration secrets after a container replacement.
 
 ```yaml
-version: "3.8"
-
 services:
-  api:
-    image: ghcr.io/cardscape/cardscape-api:0.1.0-mvp
+  cardscape.api:
+    build:
+      context: .
+      dockerfile: src/Cardscape.Api/Dockerfile
     restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - Database__Provider=Sqlite
-      - Database__ConnectionString=Data Source=/data/cardscape.db
-      - Cardscape__JwtSecret=${JWT_SECRET:?JWT_SECRET is required}
-      - Otel__Endpoint=http://otel-collector:4317
+      ASPNETCORE_ENVIRONMENT: Production
+      Database__Provider: Sqlite
+      ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
+      Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:?CARDS_CAPE_JWT_KEY is required}
+      Cardscape__DataProtection__KeyDirectory: /app/DataProtectionKeys
+      Cardscape__Database__RunMigrationsOnStartup: "true"
     volumes:
-      - cardscape-data:/data
+      - cardscape.data:/app/Data
+      - cardscape.uploads:/app/Storage
+      - cardscape.keys:/app/DataProtectionKeys
     ports:
-      - "5000:8080"
-    depends_on:
-      otel-collector:
-        condition: service_started
-
-  web:
-    image: ghcr.io/cardscape/cardscape-web:0.1.0-mvp
-    restart: unless-stopped
-    environment:
-      - Cardscape__ApiBaseUrl=https://cardscape.example.com/api/v1
-    ports:
-      - "5001:8080"
-
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.96.0
-    restart: unless-stopped
-    volumes:
-      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
-    ports:
-      - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP
+      - "8080:8080"
 
 volumes:
-  cardscape-data:
+  cardscape.data:
+  cardscape.uploads:
+  cardscape.keys:
 ```
 
 ### 1.3 The steps
 
 ```bash
-# 1. Create a directory for the deployment.
-mkdir -p /opt/cardscape && cd /opt/cardscape
-
-# 2. Download the docker-compose.yml (when the first release ships).
-curl -O https://cardscape.fitty.ar/releases/v0.1.0-mvp/docker-compose.yml
-curl -O https://cardscape.fitty.ar/releases/v0.1.0-mvp/otel-collector-config.yaml
+# 1. Clone the release tag and enter the repository.
+git clone https://github.com/FittyAr/Cardscape.git /opt/cardscape
+cd /opt/cardscape
 
 # 3. Generate a strong JWT secret (32+ random bytes, base64).
 openssl rand -base64 48
 
 # 4. Create a .env file with the secret and any other config.
 cat > .env <<EOF
-JWT_SECRET=<paste the secret from step 3>
+CARDS_CAPE_JWT_KEY=<paste the secret from step 3>
 EOF
 
 # 5. Start the stack.
@@ -109,17 +96,18 @@ docker compose up -d
 
 # 6. Verify the stack is up.
 docker compose ps
-curl -fsS http://localhost:5000/health/live
-curl -fsS http://localhost:5001/
+curl -fsS http://localhost:8080/health/live
+curl -fsS http://localhost:8080/health/ready
+curl -fsS http://localhost:8080/
 
 # 7. Set up the reverse proxy (see §2).
 # 8. Set up the backup (see 02-backup-restore.md).
 # 9. Set up the monitoring (see 03-monitoring.md).
 ```
 
-The web client is at `http://localhost:5001`. The API is
-at `http://localhost:5000`. The MCP server (Phase 2+) is
-at the same port as the API, on the `/mcp/` path.
+The hosted web client and API are available at
+`http://localhost:8080`. Deploy MCP separately when that surface is
+required and configure it against the same database/provider.
 
 ---
 

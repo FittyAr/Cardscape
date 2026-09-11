@@ -699,3 +699,9 @@
 - Assertion review: API and MCP readiness assert exact 200 responses after their fixtures create SQLite; legacy-route coverage asserts exact 404; the existing liveness test retains concrete security-header assertions.
 - Pseudo-mutation review: a readiness predicate that excludes the database, a restored `/health` mapping, or a pipeline that omits security headers would each fail a named test. Telemetry composition is additionally compiler-validated in both host projects.
 - Validation: solution Release build 0 warnings/0 errors; API health/security integration tests 5/5; MCP health E2E tests 2/2.
+# Deployment durability — 2026-09-11
+
+- Implementation: Docker restore graph, persistent Data Protection keys, readiness probes, init/graceful shutdown and capability hardening complete.
+- Assertion review: the test asserts both cross-container decryption and physical key creation, rather than only service registration.
+- Pseudo-mutation review: removing `PersistKeysToFileSystem`, changing the application discriminator, or pointing the second host at another directory breaks the exact plaintext assertion.
+- Validation: three `docker compose config --quiet` checks and actionlint 1.7.12 pass; API and UnitTests Release builds 0 warnings/0 errors; `DataProtectionKeyDirectory_PersistsSecretsAcrossContainers` 1/1. The local Docker daemon denies access, so the actual clean image build/start/readiness smoke is now an enforced CI job rather than an undocumented manual assumption.

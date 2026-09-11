@@ -859,3 +859,19 @@
 - [x] The obsolete aggregate `/health` route is removed.
 - [x] API security headers continue to cover health responses.
 - [x] Both hosts emit ASP.NET Core and HttpClient traces and metrics, with conditional OTLP export.
+# Deployment durability — 2026-09-11
+
+## Bounded inventory
+
+- Docker restore omitted both provider-specific migration project files referenced by `Cardscape.Api`.
+- Data Protection used its implicit local key ring while Compose persisted only database/uploads; encrypted integration secrets could not survive container replacement.
+- All three Compose variants lacked an init process, an explicit graceful-stop window, and capability hardening.
+- Existing unit tests use xUnit v3, FluentAssertions, and host-level DI composition.
+
+## Acceptance checklist
+
+- [x] A recreated DI container can decrypt data with the persisted key directory.
+- [x] Docker clean restore includes SQLite, PostgreSQL, and MySQL/MariaDB migration assemblies.
+- [x] Compose persists the key ring and probes readiness.
+- [x] Compose declares graceful stop and least-privilege process settings.
+- [x] CI builds the release Dockerfile and waits for real readiness before release jobs may run.

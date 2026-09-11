@@ -1,4 +1,5 @@
 using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Infrastructure.Ai;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Hosting;
@@ -8,6 +9,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Cardscape.UnitTests.Hosting;
@@ -116,9 +118,49 @@ public sealed class InfrastructureOptionsValidationTests
         act.Should().Throw<InvalidOperationException>();
     }
 
+    [Fact]
+    public void DataProtectionKeyDirectory_PersistsSecretsAcrossContainers()
+    {
+        string keyDirectory = Path.Combine(
+            Path.GetTempPath(), $"cardscape-dp-{Guid.NewGuid():N}");
+
+        try
+        {
+            const string plaintext = "persisted-integration-secret";
+            string protectedValue;
+            using (IHost firstHost = CreateHost(new Dictionary<string, string?>
+            {
+                ["Cardscape:DataProtection:KeyDirectory"] = keyDirectory
+            }))
+            {
+                protectedValue = firstHost.Services
+                    .GetRequiredService<ISecretProtector>()
+                    .Protect(plaintext);
+            }
+
+            using IHost secondHost = CreateHost(new Dictionary<string, string?>
+            {
+                ["Cardscape:DataProtection:KeyDirectory"] = keyDirectory
+            });
+
+            secondHost.Services.GetRequiredService<ISecretProtector>()
+                .Unprotect(protectedValue)
+                .Should().Be(plaintext);
+            Directory.EnumerateFiles(keyDirectory).Should().NotBeEmpty();
+        }
+        finally
+        {
+            if (Directory.Exists(keyDirectory))
+            {
+                Directory.Delete(keyDirectory, recursive: true);
+            }
+        }
+    }
+
     private static IHost CreateHost(IReadOnlyDictionary<string, string?> overrides)
     {
         HostApplicationBuilder builder = Host.CreateApplicationBuilder();
+        builder.Logging.ClearProviders();
         var configuration = new Dictionary<string, string?>
         {
             ["ConnectionStrings:Default"] = "Data Source=:memory:",

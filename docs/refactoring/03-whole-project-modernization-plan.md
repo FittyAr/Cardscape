@@ -117,7 +117,7 @@ Reglas permanentes:
 
 ### Fase 6 — Operación y cierre
 
-- [ ] Auditar Docker/Compose, configuración por ambiente, health checks, graceful shutdown y despliegue reproducible. Los tres Compose usan el mismo Dockerfile/host y health check HTTP. El mirror de producción ahora falla cerrado si `CARDS_CAPE_JWT_KEY` no está definido, en lugar de arrancar con la clave pública de desarrollo pese a que su documentación afirmaba lo contrario. El arranque del host, la aplicación de migraciones EF Core y la ejecución final usan APIs async (`MigrateAsync`/`RunAsync`) y liberación asíncrona del scope; continúa la verificación de imagen, shutdown y despliegue real.
+- [x] Auditar Docker/Compose, configuración por ambiente, health checks, graceful shutdown y despliegue reproducible. Los tres Compose usan el mismo Dockerfile/host, readiness real, init, ventana de shutdown y proceso sin capabilities/no-new-privileges. Producción falla cerrado sin `CARDS_CAPE_JWT_KEY`; las claves Data Protection que cifran secretos se conservan en un volumen dedicado y una prueba demuestra descifrado después de reconstruir el contenedor DI. El Dockerfile copia los tres proyectos de migraciones antes del restore y CI construye la imagen desde contexto limpio, la inicia, espera `/health/ready` y bloquea la release si falla. El arranque, migraciones EF Core y ejecución final usan APIs async (`MigrateAsync`/`RunAsync`) y scopes asíncronos. Localmente los tres `docker compose config` pasan; el daemon Docker deniega acceso en este host, por lo que la ejecución de imagen queda como gate reproducible de CI con responsable explícito.
 - [ ] Revisar CI, supply chain, dependencias vulnerables y actualizaciones compatibles con .NET 10.
 - [ ] Consolidar documentación operativa y eliminar contradicciones sin reescribir ADR históricos.
 - [ ] Ejecutar build, tests, análisis y smoke tests finales.
@@ -352,6 +352,7 @@ Reglas permanentes:
 | 2026-09-10 | Prefijo real de secreto OAuth | El agregado persiste el prefijo público emitido y el listado deja de derivarlo incorrectamente desde el hash. EF Core genera migraciones equivalentes para SQLite, PostgreSQL y MySQL/MariaDB | OAuth Apps integration 4 pass; tres provider builds 0/0; tres modelos sin cambios pendientes | Incluido en este commit |
 | 2026-09-10 | Primitivas de credenciales OAuth | Generación CSPRNG/base64url, hash SHA-256 y comparación constante salen de `OAuthAppService` hacia `OAuthCredential`; hashes persistidos inválidos fallan cerrados | Infrastructure Release 0/0; OAuth flows/apps/revoke integration 12 pass | Incluido en este commit |
 | 2026-09-11 | Observabilidad y health checks reales | API/MCP instrumentan trazas y métricas HTTP con OTLP opcional; readiness comprueba persistencia mediante EF Core y se elimina `/health` sintético | Solución Release 0/0; API health 5 pass; MCP health E2E 2 pass | Incluido en este commit |
+| 2026-09-11 | Despliegue durable y reproducible | Restore Docker incluye migraciones multi-provider; claves Data Protection persisten; Compose endurece proceso/shutdown y CI exige build+arranque+readiness de imagen antes de release | Compose config 3/3; API/UnitTests Release 0/0; persistencia criptográfica 1 pass; smoke Docker delegado al gate CI por daemon local inaccesible | Incluido en este commit |
 
 ### Migración LoggerMessage
 

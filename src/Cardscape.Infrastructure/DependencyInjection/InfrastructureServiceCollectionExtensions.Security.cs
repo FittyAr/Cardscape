@@ -56,7 +56,13 @@ public static partial class InfrastructureServiceCollectionExtensions
             services.AddSingleton<IPendingTotpLoginStore, InMemoryPendingTotpLoginStore>();
         }
 
-        services.AddDataProtection();
+        IDataProtectionBuilder dataProtection = services.AddDataProtection()
+            .SetApplicationName("Cardscape");
+        string? keyDirectory = configuration["Cardscape:DataProtection:KeyDirectory"];
+        if (!string.IsNullOrWhiteSpace(keyDirectory))
+        {
+            dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keyDirectory));
+        }
         services.AddSingleton<IDataProtector>(serviceProvider =>
         {
             var provider = serviceProvider.GetRequiredService<IDataProtectionProvider>();

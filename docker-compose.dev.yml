@@ -14,12 +14,19 @@ services:
     image: cardscape/api:0.1.0-mvp
     container_name: cardscape.api
     restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       Database__Provider: Sqlite
       ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
       Storage__LocalRoot: /app/Storage
+      Cardscape__DataProtection__KeyDirectory: /app/DataProtectionKeys
       Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:-dev-only-insecure-signing-key-please-override-in-production-32+chars}
       Jwt__Issuer: Cardscape
       Jwt__Audience: Cardscape
@@ -37,6 +44,7 @@ services:
     volumes:
       - cardscape.data:/app/Data
       - cardscape.uploads:/app/Storage
+      - cardscape.keys:/app/DataProtectionKeys
     healthcheck:
       # BETA-8-ENV-#1 — see test-results/r8/r8-report.md.
       # The previous `dotnet Cardscape.Api.dll --health` command spawned
@@ -45,7 +53,7 @@ services:
       # the primary API answers 200 while its process is live.
       # with curl instead; curl is installed in the Dockerfile runtime
       # stage specifically for this.
-      test: ["CMD-SHELL", "curl --silent --fail --max-time 4 http://localhost:8080/health/live || exit 1"]
+      test: ["CMD-SHELL", "curl --silent --fail --max-time 4 http://localhost:8080/health/ready || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -54,3 +62,4 @@ services:
 volumes:
   cardscape.data:
   cardscape.uploads:
+  cardscape.keys:

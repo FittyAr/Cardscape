@@ -61,6 +61,12 @@ services:
     image: cardscape/api:0.1.0-mvp
     container_name: cardscape.api.prod
     restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     environment:
       # The whole point of this compose: flip Development to
       # Production so the .NET runtime ships pre-compiled .wasm
@@ -72,6 +78,7 @@ services:
       Database__Provider: Sqlite
       ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
       Storage__LocalRoot: /app/Storage
+      Cardscape__DataProtection__KeyDirectory: /app/DataProtectionKeys
       # Production must fail closed when no signing key is supplied.
       # Generate one with `openssl rand -base64 48` and expose it
       # through the shell or a non-versioned .env file.
@@ -94,9 +101,10 @@ services:
     volumes:
       - cardscape.prod.data:/app/Data
       - cardscape.prod.uploads:/app/Storage
+      - cardscape.prod.keys:/app/DataProtectionKeys
     healthcheck:
       # Same healthcheck as the dev compose — see BETA-8-ENV-#1.
-      test: ["CMD-SHELL", "curl --silent --fail --max-time 4 http://localhost:8080/health/live || exit 1"]
+      test: ["CMD-SHELL", "curl --silent --fail --max-time 4 http://localhost:8080/health/ready || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -105,3 +113,4 @@ services:
 volumes:
   cardscape.prod.data:
   cardscape.prod.uploads:
+  cardscape.prod.keys:

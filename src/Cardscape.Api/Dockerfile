@@ -11,6 +11,8 @@ COPY Directory.Build.props Directory.Packages.props global.json ./
 COPY src/Cardscape.Domain/Cardscape.Domain.csproj           src/Cardscape.Domain/
 COPY src/Cardscape.Application/Cardscape.Application.csproj src/Cardscape.Application/
 COPY src/Cardscape.Infrastructure/Cardscape.Infrastructure.csproj src/Cardscape.Infrastructure/
+COPY src/Cardscape.Migrations.PostgreSql/Cardscape.Migrations.PostgreSql.csproj src/Cardscape.Migrations.PostgreSql/
+COPY src/Cardscape.Migrations.MySql/Cardscape.Migrations.MySql.csproj src/Cardscape.Migrations.MySql/
 COPY src/Cardscape.Web/Cardscape.Web.csproj                 src/Cardscape.Web/
 COPY src/Cardscape.Api/Cardscape.Api.csproj                 src/Cardscape.Api/
 # Seeder ships in its own project (added in the seeder
@@ -56,7 +58,7 @@ RUN apt-get update \
 # Non-root for safety; UID 1000 matches the .NET base image convention.
 RUN groupadd --system --gid 1001 cardscape \
     && useradd  --system --uid 1001 --gid cardscape cardscape \
-    && mkdir -p /app/Data /app/Storage \
+    && mkdir -p /app/Data /app/Storage /app/DataProtectionKeys \
     && chown -R cardscape:cardscape /app
 
 COPY --from=build --chown=cardscape:cardscape /app/publish ./
@@ -156,6 +158,7 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 ENV Database__Provider=Sqlite
 ENV ConnectionStrings__Default=Data Source=/app/Data/cardscape.db
 ENV Storage__LocalRoot=/app/Storage
+ENV Cardscape__DataProtection__KeyDirectory=/app/DataProtectionKeys
 EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "Cardscape.Api.dll"]

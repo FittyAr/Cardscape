@@ -612,3 +612,9 @@
 3. Add `Legacy_Health_Route_Does_Not_Exist` to lock removal of the synthetic compatibility route.
 4. Add `Mcp_Readiness_Endpoint_Verifies_Database_Connectivity` to cover the second deployable host.
 5. Build both deployable hosts, run the narrow integration/E2E classes, and review assertions for false positives.
+# Deployment durability — 2026-09-11
+
+1. Add `DataProtectionKeyDirectory_PersistsSecretsAcrossContainers` using two independently built hosts and one temporary key ring.
+2. Validate API Release compilation and all three Compose documents.
+3. Review the assertion against a missing-persistence mutation: a new ephemeral ring must fail unprotection in the second host.
+4. Add a clean-context Docker build/start/readiness gate to CI because local daemon access is unavailable.
