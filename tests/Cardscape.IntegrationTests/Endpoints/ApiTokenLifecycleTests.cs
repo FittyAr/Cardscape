@@ -85,13 +85,13 @@ public sealed class ApiTokenLifecycleTests
     }
 
     [Fact]
-    public async Task Issue_With_Empty_Name_Returns_400()
+    public async Task Issue_With_Empty_Name_Returns_422()
     {
         HttpClient client = await CreateAuthenticatedClientAsync();
         HttpResponseMessage issue = await client.PostAsJsonAsync(
             "api/security/api-tokens/",
             new { name = "", scopes = new[] { "read" } }, TestContext.Current.CancellationToken);
-        issue.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        issue.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
 
     private async Task<HttpClient> CreateAuthenticatedClientAsync()

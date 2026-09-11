@@ -108,7 +108,7 @@ public sealed class UserPreferencesEndpointsTests
     }
 
     [Fact]
-    public async Task Put_InvalidThemeName_Returns400()
+    public async Task Put_InvalidThemeName_Returns422()
     {
         HttpClient client = await CreateAuthenticatedClientAsync();
         await client.PostAsync("api/users/me/preferences", content: null, TestContext.Current.CancellationToken);
@@ -117,7 +117,7 @@ public sealed class UserPreferencesEndpointsTests
             "api/users/me/preferences",
             new { themeName = "not-a-real-theme" },
             TestContext.Current.CancellationToken);
-        put.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        put.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
 
     [Fact]

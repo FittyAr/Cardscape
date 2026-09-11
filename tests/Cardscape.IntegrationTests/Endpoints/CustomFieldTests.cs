@@ -67,7 +67,7 @@ public sealed class CustomFieldTests
     }
 
     [Fact]
-    public async Task Create_Dropdown_Without_Options_Returns_BadRequest()
+    public async Task Create_Dropdown_Without_Options_Returns_UnprocessableEntity()
     {
         HttpClient client = await CreateAuthenticatedClientAsync();
         Seed seed = await CreateSeedAsync(client, "Dropdown options");
@@ -75,7 +75,7 @@ public sealed class CustomFieldTests
         HttpResponseMessage create = await client.PostAsJsonAsync(
             $"api/boards/{seed.BoardId}/custom-fields/",
             new { name = "Severity", kind = "dropdown", dropdownOptions = (string[]?)null, position = 0 }, TestContext.Current.CancellationToken);
-        create.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        create.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
 
     [Fact]
@@ -138,7 +138,7 @@ public sealed class CustomFieldTests
         HttpResponseMessage set = await client.PutAsJsonAsync(
             $"api/cards/{seed.CardId}/custom-field-values/{field.Id}",
             new { valueJson = "\"Critical\"" }, TestContext.Current.CancellationToken);
-        set.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        set.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
 
     [Fact]

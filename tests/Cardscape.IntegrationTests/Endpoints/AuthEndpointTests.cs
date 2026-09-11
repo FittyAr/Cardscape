@@ -89,10 +89,10 @@ public sealed class AuthEndpointTests
     }
 
     [Fact]
-    public async Task Health_Endpoint_Is_Public()
+    public async Task Liveness_Endpoint_Is_Public()
     {
         HttpClient client = _factory.CreateApiClient();
-        HttpResponseMessage response = await client.GetAsync("health", TestContext.Current.CancellationToken);
+        HttpResponseMessage response = await client.GetAsync("health/live", TestContext.Current.CancellationToken);
         response.IsSuccessStatusCode.Should().BeTrue();
     }
 }

@@ -193,7 +193,7 @@ Some transitive advisories still surface under
 transitive dependency won't fail the build, only
 `nuget audit` will. The transitive overrides in
 `Directory.Packages.props` keep the known issues at bay
-(SQLitePCLRaw 2.1.12, Scalar.AspNetCore 2.12.50, etc.).
+(SQLitePCLRaw 2.1.13, Scalar.AspNetCore 2.12.54, etc.).
 
 ### `Cardscape.Web` fails to build with "the type 'Components' is not found"
 

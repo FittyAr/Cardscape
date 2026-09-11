@@ -705,3 +705,9 @@
 - Assertion review: the test asserts both cross-container decryption and physical key creation, rather than only service registration.
 - Pseudo-mutation review: removing `PersistKeysToFileSystem`, changing the application discriminator, or pointing the second host at another directory breaks the exact plaintext assertion.
 - Validation: three `docker compose config --quiet` checks and actionlint 1.7.12 pass; API and UnitTests Release builds 0 warnings/0 errors; `DataProtectionKeyDirectory_PersistsSecretsAcrossContainers` 1/1. The local Docker daemon denies access, so the actual clean image build/start/readiness smoke is now an enforced CI job rather than an undocumented manual assumption.
+# Supply-chain and contract synchronization — 2026-09-11
+
+- Implementation: complete.
+- Assertion review: liveness tests target the canonical anonymous endpoint; invalid domain inputs assert exact 422 while malformed transport inputs that remain 400 were preserved.
+- Pseudo-mutation review: restoring `/health`, returning 400 for domain validation, admitting a new deprecated package, using a mutable action tag, or introducing any NU1901–NU1904 advisory breaks a named test or CI gate.
+- Validation: Release solution build 0 warnings/0 errors; NuGet vulnerable count 0; deprecated set exactly `Microsoft.IdentityModel.Tokens.Saml,Microsoft.IdentityModel.Xml`; actionlint 1.7.12 passes both workflows; integration 266/266; remaining suites 712/712, aggregate 978/978; SQLite, PostgreSQL and MySQL/MariaDB report no pending EF Core model changes with dotnet-ef 10.0.12.

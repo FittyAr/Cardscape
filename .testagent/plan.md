@@ -618,3 +618,10 @@
 2. Validate API Release compilation and all three Compose documents.
 3. Review the assertion against a missing-persistence mutation: a new ephemeral ring must fail unprotection in the second host.
 4. Add a clean-context Docker build/start/readiness gate to CI because local daemon access is unavailable.
+# Supply-chain and contract synchronization — 2026-09-11
+
+1. Enable transitive NuGet auditing and fail restore for all advisory severities.
+2. Remove the replaceable legacy dependency and allowlist only the documented SAML exception.
+3. Apply patch-only package updates, restore and compile the complete solution.
+4. Pin every GitHub Action reference and validate workflows with actionlint.
+5. Run the full test matrix, update only stale contract assertions, and rerun integration.

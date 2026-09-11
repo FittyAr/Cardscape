@@ -11,11 +11,9 @@ public static class LoggingConstants
     // ── Property / log-event names ─────────────────────────────
     public const string ServiceProperty = "Service";
     public const string ApplicationProperty = "Application";
-    public const string CorrelationIdProperty = "CorrelationId";
     public const string SourceProperty = "Source";
 
     // ── HTTP / endpoint surface ─────────────────────────────────
-    public const string CorrelationIdHeader = "X-Correlation-ID";
     public const string InternalSecretHeader = "X-Internal-Secret";
     // ── Path layout ─────────────────────────────────────────────
     /// <summary>yyyy/MM/dd sub-folder appended under the log root.</summary>

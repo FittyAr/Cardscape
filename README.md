@@ -572,17 +572,17 @@ Full layout and dependency rules:
 | Layer | Choice | Notes |
 |---|---|---|
 | Runtime | .NET 10 (LTS) | SDK `10.0.302` (latest 10.0.x feature band) |
-| Web framework | ASP.NET Core minimal APIs | 10.0.10 |
-| Client | Blazor WebAssembly | 10.0.10, Radzen components |
-| UI components | Radzen.Blazor | 11.2.1 |
-| ORM | Entity Framework Core | 10.0.10 LTS (third-party providers trail .NET) |
+| Web framework | ASP.NET Core minimal APIs | 10.0.12 |
+| Client | Blazor WebAssembly | 10.0.12, Radzen components |
+| UI components | Radzen.Blazor | 11.2.8 |
+| ORM | Entity Framework Core | 10.0.12 LTS (third-party providers trail .NET) |
 | DB providers | Sqlite, Npgsql, MySql.EntityFrameworkCore | runtime, all switchable via config |
 | Validation | FluentValidation | 12.1.1 |
-| CQRS / Mediator | Wolverine | 6.24.5 (JasperFx), source-generator |
+| CQRS / Mediator | Wolverine | 6.24.10 (JasperFx), source-generator |
 | Mapping | Mapperly | 4.3.1 (Riok), source-generator |
 | Auth | JWT bearer + Pbkdf2 password hasher | built-in + `System.IdentityModel.Tokens.Jwt` 8.22.0 |
 | AI integration | Model Context Protocol | .NET SDK `2.0.0`, stdio + HTTP endpoints |
-| Tests | xUnit + FluentAssertions + `WebApplicationFactory` | 3.2.2 / 8.10.0 / ASP.NET Core 10.0.10 |
+| Tests | xUnit + FluentAssertions + `WebApplicationFactory` | 3.2.2 / 8.10.0 / ASP.NET Core 10.0.12 |
 | Containers | Docker + docker compose | multi-stage Dockerfile, Postgres + API |
 | License | Reciprocal Public License 1.5 | RPL-1.5 |
 

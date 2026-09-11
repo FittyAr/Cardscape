@@ -44,7 +44,7 @@ if (-not (Test-Dotnet)) { exit 1 }
 
 # Ensure dotnet-ef is installed. The repo uses Directory.Packages.props
 # (CPM), so the tool manifest in dotnet-tools.json is the source of truth.
-$efVer = '10.0.10'
+$efVer = '10.0.12'
 $efInstalled = (& dotnet ef --version 2>$null)
 if (-not $efInstalled) {
     Write-Warn "dotnet-ef not found. Installing version $efVer as a global tool (you may be prompted for elevation)..."

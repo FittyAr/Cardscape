@@ -235,7 +235,7 @@ public sealed class IntegrationsEndpointTests
             $"api/workspaces/{workspaceId}/integrations/slack/connect",
             new { teamId = "T-REJECTED", teamName = "", botToken = "xoxb-rejected-token" },
             TestContext.Current.CancellationToken);
-        invalid.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        invalid.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
 
         SlackWorkspaceDto unchanged = (await owner.GetFromJsonAsync<SlackWorkspaceDto>(
             $"api/workspaces/{workspaceId}/integrations/slack/",
@@ -572,7 +572,7 @@ public sealed class IntegrationsEndpointTests
     }
 
     [Fact]
-    public async Task InboundEmail_Register_With_List_From_Another_Workspace_Returns_BadRequest()
+    public async Task InboundEmail_Register_With_List_From_Another_Workspace_Returns_UnprocessableEntity()
     {
         HttpClient client = await CreateAuthenticatedClientAsync();
         Guid requestedWorkspaceId = await CreateWorkspaceAsync(client, "email-boundary-source");
@@ -592,7 +592,7 @@ public sealed class IntegrationsEndpointTests
             },
             TestContext.Current.CancellationToken);
 
-        registered.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        registered.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
 
         InboundEmailAddressDto[] addresses =
             (await client.GetFromJsonAsync<InboundEmailAddressDto[]>(

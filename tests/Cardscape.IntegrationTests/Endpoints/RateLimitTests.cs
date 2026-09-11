@@ -26,10 +26,10 @@ public sealed class RateLimitTests
     public RateLimitTests(CardscapeWebApplicationFactory factory) => _factory = factory;
 
     [Fact]
-    public async Task Unauthenticated_Request_To_Health_Is_NotRateLimited()
+    public async Task Unauthenticated_Request_To_Liveness_Is_NotRateLimited()
     {
         HttpClient client = _factory.CreateApiClient();
-        HttpResponseMessage response = await client.GetAsync("health", TestContext.Current.CancellationToken);
+        HttpResponseMessage response = await client.GetAsync("health/live", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
@@ -165,7 +165,7 @@ public sealed class RateLimitTests
     }
 
     [Fact]
-    public async Task ApiToken_HealthCheck_IsNotRateLimited()
+    public async Task ApiToken_LivenessCheck_IsNotRateLimited()
     {
         // The middleware explicitly skips /health so a throttled
         // user can still see liveness.
@@ -180,7 +180,7 @@ public sealed class RateLimitTests
         await client.GetAsync("api/workspaces/", TestContext.Current.CancellationToken);
 
         // Health is still reachable.
-        HttpResponseMessage health = await client.GetAsync("health", TestContext.Current.CancellationToken);
+        HttpResponseMessage health = await client.GetAsync("health/live", TestContext.Current.CancellationToken);
         health.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 

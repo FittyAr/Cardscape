@@ -34,14 +34,14 @@ MCP server decision.
 | Layer | Choice | Version (Jul 2026) |
 |---|---|---|
 | Runtime | .NET | 10.0 (LTS, SDK 10.0.302) |
-| Web framework | ASP.NET Core minimal APIs | 10.0.10 |
-| Client | Blazor WebAssembly | 10.0.10 |
-| UI components | Radzen.Blazor | 11.2.1 |
-| ORM | Entity Framework Core | 10.0.10 LTS |
-| DB providers (runtime) | Sqlite, Npgsql, MySql.EntityFrameworkCore | 10.0.10 / 10.0.3 / 10.0.9 |
+| Web framework | ASP.NET Core minimal APIs | 10.0.12 |
+| Client | Blazor WebAssembly | 10.0.12 |
+| UI components | Radzen.Blazor | 11.2.8 |
+| ORM | Entity Framework Core | 10.0.12 LTS |
+| DB providers (runtime) | Sqlite, Npgsql, MySql.EntityFrameworkCore | 10.0.12 / 10.0.3 / 10.0.9 |
 | Validation | FluentValidation | 12.1.1 |
-| CQRS / Mediator | Wolverine | 6.24.5 |
-| API docs | Microsoft.AspNetCore.OpenApi + Scalar.AspNetCore | 10.0.10 / 2.12.50 |
+| CQRS / Mediator | Wolverine | 6.24.10 |
+| API docs | Microsoft.AspNetCore.OpenApi + Scalar.AspNetCore | 10.0.12 / 2.12.54 |
 | AI integration | ModelContextProtocol (MCP) | latest stable (>= 0.3) |
 | Tests | xUnit + FluentAssertions + Moq + NetArchTest | 2.9.2 / 6.12.2 / 4.20.72 / 1.3.2 |
 | License | Reciprocal Public License 1.5 | RPL-1.5 |

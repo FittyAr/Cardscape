@@ -73,7 +73,7 @@ if ($ef) {
     Write-Ok "dotnet-ef $ef"
 } else {
     Write-Warn "dotnet-ef not installed. migrate.ps1 will install it on first run, or you can install manually:"
-    Write-Info "  dotnet tool install --global dotnet-ef --version 10.0.10"
+    Write-Info "  dotnet tool install --global dotnet-ef --version 10.0.12"
 }
 
 # -----------------------------------------------------------------------------

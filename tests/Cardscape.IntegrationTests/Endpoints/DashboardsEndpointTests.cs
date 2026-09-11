@@ -87,7 +87,7 @@ public sealed class DashboardsEndpointTests
     }
 
     [Fact]
-    public async Task Update_Config_With_Invalid_Json_Returns_400()
+    public async Task Update_Config_With_Invalid_Json_Returns_422()
     {
         HttpClient client = await CreateAuthenticatedClientAsync();
         Seed seed = await CreateSeedAsync(client, "dash-invalid-config");
@@ -111,12 +111,12 @@ public sealed class DashboardsEndpointTests
             new { configurationJson = "not-json" },
             TestContext.Current.CancellationToken);
 
-        updated.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        updated.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
 
     [Theory]
     [InlineData(8192, HttpStatusCode.OK)]
-    [InlineData(8193, HttpStatusCode.BadRequest)]
+    [InlineData(8193, HttpStatusCode.UnprocessableEntity)]
     public async Task Update_Config_Enforces_Exact_Size_Boundary(
         int configurationLength,
         HttpStatusCode expectedStatus)

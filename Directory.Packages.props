@@ -8,7 +8,7 @@
     <!--
       NOTE: We target net10.0 (LTS), so the whole Microsoft.* / ASP.NET Core
       stack is on the 10.0.x line. EF Core 11 preview providers for MariaDB
-      have not shipped yet, so we use EF Core 10.0.10 (current LTS) for all
+      have not shipped yet, so we use EF Core 10.0.12 (current LTS) for all
       three database engines: SQLite, PostgreSQL, and MariaDB (via Oracle's
       MySql.EntityFrameworkCore, which is wire-compatible with MariaDB).
       This decision will be revisited once Pomelo / Oracle ship EF Core 11
@@ -17,7 +17,6 @@
     <!-- Application layer. -->
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
-    <PackageVersion Include="Serilog.Enrichers.CorrelationId" Version="3.0.1" />
     <PackageVersion Include="Serilog.Enrichers.Environment" Version="3.0.1" />
     <PackageVersion Include="Serilog.Enrichers.Process" Version="3.0.0" />
     <PackageVersion Include="Serilog.Enrichers.Span" Version="3.1.0" />
@@ -32,36 +31,36 @@
     <PackageVersion Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="4.2.0" />
-    <PackageVersion Include="WolverineFx" Version="6.24.5" />
-    <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.24.5" />
+    <PackageVersion Include="WolverineFx" Version="6.24.10" />
+    <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.24.10" />
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
     <!-- Override transitive SQLitePCLRaw (vulnerability GHSA-2m69-gcr7-jv3q, fixed in 2.1.12+). -->
-    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.10" />
+    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.13" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.12" />
     <!-- Override transitive Newtonsoft.Json (transitive from SignalR.Client 1.2.0). -->
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <!-- Redis client (opt-in distributed backends for the rate limiter
          and the pending-2FA token store). See docs/operations/06-configurable-subsystems.md. -->
-    <PackageVersion Include="StackExchange.Redis" Version="2.8.16" />
+    <PackageVersion Include="StackExchange.Redis" Version="2.8.58" />
     <!-- EF Core 10 LTS + Identity. -->
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
     <!-- Database providers (one per engine, all EF Core 10-compatible). -->
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageVersion Include="MySql.EntityFrameworkCore" Version="10.0.9" />
     <!-- API surface. -->
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
     <!--
       System.IdentityModel.Tokens.Jwt: previously pinned to 8.2.1 to dodge the
       GHSA-5crp-9r3c-p9vr advisory that hit 11.0.2. The advisory is fixed in
-      7.1.2 / 8.2.1+, and the JwtBearer 10.0.10 transitive tree now requires
+      7.1.2 / 8.2.1+, and the JwtBearer 10.0.12 transitive tree now requires
       >= 8.19.2 via Microsoft.IdentityModel.Protocols.OpenIdConnect 8.19.2.
       Bumping to the latest 8.x release (still on the 8.x line to keep the
       LTS-friendly surface area).
@@ -75,31 +74,32 @@
       10.0.x). Scalar.AspNetCore mounts the Scalar reference UI on
       top of the document emitted by MapOpenApi().
     -->
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.12.50" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.12.54" />
     <!--
       Override transitive Microsoft.OpenApi (pulled in by both
-      Microsoft.AspNetCore.OpenApi 10.0.10 and Scalar.AspNetCore).
+      Microsoft.AspNetCore.OpenApi 10.0.12 and Scalar.AspNetCore).
       The 2.0.0 default is flagged by GHSA-v5pm-xwqc-g5wc (CVE-2026-49451,
-      uncontrolled recursion on circular schema references, fixed in
-      2.7.5). Central Package Management is what lets us pin the
+      uncontrolled recursion on circular schema references. The ASP.NET Core
+      10.0.12 contract requires 2.12.0 or newer, which also contains the fix.
+      Central Package Management lets us pin the
       transitive once instead of overriding per project.
     -->
-    <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.12.0" />
     <!-- Localization (Blazor WASM). -->
-    <PackageVersion Include="Microsoft.Extensions.Localization" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="10.0.12" />
     <!-- OAuth 2.0 / OIDC external login providers. -->
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.12" />
     <!-- Blazor WASM + Radzen. -->
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.10" />
-    <PackageVersion Include="Radzen.Blazor" Version="11.2.1" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.12" />
+    <PackageVersion Include="Radzen.Blazor" Version="11.2.8" />
     <!-- Model Context Protocol (AI integration server). -->
     <PackageVersion Include="ModelContextProtocol" Version="2.0.0" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.0.0" />
@@ -110,7 +110,7 @@
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
     <!-- 2FA / TOTP (OtpNet RFC 6238 + ASP.NET Core Data Protection for at-rest secret encryption). -->
     <PackageVersion Include="Otp.NET" Version="1.4.1" />
-    <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="10.0.12" />
     <!-- SAML 2.0 SSO (Sustainsys.Saml2 — formerly Kentor.AuthServices). -->
     <PackageVersion Include="Sustainsys.Saml2.AspNetCore2" Version="2.11.0" />
     <!-- Tests. -->
@@ -122,7 +122,7 @@
     <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
     <PackageVersion Include="AutoFixture" Version="4.18.1" />
     <PackageVersion Include="AutoFixture.Xunit2" Version="4.18.1" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />
   </ItemGroup>

@@ -117,7 +117,7 @@ public sealed class RecurrenceTests
     }
 
     [Fact]
-    public async Task Set_With_Zero_Interval_Returns_BadRequest()
+    public async Task Set_With_Zero_Interval_Returns_UnprocessableEntity()
     {
         HttpClient client = await CreateAuthenticatedClientAsync();
         Seed seed = await CreateSeedAsync(client, "zero");
@@ -125,7 +125,7 @@ public sealed class RecurrenceTests
         HttpResponseMessage put = await client.PutAsJsonAsync(
             $"api/cards/{seed.CardId}/recurrence/",
             new { intervalDays = 0, firstOccurrenceAt = DateTimeOffset.UtcNow }, TestContext.Current.CancellationToken);
-        put.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        put.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
 
     // ── helpers ─────────────────────────────────────────────

@@ -875,3 +875,21 @@
 - [x] Compose persists the key ring and probes readiness.
 - [x] Compose declares graceful stop and least-privilege process settings.
 - [x] CI builds the release Dockerfile and waits for real readiness before release jobs may run.
+# Supply-chain and contract synchronization — 2026-09-11
+
+## Bounded inventory
+
+- NuGet audit found zero known vulnerabilities across 18 projects.
+- `Serilog.Enrichers.CorrelationId` introduced five deprecated ASP.NET Core 2.2 transitive packages despite trace correlation already being provided by OpenTelemetry/`WithSpan`.
+- Sustainsys SAML 2.11.0, its latest published line, introduces exactly two legacy IdentityModel packages and has no in-place modern upgrade.
+- CI actions used mutable major tags and the workflow token had implicit permissions.
+- Fourteen integration assertions still encoded removed `/health` or pre-RFC-7807 validation status codes.
+
+## Acceptance checklist
+
+- [x] All transitive vulnerabilities fail restore through NuGetAudit and NU1901–NU1904.
+- [x] Unexpected deprecated packages fail CI; the exact SAML exception is documented in ADR 0012.
+- [x] Redundant legacy correlation package and transitive ASP.NET Core 2.2 graph are removed.
+- [x] Compatible direct package patches are applied and the .NET tool manifest is synchronized.
+- [x] Workflow permissions are read-only and every external action is pinned to an immutable commit.
+- [x] Tests assert the current liveness and RFC 7807 validation contracts.

@@ -18,7 +18,7 @@
 // The split keeps the catalog free of per-Radzen-version
 // fragility: the free theme names (Default, Humanistic, …,
 // Software, Standard, and their dark siblings) are the
-// exact values that Radzen.Blazor 11.2.1 ships in
+// exact values that Radzen.Blazor 11.2.8 ships in
 // _content/Radzen.Blazor/css/ — verified against the
 // installed NuGet package.
 //

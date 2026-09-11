@@ -50,7 +50,7 @@ public class ThemeCatalogTests
     public void All_ContainsEveryRadzenFreeTheme()
     {
         // The 10 free theme CSS files ship in the
-        // Radzen.Blazor 11.2.1 NuGet package. If a future
+        // Radzen.Blazor 11.2.8 NuGet package. If a future
         // Radzen version drops one of these names, the
         // catalog entry would render but the cookie service
         // would fail to resolve the matching CSS — caught
@@ -67,7 +67,7 @@ public class ThemeCatalogTests
         foreach (var name in expected)
         {
             ThemeCatalog.All.Should().Contain(e => e.Name == name,
-                because: $"Radzen.Blazor 11.2.1 ships a CSS file for '{name}'");
+                because: $"Radzen.Blazor 11.2.8 ships a CSS file for '{name}'");
         }
     }
 

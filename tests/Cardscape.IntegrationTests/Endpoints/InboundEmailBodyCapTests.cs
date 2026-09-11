@@ -86,7 +86,7 @@ public sealed class InboundEmailBodyCapTests
     }
 
     [Fact]
-    public async Task Search_With_Oversized_Query_Returns_400()
+    public async Task Search_With_Oversized_Query_Returns_422()
     {
         HttpClient client = await CreateAuthenticatedClientAsync();
 
@@ -97,7 +97,7 @@ public sealed class InboundEmailBodyCapTests
 
         HttpResponseMessage response = await client.GetAsync(
             $"api/search/?q={Uri.EscapeDataString(huge)}", TestContext.Current.CancellationToken);
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
 
     [Fact]

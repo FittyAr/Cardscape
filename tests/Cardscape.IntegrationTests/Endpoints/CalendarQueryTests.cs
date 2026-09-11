@@ -66,7 +66,7 @@ public sealed class CalendarQueryTests
     }
 
     [Fact]
-    public async Task Invalid_Range_Returns_400()
+    public async Task Invalid_Range_Returns_422()
     {
         HttpClient owner = await CreateAuthenticatedClientAsync("CalOwner3");
         DateTimeOffset from = DateTimeOffset.UtcNow;
@@ -74,7 +74,7 @@ public sealed class CalendarQueryTests
 
         HttpResponseMessage resp = await owner.GetAsync(
             $"api/cards/calendar?from={Uri.EscapeDataString(from.ToString("o"))}&to={Uri.EscapeDataString(to.ToString("o"))}", TestContext.Current.CancellationToken);
-        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        resp.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
     }
 
     [Fact]

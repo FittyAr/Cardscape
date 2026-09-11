@@ -14,7 +14,7 @@
     <PackageReference Include="Riok.Mapperly" />
     <!--
       Microsoft.Extensions.{DependencyInjection,Logging}.Abstractions are
-      pinned centrally in Directory.Packages.props at the matching 10.0.10
+      pinned centrally in Directory.Packages.props at the matching 10.0.12
       patch. The Application layer only needs the abstractions (no concrete
       DI / logging implementation), so it doesn't reference the AspNetCore
       shared framework that would otherwise auto-include them.

@@ -1,14 +1,12 @@
 using Serilog;
 using Serilog.Configuration;
-using Serilog.Enrichers.CorrelationId;
 using Serilog.Enrichers.Span;
 
 namespace Cardscape.Infrastructure.Logging;
 
 /// <summary>
 /// Standard enrichers every host wires up: machine name, process,
-/// thread, W3C trace context, the <see cref="LoggingConstants.CorrelationIdProperty"/>
-/// pulled from the <see cref="Serilog.Context.LogContext"/>, and
+/// thread, W3C trace context, and
 /// the static <c>Service</c> / <c>Application</c> properties
 /// identifying the emitting host.
 /// </summary>
@@ -45,7 +43,6 @@ public static class SerilogEnricherExtensions
             .Enrich.WithProcessName()
             .Enrich.WithThreadId()
             .Enrich.WithSpan()
-            .Enrich.WithCorrelationId()
             .Enrich.WithProperty(LoggingConstants.ServiceProperty, serviceName)
             .Enrich.WithProperty(LoggingConstants.ApplicationProperty, $"Cardscape.{service}");
     }

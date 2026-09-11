@@ -19,14 +19,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout master (full history for the merge)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: master
           fetch-depth: 0
           path: master
 
       - name: Checkout site branch into a sibling work tree
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: site
           fetch-depth: 0
