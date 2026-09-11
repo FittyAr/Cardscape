@@ -8,6 +8,7 @@ using Cardscape.Infrastructure.Persistence.Outbox;
 using Cardscape.Tests.Common.Fakes;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -15,6 +16,25 @@ namespace Cardscape.UnitTests.Infrastructure.Persistence;
 
 public sealed class CardscapeDbContextModelTests
 {
+    [Fact]
+    public void UserPreferencesMode_HasNoDatabaseGeneratedDefault()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        var options = new DbContextOptionsBuilder<CardscapeDbContext>()
+            .UseSqlite(connection)
+            .Options;
+        using var dbContext = new CardscapeDbContext(options);
+
+        var entityType = dbContext.Model.FindEntityType(
+            typeof(Cardscape.Domain.UserPreferences.UserPreferences));
+        var mode = entityType!.FindProperty(nameof(
+            Cardscape.Domain.UserPreferences.UserPreferences.Mode));
+
+        mode.Should().NotBeNull();
+        mode!.FindAnnotation(RelationalAnnotationNames.DefaultValue).Should().BeNull(
+            "the aggregate always supplies the selected mode and a database default creates ambiguous EF sentinel behavior");
+    }
+
     [Fact]
     public void EveryMappedRowVersion_IsAConcurrencyTokenWithZeroDefault()
     {

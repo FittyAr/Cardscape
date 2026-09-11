@@ -168,8 +168,9 @@ real-service migration gate defined in `.github/workflows/ci.yml`.
    instead.
 4. **When adding a NuGet package, declare its version in
    `Directory.Packages.props` only.**
-5. **Migrations**: each EF Core provider owns a project under
-   `src/Cardscape.Migrations.{Sqlite|PostgreSql|MySql}`.
+5. **Migrations**: SQLite is owned by Infrastructure; PostgreSQL and MySQL
+   own `src/Cardscape.Migrations.PostgreSql` and
+   `src/Cardscape.Migrations.MySql` respectively.
 6. **Don't touch the `.gitignore` for `obj/`, `bin/`, `.vs/`, etc.**
 7. **No provider-specific code paths without a comment**
    explaining why the abstraction failed and pointing at the ADR.
@@ -189,9 +190,9 @@ real-service migration gate defined in `.github/workflows/ci.yml`.
 ```bash
 # SQLite
 dotnet ef migrations add <Name> \
-  --project src/Cardscape.Migrations.Sqlite \
+  --project src/Cardscape.Infrastructure \
   --startup-project src/Cardscape.Api \
-  --output-dir Migrations
+  --output-dir Persistence/Migrations
 
 # PostgreSQL
 dotnet ef migrations add <Name> \

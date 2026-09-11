@@ -27,8 +27,7 @@ public sealed class UserPreferencesConfiguration : IEntityTypeConfiguration<User
 
         builder.Property(p => p.Mode)
             .HasConversion<int>()
-            .IsRequired()
-            .HasDefaultValue(AppearanceMode.System);
+            .IsRequired();
 
         builder.Property(p => p.CreatedAt).IsRequired();
         builder.Property(p => p.UpdatedAt);

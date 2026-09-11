@@ -893,3 +893,17 @@
 - [x] Compatible direct package patches are applied and the .NET tool manifest is synchronized.
 - [x] Workflow permissions are read-only and every external action is pinned to an immutable commit.
 - [x] Tests assert the current liveness and RFC 7807 validation contracts.
+
+# Appearance mode persistence default — 2026-09-11
+
+## Bounded inventory
+
+- The final API smoke emitted EF Core model warning 20601 because `AppearanceMode.Light` is the enum CLR default while the column declared a database default of `System`.
+- The aggregate factory always supplies a valid appearance mode; persistence does not need a generated default.
+- All three preproduction provider histories can remove the default without compatibility constraints.
+
+## Acceptance checklist
+
+- [x] The common model has no database-generated default for `UserPreferences.Mode`.
+- [x] SQLite, PostgreSQL and MySQL histories contain provider-native EF Core migrations.
+- [x] A model regression test rejects restoration of the ambiguous default.

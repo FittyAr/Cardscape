@@ -15,7 +15,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
             modelBuilder.Entity("Cardscape.Domain.Activities.Activity", b =>
                 {
@@ -2175,9 +2175,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Mode")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(2);
+                        .HasColumnType("INTEGER");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()

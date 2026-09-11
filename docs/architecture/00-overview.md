@@ -110,7 +110,6 @@ src/
 │   ├── RealTime/                ← SignalR
 │   └── DependencyInjection/    ← AddInfrastructure(IConfiguration)
 │
-├── Cardscape.Migrations.Sqlite/       ← SQLite EF Core history
 ├── Cardscape.Migrations.PostgreSql/   ← PostgreSQL EF Core history
 ├── Cardscape.Migrations.MySql/        ← MySQL EF Core history
 │

@@ -625,3 +625,10 @@
 3. Apply patch-only package updates, restore and compile the complete solution.
 4. Pin every GitHub Action reference and validate workflows with actionlint.
 5. Run the full test matrix, update only stale contract assertions, and rerun integration.
+
+# Appearance mode persistence default — 2026-09-11
+
+1. Remove the unnecessary database default from the EF Core configuration.
+2. Generate one migration per supported provider using `dotnet ef`.
+3. Add a metadata assertion that distinguishes no default from the former value.
+4. Rebuild, run the focused regression, verify all snapshots, then repeat the API smoke.

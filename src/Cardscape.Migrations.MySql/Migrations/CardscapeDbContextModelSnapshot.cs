@@ -16,7 +16,7 @@ namespace Cardscape.Migrations.MySql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.10")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("Cardscape.Domain.Activities.Activity", b =>
@@ -2177,9 +2177,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<int>("Mode")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(2);
+                        .HasColumnType("int");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()

@@ -173,9 +173,9 @@ Then add a migration in all three provider folders:
 
 ```bash
 dotnet ef migrations add RenameBoard \
-  --project src/Cardscape.Migrations.Sqlite \
+  --project src/Cardscape.Infrastructure \
   --startup-project src/Cardscape.Api \
-  --output-dir Migrations
+  --output-dir Persistence/Migrations
 # Repeat with Cardscape.Migrations.PostgreSql and Cardscape.Migrations.MySql.
 ```
 

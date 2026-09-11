@@ -62,14 +62,15 @@ Runtime selection uses exactly these settings:
 | PostgreSQL | `PostgreSQL` | `Host=localhost;Port=5432;Database=cardscape;Username=cardscape;Password=...` |
 | MySQL | `MySql` | `Server=localhost;Port=3306;Database=cardscape;User=cardscape;Password=...` |
 
-Generate and validate migrations through the provider-specific projects; do not put provider migrations back into Infrastructure:
+SQLite migrations are owned by Infrastructure; PostgreSQL and MySQL use their
+provider-specific projects:
 
 ```bash
-dotnet ef migrations add <Name> --project src/Cardscape.Migrations.Sqlite --startup-project src/Cardscape.Api --output-dir Migrations
+dotnet ef migrations add <Name> --project src/Cardscape.Infrastructure --startup-project src/Cardscape.Api --output-dir Persistence/Migrations
 dotnet ef migrations add <Name> --project src/Cardscape.Migrations.PostgreSql --startup-project src/Cardscape.Api --output-dir Migrations
 dotnet ef migrations add <Name> --project src/Cardscape.Migrations.MySql --startup-project src/Cardscape.Api --output-dir Migrations
 
-dotnet ef migrations has-pending-model-changes --project src/Cardscape.Migrations.Sqlite --startup-project src/Cardscape.Api
+dotnet ef migrations has-pending-model-changes --project src/Cardscape.Infrastructure --startup-project src/Cardscape.Api
 dotnet ef migrations has-pending-model-changes --project src/Cardscape.Migrations.PostgreSql --startup-project src/Cardscape.Api
 dotnet ef migrations has-pending-model-changes --project src/Cardscape.Migrations.MySql --startup-project src/Cardscape.Api
 ```

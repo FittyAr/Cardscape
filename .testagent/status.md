@@ -711,3 +711,18 @@
 - Assertion review: liveness tests target the canonical anonymous endpoint; invalid domain inputs assert exact 422 while malformed transport inputs that remain 400 were preserved.
 - Pseudo-mutation review: restoring `/health`, returning 400 for domain validation, admitting a new deprecated package, using a mutable action tag, or introducing any NU1901–NU1904 advisory breaks a named test or CI gate.
 - Validation: Release solution build 0 warnings/0 errors; NuGet vulnerable count 0; deprecated set exactly `Microsoft.IdentityModel.Tokens.Saml,Microsoft.IdentityModel.Xml`; actionlint 1.7.12 passes both workflows; integration 266/266; remaining suites 712/712, aggregate 978/978; SQLite, PostgreSQL and MySQL/MariaDB report no pending EF Core model changes with dotnet-ef 10.0.12.
+
+# Appearance mode persistence default — 2026-09-11
+
+- Implementation: database-generated default removed; provider-native migrations generated for SQLite, PostgreSQL and MySQL.
+- Assertion review: the test inspects relational model metadata and requires an exact `null` default, so restoring either the old `System` default or another generated value fails.
+- Test calibration: `GetDefaultValue()` returns the CLR default when no
+  relational annotation exists, so the exact regression assertion inspects
+  `Relational:DefaultValue` directly rather than confusing `Light` with a
+  configured database default.
+- Validation: Release build 0 warnings/0 errors; focused model tests 3/3;
+  SQLite, PostgreSQL and MySQL snapshots report no pending model changes. The
+  API starts without EF model warning 20601 and returns 200 for live, ready,
+  OpenAPI and hosted Web; SQLite still reports its explicit historical
+  non-transactional table-rebuild warning while applying a fresh schema. The
+  final aggregate suite passes 979/979.
