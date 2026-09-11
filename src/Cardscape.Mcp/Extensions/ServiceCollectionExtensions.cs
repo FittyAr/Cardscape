@@ -9,6 +9,7 @@ using Cardscape.Mcp.Authentication;
 using Cardscape.Mcp.Authorization;
 using Cardscape.Mcp.Idempotency;
 using Cardscape.Mcp.Realtime;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -219,19 +220,15 @@ public static class ServiceCollectionExtensions
 
     public static WebApplication MapCardscapeHealthChecks(this WebApplication app)
     {
-        app.MapGet("/health/live", () => Results.Ok(new
+        app.MapHealthChecks("/health/live", new HealthCheckOptions
         {
-            status = "healthy",
-            service = "Cardscape.Mcp",
-            timestamp = DateTime.UtcNow
-        }));
+            Predicate = static _ => false
+        });
 
-        app.MapGet("/health/ready", () => Results.Ok(new
+        app.MapHealthChecks("/health/ready", new HealthCheckOptions
         {
-            status = "ready",
-            service = "Cardscape.Mcp",
-            timestamp = DateTime.UtcNow
-        }));
+            Predicate = static registration => registration.Tags.Contains("ready")
+        });
 
         return app;
     }

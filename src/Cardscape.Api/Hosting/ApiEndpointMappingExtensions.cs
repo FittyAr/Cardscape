@@ -43,6 +43,7 @@ using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Logging;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Seeder.DependencyInjection;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -53,12 +54,15 @@ internal static class ApiEndpointMappingExtensions
     public static WebApplication MapCardscapeEndpoints(this WebApplication app)
     {
         // ── Endpoints ────────────────────────────────────────────
-        app.MapGet("/health", () => Results.Ok(new
+        app.MapHealthChecks("/health/live", new HealthCheckOptions
         {
-            status = "healthy",
-            service = "Cardscape.Api",
-            timestamp = DateTime.UtcNow
-        })).WithName("HealthCheck").WithTags("Health").AllowAnonymous();
+            Predicate = static _ => false
+        }).WithName("Liveness").WithTags("Health").AllowAnonymous();
+
+        app.MapHealthChecks("/health/ready", new HealthCheckOptions
+        {
+            Predicate = static registration => registration.Tags.Contains("ready")
+        }).WithName("Readiness").WithTags("Health").AllowAnonymous();
 
         app.MapAuthEndpoints();
         app.MapExternalLoginEndpoints();

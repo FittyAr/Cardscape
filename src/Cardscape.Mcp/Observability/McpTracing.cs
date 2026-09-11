@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -65,12 +66,25 @@ public static class McpTracing
             .WithTracing(tb =>
             {
                 tb.AddSource(ActivitySourceName)
-                  .AddAspNetCoreInstrumentation()
+                  .AddAspNetCoreInstrumentation(options =>
+                      options.Filter = static context =>
+                          !context.Request.Path.StartsWithSegments("/health"))
+                  .AddHttpClientInstrumentation(options => options.RecordException = true)
                   .SetSampler(new AlwaysOnSampler());
 
                 if (!string.IsNullOrWhiteSpace(endpoint))
                 {
                     tb.AddOtlpExporter(o => o.Endpoint = new Uri(endpoint));
+                }
+            })
+            .WithMetrics(mb =>
+            {
+                mb.AddAspNetCoreInstrumentation()
+                  .AddHttpClientInstrumentation();
+
+                if (!string.IsNullOrWhiteSpace(endpoint))
+                {
+                    mb.AddOtlpExporter(o => o.Endpoint = new Uri(endpoint));
                 }
             });
 

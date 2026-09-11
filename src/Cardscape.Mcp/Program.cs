@@ -22,6 +22,8 @@ builder.UseCardscapeSerilog(ServiceType.Mcp);
 
 builder.Services.AddCardscapeMcp(builder.Configuration);
 builder.Services.AddMcpTracing(builder.Configuration);
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>(DatabaseHealthCheck.Name, tags: ["ready"]);
 
 // The MCP's internal endpoints return snapshots with
 // enum-typed fields (e.g. SubscriptionEventKind). The

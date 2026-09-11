@@ -96,7 +96,7 @@ services:
       - cardscape.prod.uploads:/app/Storage
     healthcheck:
       # Same healthcheck as the dev compose — see BETA-8-ENV-#1.
-      test: ["CMD-SHELL", "curl --silent --fail --max-time 4 http://localhost:8080/health || exit 1"]
+      test: ["CMD-SHELL", "curl --silent --fail --max-time 4 http://localhost:8080/health/live || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5

@@ -150,6 +150,7 @@ internal static class ApiApplicationExtensions
         // the OpenAPI document or Scalar UI endpoints.
         app.MapWhen(
             context => !context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
+                && !context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase)
                 && !context.Request.Path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase)
                 && !context.Request.Path.StartsWithSegments("/scalar", StringComparison.OrdinalIgnoreCase),
             branch => branch.UseStaticFiles().UseRouting().UseEndpoints(endpoints =>
@@ -166,5 +167,4 @@ internal static class ApiApplicationExtensions
         await db.Database.MigrateAsync();
     }
 }
-
 

@@ -103,11 +103,11 @@
     <!-- Model Context Protocol (AI integration server). -->
     <PackageVersion Include="ModelContextProtocol" Version="2.0.0" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.0.0" />
-    <!-- OpenTelemetry (tracing for the MCP server). -->
+    <!-- OpenTelemetry tracing and metrics for both deployable hosts. -->
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.17.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.17.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
-    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.17.0" />
     <!-- 2FA / TOTP (OtpNet RFC 6238 + ASP.NET Core Data Protection for at-rest secret encryption). -->
     <PackageVersion Include="Otp.NET" Version="1.4.1" />
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="10.0.10" />

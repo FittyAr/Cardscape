@@ -843,3 +843,19 @@
 - Finding: registration returned the first eight characters of the issued secret, but listing recomputed the display prefix from the SHA-256 hash. The values could never identify the same credential.
 - Scope: OAuth aggregate, EF configuration and three provider migrations, infrastructure service, Seeder and existing endpoint integration.
 - Acceptance: persist only the non-sensitive eight-character prefix, never the cleartext; listing must equal both registration prefix and `ClientSecret[..8]`.
+# Observability and health checks — 2026-09-10
+
+## Bounded inventory
+
+- `Cardscape.Api` exposed a synthetic `/health` response with no dependency check.
+- `Cardscape.Mcp` exposed synthetic live/ready responses; readiness did not inspect persistence.
+- MCP registered HTTP tracing only; API had no OpenTelemetry SDK pipeline and neither host exported HTTP metrics.
+- Integration tests use xUnit v3 and the shared SQLite `CardscapeWebApplicationFactory`.
+
+## Acceptance checklist
+
+- [x] Liveness remains anonymous and does not depend on external resources.
+- [x] Readiness checks the configured database through EF Core.
+- [x] The obsolete aggregate `/health` route is removed.
+- [x] API security headers continue to cover health responses.
+- [x] Both hosts emit ASP.NET Core and HttpClient traces and metrics, with conditional OTLP export.

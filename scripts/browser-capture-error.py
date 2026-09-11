@@ -61,9 +61,9 @@ def main():
             return out;
         }""")
 
-        # Also try fetching /health to make sure API is reachable
+        # Also fetch liveness to make sure the API process is reachable.
         try:
-            r = page.request.get("http://localhost:5291/health", timeout=5000)
+            r = page.request.get("http://localhost:5291/health/live", timeout=5000)
             health = {"status": r.status, "body": r.text()[:200]}
         except Exception as e:
             health = {"error": str(e)}
@@ -74,7 +74,7 @@ def main():
         print("=== BLazor error UI ===")
         print(json.dumps(detail, indent=2))
         print()
-        print("=== /health ===")
+        print("=== /health/live ===")
         print(json.dumps(health, indent=2))
         print()
         print("=== console errors/warnings ({} total) ===".format(len(errs)))

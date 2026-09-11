@@ -8,7 +8,7 @@ namespace Cardscape.IntegrationTests.Endpoints;
 /// <summary>
 /// Coverage for the <c>SecurityHeadersMiddleware</c> the
 /// v1.2.0 audit (pass 5) introduced. Every API response
-/// (including 401s, 404s, and the unauthenticated /health
+/// (including 401s, 404s, and the unauthenticated liveness
 /// endpoint) must carry the project's security headers.
 /// </summary>
 [Collection(CardscapeApi.Name)]
@@ -22,11 +22,11 @@ public sealed class SecurityHeadersTests
     public async Task Anonymous_Health_Returns_Security_Headers()
     {
         HttpClient client = _factory.CreateApiClient();
-        HttpResponseMessage response = await client.GetAsync("health", TestContext.Current.CancellationToken);
+        HttpResponseMessage response = await client.GetAsync("health/live", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // The middleware sets these on every response, even
-        // an unauthenticated /health probe.
+        // an unauthenticated liveness probe.
         response.Headers.Should().Contain(h => h.Key == "X-Content-Type-Options"
             && h.Value.Contains("nosniff"));
         response.Headers.Should().Contain(h => h.Key == "X-Frame-Options"
@@ -52,6 +52,28 @@ public sealed class SecurityHeadersTests
     }
 
     [Fact]
+    public async Task Anonymous_Readiness_Verifies_Database_Connectivity()
+    {
+        HttpClient client = _factory.CreateApiClient();
+
+        HttpResponseMessage response = await client.GetAsync(
+            "health/ready", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Legacy_Health_Route_Does_Not_Exist()
+    {
+        HttpClient client = _factory.CreateApiClient();
+
+        HttpResponseMessage response = await client.GetAsync(
+            "health", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Unauthorized_Search_Returns_Security_Headers()
     {
         HttpClient client = _factory.CreateApiClient();
@@ -71,9 +93,9 @@ public sealed class SecurityHeadersTests
     public async Task Api_Responses_Carry_No_Store_Cache_Header()
     {
         HttpClient client = _factory.CreateApiClient();
-        HttpResponseMessage response = await client.GetAsync("health", TestContext.Current.CancellationToken);
+        HttpResponseMessage response = await client.GetAsync("health/live", TestContext.Current.CancellationToken);
 
-        // /health is not a static asset, so the middleware
+        // /health/live is not a static asset, so the middleware
         // should add Cache-Control: no-store. The default
         // for ASP.NET static files is much more permissive
         // (no Cache-Control on a controller-returned body);

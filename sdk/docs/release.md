@@ -97,7 +97,7 @@ dotnet new console
 dotnet add package Cardscape.Sdk --version <version>
 ```
 
-A 5-line `Program.cs` that hits the `/health` endpoint of a
+A 5-line `Program.cs` that hits the `/health/live` endpoint of a
 local API instance confirms the package is consumable. The
 test project `tests/Cardscape.Sdk.Tests` does the same
 against a stub `HttpMessageHandler` so the maintainer does

@@ -80,6 +80,23 @@ public sealed class McpSubscriptionsCrossProcessTests
     }
 
     [Fact]
+    public async Task Mcp_Readiness_Endpoint_Verifies_Database_Connectivity()
+    {
+        await using (AsyncServiceScope scope = _factory.Mcp.Services.CreateAsyncScope())
+        {
+            CardscapeDbContext db = scope.ServiceProvider.GetRequiredService<CardscapeDbContext>();
+            await db.Database.EnsureCreatedAsync(TestContext.Current.CancellationToken);
+        }
+
+        HttpClient mcpClient = _factory.Mcp.CreateClient();
+
+        HttpResponseMessage response = await mcpClient.GetAsync(
+            "health/ready", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
     public async Task Mcp_StreamableHttp_Endpoint_Rejects_Anonymous_Protocol_Requests()
     {
         HttpClient mcpClient = _factory.Mcp.CreateClient();

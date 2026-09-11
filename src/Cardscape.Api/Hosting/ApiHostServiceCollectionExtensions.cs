@@ -34,6 +34,7 @@ using Cardscape.Api.Endpoints.Workspaces;
 using Cardscape.Api.Extensions;
 using Cardscape.Api.Hubs;
 using Cardscape.Api.Middleware;
+using Cardscape.Api.Observability;
 using Cardscape.Api.OpenApi;
 using Cardscape.Api.Realtime;
 using Cardscape.Application.Abstractions.Realtime;
@@ -72,6 +73,9 @@ internal static class ApiHostServiceCollectionExtensions
         // logger. Browser logs remain local to the client; server
         // sinks receive only telemetry produced in trusted processes.
         builder.UseCardscapeSerilog(ServiceType.Api);
+        builder.Services.AddApiObservability(builder.Configuration);
+        builder.Services.AddHealthChecks()
+            .AddCheck<DatabaseHealthCheck>(DatabaseHealthCheck.Name, tags: ["ready"]);
 
         // ── Services ─────────────────────────────────────────────
         // Native .NET 10+ OpenAPI document generation

@@ -605,3 +605,10 @@
 - [x] Extend `Register_Then_List_Adds_OAuthApp_To_Owner` to compare list prefix with registration and cleartext prefix.
 - [x] Generate SQLite, PostgreSQL and MySQL migrations through EF Core tooling.
 - [x] Run the OAuth app endpoint slice and build all provider assemblies.
+# Observability and health checks — 2026-09-10
+
+1. Map `Anonymous_Health_Returns_Security_Headers` to liveness and retain its header assertions.
+2. Add `Anonymous_Readiness_Verifies_Database_Connectivity` to exercise the EF Core-backed ready check against SQLite.
+3. Add `Legacy_Health_Route_Does_Not_Exist` to lock removal of the synthetic compatibility route.
+4. Add `Mcp_Readiness_Endpoint_Verifies_Database_Connectivity` to cover the second deployable host.
+5. Build both deployable hosts, run the narrow integration/E2E classes, and review assertions for false positives.
