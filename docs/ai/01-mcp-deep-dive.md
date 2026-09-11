@@ -372,7 +372,7 @@ dotnet run --project src/Cardscape.Api
 dotnet run --project src/Cardscape.Mcp
 ```
 
-Connect an MCP client to `http://localhost:<mcp-port>/mcp` and
+Connect an MCP client to `http://localhost:59515/mcp` and
 send the minted API token as `Authorization: Bearer <secret>`.
 
 The local dev setup is the same as the production setup,
@@ -382,30 +382,10 @@ minus the reverse proxy and the monitoring.
 
 ## 8. The MCP server's deployment
 
-The MCP server is deployed as a separate container (or
-the same container as the API, depending on the
-deployment). The container is the same image; the entry
-point is the MCP server instead of the API.
-
-The Docker image: `ghcr.io/cardscape/cardscape-mcp:0.2.0-core-mcp`.
-
-The Claude Desktop configuration:
-
-```json
-{
-  "mcpServers": {
-    "cardscape": {
-      "command": "docker",
-      "args": [
-        "run", "--rm", "-i",
-        "-e", "Cardscape__ApiBaseUrl=https://cardscape.example.com",
-        "-e", "Cardscape__ApiToken=<the user's API token>",
-        "ghcr.io/cardscape/cardscape-mcp:0.2.0-core-mcp"
-      ]
-    }
-  }
-}
-```
+The MCP server is an independent ASP.NET Core deployable. No MCP container is
+currently published. Publish `src/Cardscape.Mcp/Cardscape.Mcp.csproj`, run it
+as a supervised service, configure the same database as the API, and expose
+its authenticated `/mcp` Streamable HTTP endpoint through the reverse proxy.
 
 The user's API token is created in the web UI (Settings →
 API tokens). The token is shown once, at creation time,

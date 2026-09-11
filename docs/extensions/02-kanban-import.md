@@ -259,7 +259,7 @@ Idempotency is not currently part of this import contract.
    preview panel.
 6. From a curl one-liner:
    ```bash
-   curl -X POST https://localhost:5001/api/imports/kanban/preview \
+   curl -X POST http://localhost:5291/api/imports/kanban/preview \
      -H "Authorization: Bearer $TOKEN" \
      -F "file=@boards.json" \
      -F "targetWorkspaceId=$WS_ID"

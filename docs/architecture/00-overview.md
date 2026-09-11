@@ -96,13 +96,9 @@ src/
 │   └── Common/                  ← Behaviors (validation, logging), Mapping, ...
 │
 ├── Cardscape.Infrastructure/
-│   ├── Persistence/             ← EF Core
+│   ├── Persistence/             ← EF Core context/configurations/repositories
 │   │   ├── CardscapeDbContext.cs
 │   │   ├── Configurations/      ← IEntityTypeConfiguration<T> per aggregate root
-│   │   ├── Migrations/          ← one folder per provider
-│   │   │   ├── Sqlite/
-│   │   │   ├── PostgreSQL/
-│   │   │   └── MariaDB/
 │   │   ├── Repositories/        ← BoardRepository.cs, ...
 │   │   ├── Interceptors/        ← AuditableEntitySaveChangesInterceptor.cs
 │   │   └── Seeds/               ← initial data
@@ -113,6 +109,10 @@ src/
 │   ├── BackgroundJobs/          ← EF-backed queue claimed atomically; dispatched through Wolverine
 │   ├── RealTime/                ← SignalR
 │   └── DependencyInjection/    ← AddInfrastructure(IConfiguration)
+│
+├── Cardscape.Migrations.Sqlite/       ← SQLite EF Core history
+├── Cardscape.Migrations.PostgreSql/   ← PostgreSQL EF Core history
+├── Cardscape.Migrations.MySql/        ← MySQL EF Core history
 │
 ├── Cardscape.Api/
 │   ├── Endpoints/               ← Boards/, Lists/, Cards/, Members/, Auth/

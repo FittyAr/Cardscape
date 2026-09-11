@@ -2,7 +2,7 @@
 
 > The backup and restore procedure for a self-hosted
 > Cardscape instance. The procedure covers the three
-> database providers (SQLite, PostgreSQL, MariaDB), the
+> supported database providers (SQLite, PostgreSQL, MySQL), the
 > attached volumes, and the `OTel` and `Smtp`
 > configuration. The procedure is meant to be run on a
 > schedule (cron, systemd timer, or a managed backup
@@ -42,10 +42,12 @@ The backup strategy is:
 
 ## 2. The SQLite backup
 
-The SQLite database is a single file (`/data/cardscape.db`
-in the container, mounted to the `cardscape-data` volume
-on the host). The backup is a copy of the file, taken
-**with the SQLite online backup API** to avoid corruption.
+The SQLite database is a single file (`/app/Data/cardscape.db`
+in the container, mounted to the `cardscape.data` volume).
+The shipped runtime image deliberately contains no database administration
+CLI. The baseline runbook therefore takes a short maintenance stop and copies
+the closed database; use a separately reviewed online-backup tool only when
+the deployment cannot accept that pause.
 
 The script (the user saves this as
 `/opt/cardscape/scripts/backup-sqlite.sh`):
@@ -63,10 +65,10 @@ BACKUP_FILE="${BACKUP_DIR}/cardscape-${TIMESTAMP}.db"
 # Create the backup directory
 mkdir -p "${BACKUP_DIR}"
 
-# Use sqlite3's online backup API (VACUUM INTO is the
-# safe way to copy a live SQLite database).
-docker compose exec -T api \
-  sqlite3 /data/cardscape.db ".backup '${BACKUP_FILE}'"
+# Stop writes, copy the closed database, and immediately resume service.
+docker compose stop cardscape.api
+docker cp cardscape.api:/app/Data/cardscape.db "${BACKUP_FILE}"
+docker compose start cardscape.api
 
 # Compress the backup
 gzip "${BACKUP_FILE}"
@@ -144,9 +146,9 @@ databases). The script is a future addition; the
 
 ---
 
-## 4. The MariaDB backup
+## 4. The MySQL backup
 
-The MariaDB backup is a logical dump via `mariadb-dump`.
+The MySQL backup is a logical dump via `mysqldump`.
 The script is the same shape as the PostgreSQL one:
 
 ```bash
@@ -160,17 +162,17 @@ BACKUP_FILE="${BACKUP_DIR}/cardscape-${TIMESTAMP}.sql.gz"
 
 mkdir -p "${BACKUP_DIR}"
 
-docker compose exec -T mariadb \
-  mariadb-dump --single-transaction --quick --routines \
+docker compose exec -T mysql \
+  mysqldump --single-transaction --quick --routines \
   -u cardscape -p"${DB_PASSWORD}" cardscape \
   | gzip > "${BACKUP_FILE}"
 
 rclone copy "${BACKUP_FILE}" \
-  "remote:cardscape-backups/mariadb/"
+  "remote:cardscape-backups/mysql/"
 
 find "${BACKUP_DIR}" -name "cardscape-*.sql.gz" \
   -mtime +${RETENTION_DAYS} -delete
-rclone delete "remote:cardscape-backups/mariadb/" \
+rclone delete "remote:cardscape-backups/mysql/" \
   --min-age ${RETENTION_DAYS}d
 ```
 

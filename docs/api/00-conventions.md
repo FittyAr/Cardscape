@@ -181,11 +181,10 @@ it does not imply that an obsolete HTTP contract remains available.
 
 ## 13. CORS
 
-- The Api is configured with CORS in Development to accept
-  requests from `https://localhost:7001` (the Blazor WASM
-  dev server).
-- In Production, the allowed origin is configurable via
-  `Cors:AllowedOrigins`.
+- In Development, omitting `Cors:AllowedOrigins` enables the documented Web
+  development origins (`http://localhost:5206` and `https://localhost:7188`).
+- Outside Development, `Cors:AllowedOrigins` is required and must list every
+  trusted Web origin explicitly.
 
 ## 14. Examples
 

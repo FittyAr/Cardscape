@@ -124,8 +124,8 @@ or a transport.
 | Check | How to verify |
 |---|---|
 | **No secret is in the diff.** | The diff does not contain any string that looks like a secret (API key, password, connection string, OAuth client secret). The CI greps for common patterns. |
-| **The secret is read from an environment variable, not from `appsettings.json`.** | The configuration is `Environment.GetEnvironmentVariable("Cardscape__JwtSecret")` or `builder.Configuration["JwtSecret"]` (which reads from env vars in production). |
-| **The secret has a placeholder in `appsettings.json`.** | The committed `appsettings.json` has `null` or a placeholder for the secret; the real value is in `appsettings.Development.json` (gitignored) or in the environment. |
+| **The secret is provided through the configuration system without a production default.** | For JWT, production supplies `Jwt__SigningKey`; Options validation rejects a missing or short value. |
+| **Tracked settings contain no deployable secret.** | Base `appsettings.json` uses `null` or an empty value. Development-only values are visibly insecure and production fails closed if they are reused. |
 | **The secret is rotated.** | The new secret is documented in the secrets-rotation runbook (`docs/operations/`); the rotation procedure is tested. |
 | **The new dependency does not introduce a known vulnerability.** | `dotnet list package --vulnerable --include-transitive` is clean; the dependency review action (added in Phase 5) does not flag the change. |
 

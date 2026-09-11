@@ -4,11 +4,9 @@
 > announced. The maintainer follows this document for every
 > release.
 
-This is a **process** document — it describes what to do, in
-what order, and what the outputs are. The actual scripts and
-CI configuration that automate parts of this process land
-with Phase 1. Until then, the maintainer runs the steps by
-hand, following this checklist.
+This is a **process** document. The repository CI is the executable source of
+truth for automated gates; the maintainer performs only the explicitly manual
+steps below.
 
 ---
 
@@ -129,47 +127,16 @@ A Cardscape release produces the following artifacts.
   attached binary artifacts (initially: a `Source code
   (tar.gz)` and `Source code (zip)` produced by GitHub).
 
-### NuGet packages
-
-When the project is multi-project (it is), each public
-assembly is a NuGet package.
-
-| Package | Source | Ships in |
-|---|---|---|
-| `Cardscape.Domain` | `src/Cardscape.Domain` | Phase 1+ |
-| `Cardscape.Application` | `src/Cardscape.Application` | Phase 1+ |
-| `Cardscape.Infrastructure` | `src/Cardscape.Infrastructure` | Phase 1+ |
-| `Cardscape.Api` (meta) | `src/Cardscape.Api` | Phase 1+ |
-| `Cardscape.Web` (meta) | `src/Cardscape.Web` | Phase 1+ |
-| `Cardscape.Mcp` (meta) | `src/Cardscape.Mcp` | Phase 2+ |
-
-`Api`, `Web`, and `Mcp` are metapackages that depend on
-`Application` + `Infrastructure` and on the appropriate
-ASP.NET / MCP / Radzen packages. They bundle the deployment
-shape.
-
-Packages are pushed to **nuget.org** under the
-`cardscape` owner (placeholder — updated when the project
-gets a real org).
-
 ### Docker images
 
-When the deployment story lands (Phase 1+), the release
-produces:
+CI builds and smoke-tests the single `src/Cardscape.Api/Dockerfile` image. That
+image hosts both the REST API and the published Blazor client. The current
+workflow does not publish a registry image or NuGet packages; a release must
+not claim either artifact until an authenticated publishing job exists.
 
-- `ghcr.io/cardscape/cardscape-api:<tag>` — the REST API.
-- `ghcr.io/cardscape/cardscape-web:<tag>` — the Blazor WASM
-  client (or a static-served variant).
-- `ghcr.io/cardscape/cardscape-mcp:<tag>` — the MCP server
-  (Phase 2+).
-- A `docker-compose.yml` example that wires them together
-  with a SQLite or PostgreSQL database.
-
-The `latest` tag tracks the most recent release. Older
-versions are kept for one minor version back (e.g. when
-`v0.2.0-core-mcp` is out, `v0.1.0-mvp` is also kept; when
-`v0.3.0-extensions` is out, `v0.2.0-core-mcp` is kept and
-`v0.1.0-mvp` is removed).
+`docker-compose.yml` is the supported SQLite self-hosting example. PostgreSQL
+17 and MySQL 8.4 release compatibility is established by the real-service
+migration job, not by additional Compose files.
 
 ---
 
@@ -202,8 +169,8 @@ The actual steps. The order matters.
    commit message is `release: v<version>`.
 9. **Tag** the merge commit: `git tag -a v<version> -m
    "v<version>"`. The tag is annotated.
-10. **Push** the tag: `git push origin v<version>`. The
-    tag triggers the CI release pipeline (added in Phase 1+).
+10. **Push** the tag: `git push origin v<version>`. The tag triggers the same
+    build, test, provider-migration, container and release smoke gates as CI.
 11. **Draft the GitHub Release** on the tag, with the
     changelog excerpt as the body. Title:
     `v<version> — <one-line summary>`. Attach any binary
@@ -214,9 +181,8 @@ The actual steps. The order matters.
 14. **Announce** in the `Announcements` Discussion category
     with a link to the GitHub Release.
 
-For Phases 1 and 2 (no CI yet), steps 9-12 are manual. From
-Phase 3, the CI pipeline automates the tag → build → push →
-release flow.
+GitHub Release creation and artifact publication remain manual until dedicated
+jobs are added. Passing tag CI alone does not publish packages or images.
 
 ---
 
@@ -273,9 +239,8 @@ pin to the previous version.
 
 ## 9. What this document does not cover
 
-- **Automated CI release pipelines.** Added with Phase 1.
-  This document describes the manual process for the
-  pre-Phase-1 era.
+- **Automated artifact publishing.** CI validates release tags but does not
+  currently publish registry images, NuGet packages, or GitHub Releases.
 - **NuGet package signing.** The project does not sign
   packages today. When the community asks for it (or
   before the first 1.0), this section gets a "Package

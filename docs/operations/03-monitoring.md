@@ -259,16 +259,13 @@ playbook.
 
 ## 10. The local-development observability
 
-In local development, the OTel collector is configured to
-send to a local Grafana + Prometheus + Loki + Tempo stack.
-The `docker-compose.dev.yml` brings up the stack. The
-maintainer publishes the file with the first v0.1.0-mvp
-release.
+The repository does not bundle an observability backend. Run an OTLP-compatible
+collector separately when local trace/metric inspection is required.
 
 The local stack is **optional**. A developer who does not
 need the full observability can run the API without the
 collector; the OTel SDK in the API defaults to a no-op
-exporter when `Otel__Endpoint` is not set.
+exporter when `Otel__EndpointUrl` is not set.
 
 ---
 

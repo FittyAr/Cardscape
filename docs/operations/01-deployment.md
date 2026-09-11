@@ -19,7 +19,7 @@
 The simplest self-hostable Cardscape deployment is a
 single Linux host with Docker and Docker Compose. The host
 runs the API, its hosted Blazor WebAssembly client, and SQLite.
-PostgreSQL and MySQL/MariaDB are supported release targets through
+PostgreSQL and MySQL are supported release targets through
 their provider-specific EF Core migrations. The MCP server is a
 separate deployable and is not part of the default Compose stack.
 
@@ -123,9 +123,7 @@ choice (it auto-renews Let's Encrypt certificates), but
 ```caddyfile
 # /etc/caddy/Caddyfile
 cardscape.example.com {
-    reverse_proxy /api/* api:8080
-    reverse_proxy /mcp/* api:8080
-    reverse_proxy /* web:8080
+    reverse_proxy 127.0.0.1:8080
 }
 ```
 
@@ -145,7 +143,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/cardscape.example.com/privkey.pem;
 
     location /api/ {
-        proxy_pass http://localhost:5000/;
+        proxy_pass http://localhost:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -153,7 +151,7 @@ server {
     }
 
     location /mcp/ {
-        proxy_pass http://localhost:5000/;
+        proxy_pass http://localhost:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -165,7 +163,7 @@ server {
     }
 
     location / {
-        proxy_pass http://localhost:5001/;
+        proxy_pass http://localhost:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -218,9 +216,10 @@ sections:
 |---|---|---|---|
 | `ASPNETCORE_ENVIRONMENT` | top | `Production` | `Development` for local dev |
 | `Database__Provider` | `Database` | `Sqlite` | one of `Sqlite`, `PostgreSQL`, `MySql` |
-| `Database__ConnectionString` | `Database` | `Data Source=/data/cardscape.db` | provider-specific |
-| `Cardscape__JwtSecret` | `Cardscape` | (required) | 32+ random bytes, base64 |
-| `Otel__Endpoint` | `Otel` | (none) | OTel collector URL, e.g. `http://otel-collector:4317` |
+| `ConnectionStrings__Default` | `ConnectionStrings` | `Data Source=/app/Data/cardscape.db` | provider-specific |
+| `Jwt__SigningKey` | `Jwt` | (required) | 32+ random bytes; never reuse the development value |
+| `Cardscape__DataProtection__KeyDirectory` | `Cardscape:DataProtection` | `/app/DataProtectionKeys` in Compose | must be persistent |
+| `Otel__EndpointUrl` | `Otel` | (none) | OTLP endpoint, e.g. `http://otel-collector:4317` |
 | `Smtp__Host` | `Smtp` | (none) | for outbound email |
 | `Smtp__Port` | `Smtp` | `587` | |
 | `Smtp__Username` | `Smtp` | (none) | |
@@ -243,13 +242,13 @@ services:
   api:
     environment:
       - Database__Provider=PostgreSQL
-      - Database__ConnectionString=Host=postgres;Port=5432;Database=cardscape;Username=cardscape;Password=${DB_PASSWORD}
+      - ConnectionStrings__Default=Host=postgres;Port=5432;Database=cardscape;Username=cardscape;Password=${DB_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
 
   postgres:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     restart: unless-stopped
     environment:
       - POSTGRES_DB=cardscape
@@ -286,42 +285,22 @@ supported alias; see `12-mariadb-future-work.md`.
 
 ---
 
-## 7. The MCP server deployment (Phase 2+)
+## 7. The MCP server deployment
 
-The MCP server is the same `api` container in Phase 2+ —
-the MCP endpoint is exposed at `/mcp/`. The AI client
-connects to `https://cardscape.example.com/mcp/`.
+`Cardscape.Mcp` is a separate ASP.NET Core process using authenticated,
+stateful Streamable HTTP at `/mcp`. The repository does not currently publish
+an MCP container, and the API image does not contain an alternate MCP
+entrypoint. Build and supervise it as a separate service:
 
-For the **stdio** transport, the AI client runs the MCP
-server as a child process. The recommended pattern is
-`docker run --rm -i ghcr.io/cardscape/cardscape-mcp:0.2.0-core-mvp`
-(the image entrypoint is the MCP server, not a shell).
-
-The Claude Desktop configuration:
-
-```json
-{
-  "mcpServers": {
-    "cardscape": {
-      "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "-e",
-        "Cardscape__ApiBaseUrl=https://cardscape.example.com",
-        "-e",
-        "Cardscape__ApiToken=<the user's API token>",
-        "ghcr.io/cardscape/cardscape-mcp:0.2.0-core-mcp"
-      ]
-    }
-  }
-}
+```bash
+dotnet publish src/Cardscape.Mcp/Cardscape.Mcp.csproj --configuration Release --output ./publish/mcp
+ASPNETCORE_URLS=http://127.0.0.1:8090 dotnet ./publish/mcp/Cardscape.Mcp.dll
 ```
 
-The API token is created by the user in the web UI
-(Settings → API tokens). The token is shown once, at
-creation time, and never again.
+Configure the same `Database__Provider` and `ConnectionStrings__Default` used
+by the API, then reverse-proxy `/mcp` to port 8090 with streaming/buffering
+disabled. Clients authenticate with an API token created in Settings; its
+secret is displayed only once.
 
 ---
 

@@ -173,10 +173,10 @@ Then add a migration in all three provider folders:
 
 ```bash
 dotnet ef migrations add RenameBoard \
-  --project src/Cardscape.Infrastructure \
+  --project src/Cardscape.Migrations.Sqlite \
   --startup-project src/Cardscape.Api \
-  --output-dir Persistence/Migrations/Sqlite
-# (repeat for PostgreSQL and MariaDB)
+  --output-dir Migrations
+# Repeat with Cardscape.Migrations.PostgreSql and Cardscape.Migrations.MySql.
 ```
 
 Hand-diff the three files. If the schema change is simple

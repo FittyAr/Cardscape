@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Serilog wires the same shared infrastructure the API uses:
 // structured console, rolling daily file under
 // logs/mcp/{yyyyMMdd}/mcp-app.log, a Warning+ error stream,
-// and (when enabled) the OTel / DB sinks. Runs before the
+// and (when enabled) the OTel sink. Runs before the
 // OTel / MCP service registration so every component that
 // resolves ILogger<T> gets the same logger.
 builder.UseCardscapeSerilog(ServiceType.Mcp);

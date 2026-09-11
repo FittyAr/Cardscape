@@ -1,223 +1,104 @@
 # Development onboarding
 
-> Get the solution building on your machine in 10 minutes.
+> Build and run the current solution without relying on historical roadmap assumptions.
 
-## 1. Prerequisites
+## Prerequisites
 
-| Tool | Version | Notes |
+| Tool | Requirement | Purpose |
 |---|---|---|
-| .NET SDK | 10.0.302 (or newer in the 10.0.x feature band) | `global.json` pins the patch. `rollForward: latestFeature` lets a newer SDK satisfy the constraint. |
-| Git | any recent | The `core.autocrlf=false` recommendation applies; the repo ships LF line endings. |
-| An editor | Rider / VS 2022 17.x+ / VS Code + C# Dev Kit | Any of them. The project includes an `.editorconfig` so your editor will pick up the style rules. |
-| SQLite browser (optional) | DB Browser for SQLite or `sqlite3` CLI | Helpful when debugging migrations. |
-| Docker (optional) | any recent | Only if you want to run PostgreSQL or MariaDB locally. The MVP runs on SQLite. |
+| .NET SDK | 10.0.302 or a newer 10.0 feature band | `global.json` is authoritative |
+| Git | Current supported release | Source control and hooks |
+| Docker + Compose v2 | Optional | Container smoke tests and real PostgreSQL/MySQL migration gates |
+| SQLite tooling | Optional | Inspect the local development database |
 
-## 2. Clone and build
-
-```bash
-git clone https://github.com/cardscape/cardscape.git
-cd cardscape
-dotnet --version          # must report 10.0.302 (or later in the band)
-dotnet restore
-dotnet build
-```
-
-A green build at this point means your machine is correctly set up.
-You should see:
-
-```
-Build succeeded.
-    0 Warning(s)
-    0 Error(s)
-```
-
-## 3. Run the API
+## Restore and build
 
 ```bash
-dotnet run --project src/Cardscape.Api
+git clone https://github.com/FittyAr/Cardscape.git
+cd Cardscape
+dotnet --version
+dotnet tool restore
+dotnet restore Cardscape.slnx
+dotnet build Cardscape.slnx --configuration Release --no-restore
 ```
 
-By default, the API:
+The repository treats compiler, analyzer, formatting and NuGet security warnings as errors. Do not suppress them to make a local build green.
 
-- Listens on `https://localhost:5001` and `http://localhost:5000`.
-- Uses **SQLite** with the connection string
-  `Data Source=Data/cardscape.db` (a `Data/` folder is created next
-  to the API binary if it doesn't exist).
-- Exposes the health endpoints at `/health/live` and
-  `/health/ready`.
-- Exposes the OpenAPI spec at `/openapi/v1.json` and the
-  Scalar reference UI at `/scalar` (Development environment
-  only).
+## Run locally
 
-To smoke-test:
+Start the API and Web client in separate terminals:
 
 ```bash
-curl -k https://localhost:5001/health/live
-# → {"status":"healthy","service":"Cardscape.Api","timestamp":"..."}
+dotnet run --project src/Cardscape.Api --launch-profile http
+dotnet run --project src/Cardscape.Web --launch-profile http
 ```
 
-## 4. Run the Web client
+- API: `http://localhost:5291`
+- Web: `http://localhost:5206`
+- Liveness: `http://localhost:5291/health/live`
+- Readiness: `http://localhost:5291/health/ready`
+- OpenAPI: `http://localhost:5291/openapi/v1.json`
+- Scalar, Development only: `http://localhost:5291/scalar`
 
-In a second terminal:
+Development uses SQLite at `Data/cardscape.db`, enables the representative data seeder, and supplies an explicitly insecure development JWT key. Never copy that key to a deployed environment.
+
+For the published, single-container shape:
 
 ```bash
-dotnet run --project src/Cardscape.Web
+docker compose -f docker-compose.dev.yml up -d --build
 ```
 
-It listens on `https://localhost:7001` by default. Navigate there to
-see the Blazor WASM client.
+Open `http://localhost:8080`. The API container serves the published Blazor client and persists SQLite, uploads and Data Protection keys in named volumes.
 
-## 5. Switch the database engine
+## Database providers and migrations
 
-The provider is chosen at boot from `Database:Provider` in
-`appsettings.json` (or via environment variable
-`Database__Provider`). Valid values:
+SQLite is the ordinary development and automated-test provider. Releases are gated against PostgreSQL 17 and MySQL 8.4 using their provider-owned EF Core migration assemblies. MariaDB is not currently supported; its explicit gate is documented in [`../operations/12-mariadb-future-work.md`](../operations/12-mariadb-future-work.md).
 
-| Value | Engine | Connection string key |
+Runtime selection uses exactly these settings:
+
+| Provider | `Database__Provider` | `ConnectionStrings__Default` |
 |---|---|---|
-| `Sqlite` | SQLite (default) | `Database:SqliteConnectionString` |
-| `PostgreSQL` | PostgreSQL | `Database:PostgreSqlConnectionString` |
-| `MariaDB` | MariaDB | `Database:MariaDbConnectionString` |
+| SQLite | `Sqlite` | `Data Source=Data/cardscape.db` |
+| PostgreSQL | `PostgreSQL` | `Host=localhost;Port=5432;Database=cardscape;Username=cardscape;Password=...` |
+| MySQL | `MySql` | `Server=localhost;Port=3306;Database=cardscape;User=cardscape;Password=...` |
 
-Example `appsettings.Development.json`:
-
-```json
-{
-  "Database": {
-    "Provider": "PostgreSQL",
-    "PostgreSqlConnectionString": "Host=localhost;Port=5432;Database=cardscape;Username=postgres;Password=postgres"
-  }
-}
-```
-
-The same binary ships to any deployment; only the configuration
-changes. Migrations are applied automatically on boot (in
-Development) or via a separate `dotnet ef database update` step
-(in Production).
-
-## 6. Generate migrations
-
-See [`../AGENTS.md`](../AGENTS.md#7-migrations-incantation) for the
-incantation. Short version:
+Generate and validate migrations through the provider-specific projects; do not put provider migrations back into Infrastructure:
 
 ```bash
-# Add the EF Core tool if you haven't
-dotnet tool install -g dotnet-ef
+dotnet ef migrations add <Name> --project src/Cardscape.Migrations.Sqlite --startup-project src/Cardscape.Api --output-dir Migrations
+dotnet ef migrations add <Name> --project src/Cardscape.Migrations.PostgreSql --startup-project src/Cardscape.Api --output-dir Migrations
+dotnet ef migrations add <Name> --project src/Cardscape.Migrations.MySql --startup-project src/Cardscape.Api --output-dir Migrations
 
-# One migration, three times, three folders
-dotnet ef migrations add <Name> \
-  --project src/Cardscape.Infrastructure \
-  --startup-project src/Cardscape.Api \
-  --output-dir Persistence/Migrations/Sqlite
-
-# (repeat for PostgreSQL and MariaDB)
+dotnet ef migrations has-pending-model-changes --project src/Cardscape.Migrations.Sqlite --startup-project src/Cardscape.Api
+dotnet ef migrations has-pending-model-changes --project src/Cardscape.Migrations.PostgreSql --startup-project src/Cardscape.Api
+dotnet ef migrations has-pending-model-changes --project src/Cardscape.Migrations.MySql --startup-project src/Cardscape.Api
 ```
 
-The first time you add a migration, **always hand-diff** the three
-generated files. Look for:
+Use the repository-local `dotnet-ef` tool restored from `.config/dotnet-tools.json`; do not install an arbitrary global version.
 
-- Default value syntax (SQLite, PostgreSQL, MariaDB differ on
-  `DEFAULT (now())` vs. `DEFAULT CURRENT_TIMESTAMP` vs.
-  `DEFAULT now()`).
-- Identity/auto-increment (`INTEGER PRIMARY KEY AUTOINCREMENT` in
-  SQLite, `SERIAL` in PostgreSQL, `BIGINT AUTO_INCREMENT` in
-  MariaDB).
-- String length and collation.
-- JSON columns (we recommend `text` everywhere and a value
-  converter on the C# side).
-
-If the diff is non-trivial, add a per-provider override in the
-`Up` / `Down` methods and a comment in the commit message.
-
-## 7. Run the tests
+## Test and quality gates
 
 ```bash
-dotnet test
+dotnet test Cardscape.slnx --configuration Release --no-build
+dotnet format Cardscape.slnx --verify-no-changes --no-restore
+dotnet package list --project Cardscape.slnx --vulnerable --include-transitive --no-restore
 ```
 
-The current matrix runs all tests against SQLite only:
+The full local suite uses SQLite. CI additionally applies the complete PostgreSQL and MySQL histories to clean real services, builds and probes the container, checks coverage thresholds, audits NuGet dependencies, and verifies formatting. See [`03-testing-strategy.md`](03-testing-strategy.md) and [`04-release-process.md`](04-release-process.md).
 
-- **Unit tests** (`Cardscape.UnitTests`) are provider-agnostic by
-  construction — they don't touch a real database, they mock
-  `IRepository<T>` or use the EF Core `InMemory` provider.
-- **Integration tests** (`Cardscape.IntegrationTests`) boot the
-  Api in-process and connect to a temporary SQLite file.
-- **Functional tests** (`Cardscape.FunctionalTests`) hit the API
-  over HTTP via `WebApplicationFactory<Program>`.
-- **Architecture tests** (`Cardscape.ArchitectureTests`) verify
-  the dependency graph and naming rules with NetArchTest. These
-  run on every build and protect the architecture from drift.
+## Configuration rules
 
-When the MariaDB / PostgreSQL providers ship EF Core 11 versions,
-add the corresponding `PackageReference` to the test project,
-remove the `--filter "Database=Sqlite"` from CI, and tag the new
-tests with `[Trait("Database", "PostgreSQL")]` or
-`[Trait("Database", "MariaDB")]`. The rest is automatic.
+- Environment variables use `__` for section separators.
+- Secrets never belong in tracked JSON, Compose YAML, command history or logs.
+- Production requires `Jwt__SigningKey`; generate at least 32 random bytes.
+- Persist `Cardscape__DataProtection__KeyDirectory` across replacements or encrypted integration credentials become unreadable.
+- Use `Otel__EndpointUrl` to enable the OTLP log, trace and metric exporters.
+- The complete subsystem catalogue is [`../operations/06-configurable-subsystems.md`](../operations/06-configurable-subsystems.md).
 
-## 8. Recommended editor setup
+## Before submitting a change
 
-### JetBrains Rider (recommended for .NET)
-
-- Enable **Solution-wide analysis** in `Settings → Editor →
-  Inspection Settings → Inspection Severity → Roslyn`.
-- The .NET 10 SDK 10.0.302 ships with full Roslyn support
-  for the C# features we use; no extra plugin is required.
-- The built-in Roslyn analyzers will surface every C# style rule
-  from the `.editorconfig` directly in the editor.
-
-### Visual Studio 2022 17.x+
-
-- Install the **.NET 10 SDK** (10.0.302 or any newer 10.0.x
-  feature band) as a Visual Studio component.
-- The `.editorconfig` is honored automatically.
-
-### VS Code + C# Dev Kit
-
-- Install the `ms-dotnettools.csdevkit` and
-  `ms-dotnettools.csharp` extensions.
-- The C# extension reads the `.editorconfig` automatically.
-
-## 9. Common issues
-
-### `dotnet --version` reports an older SDK
-
-Install .NET 10 SDK 10.0.302 or newer in the 10.0.x band.
-On Windows, the SDK lives at `C:\Program Files\dotnet\sdk\`.
-On macOS/Linux, install via your package manager or `dotnet-install.sh`.
-
-### `dotnet restore` complains about NU1903 vulnerabilities
-
-Some transitive advisories still surface under
-`nuget audit` even on the LTS SDK. The CI build instructs
-`dotnet restore` to ignore audit warnings, so a vulnerable
-transitive dependency won't fail the build, only
-`nuget audit` will. The transitive overrides in
-`Directory.Packages.props` keep the known issues at bay
-(SQLitePCLRaw 2.1.13, Scalar.AspNetCore 2.12.54, etc.).
-
-### `Cardscape.Web` fails to build with "the type 'Components' is not found"
-
-You added a `using Cardscape.Web.Components` line in
-`_Imports.razor` but the folder doesn't exist. Create the folder
-or remove the `using`.
-
-### `dotnet ef` not found
-
-```bash
-dotnet tool install -g dotnet-ef
-```
-
-If you already have it, update it to a version that targets .NET 10
-(any 10.x release works fine with the 10 SDK).
-
-## 10. Next steps
-
-Once your machine is green:
-
-1. Read [`../architecture/00-overview.md`](../architecture/00-overview.md)
-   to understand the shape of the code.
-2. Read [`../roadmap/01-implementation-plan.md`](../roadmap/01-implementation-plan.md)
-   to see what we're building next.
-3. Pick a small task from the Phase 1 backlog and follow the
-   [vertical slice recipe](../development/02-vertical-slices.md).
-4. Open a PR. Every commit must build green and pass tests.
+1. Follow [`01-conventions.md`](01-conventions.md) and the relevant vertical slice in [`02-vertical-slices.md`](02-vertical-slices.md).
+2. Keep persistence in EF Core unless the operation cannot be expressed safely by EF Core and the exception is documented.
+3. Use `LoggerMessage` source-generated logging and Radzen components for UI.
+4. Run the build, applicable tests, formatting and migration checks.
+5. Update normative documentation in the same commit as the behavior change.

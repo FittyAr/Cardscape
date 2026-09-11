@@ -128,23 +128,21 @@ for the decision.
 > *"todo el desarrollo debe ser pensado, diseñador y programado
 > pensando en los 3."*
 
-The application is designed, implemented, and packaged to run on
-three database engines — SQLite, PostgreSQL, and MariaDB. But
-the automated test matrix today runs **only on SQLite**.
+The application is designed, implemented, and packaged for SQLite,
+PostgreSQL, and MySQL. The ordinary test suite uses SQLite; CI additionally
+applies every provider-owned migration to clean PostgreSQL 17 and MySQL 8.4
+services. MariaDB remains an explicit future compatibility gate.
 
-**Why**: the third-party EF Core providers for PostgreSQL and
-MariaDB target EF Core 10 on the 10.0.x line, and the whole
-solution lives on the same LTS feature band for support
-uniformity. See [ADR 0001](adr/0001-multi-provider-strategy.md)
-for the full rationale.
+See [ADR 0001](adr/0001-multi-provider-strategy.md) and the current
+[multi-provider architecture](architecture/02-multi-provider-persistence.md).
 
 **What this means in code**:
 
 - The runtime projects (`Cardscape.Api`, `Cardscape.Mcp`)
   reference all three provider packages and select the engine
   at boot time via `Database:Provider` configuration.
-- The integration-test project (`Cardscape.IntegrationTests`)
-  references only `Microsoft.EntityFrameworkCore.Sqlite`.
+- The ordinary integration tests use SQLite; the CI provider gate uses the
+  production migration projects against real database services.
 - Every LINQ expression, every column attribute, every
   migration body is written against the relational abstractions.
   We avoid `EF.Functions.*` provider-specific helpers, raw SQL
@@ -153,26 +151,25 @@ for the full rationale.
 **Test trait convention**:
 
 ```csharp
-[Trait("Database", "Sqlite")]      // today
-[Trait("Database", "PostgreSQL")]  // when the provider ships EF Core 11
-[Trait("Database", "MariaDB")]     // when the provider ships EF Core 11
+[Trait("Database", "Sqlite")]
+[Trait("Database", "PostgreSQL")]
+[Trait("Database", "MySql")]
 ```
 
-The CI command is `dotnet test --filter "Database=Sqlite"`. When
-the deferred providers catch up, removing the filter and adding
-the trait to the new tests is the entire migration.
+Do not infer provider certification from compilation. A release requires the
+real-service migration gate defined in `.github/workflows/ci.yml`.
 
 ## 6. Working rules for any agent
 
 1. **Never edit `global.json` without explicit human approval.**
 2. **Never bump EF Core provider versions** without verifying all
-   three engines (SQLite, PostgreSQL, MariaDB) are still working.
+   three supported engines (SQLite, PostgreSQL, MySQL) are still working.
 3. **Never delete ADR files.** Mark as `Superseded by ADR NNNN`
    instead.
 4. **When adding a NuGet package, declare its version in
    `Directory.Packages.props` only.**
-5. **Migrations**: each EF Core provider has its own output
-   directory under `src/Cardscape.Infrastructure/Persistence/Migrations/{Provider}`.
+5. **Migrations**: each EF Core provider owns a project under
+   `src/Cardscape.Migrations.{Sqlite|PostgreSql|MySql}`.
 6. **Don't touch the `.gitignore` for `obj/`, `bin/`, `.vs/`, etc.**
 7. **No provider-specific code paths without a comment**
    explaining why the abstraction failed and pointing at the ADR.
@@ -192,21 +189,21 @@ the trait to the new tests is the entire migration.
 ```bash
 # SQLite
 dotnet ef migrations add <Name> \
-  --project src/Cardscape.Infrastructure \
+  --project src/Cardscape.Migrations.Sqlite \
   --startup-project src/Cardscape.Api \
-  --output-dir Persistence/Migrations/Sqlite
+  --output-dir Migrations
 
 # PostgreSQL
 dotnet ef migrations add <Name> \
-  --project src/Cardscape.Infrastructure \
+  --project src/Cardscape.Migrations.PostgreSql \
   --startup-project src/Cardscape.Api \
-  --output-dir Persistence/Migrations/PostgreSQL
+  --output-dir Migrations
 
-# MariaDB
+# MySQL
 dotnet ef migrations add <Name> \
-  --project src/Cardscape.Infrastructure \
+  --project src/Cardscape.Migrations.MySql \
   --startup-project src/Cardscape.Api \
-  --output-dir Persistence/Migrations/MariaDB
+  --output-dir Migrations
 ```
 
 Always run all three. The first migration is hand-diffed before
