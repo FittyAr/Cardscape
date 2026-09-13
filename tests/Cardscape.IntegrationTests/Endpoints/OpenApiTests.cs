@@ -238,7 +238,8 @@ public sealed class OpenApiTests
         [
             "Cards", "Boards", "Lists", "Checklists", "Custom fields", "Extensions", "Automation",
             "Voting", "Recurrence", "Search", "Notifications", "Integrations.GoogleCalendar",
-            "Attachments", "AI", "Dashcards", "Background jobs"
+            "Attachments", "AI", "Dashcards", "Background jobs", "UserPreferences",
+            "Users.Self", "Workspace invitations", "Security"
         ];
         HttpClient client = _factory.CreateApiClient();
         using HttpResponseMessage response = await client.GetAsync(

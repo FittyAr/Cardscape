@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Identity/workspace OpenAPI metadata — 2026-09-13
+
+1. Declare concrete success contracts on all 15 operations.
+2. Preserve nullable preferences and bodyless delete/revoke semantics.
+3. Align endpoint documentation with canonical validation status 422.
+4. Extend the OpenAPI gate and run relevant functional regressions.
+
+Status: complete. All four steps are implemented and validated.
+
 # OpenAPI/Scalar/Web synchronization — 2026-09-11
 
 1. Compare every SDK-covered OpenAPI response with its Web response record.

@@ -44,7 +44,9 @@ public static class UserSelfEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);
-        }).RequireAuthorization();
+        })
+            .RequireAuthorization()
+            .Produces(StatusCodes.Status204NoContent);
 
         return app;
     }

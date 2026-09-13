@@ -45,7 +45,7 @@ public static class WorkspaceInvitationEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
                 new ListWorkspaceInvitationsQuery(workspaceId, includeTerminal), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<IReadOnlyList<WorkspaceInvitationDto>>(StatusCodes.Status200OK);
 
         wsGroup.MapPost("/", async (
             Guid workspaceId,
@@ -59,7 +59,7 @@ public static class WorkspaceInvitationEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/workspaces/{workspaceId}/invitations/{result.Value.Id}", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<WorkspaceInvitationIssuanceDto>(StatusCodes.Status201Created);
 
         wsGroup.MapDelete("/{invitationId:guid}", async (
             Guid workspaceId,
@@ -70,7 +70,7 @@ public static class WorkspaceInvitationEndpoints
             var result = await bus.InvokeAsync<Result>(
                 new RevokeWorkspaceInvitationCommand(invitationId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         var inboxGroup = app.MapGroup("/api/invitations")
             .RequireAuthorization()
@@ -81,7 +81,7 @@ public static class WorkspaceInvitationEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
                 new ListPendingInvitationsForUserQuery(), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<IReadOnlyList<WorkspaceInvitationDto>>(StatusCodes.Status200OK);
 
         inboxGroup.MapPost("/accept", async (
             AcceptWorkspaceInvitationBody body,
@@ -91,7 +91,7 @@ public static class WorkspaceInvitationEndpoints
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
                 new AcceptWorkspaceInvitationCommand(body.Token), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<WorkspaceDto>(StatusCodes.Status200OK);
 
         return app;
     }

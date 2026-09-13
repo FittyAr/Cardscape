@@ -848,3 +848,14 @@
   success and the correct body/bodyless representation for every tagged operation.
 - [x] Pseudo-mutation review: deleting any new `Produces`, changing attachment
   deletion from 204, or dropping the binary schema fails the exact path diagnostic.
+
+# Identity/workspace OpenAPI metadata — 2026-09-13
+
+- [x] All 15 operations declare concrete status and response DTO semantics.
+- [x] Stale preferences validation documentation now states canonical 422.
+- [x] OpenAPI and affected functional integration regressions pass: 27/27,
+  0 failed and 0 skipped.
+- [x] Assertion review: generated success contracts are checked alongside real
+  preferences, invitation and API-token lifecycle behavior.
+- [x] Pseudo-mutation review: removing metadata fails the tag gate; changing
+  nullable/bodyless semantics or status codes breaks generated-contract checks.

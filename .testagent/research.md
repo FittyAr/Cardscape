@@ -1004,3 +1004,10 @@
   no explicit success contract despite exposing stable application DTOs.
 - Attachment download is a binary response and deletion is bodyless; both need
   metadata that represents their actual wire semantics.
+
+# Identity/workspace OpenAPI metadata — 2026-09-13
+
+- UserPreferences, Users.Self, Workspace invitations and Security exposed 15
+  operations without explicit success contracts.
+- Preferences documentation still described validation as 400 even though the
+  canonical domain policy intentionally returns 422.

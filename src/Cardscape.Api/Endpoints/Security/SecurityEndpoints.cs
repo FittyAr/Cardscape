@@ -22,7 +22,7 @@ public static class SecurityEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<IReadOnlyList<ApiTokenSummaryDto>>(StatusCodes.Status200OK);
 
         group.MapPost("/", async (IssueApiTokenBody body, IMessageBus bus, CancellationToken ct) =>
         {
@@ -32,7 +32,7 @@ public static class SecurityEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/security/api-tokens/{result.Value.Id}", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<ApiTokenIssuanceDto>(StatusCodes.Status201Created);
 
         group.MapDelete("/{tokenId:guid}", async (Guid tokenId, IMessageBus bus, CancellationToken ct) =>
         {
@@ -41,7 +41,7 @@ public static class SecurityEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/{tokenId:guid}/revoke", async (Guid tokenId, RevokeApiTokenBody? body, IMessageBus bus, CancellationToken ct) =>
         {
@@ -50,7 +50,7 @@ public static class SecurityEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPatch("/{tokenId:guid}/rate-limit", async (Guid tokenId, UpdateRateLimitBody body, IMessageBus bus, CancellationToken ct) =>
         {
@@ -59,7 +59,7 @@ public static class SecurityEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<ApiTokenRateLimitDto>(StatusCodes.Status200OK);
 
         group.MapGet("/{tokenId:guid}/rate-limit-status", async (Guid tokenId, IMessageBus bus, CancellationToken ct) =>
         {
@@ -68,7 +68,7 @@ public static class SecurityEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<ApiTokenRateLimitStatusDto>(StatusCodes.Status200OK);
 
         return app;
     }

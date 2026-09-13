@@ -28,7 +28,7 @@ namespace Cardscape.Api.Endpoints.UserPreferences;
 ///   PUT  /api/users/me/preferences
 ///     Body: { themeName?, mode? }   (either or both)
 ///     200 → UserPreferencesDto
-///     400 → { code, message }    (validation failure)
+///     422 → Problem Details      (validation failure)
 ///     404 → { code, message }    (no row yet — call POST)
 ///     401 → unauthenticated
 /// </summary>
@@ -57,7 +57,7 @@ public static class UserPreferencesEndpoints
             return result.Value is null
                 ? Results.Ok((UserPreferencesDto?)null)
                 : Results.Ok(result.Value);
-        });
+        }).Produces<UserPreferencesDto?>(StatusCodes.Status200OK);
 
         group.MapPost("/", async (IMessageBus bus, CancellationToken ct) =>
         {
@@ -66,7 +66,7 @@ public static class UserPreferencesEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<UserPreferencesDto>(StatusCodes.Status200OK);
 
         group.MapPut("/", async (
             UpdatePreferencesBody body, IMessageBus bus, CancellationToken ct) =>
@@ -93,7 +93,7 @@ public static class UserPreferencesEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<UserPreferencesDto>(StatusCodes.Status200OK);
 
         return app;
     }
