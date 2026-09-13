@@ -233,6 +233,23 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void ApiEndpoints_DoNotConstructProblemDetailsDirectly()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string endpointsRoot = Path.Combine(
+            repositoryRoot.FullName, "src", "Cardscape.Api", "Endpoints");
+
+        string[] violations = Directory.GetFiles(endpointsRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(file => File.ReadAllText(file).Contains("Results.Problem(", StringComparison.Ordinal))
+            .Select(file => Path.GetRelativePath(repositoryRoot.FullName, file))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "REST errors must use DomainErrorResults or ApiProblemResults so RFC 7807 fields and stable codes cannot drift");
+    }
+
+    [Fact]
     public void Domain_DoesNotDependOn_AnyOuterLayer()
     {
         TestResult result = Types.InAssembly(typeof(Cardscape.Domain.Common.AggregateRoot<>).Assembly)

@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Google Calendar OAuth Problem Details — 2026-09-12
+
+1. Route transport/domain failures through the two canonical mappers.
+2. Make missing workspace validation handler-owned and deterministic.
+3. Type both redirect responses in OpenAPI.
+4. Add exact missing-parameter tests and forbid direct endpoint Problem Details.
+
+Status: complete. All four steps are implemented and validated.
+
 # Transport Problem Details 413/503 — 2026-09-12
 
 1. Extend the canonical transport mapper with 413 and 503 responses.

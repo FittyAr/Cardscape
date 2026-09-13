@@ -39,21 +39,20 @@ public static class GoogleCalendarOAuthEndpoints
             IConfiguration configuration,
             IDataProtectionProvider dataProtection,
             IMessageBus bus,
-            [FromQuery] Guid workspaceId,
+            [FromQuery] Guid? workspaceId,
             [FromQuery] string? returnUrl,
             CancellationToken ct) =>
         {
-            if (workspaceId == Guid.Empty)
+            if (workspaceId is null || workspaceId == Guid.Empty)
             {
-                return Results.Problem(
-                    title: "google_calendar.workspace_required",
-                    detail: "workspaceId query parameter is required.",
-                    statusCode: StatusCodes.Status400BadRequest);
+                return ApiProblemResults.BadRequest(
+                    "google_calendar.workspace_required",
+                    "workspaceId query parameter is required.");
             }
 
             Result<GoogleCalendarOAuthAuthorization> authorization = await bus.InvokeAsync<
                 Result<GoogleCalendarOAuthAuthorization>>(
-                new AuthorizeGoogleCalendarOAuthQuery(workspaceId), ct);
+                new AuthorizeGoogleCalendarOAuthQuery(workspaceId.Value), ct);
             if (authorization.IsFailure)
             {
                 return DomainErrorResults.ToProblem(authorization.Error);
@@ -64,10 +63,9 @@ public static class GoogleCalendarOAuthEndpoints
                 ?? $"{http.Request.Scheme}://{http.Request.Host}/api/integrations/google-calendar/callback";
             if (string.IsNullOrWhiteSpace(clientId))
             {
-                return Results.Problem(
-                    title: "google_calendar.not_configured",
-                    detail: "Google Calendar integration is not configured.",
-                    statusCode: StatusCodes.Status503ServiceUnavailable);
+                return ApiProblemResults.ServiceUnavailable(
+                    "google_calendar.not_configured",
+                    "Google Calendar integration is not configured.");
             }
 
             string localReturnUrl = IsLocalReturnUrl(returnUrl)
@@ -95,7 +93,8 @@ public static class GoogleCalendarOAuthEndpoints
                 + $"&prompt=consent"
                 + $"&include_granted_scopes=true";
             return Results.Redirect(authUrl);
-        }).RequireAuthorization();
+        }).Produces(StatusCodes.Status302Found)
+            .RequireAuthorization();
 
         oauthGroup.MapGet("/callback", async (
             HttpContext http,
@@ -108,19 +107,17 @@ public static class GoogleCalendarOAuthEndpoints
         {
             if (!http.Request.Query.TryGetValue("code", out var codeValues) || string.IsNullOrEmpty(codeValues))
             {
-                return Results.Problem(
-                    title: "google_calendar.missing_code",
-                    detail: "Google did not return an authorization code.",
-                    statusCode: StatusCodes.Status400BadRequest);
+                return ApiProblemResults.BadRequest(
+                    "google_calendar.missing_code",
+                    "Google did not return an authorization code.");
             }
 
             if (!http.Request.Query.TryGetValue("state", out var stateValues)
                 || string.IsNullOrEmpty(stateValues))
             {
-                return Results.Problem(
-                    title: "google_calendar.missing_state",
-                    detail: "Google did not return a state parameter.",
-                    statusCode: StatusCodes.Status400BadRequest);
+                return ApiProblemResults.BadRequest(
+                    "google_calendar.missing_state",
+                    "Google did not return a state parameter.");
             }
 
             GoogleCalendarOAuthState state;
@@ -135,10 +132,9 @@ public static class GoogleCalendarOAuthEndpoints
             }
             catch (CryptographicException)
             {
-                return Results.Problem(
-                    title: "google_calendar.state_invalid",
-                    detail: "The OAuth state is invalid or expired. Restart the connection flow.",
-                    statusCode: StatusCodes.Status400BadRequest);
+                return ApiProblemResults.BadRequest(
+                    "google_calendar.state_invalid",
+                    "The OAuth state is invalid or expired. Restart the connection flow.");
             }
 
             string clientId = configuration["Integrations:GoogleCalendar:ClientId"] ?? string.Empty;
@@ -148,10 +144,9 @@ public static class GoogleCalendarOAuthEndpoints
 
             if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
             {
-                return Results.Problem(
-                    title: "google_calendar.not_configured",
-                    detail: "Google Calendar integration is not configured.",
-                    statusCode: StatusCodes.Status503ServiceUnavailable);
+                return ApiProblemResults.ServiceUnavailable(
+                    "google_calendar.not_configured",
+                    "Google Calendar integration is not configured.");
             }
 
             using HttpClient tokenHttp = httpClientFactory.CreateClient("google-oauth");
@@ -170,10 +165,9 @@ public static class GoogleCalendarOAuthEndpoints
                 tokenRequest, HttpCompletionOption.ResponseHeadersRead, ct);
             if (!tokenResponse.IsSuccessStatusCode)
             {
-                return Results.Problem(
-                    title: "google_calendar.token_exchange_failed",
-                    detail: $"Google token exchange failed with status {(int)tokenResponse.StatusCode}.",
-                    statusCode: StatusCodes.Status502BadGateway);
+                return DomainErrorResults.ToProblem(DomainError.External(
+                    "google_calendar.token_exchange_failed",
+                    $"Google token exchange failed with status {(int)tokenResponse.StatusCode}."));
             }
 
             Result<JsonElement> tokenBodyResult = await ReadGoogleJsonAsync(tokenResponse.Content, ct);
@@ -187,10 +181,9 @@ public static class GoogleCalendarOAuthEndpoints
             string? accessToken = tokenBody.TryGetProperty("access_token", out JsonElement at) ? at.GetString() : null;
             if (string.IsNullOrEmpty(refreshToken))
             {
-                return Results.Problem(
-                    title: "google_calendar.refresh_token_missing",
-                    detail: "Google did not return a refresh token.",
-                    statusCode: StatusCodes.Status409Conflict);
+                return ApiProblemResults.Conflict(
+                    "google_calendar.refresh_token_missing",
+                    "Google did not return a refresh token.");
             }
 
             string? googleEmail = null;
@@ -217,10 +210,9 @@ public static class GoogleCalendarOAuthEndpoints
 
             if (string.IsNullOrWhiteSpace(googleEmail))
             {
-                return Results.Problem(
-                    title: "google_calendar.email_missing",
-                    detail: "Google did not return the account email address.",
-                    statusCode: StatusCodes.Status502BadGateway);
+                return DomainErrorResults.ToProblem(DomainError.External(
+                    "google_calendar.email_missing",
+                    "Google did not return the account email address."));
             }
 
             string encrypted = secrets.Protect(refreshToken);
@@ -240,7 +232,8 @@ public static class GoogleCalendarOAuthEndpoints
             }
 
             return Results.Redirect(state.ReturnUrl);
-        }).AllowAnonymous();
+        }).Produces(StatusCodes.Status302Found)
+            .AllowAnonymous();
 
         return app;
     }

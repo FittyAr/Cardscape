@@ -966,3 +966,12 @@
   status and boundary behavior.
 - Inbound email returned an anonymous success object despite being a public
   response contract.
+
+# Google Calendar OAuth Problem Details — 2026-09-12
+
+- The final nine direct endpoint `Results.Problem` calls were all in Google
+  Calendar OAuth and omitted the stable `code` extension.
+- Required non-nullable `workspaceId` binding intercepted missing input before
+  the handler, making its intended canonical validation unreachable.
+- OAuth success is a redirect on both start and callback and needs explicit
+  302 OpenAPI metadata.

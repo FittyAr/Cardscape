@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Authentication.DTOs;
@@ -425,6 +426,51 @@ public sealed class IntegrationsEndpointTests
         tampered.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await tampered.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
             .Should().Contain("google_calendar.state_invalid");
+    }
+
+    [Theory]
+    [InlineData("api/integrations/google-calendar/callback", "google_calendar.missing_code")]
+    [InlineData("api/integrations/google-calendar/callback?code=test-code", "google_calendar.missing_state")]
+    public async Task GoogleCalendar_Callback_WithMissingTransportParameter_ReturnsCanonicalBadRequest(
+        string requestUri,
+        string expectedCode)
+    {
+        using WebApplicationFactory<Program> factory = CreateGoogleOAuthFactory();
+        using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+
+        using HttpResponseMessage response = await client.GetAsync(
+            requestUri, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        using JsonDocument problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken));
+        problem.RootElement.GetProperty("status").GetInt32().Should().Be(400);
+        problem.RootElement.GetProperty("title").GetString().Should().Be("Bad request");
+        problem.RootElement.GetProperty("code").GetString().Should().Be(expectedCode);
+    }
+
+    [Fact]
+    public async Task GoogleCalendar_Start_WithoutWorkspace_ReturnsCanonicalBadRequest()
+    {
+        using WebApplicationFactory<Program> factory = CreateGoogleOAuthFactory();
+        using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+        await AuthenticateAsync(client);
+
+        using HttpResponseMessage response = await client.GetAsync(
+            "api/integrations/google-calendar/start", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        using JsonDocument problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken));
+        problem.RootElement.GetProperty("status").GetInt32().Should().Be(400);
+        problem.RootElement.GetProperty("title").GetString().Should().Be("Bad request");
+        problem.RootElement.GetProperty("code").GetString().Should().Be("google_calendar.workspace_required");
     }
 
     [Theory]

@@ -791,3 +791,16 @@
   suites retain exact 413/503 and limit behavior.
 - [x] Pseudo-mutation review: changing either helper status/title/code shape or
   restoring an unbounded/disabled transport path breaks a concrete assertion.
+
+# Google Calendar OAuth Problem Details — 2026-09-12
+
+- [x] All nine remaining manual endpoint problems migrated; direct
+  `Results.Problem` usage under Endpoints is now zero and architecture-gated.
+- [x] Focused validation: Google Calendar 12/12; full architecture 28/28;
+  0 failed and 0 skipped, with warning-free transitive builds.
+- [x] Assertion review: three new parameter cases assert exact 400, body status,
+  canonical title and stable code; existing OAuth tests retain redirect,
+  identity, state integrity and bounded-provider-response coverage.
+- [x] Pseudo-mutation review: reverting nullable binding removes the code field
+  for absent workspace; direct problem construction or changed response codes
+  fail the architecture or exact integration assertions.
