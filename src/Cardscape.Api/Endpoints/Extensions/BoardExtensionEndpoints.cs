@@ -26,7 +26,7 @@ public static class BoardExtensionEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardExtensionDto>>>(
                 new ListBoardExtensionsQuery(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardExtensionDto[]>();
 
         group.MapPost("/", async (
             Guid boardId,
@@ -41,7 +41,7 @@ public static class BoardExtensionEndpoints
                     $"/api/boards/{boardId}/extensions/{ToRouteValue(body.Kind)}",
                     result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardExtensionDto>(StatusCodes.Status201Created);
 
         group.MapDelete("/{kind}", async (Guid boardId, string kind, IMessageBus bus, CancellationToken ct) =>
         {
@@ -52,7 +52,7 @@ public static class BoardExtensionEndpoints
             var result = await bus.InvokeAsync<Result>(
                 new DisableBoardExtensionCommand(boardId, (int)parsedKind), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         // BETA-9-#3 — see test-results/r9/r9-report.md.
         // The list endpoint returns rows with both an `id` (UUID,
@@ -88,7 +88,7 @@ public static class BoardExtensionEndpoints
             var disable = await bus.InvokeAsync<Result>(
                 new DisableBoardExtensionCommand(boardId, row.Kind), ct);
             return disable.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(disable.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPut("/{kind}/config", async (
             Guid boardId,
@@ -104,7 +104,7 @@ public static class BoardExtensionEndpoints
             var result = await bus.InvokeAsync<Result<BoardExtensionDto>>(
                 new UpdateBoardExtensionConfigCommand(boardId, (int)parsedKind, body.ConfigJson), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardExtensionDto>();
 
         return app;
     }

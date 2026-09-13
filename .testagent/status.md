@@ -817,3 +817,13 @@
 - [x] Pseudo-mutation review: deleting any `Produces`, reverting snooze to an
   untyped body, or dropping either download schema fails the generated-contract
   assertion for the exact HTTP method and path.
+
+# Board/card extension OpenAPI metadata — 2026-09-12
+
+- [x] All 24 mappings publish concrete response metadata; checklist item POST
+  returns 201 with a resource Location.
+- [x] Focused validation: functional/OpenAPI regressions 27/27; 0 failed and 0 skipped.
+- [x] Assertion review: creation asserts exact status and URI; the OpenAPI gate
+  checks every operation under all four exact tags.
+- [x] Pseudo-mutation review: reverting 201/Location or removing response
+  metadata fails a named behavior or generated-contract assertion.

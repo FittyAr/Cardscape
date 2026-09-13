@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Board/card extension OpenAPI metadata — 2026-09-12
+
+1. Type all 24 success responses across the four feature groups.
+2. Return 201 and an exact Location for checklist-item creation.
+3. Extend the generated OpenAPI gate to all four tags.
+4. Run the focused functional and contract suites.
+
+Status: complete. All four steps are implemented and validated.
+
 # Core workflow OpenAPI metadata — 2026-09-12
 
 1. Add exact response DTO/status metadata to every Card, Board and List route.

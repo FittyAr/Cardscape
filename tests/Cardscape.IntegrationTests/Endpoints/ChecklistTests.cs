@@ -62,8 +62,10 @@ public sealed class ChecklistTests
 
         HttpResponseMessage withItem = await client.PostAsJsonAsync(
             $"api/checklists/{cl!.Id}/items/", new { text = "first" }, TestContext.Current.CancellationToken);
+        withItem.StatusCode.Should().Be(HttpStatusCode.Created);
         ChecklistItemDto? addedItem = await withItem.Content.ReadFromJsonAsync<ChecklistItemDto>(TestContext.Current.CancellationToken);
         Guid itemId = addedItem!.Id;
+        withItem.Headers.Location.Should().Be($"/api/checklists/{cl.Id}/items/{itemId}");
 
         HttpResponseMessage toggled = await client.PatchAsync(
             $"api/checklists/{cl.Id}/items/{itemId}/toggle", content: null, TestContext.Current.CancellationToken);

@@ -234,7 +234,7 @@ public sealed class OpenApiTests
     [Fact]
     public async Task OpenApi_CoreWorkflowOperations_ExposeConcreteSuccessContracts()
     {
-        string[] tags = ["Cards", "Boards", "Lists"];
+        string[] tags = ["Cards", "Boards", "Lists", "Checklists", "Custom fields", "Extensions", "Automation"];
         HttpClient client = _factory.CreateApiClient();
         using HttpResponseMessage response = await client.GetAsync(
             "openapi/v1.json", TestContext.Current.CancellationToken);

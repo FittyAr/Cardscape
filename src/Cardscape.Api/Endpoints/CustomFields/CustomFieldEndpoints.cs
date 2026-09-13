@@ -21,7 +21,7 @@ public static class CustomFieldEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CustomFieldDefinitionDto>>>(
                 new ListCustomFieldDefinitionsQuery(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CustomFieldDefinitionDto[]>();
 
         group.MapPost("/", async (
             Guid boardId,
@@ -38,7 +38,7 @@ public static class CustomFieldEndpoints
                     $"/api/boards/{boardId}/custom-fields/{result.Value.Id}",
                     result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CustomFieldDefinitionDto>(StatusCodes.Status201Created);
 
         group.MapPatch("/{fieldId:guid}", async (
             Guid boardId,
@@ -50,7 +50,7 @@ public static class CustomFieldEndpoints
             var result = await bus.InvokeAsync<Result<CustomFieldDefinitionDto>>(
                 new RenameCustomFieldDefinitionCommand(fieldId, body.NewName), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CustomFieldDefinitionDto>();
 
         group.MapDelete("/{fieldId:guid}", async (
             Guid boardId,
@@ -61,7 +61,7 @@ public static class CustomFieldEndpoints
             var result = await bus.InvokeAsync<Result>(
                 new DeleteCustomFieldDefinitionCommand(fieldId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }
@@ -78,7 +78,7 @@ public static class CustomFieldEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CustomFieldValueDto>>>(
                 new ListCustomFieldValuesForCardQuery(cardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CustomFieldValueDto[]>();
 
         group.MapPut("/{fieldId:guid}", async (
             Guid cardId,
@@ -90,7 +90,7 @@ public static class CustomFieldEndpoints
             var result = await bus.InvokeAsync<Result<CustomFieldValueDto>>(
                 new SetCustomFieldValueCommand(cardId, fieldId, body.ValueJson), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CustomFieldValueDto>();
 
         return app;
     }

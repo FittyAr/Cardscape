@@ -26,7 +26,7 @@ public static class AutomationEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardAutomationRuleDto>>>(
                 new ListBoardAutomationRulesQuery(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardAutomationRuleDto[]>();
 
         group.MapPost("/", async (
             Guid boardId,
@@ -44,28 +44,28 @@ public static class AutomationEndpoints
                     $"/api/boards/{boardId}/automation/{result.Value.Id}",
                     result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardAutomationRuleDto>(StatusCodes.Status201Created);
 
         group.MapPost("/{ruleId:guid}/enable", async (Guid boardId, Guid ruleId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new EnableBoardAutomationRuleCommand(ruleId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/{ruleId:guid}/disable", async (Guid boardId, Guid ruleId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new DisableBoardAutomationRuleCommand(ruleId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapDelete("/{ruleId:guid}", async (Guid boardId, Guid ruleId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new DeleteBoardAutomationRuleCommand(ruleId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }

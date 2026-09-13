@@ -983,3 +983,10 @@
   declared media types without schemas.
 - The three endpoint classes contain 47 operations total and can be treated as
   one core workflow contract boundary.
+
+# Board/card extension OpenAPI metadata — 2026-09-12
+
+- Checklists, Custom Fields, Extensions and Automation contained 24 operations
+  with no explicit success metadata.
+- Checklist item creation returned 200 despite creating a distinct resource and
+  already exposing its identifier.
