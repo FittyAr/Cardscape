@@ -38,7 +38,8 @@ public static class RecurrenceEndpoints
             return result.Value is null
                 ? Results.NoContent()
                 : Results.Ok(result.Value);
-        });
+        }).Produces<CardRecurrenceDto>()
+            .Produces(StatusCodes.Status204NoContent);
 
         group.MapPut("/", async (
             Guid cardId, RecurrenceBody body, IMessageBus bus, CancellationToken ct) =>
@@ -46,14 +47,14 @@ public static class RecurrenceEndpoints
             var result = await bus.InvokeAsync<Result<CardRecurrenceDto>>(
                 new SetCardRecurrenceCommand(cardId, body.IntervalDays, body.FirstOccurrenceAt), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardRecurrenceDto>();
 
         group.MapDelete("/", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new DeleteCardRecurrenceCommand(cardId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }

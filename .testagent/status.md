@@ -827,3 +827,14 @@
   checks every operation under all four exact tags.
 - [x] Pseudo-mutation review: reverting 201/Location or removing response
   metadata fails a named behavior or generated-contract assertion.
+
+# Auxiliary workflow OpenAPI metadata — 2026-09-12
+
+- [x] All 12 operations publish concrete success metadata, including alternate
+  recurrence 200/204 and Calendar 204.
+- [x] Focused validation: behavior/contract regressions 39/39 after correcting
+  the gate's 3xx model; OpenAPI subset 6/6.
+- [x] Assertion review: exact tagged operations require declared success,
+  bodyless 204/3xx, and content for represented success bodies.
+- [x] Pseudo-mutation review: removing metadata or misclassifying redirect/body
+  semantics fails the exact method/path diagnostic.

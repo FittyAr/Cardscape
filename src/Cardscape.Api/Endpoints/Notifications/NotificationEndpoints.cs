@@ -42,7 +42,7 @@ public static class NotificationEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<NotificationDto>>>(
                 new ListNotificationsQuery(unreadOnly ?? false, effectiveSkip, effectiveTake), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<NotificationDto[]>();
 
         group.MapGet("/unread-count", async (IMessageBus bus, CancellationToken ct) =>
         {
@@ -50,7 +50,7 @@ public static class NotificationEndpoints
             return result.IsSuccess
                 ? Results.Ok(new UnreadCountResponse(result.Value))
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<UnreadCountResponse>();
 
         // Returns the unread notification count for the authenticated user.
         // Wrapped in a DTO (rather than a raw int) so the response shape is
@@ -64,13 +64,13 @@ public static class NotificationEndpoints
         {
             var result = await bus.InvokeAsync<Result>(new MarkAllNotificationsReadCommand(), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/{notificationId:guid}/read", async (Guid notificationId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new MarkNotificationReadCommand(notificationId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }

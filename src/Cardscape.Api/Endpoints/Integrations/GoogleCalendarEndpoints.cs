@@ -55,14 +55,14 @@ public static class GoogleCalendarEndpoints
             }
 
             return Results.Ok(result.Value);
-        });
+        }).Produces<GoogleCalendarConnectionDto>();
 
         group.MapDelete("/", async (IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new RevokeGoogleCalendarConnectionCommand(), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }

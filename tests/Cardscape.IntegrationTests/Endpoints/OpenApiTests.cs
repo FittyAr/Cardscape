@@ -234,7 +234,11 @@ public sealed class OpenApiTests
     [Fact]
     public async Task OpenApi_CoreWorkflowOperations_ExposeConcreteSuccessContracts()
     {
-        string[] tags = ["Cards", "Boards", "Lists", "Checklists", "Custom fields", "Extensions", "Automation"];
+        string[] tags =
+        [
+            "Cards", "Boards", "Lists", "Checklists", "Custom fields", "Extensions", "Automation",
+            "Voting", "Recurrence", "Search", "Notifications", "Integrations.GoogleCalendar"
+        ];
         HttpClient client = _factory.CreateApiClient();
         using HttpResponseMessage response = await client.GetAsync(
             "openapi/v1.json", TestContext.Current.CancellationToken);
@@ -250,14 +254,14 @@ public sealed class OpenApiTests
             {
                 JsonProperty[] successes = operation.Value.GetProperty("responses")
                     .EnumerateObject()
-                    .Where(item => item.Name.Length == 3 && item.Name[0] == '2')
+                    .Where(item => item.Name.Length == 3 && item.Name[0] is '2' or '3')
                     .ToArray();
                 successes.Should().NotBeEmpty(
                     $"{operation.Name.ToUpperInvariant()} {path.Name} must declare a success response");
 
                 foreach (JsonProperty success in successes)
                 {
-                    if (success.Name == "204")
+                    if (success.Name == "204" || success.Name[0] == '3')
                     {
                         success.Value.TryGetProperty("content", out _).Should().BeFalse(
                             $"{operation.Name.ToUpperInvariant()} {path.Name} 204 has no body");

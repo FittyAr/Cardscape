@@ -23,7 +23,7 @@ public static class VotingEndpoints
             var result = await bus.InvokeAsync<Result<CardVoteStateDto>>(
                 new ToggleCardVoteCommand(cardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardVoteStateDto>();
 
         // Read-only fetch of the current vote state for the card.
         group.MapGet("/", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
@@ -31,7 +31,7 @@ public static class VotingEndpoints
             var result = await bus.InvokeAsync<Result<CardVoteStateDto>>(
                 new ListCardVotesQuery(cardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardVoteStateDto>();
 
         return app;
     }

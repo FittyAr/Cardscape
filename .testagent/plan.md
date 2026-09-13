@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Auxiliary workflow OpenAPI metadata — 2026-09-12
+
+1. Type all 12 operations and both recurrence outcomes.
+2. Extend the contract gate to the five exact feature tags.
+3. Model 3xx redirect success without requiring response content.
+4. Run focused behavior and generated-contract regressions.
+
+Status: complete. All four steps are implemented and validated.
+
 # Board/card extension OpenAPI metadata — 2026-09-12
 
 1. Type all 24 success responses across the four feature groups.
