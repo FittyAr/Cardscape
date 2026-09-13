@@ -1031,3 +1031,10 @@
   final 19 operations in conventional endpoint files without explicit metadata.
 - OAuth returned anonymous snake_case payloads; SCIM Users list omitted the
   standard `itemsPerPage` and `startIndex` fields already modeled for Groups.
+
+# Secrets, PII and retention closure — 2026-09-13
+
+- The remaining sensitive-field scan found one LoggerMessage contract exposing
+  the first eight characters of a pending 2FA bearer token on corrupt Redis data.
+- Secret persistence otherwise uses hashes or Data Protection; DSR and retention
+  paths have focused behavior coverage and bounded EF Core sweep operations.

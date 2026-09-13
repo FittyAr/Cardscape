@@ -894,3 +894,14 @@
 - [x] Pseudo-mutation review: deleting metadata anywhere in the generated API,
   reverting named OAuth/translation schemas or removing SCIM paging fields fails
   generated-contract or protocol behavior assertions.
+
+# Secrets, PII and retention closure — 2026-09-13
+
+- [x] Pending 2FA token prefix removed from the LoggerMessage contract and call.
+- [x] Sensitive LoggerMessage template scan has no value-bearing secret/PII fields.
+- [x] Focused retention/options/token unit regressions pass: 53/53; DSR,
+  webhook/integration secret and API-token integration regressions pass: 38/38.
+- [x] Assertion review: tests cover encryption-at-rest behavior, redacted
+  webhook failures, anonymization grace periods and credential lifecycle outcomes.
+- [x] Pseudo-mutation review: restoring the token-prefix logger is caught by the
+  sensitive-template scan; encryption/retention reversions break focused behavior tests.

@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Secrets, PII and retention closure — 2026-09-13
+
+1. Remove pending-2FA token material from structured logs.
+2. Re-audit LoggerMessage templates for secret/body/email/URL parameters.
+3. Verify encryption, DSR anonymization and retention behavior with focused tests.
+4. Record residual policy decisions and close the security-data plan item.
+
+Status: complete. All four steps are implemented and validated.
+
 # Protocol/internal OpenAPI metadata — 2026-09-13
 
 1. Replace anonymous OAuth success/error payloads with named wire DTOs.

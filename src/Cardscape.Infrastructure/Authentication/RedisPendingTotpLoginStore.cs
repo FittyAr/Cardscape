@@ -18,8 +18,7 @@ namespace Cardscape.Infrastructure.Authentication;
 /// <c>POST /api/auth/login/totp</c> requests for the same
 /// token cannot both succeed.
 ///
-/// Same fail-open posture as
-/// <see cref="Security.RedisRateLimiter"/>: a Redis transport
+/// A Redis transport
 /// error on <see cref="Mint"/> raises (the caller is
 /// preparing a login, the operator can see the failure and
 /// intervene); a transport error on
@@ -94,7 +93,7 @@ public sealed class RedisPendingTotpLoginStore : IPendingTotpLoginStore
             string text = raw.ToString();
             if (!Guid.TryParse(text, out Guid userIdGuid))
             {
-                _logger.PendingTotpTokenValueInvalid(token[..Math.Min(8, token.Length)]);
+                _logger.PendingTotpTokenValueInvalid();
                 return null;
             }
 

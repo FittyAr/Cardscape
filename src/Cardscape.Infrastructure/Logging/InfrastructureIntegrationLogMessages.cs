@@ -10,8 +10,8 @@ internal static partial class InfrastructureIntegrationLogMessages
     [LoggerMessage(EventId = 2201, Level = LogLevel.Error, Message = "OpenAI-compatible provider call failed.")]
     internal static partial void AiProviderCallFailed(this ILogger logger, Exception exception);
 
-    [LoggerMessage(EventId = 2210, Level = LogLevel.Warning, Message = "Pending-2FA token {TokenPrefix} held a non-Guid value; ignoring.")]
-    internal static partial void PendingTotpTokenValueInvalid(this ILogger logger, string tokenPrefix);
+    [LoggerMessage(EventId = 2210, Level = LogLevel.Warning, Message = "A pending-2FA token held a non-Guid value; ignoring it.")]
+    internal static partial void PendingTotpTokenValueInvalid(this ILogger logger);
 
     [LoggerMessage(EventId = 2211, Level = LogLevel.Warning, Message = "Redis Consume failed for pending-2FA token; refusing the request.")]
     internal static partial void PendingTotpConsumeFailed(this ILogger logger, Exception exception);
