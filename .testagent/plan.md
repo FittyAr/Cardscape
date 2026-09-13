@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Core workflow OpenAPI metadata — 2026-09-12
+
+1. Add exact response DTO/status metadata to every Card, Board and List route.
+2. Replace the anonymous snooze response with a named record.
+3. Describe binary ZIP and textual iCalendar bodies with concrete schemas.
+4. Add a generated-document gate for every operation carrying a core tag.
+
+Status: complete. All four steps are implemented and validated.
+
 # Google Calendar OAuth Problem Details — 2026-09-12
 
 1. Route transport/domain failures through the two canonical mappers.

@@ -73,43 +73,43 @@ public static class BoardEndpoints
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new RenameBoardCommand(boardId, body.Name), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardDto>();
 
         group.MapPost("/{boardId:guid}/description", async (Guid boardId, DescriptionRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardDescriptionCommand(boardId, body.Description), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardDto>();
 
         group.MapPost("/{boardId:guid}/visibility", async (Guid boardId, VisibilityRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardVisibilityCommand(boardId, body.Visibility), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardDto>();
 
         group.MapPost("/{boardId:guid}/archive", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new ArchiveBoardCommand(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardDto>();
 
         group.MapPost("/{boardId:guid}/unarchive", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new UnarchiveBoardCommand(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardDto>();
 
         group.MapPost("/{boardId:guid}/star", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new StarBoardCommand(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardDto>();
 
         group.MapDelete("/{boardId:guid}/star", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new UnstarBoardCommand(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardDto>();
 
         // BETA-5-#12 — see test-results/BETA-TEST-REPORT.md.
         // No HTTP surface existed for promoting a workspace
@@ -128,7 +128,7 @@ public static class BoardEndpoints
             var result = await bus.InvokeAsync<Result>(
                 new AddBoardMemberCommand(boardId, body.UserId, body.Role), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         // BETA-8-API-#1 - see test-results/r8/r8-report.md.
         // The add-member endpoint above (BETA-5-#12) existed
@@ -147,7 +147,7 @@ public static class BoardEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardMemberDto>>>(
                 new ListBoardMembersQuery(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardMemberDto[]>();
 
         // Export the board as a ZIP archive (board.json + attachments).
         group.MapGet("/{boardId:guid}/export", async (
@@ -163,7 +163,7 @@ public static class BoardEndpoints
 
             string fileName = $"board-{boardId}.zip";
             return Results.File(result.Value, "application/zip", fileName);
-        });
+        }).Produces<byte[]>(StatusCodes.Status200OK, contentType: "application/zip");
 
         // BETA-2-#3 — see test-results/BETA-TEST-REPORT.md.
         //
@@ -199,7 +199,7 @@ public static class BoardEndpoints
             }
 
             return Results.File(result.Value, "text/calendar", $"board-{boardId}.ics");
-        });
+        }).Produces<string>(StatusCodes.Status200OK, contentType: "text/calendar");
 
         return app;
     }

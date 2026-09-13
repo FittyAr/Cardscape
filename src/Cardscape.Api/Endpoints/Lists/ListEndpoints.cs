@@ -54,25 +54,25 @@ public static class ListEndpoints
         {
             var result = await bus.InvokeAsync<Result<BoardListDto>>(new RenameListCommand(listId, body.Name), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardListDto>();
 
         group.MapPost("/{listId:guid}/move", async (Guid listId, MoveBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardListDto>>(new MoveListCommand(listId, body.Position), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardListDto>();
 
         group.MapPost("/{listId:guid}/archive", async (Guid listId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardListDto>>(new ArchiveListCommand(listId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardListDto>();
 
         group.MapPost("/{listId:guid}/restore", async (Guid listId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardListDto>>(new RestoreListCommand(listId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<BoardListDto>();
 
         return app;
     }

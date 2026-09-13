@@ -804,3 +804,16 @@
 - [x] Pseudo-mutation review: reverting nullable binding removes the code field
   for absent workspace; direct problem construction or changed response codes
   fail the architecture or exact integration assertions.
+
+# Core workflow OpenAPI metadata — 2026-09-12
+
+- [x] Cards 24/24, Boards 16/16 and Lists 7/7 mappings now carry explicit
+  success metadata; anonymous/binary/text response gaps are resolved.
+- [x] Focused validation: OpenAPI 6/6; 0 failed and 0 skipped, with a
+  warning-free transitive build.
+- [x] Assertion review: the document gate enumerates every operation by exact
+  core tag, requires a 2xx response, rejects content on 204 and requires a
+  non-empty media/schema content map on every other success.
+- [x] Pseudo-mutation review: deleting any `Produces`, reverting snooze to an
+  untyped body, or dropping either download schema fails the generated-contract
+  assertion for the exact HTTP method and path.

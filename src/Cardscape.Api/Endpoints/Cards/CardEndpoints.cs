@@ -74,31 +74,31 @@ public static class CardEndpoints
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new RenameCardCommand(cardId, body.Title), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapPost("/{cardId:guid}/description", async (Guid cardId, DescriptionBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new ChangeCardDescriptionCommand(cardId, body.Description), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapPost("/{cardId:guid}/move", async (Guid cardId, MoveBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new MoveCardCommand(cardId, body.ListId, body.Position), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapPost("/{cardId:guid}/due-date", async (Guid cardId, DueDateBody body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new SetCardDueDateCommand(cardId, body.DueDate), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapDelete("/{cardId:guid}/due-date", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new ClearCardDueDateCommand(cardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         // BETA-A4-009 — see
         // test-results/beta/round-2/reports/A4-cards-lists.md.
@@ -113,38 +113,38 @@ public static class CardEndpoints
             var result = await bus.InvokeAsync<Result<CardDto>>(
                 new SetCardCoverCommand(cardId, body.Color), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapDelete("/{cardId:guid}/cover", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(
                 new SetCardCoverCommand(cardId, null), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapPost("/{cardId:guid}/complete", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new CompleteCardCommand(cardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapPost("/{cardId:guid}/reopen", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new ReopenCardCommand(cardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapPost("/{cardId:guid}/archive", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new ArchiveCardCommand(cardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapPost("/{cardId:guid}/restore", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new RestoreCardCommand(cardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         // BETA-5-#5 — see test-results/BETA-TEST-REPORT.md. The card
         // could only be archived (soft-deleted) and restored before,
@@ -156,31 +156,31 @@ public static class CardEndpoints
         {
             var result = await bus.InvokeAsync<Result>(new DeleteCardCommand(cardId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/{cardId:guid}/assign/{userId:guid}", async (Guid cardId, Guid userId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new AssignCardCommand(cardId, userId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapDelete("/{cardId:guid}/assign/{userId:guid}", async (Guid cardId, Guid userId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new UnassignCardCommand(cardId, userId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapPost("/{cardId:guid}/labels/{labelId:guid}", async (Guid cardId, Guid labelId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new AttachLabelToCardCommand(cardId, labelId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         group.MapDelete("/{cardId:guid}/labels/{labelId:guid}", async (Guid cardId, Guid labelId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new DetachLabelFromCardCommand(cardId, labelId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<CardDto>();
 
         // P3.3 / G6c — mirror the card to a different list. The
         // backing `MirrorCardCommand` (CardscapeExtensions) creates a
@@ -195,7 +195,7 @@ public static class CardEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/cards/{result.Value.MirrorCardId}", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<MirrorResult>(StatusCodes.Status201Created);
 
         // Card Snooze (G6b / §3.2). The backing command lives
         // inside CardscapeExtensions (the consolidated command
@@ -207,15 +207,15 @@ public static class CardEndpoints
             var result = await bus.InvokeAsync<Result<DateTimeOffset>>(
                 new SnoozeCmd(cardId, body.Until), ct);
             return result.IsSuccess
-                ? Results.Ok(new { until = result.Value })
+                ? Results.Ok(new SnoozeResult(result.Value))
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<SnoozeResult>();
 
         group.MapDelete("/{cardId:guid}/snooze", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new UnsnoozeCmd(cardId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }
@@ -227,6 +227,7 @@ public static class CardEndpoints
     public sealed record DueDateBody(DateTimeOffset DueDate);
     public sealed record MirrorBody(Guid TargetListId);
     public sealed record SnoozeBody(DateTimeOffset Until);
+    public sealed record SnoozeResult(DateTimeOffset Until);
     public sealed record CoverBody(string? Color);
 
 }

@@ -231,6 +231,48 @@ public sealed class OpenApiTests
         }
     }
 
+    [Fact]
+    public async Task OpenApi_CoreWorkflowOperations_ExposeConcreteSuccessContracts()
+    {
+        string[] tags = ["Cards", "Boards", "Lists"];
+        HttpClient client = _factory.CreateApiClient();
+        using HttpResponseMessage response = await client.GetAsync(
+            "openapi/v1.json", TestContext.Current.CancellationToken);
+        using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken));
+
+        foreach (JsonProperty path in document.RootElement.GetProperty("paths").EnumerateObject())
+        {
+            foreach (JsonProperty operation in path.Value.EnumerateObject()
+                .Where(property => property.Name is "get" or "post" or "put" or "patch" or "delete")
+                .Where(property => property.Value.GetProperty("tags").EnumerateArray()
+                    .Any(tag => tags.Contains(tag.GetString(), StringComparer.Ordinal))))
+            {
+                JsonProperty[] successes = operation.Value.GetProperty("responses")
+                    .EnumerateObject()
+                    .Where(item => item.Name.Length == 3 && item.Name[0] == '2')
+                    .ToArray();
+                successes.Should().NotBeEmpty(
+                    $"{operation.Name.ToUpperInvariant()} {path.Name} must declare a success response");
+
+                foreach (JsonProperty success in successes)
+                {
+                    if (success.Name == "204")
+                    {
+                        success.Value.TryGetProperty("content", out _).Should().BeFalse(
+                            $"{operation.Name.ToUpperInvariant()} {path.Name} 204 has no body");
+                    }
+                    else
+                    {
+                        success.Value.TryGetProperty("content", out JsonElement content).Should().BeTrue(
+                            $"{operation.Name.ToUpperInvariant()} {path.Name} {success.Name} must describe its body");
+                        content.EnumerateObject().Should().NotBeEmpty();
+                    }
+                }
+            }
+        }
+    }
+
     private static JsonElement ResolveSchema(JsonDocument document, JsonElement schema)
     {
         while (schema.TryGetProperty("$ref", out JsonElement reference))

@@ -975,3 +975,11 @@
   the handler, making its intended canonical validation unreachable.
 - OAuth success is a redirect on both start and callback and needs explicit
   302 OpenAPI metadata.
+
+# Core workflow OpenAPI metadata — 2026-09-12
+
+- Cards had 19, Boards 11 and Lists 4 operations relying on untyped inference.
+- Card snooze returned an anonymous record; board ZIP/iCalendar responses
+  declared media types without schemas.
+- The three endpoint classes contain 47 operations total and can be treated as
+  one core workflow contract boundary.
