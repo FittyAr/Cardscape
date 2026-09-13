@@ -153,7 +153,9 @@ public static class BoardBroadcastEndpoints
                 : ApiProblemResults.BadRequest(
                     "broadcast.method_unknown",
                     $"Unknown method '{request.Method}'.");
-        }).Accepts<BroadcastRequest>("application/json");
+        })
+            .Accepts<BroadcastRequest>("application/json")
+            .Produces(StatusCodes.Status202Accepted);
 
         return app;
     }

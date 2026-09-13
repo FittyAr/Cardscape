@@ -881,3 +881,16 @@
   authorization, SSRF/body-cap, ownership and nested-resource behavior coverage.
 - [x] Pseudo-mutation review: missing metadata, incorrect creation/no-content
   statuses or loss of Slack's 204 alternative fails contract or behavior tests.
+
+# Protocol/internal OpenAPI metadata — 2026-09-13
+
+- [x] OAuth uses named snake_case wire DTOs and explicit protocol statuses.
+- [x] SCIM Users now uses the standard list envelope used by Groups.
+- [x] All 19 conventional protocol/internal operations declare success metadata.
+- [x] Protocol, internal transport and OpenAPI regressions pass: Integration
+  31/31 and focused MCP authorization 1/1; 0 failed and 0 skipped.
+- [x] Assertion review: every API operation is now inspected without a manual
+  tag allowlist; 202 bodies remain optional and RFC 7009 empty 200 is exact-scoped.
+- [x] Pseudo-mutation review: deleting metadata anywhere in the generated API,
+  reverting named OAuth/translation schemas or removing SCIM paging fields fails
+  generated-contract or protocol behavior assertions.

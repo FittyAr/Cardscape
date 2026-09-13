@@ -1024,3 +1024,10 @@
 - Webhooks, GitHub, inbound email and Slack exposed 18 operations without
   concrete generated success contracts.
 - Slack connection lookup legitimately returns either its DTO or a bodyless 204.
+
+# Protocol/internal OpenAPI metadata — 2026-09-13
+
+- OAuth flow, SCIM resources and internal API/MCP transport accounted for the
+  final 19 operations in conventional endpoint files without explicit metadata.
+- OAuth returned anonymous snake_case payloads; SCIM Users list omitted the
+  standard `itemsPerPage` and `startIndex` fields already modeled for Groups.

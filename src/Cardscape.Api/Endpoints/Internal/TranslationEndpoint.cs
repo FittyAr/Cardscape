@@ -53,12 +53,10 @@ public static class TranslationEndpoint
             }
 
             IReadOnlyDictionary<string, string> translations = LoadEmbeddedTranslations(culture);
-            return Results.Ok(new
-            {
-                culture,
-                translations
-            });
-        }).WithTags("Internal");
+            return Results.Ok(new TranslationResponse(culture, translations));
+        })
+            .WithTags("Internal")
+            .Produces<TranslationResponse>(StatusCodes.Status200OK);
 
         return app;
     }
@@ -140,4 +138,8 @@ public static class TranslationEndpoint
         }
         return dict;
     }
+
+    public sealed record TranslationResponse(
+        string Culture,
+        IReadOnlyDictionary<string, string> Translations);
 }

@@ -53,7 +53,7 @@ public static class McpBoardEventEndpoints
 
             await broadcaster.BroadcastAsync(request.BoardId, ct);
             return Results.Accepted();
-        });
+        }).Produces(StatusCodes.Status202Accepted);
 
         // Admin-only snapshot of the broadcaster state. The
         // API proxies this through its own admin endpoint
@@ -74,7 +74,7 @@ public static class McpBoardEventEndpoints
             }
 
             return Results.Ok(broadcaster.GetSnapshot());
-        });
+        }).Produces<McpResourceBroadcasterSnapshot>(StatusCodes.Status200OK);
 
         return app;
     }

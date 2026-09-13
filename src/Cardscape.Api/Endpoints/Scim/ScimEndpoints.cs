@@ -75,13 +75,14 @@ public static class ScimEndpoints
                 return MapError(result.Error);
             }
 
-            return Results.Json(new
-            {
-                schemas = ListResponseSchemas,
-                totalResults = result.Value.Count,
-                Resources = result.Value
-            });
-        });
+            int effectiveStartIndex = Math.Max(1, startIndex ?? 1);
+            return Results.Json(new ScimListResponse<ScimUserResponse>(
+                ListResponseSchemas,
+                result.Value.Count,
+                result.Value.Count,
+                effectiveStartIndex,
+                result.Value));
+        }).Produces<ScimListResponse<ScimUserResponse>>(StatusCodes.Status200OK);
 
         group.MapPost("/Users", async (
             HttpContext http,
@@ -104,7 +105,7 @@ public static class ScimEndpoints
             return result.IsSuccess
                 ? Results.Created($"/scim/v2/Users/{result.Value.Id}", result.Value)
                 : MapError(result.Error);
-        });
+        }).Produces<ScimUserResponse>(StatusCodes.Status201Created);
 
         group.MapGet("/Users/{userId:guid}", async (
             HttpContext http,
@@ -119,7 +120,7 @@ public static class ScimEndpoints
 
             var result = await scim.GetUserAsync(workspaceId, userId, ct);
             return result.IsSuccess ? Results.Json(result.Value) : MapError(result.Error);
-        });
+        }).Produces<ScimUserResponse>(StatusCodes.Status200OK);
 
         group.MapPut("/Users/{userId:guid}", async (
             HttpContext http,
@@ -141,7 +142,7 @@ public static class ScimEndpoints
                 body.Password);
             var result = await scim.ReplaceUserAsync(workspaceId, userId, req, ct);
             return result.IsSuccess ? Results.Json(result.Value) : MapError(result.Error);
-        });
+        }).Produces<ScimUserResponse>(StatusCodes.Status200OK);
 
         group.MapPatch("/Users/{userId:guid}", async (
             HttpContext http,
@@ -161,7 +162,7 @@ public static class ScimEndpoints
             var result = await scim.PatchUserAsync(workspaceId, userId,
                 new ScimPatchRequest(ops), ct);
             return result.IsSuccess ? Results.Json(result.Value) : MapError(result.Error);
-        });
+        }).Produces<ScimUserResponse>(StatusCodes.Status200OK);
 
         group.MapDelete("/Users/{userId:guid}", async (
             HttpContext http,
@@ -176,7 +177,7 @@ public static class ScimEndpoints
 
             var result = await scim.DeleteUserAsync(workspaceId, userId, ct);
             return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         // ── /scim/v2/Groups ────────────────────────────────────
         // 1:1 mapping: SCIM Group == Workspace, SCIM Group
@@ -201,7 +202,7 @@ public static class ScimEndpoints
                 count ?? 50,
                 ct);
             return Results.Json(response);
-        });
+        }).Produces<ScimListResponse<ScimGroup>>(StatusCodes.Status200OK);
 
         group.MapPost("/Groups", async (
             HttpContext http,
@@ -223,7 +224,7 @@ public static class ScimEndpoints
             return result.IsSuccess
                 ? Results.Created($"/scim/v2/Groups/{result.Value.Id}", result.Value)
                 : MapError(result.Error);
-        });
+        }).Produces<ScimGroup>(StatusCodes.Status201Created);
 
         group.MapGet("/Groups/{groupId}", async (
             HttpContext http,
@@ -238,7 +239,7 @@ public static class ScimEndpoints
 
             var result = await scim.GetGroupAsync(workspaceId, groupId, ct);
             return result.IsSuccess ? Results.Json(result.Value) : MapError(result.Error);
-        });
+        }).Produces<ScimGroup>(StatusCodes.Status200OK);
 
         group.MapPut("/Groups/{groupId}", async (
             HttpContext http,
@@ -259,7 +260,7 @@ public static class ScimEndpoints
                 Members: MapMembers(body.Members));
             var result = await scim.UpdateGroupAsync(workspaceId, groupId, input, ct);
             return result.IsSuccess ? Results.Json(result.Value) : MapError(result.Error);
-        });
+        }).Produces<ScimGroup>(StatusCodes.Status200OK);
 
         group.MapPatch("/Groups/{groupId}", async (
             HttpContext http,
@@ -279,7 +280,7 @@ public static class ScimEndpoints
             var result = await scim.PatchGroupAsync(workspaceId, groupId,
                 new ScimPatchRequest(ops), ct);
             return result.IsSuccess ? Results.Json(result.Value) : MapError(result.Error);
-        });
+        }).Produces<ScimGroup>(StatusCodes.Status200OK);
 
         group.MapDelete("/Groups/{groupId}", async (
             HttpContext http,
@@ -294,7 +295,7 @@ public static class ScimEndpoints
 
             var result = await scim.DeleteGroupAsync(workspaceId, groupId, ct);
             return result.IsSuccess ? Results.NoContent() : MapError(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }

@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Common;
 using Cardscape.Domain.Common;
@@ -56,11 +57,9 @@ public static class OAuthFlowEndpoints
         {
             if (string.IsNullOrWhiteSpace(client_id) || string.IsNullOrWhiteSpace(redirect_uri))
             {
-                return Results.BadRequest(new
-                {
-                    error = "invalid_request",
-                    error_description = "client_id and redirect_uri are required."
-                });
+                return Results.BadRequest(new OAuthErrorResponse(
+                    "invalid_request",
+                    "client_id and redirect_uri are required."));
             }
 
             // If the user is not authenticated, bounce to
@@ -117,14 +116,16 @@ public static class OAuthFlowEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { error = "invalid_request", error_description = ex.Message });
+                return Results.BadRequest(new OAuthErrorResponse("invalid_request", ex.Message));
             }
 
             string separator = redirect_uri.Contains('?') ? "&" : "?";
             string fragment = $"code={Uri.EscapeDataString(issuance.Code)}" +
                               (string.IsNullOrEmpty(state) ? string.Empty : $"&state={Uri.EscapeDataString(state)}");
             return Results.Redirect($"{redirect_uri}{separator}{fragment}");
-        });
+        })
+            .Produces(StatusCodes.Status302Found)
+            .Produces<OAuthErrorResponse>(StatusCodes.Status400BadRequest);
 
         // /oauth/token — exchanges an authorization code
         // for a Bearer access token. The request body is
@@ -143,11 +144,9 @@ public static class OAuthFlowEndpoints
 
             if (!string.Equals(grantType, "authorization_code", StringComparison.Ordinal))
             {
-                return Results.BadRequest(new
-                {
-                    error = "unsupported_grant_type",
-                    error_description = "Only authorization_code is supported."
-                });
+                return Results.BadRequest(new OAuthErrorResponse(
+                    "unsupported_grant_type",
+                    "Only authorization_code is supported."));
             }
 
             if (string.IsNullOrWhiteSpace(code) ||
@@ -155,29 +154,28 @@ public static class OAuthFlowEndpoints
                 string.IsNullOrWhiteSpace(clientSecret) ||
                 string.IsNullOrWhiteSpace(redirectUri))
             {
-                return Results.BadRequest(new
-                {
-                    error = "invalid_request",
-                    error_description = "code, client_id, client_secret, and redirect_uri are required."
-                });
+                return Results.BadRequest(new OAuthErrorResponse(
+                    "invalid_request",
+                    "code, client_id, client_secret, and redirect_uri are required."));
             }
 
             var exchange = await service.ExchangeCodeAsync(clientId, clientSecret, code, redirectUri, ct);
             if (exchange.IsFailure)
             {
                 return Results.Json(
-                    new { error = "invalid_grant", error_description = exchange.Error.Message },
+                    new OAuthErrorResponse("invalid_grant", exchange.Error.Message),
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
-            return Results.Ok(new
-            {
-                access_token = exchange.Value.AccessToken,
-                token_type = exchange.Value.TokenType,
-                expires_in = exchange.Value.ExpiresInSeconds,
-                scope = string.Join(' ', exchange.Value.Scopes)
-            });
-        });
+            return Results.Ok(new OAuthTokenResponse(
+                exchange.Value.AccessToken,
+                exchange.Value.TokenType,
+                exchange.Value.ExpiresInSeconds,
+                string.Join(' ', exchange.Value.Scopes)));
+        })
+            .DisableAntiforgery()
+            .Produces<OAuthTokenResponse>(StatusCodes.Status200OK)
+            .Produces<OAuthErrorResponse>(StatusCodes.Status400BadRequest);
 
         // /oauth/revoke — RFC 7009 token revocation. The
         // client authenticates with the same client_id /
@@ -195,11 +193,9 @@ public static class OAuthFlowEndpoints
             string token = form["token"].ToString();
             if (string.IsNullOrWhiteSpace(token))
             {
-                return Results.BadRequest(new
-                {
-                    error = "invalid_request",
-                    error_description = "token is required."
-                });
+                return Results.BadRequest(new OAuthErrorResponse(
+                    "invalid_request",
+                    "token is required."));
             }
 
             // RFC 7009 §2.1 lets the client authenticate via
@@ -215,11 +211,9 @@ public static class OAuthFlowEndpoints
             if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
             {
                 return Results.Json(
-                    new
-                    {
-                        error = "invalid_client",
-                        error_description = "client_id and client_secret are required (form params or HTTP Basic auth)."
-                    },
+                    new OAuthErrorResponse(
+                        "invalid_client",
+                        "client_id and client_secret are required (form params or HTTP Basic auth)."),
                     statusCode: StatusCodes.Status401Unauthorized);
             }
 
@@ -227,9 +221,13 @@ public static class OAuthFlowEndpoints
             return result.IsSuccess
                 ? Results.Ok()
                 : Results.Json(
-                    new { error = "invalid_client", error_description = result.Error.Message },
+                    new OAuthErrorResponse("invalid_client", result.Error.Message),
                     statusCode: StatusCodes.Status400BadRequest);
-        });
+        })
+            .DisableAntiforgery()
+            .Produces(StatusCodes.Status200OK)
+            .Produces<OAuthErrorResponse>(StatusCodes.Status400BadRequest)
+            .Produces<OAuthErrorResponse>(StatusCodes.Status401Unauthorized);
 
         // /oauth/userinfo — returns the authenticated
         // user's projection. The access token is read from
@@ -243,7 +241,7 @@ public static class OAuthFlowEndpoints
             if (string.IsNullOrWhiteSpace(bearer))
             {
                 return Results.Json(
-                    new { error = "invalid_token", error_description = "Missing bearer token." },
+                    new OAuthErrorResponse("invalid_token", "Missing bearer token."),
                     statusCode: StatusCodes.Status401Unauthorized);
             }
 
@@ -251,17 +249,17 @@ public static class OAuthFlowEndpoints
             if (info.IsFailure)
             {
                 return Results.Json(
-                    new { error = "invalid_token", error_description = info.Error.Message },
+                    new OAuthErrorResponse("invalid_token", info.Error.Message),
                     statusCode: StatusCodes.Status401Unauthorized);
             }
 
-            return Results.Ok(new
-            {
-                sub = info.Value.UserId,
-                email = info.Value.Email,
-                name = info.Value.DisplayName
-            });
-        });
+            return Results.Ok(new OAuthUserInfoResponse(
+                info.Value.UserId,
+                info.Value.Email,
+                info.Value.DisplayName));
+        })
+            .Produces<OAuthUserInfoResponse>(StatusCodes.Status200OK)
+            .Produces<OAuthErrorResponse>(StatusCodes.Status401Unauthorized);
 
         return app;
     }
@@ -322,4 +320,19 @@ public static class OAuthFlowEndpoints
 
         return (formId, formSecret);
     }
+
+    public sealed record OAuthErrorResponse(
+        [property: JsonPropertyName("error")] string Error,
+        [property: JsonPropertyName("error_description")] string ErrorDescription);
+
+    public sealed record OAuthTokenResponse(
+        [property: JsonPropertyName("access_token")] string AccessToken,
+        [property: JsonPropertyName("token_type")] string TokenType,
+        [property: JsonPropertyName("expires_in")] int ExpiresIn,
+        [property: JsonPropertyName("scope")] string Scope);
+
+    public sealed record OAuthUserInfoResponse(
+        [property: JsonPropertyName("sub")] Guid Subject,
+        [property: JsonPropertyName("email")] string Email,
+        [property: JsonPropertyName("name")] string Name);
 }

@@ -232,17 +232,8 @@ public sealed class OpenApiTests
     }
 
     [Fact]
-    public async Task OpenApi_CoreWorkflowOperations_ExposeConcreteSuccessContracts()
+    public async Task OpenApi_AllOperations_ExposeConcreteSuccessContracts()
     {
-        string[] tags =
-        [
-            "Cards", "Boards", "Lists", "Checklists", "Custom fields", "Extensions", "Automation",
-            "Voting", "Recurrence", "Search", "Notifications", "Integrations.GoogleCalendar",
-            "Attachments", "AI", "Dashcards", "Background jobs", "UserPreferences",
-            "Users.Self", "Workspace invitations", "Security", "Admin.Dsr", "Seeder",
-            "Imports", "OAuthApps", "SAML.Admin", "SCIM.Admin", "Webhooks",
-            "Integrations.GitHub", "Integrations.InboundEmail", "Integrations.Slack"
-        ];
         HttpClient client = _factory.CreateApiClient();
         using HttpResponseMessage response = await client.GetAsync(
             "openapi/v1.json", TestContext.Current.CancellationToken);
@@ -252,9 +243,7 @@ public sealed class OpenApiTests
         foreach (JsonProperty path in document.RootElement.GetProperty("paths").EnumerateObject())
         {
             foreach (JsonProperty operation in path.Value.EnumerateObject()
-                .Where(property => property.Name is "get" or "post" or "put" or "patch" or "delete")
-                .Where(property => property.Value.GetProperty("tags").EnumerateArray()
-                    .Any(tag => tags.Contains(tag.GetString(), StringComparer.Ordinal))))
+                .Where(property => property.Name is "get" or "post" or "put" or "patch" or "delete"))
             {
                 JsonProperty[] successes = operation.Value.GetProperty("responses")
                     .EnumerateObject()
@@ -269,6 +258,20 @@ public sealed class OpenApiTests
                     {
                         success.Value.TryGetProperty("content", out _).Should().BeFalse(
                             $"{operation.Name.ToUpperInvariant()} {path.Name} 204 has no body");
+                    }
+                    else if (success.Name == "202")
+                    {
+                        // RFC 9110 permits Accepted to carry a status representation,
+                        // but does not require one. Seeder returns one; internal
+                        // fire-and-forget broadcasts intentionally do not.
+                        continue;
+                    }
+                    else if (success.Name == "200"
+                        && operation.Name == "post"
+                        && path.Name == "/oauth/revoke")
+                    {
+                        success.Value.TryGetProperty("content", out _).Should().BeFalse(
+                            "RFC 7009 token revocation returns an empty 200 response");
                     }
                     else
                     {

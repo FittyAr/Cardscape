@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Protocol/internal OpenAPI metadata — 2026-09-13
+
+1. Replace anonymous OAuth success/error payloads with named wire DTOs.
+2. Use the shared SCIM list envelope for Users and declare all resource contracts.
+3. Type API/MCP internal accepted and snapshot responses.
+4. Extend the API gate and run protocol/internal regressions.
+
+Status: complete. All four steps are implemented and validated.
+
 # Integration OpenAPI metadata — 2026-09-13
 
 1. Declare exact DTO/status metadata on all 18 integration operations.
