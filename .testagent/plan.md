@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Transport Problem Details 413/503 — 2026-09-12
+
+1. Extend the canonical transport mapper with 413 and 503 responses.
+2. Replace all applicable ad-hoc responses in import/internals/integrations.
+3. Replace the anonymous inbound-email success shape with a named record.
+4. Expand the mapper matrix and run all existing boundary regressions.
+
+Status: complete. All four steps are implemented and validated.
+
 # External login and endpoint cancellation — 2026-09-12
 
 1. Add cancellation to the sole async endpoint lambda missing it.

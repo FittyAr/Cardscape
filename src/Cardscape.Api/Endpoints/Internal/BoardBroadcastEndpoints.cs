@@ -59,9 +59,9 @@ public static class BoardBroadcastEndpoints
             string? expected = config["Internal:Secret"];
             if (string.IsNullOrWhiteSpace(expected))
             {
-                return Results.Problem(
-                    detail: "Internal:Secret is not configured on the API.",
-                    statusCode: StatusCodes.Status503ServiceUnavailable);
+                return ApiProblemResults.ServiceUnavailable(
+                    "broadcast.unavailable",
+                    "Internal:Secret is not configured on the API.");
             }
 
             // Constant-time compare so a timing oracle
@@ -80,9 +80,9 @@ public static class BoardBroadcastEndpoints
             // binding would consume the stream before this code can inspect it.
             if (http.Request.ContentLength is long advertised && advertised > MaxBodyBytes)
             {
-                return Results.Problem(
-                    detail: $"Broadcast body exceeds the {MaxBodyBytes}-byte cap.",
-                    statusCode: StatusCodes.Status413PayloadTooLarge);
+                return ApiProblemResults.PayloadTooLarge(
+                    "broadcast.payload_too_large",
+                    $"Broadcast body exceeds the {MaxBodyBytes}-byte cap.");
             }
 
             byte[] buffer = new byte[MaxBodyBytes + 1];
@@ -93,9 +93,9 @@ public static class BoardBroadcastEndpoints
                 read += chunk;
                 if (read > MaxBodyBytes)
                 {
-                    return Results.Problem(
-                        detail: $"Broadcast body exceeds the {MaxBodyBytes}-byte cap.",
-                        statusCode: StatusCodes.Status413PayloadTooLarge);
+                    return ApiProblemResults.PayloadTooLarge(
+                        "broadcast.payload_too_large",
+                        $"Broadcast body exceeds the {MaxBodyBytes}-byte cap.");
                 }
             }
 

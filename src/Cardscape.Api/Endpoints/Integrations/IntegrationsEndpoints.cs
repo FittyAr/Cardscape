@@ -57,10 +57,9 @@ public static class IntegrationsEndpoints
         {
             if (boardId == Guid.Empty)
             {
-                return Results.Problem(
-                    title: "integrations.github.board_required",
-                    detail: "The boardId query parameter is required so the server can scope the lookup to the right board.",
-                    statusCode: StatusCodes.Status400BadRequest);
+                return ApiProblemResults.BadRequest(
+                    "integrations.github.board_required",
+                    "The boardId query parameter is required so the server can scope the lookup to the right board.");
             }
 
             var result = await bus.InvokeAsync<Result<IReadOnlyList<GitHubPullRequestDto>>>(
@@ -174,10 +173,10 @@ public static class IntegrationsEndpoints
             string? expected = config["InboundEmail:SigningSecret"];
             if (string.IsNullOrWhiteSpace(expected))
             {
-                return Results.Problem(
-                    detail: "InboundEmail:SigningSecret is not configured; the inbound email endpoint is unavailable. " +
-                            "Set it via appsettings, environment variables, or a secret store to opt in.",
-                    statusCode: StatusCodes.Status503ServiceUnavailable);
+                return ApiProblemResults.ServiceUnavailable(
+                    "inbound_email.unavailable",
+                    "InboundEmail:SigningSecret is not configured; the inbound email endpoint is unavailable. " +
+                    "Set it via appsettings, environment variables, or a secret store to opt in.");
             }
 
             string? provided = http.Request.Headers[InboundSignatureHeader];
@@ -195,9 +194,9 @@ public static class IntegrationsEndpoints
             // fails the auth check.
             if (http.Request.ContentLength is long advertised && advertised > MaxInboundEmailBodyBytes)
             {
-                return Results.Problem(
-                    detail: $"Inbound email body exceeds the {MaxInboundEmailBodyBytes}-byte cap.",
-                    statusCode: StatusCodes.Status413PayloadTooLarge);
+                return ApiProblemResults.PayloadTooLarge(
+                    "inbound_email.payload_too_large",
+                    $"Inbound email body exceeds the {MaxInboundEmailBodyBytes}-byte cap.");
             }
 
             byte[] buffer = new byte[MaxInboundEmailBodyBytes + 1];
@@ -208,9 +207,9 @@ public static class IntegrationsEndpoints
                 read += chunk;
                 if (read > MaxInboundEmailBodyBytes)
                 {
-                    return Results.Problem(
-                        detail: $"Inbound email body exceeds the {MaxInboundEmailBodyBytes}-byte cap.",
-                        statusCode: StatusCodes.Status413PayloadTooLarge);
+                    return ApiProblemResults.PayloadTooLarge(
+                        "inbound_email.payload_too_large",
+                        $"Inbound email body exceeds the {MaxInboundEmailBodyBytes}-byte cap.");
                 }
             }
 
@@ -255,7 +254,7 @@ public static class IntegrationsEndpoints
             var result = await bus.InvokeAsync<Result<Guid>>(
                 new HandleInboundEmailCommand(provider, body, headers), ct);
             return result.IsSuccess
-                ? Results.Ok(new { cardId = result.Value })
+                ? Results.Ok(new InboundEmailResult(result.Value))
                 : DomainErrorResults.ToProblem(result.Error);
         });
 
@@ -270,5 +269,6 @@ public static class IntegrationsEndpoints
         Guid CardId, string RepoFullName, string? Title, string? Body);
     public sealed record RegisterInboundEmailAddressRequest(
         Guid WorkspaceId, string EmailAddress, Guid TargetListId, string Label);
+    public sealed record InboundEmailResult(Guid CardId);
 
 }

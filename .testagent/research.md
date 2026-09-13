@@ -956,3 +956,13 @@
   canonical `code` extension.
 - A known but unconfigured provider returned 501 and exposed deployment
   configuration; feature hiding requires 404.
+
+# Transport Problem Details 413/503 — 2026-09-12
+
+- Nine manual `Results.Problem` calls outside Google Calendar OAuth duplicated
+  payload-too-large and service-unavailable responses without stable codes.
+- The affected boundaries are Kanban upload, internal broadcast, inbound email
+  and the MCP subscription proxy; existing integration suites cover their
+  status and boundary behavior.
+- Inbound email returned an anonymous success object despite being a public
+  response contract.

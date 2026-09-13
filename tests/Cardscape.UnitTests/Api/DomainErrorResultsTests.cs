@@ -41,6 +41,8 @@ public sealed class DomainErrorResultsTests
     [InlineData("bad-request", StatusCodes.Status400BadRequest, "Bad request")]
     [InlineData("not-found", StatusCodes.Status404NotFound, "Resource not found")]
     [InlineData("conflict", StatusCodes.Status409Conflict, "Conflict")]
+    [InlineData("payload-too-large", StatusCodes.Status413PayloadTooLarge, "Payload too large")]
+    [InlineData("service-unavailable", StatusCodes.Status503ServiceUnavailable, "Service unavailable")]
     public void ApiProblemResult_KnownTransportFailure_ReturnsCanonicalProblemDetails(
         string kind,
         int expectedStatus,
@@ -51,6 +53,8 @@ public sealed class DomainErrorResultsTests
             "bad-request" => ApiProblemResults.BadRequest("request.invalid", "Invalid request."),
             "not-found" => ApiProblemResults.NotFound("resource.missing", "Resource is missing."),
             "conflict" => ApiProblemResults.Conflict("resource.conflict", "Resource conflicts."),
+            "payload-too-large" => ApiProblemResults.PayloadTooLarge("request.too_large", "Request is too large."),
+            "service-unavailable" => ApiProblemResults.ServiceUnavailable("service.unavailable", "Service is unavailable."),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
 

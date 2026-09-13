@@ -12,6 +12,12 @@ internal static class ApiProblemResults
     internal static IResult Conflict(string code, string detail) =>
         Create(StatusCodes.Status409Conflict, "Conflict", code, detail);
 
+    internal static IResult PayloadTooLarge(string code, string detail) =>
+        Create(StatusCodes.Status413PayloadTooLarge, "Payload too large", code, detail);
+
+    internal static IResult ServiceUnavailable(string code, string detail) =>
+        Create(StatusCodes.Status503ServiceUnavailable, "Service unavailable", code, detail);
+
     private static IResult Create(int status, string title, string code, string detail)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);

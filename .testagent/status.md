@@ -779,3 +779,15 @@
 - [x] Pseudo-mutation review: restoring 501/400 or an ad-hoc body breaks exact
   wire assertions; removing any endpoint token adds its source file to the
   architecture failure list.
+
+# Transport Problem Details 413/503 — 2026-09-12
+
+- [x] Canonical transport errors now include payload-too-large and service
+  unavailable, with stable codes at every migrated call site.
+- [x] Focused validation: mapper matrix 11/11 and affected integration suites
+  18/18; 0 failed and 0 skipped. Both compiled transitively without warnings.
+- [x] Assertion review: mapper rows assert result type, response/body status,
+  exact title, non-empty safe detail and a single non-empty code; boundary
+  suites retain exact 413/503 and limit behavior.
+- [x] Pseudo-mutation review: changing either helper status/title/code shape or
+  restoring an unbounded/disabled transport path breaks a concrete assertion.

@@ -37,13 +37,12 @@ public static class McpSubscriptionsAdminEndpoints
             McpSubscriptionsSnapshot? snapshot = await client.GetSnapshotAsync(ct);
             if (snapshot is null)
             {
-                return Results.Problem(
-                    detail: "MCP subscriptions snapshot is unavailable. " +
-                            "Check Cardscape:Mcp:BaseUrl and Internal:Secret on the API.",
-                    statusCode: StatusCodes.Status503ServiceUnavailable);
+                return ApiProblemResults.ServiceUnavailable(
+                    "mcp.subscriptions.unavailable",
+                    "MCP subscriptions snapshot is unavailable. Check Cardscape:Mcp:BaseUrl and Internal:Secret on the API.");
             }
             return Results.Ok(snapshot);
-        });
+        }).Produces<McpSubscriptionsSnapshot>();
 
         return app;
     }

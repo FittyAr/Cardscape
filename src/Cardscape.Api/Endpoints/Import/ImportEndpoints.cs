@@ -73,9 +73,9 @@ public static class ImportEndpoints
 
         if (file.Length > MaxUploadBytes)
         {
-            return Results.Problem(
-                detail: $"Kanban boards.json exceeds the {MaxUploadBytes}-byte cap.",
-                statusCode: StatusCodes.Status413PayloadTooLarge);
+            return ApiProblemResults.PayloadTooLarge(
+                "imports.payload_too_large",
+                $"Kanban boards.json exceeds the {MaxUploadBytes}-byte cap.");
         }
 
         await using Stream stream = file.OpenReadStream();
