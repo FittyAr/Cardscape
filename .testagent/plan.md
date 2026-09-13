@@ -643,6 +643,15 @@
 
 Status: complete. All five steps are implemented and validated.
 
+# Supporting workflow OpenAPI metadata — 2026-09-13
+
+1. Declare concrete success DTOs and status codes on all 13 operations.
+2. Represent attachment download as binary and deletes as bodyless 204.
+3. Extend the generated-document gate to all four exact endpoint tags.
+4. Run the focused OpenAPI integration suite and review mutation sensitivity.
+
+Status: complete. All four steps are implemented and validated.
+
 # OpenAPI/Scalar/Web synchronization — 2026-09-11
 
 1. Compare every SDK-covered OpenAPI response with its Web response record.

@@ -21,7 +21,7 @@ public static class AttachmentEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<AttachmentDto>>>(
                 new ListCardAttachmentsQuery(cardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<IReadOnlyList<AttachmentDto>>(StatusCodes.Status200OK);
 
         // BUG-A5-002 — direct multipart upload. Bounded to
         // 30 MB at the framework level so a misbehaving client
@@ -63,7 +63,9 @@ public static class AttachmentEndpoints
                     $"/api/cards/{cardId}/attachments/{result.Value.Id}",
                     result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        }).DisableAntiforgery();
+        })
+            .DisableAntiforgery()
+            .Produces<AttachmentDto>(StatusCodes.Status201Created);
 
         // Per-attachment operations live under a second group so
         // the {attachmentId} route value is enforced by the URL
@@ -85,7 +87,7 @@ public static class AttachmentEndpoints
                 result.Value.Content,
                 contentType: result.Value.MimeType,
                 fileDownloadName: result.Value.FileName);
-        });
+        }).Produces<byte[]>(StatusCodes.Status200OK, "application/octet-stream");
 
         byId.MapDelete("/", async (Guid cardId, Guid attachmentId, IMessageBus bus, CancellationToken ct) =>
         {
@@ -94,7 +96,7 @@ public static class AttachmentEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }

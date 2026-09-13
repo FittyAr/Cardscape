@@ -237,7 +237,8 @@ public sealed class OpenApiTests
         string[] tags =
         [
             "Cards", "Boards", "Lists", "Checklists", "Custom fields", "Extensions", "Automation",
-            "Voting", "Recurrence", "Search", "Notifications", "Integrations.GoogleCalendar"
+            "Voting", "Recurrence", "Search", "Notifications", "Integrations.GoogleCalendar",
+            "Attachments", "AI", "Dashcards", "Background jobs"
         ];
         HttpClient client = _factory.CreateApiClient();
         using HttpResponseMessage response = await client.GetAsync(

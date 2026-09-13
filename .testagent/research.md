@@ -997,3 +997,10 @@
   operations without explicit success metadata.
 - Recurrence legitimately has alternate 200/204 outcomes; OAuth redirects are
   successful 3xx responses without bodies and the gate must model both.
+
+# Supporting workflow OpenAPI metadata — 2026-09-13
+
+- Attachments, AI, Dashcards and Background jobs contained 13 operations with
+  no explicit success contract despite exposing stable application DTOs.
+- Attachment download is a binary response and deletion is bodyless; both need
+  metadata that represents their actual wire semantics.

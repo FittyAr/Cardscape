@@ -29,7 +29,7 @@ public static class AiEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<AiFeatures.AiGeneratedText>(StatusCodes.Status200OK);
 
         group.MapPost("/cards/{cardId:guid}/generate-checklist",
             async (Guid cardId, [FromServices] IMessageBus bus, CancellationToken ct) =>
@@ -40,7 +40,7 @@ public static class AiEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<AiFeatures.AiGeneratedChecklist>(StatusCodes.Status200OK);
 
         group.MapPost("/cards/{cardId:guid}/suggest-owners",
             async (Guid cardId, [FromServices] IMessageBus bus, CancellationToken ct) =>
@@ -51,7 +51,7 @@ public static class AiEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<AiFeatures.AiOwnerSuggestions>(StatusCodes.Status200OK);
 
         group.MapPost("/comments/summarize",
             async ([FromBody] SummarizeRequest body, [FromServices] IMessageBus bus, CancellationToken ct) =>
@@ -62,7 +62,7 @@ public static class AiEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<AiFeatures.AiGeneratedText>(StatusCodes.Status200OK);
 
         return app;
     }

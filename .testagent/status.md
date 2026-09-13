@@ -838,3 +838,13 @@
   bodyless 204/3xx, and content for represented success bodies.
 - [x] Pseudo-mutation review: removing metadata or misclassifying redirect/body
   semantics fails the exact method/path diagnostic.
+
+# Supporting workflow OpenAPI metadata — 2026-09-13
+
+- [x] All 13 operations now declare their success DTO/status contract.
+- [x] Binary download and bodyless deletion semantics are represented explicitly.
+- [x] Focused OpenAPI integration suite passes: 6/6, 0 failed, 0 skipped.
+- [x] Assertion review: the generated document must expose at least one explicit
+  success and the correct body/bodyless representation for every tagged operation.
+- [x] Pseudo-mutation review: deleting any new `Produces`, changing attachment
+  deletion from 204, or dropping the binary schema fails the exact path diagnostic.
