@@ -45,7 +45,9 @@ public static class SlackEndpoints
                     ? Results.NoContent()
                     : Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        })
+            .Produces<SlackWorkspaceDto>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/connect", async (Guid workspaceId, [FromBody] ConnectSlackRequest body, IMessageBus bus, CancellationToken ct) =>
         {
@@ -56,14 +58,14 @@ public static class SlackEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/workspaces/{workspaceId}/integrations/slack", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<SlackWorkspaceDto>(StatusCodes.Status201Created);
 
         group.MapGet("/channels", async (Guid workspaceId, [FromQuery] Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<SlackChannelDto>>>(
                 new ListSlackChannelsForBoardQuery(workspaceId, boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<IReadOnlyList<SlackChannelDto>>(StatusCodes.Status200OK);
 
         group.MapPost("/channels", async (Guid workspaceId, [FromBody] LinkSlackChannelRequest body, IMessageBus bus, CancellationToken ct) =>
         {
@@ -75,14 +77,14 @@ public static class SlackEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/workspaces/{workspaceId}/integrations/slack/channels/{result.Value.Id}", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<SlackChannelDto>(StatusCodes.Status201Created);
 
         group.MapDelete("/channels/{channelId:guid}", async (Guid workspaceId, Guid channelId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new UnlinkSlackChannelCommand(workspaceId, channelId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }

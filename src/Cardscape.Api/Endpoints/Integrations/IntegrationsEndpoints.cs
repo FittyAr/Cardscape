@@ -34,7 +34,7 @@ public static class IntegrationsEndpoints
                     body.BoardId, body.RepoFullName, body.Events),
                 ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         // BETA-2-#11 — see test-results/BETA-TEST-REPORT.md.
         //
@@ -65,7 +65,7 @@ public static class IntegrationsEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<GitHubPullRequestDto>>>(
                 new ListGitHubPullRequestsQuery(boardId, repoFullName, state ?? "open"), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<IReadOnlyList<GitHubPullRequestDto>>(StatusCodes.Status200OK);
 
         group.MapPost("/pulls/link", async ([FromBody] LinkGitHubPullRequestRequest body, IMessageBus bus, CancellationToken ct) =>
         {
@@ -75,7 +75,7 @@ public static class IntegrationsEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/cards/{body.CardId}/github-links/{result.Value.Id}", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<GitHubPullRequestLinkDto>(StatusCodes.Status201Created);
 
         group.MapPost("/issues", async ([FromBody] CreateGitHubIssueRequest body, IMessageBus bus, CancellationToken ct) =>
         {
@@ -83,7 +83,7 @@ public static class IntegrationsEndpoints
                 new CreateGitHubIssueFromCardCommand(
                     body.CardId, body.RepoFullName, body.Title, body.Body), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<GitHubIssueDto>(StatusCodes.Status200OK);
 
         return app;
     }
@@ -104,7 +104,7 @@ public static class IntegrationsEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<InboundEmailAddressDto>>>(
                 new ListInboundEmailAddressesQuery(workspaceId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<IReadOnlyList<InboundEmailAddressDto>>(StatusCodes.Status200OK);
 
         authed.MapPost("/addresses", async ([FromBody] RegisterInboundEmailAddressRequest body, IMessageBus bus, CancellationToken ct) =>
         {
@@ -114,14 +114,14 @@ public static class IntegrationsEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/integrations/email/addresses/{result.Value.Id}", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<InboundEmailAddressDto>(StatusCodes.Status201Created);
 
         authed.MapDelete("/addresses/{addressId:guid}", async (Guid addressId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new UnregisterInboundEmailAddressCommand(addressId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         // Public webhook surface — no authorization at the
         // routing layer, but the endpoint requires the same
@@ -256,7 +256,7 @@ public static class IntegrationsEndpoints
             return result.IsSuccess
                 ? Results.Ok(new InboundEmailResult(result.Value))
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<InboundEmailResult>(StatusCodes.Status200OK);
 
         return app;
     }

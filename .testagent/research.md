@@ -1018,3 +1018,9 @@
   SCIM token administration exposed 23 operations without explicit contracts.
 - Seeder returned four anonymous payload families, preventing stable generated
   schemas; disabled Seeder and missing DSR users also returned unstructured 404s.
+
+# Integration OpenAPI metadata — 2026-09-13
+
+- Webhooks, GitHub, inbound email and Slack exposed 18 operations without
+  concrete generated success contracts.
+- Slack connection lookup legitimately returns either its DTO or a bodyless 204.

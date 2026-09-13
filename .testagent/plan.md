@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Integration OpenAPI metadata — 2026-09-13
+
+1. Declare exact DTO/status metadata on all 18 integration operations.
+2. Preserve Slack's alternate 200/204 contract and all creation locations.
+3. Extend the generated-document gate to the four integration tags.
+4. Run OpenAPI, integration behavior and nested-boundary regressions.
+
+Status: complete. All four steps are implemented and validated.
+
 # Administrative/provisioning OpenAPI metadata — 2026-09-13
 
 1. Replace anonymous Seeder responses with named wire DTOs.

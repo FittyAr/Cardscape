@@ -240,7 +240,8 @@ public sealed class OpenApiTests
             "Voting", "Recurrence", "Search", "Notifications", "Integrations.GoogleCalendar",
             "Attachments", "AI", "Dashcards", "Background jobs", "UserPreferences",
             "Users.Self", "Workspace invitations", "Security", "Admin.Dsr", "Seeder",
-            "Imports", "OAuthApps", "SAML.Admin", "SCIM.Admin"
+            "Imports", "OAuthApps", "SAML.Admin", "SCIM.Admin", "Webhooks",
+            "Integrations.GitHub", "Integrations.InboundEmail", "Integrations.Slack"
         ];
         HttpClient client = _factory.CreateApiClient();
         using HttpResponseMessage response = await client.GetAsync(

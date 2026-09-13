@@ -871,3 +871,13 @@
   import, OAuth, SAML and SCIM behavior tests.
 - [x] Pseudo-mutation review: anonymous responses, missing metadata, wrong
   bodyless statuses or unstructured 404s are detected by contract/behavior tests.
+
+# Integration OpenAPI metadata — 2026-09-13
+
+- [x] All 18 Webhook/GitHub/inbound-email/Slack operations declare success contracts.
+- [x] Slack's nullable lookup is represented as distinct 200 and 204 responses.
+- [x] OpenAPI and integration boundary regressions pass: 39/39, 0 failed, 0 skipped.
+- [x] Assertion review: exact generated response shapes are combined with
+  authorization, SSRF/body-cap, ownership and nested-resource behavior coverage.
+- [x] Pseudo-mutation review: missing metadata, incorrect creation/no-content
+  statuses or loss of Slack's 204 alternative fails contract or behavior tests.

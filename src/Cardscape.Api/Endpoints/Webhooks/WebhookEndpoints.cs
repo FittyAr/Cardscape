@@ -37,7 +37,7 @@ public static class WebhookEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WebhookEndpointDto>>>(
                 new ListWebhookEndpointsQuery(boardId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<IReadOnlyList<WebhookEndpointDto>>(StatusCodes.Status200OK);
 
         boardGroup.MapPost("/", async (
             Guid boardId,
@@ -51,7 +51,7 @@ public static class WebhookEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/boards/{boardId}/webhooks/{result.Value.Endpoint.Id}", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<WebhookEndpointIssuance>(StatusCodes.Status201Created);
 
         boardGroup.MapPatch("/{endpointId:guid}", async (
             Guid boardId,
@@ -64,7 +64,7 @@ public static class WebhookEndpoints
                 new UpdateWebhookEndpointCommand(
                     boardId, endpointId, body.Url, body.Active), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<WebhookEndpointDto>(StatusCodes.Status200OK);
 
         boardGroup.MapDelete("/{endpointId:guid}", async (
             Guid boardId,
@@ -75,7 +75,7 @@ public static class WebhookEndpoints
             var result = await bus.InvokeAsync<Result>(
                 new DeleteWebhookEndpointCommand(boardId, endpointId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         boardGroup.MapGet("/{endpointId:guid}/deliveries", async (
             Guid boardId,
@@ -87,7 +87,7 @@ public static class WebhookEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WebhookDeliveryDto>>>(
                 new ListWebhookDeliveriesQuery(boardId, endpointId, null, 0, take ?? 50), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<IReadOnlyList<WebhookDeliveryDto>>(StatusCodes.Status200OK);
 
         return app;
     }
