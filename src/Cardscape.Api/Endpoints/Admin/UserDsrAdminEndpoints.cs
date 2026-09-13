@@ -54,9 +54,9 @@ public static class UserDsrAdminEndpoints
             UserDataExportDto? bundle = await bus.InvokeAsync<UserDataExportDto?>(
                 new GetUserDataExportQuery(userId), ct);
             return bundle is null
-                ? Results.NotFound()
+                ? ApiProblemResults.NotFound("users.not_found", "The requested user was not found.")
                 : Results.Ok(bundle);
-        });
+        }).Produces<UserDataExportDto>(StatusCodes.Status200OK);
 
         group.MapDelete("/{userId:guid}", async Task<IResult> (
             Guid userId, IMessageBus bus, CancellationToken ct) =>
@@ -66,7 +66,7 @@ public static class UserDsrAdminEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/{userId:guid}/restore", async Task<IResult> (
             Guid userId, IMessageBus bus, CancellationToken ct) =>
@@ -76,7 +76,7 @@ public static class UserDsrAdminEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/{userId:guid}/anonymise", async Task<IResult> (
             Guid userId, IMessageBus bus, CancellationToken ct) =>
@@ -86,7 +86,7 @@ public static class UserDsrAdminEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/{userId:guid}/restrict", async Task<IResult> (
             Guid userId, IMessageBus bus, CancellationToken ct) =>
@@ -96,7 +96,7 @@ public static class UserDsrAdminEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/{userId:guid}/unrestrict", async Task<IResult> (
             Guid userId, IMessageBus bus, CancellationToken ct) =>
@@ -106,7 +106,7 @@ public static class UserDsrAdminEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/{userId:guid}/admin", async Task<IResult> (
             Guid userId, IMessageBus bus, CancellationToken ct) =>
@@ -116,7 +116,7 @@ public static class UserDsrAdminEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/{userId:guid}/unadmin", async Task<IResult> (
             Guid userId, IMessageBus bus, CancellationToken ct) =>
@@ -126,7 +126,7 @@ public static class UserDsrAdminEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }

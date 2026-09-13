@@ -31,12 +31,16 @@ public static class ImportEndpoints
         group.MapPost("/kanban/preview", (
             HttpRequest request,
             IImportService import,
-            CancellationToken ct) => ImportKanbanAsync(request, import, previewOnly: true, ct));
+            CancellationToken ct) => ImportKanbanAsync(request, import, previewOnly: true, ct))
+            .DisableAntiforgery()
+            .Produces<Domain.Import.ImportResult>(StatusCodes.Status200OK);
 
         group.MapPost("/kanban/apply", (
             HttpRequest request,
             IImportService import,
-            CancellationToken ct) => ImportKanbanAsync(request, import, previewOnly: false, ct));
+            CancellationToken ct) => ImportKanbanAsync(request, import, previewOnly: false, ct))
+            .DisableAntiforgery()
+            .Produces<Domain.Import.ImportResult>(StatusCodes.Status200OK);
 
         return app;
     }

@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Administrative/provisioning OpenAPI metadata — 2026-09-13
+
+1. Replace anonymous Seeder responses with named wire DTOs.
+2. Canonicalize transport-level 404 responses with stable problem codes.
+3. Declare success contracts on all 23 administrative/provisioning operations.
+4. Extend the OpenAPI gate and run all affected functional regressions.
+
+Status: complete. All four steps are implemented and validated.
+
 # Identity/workspace OpenAPI metadata — 2026-09-13
 
 1. Declare concrete success contracts on all 15 operations.

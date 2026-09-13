@@ -859,3 +859,15 @@
   preferences, invitation and API-token lifecycle behavior.
 - [x] Pseudo-mutation review: removing metadata fails the tag gate; changing
   nullable/bodyless semantics or status codes breaks generated-contract checks.
+
+# Administrative/provisioning OpenAPI metadata — 2026-09-13
+
+- [x] Named Seeder schemas replace all anonymous public response objects.
+- [x] Disabled Seeder and missing DSR user return canonical coded Problem Details.
+- [x] All 23 operations declare concrete success contracts and enter the gate.
+- [x] OpenAPI and affected functional integration regressions pass: 37/37,
+  0 failed and 0 skipped.
+- [x] Assertion review: generated schemas are checked together with DSR, Seeder,
+  import, OAuth, SAML and SCIM behavior tests.
+- [x] Pseudo-mutation review: anonymous responses, missing metadata, wrong
+  bodyless statuses or unstructured 404s are detected by contract/behavior tests.

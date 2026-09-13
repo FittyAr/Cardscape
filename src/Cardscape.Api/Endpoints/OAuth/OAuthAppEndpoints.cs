@@ -28,7 +28,7 @@ public static class OAuthAppEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<IReadOnlyList<OAuthAppSummaryDto>>(StatusCodes.Status200OK);
 
         group.MapPost("/", async (
             [FromBody] RegisterOAuthAppBody body,
@@ -44,7 +44,7 @@ public static class OAuthAppEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/oauth-apps/{result.Value.Id}", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<OAuthAppRegistrationDto>(StatusCodes.Status201Created);
 
         group.MapDelete("/{appId:guid}", async (
             Guid appId,
@@ -56,7 +56,7 @@ public static class OAuthAppEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }

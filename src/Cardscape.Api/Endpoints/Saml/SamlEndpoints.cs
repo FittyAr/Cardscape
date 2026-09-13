@@ -48,7 +48,9 @@ public static class SamlEndpoints
                     ? Results.NoContent()
                     : Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        })
+            .Produces<SamlConnectionDto>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status204NoContent);
 
         admin.MapPost("/", async (
             Guid workspaceId,
@@ -64,14 +66,14 @@ public static class SamlEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/workspaces/{workspaceId}/saml", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<SamlConnectionDto>(StatusCodes.Status201Created);
 
         admin.MapDelete("/", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new DisableSamlConnectionCommand(workspaceId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }

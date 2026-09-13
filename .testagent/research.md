@@ -1011,3 +1011,10 @@
   operations without explicit success contracts.
 - Preferences documentation still described validation as 400 even though the
   canonical domain policy intentionally returns 422.
+
+# Administrative/provisioning OpenAPI metadata — 2026-09-13
+
+- Admin DSR, Seeder, imports, OAuth app administration, SAML administration and
+  SCIM token administration exposed 23 operations without explicit contracts.
+- Seeder returned four anonymous payload families, preventing stable generated
+  schemas; disabled Seeder and missing DSR users also returned unstructured 404s.

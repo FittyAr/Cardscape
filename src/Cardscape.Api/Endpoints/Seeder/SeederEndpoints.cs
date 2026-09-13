@@ -41,24 +41,20 @@ public static class SeederEndpoints
 
         group.MapGet("/status", (SeedReport report, SeedRunner runner, SeederOperationQueue queue) =>
         {
-            return Results.Ok(new
-            {
-                enabled = runner.IsEnabled,
-                running = queue.IsBusy,
-                report = ToStatus(report)
-            });
-        });
+            return Results.Ok(new SeederStatusResponse(
+                runner.IsEnabled,
+                queue.IsBusy,
+                ToStatus(report)));
+        }).Produces<SeederStatusResponse>(StatusCodes.Status200OK);
 
         group.MapGet("/options", (Microsoft.Extensions.Options.IOptions<SeederOptions> options) =>
         {
             SeederOptions snapshot = options.Value;
-            return Results.Ok(new
-            {
-                enabled = snapshot.Enabled,
-                wipeBeforeSeed = snapshot.WipeBeforeSeed,
-                fixedNow = snapshot.FixedNow
-            });
-        });
+            return Results.Ok(new SeederOptionsResponse(
+                snapshot.Enabled,
+                snapshot.WipeBeforeSeed,
+                snapshot.FixedNow));
+        }).Produces<SeederOptionsResponse>(StatusCodes.Status200OK);
 
         // Async run: the endpoint returns 202 the moment
         // the runner accepts the request; the runner itself
@@ -74,7 +70,9 @@ public static class SeederEndpoints
         {
             if (!runner.IsEnabled)
             {
-                return Results.NotFound();
+                return ApiProblemResults.NotFound(
+                    "seeder.disabled",
+                    "The Seeder feature is disabled.");
             }
             bool wipe = request?.Wipe ?? runner.CurrentOptions.WipeBeforeSeed;
             if (!queue.TryEnqueueRun(wipe))
@@ -84,19 +82,19 @@ public static class SeederEndpoints
                     "A Seeder operation is already running.");
             }
 
-            return Results.Accepted(value: new
-            {
-                running = true,
+            return Results.Accepted(value: new SeederRunAcceptedResponse(
+                true,
                 wipe,
-                startedAt = report.StartedAt
-            });
-        });
+                report.StartedAt));
+        }).Produces<SeederRunAcceptedResponse>(StatusCodes.Status202Accepted);
 
         group.MapPost("/wipe", (SeedRunner runner, SeederOperationQueue queue) =>
         {
             if (!runner.IsEnabled)
             {
-                return Results.NotFound();
+                return ApiProblemResults.NotFound(
+                    "seeder.disabled",
+                    "The Seeder feature is disabled.");
             }
             if (!queue.TryEnqueueWipe())
             {
@@ -105,46 +103,45 @@ public static class SeederEndpoints
                     "A Seeder operation is already running.");
             }
 
-            return Results.Accepted(value: new
-            {
-                running = true,
-                wipeOnly = true,
-                startedAt = runner.CurrentOptions.FixedNow
-            });
-        });
+            return Results.Accepted(value: new SeederWipeAcceptedResponse(
+                true,
+                true,
+                runner.CurrentOptions.FixedNow));
+        }).Produces<SeederWipeAcceptedResponse>(StatusCodes.Status202Accepted);
 
         return app;
     }
 
-    private static object ToStatus(SeedReport r) => new
-    {
-        status = r.Status,
-        startedAt = r.StartedAt,
-        finishedAt = r.FinishedAt,
-        elapsed = r.Elapsed,
-        currentStep = r.CurrentStep,
-        totalSteps = r.TotalSteps,
-        currentStepName = r.CurrentStepName,
-        entries = r.Entries
-            .Select(e => new
-            {
-                at = e.At,
-                level = e.Level.ToString(),
-                step = e.Step,
-                message = e.Message
-            })
-            .ToList(),
-        tables = r.TableSnapshot()
-            .Select(t => new
-            {
-                key = t.Table,
-                aggregate = t.AggregateName,
-                rows = t.RowCount,
-                highlight = t.Highlight
-            })
-            .ToList()
-    };
+    private static SeedReportResponse ToStatus(SeedReport report) => new(
+        report.Status,
+        report.StartedAt,
+        report.FinishedAt,
+        report.Elapsed,
+        report.CurrentStep,
+        report.TotalSteps,
+        report.CurrentStepName,
+        report.Entries.Select(entry => new SeedLogEntryResponse(
+            entry.At, entry.Level.ToString(), entry.Step, entry.Message)).ToList(),
+        report.TableSnapshot().Select(table => new SeedTableResponse(
+            table.Table, table.AggregateName, table.RowCount, table.Highlight)).ToList());
 }
 
 /// <summary>Body for <c>POST /api/admin/seeder/run</c>.</summary>
 public sealed record SeederRunRequest(bool? Wipe);
+
+public sealed record SeederStatusResponse(bool Enabled, bool Running, SeedReportResponse Report);
+public sealed record SeederOptionsResponse(bool Enabled, bool WipeBeforeSeed, DateTimeOffset? FixedNow);
+public sealed record SeederRunAcceptedResponse(bool Running, bool Wipe, DateTimeOffset? StartedAt);
+public sealed record SeederWipeAcceptedResponse(bool Running, bool WipeOnly, DateTimeOffset? StartedAt);
+public sealed record SeedReportResponse(
+    string Status,
+    DateTimeOffset? StartedAt,
+    DateTimeOffset? FinishedAt,
+    TimeSpan? Elapsed,
+    int CurrentStep,
+    int TotalSteps,
+    string? CurrentStepName,
+    IReadOnlyList<SeedLogEntryResponse> Entries,
+    IReadOnlyList<SeedTableResponse> Tables);
+public sealed record SeedLogEntryResponse(DateTimeOffset At, string Level, string Step, string Message);
+public sealed record SeedTableResponse(string Key, string Aggregate, long Rows, string? Highlight);

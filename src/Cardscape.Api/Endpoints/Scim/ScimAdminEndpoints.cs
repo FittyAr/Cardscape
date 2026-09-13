@@ -27,7 +27,7 @@ public static class ScimAdminEndpoints
             var result = await bus.InvokeAsync<Result<IReadOnlyList<ScimTokenDto>>>(
                 new ListScimTokensQuery(workspaceId), ct);
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<IReadOnlyList<ScimTokenDto>>(StatusCodes.Status200OK);
 
         group.MapPost("/tokens", async (
             Guid workspaceId,
@@ -41,7 +41,7 @@ public static class ScimAdminEndpoints
                 ? Results.Created($"/api/workspaces/{workspaceId}/scim/tokens/{result.Value.Token.Id}",
                                  result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces<IssueScimTokenResult>(StatusCodes.Status201Created);
 
         group.MapDelete("/tokens/{tokenId:guid}", async (
             Guid workspaceId, Guid tokenId, IMessageBus bus, CancellationToken ct) =>
@@ -49,7 +49,7 @@ public static class ScimAdminEndpoints
             var result = await bus.InvokeAsync<Result>(
                 new RevokeScimTokenCommand(workspaceId, tokenId), ct);
             return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }
