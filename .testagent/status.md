@@ -767,3 +767,15 @@
 - [x] Assertion/pseudo-mutation review: adding, removing or renaming a shared
   Web property, changing Scalar's document URL, disabling its endpoint or
   breaking the OpenAPI document fails an exact assertion.
+
+# External login and endpoint cancellation — 2026-09-12
+
+- [x] External login uses canonical Problem Details and hides unavailable
+  providers; all async endpoint lambdas accept request cancellation.
+- [x] Focused validation: external-login integration 2/2 and architecture 1/1;
+  0 failed and 0 skipped. Both projects compiled transitively with 0 warnings.
+- [x] Assertion review: HTTP tests assert exact status, body status, canonical
+  title and stable code; architecture asserts an empty violation inventory.
+- [x] Pseudo-mutation review: restoring 501/400 or an ad-hoc body breaks exact
+  wire assertions; removing any endpoint token adds its source file to the
+  architecture failure list.

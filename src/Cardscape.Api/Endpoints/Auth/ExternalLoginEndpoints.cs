@@ -47,7 +47,7 @@ namespace Cardscape.Api.Endpoints.Auth;
 /// configuration block is present; otherwise the
 /// <see cref="ExternalProviderExtensions.IsKnown"/>
 /// check on the <c>apple</c> provider keeps the start
-/// endpoint out of the menu (returns 501).
+/// endpoint hidden when the provider is not configured.
 /// </summary>
 public static class ExternalLoginEndpoints
 {
@@ -58,23 +58,19 @@ public static class ExternalLoginEndpoints
         group.MapGet("/{provider}/start", async Task<IResult> (
             string provider,
             IAuthenticationSchemeProvider schemes,
-            string? returnUrl) =>
+            string? returnUrl,
+            CancellationToken ct) =>
         {
+            ct.ThrowIfCancellationRequested();
             if (!ExternalProviderExtensions.TryParse(provider, out var parsed))
             {
-                return Results.Problem(
-                    title: ExternalLoginErrors.UnknownProvider.Code,
-                    detail: ExternalLoginErrors.UnknownProvider.Message,
-                    statusCode: StatusCodes.Status400BadRequest);
+                return DomainErrorResults.ToProblem(ExternalLoginErrors.UnknownProvider);
             }
 
             string scheme = parsed.WireName();
             if (await schemes.GetSchemeAsync(scheme) is null)
             {
-                return Results.Problem(
-                    title: ExternalLoginErrors.ProviderNotImplemented.Code,
-                    detail: ExternalLoginErrors.ProviderNotImplemented.Message,
-                    statusCode: StatusCodes.Status501NotImplemented);
+                return DomainErrorResults.ToProblem(ExternalLoginErrors.ProviderUnavailable);
             }
 
             var properties = new AuthenticationProperties
@@ -87,7 +83,7 @@ public static class ExternalLoginEndpoints
                 }
             };
             return Results.Challenge(properties, new[] { scheme });
-        });
+        }).Produces(StatusCodes.Status302Found);
 
         group.MapGet("/{provider}/callback", async (
             string provider,
@@ -100,30 +96,25 @@ public static class ExternalLoginEndpoints
         {
             if (!ExternalProviderExtensions.TryParse(provider, out var parsed))
             {
-                return Results.Problem(
-                    title: ExternalLoginErrors.UnknownProvider.Code,
-                    detail: ExternalLoginErrors.UnknownProvider.Message,
-                    statusCode: StatusCodes.Status400BadRequest);
+                return DomainErrorResults.ToProblem(ExternalLoginErrors.UnknownProvider);
             }
 
             var authenticateResult = await http.AuthenticateAsync(
                 ServiceCollectionExtensions.ExternalCookieScheme);
             if (!authenticateResult.Succeeded || authenticateResult.Principal is null)
             {
-                return Results.Problem(
-                    title: "auth.external.failed",
-                    detail: "External provider did not return a valid principal.",
-                    statusCode: StatusCodes.Status401Unauthorized);
+                return DomainErrorResults.ToProblem(DomainError.Unauthenticated(
+                    "auth.external.failed",
+                    "External provider did not return a valid principal."));
             }
 
             string expectedProvider = parsed.WireName();
             if (!IsExpectedProvider(authenticateResult.Properties, expectedProvider))
             {
                 await http.SignOutAsync(ServiceCollectionExtensions.ExternalCookieScheme);
-                return Results.Problem(
-                    title: "auth.external.provider_mismatch",
-                    detail: "External login provider did not match the requested callback.",
-                    statusCode: StatusCodes.Status400BadRequest);
+                return DomainErrorResults.ToProblem(DomainError.Validation(
+                    "auth.external.provider_mismatch",
+                    "External login provider did not match the requested callback."));
             }
 
             string returnUrl = authenticateResult.Properties.Items.TryGetValue(
@@ -140,19 +131,13 @@ public static class ExternalLoginEndpoints
                 ?? principal.FindFirstValue("sub");
             if (string.IsNullOrWhiteSpace(subject))
             {
-                return Results.Problem(
-                    title: ExternalLoginErrors.SubjectMissing.Code,
-                    detail: ExternalLoginErrors.SubjectMissing.Message,
-                    statusCode: StatusCodes.Status400BadRequest);
+                return DomainErrorResults.ToProblem(ExternalLoginErrors.SubjectMissing);
             }
 
             var subjectResult = SubjectId.Create(subject);
             if (subjectResult.IsFailure)
             {
-                return Results.Problem(
-                    title: subjectResult.Error.Code,
-                    detail: subjectResult.Error.Message,
-                    statusCode: StatusCodes.Status400BadRequest);
+                return DomainErrorResults.ToProblem(subjectResult.Error);
             }
 
             string? email = principal.FindFirstValue(ClaimTypes.Email);
@@ -164,10 +149,7 @@ public static class ExternalLoginEndpoints
                 ct);
             if (auth.IsFailure)
             {
-                return Results.Problem(
-                    title: auth.Error.Code,
-                    detail: auth.Error.Message,
-                    statusCode: StatusCodes.Status400BadRequest);
+                return DomainErrorResults.ToProblem(auth.Error);
             }
 
             string redirect = configuration["Cardscape:Web:ExternalLoginRedirectUrl"]
@@ -180,7 +162,7 @@ public static class ExternalLoginEndpoints
                 + $"&user_name={Uri.EscapeDataString(auth.Value.User.DisplayName)}"
                 + $"&return_url={Uri.EscapeDataString(returnUrl)}";
             return Results.Redirect($"{redirect}#{fragment}");
-        });
+        }).Produces(StatusCodes.Status302Found);
 
         return app;
     }

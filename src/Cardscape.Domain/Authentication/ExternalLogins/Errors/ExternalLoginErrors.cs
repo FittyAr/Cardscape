@@ -17,15 +17,15 @@ public static class ExternalLoginErrors
 
     /// <summary>
     /// The provider is recognised but the OIDC handler is
-    /// not registered in this build (e.g. Apple without
+    /// not registered in this deployment (e.g. Apple without
     /// the required <c>Authentication:Apple:TeamId</c> +
     /// <c>ClientId</c> + <c>KeyId</c> + <c>PrivateKeyPem</c>
     /// configuration, or any future provider that lands
-    /// behind a feature flag). The endpoint returns 501.
+    /// behind a feature flag). The endpoint hides unavailable features.
     /// </summary>
-    public static readonly DomainError ProviderNotImplemented = DomainError.External(
-        "auth.external.not_implemented",
-        "External provider is not implemented in this build.");
+    public static readonly DomainError ProviderUnavailable = DomainError.NotFound(
+        "auth.external.provider_unavailable",
+        "External login provider is not available.");
 
     /// <summary>
     /// The provider did not return a <c>sub</c> claim, so

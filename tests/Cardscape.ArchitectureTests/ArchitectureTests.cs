@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using FluentAssertions;
 using NetArchTest.Rules;
@@ -205,6 +206,30 @@ public sealed class ArchitectureTests
 
         return directory ?? throw new DirectoryNotFoundException(
             $"Could not find the repository root from {AppContext.BaseDirectory}.");
+    }
+
+    [Fact]
+    public void AsyncApiEndpointLambdas_AcceptCancellationToken()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string endpointsRoot = Path.Combine(
+            repositoryRoot.FullName, "src", "Cardscape.Api", "Endpoints");
+        Regex asyncEndpointSignature = new(
+            @"\.Map(?:Get|Post|Put|Patch|Delete)\s*\((?<signature>[\s\S]*?\basync\b[\s\S]*?=>)",
+            RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1));
+
+        string[] violations = Directory.GetFiles(endpointsRoot, "*.cs", SearchOption.AllDirectories)
+            .SelectMany(file => asyncEndpointSignature.Matches(File.ReadAllText(file))
+                .Where(match => !match.Groups["signature"].Value.Contains(
+                    nameof(CancellationToken), StringComparison.Ordinal))
+                .Select(match => Path.GetRelativePath(repositoryRoot.FullName, file)))
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "every async HTTP endpoint must observe request cancellation explicitly");
     }
 
     [Fact]

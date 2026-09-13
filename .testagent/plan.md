@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# External login and endpoint cancellation — 2026-09-12
+
+1. Add cancellation to the sole async endpoint lambda missing it.
+2. Replace external-login error bodies with the canonical domain mapper.
+3. Hide unconfigured providers and type redirect success metadata.
+4. Add exact HTTP regressions and a project-wide cancellation architecture gate.
+
+Status: complete. All four steps are implemented and validated.
+
 # Auth/TOTP HTTP semantics — 2026-09-11
 
 1. Replace manual domain-error mapping with the canonical RFC 7807 mapper.

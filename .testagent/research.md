@@ -947,3 +947,12 @@
 - Scalar's generated bootstrap normalizes its canonical document source to
   `openapi/v1.json`; an explicit leading-slash option produces the same output
   and is therefore unnecessary configuration.
+
+# External login and endpoint cancellation — 2026-09-12
+
+- A bounded scan of all 210 REST mappings found one async lambda without a
+  request `CancellationToken`: external-login start.
+- External login created six ad-hoc Problem Details variants without the
+  canonical `code` extension.
+- A known but unconfigured provider returned 501 and exposed deployment
+  configuration; feature hiding requires 404.
