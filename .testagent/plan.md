@@ -757,6 +757,14 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All five steps are implemented and validated.
 
+# Workspace members visible-copy localization — 2026-09-14
+
+1. Localize headings, form, secret state, tables, actions, roles, and validation.
+2. Resolve role options at render and format dates by culture.
+3. Add `WebWorkspaceMembers_UsesLocalizedVisibleCopyAndDates` and validate.
+
+Status: complete. All three steps are implemented and validated.
+
 # Keyboard, focus and icon-button accessibility — 2026-09-14
 
 1. Inventory non-semantic click targets, focus CSS and icon-only buttons.

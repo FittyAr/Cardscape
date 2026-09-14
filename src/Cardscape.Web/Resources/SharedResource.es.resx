@@ -215,6 +215,20 @@
   <data name="InboxMarkReadFailed" xml:space="preserve"><value>No se pudo actualizar el estado de la notificación.</value></data>
   <data name="WorkspaceMembersWorkspaceLoadFailed" xml:space="preserve"><value>No se pudieron cargar los detalles del workspace.</value></data>
   <data name="WorkspaceMembersLoadFailed" xml:space="preserve"><value>No se pudieron cargar los miembros del workspace.</value></data>
+  <data name="MembersTitle" xml:space="preserve"><value>Miembros</value></data>
+  <data name="MembersEmail" xml:space="preserve"><value>Email</value></data>
+  <data name="MembersRole" xml:space="preserve"><value>Rol</value></data>
+  <data name="MembersInvitationCreated" xml:space="preserve"><value>Invitación creada</value></data>
+  <data name="MembersInvitationSendTo" xml:space="preserve"><value>Enviá este enlace de un solo uso a {0}.</value></data>
+  <data name="MembersInvitationSent" xml:space="preserve"><value>Ya lo envié</value></data>
+  <data name="MembersSend" xml:space="preserve"><value>Enviar</value></data>
+  <data name="MembersCurrent" xml:space="preserve"><value>Miembros actuales</value></data>
+  <data name="MembersEmpty" xml:space="preserve"><value>Todavía no hay miembros. Invitá a alguien para comenzar.</value></data>
+  <data name="MembersName" xml:space="preserve"><value>Nombre</value></data>
+  <data name="MembersPendingInvitations" xml:space="preserve"><value>Invitaciones pendientes</value></data>
+  <data name="MembersNoInvitations" xml:space="preserve"><value>No hay invitaciones pendientes.</value></data>
+  <data name="MembersExpires" xml:space="preserve"><value>Vence</value></data>
+  <data name="MembersInvite" xml:space="preserve"><value>Invitar</value></data>
   <data name="WorkspaceInvitationsLoadFailed" xml:space="preserve"><value>No se pudieron cargar las invitaciones del workspace.</value></data>
   <data name="GitHubBoardsLoadFailed" xml:space="preserve"><value>No se pudieron cargar los tableros del workspace para la integración con GitHub.</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>

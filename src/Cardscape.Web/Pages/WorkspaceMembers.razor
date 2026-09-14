@@ -9,10 +9,10 @@
 @inject IInvitationsApiClient InvitationsApi
 @inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Members — Cardscape</PageTitle>
+<PageTitle>@L["MembersTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
-    <PageHeader Title="Members"
+    <PageHeader Title="@L["MembersTitle"]"
                 Subtitle="@(workspace?.Name ?? string.Empty)"
                 Actions="@(ShowInviteButton())" />
 
@@ -20,14 +20,14 @@
     {
         <RadzenCard>
             <RadzenTemplateForm TItem="InviteModel" Data="@inviteModel" Submit="@SendInviteAsync">
-                <LabeledField Text="Email" Component="invite-email">
+                <LabeledField Text="@L["MembersEmail"]" Component="invite-email">
                     <RadzenTextBox @bind-Value="inviteModel.Email" Name="invite-email" Style="width:100%" />
                 </LabeledField>
                 <RadzenRequiredValidator Component="invite-email" Text="@L["ValidationRequired"]" />
                 <RadzenEmailValidator Component="invite-email" Text="@L["ValidationEmail"]" />
 
-                <LabeledField Text="Role" Component="invite-role">
-                    <RadzenDropDown @bind-Value="inviteModel.Role" Data="@roles"
+                <LabeledField Text="@L["MembersRole"]" Component="invite-role">
+                    <RadzenDropDown @bind-Value="inviteModel.Role" Data="@Roles"
                                     TextProperty="Label" ValueProperty="Value"
                                     Name="invite-role" Style="width:100%" />
                 </LabeledField>
@@ -36,20 +36,17 @@
                 {
                     <RadzenCard Variant="Variant.Outlined" Class="rz-mt-3">
                         <RadzenStack Gap="0.5rem">
-                            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H3" Text="Invitation created" />
-                            <RadzenText TextStyle="TextStyle.Body2">
-                                Send this link to <RadzenText Text="@inviteModel.Email" TextStyle="TextStyle.Body1" TagName="TagName.Span" />.
-                                It will also appear in the API log.
-                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H3" Text="@L["MembersInvitationCreated"]" />
+                            <RadzenText Text="@L["MembersInvitationSendTo", inviteModel.Email]" TextStyle="TextStyle.Body2" />
                             <SecretBox Secret="@issuedToken" />
-                            <RadzenButton Text="I've sent it" ButtonStyle="ButtonStyle.Primary"
+                            <RadzenButton Text="@L["MembersInvitationSent"]" ButtonStyle="ButtonStyle.Primary"
                                           Click="@DismissIssuedToken" />
                         </RadzenStack>
                     </RadzenCard>
                 }
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
-                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelInvite" />
-                    <RadzenButton Text="Send" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                    <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@CancelInvite" />
+                    <RadzenButton Text="@L["MembersSend"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
                                   IsBusy="@busy" />
                 </RadzenStack>
             </RadzenTemplateForm>
@@ -66,7 +63,7 @@
         <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@workspaceError</RadzenAlert>
     }
 
-    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" Text="Current members" />
+    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" Text="@L["MembersCurrent"]" />
 
     @if (membersError is not null)
     {
@@ -74,19 +71,19 @@
     }
     else if (members is null)
     {
-        <RadzenText Text="Loading…" />
+        <RadzenText Text="@L["ActionLoading"]" />
     }
     else if (members.Count == 0)
     {
-        <RadzenText Text="No members yet — invite someone to get started." />
+        <RadzenText Text="@L["MembersEmpty"]" />
     }
     else
     {
         <RadzenDataGrid TItem="WorkspaceMemberDto" Data="@members" AllowSorting="true" AllowPaging="true" PageSize="20">
             <Columns>
-                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="DisplayName" Title="Name" />
-                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="Email" Title="Email" />
-                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="Role" Title="Role">
+                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="DisplayName" Title="@L["MembersName"]" />
+                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="Email" Title="@L["MembersEmail"]" />
+                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="Role" Title="@L["MembersRole"]">
                     <Template Context="m">
                         @RoleName(m.Role)
                     </Template>
@@ -95,7 +92,7 @@
         </RadzenDataGrid>
     }
 
-    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" Text="Pending invitations" />
+    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" Text="@L["MembersPendingInvitations"]" />
 
     @if (invitationsError is not null)
     {
@@ -103,31 +100,31 @@
     }
     else if (invitations is null)
     {
-        <RadzenText Text="Loading…" />
+        <RadzenText Text="@L["ActionLoading"]" />
     }
     else if (invitations.Count == 0)
     {
-        <RadzenText Text="No pending invitations." />
+        <RadzenText Text="@L["MembersNoInvitations"]" />
     }
     else
     {
         <RadzenDataGrid TItem="WorkspaceInvitationDto" Data="@invitations" AllowSorting="true" AllowPaging="true" PageSize="20">
             <Columns>
-                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="Email" Title="Email" />
-                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="Role" Title="Role">
+                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="Email" Title="@L["MembersEmail"]" />
+                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="Role" Title="@L["MembersRole"]">
                     <Template Context="inv">
                         @RoleName(inv.Role)
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="ExpiresAt" Title="Expires">
+                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="ExpiresAt" Title="@L["MembersExpires"]">
                     <Template Context="inv">
-                        @inv.ExpiresAt.LocalDateTime.ToString("yyyy-MM-dd")
+                        @inv.ExpiresAt.LocalDateTime.ToString("d")
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="TokenPrefix" Title="Prefix" />
+                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="TokenPrefix" Title="@L["ScimPrefix"]" />
                 <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Title="" Sortable="false" Filterable="false" Width="120px">
                     <Template Context="inv">
-                        <RadzenButton Text="Revoke" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                        <RadzenButton Text="@L["ScimRevoke"]" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
                                       Click="@(() => RevokeAsync(inv))" />
                     </Template>
                 </RadzenDataGridColumn>
@@ -151,16 +148,16 @@
     private string? issuedToken;
     private readonly InviteModel inviteModel = new();
 
-    private readonly List<RoleOption> roles = new()
-    {
-        new(WorkspaceRole.Admin, "Admin"),
-        new(WorkspaceRole.Member, "Member"),
-        new(WorkspaceRole.Observer, "Observer")
-    };
+    private IReadOnlyList<RoleOption> Roles =>
+    [
+        new(WorkspaceRole.Admin, L["WorkspaceRoleAdmin"]),
+        new(WorkspaceRole.Member, L["WorkspaceRoleMember"]),
+        new(WorkspaceRole.Observer, L["WorkspaceRoleObserver"])
+    ];
 
     private RenderFragment ShowInviteButton() => __builder =>
     {
-        <RadzenButton Text="Invite" Icon="person_add" ButtonStyle="ButtonStyle.Primary"
+        <RadzenButton Text="@L["MembersInvite"]" Icon="person_add" ButtonStyle="ButtonStyle.Primary"
                       Click="@(() => showInvite = !showInvite)" />
     };
 
@@ -205,7 +202,7 @@
         {
             if (string.IsNullOrWhiteSpace(inviteModel.Email))
             {
-                error = "Email is required.";
+                error = L["ValidationRequired"];
                 return;
             }
 
@@ -259,12 +256,12 @@
         }
     }
 
-    private static string RoleName(WorkspaceRole role) => role switch
+    private string RoleName(WorkspaceRole role) => role switch
     {
-        WorkspaceRole.Admin => "Admin",
-        WorkspaceRole.Member => "Member",
-        WorkspaceRole.Observer => "Observer",
-        _ => "Unknown"
+        WorkspaceRole.Admin => L["WorkspaceRoleAdmin"],
+        WorkspaceRole.Member => L["WorkspaceRoleMember"],
+        WorkspaceRole.Observer => L["WorkspaceRoleObserver"],
+        _ => L["CommonUnknown"]
     };
 
     private sealed class InviteModel

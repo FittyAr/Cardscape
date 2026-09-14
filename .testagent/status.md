@@ -1203,3 +1203,13 @@
 - [x] Pseudo-mutation review: restoring card click navigation, literal options/title,
   or fixed date format fails `WebBoards_UsesLocalizedKeyboardAccessibleNavigation`;
   catalog drift fails `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Workspace members visible-copy localization — 2026-09-14
+
+- [x] Visible copy, roles, and dates follow active culture.
+- [x] Architecture gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 49/49; catalog: 5/5.
+- [x] Assertion review independently covers dynamic roles, role resources, culture
+  dates, headings and actions. Restoring any checked literal/fixed date fails
+  `WebWorkspaceMembers_UsesLocalizedVisibleCopyAndDates`; catalog drift fails
+  `EverySupportedCulture_ReturnsCompleteCatalog`.

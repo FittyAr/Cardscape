@@ -549,6 +549,17 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebWorkspaceMembers_UsesLocalizedVisibleCopyAndDates()
+    {
+        string source = File.ReadAllText(Path.Combine(FindRepositoryRoot().FullName, "src", "Cardscape.Web", "Pages", "WorkspaceMembers.razor"));
+        source.Should().Contain("Data=\"@Roles\"");
+        source.Should().Contain("L[\"WorkspaceRoleAdmin\"]");
+        source.Should().Contain("LocalDateTime.ToString(\"d\")");
+        source.Should().NotContain("PageHeader Title=\"Members\"");
+        source.Should().NotContain("Text=\"Invite\"");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

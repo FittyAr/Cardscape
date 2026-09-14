@@ -215,6 +215,20 @@
   <data name="InboxMarkReadFailed" xml:space="preserve"><value>Could not update notification status.</value></data>
   <data name="WorkspaceMembersWorkspaceLoadFailed" xml:space="preserve"><value>Could not load workspace details.</value></data>
   <data name="WorkspaceMembersLoadFailed" xml:space="preserve"><value>Could not load workspace members.</value></data>
+  <data name="MembersTitle" xml:space="preserve"><value>Members</value></data>
+  <data name="MembersEmail" xml:space="preserve"><value>Email</value></data>
+  <data name="MembersRole" xml:space="preserve"><value>Role</value></data>
+  <data name="MembersInvitationCreated" xml:space="preserve"><value>Invitation created</value></data>
+  <data name="MembersInvitationSendTo" xml:space="preserve"><value>Send this single-use link to {0}.</value></data>
+  <data name="MembersInvitationSent" xml:space="preserve"><value>I've sent it</value></data>
+  <data name="MembersSend" xml:space="preserve"><value>Send</value></data>
+  <data name="MembersCurrent" xml:space="preserve"><value>Current members</value></data>
+  <data name="MembersEmpty" xml:space="preserve"><value>No members yet. Invite someone to get started.</value></data>
+  <data name="MembersName" xml:space="preserve"><value>Name</value></data>
+  <data name="MembersPendingInvitations" xml:space="preserve"><value>Pending invitations</value></data>
+  <data name="MembersNoInvitations" xml:space="preserve"><value>No pending invitations.</value></data>
+  <data name="MembersExpires" xml:space="preserve"><value>Expires</value></data>
+  <data name="MembersInvite" xml:space="preserve"><value>Invite</value></data>
   <data name="WorkspaceInvitationsLoadFailed" xml:space="preserve"><value>Could not load workspace invitations.</value></data>
   <data name="GitHubBoardsLoadFailed" xml:space="preserve"><value>Could not load workspace boards for GitHub integration.</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Sign in</value></data>

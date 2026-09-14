@@ -1236,3 +1236,8 @@
 - Its load error was rendered only inside the optional create form.
 - Acceptance: localized culture-aware copy, render-time visibility options,
   globally visible errors, and explicit Radzen button navigation.
+
+# Workspace members visible-copy localization — 2026-09-14
+
+- Members retained literal headings, form/table labels, actions, states, role options,
+  validation, and fixed dates. Acceptance: shared resources, render-time roles, culture dates.
