@@ -905,3 +905,13 @@
   webhook failures, anonymization grace periods and credential lifecycle outcomes.
 - [x] Pseudo-mutation review: restoring the token-prefix logger is caught by the
   sensitive-template scan; encryption/retention reversions break focused behavior tests.
+
+# HTTP boundary closure — 2026-09-13
+
+- [x] Slack/GitHub redirects disabled and responses capped at 1 MiB.
+- [x] GitHub issue creation validates status; external details are not reflected.
+- [x] Focused HTTP/import/webhook unit tests pass 10/10; integration tests 28/28.
+- [x] Assertion review: oversized responses assert stable safe codes/messages;
+  existing tests cover signatures, SSRF, import fidelity and workspace ownership.
+- [x] Pseudo-mutation review: removing either buffer cap makes the new oversized
+  test reach JSON parsing and return the wrong stable error code.

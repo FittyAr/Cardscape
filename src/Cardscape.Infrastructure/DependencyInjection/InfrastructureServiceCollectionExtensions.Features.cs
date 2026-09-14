@@ -89,6 +89,9 @@ public static partial class InfrastructureServiceCollectionExtensions
         {
             client.BaseAddress = new Uri("https://slack.com/api/");
             client.Timeout = TimeSpan.FromSeconds(30);
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false
         });
 
         services.AddScoped<IGitHubRepoLinkRepository, GitHubRepoLinkRepository>();
@@ -97,6 +100,9 @@ public static partial class InfrastructureServiceCollectionExtensions
         {
             client.BaseAddress = new Uri("https://api.github.com");
             client.Timeout = TimeSpan.FromSeconds(30);
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false
         });
 
         services.AddScoped<IInboundEmailAddressRepository, InboundEmailAddressRepository>();

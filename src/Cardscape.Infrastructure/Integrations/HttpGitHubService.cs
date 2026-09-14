@@ -21,6 +21,7 @@ namespace Cardscape.Infrastructure.Integrations;
 public sealed class HttpGitHubService : IGitHubService
 {
     private const string GitHubApiBase = "https://api.github.com";
+    private const int MaxResponseBytes = 1024 * 1024;
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -53,9 +54,8 @@ public sealed class HttpGitHubService : IGitHubService
 
         try
         {
-            GitHubBranchWire[]? rows = await _http.GetFromJsonAsync<GitHubBranchWire[]>(
+            GitHubBranchWire[]? rows = await GetBoundedJsonAsync<GitHubBranchWire[]>(
                 $"{GitHubApiBase}/repos/{Uri.EscapeDataString(repoFullName)}/branches",
-                JsonOptions,
                 ct);
             if (rows is null)
             {
@@ -69,15 +69,15 @@ public sealed class HttpGitHubService : IGitHubService
                     Protected: b.Protected))
                 .ToList());
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
             return Result.Failure<IReadOnlyList<GitHubBranchDto>>(DomainError.External(
-                "github.transport_error", $"GitHub API call failed: {ex.Message}"));
+                "github.transport_error", "GitHub API call failed."));
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
             return Result.Failure<IReadOnlyList<GitHubBranchDto>>(DomainError.External(
-                "github.response_invalid", $"GitHub returned an unparseable response: {ex.Message}"));
+                "github.response_invalid", "GitHub returned an invalid response."));
         }
     }
 
@@ -99,8 +99,7 @@ public sealed class HttpGitHubService : IGitHubService
 
         try
         {
-            GitHubPullRequestWire[]? rows = await _http.GetFromJsonAsync<GitHubPullRequestWire[]>(
-                url, JsonOptions, ct);
+            GitHubPullRequestWire[]? rows = await GetBoundedJsonAsync<GitHubPullRequestWire[]>(url, ct);
             if (rows is null)
             {
                 return Result.Success<IReadOnlyList<GitHubPullRequestDto>>([]);
@@ -117,15 +116,15 @@ public sealed class HttpGitHubService : IGitHubService
                     CreatedAt: p.CreatedAt))
                 .ToList());
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
             return Result.Failure<IReadOnlyList<GitHubPullRequestDto>>(DomainError.External(
-                "github.transport_error", $"GitHub API call failed: {ex.Message}"));
+                "github.transport_error", "GitHub API call failed."));
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
             return Result.Failure<IReadOnlyList<GitHubPullRequestDto>>(DomainError.External(
-                "github.response_invalid", $"GitHub returned an unparseable response: {ex.Message}"));
+                "github.response_invalid", "GitHub returned an invalid response."));
         }
     }
 
@@ -147,8 +146,7 @@ public sealed class HttpGitHubService : IGitHubService
 
         try
         {
-            GitHubIssueWire[]? rows = await _http.GetFromJsonAsync<GitHubIssueWire[]>(
-                url, JsonOptions, ct);
+            GitHubIssueWire[]? rows = await GetBoundedJsonAsync<GitHubIssueWire[]>(url, ct);
             if (rows is null)
             {
                 return Result.Success<IReadOnlyList<GitHubIssueDto>>([]);
@@ -167,15 +165,15 @@ public sealed class HttpGitHubService : IGitHubService
                         CreatedAt: i.CreatedAt))
                 .ToList());
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
             return Result.Failure<IReadOnlyList<GitHubIssueDto>>(DomainError.External(
-                "github.transport_error", $"GitHub API call failed: {ex.Message}"));
+                "github.transport_error", "GitHub API call failed."));
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
             return Result.Failure<IReadOnlyList<GitHubIssueDto>>(DomainError.External(
-                "github.response_invalid", $"GitHub returned an unparseable response: {ex.Message}"));
+                "github.response_invalid", "GitHub returned an invalid response."));
         }
     }
 
@@ -196,6 +194,8 @@ public sealed class HttpGitHubService : IGitHubService
                 new { title, body },
                 JsonOptions,
                 ct);
+            response.EnsureSuccessStatusCode();
+            await response.Content.LoadIntoBufferAsync(MaxResponseBytes, ct);
             GitHubIssueWire? created = await response.Content
                 .ReadFromJsonAsync<GitHubIssueWire>(JsonOptions, ct);
             if (created is null)
@@ -214,16 +214,25 @@ public sealed class HttpGitHubService : IGitHubService
                          ?? new List<string>(),
                 CreatedAt: created.CreatedAt));
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
             return Result.Failure<GitHubIssueDto>(DomainError.External(
-                "github.transport_error", $"GitHub API call failed: {ex.Message}"));
+                "github.transport_error", "GitHub API call failed."));
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
             return Result.Failure<GitHubIssueDto>(DomainError.External(
-                "github.response_invalid", $"GitHub returned an unparseable response: {ex.Message}"));
+                "github.response_invalid", "GitHub returned an invalid response."));
         }
+    }
+
+    private async Task<T?> GetBoundedJsonAsync<T>(string url, CancellationToken ct)
+    {
+        using HttpResponseMessage response = await _http.GetAsync(
+            url, HttpCompletionOption.ResponseHeadersRead, ct);
+        response.EnsureSuccessStatusCode();
+        await response.Content.LoadIntoBufferAsync(MaxResponseBytes, ct);
+        return await response.Content.ReadFromJsonAsync<T>(JsonOptions, ct);
     }
 
     private sealed record GitHubBranchWire(string Name, GitHubBranchCommit? Commit, bool Protected);

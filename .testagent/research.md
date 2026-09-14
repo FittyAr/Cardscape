@@ -1038,3 +1038,10 @@
   the first eight characters of a pending 2FA bearer token on corrupt Redis data.
 - Secret persistence otherwise uses hashes or Data Protection; DSR and retention
   paths have focused behavior coverage and bounded EF Core sweep operations.
+
+# HTTP boundary closure — 2026-09-13
+
+- Slack and GitHub were the remaining external clients that followed redirects
+  and deserialized responses without a size cap.
+- GitHub/Slack transport and JSON exception messages were reflected into domain
+  errors; GitHub issue creation did not reject non-success status before parsing.

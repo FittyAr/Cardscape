@@ -24,6 +24,7 @@ namespace Cardscape.Infrastructure.Integrations;
 public sealed class HttpSlackNotificationService : ISlackNotificationService
 {
     private const string ChatPostMessagePath = "chat.postMessage";
+    private const int MaxResponseBytes = 1024 * 1024;
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -73,21 +74,24 @@ public sealed class HttpSlackNotificationService : ISlackNotificationService
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", botToken);
             request.Content = JsonContent.Create(
                 new { channel = channelId, text = message }, options: JsonOptions);
-            using HttpResponseMessage http = await _http.SendAsync(request, ct);
+            using HttpResponseMessage http = await _http.SendAsync(
+                request, HttpCompletionOption.ResponseHeadersRead, ct);
+            http.EnsureSuccessStatusCode();
+            await http.Content.LoadIntoBufferAsync(MaxResponseBytes, ct);
             response = await http.Content.ReadFromJsonAsync<SlackPostMessageResponse>(
                 JsonOptions, ct);
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
             return Result.Failure(DomainError.External(
                 "slack.transport_error",
-                $"Slack API call failed: {ex.Message}"));
+                "Slack API call failed."));
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
             return Result.Failure(DomainError.External(
                 "slack.response_invalid",
-                $"Slack API returned an unparseable response: {ex.Message}"));
+                "Slack API returned an invalid response."));
         }
 
         if (response is null)

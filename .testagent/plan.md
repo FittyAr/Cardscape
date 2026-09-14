@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# HTTP boundary closure — 2026-09-13
+
+1. Disable automatic redirects for Slack and GitHub clients.
+2. Enforce 1 MiB response caps before JSON deserialization.
+3. Require successful status and stop reflecting transport/parser details.
+4. Add oversized-response regressions and run webhook/import integration tests.
+
+Status: complete. All four steps are implemented and validated.
+
 # Secrets, PII and retention closure — 2026-09-13
 
 1. Remove pending-2FA token material from structured logs.

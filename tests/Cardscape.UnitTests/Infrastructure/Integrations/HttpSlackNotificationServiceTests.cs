@@ -32,6 +32,29 @@ public sealed class HttpSlackNotificationServiceTests
         handler.RequestUri.Should().Be(new Uri("https://slack.com/api/chat.postMessage"));
     }
 
+    [Fact]
+    public async Task SendAsync_WhenResponseExceedsLimit_ReturnsSafeExternalFailure()
+    {
+        SlackWorkspace workspace = SlackWorkspace.Connect(
+            SlackWorkspaceId.New(),
+            new WorkspaceId(Guid.NewGuid()),
+            "T-CARDSCAPE",
+            "Cardscape",
+            "xoxb-secret",
+            DateTimeOffset.UtcNow).Value;
+        var handler = new OversizedResponseHandler();
+        using var http = new HttpClient(handler) { BaseAddress = new Uri("https://slack.com/api/") };
+        var service = new HttpSlackNotificationService(http, new IdentitySecretProtector());
+
+        var result = await service.SendAsync(
+            workspace, "C-CARDSCAPE", "hello", TestContext.Current.CancellationToken);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("slack.transport_error");
+        result.Error.Message.Should().Be("Slack API call failed.");
+        result.Error.Message.Should().NotContain("slack.com");
+    }
+
     private sealed class RecordingHandler : HttpMessageHandler
     {
         public string? Authorization { get; private set; }
@@ -48,5 +71,19 @@ public sealed class HttpSlackNotificationServiceTests
                 Content = new StringContent("{\"ok\":true}", Encoding.UTF8, "application/json")
             });
         }
+    }
+
+    private sealed class OversizedResponseHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    new string('x', 1024 * 1024 + 1),
+                    Encoding.UTF8,
+                    "application/json")
+            });
     }
 }
