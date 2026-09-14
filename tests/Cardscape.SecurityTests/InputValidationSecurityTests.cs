@@ -35,10 +35,12 @@ public sealed class InputValidationSecurityTests
         };
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/auth/register", body, TestContext.Current.CancellationToken);
-        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+        resp.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
             $"the email validator should reject the SQLi attempt; " +
             $"a 500 would mean the validator bypassed and the query " +
             $"reached the SQL parser with the injection");
+        (await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+            .Should().Contain("members.email.invalid");
     }
 
     [Theory]
@@ -88,8 +90,10 @@ public sealed class InputValidationSecurityTests
         };
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/auth/register", body, TestContext.Current.CancellationToken);
-        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+        resp.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
             "the email validator should reject the over-long input");
+        (await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+            .Should().Contain("members.email.too_long");
     }
 
     [Fact]

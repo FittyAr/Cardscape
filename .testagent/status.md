@@ -928,3 +928,17 @@
 - [x] Pseudo-mutation review: removing the unique lookup, active lease branch,
   completed replay, expiry delete or failure release breaks a named scenario;
   removing handler cancellation breaks the architecture gate.
+
+# Authentication and tenant-boundary closure — 2026-09-13
+
+- [x] Root cause established: seven security tests retained pre-canonical 400
+  expectations while the application intentionally returns validation 422.
+- [x] Registration preserves canonical email/display-name value-object errors.
+- [x] Security assertions require 422 and stable field-specific error codes.
+- [x] Complete security suite passes 23/23 and the auth/protocol/IDOR
+  integration matrix passes 87/87; 0 failed and 0 skipped.
+- [x] Assertion review: rejected credentials assert exact HTTP semantics and
+  field-specific stable code while tenant scenarios assert observable access.
+- [x] Pseudo-mutation review: reverting 422, collapsing field errors into the
+  password code, or removing owner/member checks fails a named security or
+  cross-workspace integration scenario.

@@ -1056,3 +1056,14 @@
   keep a bounded lease so interrupted work can be retried.
 - This internal persistence concern requires native migrations in all three
   supported provider histories; it does not belong in the domain model.
+
+# Authentication and tenant-boundary closure — 2026-09-13
+
+- The security suite exposed seven stale HTTP 400 expectations after the API
+  standardized domain validation on RFC 7807 status 422.
+- Registration also collapsed email/display-name validator failures into the
+  `members.user.invalid_password` code, losing the canonical value-object error
+  even though the request was safely rejected.
+- OAuth, SAML, SCIM, API-token and integration mutations resolve ownership or
+  membership before mutating tenant-scoped state; cross-workspace SCIM and
+  inbound-email behavior already has relational endpoint coverage.

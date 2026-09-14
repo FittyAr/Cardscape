@@ -655,6 +655,18 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All five steps are implemented and validated.
 
+# Authentication and tenant-boundary closure — 2026-09-13
+
+1. Run the complete security suite and classify every failure against the
+   canonical Problem Details policy.
+2. Preserve value-object validation codes by validating identity fields before
+   the password-only policy mapping.
+3. Modernize stale security assertions to require 422 and exact stable codes.
+4. Re-run security and tenant-sensitive integration scenarios.
+5. Record the completed audit and remaining explicit operational assumptions.
+
+Status: complete. All five steps are implemented and validated.
+
 # Supporting workflow OpenAPI metadata — 2026-09-13
 
 1. Declare concrete success DTOs and status codes on all 13 operations.

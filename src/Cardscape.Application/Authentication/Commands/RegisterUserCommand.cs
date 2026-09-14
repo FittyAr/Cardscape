@@ -29,22 +29,6 @@ public static class RegisterUserCommandHandler
         IValidator<RegisterUserCommand> validator,
         CancellationToken cancellationToken)
     {
-        // FluentValidation runs the rules declared in
-        // RegisterUserCommandValidator (min length, max
-        // length, common-password rejection). The
-        // validator is the source of truth for the
-        // password policy; the inline check below is
-        // a belt-and-braces fallback for callers
-        // that bypass the validator (e.g. an internal
-        // admin-only path that synthesises a
-        // RegisterUserCommand for a password reset).
-        FluentValidation.Results.ValidationResult validation = await validator.ValidateAsync(command, cancellationToken);
-        if (!validation.IsValid)
-        {
-            string first = validation.Errors[0].ErrorMessage;
-            return Result.Failure<AuthResponse>(InvalidPassword(first));
-        }
-
         var emailResult = EmailAddress.Create(command.Email);
         if (emailResult.IsFailure)
         {
@@ -55,6 +39,17 @@ public static class RegisterUserCommandHandler
         if (displayNameResult.IsFailure)
         {
             return Result.Failure<AuthResponse>(displayNameResult.Error);
+        }
+
+        // Value objects own identity-field validation and their stable error
+        // codes. FluentValidation then applies the password policy; mapping
+        // every validator failure to invalid_password is only precise after
+        // email and display name have passed their canonical domain checks.
+        FluentValidation.Results.ValidationResult validation = await validator.ValidateAsync(command, cancellationToken);
+        if (!validation.IsValid)
+        {
+            string first = validation.Errors[0].ErrorMessage;
+            return Result.Failure<AuthResponse>(InvalidPassword(first));
         }
 
         if (string.IsNullOrWhiteSpace(command.Password) || command.Password.Length < 8)

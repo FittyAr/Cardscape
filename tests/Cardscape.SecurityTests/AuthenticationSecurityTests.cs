@@ -34,9 +34,11 @@ public sealed class AuthenticationSecurityTests
         };
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/auth/register", body, TestContext.Current.CancellationToken);
-        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+        resp.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
             "the password policy should reject the breached password (12345678 is " +
             "in the top-100 most-leaked passwords list)");
+        (await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+            .Should().Contain("members.user.invalid_password");
     }
 
     [Fact]
@@ -51,7 +53,9 @@ public sealed class AuthenticationSecurityTests
         };
         HttpResponseMessage resp = await client.PostAsJsonAsync(
             "api/auth/register", body, TestContext.Current.CancellationToken);
-        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        resp.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+            .Should().Contain("members.user.invalid_password");
     }
 
     [Fact]
