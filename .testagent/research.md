@@ -1260,3 +1260,12 @@
   changing their stable transport/domain values.
 - Acceptance: all inventoried visible/accessibility/dialog copy uses the shared
   catalog, all display dates follow culture, and a cross-partial gate protects it.
+
+# Card detail partial load outcomes — 2026-09-14
+
+- After loading the card, seven independent API calls ran serially and mapped
+  every failure to an empty collection or null, making remote failures look valid.
+- The card authorization/not-found boundary must remain first and short-circuit
+  all secondary requests; successful independent sections must survive peer failures.
+- Acceptance: concurrent secondary loads, seven attributed localized Radzen error
+  states, no failure-to-empty coercion, and an architecture regression gate.

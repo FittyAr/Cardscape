@@ -114,6 +114,10 @@ else
                     <RadzenBadge BadgeStyle="BadgeStyle.Light"
                                  Text="@L["CardVotes", _voteState?.VoteCount ?? 0]" />
                 </RadzenStack>
+                @if (_voteError is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_voteError</RadzenAlert>
+                }
             </RadzenStack>
 
             <MetadataList Items="@CardMetaItems" />
@@ -241,7 +245,11 @@ else
                                                    Size="ProgressBarCircularSize.Small" />
                     }
                 </RadzenStack>
-                @if (_attachments is null)
+                @if (_attachmentsError is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_attachmentsError</RadzenAlert>
+                }
+                else if (_attachments is null)
                 {
                     <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
@@ -271,7 +279,14 @@ else
                 }
             </RadzenStack>
 
-            @if (_fieldValues is not null && _fieldValues.Count > 0)
+            @if (_fieldValuesError is not null)
+            {
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText Text="@L["CustomFieldsTitle"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_fieldValuesError</RadzenAlert>
+                </RadzenStack>
+            }
+            else if (_fieldValues is not null && _fieldValues.Count > 0)
             {
                 <RadzenStack Gap="0.5rem">
                     <RadzenText Text="@L["CustomFieldsTitle"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
@@ -281,7 +296,11 @@ else
 
             <RadzenStack Gap="0.5rem">
                 <RadzenText Text="@L["CardComments"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @if (_comments is null)
+                @if (_commentsError is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_commentsError</RadzenAlert>
+                }
+                else if (_comments is null)
                 {
                     <RadzenText Text="@L["CardLoadingComments"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
@@ -336,7 +355,11 @@ else
 
             <RadzenStack Gap="0.5rem">
                 <RadzenText Text="@L["CardRecurrence"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @if (_recurrence is { IsActive: true })
+                @if (_recurrenceError is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_recurrenceError</RadzenAlert>
+                }
+                else if (_recurrence is { IsActive: true })
                 {
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                                  Wrap="FlexWrap.Wrap">
@@ -360,7 +383,11 @@ else
 
             <RadzenStack Gap="0.5rem">
                 <RadzenText Text="@L["CardChecklists"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @if (_checklists is null)
+                @if (_checklistsError is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_checklistsError</RadzenAlert>
+                }
+                else if (_checklists is null)
                 {
                     <RadzenText Text="@L["CardLoadingChecklists"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
@@ -432,7 +459,11 @@ else
 
             <RadzenStack Gap="0.5rem">
                 <RadzenText Text="@L["ActivityTitle"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @if (_recentActivity is null)
+                @if (_activityError is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_activityError</RadzenAlert>
+                }
+                else if (_recentActivity is null)
                 {
                     <RadzenText Text="@L["ActivityLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }

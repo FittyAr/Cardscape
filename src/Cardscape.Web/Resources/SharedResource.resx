@@ -674,4 +674,6 @@
   <data name="CardActivityChecklistItemUncompleted" xml:space="preserve"><value>Checklist item reopened</value></data>
   <data name="CardActivityAttachmentAdded" xml:space="preserve"><value>Attachment added</value></data>
   <data name="CardActivityAttachmentRemoved" xml:space="preserve"><value>Attachment removed</value></data>
+  <data name="CardVotesLabel" xml:space="preserve"><value>Votes</value></data>
+  <data name="CardSectionLoadFailed" xml:space="preserve"><value>Could not load {0}.</value></data>
 </root>

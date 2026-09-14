@@ -819,6 +819,14 @@ Status: complete. All five steps are implemented and validated.
 4. Add `WebCardDetail_UsesLocalizedVisibleCopyAndCultureAwareDates` across partials.
 5. Build Web and run architecture/catalog regressions.
 
+# Card detail partial load outcomes — 2026-09-14
+
+1. Preserve the card access check as the primary short-circuit boundary.
+2. Start all seven independent secondary API requests before awaiting them.
+3. Preserve each failed outcome independently with a localized fallback.
+4. Render attributed Radzen alerts without discarding successful peer sections.
+5. Add the architecture gate and run Web/architecture/catalog validation.
+
 # Accessible-name localization — 2026-09-14
 
 1. Add shared English/Spanish resource keys for month navigation and search.

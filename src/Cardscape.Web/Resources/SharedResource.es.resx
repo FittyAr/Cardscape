@@ -673,4 +673,6 @@
   <data name="CardActivityChecklistItemUncompleted" xml:space="preserve"><value>Elemento reabierto</value></data>
   <data name="CardActivityAttachmentAdded" xml:space="preserve"><value>Adjunto agregado</value></data>
   <data name="CardActivityAttachmentRemoved" xml:space="preserve"><value>Adjunto eliminado</value></data>
+  <data name="CardVotesLabel" xml:space="preserve"><value>Votos</value></data>
+  <data name="CardSectionLoadFailed" xml:space="preserve"><value>No se pudo cargar {0}.</value></data>
 </root>

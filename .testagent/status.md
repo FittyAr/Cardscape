@@ -1243,3 +1243,18 @@
   bypassing localized activity/metadata labels, or removing a resource fails
   `WebCardDetail_UsesLocalizedVisibleCopyAndCultureAwareDates` or
   `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Card detail partial load outcomes — 2026-09-14
+
+- [x] Inaccessible/missing card short-circuits all secondary requests.
+- [x] Seven independent secondary loads execute concurrently.
+- [x] Every failed outcome remains attributed and visible through Radzen alerts.
+- [x] Successful collections remain intact when a peer request fails.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 52/52 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion review covers concurrency, short-circuiting, representative
+  outcome helpers, all seven error fields and sufficient rendered error surfaces.
+- [x] Pseudo-mutation review: removing `Task.WhenAll`, an attributed error field,
+  its alert, or restoring direct empty coercion fails
+  `WebCardDetail_PreservesPartialLoadFailuresAndLoadsIndependentSectionsConcurrently`.

@@ -45,13 +45,19 @@ public partial class CardDetail
     private string _editingTitleValue = string.Empty;
     private CancellationTokenSource? _titleCts;
     private IReadOnlyList<CommentDto>? _comments;
+    private string? _commentsError;
     private IReadOnlyList<CustomFieldValueDto>? _fieldValues;
+    private string? _fieldValuesError;
     private IReadOnlyList<ActivityDto>? _recentActivity;
+    private string? _activityError;
     private CardVoteStateDto? _voteState;
+    private string? _voteError;
     private IReadOnlyList<ChecklistDto>? _checklists;
+    private string? _checklistsError;
     private string _newChecklistTitle = string.Empty;
     private string _newChecklistItemText = string.Empty;
     private CardRecurrenceDto? _recurrence;
+    private string? _recurrenceError;
     private int _recurrenceIntervalDays = 7;
     private bool _addingComment;
     private bool _togglingVote;
@@ -61,6 +67,7 @@ public partial class CardDetail
     private string? _aiSummary;
     // BUG-A5-002 — attachments list / upload / download state.
     private IReadOnlyList<AttachmentDto>? _attachments;
+    private string? _attachmentsError;
     private bool _uploadingAttachment;
     private IReadOnlyList<AiOwnerSuggestionDto>? _aiSuggestedOwners;
     private readonly AddCommentModel _addCommentModel = new();
@@ -134,8 +141,10 @@ public partial class CardDetail
     {
         ApiResult<IReadOnlyList<ChecklistDto>> checklistsResult =
             await Checklists.ListForCardAsync(CardId);
-        _checklists = checklistsResult.IsSuccess ? checklistsResult.Value : [];
-        await Task.CompletedTask;
+        _checklists = checklistsResult.IsSuccess ? checklistsResult.Value : null;
+        _checklistsError = checklistsResult.IsSuccess
+            ? null
+            : checklistsResult.Error ?? L["CardSectionLoadFailed", L["CardChecklists"]];
     }
 
     protected override async Task OnParametersSetAsync()
@@ -154,34 +163,47 @@ public partial class CardDetail
             // knowing the card exists. BETA-8-UI-#5.
             _card = null;
             _notFound = true;
+            return;
         }
 
-        ApiResult<IReadOnlyList<CommentDto>> commentsResult = await Comments.ListForCardAsync(CardId);
-        _comments = commentsResult.IsSuccess ? commentsResult.Value : [];
+        Task<ApiResult<IReadOnlyList<CommentDto>>> commentsTask = Comments.ListForCardAsync(CardId);
+        Task<ApiResult<IReadOnlyList<CustomFieldValueDto>>> valuesTask = CustomFields.ListValuesForCardAsync(CardId);
+        Task<ApiResult<ActivityPageDto>> activityTask = Activities.ListForCardAsync(CardId, cursor: null, limit: 20);
+        Task<ApiResult<CardVoteStateDto>> voteTask = Votes.GetStateAsync(CardId);
+        Task<ApiResult<IReadOnlyList<ChecklistDto>>> checklistsTask = Checklists.ListForCardAsync(CardId);
+        Task<ApiResult<CardRecurrenceDto?>> recurrenceTask = Recurrence.GetAsync(CardId);
+        Task<ApiResult<IReadOnlyList<AttachmentDto>>> attachmentsTask = Attachments.ListAsync(CardId);
 
-        ApiResult<IReadOnlyList<CustomFieldValueDto>> valuesResult =
-            await CustomFields.ListValuesForCardAsync(CardId);
-        _fieldValues = valuesResult.IsSuccess ? valuesResult.Value : [];
+        await Task.WhenAll(commentsTask, valuesTask, activityTask, voteTask,
+            checklistsTask, recurrenceTask, attachmentsTask);
 
-        ApiResult<ActivityPageDto> activityResult =
-            await Activities.ListForCardAsync(CardId, cursor: null, limit: 20);
-        _recentActivity = activityResult.IsSuccess ? activityResult.Value?.Items : [];
-
-        ApiResult<CardVoteStateDto> voteResult = await Votes.GetStateAsync(CardId);
+        ApiResult<IReadOnlyList<CommentDto>> commentsResult = await commentsTask;
+        (_comments, _commentsError) = CollectionOutcome(commentsResult, L["CardComments"]);
+        ApiResult<IReadOnlyList<CustomFieldValueDto>> valuesResult = await valuesTask;
+        (_fieldValues, _fieldValuesError) = CollectionOutcome(valuesResult, L["CustomFieldsTitle"]);
+        ApiResult<ActivityPageDto> activityResult = await activityTask;
+        _recentActivity = activityResult.IsSuccess ? activityResult.Value?.Items ?? [] : null;
+        _activityError = ErrorOutcome(activityResult, L["ActivityTitle"]);
+        ApiResult<CardVoteStateDto> voteResult = await voteTask;
         _voteState = voteResult.IsSuccess ? voteResult.Value : null;
-
-        ApiResult<IReadOnlyList<ChecklistDto>> checklistsResult = await Checklists.ListForCardAsync(CardId);
-        _checklists = checklistsResult.IsSuccess ? checklistsResult.Value : [];
-
-        ApiResult<CardRecurrenceDto?> recurrenceResult = await Recurrence.GetAsync(CardId);
+        _voteError = ErrorOutcome(voteResult, L["CardVotesLabel"]);
+        ApiResult<IReadOnlyList<ChecklistDto>> checklistsResult = await checklistsTask;
+        (_checklists, _checklistsError) = CollectionOutcome(checklistsResult, L["CardChecklists"]);
+        ApiResult<CardRecurrenceDto?> recurrenceResult = await recurrenceTask;
         _recurrence = recurrenceResult.IsSuccess ? recurrenceResult.Value : null;
-
-        // BUG-A5-002 — fetch the attachments list alongside the
-        // rest of the card data so the section is ready when
-        // the user scrolls to it.
-        ApiResult<IReadOnlyList<AttachmentDto>> attachmentsResult = await Attachments.ListAsync(CardId);
-        _attachments = attachmentsResult.IsSuccess ? attachmentsResult.Value : [];
+        _recurrenceError = ErrorOutcome(recurrenceResult, L["CardRecurrence"]);
+        ApiResult<IReadOnlyList<AttachmentDto>> attachmentsResult = await attachmentsTask;
+        (_attachments, _attachmentsError) = CollectionOutcome(attachmentsResult, L["CardAttachments"]);
     }
+
+    private (IReadOnlyList<T>? Value, string? Error) CollectionOutcome<T>(
+        ApiResult<IReadOnlyList<T>> result,
+        string section) => result.IsSuccess
+            ? (result.Value ?? [], null)
+            : (null, result.Error ?? L["CardSectionLoadFailed", section]);
+
+    private string? ErrorOutcome<T>(ApiResult<T> result, string section) =>
+        result.IsSuccess ? null : result.Error ?? L["CardSectionLoadFailed", section];
 
     private void StartEditingTitle()
     {

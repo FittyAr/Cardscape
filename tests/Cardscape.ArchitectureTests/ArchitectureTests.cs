@@ -597,6 +597,30 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebCardDetail_PreservesPartialLoadFailuresAndLoadsIndependentSectionsConcurrently()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string pagePath = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "CardDetail.razor");
+        string source = File.ReadAllText(pagePath);
+        string codeBehind = File.ReadAllText($"{pagePath}.cs");
+
+        codeBehind.Should().Contain("await Task.WhenAll(commentsTask, valuesTask, activityTask, voteTask,");
+        codeBehind.Should().Contain("return;", "secondary requests must not run when the card is inaccessible");
+        codeBehind.Should().Contain("CollectionOutcome(commentsResult");
+        codeBehind.Should().Contain("ErrorOutcome(voteResult");
+        codeBehind.Should().NotContain("IsSuccess ? commentsResult.Value : []");
+
+        string[] attributedErrors =
+        [
+            "_voteError", "_attachmentsError", "_fieldValuesError", "_commentsError",
+            "_recurrenceError", "_checklistsError", "_activityError"
+        ];
+        attributedErrors.Should().AllSatisfy(error => source.Should().Contain(error));
+        source.Split("<RadzenAlert AlertStyle=\"AlertStyle.Danger\"", StringSplitOptions.None)
+            .Length.Should().BeGreaterThan(attributedErrors.Length);
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
