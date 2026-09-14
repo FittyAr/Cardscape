@@ -1025,3 +1025,15 @@
 - [x] Pseudo-mutation review: resource drift fails
   `EverySupportedCulture_ReturnsCompleteCatalog`; invalid option bindings fail
   the warnings-as-errors Razor build.
+
+# Custom-fields form and localization — 2026-09-14
+
+- [x] Create flow is a validated Radzen form; every visible string is localized.
+- [x] Web build passes with 0 warnings/errors; ArchitectureTests pass 36/36 and
+  TranslationEndpointTests pass 5/5, with 0 failed and 0 skipped.
+- [x] Assertion review: gates bind exact required component ids and enumerate
+  every route rather than maintaining a hand-picked localization allow-list.
+- [x] Pseudo-mutation review: removing a validator fails
+  `WebRadzenForms_ValidateRequiredInputs`; removing a localizer fails
+  `WebRoutablePages_UseSharedLocalization`; catalog drift fails
+  `EverySupportedCulture_ReturnsCompleteCatalog`.

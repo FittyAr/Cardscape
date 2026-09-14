@@ -1129,3 +1129,10 @@
   its filter, despite translating the badge presentation separately.
 - Acceptance: all chrome/states and event labels use EN/ES resources, filter
   values remain stable codes, timestamps follow active culture, catalogs match.
+
+# Custom-fields form and localization — 2026-09-14
+
+- CustomFields was the last routable page without the shared localizer and its
+  create flow bypassed `RadzenTemplateForm` through a Click handler.
+- Acceptance: localized Radzen form, named required inputs/validators, typed
+  localized kind options, localized confirmation, and a route-wide i18n gate.

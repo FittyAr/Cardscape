@@ -319,6 +319,25 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebRoutablePages_UseSharedLocalization()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string pagesRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages");
+
+        string[] violations = Directory.GetFiles(pagesRoot, "*.razor", SearchOption.AllDirectories)
+            .Where(file => File.ReadAllText(file).Contains("@page ", StringComparison.Ordinal))
+            .Where(file => !File.ReadAllText(file).Contains(
+                "IStringLocalizer<SharedResource>",
+                StringComparison.Ordinal))
+            .Select(file => Path.GetRelativePath(repositoryRoot.FullName, file))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "every routable page must source user-facing copy from the shared localization catalog");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
@@ -352,6 +371,7 @@ public sealed class ArchitectureTests
             ["BoardDetail.razor"] = ["list-name", "board-name"],
             ["Boards.razor"] = ["b-name"],
             ["CardDetail.razor"] = ["comment-body"],
+            ["CustomFields.razor"] = ["cf-name", "cf-options"],
             ["ForgotPassword.razor"] = ["email"],
             ["Login.razor"] = ["email", "password", "totp"],
             ["Register.razor"] = ["displayName", "email", "password", "confirmPassword"],

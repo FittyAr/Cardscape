@@ -652,6 +652,16 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Custom-fields form and localization — 2026-09-14
+
+1. Convert create to `RadzenTemplateForm` with required validators.
+2. Localize all page states/actions/kinds/dialogs in both catalogs.
+3. Add CustomFields to the required-input gate and require shared localization
+   on every routable page with `WebRoutablePages_UseSharedLocalization`.
+4. Build Web and run architecture plus translation regressions.
+
+Status: complete. All four steps are implemented and validated.
+
 # Activity localization — 2026-09-14
 
 1. Localize page chrome, filter controls, states, metadata and pagination.

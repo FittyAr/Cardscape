@@ -4,29 +4,30 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject ICustomFieldsApiClient CustomFieldsClient
 @inject DialogService DialogService
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Custom fields — Cardscape</PageTitle>
+<PageTitle>@L["CustomFieldsTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
-    <PageHeader Title="Custom fields"
+    <PageHeader Title="@L["CustomFieldsTitle"]"
                 Actions="@(NewFieldButton())" />
 
     <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
-        Board-scoped structured fields. Each card on this board can have a value
-        for every active field. Supported kinds: text, number, date, dropdown
-        (with custom options), checkbox.
+        @L["CustomFieldsBlurb"]
     </RadzenText>
 
     @if (rows is null)
     {
-        <RadzenText Text="Loading…" />
+        <RadzenText Text="@L["CommonLoading"]" />
     }
     else if (rows.Count == 0 && !showCreate)
     {
         <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
-            No custom fields yet. Click <em>New field</em> to add one.
+            @L["CustomFieldsEmpty"]
         </RadzenText>
     }
     else if (rows.Count > 0)
@@ -44,7 +45,7 @@
                             @if (field.Kind == CustomFieldKind.Dropdown)
                             {
                                 <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
-                                    Options: @string.Join(", ", ParseOptions(field.OptionsJson))
+                                    @L["CustomFieldsOptions", string.Join(", ", ParseOptions(field.OptionsJson))]
                                 </RadzenText>
                             }
                         </RadzenStack>
@@ -52,16 +53,16 @@
                             @if (renamingId == field.Id)
                             {
                                 <RadzenTextBox @bind-Value="renameValue" Style="width:200px" />
-                                <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                                <RadzenButton Text="@L["ActionSave"]" ButtonStyle="ButtonStyle.Success"
                                               Size="ButtonSize.Small" Click="@(() => SaveRenameAsync(field))" />
-                                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light"
+                                <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light"
                                               Size="ButtonSize.Small" Click="@CancelRename" />
                             }
                             else
                             {
-                                <RadzenButton Text="Rename" ButtonStyle="ButtonStyle.Light"
+                                <RadzenButton Text="@L["CustomFieldsRename"]" ButtonStyle="ButtonStyle.Light"
                                               Size="ButtonSize.Small" Click="@(() => StartRename(field))" />
-                                <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                                <RadzenButton Text="@L["ActionDelete"]" ButtonStyle="ButtonStyle.Danger"
                                               Size="ButtonSize.Small" Click="@(() => DeleteAsync(field))" />
                             }
                         </RadzenStack>
@@ -74,28 +75,32 @@
     @if (showCreate)
     {
         <RadzenCard>
-            <RadzenStack Gap="0.5rem">
-                <RadzenText Text="New custom field" TextStyle="TextStyle.H5" TagName="TagName.H3" />
-                <LabeledField Text="Name" Component="cf-name">
-                    <RadzenTextBox @bind-Value="createModel.Name" Name="cf-name" Placeholder="e.g. Priority" Style="width:100%" />
+            <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateAsync">
+              <RadzenStack Gap="0.5rem">
+                <RadzenText Text="@L["CustomFieldsNew"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                <LabeledField Text="@L["CustomFieldsName"]" Component="cf-name">
+                    <RadzenTextBox @bind-Value="createModel.Name" Name="cf-name" Placeholder="@L["CustomFieldsNamePlaceholder"]" Style="width:100%" />
                 </LabeledField>
-                <LabeledField Text="Kind" Component="cf-kind">
-                    <RadzenDropDown @bind-Value="createModel.KindValue" Data="@allKinds"
+                <RadzenRequiredValidator Component="cf-name" Text="@L["ValidationRequired"]" />
+                <LabeledField Text="@L["CustomFieldsKind"]" Component="cf-kind">
+                    <RadzenDropDown @bind-Value="createModel.KindValue" Data="@AllKinds"
                                     TextProperty="Label" ValueProperty="Value" Name="cf-kind" Style="width:100%" />
                 </LabeledField>
                 @if (createModel.KindValue == CustomFieldKind.Dropdown)
                 {
-                    <LabeledField Text="Dropdown options (comma-separated)" Component="cf-options">
+                    <LabeledField Text="@L["CustomFieldsDropdownOptions"]" Component="cf-options">
                         <RadzenTextBox @bind-Value="createModel.OptionsRaw"
-                                       Name="cf-options" Placeholder="Low, Medium, High" Style="width:100%" />
+                                       Name="cf-options" Placeholder="@L["CustomFieldsOptionsPlaceholder"]" Style="width:100%" />
                     </LabeledField>
+                    <RadzenRequiredValidator Component="cf-options" Text="@L["CustomFieldsOptionsRequired"]" />
                 }
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
-                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
-                    <RadzenButton Text="Create" ButtonStyle="ButtonStyle.Primary"
-                                  IsBusy="@creating" Click="@CreateAsync" />
+                    <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
+                    <RadzenButton Text="@L["ActionCreate"]" ButtonStyle="ButtonStyle.Primary"
+                                  ButtonType="ButtonType.Submit" IsBusy="@creating" />
                 </RadzenStack>
-            </RadzenStack>
+              </RadzenStack>
+            </RadzenTemplateForm>
         </RadzenCard>
     }
 
@@ -118,18 +123,18 @@
     private Guid? renamingId;
     private string renameValue = string.Empty;
 
-    private static readonly IReadOnlyList<KindOption> allKinds = new[]
-    {
-        new KindOption(CustomFieldKind.Text, "Text"),
-        new KindOption(CustomFieldKind.Number, "Number"),
-        new KindOption(CustomFieldKind.Date, "Date"),
-        new KindOption(CustomFieldKind.Dropdown, "Dropdown"),
-        new KindOption(CustomFieldKind.Checkbox, "Checkbox"),
-    };
+    private IReadOnlyList<KindOption> AllKinds =>
+    [
+        new(CustomFieldKind.Text, L["CustomFieldText"]),
+        new(CustomFieldKind.Number, L["CustomFieldNumber"]),
+        new(CustomFieldKind.Date, L["CustomFieldDate"]),
+        new(CustomFieldKind.Dropdown, L["CustomFieldDropdown"]),
+        new(CustomFieldKind.Checkbox, L["CustomFieldCheckbox"])
+    ];
 
     private RenderFragment NewFieldButton() => __builder =>
     {
-        <RadzenButton Text="New field" Icon="add" ButtonStyle="ButtonStyle.Primary"
+        <RadzenButton Text="@L["CustomFieldsNewAction"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
                       Click="@ShowCreateForm" />
     };
 
@@ -168,7 +173,7 @@
     {
         if (string.IsNullOrWhiteSpace(createModel.Name))
         {
-            error = "Name is required.";
+            error = L["ValidationRequired"];
             return;
         }
 
@@ -179,7 +184,7 @@
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             if (options.Count == 0)
             {
-                error = "Dropdown fields require at least one option.";
+                error = L["CustomFieldsOptionsRequired"];
                 return;
             }
         }
@@ -248,8 +253,8 @@
     private async Task DeleteAsync(CustomFieldDefinitionDto field)
     {
         bool? ok = await DialogService.Confirm(
-            $"Delete '{field.Name}'? All values for this field across all cards will be lost.",
-            "Delete field", new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+            L["CustomFieldsDeleteConfirm", field.Name],
+            L["CustomFieldsDeleteTitle"], new ConfirmOptions { OkButtonText = L["ActionDelete"], CancelButtonText = L["ActionCancel"] });
         if (ok != true)
         {
             return;
@@ -266,7 +271,8 @@
         }
     }
 
-    private static string KindLabel(CustomFieldKind kind) => allKinds.FirstOrDefault(k => k.Value == kind)?.Label ?? $"Kind {(int)kind}";
+    private string KindLabel(CustomFieldKind kind) =>
+        AllKinds.FirstOrDefault(k => k.Value == kind)?.Label ?? L["CustomFieldUnknown", (int)kind];
 
     private static IEnumerable<string> ParseOptions(string json)
     {

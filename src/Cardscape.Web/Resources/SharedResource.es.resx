@@ -132,6 +132,27 @@
   <data name="ActivityKindArchive" xml:space="preserve"><value>Archivado</value></data>
   <data name="ActivityKindRestore" xml:space="preserve"><value>Restauración</value></data>
   <data name="ActivityKindComment" xml:space="preserve"><value>Comentario</value></data>
+  <data name="CustomFieldsTitle" xml:space="preserve"><value>Campos personalizados</value></data>
+  <data name="CustomFieldsBlurb" xml:space="preserve"><value>Campos estructurados del tablero. Cada tarjeta puede tener un valor para cada campo activo. Tipos disponibles: texto, número, fecha, lista y casilla.</value></data>
+  <data name="CustomFieldsEmpty" xml:space="preserve"><value>Todavía no hay campos personalizados. Creá uno para agregar datos estructurados a las tarjetas.</value></data>
+  <data name="CustomFieldsOptions" xml:space="preserve"><value>Opciones: {0}</value></data>
+  <data name="CustomFieldsRename" xml:space="preserve"><value>Renombrar</value></data>
+  <data name="CustomFieldsNew" xml:space="preserve"><value>Nuevo campo personalizado</value></data>
+  <data name="CustomFieldsNewAction" xml:space="preserve"><value>Nuevo campo</value></data>
+  <data name="CustomFieldsName" xml:space="preserve"><value>Nombre</value></data>
+  <data name="CustomFieldsNamePlaceholder" xml:space="preserve"><value>p. ej., Prioridad</value></data>
+  <data name="CustomFieldsKind" xml:space="preserve"><value>Tipo</value></data>
+  <data name="CustomFieldsDropdownOptions" xml:space="preserve"><value>Opciones de lista (separadas por comas)</value></data>
+  <data name="CustomFieldsOptionsPlaceholder" xml:space="preserve"><value>Baja, Media, Alta</value></data>
+  <data name="CustomFieldsOptionsRequired" xml:space="preserve"><value>Los campos de lista requieren al menos una opción.</value></data>
+  <data name="CustomFieldsDeleteTitle" xml:space="preserve"><value>Eliminar campo</value></data>
+  <data name="CustomFieldsDeleteConfirm" xml:space="preserve"><value>¿Eliminar '{0}'? Se perderán todos sus valores en todas las tarjetas.</value></data>
+  <data name="CustomFieldText" xml:space="preserve"><value>Texto</value></data>
+  <data name="CustomFieldNumber" xml:space="preserve"><value>Número</value></data>
+  <data name="CustomFieldDate" xml:space="preserve"><value>Fecha</value></data>
+  <data name="CustomFieldDropdown" xml:space="preserve"><value>Lista</value></data>
+  <data name="CustomFieldCheckbox" xml:space="preserve"><value>Casilla</value></data>
+  <data name="CustomFieldUnknown" xml:space="preserve"><value>Tipo {0}</value></data>
   <data name="NavApiTokens" xml:space="preserve"><value>Tokens de API</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>
