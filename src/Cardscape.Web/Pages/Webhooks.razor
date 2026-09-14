@@ -19,7 +19,11 @@
     </Actions>
 </PageHeader>
 
-@if (rows is null)
+@if (loadError is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@loadError</RadzenAlert>
+}
+else if (rows is null)
 {
     <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
@@ -112,6 +116,7 @@ else
     private WebhookEndpointIssuance? showSecret;
     private bool showCreate;
     private bool creating;
+    private string? loadError;
     private CreateModel createModel = new();
 
     private sealed class CreateModel
@@ -128,7 +133,15 @@ else
     private async Task ReloadAsync()
     {
         ApiResult<IReadOnlyList<WebhookEndpointDto>> result = await WebhooksClient.ListForBoardAsync(BoardId);
-        rows = result.IsSuccess ? result.Value : [];
+        if (result.IsSuccess && result.Value is not null)
+        {
+            rows = result.Value;
+            loadError = null;
+            return;
+        }
+
+        rows = null;
+        loadError = result.Error ?? L["WebhooksLoadFailed"];
     }
 
     private void ShowCreate() => showCreate = true;

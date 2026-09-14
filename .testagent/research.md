@@ -1177,3 +1177,12 @@
 - Invitations rendered both its valid-empty message and an error after a failed load.
 - Acceptance: mutually exclusive Radzen loading/error/empty/content branches and
   visible mutation failures for all three pages.
+
+# Integration collection load failures — 2026-09-14
+
+- Webhooks, inbound email addresses, and SCIM tokens silently mapped load failures
+  to empty collections.
+- Workspaces captured its error in an alert nested inside the closed create form.
+- Acceptance: separate load and command errors, with load error taking precedence
+  over loading/empty/content without discarding successfully rendered data after a
+  later command failure.

@@ -49,7 +49,11 @@
 
     <RadzenText Text="@L["EmailAddresses"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
 
-    @if (addresses is null)
+    @if (loadError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@loadError</RadzenAlert>
+    }
+    else if (addresses is null)
     {
         <RadzenText Text="@L["ActionLoading"]" />
     }
@@ -90,6 +94,7 @@
 
     private IReadOnlyList<InboundEmailAddressDto>? addresses;
     private string? error;
+    private string? loadError;
     private bool busy;
     private readonly AddModel addModel = new();
 
@@ -103,7 +108,15 @@
     private async Task ReloadAsync()
     {
         var result = await EmailApi.ListAddressesAsync(WorkspaceId);
-        addresses = result.IsSuccess ? result.Value : [];
+        if (result.IsSuccess && result.Value is not null)
+        {
+            addresses = result.Value;
+            loadError = null;
+            return;
+        }
+
+        addresses = null;
+        loadError = result.Error ?? L["EmailLoadFailed"];
     }
 
     private async Task AddAsync()

@@ -166,6 +166,10 @@
   <data name="AutomationLoadFailed" xml:space="preserve"><value>Could not load automation rules.</value></data>
   <data name="DashboardLoadFailed" xml:space="preserve"><value>Could not load the board dashboard.</value></data>
   <data name="InvitationsLoadFailed" xml:space="preserve"><value>Could not load pending invitations.</value></data>
+  <data name="WebhooksLoadFailed" xml:space="preserve"><value>Could not load webhooks.</value></data>
+  <data name="EmailLoadFailed" xml:space="preserve"><value>Could not load inbound email addresses.</value></data>
+  <data name="ScimLoadFailed" xml:space="preserve"><value>Could not load SCIM tokens.</value></data>
+  <data name="WorkspacesLoadFailed" xml:space="preserve"><value>Could not load workspaces.</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Create account</value></data>
   <data name="AuthSignInTitle" xml:space="preserve"><value>Sign in</value></data>

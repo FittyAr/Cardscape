@@ -166,6 +166,10 @@
   <data name="AutomationLoadFailed" xml:space="preserve"><value>No se pudieron cargar las reglas de automatización.</value></data>
   <data name="DashboardLoadFailed" xml:space="preserve"><value>No se pudo cargar el dashboard del tablero.</value></data>
   <data name="InvitationsLoadFailed" xml:space="preserve"><value>No se pudieron cargar las invitaciones pendientes.</value></data>
+  <data name="WebhooksLoadFailed" xml:space="preserve"><value>No se pudieron cargar los webhooks.</value></data>
+  <data name="EmailLoadFailed" xml:space="preserve"><value>No se pudieron cargar las direcciones de email entrante.</value></data>
+  <data name="ScimLoadFailed" xml:space="preserve"><value>No se pudieron cargar los tokens SCIM.</value></data>
+  <data name="WorkspacesLoadFailed" xml:space="preserve"><value>No se pudieron cargar los workspaces.</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>
   <data name="AuthSignInTitle" xml:space="preserve"><value>Iniciar sesión</value></data>

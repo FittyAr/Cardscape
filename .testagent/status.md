@@ -1104,3 +1104,17 @@
   restoring a failure-to-empty ternary in any audited page, fails
   `WebCollectionPages_DoNotRenderLoadFailuresAsEmptyState`; resource drift fails
   `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Integration collection load failures — 2026-09-14
+
+- [x] Four primary collections preserve failed loads separately from empty state.
+- [x] Load errors have localized fallbacks and remain outside optional forms.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 42/42 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion-quality review: the gate reports all violating filenames and
+  independently checks visible load error, fallback propagation, and forbidden coercion.
+- [x] Pseudo-mutation review: removing `loadError`, its localized fallback, or
+  restoring the failure-to-empty ternary fails
+  `WebIntegrationCollections_PreserveLoadFailures`; catalog drift fails
+  `EverySupportedCulture_ReturnsCompleteCatalog`.

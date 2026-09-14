@@ -60,7 +60,11 @@
     </RadzenCard>
 }
 
-@if (workspaces is null)
+@if (loadError is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@loadError</RadzenAlert>
+}
+else if (workspaces is null)
 {
     <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
@@ -104,6 +108,7 @@ else
     private bool showCreate;
     private bool busy;
     private string? error;
+    private string? loadError;
     private readonly CreateModel createModel = new();
 
     // Read once on first render. The flag is a deployment-time
@@ -132,11 +137,14 @@ else
             "Features:DataResidencyEnabled", false);
 
         ApiResult<IReadOnlyList<WorkspaceDto>> result = await WorkspacesApi.ListAsync();
-        workspaces = result.IsSuccess ? result.Value : [];
-        if (!result.IsSuccess)
+        if (result.IsSuccess && result.Value is not null)
         {
-            error = result.Error;
+            workspaces = result.Value;
+            return;
         }
+
+        workspaces = null;
+        loadError = result.Error ?? L["WorkspacesLoadFailed"];
     }
 
     private async Task CreateWorkspaceAsync()

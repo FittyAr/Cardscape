@@ -39,7 +39,11 @@
 
     <RadzenText Text="@L["ScimExistingTokens"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
 
-    @if (tokens is null)
+    @if (loadError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@loadError</RadzenAlert>
+    }
+    else if (tokens is null)
     {
         <RadzenText Text="@L["ActionLoading"]" />
     }
@@ -84,6 +88,7 @@
 
     private IReadOnlyList<ScimTokenDto>? tokens;
     private string? newTokenPlaintext;
+    private string? loadError;
     private bool issuing;
     private readonly IssueModel issueModel = new();
 
@@ -92,7 +97,14 @@
     protected override async Task OnInitializedAsync()
     {
         var result = await ScimApi.ListTokensAsync(WorkspaceId);
-        tokens = result.IsSuccess ? result.Value : [];
+        if (result.IsSuccess && result.Value is not null)
+        {
+            tokens = result.Value;
+            return;
+        }
+
+        tokens = null;
+        loadError = result.Error ?? L["ScimLoadFailed"];
     }
 
     private async Task IssueTokenAsync()

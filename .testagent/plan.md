@@ -689,6 +689,16 @@ Status: complete. All four steps are implemented and validated.
 
 Status: complete. All five steps are implemented and validated.
 
+# Integration collection load failures — 2026-09-14
+
+1. Add dedicated load-error state to Webhooks, Email, SCIM, and Workspaces.
+2. Preserve null-as-loading and valid empty collections as distinct outcomes.
+3. Add localized fallback errors for remote failures without detail.
+4. Add `WebIntegrationCollections_PreserveLoadFailures`.
+5. Build Web and run architecture plus translation regressions.
+
+Status: complete. All five steps are implemented and validated.
+
 # Keyboard, focus and icon-button accessibility — 2026-09-14
 
 1. Inventory non-semantic click targets, focus CSS and icon-only buttons.

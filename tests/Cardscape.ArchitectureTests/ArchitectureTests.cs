@@ -429,6 +429,28 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebIntegrationCollections_PreserveLoadFailures()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string pagesRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages");
+        string[] pages = ["Webhooks.razor", "WorkspaceEmail.razor", "WorkspaceScim.razor", "Workspaces.razor"];
+
+        string[] violations = pages
+            .Where(page =>
+            {
+                string source = File.ReadAllText(Path.Combine(pagesRoot, page));
+                return !source.Contains("loadError is not null", StringComparison.Ordinal)
+                    || !source.Contains("result.Error ?? L[", StringComparison.Ordinal)
+                    || source.Contains("result.IsSuccess ? result.Value : []", StringComparison.Ordinal);
+            })
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "integration-backed collections must preserve a failed load separately from valid empty state");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
