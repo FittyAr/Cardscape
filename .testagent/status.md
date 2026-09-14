@@ -1188,3 +1188,18 @@
 - [x] Pseudo-mutation review: restoring a literal heading/action or fixed date fails
   `WebApiTokens_UsesLocalizedVisibleCopyAndCultureAwareDates`; removing a localized
   key fails `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Boards localization and keyboard navigation — 2026-09-14
+
+- [x] Human-facing board collection copy uses shared resources.
+- [x] Visibility labels resolve at render and dates follow culture.
+- [x] Board navigation is a focusable Radzen button, not card click handling.
+- [x] Load/create errors remain visible outside the optional form.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 48/48 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion-quality review: assertions separately cover keyboard semantics,
+  localized navigation, dynamic options, culture-aware dates, and literal headings.
+- [x] Pseudo-mutation review: restoring card click navigation, literal options/title,
+  or fixed date format fails `WebBoards_UsesLocalizedKeyboardAccessibleNavigation`;
+  catalog drift fails `EverySupportedCulture_ReturnsCompleteCatalog`.

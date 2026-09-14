@@ -535,6 +535,20 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebBoards_UsesLocalizedKeyboardAccessibleNavigation()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string path = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "Boards.razor");
+        string source = File.ReadAllText(path);
+
+        source.Should().NotContain("RadzenCard @onclick", "board navigation must be keyboard-focusable");
+        source.Should().Contain("RadzenButton Text=\"@L[\"BoardsOpen\"]\"");
+        source.Should().Contain("Data=\"@VisibilityOptions\"");
+        source.Should().Contain("LocalDateTime.ToString(\"d\")");
+        source.Should().NotContain("PageHeader Title=\"Boards\"");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

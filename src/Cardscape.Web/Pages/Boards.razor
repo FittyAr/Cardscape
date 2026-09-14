@@ -8,11 +8,11 @@
 @inject IBoardsApiClient BoardsApi
 @inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Boards — Cardscape</PageTitle>
+<PageTitle>@L["BoardsTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<PageHeader Title="Boards">
+<PageHeader Title="@L["BoardsTitle"]">
     <Actions>
-        <RadzenButton Text="New board" Icon="add" ButtonStyle="ButtonStyle.Primary"
+        <RadzenButton Text="@L["BoardsNew"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
                       Click="@(() => showCreate = !showCreate)" />
     </Actions>
 </PageHeader>
@@ -21,45 +21,42 @@
 {
     <RadzenCard>
         <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateBoardAsync">
-            <LabeledField Text="Name" Component="b-name">
+            <LabeledField Text="@L["WorkspacesName"]" Component="b-name">
                 <RadzenTextBox @bind-Value="createModel.Name" Name="b-name" Style="width:100%" />
             </LabeledField>
             <RadzenRequiredValidator Component="b-name" Text="@L["ValidationRequired"]" />
 
-            <LabeledField Text="Description" Component="b-desc">
+            <LabeledField Text="@L["BoardsDescription"]" Component="b-desc">
                 <RadzenTextArea @bind-Value="createModel.Description" Name="b-desc" Style="width:100%" Rows="2" />
             </LabeledField>
 
-            <LabeledField Text="Visibility" Component="b-vis">
+            <LabeledField Text="@L["BoardsVisibility"]" Component="b-vis">
                 <RadzenDropDown @bind-Value="createModel.Visibility" Name="b-vis" Style="width:100%"
-                                Data="@(new[] { new { Value = BoardVisibility.Private, Label = "Private" },
-                                                new { Value = BoardVisibility.Workspace, Label = "Workspace" },
-                                                new { Value = BoardVisibility.Public, Label = "Public" } })"
+                                Data="@VisibilityOptions"
                                 TextProperty="Label" ValueProperty="Value" />
             </LabeledField>
 
-            @if (error is not null)
-            {
-                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" class="rz-mt-3">
-                    @error
-                </RadzenAlert>
-            }
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-mt-3">
-                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => { showCreate = false; error = null; })" />
-                <RadzenButton Text="Create" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => { showCreate = false; error = null; })" />
+                <RadzenButton Text="@L["ActionCreate"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
                               IsBusy="@busy" />
             </RadzenStack>
         </RadzenTemplateForm>
     </RadzenCard>
 }
 
+@if (error is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" Class="rz-mb-3">@error</RadzenAlert>
+}
+
 @if (boards is null)
 {
-    <RadzenText Text="Loading…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else if (boards.Count == 0)
 {
-    <RadzenText Text="No boards in this workspace yet. Create your first one above." TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenText Text="@L["BoardsEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else
 {
@@ -67,23 +64,25 @@ else
         @foreach (BoardSummaryDto b in boards)
         {
             <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
-                <RadzenCard @onclick="@(() => Nav.NavigateTo($"boards/{b.Id}"))">
+                <RadzenCard>
                     <RadzenText Text="@b.Name" TextStyle="TextStyle.H5" TagName="TagName.H3" />
                     <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
-                        created @b.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")
+                        @L["BoardsCreatedAt", b.CreatedAt.LocalDateTime.ToString("d")]
                     </RadzenText>
                     @if (b.IsStarred)
                     {
                         <div class="rz-mt-2">
-                            <RadzenBadge Text="★ Starred" BadgeStyle="BadgeStyle.Success" />
+                            <RadzenBadge Text="@L["BoardsStarred"]" BadgeStyle="BadgeStyle.Success" />
                         </div>
                     }
                     @if (b.IsArchived)
                     {
                         <div class="rz-mt-2">
-                            <RadzenBadge Text="Archived" BadgeStyle="BadgeStyle.Warning" />
+                            <RadzenBadge Text="@L["ActionArchived"]" BadgeStyle="BadgeStyle.Warning" />
                         </div>
                     }
+                    <RadzenButton Text="@L["BoardsOpen"]" Icon="open_in_new" ButtonStyle="ButtonStyle.Light"
+                                  Class="rz-mt-3" Click="@(() => Nav.NavigateTo($"boards/{b.Id}"))" />
                 </RadzenCard>
             </RadzenColumn>
         }
@@ -100,6 +99,12 @@ else
     private bool busy;
     private string? error;
     private readonly CreateModel createModel = new() { Visibility = BoardVisibility.Private };
+    private IReadOnlyList<VisibilityOption> VisibilityOptions =>
+    [
+        new(BoardVisibility.Private, L["BoardsVisibilityPrivate"]),
+        new(BoardVisibility.Workspace, L["BoardsVisibilityWorkspace"]),
+        new(BoardVisibility.Public, L["BoardsVisibilityPublic"])
+    ];
 
     protected override async Task OnParametersSetAsync()
     {
@@ -111,7 +116,7 @@ else
         }
         else
         {
-            error = result.Error;
+            error = result.Error ?? L["BoardsLoadFailed"];
         }
     }
 
@@ -149,4 +154,6 @@ else
         public string? Description { get; set; }
         public BoardVisibility Visibility { get; set; }
     }
+
+    private sealed record VisibilityOption(BoardVisibility Value, string Label);
 }

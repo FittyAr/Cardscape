@@ -349,6 +349,15 @@
   <data name="BoardsTitle" xml:space="preserve"><value>Tableros</value></data>
   <data name="BoardsNew" xml:space="preserve"><value>Nuevo tablero</value></data>
   <data name="BoardsEmpty" xml:space="preserve"><value>Aún no hay tableros.</value></data>
+  <data name="BoardsDescription" xml:space="preserve"><value>Descripción</value></data>
+  <data name="BoardsVisibility" xml:space="preserve"><value>Visibilidad</value></data>
+  <data name="BoardsVisibilityPrivate" xml:space="preserve"><value>Privado</value></data>
+  <data name="BoardsVisibilityWorkspace" xml:space="preserve"><value>Workspace</value></data>
+  <data name="BoardsVisibilityPublic" xml:space="preserve"><value>Público</value></data>
+  <data name="BoardsCreatedAt" xml:space="preserve"><value>Creado el {0}</value></data>
+  <data name="BoardsStarred" xml:space="preserve"><value>★ Favorito</value></data>
+  <data name="BoardsOpen" xml:space="preserve"><value>Abrir tablero</value></data>
+  <data name="BoardsLoadFailed" xml:space="preserve"><value>No se pudieron cargar los tableros.</value></data>
   <data name="PageTitleSuffix" xml:space="preserve"><value>— Cardscape</value></data>
   <data name="NotFoundTitle" xml:space="preserve"><value>No encontrado</value></data>
   <data name="NotFoundBackHome" xml:space="preserve"><value>Volver al inicio</value></data>

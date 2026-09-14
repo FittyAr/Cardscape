@@ -747,6 +747,16 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All five steps are implemented and validated.
 
+# Boards localization and keyboard navigation — 2026-09-14
+
+1. Localize Board headings, form, states, metadata, badges, and visibility options.
+2. Replace fixed display dates with culture-aware short dates.
+3. Replace mouse-only card navigation with a Radzen button.
+4. Move errors outside the optional create form.
+5. Add `WebBoards_UsesLocalizedKeyboardAccessibleNavigation` and validate.
+
+Status: complete. All five steps are implemented and validated.
+
 # Keyboard, focus and icon-button accessibility — 2026-09-14
 
 1. Inventory non-semantic click targets, focus CSS and icon-only buttons.

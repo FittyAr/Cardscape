@@ -348,6 +348,15 @@
   <data name="BoardsTitle" xml:space="preserve"><value>Boards</value></data>
   <data name="BoardsNew" xml:space="preserve"><value>New board</value></data>
   <data name="BoardsEmpty" xml:space="preserve"><value>No boards yet.</value></data>
+  <data name="BoardsDescription" xml:space="preserve"><value>Description</value></data>
+  <data name="BoardsVisibility" xml:space="preserve"><value>Visibility</value></data>
+  <data name="BoardsVisibilityPrivate" xml:space="preserve"><value>Private</value></data>
+  <data name="BoardsVisibilityWorkspace" xml:space="preserve"><value>Workspace</value></data>
+  <data name="BoardsVisibilityPublic" xml:space="preserve"><value>Public</value></data>
+  <data name="BoardsCreatedAt" xml:space="preserve"><value>Created {0}</value></data>
+  <data name="BoardsStarred" xml:space="preserve"><value>★ Starred</value></data>
+  <data name="BoardsOpen" xml:space="preserve"><value>Open board</value></data>
+  <data name="BoardsLoadFailed" xml:space="preserve"><value>Could not load boards.</value></data>
   <data name="PageTitleSuffix" xml:space="preserve"><value>— Cardscape</value></data>
   <data name="NotFoundTitle" xml:space="preserve"><value>Not found</value></data>
   <data name="NotFoundBackHome" xml:space="preserve"><value>Back to home</value></data>

@@ -1226,3 +1226,13 @@
 - Scope identifiers `read` and `write` are protocol values and remain untranslated.
 - Acceptance: all human-facing copy uses the shared catalog and display dates use
   the active culture's short-date pattern.
+
+# Boards localization and keyboard navigation — 2026-09-14
+
+- Boards retained literal headings, form labels/actions, visibility options,
+  states, badges, and a fixed display date.
+- Navigation was attached to `RadzenCard @onclick`, which is mouse-only rather
+  than a focusable control with native keyboard activation.
+- Its load error was rendered only inside the optional create form.
+- Acceptance: localized culture-aware copy, render-time visibility options,
+  globally visible errors, and explicit Radzen button navigation.
