@@ -811,6 +811,14 @@ Status: complete. All five steps are implemented and validated.
 4. Add `WebBoardDetail_UsesLocalizedVisibleCopyAndCultureAwareDates`.
 5. Build Web and run focused architecture/catalog regressions.
 
+# Card detail visible-copy localization — 2026-09-14
+
+1. Localize header actions, states, tooltips and dialog copy.
+2. Localize all section controls, metadata and enum presentation.
+3. Replace fixed date/time display and picker patterns with active-culture formats.
+4. Add `WebCardDetail_UsesLocalizedVisibleCopyAndCultureAwareDates` across partials.
+5. Build Web and run architecture/catalog regressions.
+
 # Accessible-name localization — 2026-09-14
 
 1. Add shared English/Spanish resource keys for month navigation and search.

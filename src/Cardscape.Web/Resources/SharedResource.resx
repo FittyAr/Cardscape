@@ -616,4 +616,62 @@
   <data name="BoardMirrorSuffix" xml:space="preserve"><value> (mirror)</value></data>
   <data name="BoardMirrorCard" xml:space="preserve"><value>Mirror card</value></data>
   <data name="BoardCardTitle" xml:space="preserve"><value>Card title…</value></data>
+  <data name="CardLoading" xml:space="preserve"><value>Loading card…</value></data>
+  <data name="CardSnoozedUntil" xml:space="preserve"><value>Snoozed until {0}</value></data>
+  <data name="CardUnsnooze" xml:space="preserve"><value>Unsnooze</value></data>
+  <data name="CardComplete" xml:space="preserve"><value>Complete</value></data>
+  <data name="CardVote" xml:space="preserve"><value>Vote on this card</value></data>
+  <data name="CardVotes" xml:space="preserve"><value>Votes: {0}</value></data>
+  <data name="CardSnooze" xml:space="preserve"><value>Snooze</value></data>
+  <data name="CardSnoozeUntil" xml:space="preserve"><value>Snooze until…</value></data>
+  <data name="CardDescription" xml:space="preserve"><value>Description</value></data>
+  <data name="CardAttachments" xml:space="preserve"><value>Attachments</value></data>
+  <data name="CardChooseAttachment" xml:space="preserve"><value>Choose attachment</value></data>
+  <data name="CardNoAttachments" xml:space="preserve"><value>No attachments yet.</value></data>
+  <data name="CardDownload" xml:space="preserve"><value>Download</value></data>
+  <data name="CardComments" xml:space="preserve"><value>Comments</value></data>
+  <data name="CardLoadingComments" xml:space="preserve"><value>Loading comments…</value></data>
+  <data name="CardWriteComment" xml:space="preserve"><value>Write a comment…</value></data>
+  <data name="CardRecurrence" xml:space="preserve"><value>Recurrence</value></data>
+  <data name="CardRecurrenceSummary" xml:space="preserve"><value>Repeats every {0} day(s). Next: {1}</value></data>
+  <data name="CardRecurrenceStop" xml:space="preserve"><value>Stop</value></data>
+  <data name="CardDays" xml:space="preserve"><value>day(s)</value></data>
+  <data name="CardSetRecurrence" xml:space="preserve"><value>Set recurrence</value></data>
+  <data name="CardChecklists" xml:space="preserve"><value>Checklists</value></data>
+  <data name="CardLoadingChecklists" xml:space="preserve"><value>Loading checklists…</value></data>
+  <data name="CardChecklistItem" xml:space="preserve"><value>Add an item…</value></data>
+  <data name="CardChecklistTitle" xml:space="preserve"><value>New checklist title…</value></data>
+  <data name="CardCreateChecklist" xml:space="preserve"><value>Create checklist</value></data>
+  <data name="CardActivityEmpty" xml:space="preserve"><value>No activity recorded for this card yet.</value></data>
+  <data name="CardDueDate" xml:space="preserve"><value>Due date</value></data>
+  <data name="CardNone" xml:space="preserve"><value>none</value></data>
+  <data name="CardLabels" xml:space="preserve"><value>Labels</value></data>
+  <data name="CardEmptyValue" xml:space="preserve"><value>(empty)</value></data>
+  <data name="CardYes" xml:space="preserve"><value>Yes</value></data>
+  <data name="CardNo" xml:space="preserve"><value>No</value></data>
+  <data name="CardActivityBoardCreated" xml:space="preserve"><value>Board created</value></data>
+  <data name="CardActivityBoardRenamed" xml:space="preserve"><value>Board renamed</value></data>
+  <data name="CardActivityBoardArchived" xml:space="preserve"><value>Board archived</value></data>
+  <data name="CardActivityBoardUnarchived" xml:space="preserve"><value>Board unarchived</value></data>
+  <data name="CardActivityListCreated" xml:space="preserve"><value>List created</value></data>
+  <data name="CardActivityListRenamed" xml:space="preserve"><value>List renamed</value></data>
+  <data name="CardActivityListMoved" xml:space="preserve"><value>List moved</value></data>
+  <data name="CardActivityListArchived" xml:space="preserve"><value>List archived</value></data>
+  <data name="CardActivityCardCreated" xml:space="preserve"><value>Card created</value></data>
+  <data name="CardActivityCardRenamed" xml:space="preserve"><value>Card renamed</value></data>
+  <data name="CardActivityCardMoved" xml:space="preserve"><value>Card moved</value></data>
+  <data name="CardActivityCardArchived" xml:space="preserve"><value>Card archived</value></data>
+  <data name="CardActivityCardRestored" xml:space="preserve"><value>Card restored</value></data>
+  <data name="CardActivityCardAssigned" xml:space="preserve"><value>Member assigned</value></data>
+  <data name="CardActivityCardUnassigned" xml:space="preserve"><value>Member unassigned</value></data>
+  <data name="CardActivityCardDueDateSet" xml:space="preserve"><value>Due date set</value></data>
+  <data name="CardActivityCardDueDateCleared" xml:space="preserve"><value>Due date cleared</value></data>
+  <data name="CardActivityLabelAdded" xml:space="preserve"><value>Label added</value></data>
+  <data name="CardActivityLabelRemoved" xml:space="preserve"><value>Label removed</value></data>
+  <data name="CardActivityCommentAdded" xml:space="preserve"><value>Comment added</value></data>
+  <data name="CardActivityChecklistCreated" xml:space="preserve"><value>Checklist created</value></data>
+  <data name="CardActivityChecklistItemCompleted" xml:space="preserve"><value>Checklist item completed</value></data>
+  <data name="CardActivityChecklistItemUncompleted" xml:space="preserve"><value>Checklist item reopened</value></data>
+  <data name="CardActivityAttachmentAdded" xml:space="preserve"><value>Attachment added</value></data>
+  <data name="CardActivityAttachmentRemoved" xml:space="preserve"><value>Attachment removed</value></data>
 </root>

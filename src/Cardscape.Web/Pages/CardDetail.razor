@@ -23,7 +23,7 @@
 @inject IJSRuntime JS
 @implements IDisposable
 
-<PageTitle>@(_card?.Title ?? "Card") — Cardscape</PageTitle>
+<PageTitle>@(_card?.Title ?? L["ActivityKindCard"]) @L["PageTitleSuffix"]</PageTitle>
 
 @if (_notFound)
 {
@@ -40,7 +40,7 @@
 }
 else if (_card is null)
 {
-    <RadzenText Text="Loading card…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenText Text="@L["CardLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else
 {
@@ -72,27 +72,27 @@ else
                 {
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                         <RadzenBadge BadgeStyle="BadgeStyle.Warning"
-                                     Text="@($"Snoozed until {snoozeUntil.LocalDateTime:yyyy-MM-dd HH:mm}")" />
-                        <RadzenButton Text="Unsnooze" ButtonStyle="ButtonStyle.Light"
+                                     Text="@L["CardSnoozedUntil", snoozeUntil.LocalDateTime.ToString("g")]" />
+                        <RadzenButton Text="@L["CardUnsnooze"]" ButtonStyle="ButtonStyle.Light"
                                       Size="ButtonSize.ExtraSmall" Click="@UnsnoozeAsync" />
                     </RadzenStack>
                 }
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                              Wrap="FlexWrap.Wrap">
-                    <RadzenButton Text="Back to board" Icon="arrow_back"
+                    <RadzenButton Text="@L["ActivityBackToBoard"]" Icon="arrow_back"
                                   ButtonStyle="ButtonStyle.Light"
                                   Click="@GoBackToBoard" />
                     @if (_card.IsCompleted)
                     {
-                        <RadzenButton Text="Reopen" ButtonStyle="ButtonStyle.Light" Click="@ReopenAsync" />
+                        <RadzenButton Text="@L["ActivityKindReopen"]" ButtonStyle="ButtonStyle.Light" Click="@ReopenAsync" />
                     }
                     else
                     {
-                        <RadzenButton Text="Complete" ButtonStyle="ButtonStyle.Success" Click="@CompleteAsync" />
+                        <RadzenButton Text="@L["CardComplete"]" ButtonStyle="ButtonStyle.Success" Click="@CompleteAsync" />
                     }
-                    <RadzenButton Text="@(_card.IsArchived ? "Restore" : "Archive")"
+                    <RadzenButton Text="@(_card.IsArchived ? L["ActivityKindRestore"] : L["ActivityKindArchive"])"
                                   ButtonStyle="ButtonStyle.Warning" Click="@ToggleArchiveAsync" />
-                    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger"
+                    <RadzenButton Text="@L["ActionDelete"]" Icon="delete" ButtonStyle="ButtonStyle.Danger"
                                   Click="@DeleteCardAsync" />
                     @* P3.3 / G6c ” "Mirror to..." entry. Opens a RadzenDialog
                        with a board picker + a list picker. On confirm the
@@ -110,9 +110,9 @@ else
                                   Click="@ToggleVoteAsync"
                                   Disabled="@_togglingVote"
                                   IsBusy="@_togglingVote"
-                                  title="Vote on this card" />
+                                  title="@L["CardVote"]" aria-label="@L["CardVote"]" />
                     <RadzenBadge BadgeStyle="BadgeStyle.Light"
-                                 Text="@($"Votes: {_voteState?.VoteCount ?? 0}")" />
+                                 Text="@L["CardVotes", _voteState?.VoteCount ?? 0]" />
                 </RadzenStack>
             </RadzenStack>
 
@@ -128,11 +128,11 @@ else
             {
                 <RadzenCard Variant="Variant.Flat">
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenText Text="Snooze" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                        <RadzenText Text="@L["CardSnooze"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
                         <RadzenDatePicker @bind-Value="_snoozeUntilLocal"
                                           ShowTime="true"
-                                          DateFormat="yyyy-MM-dd HH:mm" />
-                        <RadzenButton Text="Snooze until…"
+                                          DateFormat="@CardDateTimeFormat" />
+                        <RadzenButton Text="@L["CardSnoozeUntil"]"
                                       Icon="schedule"
                                       ButtonStyle="ButtonStyle.Secondary"
                                       Click="@SnoozeAsync"
@@ -157,7 +157,7 @@ else
                                                 TagName="TagName.Span" />
                                     <RadzenText Text="@($"” {suggestion.Reason}")" TextStyle="TextStyle.Body2"
                                                 class="rz-color-text-secondary" />
-                                    <RadzenButton Text="Add" Size="ButtonSize.ExtraSmall"
+                                    <RadzenButton Text="@L["BoardAddItem"]" Size="ButtonSize.ExtraSmall"
                                                   ButtonStyle="ButtonStyle.Success"
                                                   Click="@(() => AssignSuggestedOwnerAsync(suggestion))"
                                                   Disabled="@_aiBusy" />
@@ -169,7 +169,7 @@ else
             }
 
             <RadzenStack Gap="0.5rem">
-                <RadzenText Text="Description" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                <RadzenText Text="@L["CardDescription"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
                 @* BETA-8-UI-#15 - see test-results/r8/r8-report.md.
                    Manual description editor. The endpoint
                    (POST /api/cards/{id}/description) and
@@ -230,11 +230,11 @@ else
                card can attach a file via the standard file picker
                and download / delete it from the list. *@
             <RadzenStack Gap="0.5rem">
-                <RadzenText Text="Attachments" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                <RadzenText Text="@L["CardAttachments"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                              Wrap="FlexWrap.Wrap">
                     <RadzenUpload Change="@OnAttachmentSelectedAsync" Accept="*/*" Auto="false" Multiple="false"
-                                  Disabled="@_uploadingAttachment" ChooseText="Choose attachment" />
+                                  Disabled="@_uploadingAttachment" ChooseText="@L["CardChooseAttachment"]" />
                     @if (_uploadingAttachment)
                     {
                         <RadzenProgressBarCircular ProgressBarType="ProgressBarType.Indeterminate"
@@ -243,11 +243,11 @@ else
                 </RadzenStack>
                 @if (_attachments is null)
                 {
-                    <RadzenText Text="Loading…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+                    <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
                 else if (_attachments.Count == 0)
                 {
-                    <RadzenText Text="No attachments yet." TextStyle="TextStyle.Body2"
+                    <RadzenText Text="@L["CardNoAttachments"]" TextStyle="TextStyle.Body2"
                                 class="rz-color-text-secondary" />
                 }
                 else
@@ -261,9 +261,9 @@ else
                                 <RadzenText Text="@attachment.FileName" TextStyle="TextStyle.Body2" />
                                 <RadzenText Text="@FormatSize(attachment.SizeBytes)"
                                             TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
-                                <RadzenButton Text="Download" Icon="download" ButtonStyle="ButtonStyle.Light"
+                                <RadzenButton Text="@L["CardDownload"]" Icon="download" ButtonStyle="ButtonStyle.Light"
                                               Size="ButtonSize.ExtraSmall" Click="@(() => DownloadAttachmentAsync(attachment))" />
-                                <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger"
+                                <RadzenButton Text="@L["ActionDelete"]" Icon="delete" ButtonStyle="ButtonStyle.Danger"
                                               Size="ButtonSize.ExtraSmall" Click="@(() => DeleteAttachmentAsync(attachment))" />
                             </RadzenStack>
                         }
@@ -274,16 +274,16 @@ else
             @if (_fieldValues is not null && _fieldValues.Count > 0)
             {
                 <RadzenStack Gap="0.5rem">
-                    <RadzenText Text="Custom fields" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                    <RadzenText Text="@L["CustomFieldsTitle"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
                     <MetadataList Items="@CustomFieldItems" />
                 </RadzenStack>
             }
 
             <RadzenStack Gap="0.5rem">
-                <RadzenText Text="Comments" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                <RadzenText Text="@L["CardComments"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
                 @if (_comments is null)
                 {
-                    <RadzenText Text="Loading comments…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+                    <RadzenText Text="@L["CardLoadingComments"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
                 else
                 {
@@ -315,7 +315,7 @@ else
                             : c.AuthorId.ToString();
                         <RadzenCard Variant="Variant.Flat">
                             <RadzenStack Gap="0.25rem">
-                                <RadzenText Text="@($"{c.CreatedAt.LocalDateTime:yyyy-MM-dd HH:mm} · {authorLabel}")"
+                                <RadzenText Text="@($"{c.CreatedAt.LocalDateTime:g} · {authorLabel}")"
                                             TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
                                 <RadzenText Text="@c.Body" TextStyle="TextStyle.Body2" />
                             </RadzenStack>
@@ -325,24 +325,24 @@ else
 
                 <RadzenTemplateForm TItem="AddCommentModel" Data="@_addCommentModel" Submit="@AddCommentAsync">
                     <RadzenStack Gap="0.5rem" Class="rz-mt-2">
-                        <RadzenTextArea @bind-Value="_addCommentModel.Body" Name="comment-body" Rows="2" Placeholder="Write a comment…"
+                        <RadzenTextArea @bind-Value="_addCommentModel.Body" Name="comment-body" Rows="2" Placeholder="@L["CardWriteComment"]"
                                         Style="width:100%" />
                         <RadzenRequiredValidator Component="comment-body" Text="@L["ValidationRequired"]" />
-                        <RadzenButton Text="Comment" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                        <RadzenButton Text="@L["ActivityKindComment"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
                                       IsBusy="@_addingComment" />
                     </RadzenStack>
                 </RadzenTemplateForm>
             </RadzenStack>
 
             <RadzenStack Gap="0.5rem">
-                <RadzenText Text="Recurrence" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                <RadzenText Text="@L["CardRecurrence"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
                 @if (_recurrence is { IsActive: true })
                 {
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                                  Wrap="FlexWrap.Wrap">
-                        <RadzenText Text="@($"Repeats every {_recurrence.IntervalDays} day(s). Next: {_recurrence.NextOccurrenceAt.LocalDateTime:yyyy-MM-dd HH:mm}")"
+                        <RadzenText Text="@L["CardRecurrenceSummary", _recurrence.IntervalDays, _recurrence.NextOccurrenceAt.LocalDateTime.ToString("g")]"
                                     TextStyle="TextStyle.Body2" />
-                        <RadzenButton Text="Stop" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small"
+                        <RadzenButton Text="@L["CardRecurrenceStop"]" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small"
                                       Click="@ClearRecurrenceAsync" />
                     </RadzenStack>
                 }
@@ -351,18 +351,18 @@ else
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                         <RadzenNumeric @bind-Value="_recurrenceIntervalDays" Min="1" Max="365"
                                        ShowUpDown="true" Style="width:6rem" />
-                        <RadzenText Text="day(s)" TextStyle="TextStyle.Body2" />
-                        <RadzenButton Text="Set recurrence" ButtonStyle="ButtonStyle.Secondary"
+                        <RadzenText Text="@L["CardDays"]" TextStyle="TextStyle.Body2" />
+                        <RadzenButton Text="@L["CardSetRecurrence"]" ButtonStyle="ButtonStyle.Secondary"
                                       Click="@SaveRecurrenceAsync" />
                     </RadzenStack>
                 }
             </RadzenStack>
 
             <RadzenStack Gap="0.5rem">
-                <RadzenText Text="Checklists" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                <RadzenText Text="@L["CardChecklists"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
                 @if (_checklists is null)
                 {
-                    <RadzenText Text="Loading checklists…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+                    <RadzenText Text="@L["CardLoadingChecklists"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
                 else
                 {
@@ -407,10 +407,10 @@ else
                                 }
                                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
                                              Gap="0.5rem">
-                                    <RadzenTextBox @bind-Value="_newChecklistItemText" Placeholder="Add an item…"
+                                    <RadzenTextBox @bind-Value="_newChecklistItemText" Placeholder="@L["CardChecklistItem"]"
                                                    Style="flex:1"
                                                    @onkeydown="@(e => OnAddItemKeyDownAsync(e, cl.Id))" />
-                                    <RadzenButton Text="Add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                    <RadzenButton Text="@L["BoardAddItem"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
                                                   Click="@(() => AddItemAsync(cl.Id))" />
                                 </RadzenStack>
                             </RadzenStack>
@@ -418,10 +418,10 @@ else
                     }
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                                  Wrap="FlexWrap.Wrap">
-                        <RadzenTextBox @bind-Value="_newChecklistTitle" Placeholder="New checklist title…"
+                        <RadzenTextBox @bind-Value="_newChecklistTitle" Placeholder="@L["CardChecklistTitle"]"
                                        Style="flex:1"
                                        @onkeydown="@OnCreateChecklistKeyDownAsync" />
-                        <RadzenButton Text="Create checklist" Icon="add" ButtonStyle="ButtonStyle.Secondary"
+                        <RadzenButton Text="@L["CardCreateChecklist"]" Icon="add" ButtonStyle="ButtonStyle.Secondary"
                                       Click="@CreateChecklistAsync" />
                         <RadzenButton Text="@($" {L["AiGenerateChecklist"]}")" Icon="auto_awesome"
                                       ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
@@ -431,14 +431,14 @@ else
             </RadzenStack>
 
             <RadzenStack Gap="0.5rem">
-                <RadzenText Text="Activity" TextStyle="TextStyle.H6" TagName="TagName.H3" />
+                <RadzenText Text="@L["ActivityTitle"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
                 @if (_recentActivity is null)
                 {
-                    <RadzenText Text="Loading activity…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+                    <RadzenText Text="@L["ActivityLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
                 else if (_recentActivity.Count == 0)
                 {
-                    <RadzenText Text="No activity recorded for this card yet." TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+                    <RadzenText Text="@L["CardActivityEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
                 }
                 else
                 {
@@ -455,11 +455,11 @@ else
                                 : a.ActorId.ToString();
                             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
                                          Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                                <RadzenText Text="@a.Kind.ToString()" TextStyle="TextStyle.Body2"
+                                <RadzenText Text="@ActivityKindLabel(a.Kind)" TextStyle="TextStyle.Body2"
                                             TagName="TagName.Span" />
                                 <RadzenText Text="@actorLabel" TextStyle="TextStyle.Body2"
                                             TagName="TagName.Span" class="rz-color-text-secondary" />
-                                <RadzenText Text="@($"· {a.OccurredAt.LocalDateTime:yyyy-MM-dd HH:mm}")"
+                                <RadzenText Text="@($"· {a.OccurredAt.LocalDateTime:g}")"
                                             TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
                                 <RadzenText Text="@($"· {FormatActivityPayload(a)}")" TextStyle="TextStyle.Body2"
                                             class="rz-color-text-secondary" />

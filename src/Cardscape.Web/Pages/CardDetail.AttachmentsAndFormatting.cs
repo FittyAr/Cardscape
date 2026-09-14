@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Cardscape.Web.Resources;
 using Cardscape.Web.Services;
@@ -14,32 +15,35 @@ namespace Cardscape.Web.Pages;
 
 public partial class CardDetail
 {
-    private static string FieldKindLabel(CustomFieldKind kind) => kind switch
+    private string FieldKindLabel(CustomFieldKind kind) => kind switch
     {
-        CustomFieldKind.Text => "Text",
-        CustomFieldKind.Number => "Number",
-        CustomFieldKind.Date => "Date",
-        CustomFieldKind.Dropdown => "Dropdown",
-        CustomFieldKind.Checkbox => "Checkbox",
-        _ => $"Kind {(int)kind}",
+        CustomFieldKind.Text => L["CustomFieldText"],
+        CustomFieldKind.Number => L["CustomFieldNumber"],
+        CustomFieldKind.Date => L["CustomFieldDate"],
+        CustomFieldKind.Dropdown => L["CustomFieldDropdown"],
+        CustomFieldKind.Checkbox => L["CustomFieldCheckbox"],
+        _ => L["CustomFieldUnknown", (int)kind],
     };
 
-    private static string FormatFieldValue(CustomFieldValueDto value)
+    private string FormatFieldValue(CustomFieldValueDto value)
     {
         // Values are stored as JSON strings; strip outer quotes for display.
         string raw = value.ValueJson?.Trim('"') ?? string.Empty;
         if (string.IsNullOrEmpty(raw))
         {
-            return "(empty)";
+            return L["CardEmptyValue"];
         }
 
         return value.Kind switch
         {
-            CustomFieldKind.Checkbox => raw.Equals("true", StringComparison.OrdinalIgnoreCase) ? " Yes" : " No",
-            CustomFieldKind.Date => raw, // ISO date; render as-is
+            CustomFieldKind.Checkbox => raw.Equals("true", StringComparison.OrdinalIgnoreCase) ? L["CardYes"] : L["CardNo"],
+            CustomFieldKind.Date when DateOnly.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date) =>
+                date.ToString("d", CultureInfo.CurrentCulture),
             _ => raw,
         };
     }
+
+    private string ActivityKindLabel(ActivityKind kind) => L[$"CardActivity{kind}"];
 
     private static int ChecklistProgressPercent(ChecklistDto cl) =>
         cl.TotalCount == 0 ? 0 : (int)Math.Round(100.0 * cl.CompletedCount / cl.TotalCount);

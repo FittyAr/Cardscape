@@ -79,12 +79,12 @@ public partial class CardDetail
         }
 
         bool confirmed = await DialogService.Confirm(
-            $"Delete card \"{_card.Title}\"? This cannot be undone.",
-            "Delete card",
+            L["DeleteCardDialogBody", _card.Title],
+            L["DeleteCardDialogTitle"],
             new ConfirmOptions
             {
-                OkButtonText = "Delete",
-                CancelButtonText = "Cancel"
+                OkButtonText = L["DeleteCardDialogConfirm"],
+                CancelButtonText = L["DeleteCardDialogCancel"]
             }) ?? false;
         if (!confirmed)
         {

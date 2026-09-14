@@ -575,6 +575,28 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebCardDetail_UsesLocalizedVisibleCopyAndCultureAwareDates()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string pagePath = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "CardDetail.razor");
+        string source = File.ReadAllText(pagePath);
+        string codeBehind = string.Join(Environment.NewLine,
+            Directory.GetFiles(Path.GetDirectoryName(pagePath)!, "CardDetail*.cs")
+                .Select(File.ReadAllText));
+
+        source.Should().Contain("ChooseText=\"@L[\"CardChooseAttachment\"]\"");
+        source.Should().Contain("ActivityKindLabel(a.Kind)");
+        source.Should().Contain("LocalDateTime:g");
+        codeBehind.Should().Contain("L[\"CardDueDate\"]");
+        codeBehind.Should().Contain("L[$\"CardActivity{kind}\"]");
+        source.Should().NotContain("Text=\"Loading card…\"");
+        source.Should().NotContain("Placeholder=\"Write a comment…\"");
+        source.Should().NotContain("yyyy-MM-dd");
+        codeBehind.Should().NotContain("MetadataListItem.Text(\"Due date\"");
+        codeBehind.Should().NotContain("\"Delete card\",");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

@@ -1250,3 +1250,13 @@
   their Radzen dropdown labels resolve through the active culture at render time.
 - Acceptance: all identified visible and accessible copy uses the shared catalog,
   display dates follow culture, and an architecture gate prevents regression.
+
+# Card detail visible-copy localization — 2026-09-14
+
+- Card detail was the final page explicitly identified by the UI localization
+  audit. It retained literal states, actions, metadata, section headings,
+  activity kinds, confirmation copy and fixed date/time formats across four files.
+- Custom-field and activity enum values require localized presentation without
+  changing their stable transport/domain values.
+- Acceptance: all inventoried visible/accessibility/dialog copy uses the shared
+  catalog, all display dates follow culture, and a cross-partial gate protects it.

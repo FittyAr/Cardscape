@@ -76,6 +76,9 @@ public partial class CardDetail
     private DateTimeOffset _snoozeUntilLocal = DateTimeOffset.Now.AddDays(1)
         .Date.AddHours(9);
 
+    private static string CardDateTimeFormat =>
+        $"{CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern} HH:mm";
+
     // P3.4 / MetadataList adapters ” translate the card projection
     // into the IReadOnlyList<MetadataListItem> shape that the
     // <MetadataList> shared component expects. The Members row
@@ -85,20 +88,20 @@ public partial class CardDetail
         ? Array.Empty<MetadataListItem>()
         : new MetadataListItem[]
         {
-            MetadataListItem.Text("Due date",
+            MetadataListItem.Text(L["CardDueDate"],
                 _card.DueDate is null
-                    ? "none"
-                    : _card.DueDate.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture)),
-            new("Members", MakeMembersValueFragment(_card)),
-            MetadataListItem.Text("Labels", _card.LabelCount.ToString(CultureInfo.CurrentCulture)),
+                    ? L["CardNone"]
+                    : _card.DueDate.Value.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)),
+            new(L["MembersTitle"], MakeMembersValueFragment(_card)),
+            MetadataListItem.Text(L["CardLabels"], _card.LabelCount.ToString(CultureInfo.CurrentCulture)),
             // BUG-A5-003 — see test-results/beta/reports/A5-card-extras.md.
             // The header now surfaces comment / attachment /
             // checklist counts alongside the existing member /
             // label counts so the user can see at a glance which
             // cards carry attachments or open discussions.
-            MetadataListItem.Text("Comments", _card.CommentCount.ToString(CultureInfo.CurrentCulture)),
-            MetadataListItem.Text("Attachments", _card.AttachmentCount.ToString(CultureInfo.CurrentCulture)),
-            MetadataListItem.Text("Checklists", _card.ChecklistCount.ToString(CultureInfo.CurrentCulture))
+            MetadataListItem.Text(L["CardComments"], _card.CommentCount.ToString(CultureInfo.CurrentCulture)),
+            MetadataListItem.Text(L["CardAttachments"], _card.AttachmentCount.ToString(CultureInfo.CurrentCulture)),
+            MetadataListItem.Text(L["CardChecklists"], _card.ChecklistCount.ToString(CultureInfo.CurrentCulture))
         };
 
     private IReadOnlyList<MetadataListItem> CustomFieldItems => _fieldValues is null

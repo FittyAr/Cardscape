@@ -1228,3 +1228,18 @@
   or removing localized option metadata fails
   `WebBoardDetail_UsesLocalizedVisibleCopyAndCultureAwareDates`; resource drift
   fails `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Card detail visible-copy localization — 2026-09-14
+
+- [x] Header, sections, metadata, tooltips, forms and confirmation use resources.
+- [x] Custom-field and all activity-kind labels are localized at presentation.
+- [x] Display dates and the Radzen picker pattern follow the active culture.
+- [x] Architecture regression gate spans Razor and every CardDetail partial.
+- [x] Web build: 0 warnings, 0 errors; architecture: 51/51 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion review covers upload metadata, enum localization, culture dates,
+  code-behind metadata/dialog copy and representative forbidden literals.
+- [x] Pseudo-mutation review: restoring fixed dates or literal form/dialog copy,
+  bypassing localized activity/metadata labels, or removing a resource fails
+  `WebCardDetail_UsesLocalizedVisibleCopyAndCultureAwareDates` or
+  `EverySupportedCulture_ReturnsCompleteCatalog`.
