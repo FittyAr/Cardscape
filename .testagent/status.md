@@ -942,3 +942,16 @@
 - [x] Pseudo-mutation review: reverting 422, collapsing field errors into the
   password code, or removing owner/member checks fails a named security or
   cross-workspace integration scenario.
+
+# Radzen UI consistency — 2026-09-14
+
+- [x] Native interactive element and literal Razor color inventory complete.
+- [x] Seeder operational view uses scoped responsive styles and Radzen tokens.
+- [x] Kanban surfaces follow light/dark Radzen tokens; custom separator removed.
+- [x] Web build passes 0 warnings/errors; theme regressions pass 46/46 and
+  ArchitectureTests pass 31/31, with 0 failed and 0 skipped.
+- [x] Assertion review: gates inspect every Razor file rather than a curated
+  page list and theme tests cover all catalog variants.
+- [x] Pseudo-mutation review: reintroducing a native interactive tag or literal
+  Razor color fails a repository-wide diagnostic; removing theme tokens breaks
+  the scoped styles and visual contract represented by the source gate.

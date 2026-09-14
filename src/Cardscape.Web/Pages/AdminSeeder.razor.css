@@ -1,0 +1,73 @@
+.seeder-panels {
+    flex-wrap: wrap;
+}
+
+.seeder-log-panel {
+    flex: 1 1 60%;
+    min-width: min(28rem, 100%);
+}
+
+.seeder-table-panel {
+    flex: 1 1 35%;
+    min-width: min(24rem, 100%);
+}
+
+.seeder-progress {
+    margin-block: 0.25rem 0.75rem;
+}
+
+.seeder-log {
+    max-height: 28rem;
+    overflow: auto;
+    padding: 0.75rem;
+    border-radius: var(--rz-border-radius);
+    background: var(--rz-base-900);
+    color: var(--rz-base-100);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.78rem;
+}
+
+.seeder-log-entry {
+    display: grid;
+    grid-template-columns: 5rem 3.5rem 11rem minmax(12rem, 1fr);
+    gap: 0.5rem;
+    align-items: baseline;
+    padding-block: 1px;
+}
+
+.seeder-log-time {
+    color: var(--rz-base-400);
+    font-variant-numeric: tabular-nums;
+}
+
+.seeder-log-level {
+    color: var(--rz-base-100);
+    font-weight: 600;
+}
+
+.seeder-log-level-success { color: var(--rz-success); }
+.seeder-log-level-warning { color: var(--rz-warning); }
+.seeder-log-level-error { color: var(--rz-danger); }
+.seeder-log-step { color: var(--rz-info); }
+.seeder-log-message { white-space: pre-wrap; }
+
+.seeder-table-scroll {
+    max-height: 28rem;
+    overflow: auto;
+}
+
+.seeder-row-count {
+    display: block;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 48rem) {
+    .seeder-log-entry {
+        grid-template-columns: 4.5rem 3.5rem 1fr;
+    }
+
+    .seeder-log-message {
+        grid-column: 1 / -1;
+    }
+}

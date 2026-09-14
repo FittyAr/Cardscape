@@ -667,6 +667,19 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All five steps are implemented and validated.
 
+# Radzen UI consistency — 2026-09-14
+
+1. Inventory every routable Razor page, interactive native element, literal
+   color, inline layout and custom visual component.
+2. Move Seeder layout/log presentation into scoped theme-aware CSS and add
+   explicit accessible log semantics plus mobile reflow.
+3. Replace light-only Kanban literals with Radzen tokens and remove the custom
+   separator in favor of Radzen composition.
+4. Add architecture gates for Radzen controls and theme-safe Razor colors.
+5. Compile Web, run architecture/UI regressions and update the modernization plan.
+
+Status: complete. All five steps are implemented and validated.
+
 # Supporting workflow OpenAPI metadata — 2026-09-13
 
 1. Declare concrete success DTOs and status codes on all 13 operations.

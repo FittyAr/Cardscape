@@ -1,0 +1,14 @@
+.topbar-search {
+    position: relative;
+}
+
+.topbar-search-result {
+    color: inherit;
+    text-decoration: none;
+}
+
+.topbar-search-result:focus-visible {
+    border-radius: var(--rz-border-radius);
+    outline: var(--rz-outline-focus);
+    outline-offset: var(--rz-outline-offset);
+}

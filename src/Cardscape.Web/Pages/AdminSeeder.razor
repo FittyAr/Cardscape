@@ -15,22 +15,23 @@
     <PageHeader Title="@L["SeederTitle"]" Subtitle="@L["SeederSubtitle"]" />
 
     <RadzenCard>
-        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.75rem" Wrap="@FlexWrap.Wrap">
-            <RadzenBadge BadgeStyle="@BadgeStyle.Info" Text="@StatusBadge" />
-            @if (_options is not null)
-            {
-                @if (_options.WipeBeforeSeed)
+        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center"
+                     JustifyContent="@JustifyContent.SpaceBetween" Gap="0.75rem" Wrap="@FlexWrap.Wrap">
+            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
+                <RadzenBadge BadgeStyle="@BadgeStyle.Info" Text="@StatusBadge" />
+                @if (_options?.WipeBeforeSeed == true)
                 {
                     <RadzenBadge BadgeStyle="@BadgeStyle.Warning" Text="wipe on seed" />
                 }
-            }
-            <span style="flex:1"></span>
-            <RadzenButton Text="@L["SeederRun"]" Icon="play_arrow" ButtonStyle="@ButtonStyle.Primary"
-                          Disabled="@ActionsDisabled" Click="@(() => RunAsync(wipe:false))" />
-            <RadzenButton Text="@L["SeederForceReseed"]" Icon="refresh" ButtonStyle="@ButtonStyle.Danger"
-                          Disabled="@ActionsDisabled" Click="@(() => RunAsync(wipe:true))" />
-            <RadzenButton Text="@L["SeederWipe"]" Icon="delete_sweep" ButtonStyle="@ButtonStyle.Warning"
-                          Disabled="@ActionsDisabled" Click="@WipeAsync" />
+            </RadzenStack>
+            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem" Wrap="@FlexWrap.Wrap">
+                <RadzenButton Text="@L["SeederRun"]" Icon="play_arrow" ButtonStyle="@ButtonStyle.Primary"
+                              Disabled="@ActionsDisabled" Click="@(() => RunAsync(wipe:false))" />
+                <RadzenButton Text="@L["SeederForceReseed"]" Icon="refresh" ButtonStyle="@ButtonStyle.Danger"
+                              Disabled="@ActionsDisabled" Click="@(() => RunAsync(wipe:true))" />
+                <RadzenButton Text="@L["SeederWipe"]" Icon="delete_sweep" ButtonStyle="@ButtonStyle.Warning"
+                              Disabled="@ActionsDisabled" Click="@WipeAsync" />
+            </RadzenStack>
         </RadzenStack>
     </RadzenCard>
 
@@ -47,8 +48,8 @@
     }
     else
     {
-        <div class="rz-display-flex rz-flex-row rz-gap-2" style="flex-wrap: wrap;">
-            <RadzenCard Style="flex: 1 1 60%; min-width: 28rem;">
+        <div class="seeder-panels rz-display-flex rz-flex-row rz-gap-2">
+            <RadzenCard Class="seeder-log-panel">
                 <RadzenStack Gap="0.5rem">
                     <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
                         <RadzenText TextStyle="@TextStyle.H5" TagName="@TagName.H3">@L["SeederLog"]</RadzenText>
@@ -57,8 +58,8 @@
                     <RadzenText TextStyle="@TextStyle.Caption" class="rz-color-text-secondary">
                         @StepLine
                     </RadzenText>
-                    <RadzenProgressBar Value="@ProgressValue" Max="100" Style="margin: 0.25rem 0 0.75rem 0;" />
-                    <div style="font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; background: #0d1019; color: #d8dce5; border-radius: 8px; padding: 12px; max-height: 28rem; overflow: auto;">
+                    <RadzenProgressBar Value="@ProgressValue" Max="100" Class="seeder-progress" />
+                    <div class="seeder-log" role="log" aria-live="polite" aria-label="@L["SeederLog"]">
                         @if (_entries.Count == 0)
                         {
                             <span class="rz-color-text-secondary">@L["SeederLogEmpty"]</span>
@@ -67,11 +68,11 @@
                         {
                             @foreach (var entry in _entries)
                             {
-                                <div style="display: grid; grid-template-columns: 5rem 3.5rem 11rem 1fr; gap: 0.5rem; align-items: baseline; padding: 1px 0;">
-                                    <span style="color: #8a93a6;">@entry.At.ToLocalTime().ToString("HH:mm:ss")</span>
-                                    <span style="@LevelStyle(entry.Level)">@entry.Level.ToUpperInvariant()</span>
-                                    <span style="color: #6ea8ff;">@entry.Step</span>
-                                    <span style="white-space: pre-wrap;">@entry.Message</span>
+                                <div class="seeder-log-entry">
+                                    <span class="seeder-log-time">@entry.At.ToLocalTime().ToString("HH:mm:ss")</span>
+                                    <span class="@LevelClass(entry.Level)">@entry.Level.ToUpperInvariant()</span>
+                                    <span class="seeder-log-step">@entry.Step</span>
+                                    <span class="seeder-log-message">@entry.Message</span>
                                 </div>
                             }
                         }
@@ -79,7 +80,7 @@
                 </RadzenStack>
             </RadzenCard>
 
-            <RadzenCard Style="flex: 1 1 35%; min-width: 24rem;">
+            <RadzenCard Class="seeder-table-panel">
                 <RadzenStack Gap="0.5rem">
                     <RadzenText TextStyle="@TextStyle.H5" TagName="@TagName.H3">@L["SeederTableStatus"]</RadzenText>
                     <RadzenText TextStyle="@TextStyle.Caption" class="rz-color-text-secondary">
@@ -91,7 +92,7 @@
                     }
                     else
                     {
-                        <div style="max-height: 28rem; overflow: auto;">
+                        <div class="seeder-table-scroll">
                             <RadzenDataGrid Data="@_tables" TItem="SeederTableStatusDto"
                                             AllowSorting="false" AllowPaging="false"
                                             Density="@Density.Compact">
@@ -104,7 +105,7 @@
                                     </RadzenDataGridColumn>
                                     <RadzenDataGridColumn TItem="SeederTableStatusDto" Property="Rows" Title="@L["SeederTableRows"]" Width="6rem">
                                         <Template Context="row">
-                                            <span style="font-variant-numeric: tabular-nums; text-align: right; display:block;">@row.Rows</span>
+                                            <span class="seeder-row-count">@row.Rows</span>
                                         </Template>
                                     </RadzenDataGridColumn>
                                 </Columns>
@@ -314,12 +315,12 @@
 
     private static bool ContainsDisabled(string error) => error.Contains("404", StringComparison.OrdinalIgnoreCase);
 
-    private static string LevelStyle(string level) => level switch
+    private static string LevelClass(string level) => level switch
     {
-        "Success" => "color: #57d685; font-weight: 600;",
-        "Warning" => "color: #f0b400; font-weight: 600;",
-        "Error" => "color: #ff6464; font-weight: 600;",
-        _ => "color: #d8dce5; font-weight: 600;"
+        "Success" => "seeder-log-level seeder-log-level-success",
+        "Warning" => "seeder-log-level seeder-log-level-warning",
+        "Error" => "seeder-log-level seeder-log-level-error",
+        _ => "seeder-log-level"
     };
 
     public async ValueTask DisposeAsync()

@@ -1067,3 +1067,14 @@
 - OAuth, SAML, SCIM, API-token and integration mutations resolve ownership or
   membership before mutating tenant-scoped state; cross-workspace SCIM and
   inbound-email behavior already has relational endpoint coverage.
+
+# Radzen UI consistency — 2026-09-14
+
+- All routable pages already use Radzen for interactive form and data controls;
+  no native button/input/select/textarea/form/table/dialog remains.
+- Admin Seeder was the last view with literal operational colors and layout
+  scattered through inline styles; the Kanban board also pinned light-only card
+  surfaces instead of Radzen theme tokens.
+- The custom `HorizontalRule` existed only because Radzen has no divider in the
+  installed version, but the same result is expressible by composing a Radzen
+  stack with its border utility, so the bespoke component is unnecessary.

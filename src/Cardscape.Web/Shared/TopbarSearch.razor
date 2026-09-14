@@ -5,7 +5,7 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Nav
 @implements IDisposable
 
-<div class="topbar-search rz-display-flex rz-align-items-center" style="position: relative;">
+<div class="topbar-search rz-display-flex rz-align-items-center">
     <RadzenTextBox @bind-Value="query"
                    @oninput="@OnInputChangedAsync"
                    @onkeydown="@OnKeyDown"
@@ -22,8 +22,7 @@
             <RadzenStack Gap="0.25rem">
                 @foreach (SearchHitDto hit in results)
                 {
-                    <a href="@hit.Url" @onclick="@(() => NavigateTo(hit))" @onclick:preventDefault="true"
-                       style="text-decoration: none; color: inherit;">
+                    <a class="topbar-search-result" href="@hit.Url" @onclick="@(() => NavigateTo(hit))" @onclick:preventDefault="true">
                         <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem" Class="rz-p-2">
                             <RadzenBadge Text="@KindLabel(hit.Kind)" BadgeStyle="@BadgeStyle.Info" />
                             <RadzenStack Gap="0">

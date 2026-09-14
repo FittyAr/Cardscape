@@ -258,6 +258,47 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebRazorViews_UseRadzenForInteractiveControls()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string webRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web");
+        Regex razorComment = new(@"@\*[\s\S]*?\*@", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+        Regex nativeControl = new(
+            @"<(?:button|input|select|textarea|form|table|dialog)\b",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1));
+
+        string[] violations = Directory.GetFiles(webRoot, "*.razor", SearchOption.AllDirectories)
+            .Where(file => nativeControl.IsMatch(razorComment.Replace(File.ReadAllText(file), string.Empty)))
+            .Select(file => Path.GetRelativePath(repositoryRoot.FullName, file))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "interactive Web controls must use Radzen components so behavior, theming and accessibility remain consistent");
+    }
+
+    [Fact]
+    public void WebRazorViews_DoNotEmbedLiteralColors()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string webRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web");
+        Regex literalColor = new(
+            "(?:style|Style)\\s*=\\s*\"[^\"]*#[0-9a-f]{3,8}",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1));
+
+        string[] violations = Directory.GetFiles(webRoot, "*.razor", SearchOption.AllDirectories)
+            .Where(file => literalColor.IsMatch(File.ReadAllText(file)))
+            .Select(file => Path.GetRelativePath(repositoryRoot.FullName, file))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "Razor views must consume Radzen theme tokens instead of bypassing light/dark themes with literal colors");
+    }
+
+    [Fact]
     public void ApiEndpoints_DoNotConstructProblemDetailsDirectly()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
