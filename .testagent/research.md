@@ -1209,3 +1209,12 @@
   fallback, causing a failed board catalog to look like a valid empty selector.
 - Acceptance: surface that failure and prohibit the coercion pattern across every
   Razor page rather than maintaining a page-name allowlist.
+
+# Automation visible-copy localization — 2026-09-14
+
+- The earlier localization checkbox was not supported by the source: Automation
+  retained literal title, form labels, actions, empty state, and enum labels.
+- Runtime trigger/action options were initialized from English strings and could
+  not react to the selected culture.
+- Acceptance: every visible Automation string comes from the shared catalog and
+  runtime options resolve localization on render.

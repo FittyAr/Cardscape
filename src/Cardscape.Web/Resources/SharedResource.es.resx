@@ -164,6 +164,27 @@
   <data name="ApiTokensLoadFailed" xml:space="preserve"><value>No se pudieron cargar los tokens de API.</value></data>
   <data name="ApiTokensRevokeFailed" xml:space="preserve"><value>No se pudo revocar el token de API.</value></data>
   <data name="AutomationLoadFailed" xml:space="preserve"><value>No se pudieron cargar las reglas de automatización.</value></data>
+  <data name="AutomationTitle" xml:space="preserve"><value>Automatizaciones</value></data>
+  <data name="AutomationBlurb" xml:space="preserve"><value>Las reglas se ejecutan en el servidor cuando ocurre un evento coincidente. Una regla fallida nunca bloquea la acción original.</value></data>
+  <data name="AutomationName" xml:space="preserve"><value>Nombre</value></data>
+  <data name="AutomationWhen" xml:space="preserve"><value>Cuando</value></data>
+  <data name="AutomationTriggerList" xml:space="preserve"><value>ID de lista</value></data>
+  <data name="AutomationThen" xml:space="preserve"><value>Entonces</value></data>
+  <data name="AutomationArgument" xml:space="preserve"><value>Argumento (ID de lista, ID de usuario o fecha ISO)</value></data>
+  <data name="AutomationEmpty" xml:space="preserve"><value>Todavía no hay reglas de automatización. Creá una para comenzar.</value></data>
+  <data name="AutomationList" xml:space="preserve"><value>lista</value></data>
+  <data name="AutomationDo" xml:space="preserve"><value>Hacer:</value></data>
+  <data name="AutomationDisable" xml:space="preserve"><value>Deshabilitar</value></data>
+  <data name="AutomationEnable" xml:space="preserve"><value>Habilitar</value></data>
+  <data name="AutomationNew" xml:space="preserve"><value>Nueva regla</value></data>
+  <data name="AutomationTriggerMoved" xml:space="preserve"><value>Tarjeta movida a cualquier lista</value></data>
+  <data name="AutomationTriggerCompleted" xml:space="preserve"><value>Tarjeta completada</value></data>
+  <data name="AutomationTriggerReopened" xml:space="preserve"><value>Tarjeta reabierta</value></data>
+  <data name="AutomationTriggerCreatedInList" xml:space="preserve"><value>Tarjeta creada en una lista específica</value></data>
+  <data name="AutomationActionMove" xml:space="preserve"><value>Mover tarjeta a una lista</value></data>
+  <data name="AutomationActionAssign" xml:space="preserve"><value>Asignar usuario</value></data>
+  <data name="AutomationActionDue" xml:space="preserve"><value>Definir vencimiento</value></data>
+  <data name="AutomationActionComplete" xml:space="preserve"><value>Marcar como completada</value></data>
   <data name="DashboardLoadFailed" xml:space="preserve"><value>No se pudo cargar el dashboard del tablero.</value></data>
   <data name="InvitationsLoadFailed" xml:space="preserve"><value>No se pudieron cargar las invitaciones pendientes.</value></data>
   <data name="WebhooksLoadFailed" xml:space="preserve"><value>No se pudieron cargar los webhooks.</value></data>

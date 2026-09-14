@@ -1161,3 +1161,16 @@
 - [x] Pseudo-mutation review: restoring `IsSuccess ? Value : []` in any Razor page
   fails `WebPages_DoNotCoerceFailedApiCollectionsToEmpty`; removing the GitHub
   fallback fails `EverySupportedCulture_ReturnsCompleteCatalog` through catalog drift.
+
+# Automation visible-copy localization — 2026-09-14
+
+- [x] Plan localization criterion honestly reopened.
+- [x] Automation visible copy and runtime enum labels use the shared catalog.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 46/46 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion-quality review: forbidden literals are reported individually and
+  positive assertions prove both runtime enum families use localization.
+- [x] Pseudo-mutation review: restoring a literal primary action/heading or removing
+  localized trigger/action resolution fails `WebAutomation_UsesLocalizedVisibleCopy`;
+  removing a culture key fails `EverySupportedCulture_ReturnsCompleteCatalog`.

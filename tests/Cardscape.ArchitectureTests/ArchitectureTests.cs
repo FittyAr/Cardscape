@@ -497,6 +497,25 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebAutomation_UsesLocalizedVisibleCopy()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string path = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "Automation.razor");
+        string source = File.ReadAllText(path);
+
+        string[] forbiddenLiterals =
+        [
+            "Text=\"New rule\"", "Text=\"Disable\"", "Text=\"Enable\"",
+            "Text=\"Delete\"", "PageHeader Title=\"Automation\""
+        ];
+
+        forbiddenLiterals.Where(source.Contains).Should().BeEmpty(
+            "automation controls and headings must follow the active culture");
+        source.Should().Contain("L[\"AutomationTriggerMoved\"]");
+        source.Should().Contain("L[\"AutomationActionMove\"]");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

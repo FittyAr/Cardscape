@@ -164,6 +164,27 @@
   <data name="ApiTokensLoadFailed" xml:space="preserve"><value>Could not load API tokens.</value></data>
   <data name="ApiTokensRevokeFailed" xml:space="preserve"><value>Could not revoke the API token.</value></data>
   <data name="AutomationLoadFailed" xml:space="preserve"><value>Could not load automation rules.</value></data>
+  <data name="AutomationTitle" xml:space="preserve"><value>Automation</value></data>
+  <data name="AutomationBlurb" xml:space="preserve"><value>Rules run server-side when a matching card event occurs. A failed rule never blocks the originating user action.</value></data>
+  <data name="AutomationName" xml:space="preserve"><value>Name</value></data>
+  <data name="AutomationWhen" xml:space="preserve"><value>When</value></data>
+  <data name="AutomationTriggerList" xml:space="preserve"><value>List ID</value></data>
+  <data name="AutomationThen" xml:space="preserve"><value>Then</value></data>
+  <data name="AutomationArgument" xml:space="preserve"><value>Argument (list ID, user ID, or ISO date)</value></data>
+  <data name="AutomationEmpty" xml:space="preserve"><value>No automation rules yet. Create one to get started.</value></data>
+  <data name="AutomationList" xml:space="preserve"><value>list</value></data>
+  <data name="AutomationDo" xml:space="preserve"><value>Do:</value></data>
+  <data name="AutomationDisable" xml:space="preserve"><value>Disable</value></data>
+  <data name="AutomationEnable" xml:space="preserve"><value>Enable</value></data>
+  <data name="AutomationNew" xml:space="preserve"><value>New rule</value></data>
+  <data name="AutomationTriggerMoved" xml:space="preserve"><value>Card moved to any list</value></data>
+  <data name="AutomationTriggerCompleted" xml:space="preserve"><value>Card completed</value></data>
+  <data name="AutomationTriggerReopened" xml:space="preserve"><value>Card reopened</value></data>
+  <data name="AutomationTriggerCreatedInList" xml:space="preserve"><value>Card created in a specific list</value></data>
+  <data name="AutomationActionMove" xml:space="preserve"><value>Move card to list</value></data>
+  <data name="AutomationActionAssign" xml:space="preserve"><value>Assign user</value></data>
+  <data name="AutomationActionDue" xml:space="preserve"><value>Set due date</value></data>
+  <data name="AutomationActionComplete" xml:space="preserve"><value>Mark complete</value></data>
   <data name="DashboardLoadFailed" xml:space="preserve"><value>Could not load the board dashboard.</value></data>
   <data name="InvitationsLoadFailed" xml:space="preserve"><value>Could not load pending invitations.</value></data>
   <data name="WebhooksLoadFailed" xml:space="preserve"><value>Could not load webhooks.</value></data>

@@ -8,55 +8,53 @@
 @inject IAutomationApiClient AutomationClient
 @inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Automation — Cardscape</PageTitle>
+<PageTitle>@L["AutomationTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
-    <PageHeader Title="Automation"
+    <PageHeader Title="@L["AutomationTitle"]"
                 Actions="@(NewRuleButton())" />
 
     <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
-        Rules run server-side the moment a matching card event fires.
-        They're best-effort: a failed rule never blocks the user that
-        caused the event.
+        @L["AutomationBlurb"]
     </RadzenText>
 
     @if (showCreate)
     {
         <RadzenCard>
             <RadzenTemplateForm TItem="NewRuleModel" Data="@newRule" Submit="@CreateRuleAsync">
-                <LabeledField Text="Name" Component="rule-name">
+                <LabeledField Text="@L["AutomationName"]" Component="rule-name">
                     <RadzenTextBox @bind-Value="newRule.Name" Name="rule-name" Style="width:100%" />
                 </LabeledField>
                 <RadzenRequiredValidator Component="rule-name" Text="@L["ValidationRequired"]" />
 
-                <LabeledField Text="When…" Component="rule-trigger">
-                    <RadzenDropDown @bind-Value="newRule.Trigger" Data="@triggerOptions"
+                <LabeledField Text="@L["AutomationWhen"]" Component="rule-trigger">
+                    <RadzenDropDown @bind-Value="newRule.Trigger" Data="@TriggerOptions"
                                     TextProperty="Label" ValueProperty="Value"
                                     Name="rule-trigger" Style="width:100%" Change="@OnTriggerChanged" />
                 </LabeledField>
 
                 @if (newRule.Trigger == AutomationTrigger.CardCreatedInList)
                 {
-                    <LabeledField Text="In list (id)" Component="rule-trigger-list">
+                    <LabeledField Text="@L["AutomationTriggerList"]" Component="rule-trigger-list">
                         <RadzenTextBox @bind-Value="newRule.TriggerListIdText" Name="rule-trigger-list"
                                        Style="width:100%" />
                     </LabeledField>
                 }
 
-                <LabeledField Text="Then…" Component="rule-action">
-                    <RadzenDropDown @bind-Value="newRule.Action" Data="@actionOptions"
+                <LabeledField Text="@L["AutomationThen"]" Component="rule-action">
+                    <RadzenDropDown @bind-Value="newRule.Action" Data="@ActionOptions"
                                     TextProperty="Label" ValueProperty="Value"
                                     Name="rule-action" Style="width:100%" />
                 </LabeledField>
 
-                <LabeledField Text="Argument (list id / user id / ISO date)" Component="rule-arg">
+                <LabeledField Text="@L["AutomationArgument"]" Component="rule-arg">
                     <RadzenTextBox @bind-Value="newRule.ActionArgument" Name="rule-arg"
                                    Style="width:100%" />
                 </LabeledField>
 
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
-                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
-                    <RadzenButton Text="Create" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                    <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
+                    <RadzenButton Text="@L["ActionCreate"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
                                   IsBusy="@busy" />
                 </RadzenStack>
             </RadzenTemplateForm>
@@ -78,7 +76,7 @@
     }
     else if (rules is { Count: 0 })
     {
-        <RadzenText Text="No automation rules yet. Create one above to get started." />
+        <RadzenText Text="@L["AutomationEmpty"]" />
     }
     else if (rules is not null)
     {
@@ -90,12 +88,12 @@
                         <RadzenStack Gap="0.25rem">
                             <RadzenText Text="@rule.Name" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
                             <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
-                                When: <em>@TriggerName(rule.Trigger)</em>
+                                @L["AutomationWhen"] <em>@TriggerName(rule.Trigger)</em>
                                 @if (rule.Trigger == AutomationTrigger.CardCreatedInList)
                                 {
-                                    <text> (list @rule.TriggerListId)</text>
+                                    <text> (@L["AutomationList"] @rule.TriggerListId)</text>
                                 }
-                                · Do: <em>@ActionName(rule.Action)</em>
+                                · @L["AutomationDo"] <em>@ActionName(rule.Action)</em>
                                 @if (!string.IsNullOrEmpty(rule.ActionArgument))
                                 {
                                     <text> → @rule.ActionArgument</text>
@@ -105,15 +103,15 @@
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
                             @if (rule.IsEnabled)
                             {
-                                <RadzenButton Text="Disable" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                <RadzenButton Text="@L["AutomationDisable"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
                                               Click="@(() => DisableAsync(rule))" />
                             }
                             else
                             {
-                                <RadzenButton Text="Enable" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small"
+                                <RadzenButton Text="@L["AutomationEnable"]" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small"
                                               Click="@(() => EnableAsync(rule))" />
                             }
-                            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                            <RadzenButton Text="@L["ActionDelete"]" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
                                           Click="@(() => DeleteAsync(rule))" />
                         </RadzenStack>
                     </RadzenStack>
@@ -134,25 +132,25 @@
     private string? loadError;
     private readonly NewRuleModel newRule = new();
 
-    private readonly List<TriggerOption> triggerOptions = new()
-    {
-        new(AutomationTrigger.CardMoved, "Card moved to any list"),
-        new(AutomationTrigger.CardCompleted, "Card completed"),
-        new(AutomationTrigger.CardReopened, "Card reopened"),
-        new(AutomationTrigger.CardCreatedInList, "Card created in a specific list")
-    };
+    private IReadOnlyList<TriggerOption> TriggerOptions =>
+    [
+        new(AutomationTrigger.CardMoved, L["AutomationTriggerMoved"]),
+        new(AutomationTrigger.CardCompleted, L["AutomationTriggerCompleted"]),
+        new(AutomationTrigger.CardReopened, L["AutomationTriggerReopened"]),
+        new(AutomationTrigger.CardCreatedInList, L["AutomationTriggerCreatedInList"])
+    ];
 
-    private readonly List<ActionOption> actionOptions = new()
-    {
-        new(AutomationAction.MoveCardToList, "Move card to list (arg = list id)"),
-        new(AutomationAction.AssignUser, "Assign user (arg = user id)"),
-        new(AutomationAction.SetDueDate, "Set due date (arg = ISO date)"),
-        new(AutomationAction.MarkComplete, "Mark complete")
-    };
+    private IReadOnlyList<ActionOption> ActionOptions =>
+    [
+        new(AutomationAction.MoveCardToList, L["AutomationActionMove"]),
+        new(AutomationAction.AssignUser, L["AutomationActionAssign"]),
+        new(AutomationAction.SetDueDate, L["AutomationActionDue"]),
+        new(AutomationAction.MarkComplete, L["AutomationActionComplete"])
+    ];
 
     private RenderFragment NewRuleButton() => __builder =>
     {
-        <RadzenButton Text="New rule" Icon="add" ButtonStyle="ButtonStyle.Primary"
+        <RadzenButton Text="@L["AutomationNew"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
                       Click="@(() => showCreate = !showCreate)" />
     };
 
@@ -254,22 +252,22 @@
         else error = r.Error;
     }
 
-    private static string TriggerName(AutomationTrigger t) => t switch
+    private string TriggerName(AutomationTrigger t) => t switch
     {
-        AutomationTrigger.CardMoved => "card moved",
-        AutomationTrigger.CardCompleted => "card completed",
-        AutomationTrigger.CardReopened => "card reopened",
-        AutomationTrigger.CardCreatedInList => "card created in list",
-        _ => "unknown"
+        AutomationTrigger.CardMoved => L["AutomationTriggerMoved"],
+        AutomationTrigger.CardCompleted => L["AutomationTriggerCompleted"],
+        AutomationTrigger.CardReopened => L["AutomationTriggerReopened"],
+        AutomationTrigger.CardCreatedInList => L["AutomationTriggerCreatedInList"],
+        _ => L["CommonUnknown"]
     };
 
-    private static string ActionName(AutomationAction a) => a switch
+    private string ActionName(AutomationAction a) => a switch
     {
-        AutomationAction.MoveCardToList => "move card to list",
-        AutomationAction.AssignUser => "assign user",
-        AutomationAction.SetDueDate => "set due date",
-        AutomationAction.MarkComplete => "mark complete",
-        _ => "unknown"
+        AutomationAction.MoveCardToList => L["AutomationActionMove"],
+        AutomationAction.AssignUser => L["AutomationActionAssign"],
+        AutomationAction.SetDueDate => L["AutomationActionDue"],
+        AutomationAction.MarkComplete => L["AutomationActionComplete"],
+        _ => L["CommonUnknown"]
     };
 
     private sealed class NewRuleModel

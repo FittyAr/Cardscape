@@ -727,6 +727,16 @@ Status: complete. All four steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Automation visible-copy localization — 2026-09-14
+
+1. Reopen the inaccurate UI localization checklist item.
+2. Move all Automation headings, labels, actions, states, triggers, and actions to resources.
+3. Make localized option collections render-time properties.
+4. Add `WebAutomation_UsesLocalizedVisibleCopy`.
+5. Build Web and run architecture plus translation regressions.
+
+Status: complete. All five steps are implemented and validated.
+
 # Keyboard, focus and icon-button accessibility — 2026-09-14
 
 1. Inventory non-semantic click targets, focus CSS and icon-only buttons.
