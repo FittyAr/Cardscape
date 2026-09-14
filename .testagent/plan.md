@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Activity localization — 2026-09-14
+
+1. Localize page chrome, filter controls, states, metadata and pagination.
+2. Separate stable event values from localized Radzen dropdown labels.
+3. Use active-culture timestamps and retain unknown event/payload fallbacks.
+4. Build Web and run translation catalog parity tests.
+
+Status: complete. All four steps are implemented and validated.
+
 # Invitation-flow localization — 2026-09-14
 
 1. Inventory routable pages without `IStringLocalizer<SharedResource>`.

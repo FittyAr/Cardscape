@@ -4,14 +4,17 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject IActivitiesApiClient Activities
 @inject Microsoft.AspNetCore.Components.NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Activity — Cardscape</PageTitle>
+<PageTitle>@L["ActivityTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<PageHeader Title="Activity">
+<PageHeader Title="@L["ActivityTitle"]">
     <Actions>
-        <RadzenButton Text="Back to board" Icon="arrow_back" ButtonStyle="ButtonStyle.Light"
+        <RadzenButton Text="@L["ActivityBackToBoard"]" Icon="arrow_back" ButtonStyle="ButtonStyle.Light"
                       Click="@(() => Nav.NavigateTo($"boards/{BoardId}"))" />
     </Actions>
 </PageHeader>
@@ -28,31 +31,31 @@
 <RadzenCard class="rz-mb-3">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                  Wrap="FlexWrap.Wrap">
-        <RadzenText Text="Filter by kind" TextStyle="TextStyle.Body2" />
+        <RadzenText Text="@L["ActivityFilterKind"]" TextStyle="TextStyle.Body2" />
         <RadzenDropDown TValue="string" @bind-Value="kindFilter"
-                        Data="@kindOptions" Style="width:14rem"
-                        Placeholder="All kinds" AllowClear="true" />
-        <RadzenText Text="Card id" TextStyle="TextStyle.Body2" />
-        <RadzenTextBox @bind-Value="cardIdFilter" Placeholder="any card…" Style="width:18rem" />
-        <RadzenButton Text="Reset" Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                        Data="@KindOptions" TextProperty="Label" ValueProperty="Value" Style="width:14rem"
+                        Placeholder="@L["ActivityAllKinds"]" AllowClear="true" />
+        <RadzenText Text="@L["GitHubCardId"]" TextStyle="TextStyle.Body2" />
+        <RadzenTextBox @bind-Value="cardIdFilter" Placeholder="@L["ActivityAnyCard"]" Style="width:18rem" />
+        <RadzenButton Text="@L["ActivityReset"]" Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
                       Click="@ResetFilters" Disabled="@(string.IsNullOrEmpty(kindFilter) && string.IsNullOrEmpty(cardIdFilter))" />
     </RadzenStack>
 </RadzenCard>
 
 @if (loading && items is null)
 {
-    <RadzenText Text="Loading activity…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenText Text="@L["ActivityLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else if (items is null || items.Count == 0)
 {
-    <RadzenText Text="No activity recorded on this board yet." TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenText Text="@L["ActivityEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else
 {
     var filtered = FilteredItems();
     @if (filtered.Count == 0)
     {
-        <RadzenText Text="No activity matches the current filter." TextStyle="TextStyle.Body2"
+        <RadzenText Text="@L["ActivityNoMatches"]" TextStyle="TextStyle.Body2"
                     class="rz-color-text-secondary" />
     }
     <RadzenStack Gap="0.75rem">
@@ -63,16 +66,16 @@ else
                     <RadzenBadge Text="@KindLabel(a.Kind.ToString())" BadgeStyle="@KindBadgeStyle(a.Kind.ToString())" />
                     <RadzenText Text="@a.Kind.ToString()" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
                     <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
-                        · @a.OccurredAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")
+                        · @a.OccurredAt.LocalDateTime.ToString("g")
                     </RadzenText>
                 </RadzenStack>
                 <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-mt-1">
                     @if (a.CardId is Guid cardId)
                     {
-                        <span>card: </span>
+                        <span>@L["ActivityCard"]: </span>
                         <RadzenLink Path="@($"cards/{cardId}")" Text="@cardId.ToString()[..8]" />
                     }
-                    <span> · actor: @a.ActorId.ToString()[..8]</span>
+                    <span> · @L["ActivityActor"]: @a.ActorId.ToString()[..8]</span>
                 </RadzenText>
                 @if (!string.IsNullOrEmpty(FormatPayload(a)))
                 {
@@ -85,7 +88,7 @@ else
     @if (!string.IsNullOrEmpty(nextCursor))
     {
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" class="rz-mt-3">
-            <RadzenButton Text="Load more" ButtonStyle="ButtonStyle.Light" Disabled="@loading"
+            <RadzenButton Text="@L["ActivityLoadMore"]" ButtonStyle="ButtonStyle.Light" Disabled="@loading"
                           Click="@LoadMoreAsync" IsBusy="@loading" />
         </RadzenStack>
     }
@@ -111,18 +114,18 @@ else
     // the filters run over the already-loaded `items` list.
     private string? kindFilter;
     private string? cardIdFilter;
-    private readonly IReadOnlyList<string> kindOptions = new[]
-    {
-        "BoardCreated",
-        "CardCreated",
-        "CardMoved",
-        "CardCompleted",
-        "CardReopened",
-        "CardRenamed",
-        "CardArchived",
-        "CardRestored",
-        "CommentAdded"
-    };
+    private IReadOnlyList<ActivityKindOption> KindOptions =>
+    [
+        new("BoardCreated", L["ActivityKindBoard"]),
+        new("CardCreated", L["ActivityKindCard"]),
+        new("CardMoved", L["ActivityKindMove"]),
+        new("CardCompleted", L["ActivityKindDone"]),
+        new("CardReopened", L["ActivityKindReopen"]),
+        new("CardRenamed", L["ActivityKindRename"]),
+        new("CardArchived", L["ActivityKindArchive"]),
+        new("CardRestored", L["ActivityKindRestore"]),
+        new("CommentAdded", L["ActivityKindComment"])
+    ];
 
     private List<ActivityDto> FilteredItems()
     {
@@ -207,17 +210,17 @@ else
         }
     }
 
-    private static string KindLabel(string kind) => kind switch
+    private string KindLabel(string kind) => kind switch
     {
-        "BoardCreated" => "Board",
-        "CardCreated" => "Card",
-        "CardMoved" => "Move",
-        "CardCompleted" => "Done",
-        "CardReopened" => "Reopen",
-        "CardRenamed" => "Rename",
-        "CardArchived" => "Archive",
-        "CardRestored" => "Restore",
-        "CommentAdded" => "Comment",
+        "BoardCreated" => L["ActivityKindBoard"],
+        "CardCreated" => L["ActivityKindCard"],
+        "CardMoved" => L["ActivityKindMove"],
+        "CardCompleted" => L["ActivityKindDone"],
+        "CardReopened" => L["ActivityKindReopen"],
+        "CardRenamed" => L["ActivityKindRename"],
+        "CardArchived" => L["ActivityKindArchive"],
+        "CardRestored" => L["ActivityKindRestore"],
+        "CommentAdded" => L["ActivityKindComment"],
         _ => kind
     };
 
@@ -262,4 +265,6 @@ else
 
         return a.PayloadJson;
     }
+
+    private sealed record ActivityKindOption(string Value, string Label);
 }

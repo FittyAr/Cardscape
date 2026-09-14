@@ -1014,3 +1014,14 @@
 - [x] Pseudo-mutation review: deleting one localized Inbox key fails
   `EverySupportedCulture_ReturnsCompleteCatalog`; breaking a formatter fails
   the warnings-as-errors Web build.
+
+# Activity localization — 2026-09-14
+
+- [x] All known Activity UI and event labels use shared resources.
+- [x] Web build passes with 0 warnings/errors; TranslationEndpointTests pass
+  5/5, with 0 failed and 0 skipped.
+- [x] Assertion-quality review: catalog parity is exact and compilation checks
+  localized option value/label bindings rather than string-only presentation.
+- [x] Pseudo-mutation review: resource drift fails
+  `EverySupportedCulture_ReturnsCompleteCatalog`; invalid option bindings fail
+  the warnings-as-errors Razor build.

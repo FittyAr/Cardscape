@@ -1122,3 +1122,10 @@
   notification kinds and JSON-derived summaries.
 - Acceptance: the complete known-notification experience uses shared EN/ES
   resources and culture-aware timestamps while unknown payloads remain intact.
+
+# Activity localization — 2026-09-14
+
+- Activity exposed literal English chrome/states and internal event codes in
+  its filter, despite translating the badge presentation separately.
+- Acceptance: all chrome/states and event labels use EN/ES resources, filter
+  values remain stable codes, timestamps follow active culture, catalogs match.

@@ -111,6 +111,27 @@
   <data name="NotificationFallbackCard" xml:space="preserve"><value>a card</value></data>
   <data name="NotificationFallbackWorkspace" xml:space="preserve"><value>a workspace</value></data>
   <data name="NotificationFallbackPerson" xml:space="preserve"><value>Someone</value></data>
+  <data name="ActivityTitle" xml:space="preserve"><value>Activity</value></data>
+  <data name="ActivityBackToBoard" xml:space="preserve"><value>Back to board</value></data>
+  <data name="ActivityFilterKind" xml:space="preserve"><value>Filter by kind</value></data>
+  <data name="ActivityAllKinds" xml:space="preserve"><value>All kinds</value></data>
+  <data name="ActivityAnyCard" xml:space="preserve"><value>any card…</value></data>
+  <data name="ActivityReset" xml:space="preserve"><value>Reset</value></data>
+  <data name="ActivityLoading" xml:space="preserve"><value>Loading activity…</value></data>
+  <data name="ActivityEmpty" xml:space="preserve"><value>No activity recorded on this board yet.</value></data>
+  <data name="ActivityNoMatches" xml:space="preserve"><value>No activity matches the current filter.</value></data>
+  <data name="ActivityCard" xml:space="preserve"><value>card</value></data>
+  <data name="ActivityActor" xml:space="preserve"><value>actor</value></data>
+  <data name="ActivityLoadMore" xml:space="preserve"><value>Load more</value></data>
+  <data name="ActivityKindBoard" xml:space="preserve"><value>Board</value></data>
+  <data name="ActivityKindCard" xml:space="preserve"><value>Card</value></data>
+  <data name="ActivityKindMove" xml:space="preserve"><value>Move</value></data>
+  <data name="ActivityKindDone" xml:space="preserve"><value>Done</value></data>
+  <data name="ActivityKindReopen" xml:space="preserve"><value>Reopen</value></data>
+  <data name="ActivityKindRename" xml:space="preserve"><value>Rename</value></data>
+  <data name="ActivityKindArchive" xml:space="preserve"><value>Archive</value></data>
+  <data name="ActivityKindRestore" xml:space="preserve"><value>Restore</value></data>
+  <data name="ActivityKindComment" xml:space="preserve"><value>Comment</value></data>
   <data name="NavApiTokens" xml:space="preserve"><value>API tokens</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Create account</value></data>
