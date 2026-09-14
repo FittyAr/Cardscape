@@ -451,6 +451,19 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebInbox_PreservesPrimaryAndAuxiliaryRequestOutcomes()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string path = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "Inbox.razor");
+        string source = File.ReadAllText(path);
+
+        source.Should().Contain("Task.WhenAll(countTask, listTask)");
+        source.Should().Contain("loadError = list.Error ?? L[");
+        source.Should().Contain("error = count.Error ?? L[");
+        source.Should().NotContain("notifications = list.IsSuccess ? list.Value : []");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

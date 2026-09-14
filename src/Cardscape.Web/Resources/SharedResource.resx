@@ -170,6 +170,9 @@
   <data name="EmailLoadFailed" xml:space="preserve"><value>Could not load inbound email addresses.</value></data>
   <data name="ScimLoadFailed" xml:space="preserve"><value>Could not load SCIM tokens.</value></data>
   <data name="WorkspacesLoadFailed" xml:space="preserve"><value>Could not load workspaces.</value></data>
+  <data name="InboxLoadFailed" xml:space="preserve"><value>Could not load notifications.</value></data>
+  <data name="InboxCountLoadFailed" xml:space="preserve"><value>Could not refresh the unread count.</value></data>
+  <data name="InboxMarkReadFailed" xml:space="preserve"><value>Could not update notification status.</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Create account</value></data>
   <data name="AuthSignInTitle" xml:space="preserve"><value>Sign in</value></data>

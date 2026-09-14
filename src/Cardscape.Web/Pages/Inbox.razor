@@ -25,11 +25,15 @@
     </Actions>
 </PageHeader>
 
-@if (notifications is null)
+@if (loading)
 {
-    <RadzenText Text="@L["InvitationsLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
 }
-else if (notifications.Count == 0)
+else if (loadError is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@loadError</RadzenAlert>
+}
+else if (notifications is { Count: 0 })
 {
     <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
         @if (filter == "unread")
@@ -42,7 +46,7 @@ else if (notifications.Count == 0)
         }
     </RadzenText>
 }
-else
+else if (notifications is not null)
 {
     <RadzenStack Gap="0.75rem">
         @foreach (NotificationDto n in notifications)
@@ -86,7 +90,9 @@ else
     private IReadOnlyList<NotificationDto>? notifications;
     private int unreadCount;
     private string filter = "all";
+    private bool loading;
     private string? error;
+    private string? loadError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -95,15 +101,40 @@ else
 
     private async Task ReloadAsync()
     {
-        ApiResult<UnreadCountResponse> count = await Notifications.GetUnreadCountAsync();
-        unreadCount = count.IsSuccess && count.Value is not null ? count.Value.Count : 0;
-
-        ApiResult<IReadOnlyList<NotificationDto>> list = await Notifications.ListAsync(
-            unreadOnly: filter == "unread", take: 100);
-        notifications = list.IsSuccess ? list.Value : [];
-        if (!list.IsSuccess)
+        loading = true;
+        error = null;
+        loadError = null;
+        try
         {
-            error = list.Error;
+            Task<ApiResult<UnreadCountResponse>> countTask = Notifications.GetUnreadCountAsync();
+            Task<ApiResult<IReadOnlyList<NotificationDto>>> listTask = Notifications.ListAsync(
+                unreadOnly: filter == "unread", take: 100);
+            await Task.WhenAll(countTask, listTask);
+
+            ApiResult<UnreadCountResponse> count = await countTask;
+            if (count.IsSuccess && count.Value is not null)
+            {
+                unreadCount = count.Value.Count;
+            }
+            else
+            {
+                error = count.Error ?? L["InboxCountLoadFailed"];
+            }
+
+            ApiResult<IReadOnlyList<NotificationDto>> list = await listTask;
+            if (list.IsSuccess && list.Value is not null)
+            {
+                notifications = list.Value;
+            }
+            else
+            {
+                notifications = null;
+                loadError = list.Error ?? L["InboxLoadFailed"];
+            }
+        }
+        finally
+        {
+            loading = false;
         }
     }
 
@@ -118,7 +149,10 @@ else
         if (result.IsSuccess)
         {
             await ReloadAsync();
+            return;
         }
+
+        error = result.Error ?? L["InboxMarkReadFailed"];
     }
 
     private async Task MarkAllReadAsync()
@@ -127,7 +161,10 @@ else
         if (result.IsSuccess)
         {
             await ReloadAsync();
+            return;
         }
+
+        error = result.Error ?? L["InboxMarkReadFailed"];
     }
 
     private string KindLabel(string kind) => kind switch

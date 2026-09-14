@@ -1118,3 +1118,19 @@
   restoring the failure-to-empty ternary fails
   `WebIntegrationCollections_PreserveLoadFailures`; catalog drift fails
   `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Inbox partial request outcomes — 2026-09-14
+
+- [x] Count and list requests execute concurrently.
+- [x] Auxiliary count failure no longer falsifies zero unread notifications.
+- [x] Primary list failure remains distinct from valid empty state.
+- [x] Mark-read failures are visible.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 43/43 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion-quality review: four focused assertions independently cover
+  concurrency, primary failure, auxiliary failure, and forbidden empty coercion.
+- [x] Pseudo-mutation review: serializing requests, dropping either error branch,
+  or restoring failure-to-empty coercion fails
+  `WebInbox_PreservesPrimaryAndAuxiliaryRequestOutcomes`; catalog drift fails
+  `EverySupportedCulture_ReturnsCompleteCatalog`.

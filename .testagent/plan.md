@@ -699,6 +699,16 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All five steps are implemented and validated.
 
+# Inbox partial request outcomes — 2026-09-14
+
+1. Execute count and list requests concurrently.
+2. Preserve the existing count when its refresh fails.
+3. Distinguish a failed primary list from valid empty state.
+4. Surface mark-read mutation failures.
+5. Add `WebInbox_PreservesPrimaryAndAuxiliaryRequestOutcomes` and validate.
+
+Status: complete. All five steps are implemented and validated.
+
 # Keyboard, focus and icon-button accessibility — 2026-09-14
 
 1. Inventory non-semantic click targets, focus CSS and icon-only buttons.

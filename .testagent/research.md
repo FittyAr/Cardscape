@@ -1186,3 +1186,11 @@
 - Acceptance: separate load and command errors, with load error taking precedence
   over loading/empty/content without discarding successfully rendered data after a
   later command failure.
+
+# Inbox partial request outcomes — 2026-09-14
+
+- Inbox loaded unread count and notifications serially, reset a failed counter to
+  zero, and converted a failed list to valid empty state.
+- Mark-one and mark-all failures were invisible.
+- Acceptance: concurrent independent requests, primary-list failure state,
+  non-destructive auxiliary failure, and visible mutation failures.

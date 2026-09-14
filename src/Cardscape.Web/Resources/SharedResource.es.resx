@@ -170,6 +170,9 @@
   <data name="EmailLoadFailed" xml:space="preserve"><value>No se pudieron cargar las direcciones de email entrante.</value></data>
   <data name="ScimLoadFailed" xml:space="preserve"><value>No se pudieron cargar los tokens SCIM.</value></data>
   <data name="WorkspacesLoadFailed" xml:space="preserve"><value>No se pudieron cargar los workspaces.</value></data>
+  <data name="InboxLoadFailed" xml:space="preserve"><value>No se pudieron cargar las notificaciones.</value></data>
+  <data name="InboxCountLoadFailed" xml:space="preserve"><value>No se pudo actualizar el contador de no leídas.</value></data>
+  <data name="InboxMarkReadFailed" xml:space="preserve"><value>No se pudo actualizar el estado de la notificación.</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>
   <data name="AuthSignInTitle" xml:space="preserve"><value>Iniciar sesión</value></data>
