@@ -1286,3 +1286,14 @@
   owner suggestions were removed even when assignment failed.
 - Acceptance: every outcome reaches the persistent alert, partial AI checklists are
   compensated, failed assignment preserves its suggestion, and generated titles localize.
+
+# Whole-suite test quality and coverage audit — 2026-09-14
+
+- Seven xUnit/FluentAssertions projects; 838 declared tests and 2,359 assertion
+  or verification calls. Two assertion-free heuristic candidates were valid
+  helper/mock-verification tests; no true assertion-free or skipped tests remain.
+- Coverlet executed 1,028 tests. Deduplicated maintainable-code coverage is
+  47.27% lines and 32.93% branches; 185 of 3,407 methods exceed CRAP 30.
+- The advertised .NET extension and coverage scripts are absent; documented
+  fallbacks were used. Highest risks: attachment MIME, internal broadcast,
+  SCIM group patch, Activity presentation policy.

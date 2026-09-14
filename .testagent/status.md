@@ -1288,3 +1288,13 @@
 - [x] Pseudo-mutation review: dropping a captured outcome, compensation, success
   guard or localized title fails
   `WebCardDetail_AttachmentAndAiMutationsPreserveFailuresAndAvoidPartialSuccess`.
+
+# Whole-suite test quality and coverage audit — 2026-09-14
+
+- [x] 838 tests and 2,359 assertion/verification calls inventoried.
+- [x] 0 true assertion-free, always-true, unawaited-assertion or skipped tests.
+- [x] Anti-pattern candidates calibrated; only diagnostic console output removed.
+- [x] 1,028/1,028 tests passed under Coverlet across all seven projects.
+- [x] Generated/migration artifacts excluded and duplicate coverage merged.
+- [x] Coverage/CRAP worklist documented with four prioritized critical areas.
+- [x] Region regression: 4/4 pass; solution build: 0 warnings, 0 errors.

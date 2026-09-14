@@ -116,13 +116,6 @@ public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicat
             });
         });
 
-        // DIAGNOSTIC: print the connection string the secondary host will use.
-        IConfiguration secondaryConfig = northAmericaFactory.Services
-            .GetRequiredService<IConfiguration>();
-        string? secondaryConn = secondaryConfig.GetConnectionString("Default");
-        System.Console.WriteLine($"[DIAG] Secondary host connection string: {secondaryConn}");
-        System.Console.WriteLine($"[DIAG] Parent host connection string:    {_factory.ConnectionString}");
-
         HttpClient client = northAmericaFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", auth.AccessToken);

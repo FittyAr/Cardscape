@@ -843,6 +843,14 @@ Status: complete. All five steps are implemented and validated.
 4. Preserve owner suggestions unless assignment succeeds.
 5. Add the architecture gate and run Web/architecture/catalog validation.
 
+# Whole-suite test quality and coverage audit — 2026-09-14
+
+1. Inventory tests, assertions, skips and pragmatic anti-pattern markers.
+2. Calibrate candidate findings against helper assertions and integration polling.
+3. Collect Cobertura from all seven projects and exclude generated artifacts.
+4. Calculate line/branch coverage and per-method CRAP risk.
+5. Publish a durable audit, update the modernization plan and validate cleanup.
+
 # Accessible-name localization — 2026-09-14
 
 1. Add shared English/Spanish resource keys for month navigation and search.
