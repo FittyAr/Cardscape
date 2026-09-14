@@ -516,6 +516,25 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebApiTokens_UsesLocalizedVisibleCopyAndCultureAwareDates()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string path = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "ApiTokens.razor");
+        string source = File.ReadAllText(path);
+
+        string[] forbiddenLiterals =
+        [
+            "PageHeader Title=\"API tokens\"", "Text=\"New token\"",
+            "Text=\"Token created\"", "Text=\"Revoke\"", "yyyy-MM-dd"
+        ];
+
+        forbiddenLiterals.Where(source.Contains).Should().BeEmpty(
+            "credential-management copy and dates must follow the active culture");
+        source.Should().Contain("L[\"ApiTokensCreatedAt\"");
+        source.Should().Contain("LocalDateTime.ToString(\"d\")");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

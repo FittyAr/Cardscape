@@ -8,29 +8,25 @@
 @inject ISecurityApiClient Security
 @inject IStringLocalizer<SharedResource> L
 
-<PageTitle>API tokens — Cardscape</PageTitle>
+<PageTitle>@L["NavApiTokens"] @L["PageTitleSuffix"]</PageTitle>
 
 <RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
-    <PageHeader Title="API tokens"
+    <PageHeader Title="@L["NavApiTokens"]"
                 Actions="@(NewTokenButton())" />
 
-    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
-        Long-lived bearer secrets for the MCP server and any other AI client.
-        The cleartext is shown <RadzenText Text="only once" TextStyle="TextStyle.Body1" TagName="TagName.Span" /> at creation; after that
-        only the prefix is recoverable.
-    </RadzenText>
+    <RadzenText Text="@L["ApiTokensBlurb"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 
     @if (showCreate)
     {
         <RadzenCard>
             <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateTokenAsync">
-                <LabeledField Text="Name" Component="token-name">
+                <LabeledField Text="@L["ApiTokensName"]" Component="token-name">
                     <RadzenTextBox @bind-Value="createModel.Name" Name="token-name"
-                                   Placeholder="e.g. Cursor on laptop" Style="width:100%" />
+                                   Placeholder="@L["ApiTokensNamePlaceholder"]" Style="width:100%" />
                 </LabeledField>
                 <RadzenRequiredValidator Component="token-name" Text="@L["ValidationRequired"]" />
 
-                <LabeledField Text="Scopes" Component="token-scopes">
+                <LabeledField Text="@L["ApiTokensScopes"]" Component="token-scopes">
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
                         <RadzenCheckBox @bind-Value="createModel.Read" Name="scope-read" />
                         <RadzenLabel Text="read" Component="scope-read" />
@@ -39,12 +35,12 @@
                     </RadzenStack>
                 </LabeledField>
 
-                <LabeledField Text="Rate limit per hour" Component="token-rate" Help="0 disables the limit (token is never throttled).">
+                <LabeledField Text="@L["ApiTokensRateLimit"]" Component="token-rate" Help="@L["ApiTokensRateLimitHelp"]">
                     <RadzenNumeric TValue="int" @bind-Value="createModel.RateLimitPerHour" Name="token-rate"
                                    Min="0" Max="100000" Style="width:100%" />
                 </LabeledField>
 
-                <LabeledField Text="Burst size" Component="token-burst" Help="Maximum back-to-back requests before the per-hour refill kicks in.">
+                <LabeledField Text="@L["ApiTokensBurst"]" Component="token-burst" Help="@L["ApiTokensBurstHelp"]">
                     <RadzenNumeric TValue="int" @bind-Value="createModel.BurstSize" Name="token-burst"
                                    Min="1" Max="10000" Style="width:100%" />
                 </LabeledField>
@@ -56,8 +52,8 @@
                     </RadzenAlert>
                 }
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
-                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
-                    <RadzenButton Text="Create" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                    <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
+                    <RadzenButton Text="@L["ActionCreate"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
                                   IsBusy="@busy" />
                 </RadzenStack>
             </RadzenTemplateForm>
@@ -68,11 +64,11 @@
     {
         <RadzenCard Variant="Variant.Outlined">
             <RadzenStack Gap="0.5rem">
-                <RadzenText Text="Token created" TextStyle="TextStyle.H5" TagName="TagName.H3" />
-                <RadzenText>Copy this secret now. It will not be shown again.</RadzenText>
+                <RadzenText Text="@L["ApiTokensCreated"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                <RadzenText Text="@L["ApiTokensCopyNow"]" />
                 <SecretBox Secret="@issuedSecret" />
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                    <RadzenButton Text="I've copied it" ButtonStyle="ButtonStyle.Primary"
+                    <RadzenButton Text="@L["ApiTokensCopied"]" ButtonStyle="ButtonStyle.Primary"
                                   Click="@DismissIssuedSecret" />
                 </RadzenStack>
             </RadzenStack>
@@ -89,7 +85,7 @@
     }
     else if (tokens is { Count: 0 })
     {
-        <RadzenText Text="You haven't minted any API tokens yet." />
+        <RadzenText Text="@L["ApiTokensEmpty"]" />
     }
     else if (tokens is not null)
     {
@@ -103,40 +99,39 @@
                             <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
                                 <code>@token.SecretPrefix…</code>
                                 · @string.Join(", ", token.Scopes)
-                                · created @token.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")
+                                · @L["ApiTokensCreatedAt", token.CreatedAt.LocalDateTime.ToString("d")]
                                 @if (token.LastUsedAt is not null)
                                 {
-                                    <span> · last used @token.LastUsedAt.Value.LocalDateTime.ToString("yyyy-MM-dd")</span>
+                                    <span> · @L["ApiTokensLastUsed", token.LastUsedAt.Value.LocalDateTime.ToString("d")]</span>
                                 }
                             </RadzenText>
                             <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
                                 @if (token.RateLimitPerHour == 0)
                                 {
-                                    <span>rate limit: <RadzenText Text="disabled" TextStyle="TextStyle.Body1" TagName="TagName.Span" /></span>
+                                    <span>@L["ApiTokensRateLimitDisabled"]</span>
                                 }
                                 else
                                 {
                                     <span>
-                                        rate limit: <RadzenText Text="@($"{token.RateLimitPerHour}/hr")" TextStyle="TextStyle.Body1" TagName="TagName.Span" />,
-                                        burst <RadzenText Text="@token.BurstSize.ToString()" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
+                                        @L["ApiTokensRateLimitSummary", token.RateLimitPerHour, token.BurstSize]
                                     </span>
                                 }
                                 @if (rateLimitById.TryGetValue(token.Id, out ApiTokenRateLimitStatusDto? status))
                                 {
-                                    <span> · remaining <RadzenText Text="@($"{Math.Floor(status.AvailableTokens)}/{status.BurstSize}")" TextStyle="TextStyle.Body1" TagName="TagName.Span" /></span>
+                                    <span> · @L["ApiTokensRemaining", Math.Floor(status.AvailableTokens), status.BurstSize]</span>
                                 }
                             </RadzenText>
                         </RadzenStack>
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
                             @if (token.RevokedAt is null)
                             {
-                                <RadzenBadge Text="Active" BadgeStyle="BadgeStyle.Success" />
-                                <RadzenButton Text="Revoke" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                <RadzenBadge Text="@L["WebhooksActive"]" BadgeStyle="BadgeStyle.Success" />
+                                <RadzenButton Text="@L["ScimRevoke"]" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
                                               Click="@(() => RevokeAsync(token))" />
                             }
                             else
                             {
-                                <RadzenBadge Text="Revoked" BadgeStyle="BadgeStyle.Light" />
+                                <RadzenBadge Text="@L["ScimRevoked"]" BadgeStyle="BadgeStyle.Light" />
                             }
                         </RadzenStack>
                     </RadzenStack>
@@ -159,7 +154,7 @@
 
     private RenderFragment NewTokenButton() => __builder =>
     {
-        <RadzenButton Text="New token" Icon="add" ButtonStyle="ButtonStyle.Primary"
+        <RadzenButton Text="@L["ApiTokensNew"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
                       Click="@(() => showCreate = !showCreate)" Disabled="@(issuedSecret is not null)" />
     };
 
@@ -218,7 +213,7 @@
 
             if (scopes.Count == 0)
             {
-                error = "Pick at least one scope.";
+                error = L["ApiTokensScopeRequired"];
                 return;
             }
 

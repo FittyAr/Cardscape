@@ -163,6 +163,25 @@
   <data name="NavApiTokens" xml:space="preserve"><value>Tokens de API</value></data>
   <data name="ApiTokensLoadFailed" xml:space="preserve"><value>No se pudieron cargar los tokens de API.</value></data>
   <data name="ApiTokensRevokeFailed" xml:space="preserve"><value>No se pudo revocar el token de API.</value></data>
+  <data name="ApiTokensBlurb" xml:space="preserve"><value>Secretos bearer de larga duración para MCP y otros clientes de IA. El valor completo se muestra una sola vez; después sólo queda disponible su prefijo.</value></data>
+  <data name="ApiTokensName" xml:space="preserve"><value>Nombre</value></data>
+  <data name="ApiTokensNamePlaceholder" xml:space="preserve"><value>Por ejemplo, cliente del portátil</value></data>
+  <data name="ApiTokensScopes" xml:space="preserve"><value>Scopes</value></data>
+  <data name="ApiTokensRateLimit" xml:space="preserve"><value>Límite por hora</value></data>
+  <data name="ApiTokensRateLimitHelp" xml:space="preserve"><value>Usá 0 para desactivar el límite de este token.</value></data>
+  <data name="ApiTokensBurst" xml:space="preserve"><value>Tamaño de ráfaga</value></data>
+  <data name="ApiTokensBurstHelp" xml:space="preserve"><value>Máximo de solicitudes consecutivas antes de aplicar la recarga horaria.</value></data>
+  <data name="ApiTokensCreated" xml:space="preserve"><value>Token creado</value></data>
+  <data name="ApiTokensCopyNow" xml:space="preserve"><value>Copiá este secreto ahora. No volverá a mostrarse.</value></data>
+  <data name="ApiTokensCopied" xml:space="preserve"><value>Ya lo copié</value></data>
+  <data name="ApiTokensEmpty" xml:space="preserve"><value>Todavía no emitiste tokens de API.</value></data>
+  <data name="ApiTokensCreatedAt" xml:space="preserve"><value>creado el {0}</value></data>
+  <data name="ApiTokensLastUsed" xml:space="preserve"><value>último uso el {0}</value></data>
+  <data name="ApiTokensRateLimitDisabled" xml:space="preserve"><value>límite desactivado</value></data>
+  <data name="ApiTokensRateLimitSummary" xml:space="preserve"><value>límite: {0}/hora, ráfaga {1}</value></data>
+  <data name="ApiTokensRemaining" xml:space="preserve"><value>restantes {0}/{1}</value></data>
+  <data name="ApiTokensNew" xml:space="preserve"><value>Nuevo token</value></data>
+  <data name="ApiTokensScopeRequired" xml:space="preserve"><value>Seleccioná al menos un scope.</value></data>
   <data name="AutomationLoadFailed" xml:space="preserve"><value>No se pudieron cargar las reglas de automatización.</value></data>
   <data name="AutomationTitle" xml:space="preserve"><value>Automatizaciones</value></data>
   <data name="AutomationBlurb" xml:space="preserve"><value>Las reglas se ejecutan en el servidor cuando ocurre un evento coincidente. Una regla fallida nunca bloquea la acción original.</value></data>

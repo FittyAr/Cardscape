@@ -1174,3 +1174,17 @@
 - [x] Pseudo-mutation review: restoring a literal primary action/heading or removing
   localized trigger/action resolution fails `WebAutomation_UsesLocalizedVisibleCopy`;
   removing a culture key fails `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# API token visible-copy localization — 2026-09-14
+
+- [x] Human-facing credential-management copy uses shared resources.
+- [x] Protocol scope identifiers remain exact and untranslated.
+- [x] Created/last-used dates follow the active culture.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 47/47 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion-quality review: forbidden literals and fixed date format are
+  checked independently from positive localized-metadata and culture-format evidence.
+- [x] Pseudo-mutation review: restoring a literal heading/action or fixed date fails
+  `WebApiTokens_UsesLocalizedVisibleCopyAndCultureAwareDates`; removing a localized
+  key fails `EverySupportedCulture_ReturnsCompleteCatalog`.

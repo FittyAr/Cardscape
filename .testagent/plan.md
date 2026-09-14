@@ -737,6 +737,16 @@ Status: complete. All four steps are implemented and validated.
 
 Status: complete. All five steps are implemented and validated.
 
+# API token visible-copy localization — 2026-09-14
+
+1. Localize headings, explanatory copy, fields, help, actions, states, and validation.
+2. Localize token metadata while preserving protocol scope identifiers.
+3. Replace fixed display dates with culture-aware short dates.
+4. Add `WebApiTokens_UsesLocalizedVisibleCopyAndCultureAwareDates`.
+5. Build Web and run architecture plus translation regressions.
+
+Status: complete. All five steps are implemented and validated.
+
 # Keyboard, focus and icon-button accessibility — 2026-09-14
 
 1. Inventory non-semantic click targets, focus CSS and icon-only buttons.

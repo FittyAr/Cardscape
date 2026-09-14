@@ -1218,3 +1218,11 @@
   not react to the selected culture.
 - Acceptance: every visible Automation string comes from the shared catalog and
   runtime options resolve localization on render.
+
+# API token visible-copy localization — 2026-09-14
+
+- API Tokens retained literal headings, form help, actions, status badges,
+  validation, metadata, and fixed ISO-like display dates.
+- Scope identifiers `read` and `write` are protocol values and remain untranslated.
+- Acceptance: all human-facing copy uses the shared catalog and display dates use
+  the active culture's short-date pattern.

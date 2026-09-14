@@ -163,6 +163,25 @@
   <data name="NavApiTokens" xml:space="preserve"><value>API tokens</value></data>
   <data name="ApiTokensLoadFailed" xml:space="preserve"><value>Could not load API tokens.</value></data>
   <data name="ApiTokensRevokeFailed" xml:space="preserve"><value>Could not revoke the API token.</value></data>
+  <data name="ApiTokensBlurb" xml:space="preserve"><value>Long-lived bearer secrets for MCP and other AI clients. The cleartext is shown only once; afterwards only its prefix is available.</value></data>
+  <data name="ApiTokensName" xml:space="preserve"><value>Name</value></data>
+  <data name="ApiTokensNamePlaceholder" xml:space="preserve"><value>For example, laptop client</value></data>
+  <data name="ApiTokensScopes" xml:space="preserve"><value>Scopes</value></data>
+  <data name="ApiTokensRateLimit" xml:space="preserve"><value>Rate limit per hour</value></data>
+  <data name="ApiTokensRateLimitHelp" xml:space="preserve"><value>Use 0 to disable throttling for this token.</value></data>
+  <data name="ApiTokensBurst" xml:space="preserve"><value>Burst size</value></data>
+  <data name="ApiTokensBurstHelp" xml:space="preserve"><value>Maximum consecutive requests before hourly refill applies.</value></data>
+  <data name="ApiTokensCreated" xml:space="preserve"><value>Token created</value></data>
+  <data name="ApiTokensCopyNow" xml:space="preserve"><value>Copy this secret now. It will not be shown again.</value></data>
+  <data name="ApiTokensCopied" xml:space="preserve"><value>I've copied it</value></data>
+  <data name="ApiTokensEmpty" xml:space="preserve"><value>You have not issued any API tokens yet.</value></data>
+  <data name="ApiTokensCreatedAt" xml:space="preserve"><value>created {0}</value></data>
+  <data name="ApiTokensLastUsed" xml:space="preserve"><value>last used {0}</value></data>
+  <data name="ApiTokensRateLimitDisabled" xml:space="preserve"><value>rate limit disabled</value></data>
+  <data name="ApiTokensRateLimitSummary" xml:space="preserve"><value>rate limit: {0}/hour, burst {1}</value></data>
+  <data name="ApiTokensRemaining" xml:space="preserve"><value>remaining {0}/{1}</value></data>
+  <data name="ApiTokensNew" xml:space="preserve"><value>New token</value></data>
+  <data name="ApiTokensScopeRequired" xml:space="preserve"><value>Select at least one scope.</value></data>
   <data name="AutomationLoadFailed" xml:space="preserve"><value>Could not load automation rules.</value></data>
   <data name="AutomationTitle" xml:space="preserve"><value>Automation</value></data>
   <data name="AutomationBlurb" xml:space="preserve"><value>Rules run server-side when a matching card event occurs. A failed rule never blocks the originating user action.</value></data>
