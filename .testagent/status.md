@@ -1134,3 +1134,17 @@
   or restoring failure-to-empty coercion fails
   `WebInbox_PreservesPrimaryAndAuxiliaryRequestOutcomes`; catalog drift fails
   `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Workspace members partial outcomes — 2026-09-14
+
+- [x] Three parallel results are materialized exactly once and retained independently.
+- [x] Each failed section has an attributed localized fallback.
+- [x] Command errors remain visible when the invite form is closed.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 44/44 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion-quality review: five focused assertions independently require
+  every attributed result and prohibit both failure-to-empty coercions.
+- [x] Pseudo-mutation review: dropping any section error or restoring either empty
+  fallback fails `WebWorkspaceMembers_PreservesIndependentLoadOutcomes`; catalog
+  drift fails `EverySupportedCulture_ReturnsCompleteCatalog`.

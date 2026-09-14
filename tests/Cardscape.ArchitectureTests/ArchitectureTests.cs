@@ -464,6 +464,20 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebWorkspaceMembers_PreservesIndependentLoadOutcomes()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string path = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "WorkspaceMembers.razor");
+        string source = File.ReadAllText(path);
+
+        source.Should().Contain("workspaceError = workspaceResult.IsSuccess");
+        source.Should().Contain("membersError = membersResult.IsSuccess");
+        source.Should().Contain("invitationsError = invitationsResult.IsSuccess");
+        source.Should().NotContain("membersResult.IsSuccess ? membersResult.Value : []");
+        source.Should().NotContain("invitationsResult.IsSuccess ? invitationsResult.Value : []");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

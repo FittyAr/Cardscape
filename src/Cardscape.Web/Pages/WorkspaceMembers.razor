@@ -47,12 +47,6 @@
                         </RadzenStack>
                     </RadzenCard>
                 }
-                @if (error is not null)
-                {
-                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" Class="rz-mt-2">
-                        @error
-                    </RadzenAlert>
-                }
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
                     <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelInvite" />
                     <RadzenButton Text="Send" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
@@ -62,9 +56,23 @@
         </RadzenCard>
     }
 
+    @if (error is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@error</RadzenAlert>
+    }
+
+    @if (workspaceError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@workspaceError</RadzenAlert>
+    }
+
     <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" Text="Current members" />
 
-    @if (members is null)
+    @if (membersError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@membersError</RadzenAlert>
+    }
+    else if (members is null)
     {
         <RadzenText Text="Loading…" />
     }
@@ -89,7 +97,11 @@
 
     <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" Text="Pending invitations" />
 
-    @if (invitations is null)
+    @if (invitationsError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@invitationsError</RadzenAlert>
+    }
+    else if (invitations is null)
     {
         <RadzenText Text="Loading…" />
     }
@@ -133,6 +145,9 @@
     private bool showInvite;
     private bool busy;
     private string? error;
+    private string? workspaceError;
+    private string? membersError;
+    private string? invitationsError;
     private string? issuedToken;
     private readonly InviteModel inviteModel = new();
 
@@ -162,9 +177,24 @@
 
         await Task.WhenAll(wsTask, membersTask, invitationsTask);
 
-        workspace = (await wsTask).IsSuccess ? (await wsTask).Value : null;
-        members = (await membersTask).IsSuccess ? (await membersTask).Value : [];
-        invitations = (await invitationsTask).IsSuccess ? (await invitationsTask).Value : [];
+        ApiResult<WorkspaceDto> workspaceResult = await wsTask;
+        ApiResult<IReadOnlyList<WorkspaceMemberDto>> membersResult = await membersTask;
+        ApiResult<IReadOnlyList<WorkspaceInvitationDto>> invitationsResult = await invitationsTask;
+
+        workspace = workspaceResult.IsSuccess ? workspaceResult.Value : null;
+        workspaceError = workspaceResult.IsSuccess
+            ? null
+            : workspaceResult.Error ?? L["WorkspaceMembersWorkspaceLoadFailed"];
+
+        members = membersResult.IsSuccess ? membersResult.Value : null;
+        membersError = membersResult.IsSuccess
+            ? null
+            : membersResult.Error ?? L["WorkspaceMembersLoadFailed"];
+
+        invitations = invitationsResult.IsSuccess ? invitationsResult.Value : null;
+        invitationsError = invitationsResult.IsSuccess
+            ? null
+            : invitationsResult.Error ?? L["WorkspaceInvitationsLoadFailed"];
     }
 
     private async Task SendInviteAsync()

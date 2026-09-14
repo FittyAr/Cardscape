@@ -1194,3 +1194,11 @@
 - Mark-one and mark-all failures were invisible.
 - Acceptance: concurrent independent requests, primary-list failure state,
   non-destructive auxiliary failure, and visible mutation failures.
+
+# Workspace members partial outcomes — 2026-09-14
+
+- Workspace details, members, and pending invitations already loaded concurrently,
+  but every failure became null/empty without visible attribution.
+- Command errors lived inside the optional invite form, hiding revoke failures.
+- Acceptance: independent visible outcomes for all three requests and a global
+  command-error surface that does not discard successful sections.

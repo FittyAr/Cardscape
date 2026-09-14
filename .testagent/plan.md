@@ -709,6 +709,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All five steps are implemented and validated.
 
+# Workspace members partial outcomes — 2026-09-14
+
+1. Materialize each parallel result once.
+2. Preserve independent workspace/member/invitation success and failure state.
+3. Move command errors outside the optional invite form.
+4. Add `WebWorkspaceMembers_PreservesIndependentLoadOutcomes` and validate.
+
+Status: complete. All four steps are implemented and validated.
+
 # Keyboard, focus and icon-button accessibility — 2026-09-14
 
 1. Inventory non-semantic click targets, focus CSS and icon-only buttons.

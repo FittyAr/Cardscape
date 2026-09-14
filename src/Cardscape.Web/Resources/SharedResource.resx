@@ -173,6 +173,9 @@
   <data name="InboxLoadFailed" xml:space="preserve"><value>Could not load notifications.</value></data>
   <data name="InboxCountLoadFailed" xml:space="preserve"><value>Could not refresh the unread count.</value></data>
   <data name="InboxMarkReadFailed" xml:space="preserve"><value>Could not update notification status.</value></data>
+  <data name="WorkspaceMembersWorkspaceLoadFailed" xml:space="preserve"><value>Could not load workspace details.</value></data>
+  <data name="WorkspaceMembersLoadFailed" xml:space="preserve"><value>Could not load workspace members.</value></data>
+  <data name="WorkspaceInvitationsLoadFailed" xml:space="preserve"><value>Could not load workspace invitations.</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Create account</value></data>
   <data name="AuthSignInTitle" xml:space="preserve"><value>Sign in</value></data>
