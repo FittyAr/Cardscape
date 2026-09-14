@@ -1258,3 +1258,17 @@
 - [x] Pseudo-mutation review: removing `Task.WhenAll`, an attributed error field,
   its alert, or restoring direct empty coercion fails
   `WebCardDetail_PreservesPartialLoadFailuresAndLoadsIndependentSectionsConcurrently`.
+
+# Card detail core mutation outcomes — 2026-09-14
+
+- [x] Card, comment, recurrence and checklist failures use one localized projector.
+- [x] Invalid snooze dates provide an actionable localized error.
+- [x] The Radzen error alert remains outside title/forms/optional sections.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 53/53 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion review covers alert placement, both result shapes, every handler
+  family and local-validation feedback.
+- [x] Pseudo-mutation review: removing the alert, either helper, result capture or
+  the snooze feedback fails
+  `WebCardDetail_CoreMutationsExposeFailuresOutsideConditionalForms`.

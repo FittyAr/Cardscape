@@ -1269,3 +1269,12 @@
   all secondary requests; successful independent sections must survive peer failures.
 - Acceptance: concurrent secondary loads, seven attributed localized Radzen error
   states, no failure-to-empty coercion, and an architecture regression gate.
+
+# Card detail core mutation outcomes — 2026-09-14
+
+- Card state, title/description, vote, delete, snooze, comments, recurrence and
+  checklist handlers only updated on success and silently discarded every failure.
+- A form-local error is insufficient because several commands close or live outside
+  forms; the surface must remain visible at the top of the loaded card.
+- Acceptance: every core/planning result captures a localized fallback, invalid
+  snooze is explained, and the persistent Radzen alert is architecture-gated.

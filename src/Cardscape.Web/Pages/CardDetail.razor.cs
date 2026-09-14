@@ -40,6 +40,7 @@ public partial class CardDetail
     private void GoBackToBoard() => Nav.NavigateTo(BackToBoardHref);
 
     private CardDto? _card;
+    private string? _commandError;
     private bool _notFound;
     private bool _editingTitle;
     private string _editingTitleValue = string.Empty;
@@ -205,6 +206,12 @@ public partial class CardDetail
     private string? ErrorOutcome<T>(ApiResult<T> result, string section) =>
         result.IsSuccess ? null : result.Error ?? L["CardSectionLoadFailed", section];
 
+    private void CaptureCommandOutcome(ApiResult result, string action) =>
+        _commandError = result.IsSuccess ? null : result.Error ?? L["CardActionFailed", action];
+
+    private void CaptureCommandOutcome<T>(ApiResult<T> result, string action) =>
+        _commandError = result.IsSuccess ? null : result.Error ?? L["CardActionFailed", action];
+
     private void StartEditingTitle()
     {
         if (_card is null)
@@ -250,6 +257,7 @@ public partial class CardDetail
             string value = _editingDescriptionValue ?? string.Empty;
             ApiResult<CardDto> result = await Cards.ChangeDescriptionAsync(
                 CardId, value);
+            CaptureCommandOutcome(result, L["DescriptionSave"]);
             if (result.IsSuccess && result.Value is not null)
             {
                 _card = result.Value;
@@ -290,6 +298,7 @@ public partial class CardDetail
         _titleCts?.Dispose();
         _titleCts = new CancellationTokenSource();
         ApiResult<CardDto> result = await Cards.RenameAsync(CardId, newTitle, _titleCts.Token);
+        CaptureCommandOutcome(result, L["CardEditTitle"]);
         if (result.IsSuccess && result.Value is not null)
         {
             _card = result.Value;

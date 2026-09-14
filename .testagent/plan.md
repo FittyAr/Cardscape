@@ -827,6 +827,14 @@ Status: complete. All five steps are implemented and validated.
 4. Render attributed Radzen alerts without discarding successful peer sections.
 5. Add the architecture gate and run Web/architecture/catalog validation.
 
+# Card detail core mutation outcomes — 2026-09-14
+
+1. Add one persistent command-error channel above conditional content.
+2. Centralize generic/non-generic `ApiResult` failure projection.
+3. Capture every card/comment/planning mutation outcome and local validation error.
+4. Add `WebCardDetail_CoreMutationsExposeFailuresOutsideConditionalForms`.
+5. Build Web and run architecture/catalog regressions.
+
 # Accessible-name localization — 2026-09-14
 
 1. Add shared English/Spanish resource keys for month navigation and search.

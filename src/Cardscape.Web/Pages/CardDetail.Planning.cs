@@ -21,12 +21,14 @@ public partial class CardDetail
         DateTimeOffset firstOccurrence = DateTimeOffset.UtcNow.AddDays(_recurrenceIntervalDays);
         ApiResult<CardRecurrenceDto> result = await Recurrence.SetAsync(
             CardId, _recurrenceIntervalDays, firstOccurrence);
+        CaptureCommandOutcome(result, L["CardSetRecurrence"]);
         if (result.IsSuccess) _recurrence = result.Value;
     }
 
     private async Task ClearRecurrenceAsync()
     {
         ApiResult result = await Recurrence.DeleteAsync(CardId);
+        CaptureCommandOutcome(result, L["CardRecurrenceStop"]);
         if (result.IsSuccess) _recurrence = null;
     }
 
@@ -54,6 +56,7 @@ public partial class CardDetail
     {
         if (string.IsNullOrWhiteSpace(_newChecklistTitle)) return;
         ApiResult<ChecklistDto> result = await Checklists.CreateAsync(CardId, _newChecklistTitle);
+        CaptureCommandOutcome(result, L["CardCreateChecklist"]);
         if (result.IsSuccess && _checklists is not null)
         {
             _checklists = [.. _checklists, result.Value!];
@@ -69,6 +72,7 @@ public partial class CardDetail
         // append the new item to the in-memory list so the UI
         // re-renders without a full GET.
         ApiResult<ChecklistItemDto> result = await Checklists.AddItemAsync(checklistId, _newChecklistItemText);
+        CaptureCommandOutcome(result, L["BoardAddItem"]);
         if (result.IsSuccess && result.Value is not null && _checklists is not null)
         {
             _checklists = _checklists
@@ -87,18 +91,21 @@ public partial class CardDetail
     private async Task ToggleItemAsync(Guid checklistId, Guid itemId)
     {
         ApiResult<ChecklistDto> result = await Checklists.ToggleItemAsync(checklistId, itemId);
+        CaptureCommandOutcome(result, L["CardUpdateChecklistItem"]);
         if (result.IsSuccess) await ReplaceChecklistAsync(result.Value!);
     }
 
     private async Task DeleteItemAsync(Guid checklistId, Guid itemId)
     {
         ApiResult<ChecklistDto> result = await Checklists.DeleteItemAsync(checklistId, itemId);
+        CaptureCommandOutcome(result, L["ChecklistItemDelete"]);
         if (result.IsSuccess) await ReplaceChecklistAsync(result.Value!);
     }
 
     private async Task DeleteChecklistAsync(Guid checklistId)
     {
         ApiResult result = await Checklists.DeleteAsync(checklistId);
+        CaptureCommandOutcome(result, L["ChecklistDelete"]);
         if (result.IsSuccess && _checklists is not null)
         {
             _checklists = _checklists.Where(c => c.Id != checklistId).ToList();

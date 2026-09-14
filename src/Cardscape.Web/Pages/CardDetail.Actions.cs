@@ -22,6 +22,7 @@ public partial class CardDetail
         try
         {
             ApiResult<CardVoteStateDto> result = await Votes.ToggleAsync(CardId);
+            CaptureCommandOutcome(result, L["CardVote"]);
             if (result.IsSuccess)
             {
                 _voteState = result.Value;
@@ -37,6 +38,7 @@ public partial class CardDetail
     {
         if (_card is null) return;
         ApiResult<CardDto> result = await Cards.CompleteAsync(CardId);
+        CaptureCommandOutcome(result, L["CardComplete"]);
         if (result.IsSuccess) _card = result.Value;
     }
 
@@ -44,6 +46,7 @@ public partial class CardDetail
     {
         if (_card is null) return;
         ApiResult<CardDto> result = await Cards.ReopenAsync(CardId);
+        CaptureCommandOutcome(result, L["ActivityKindReopen"]);
         if (result.IsSuccess) _card = result.Value;
     }
 
@@ -53,6 +56,7 @@ public partial class CardDetail
         ApiResult<CardDto> result = _card.IsArchived
             ? await Cards.RestoreAsync(CardId)
             : await Cards.ArchiveAsync(CardId);
+        CaptureCommandOutcome(result, _card.IsArchived ? L["ActivityKindRestore"] : L["ActivityKindArchive"]);
         if (result.IsSuccess) _card = result.Value;
     }
 
@@ -92,6 +96,7 @@ public partial class CardDetail
         }
 
         ApiResult result = await Cards.DeleteAsync(CardId);
+        CaptureCommandOutcome(result, L["ActionDelete"]);
         if (result.IsSuccess)
         {
             // Send the user back to the workspaces index; the
@@ -109,6 +114,7 @@ public partial class CardDetail
         {
             // The backend enforces this too, but failing fast
             // here keeps the user from clicking through a 400.
+            _commandError = L["CardSnoozeFuture"];
             return;
         }
 
@@ -116,6 +122,7 @@ public partial class CardDetail
         try
         {
             ApiResult<DateTimeOffset> result = await Cards.SnoozeAsync(CardId, _snoozeUntilLocal);
+            CaptureCommandOutcome(result, L["CardSnooze"]);
             if (result.IsSuccess)
             {
                 // Refresh the card so the badge in the header
@@ -136,6 +143,7 @@ public partial class CardDetail
         try
         {
             ApiResult result = await Cards.UnsnoozeAsync(CardId);
+            CaptureCommandOutcome(result, L["CardUnsnooze"]);
             if (result.IsSuccess)
             {
                 await ReloadCardAsync();
@@ -153,6 +161,7 @@ public partial class CardDetail
     private async Task ReloadCardAsync()
     {
         ApiResult<CardDto> refreshed = await Cards.GetAsync(CardId);
+        CaptureCommandOutcome(refreshed, L["CardRefresh"]);
         if (refreshed.IsSuccess && refreshed.Value is not null)
         {
             _card = refreshed.Value;
@@ -166,6 +175,7 @@ public partial class CardDetail
         try
         {
             ApiResult<CommentDto> result = await Comments.AddAsync(CardId, _addCommentModel.Body);
+            CaptureCommandOutcome(result, L["ActivityKindComment"]);
             if (result.IsSuccess)
             {
                 _comments = [.. (_comments ?? Array.Empty<CommentDto>()), result.Value!];

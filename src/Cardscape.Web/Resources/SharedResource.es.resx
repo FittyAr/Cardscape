@@ -675,4 +675,8 @@
   <data name="CardActivityAttachmentRemoved" xml:space="preserve"><value>Adjunto eliminado</value></data>
   <data name="CardVotesLabel" xml:space="preserve"><value>Votos</value></data>
   <data name="CardSectionLoadFailed" xml:space="preserve"><value>No se pudo cargar {0}.</value></data>
+  <data name="CardActionFailed" xml:space="preserve"><value>No se pudo completar la acción: {0}.</value></data>
+  <data name="CardSnoozeFuture" xml:space="preserve"><value>Elegí una fecha y hora futuras.</value></data>
+  <data name="CardRefresh" xml:space="preserve"><value>Actualizar tarjeta</value></data>
+  <data name="CardUpdateChecklistItem" xml:space="preserve"><value>Actualizar elemento de la lista</value></data>
 </root>

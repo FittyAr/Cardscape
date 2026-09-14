@@ -621,6 +621,24 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebCardDetail_CoreMutationsExposeFailuresOutsideConditionalForms()
+    {
+        string pages = Path.Combine(FindRepositoryRoot().FullName, "src", "Cardscape.Web", "Pages");
+        string page = File.ReadAllText(Path.Combine(pages, "CardDetail.razor"));
+        string actions = File.ReadAllText(Path.Combine(pages, "CardDetail.Actions.cs"));
+        string planning = File.ReadAllText(Path.Combine(pages, "CardDetail.Planning.cs"));
+        string state = File.ReadAllText(Path.Combine(pages, "CardDetail.razor.cs"));
+
+        page.Should().Contain("@if (_commandError is not null)");
+        page.IndexOf("@if (_commandError is not null)", StringComparison.Ordinal)
+            .Should().BeLessThan(page.IndexOf("@if (_editingTitle)", StringComparison.Ordinal));
+        state.Should().Contain("CaptureCommandOutcome<T>");
+        actions.Split("CaptureCommandOutcome(", StringSplitOptions.None).Length.Should().BeGreaterThanOrEqualTo(10);
+        planning.Split("CaptureCommandOutcome(", StringSplitOptions.None).Length.Should().BeGreaterThanOrEqualTo(8);
+        actions.Should().Contain("_commandError = L[\"CardSnoozeFuture\"]");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

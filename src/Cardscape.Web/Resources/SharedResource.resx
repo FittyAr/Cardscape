@@ -676,4 +676,8 @@
   <data name="CardActivityAttachmentRemoved" xml:space="preserve"><value>Attachment removed</value></data>
   <data name="CardVotesLabel" xml:space="preserve"><value>Votes</value></data>
   <data name="CardSectionLoadFailed" xml:space="preserve"><value>Could not load {0}.</value></data>
+  <data name="CardActionFailed" xml:space="preserve"><value>Could not complete the action: {0}.</value></data>
+  <data name="CardSnoozeFuture" xml:space="preserve"><value>Choose a future date and time.</value></data>
+  <data name="CardRefresh" xml:space="preserve"><value>Refresh card</value></data>
+  <data name="CardUpdateChecklistItem" xml:space="preserve"><value>Update checklist item</value></data>
 </root>

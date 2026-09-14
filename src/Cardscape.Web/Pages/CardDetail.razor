@@ -46,6 +46,10 @@ else
 {
     <RadzenCard>
         <RadzenStack Gap="1rem">
+            @if (_commandError is not null)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_commandError</RadzenAlert>
+            }
             <RadzenStack Gap="0.5rem">
                 @if (_editingTitle)
                 {
