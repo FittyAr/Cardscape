@@ -1136,3 +1136,11 @@
   create flow bypassed `RadzenTemplateForm` through a Click handler.
 - Acceptance: localized Radzen form, named required inputs/validators, typed
   localized kind options, localized confirmation, and a route-wide i18n gate.
+
+# Keyboard, focus and icon-button accessibility — 2026-09-14
+
+- Radzen/native links already provide keyboard semantics and global CSS exposes
+  a tokenized `focus-visible` ring plus reduced-motion handling.
+- Four icon-only buttons lacked accessible names: title edit, checklist delete,
+  checklist-item delete and notification bell.
+- Acceptance: localized names on every icon-only button and a repository gate.

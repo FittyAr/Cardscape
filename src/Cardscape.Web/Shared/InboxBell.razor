@@ -1,14 +1,18 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject INotificationsApiClient Notifications
 @inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthState
 @inject Microsoft.AspNetCore.Components.NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 @implements IAsyncDisposable
 
 <RadzenButton Variant="Variant.Text"
               ButtonStyle="ButtonStyle.Light"
               Click="@(() => Nav.NavigateTo("inbox"))"
-              title="@(count > 0 ? $"{count} unread" : "Inbox")"
+              title="@InboxAccessibleName"
+              aria-label="@InboxAccessibleName"
               class="rz-border-radius-50">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
         <RadzenIcon Icon="notifications" />
@@ -23,6 +27,7 @@
     private int count;
     private readonly CancellationTokenSource refreshCts = new();
     private Task? refreshTask;
+    private string InboxAccessibleName => count > 0 ? L["InboxUnreadCount", count] : L["InboxTitle"];
     private Microsoft.AspNetCore.Components.Authorization.AuthenticationState? authState;
 
     protected override async Task OnInitializedAsync()

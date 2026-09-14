@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Keyboard, focus and icon-button accessibility — 2026-09-14
+
+1. Inventory non-semantic click targets, focus CSS and icon-only buttons.
+2. Add localized accessible names to every icon-only Radzen button.
+3. Add `WebIconOnlyRadzenButtons_HaveAccessibleNames` across Web Razor.
+4. Run architecture and translation suites; close the UI accessibility item.
+
+Status: complete. All four steps are implemented and validated.
+
 # Custom-fields form and localization — 2026-09-14
 
 1. Convert create to `RadzenTemplateForm` with required validators.

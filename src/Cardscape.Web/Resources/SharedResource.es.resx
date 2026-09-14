@@ -153,6 +153,9 @@
   <data name="CustomFieldDropdown" xml:space="preserve"><value>Lista</value></data>
   <data name="CustomFieldCheckbox" xml:space="preserve"><value>Casilla</value></data>
   <data name="CustomFieldUnknown" xml:space="preserve"><value>Tipo {0}</value></data>
+  <data name="InboxUnreadCount" xml:space="preserve"><value>{0} notificaciones sin leer</value></data>
+  <data name="ChecklistDelete" xml:space="preserve"><value>Eliminar checklist</value></data>
+  <data name="ChecklistItemDelete" xml:space="preserve"><value>Eliminar elemento del checklist</value></data>
   <data name="NavApiTokens" xml:space="preserve"><value>Tokens de API</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>

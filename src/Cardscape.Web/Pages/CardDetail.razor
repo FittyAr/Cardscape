@@ -60,7 +60,8 @@ else
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                         <RadzenText Text="@_card.Title" TextStyle="TextStyle.H5" TagName="TagName.H1" />
                         <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
-                                      Click="@StartEditingTitle" title="@L["CardEditTitle"]" />
+                                      Click="@StartEditingTitle" title="@L["CardEditTitle"]"
+                                      aria-label="@L["CardEditTitle"]" />
                     </RadzenStack>
                 }
                 @* P3.2 / G6b ” "Snoozed" badge. Rendered below the
@@ -387,7 +388,8 @@ else
                                     <RadzenText Text="@($"{cl.CompletedCount} / {cl.TotalCount}")"
                                                 TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
                                     <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
-                                                  Click="@(() => DeleteChecklistAsync(cl.Id))" />
+                                                  Click="@(() => DeleteChecklistAsync(cl.Id))"
+                                                  aria-label="@L["ChecklistDelete"]" />
                                 </RadzenStack>
                                 @foreach (ChecklistItemDto item in cl.Items)
                                 {
@@ -399,7 +401,8 @@ else
                                                     Class="@(item.IsCompleted ? "rz-color-text-disabled" : null)"
                                                     Style="@(item.IsCompleted ? "text-decoration: line-through;" : null)" />
                                         <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
-                                                      Click="@(() => DeleteItemAsync(cl.Id, item.Id))" />
+                                                      Click="@(() => DeleteItemAsync(cl.Id, item.Id))"
+                                                      aria-label="@L["ChecklistItemDelete"]" />
                                     </RadzenStack>
                                 }
                                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"

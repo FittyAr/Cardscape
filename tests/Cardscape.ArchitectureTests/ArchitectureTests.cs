@@ -319,6 +319,29 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebIconOnlyRadzenButtons_HaveAccessibleNames()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string webRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web");
+        Regex button = new(
+            "<RadzenButton\\b(?<attributes>(?:\"[^\"]*\"|[^>])*)>",
+            RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1));
+
+        string[] violations = Directory.GetFiles(webRoot, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(file => button.Matches(File.ReadAllText(file))
+                .Where(match => !match.Groups["attributes"].Value.Contains("Text=", StringComparison.Ordinal)
+                    && !match.Groups["attributes"].Value.Contains("aria-label=", StringComparison.Ordinal))
+                .Select(_ => Path.GetRelativePath(repositoryRoot.FullName, file)))
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "every Radzen button without visible text must expose a localized accessible name");
+    }
+
+    [Fact]
     public void WebRoutablePages_UseSharedLocalization()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

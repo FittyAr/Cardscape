@@ -1037,3 +1037,15 @@
   `WebRadzenForms_ValidateRequiredInputs`; removing a localizer fails
   `WebRoutablePages_UseSharedLocalization`; catalog drift fails
   `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Keyboard, focus and icon-button accessibility — 2026-09-14
+
+- [x] No non-semantic click targets found; focus/reduced-motion rules retained.
+- [x] All icon-only Radzen buttons expose localized accessible names.
+- [x] ArchitectureTests pass 37/37 and TranslationEndpointTests pass 5/5,
+  with 0 failed and 0 skipped.
+- [x] Assertion review: the gate parses complete multiline Radzen tags across
+  every Razor file and requires either visible Text or `aria-label`.
+- [x] Pseudo-mutation review: removing any icon-button label fails
+  `WebIconOnlyRadzenButtons_HaveAccessibleNames`; resource drift fails
+  `EverySupportedCulture_ReturnsCompleteCatalog`.
