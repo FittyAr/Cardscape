@@ -84,6 +84,7 @@
   -->
   <ItemGroup>
     <InternalsVisibleTo Include="Cardscape.UnitTests" />
+    <InternalsVisibleTo Include="Cardscape.IntegrationTests" />
   </ItemGroup>
 
 </Project>

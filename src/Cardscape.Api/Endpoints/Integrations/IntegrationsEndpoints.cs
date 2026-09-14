@@ -1,3 +1,5 @@
+using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Integrations.GitHub.Commands;
 using Cardscape.Application.Integrations.GitHub.DTOs;
 using Cardscape.Application.Integrations.InboundEmail.Commands;
@@ -161,6 +163,8 @@ public static class IntegrationsEndpoints
         group.MapPost("/inbound", async (
             HttpContext http,
             IConfiguration config,
+            IExternalMessageInbox inbox,
+            IClock clock,
             IMessageBus bus,
             CancellationToken ct) =>
         {
@@ -251,12 +255,48 @@ public static class IntegrationsEndpoints
                 ?? headers.GetValueOrDefault("X-Inbound-Provider", string.Empty)
                 ?? "sendgrid").ToLowerInvariant();
 
-            var result = await bus.InvokeAsync<Result<Guid>>(
-                new HandleInboundEmailCommand(provider, body, headers), ct);
-            return result.IsSuccess
-                ? Results.Ok(new InboundEmailResult(result.Value))
-                : DomainErrorResults.ToProblem(result.Error);
-        }).Produces<InboundEmailResult>(StatusCodes.Status200OK);
+            string messageHash = Convert.ToHexString(
+                System.Security.Cryptography.SHA256.HashData(
+                    System.Text.Encoding.UTF8.GetBytes($"{provider}\n{expectedHex}")))
+                .ToLowerInvariant();
+            ExternalMessageReservation reservation = await inbox.BeginAsync(
+                $"inbound-email:{provider}", messageHash, clock.UtcNow, ct);
+            if (reservation.State == ExternalMessageReservationState.Completed)
+            {
+                return Results.Ok(new InboundEmailResult(reservation.ResourceId!.Value));
+            }
+            if (reservation.State == ExternalMessageReservationState.InProgress)
+            {
+                return Results.Accepted(value: new InboundEmailPendingResult("processing"));
+            }
+
+            try
+            {
+                var result = await bus.InvokeAsync<Result<Guid>>(
+                    new HandleInboundEmailCommand(provider, body, headers), ct);
+                if (result.IsFailure)
+                {
+                    await inbox.ReleaseAsync(reservation.ReceiptId, CancellationToken.None);
+                    return DomainErrorResults.ToProblem(result.Error);
+                }
+
+                bool completed = await inbox.CompleteAsync(
+                    reservation.ReceiptId, result.Value, clock.UtcNow, CancellationToken.None);
+                if (!completed)
+                {
+                    throw new InvalidOperationException(
+                        "The inbound-email reservation was lost before its result could be persisted.");
+                }
+                return Results.Ok(new InboundEmailResult(result.Value));
+            }
+            catch
+            {
+                await inbox.ReleaseAsync(reservation.ReceiptId, CancellationToken.None);
+                throw;
+            }
+        })
+            .Produces<InboundEmailResult>(StatusCodes.Status200OK)
+            .Produces<InboundEmailPendingResult>(StatusCodes.Status202Accepted);
 
         return app;
     }
@@ -270,5 +310,6 @@ public static class IntegrationsEndpoints
     public sealed record RegisterInboundEmailAddressRequest(
         Guid WorkspaceId, string EmailAddress, Guid TargetListId, string Label);
     public sealed record InboundEmailResult(Guid CardId);
+    public sealed record InboundEmailPendingResult(string Status);
 
 }

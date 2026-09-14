@@ -2495,6 +2495,44 @@ namespace Cardscape.Migrations.MySql.Migrations
                     b.ToTable("workspace_invitations", (string)null);
                 });
 
+            modelBuilder.Entity("Cardscape.Infrastructure.Persistence.Inbox.ExternalMessageReceipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<long>("LeaseExpiresAtUtcTicks")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("MessageHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<Guid?>("ResourceId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeaseExpiresAtUtcTicks");
+
+                    b.HasIndex("Source", "MessageHash")
+                        .IsUnique();
+
+                    b.ToTable("external_message_inbox", (string)null);
+                });
+
             modelBuilder.Entity("Cardscape.Infrastructure.Persistence.Outbox.DomainEventOutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")

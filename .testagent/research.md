@@ -1045,3 +1045,14 @@
   and deserialized responses without a size cap.
 - GitHub/Slack transport and JSON exception messages were reflected into domain
   errors; GitHub issue creation did not reject non-success status before parsing.
+
+# Durable external-message inbox — 2026-09-13
+
+- The unauthenticated inbound-email transport verified authenticity but had no
+  durable replay protection, so provider retries could create the same card more
+  than once.
+- The existing idempotency reservation establishes the project pattern: let a
+  provider-neutral EF Core unique constraint arbitrate competing requests and
+  keep a bounded lease so interrupted work can be retried.
+- This internal persistence concern requires native migrations in all three
+  supported provider histories; it does not belong in the domain model.

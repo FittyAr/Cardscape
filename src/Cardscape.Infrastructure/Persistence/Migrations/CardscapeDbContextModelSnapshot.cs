@@ -2493,6 +2493,44 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.ToTable("workspace_invitations", (string)null);
                 });
 
+            modelBuilder.Entity("Cardscape.Infrastructure.Persistence.Inbox.ExternalMessageReceipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("LeaseExpiresAtUtcTicks")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MessageHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ResourceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeaseExpiresAtUtcTicks");
+
+                    b.HasIndex("Source", "MessageHash")
+                        .IsUnique();
+
+                    b.ToTable("external_message_inbox", (string)null);
+                });
+
             modelBuilder.Entity("Cardscape.Infrastructure.Persistence.Outbox.DomainEventOutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")

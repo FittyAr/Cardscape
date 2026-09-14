@@ -915,3 +915,16 @@
   existing tests cover signatures, SSRF, import fidelity and workspace ownership.
 - [x] Pseudo-mutation review: removing either buffer cap makes the new oversized
   test reach JSON parsing and return the wrong stable error code.
+
+# Durable external-message inbox — 2026-09-13
+
+- [x] EF Core receipt, unique source/hash boundary and bounded lease implemented.
+- [x] Inbound email reserves before Wolverine dispatch and replays completed cards.
+- [x] Focused SQLite behavior tests pass: 4/4, 0 failed, 0 skipped.
+- [x] SQLite, PostgreSQL and MySQL migrations are generated; all three
+  pending-model gates pass.
+- [x] Assertion review: tests assert exact reservation state, stable receipt and
+  replayed resource identity, not implementation call counts.
+- [x] Pseudo-mutation review: removing the unique lookup, active lease branch,
+  completed replay, expiry delete or failure release breaks a named scenario;
+  removing handler cancellation breaks the architecture gate.

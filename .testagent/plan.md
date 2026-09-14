@@ -643,6 +643,18 @@
 
 Status: complete. All five steps are implemented and validated.
 
+# Durable external-message inbox — 2026-09-13
+
+1. Add a provider-neutral application port and EF Core receipt implementation.
+2. Reserve the authenticated provider payload before dispatching its command,
+   replay completed results and release failed attempts.
+3. Cover active leases, completed replay, expired recovery and failure release
+   against a real SQLite relational database.
+4. Generate and validate SQLite, PostgreSQL and MySQL migration histories.
+5. Update the modernization plan only after the focused and architecture gates pass.
+
+Status: complete. All five steps are implemented and validated.
+
 # Supporting workflow OpenAPI metadata — 2026-09-13
 
 1. Declare concrete success DTOs and status codes on all 13 operations.

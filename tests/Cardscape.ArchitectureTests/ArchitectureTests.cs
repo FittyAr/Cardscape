@@ -233,6 +233,31 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void AsyncApplicationHandlers_AcceptCancellationToken()
+    {
+        string[] violations = typeof(Cardscape.Application.Cards.CardscapeExtensions).Assembly
+            .GetTypes()
+            .Where(type => type.Name.EndsWith("Handler", StringComparison.Ordinal))
+            .SelectMany(type => type.GetMethods(
+                System.Reflection.BindingFlags.Public |
+                System.Reflection.BindingFlags.Static |
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.DeclaredOnly))
+            .Where(method => typeof(Task).IsAssignableFrom(method.ReturnType)
+                || method.ReturnType == typeof(ValueTask)
+                || method.ReturnType.IsGenericType
+                    && method.ReturnType.GetGenericTypeDefinition() == typeof(ValueTask<>))
+            .Where(method => !method.GetParameters()
+                .Any(parameter => parameter.ParameterType == typeof(CancellationToken)))
+            .Select(method => $"{method.DeclaringType!.FullName}.{method.Name}")
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "every asynchronous application handler must propagate Wolverine/request cancellation explicitly");
+    }
+
+    [Fact]
     public void ApiEndpoints_DoNotConstructProblemDetailsDirectly()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

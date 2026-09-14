@@ -39,6 +39,7 @@ using Cardscape.Infrastructure.Export;
 using Cardscape.Infrastructure.Import;
 using Cardscape.Infrastructure.Integrations;
 using Cardscape.Infrastructure.Persistence;
+using Cardscape.Infrastructure.Persistence.Inbox;
 using Cardscape.Infrastructure.Persistence.Interceptors;
 using Cardscape.Infrastructure.Persistence.Outbox;
 using Cardscape.Infrastructure.Repositories;
@@ -111,6 +112,7 @@ public static partial class InfrastructureServiceCollectionExtensions
         services.AddScoped<DomainEventsInterceptor>();
         services.AddSingleton<DomainEventOutboxProcessor>();
         services.AddHostedService<DomainEventOutboxDispatcherService>();
+        services.AddScoped<IExternalMessageInbox, ExternalMessageInbox>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Domain-event fan-out. Three broadcasters run
