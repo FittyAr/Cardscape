@@ -299,6 +299,28 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string webRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web");
+        Regex unobservableAsync = new(
+            @"\basync\s+void\b|\.Elapsed\s*\+=\s*async\b|\.ContinueWith\s*\(",
+            RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1));
+
+        string[] violations = Directory.GetFiles(webRoot, "*.*", SearchOption.AllDirectories)
+            .Where(file => file.EndsWith(".razor", StringComparison.OrdinalIgnoreCase)
+                || file.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+            .Where(file => unobservableAsync.IsMatch(File.ReadAllText(file)))
+            .Select(file => Path.GetRelativePath(repositoryRoot.FullName, file))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "component callbacks must return observable Tasks and propagate disposal cancellation");
+    }
+
+    [Fact]
     public void ApiEndpoints_DoNotConstructProblemDetailsDirectly()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

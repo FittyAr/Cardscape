@@ -1,10 +1,9 @@
-@using System.Timers
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @inject INotificationsApiClient Notifications
 @inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthState
 @inject Microsoft.AspNetCore.Components.NavigationManager Nav
-@implements IDisposable
+@implements IAsyncDisposable
 
 <RadzenButton Variant="Variant.Text"
               ButtonStyle="ButtonStyle.Light"
@@ -22,7 +21,8 @@
 
 @code {
     private int count;
-    private Timer? refreshTimer;
+    private readonly CancellationTokenSource refreshCts = new();
+    private Task? refreshTask;
     private Microsoft.AspNetCore.Components.Authorization.AuthenticationState? authState;
 
     protected override async Task OnInitializedAsync()
@@ -30,16 +30,28 @@
         authState = await AuthState.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated == true)
         {
-            await RefreshCountAsync();
-            // Refresh every 60 s while the user is on a page.
-            refreshTimer = new Timer(60_000);
-            refreshTimer.Elapsed += async (_, _) => await InvokeAsync(RefreshCountAsync);
-            refreshTimer.AutoReset = true;
-            refreshTimer.Start();
+            await RefreshCountAsync(refreshCts.Token);
+            refreshTask = RefreshLoopAsync(refreshCts.Token);
         }
     }
 
-    private async Task RefreshCountAsync()
+    private async Task RefreshLoopAsync(CancellationToken ct)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(ct))
+            {
+                await InvokeAsync(() => RefreshCountAsync(ct));
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // Component disposal owns cancellation of the observed loop.
+        }
+    }
+
+    private async Task RefreshCountAsync(CancellationToken ct)
     {
         if (authState?.User.Identity?.IsAuthenticated != true)
         {
@@ -48,7 +60,7 @@
 
         try
         {
-            ApiResult<UnreadCountResponse> result = await Notifications.GetUnreadCountAsync();
+            ApiResult<UnreadCountResponse> result = await Notifications.GetUnreadCountAsync(ct);
             if (result.IsSuccess && result.Value is not null)
             {
                 count = result.Value.Count;
@@ -61,9 +73,14 @@
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        refreshTimer?.Dispose();
+        await refreshCts.CancelAsync();
+        if (refreshTask is not null)
+        {
+            await refreshTask;
+        }
+        refreshCts.Dispose();
     }
 
     private static string Display(int n) => n > 99 ? "99+" : n.ToString();

@@ -643,6 +643,16 @@
 
 Status: complete. All five steps are implemented and validated.
 
+# Blazor render-loop safety — 2026-09-14
+
+1. Audit event/timer callbacks that evade normal C# async-method scans.
+2. Replace the notification timer event with a serial `PeriodicTimer` loop.
+3. Propagate component disposal through delay, HTTP request and render dispatch.
+4. Add a source gate against async timer-event subscriptions.
+5. Compile Web and run architecture regressions before updating the plan.
+
+Status: complete. All five steps are implemented and validated.
+
 # Durable external-message inbox — 2026-09-13
 
 1. Add a provider-neutral application port and EF Core receipt implementation.

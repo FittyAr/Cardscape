@@ -955,3 +955,13 @@
 - [x] Pseudo-mutation review: reintroducing a native interactive tag or literal
   Razor color fails a repository-wide diagnostic; removing theme tokens breaks
   the scoped styles and visual contract represented by the source gate.
+
+# Blazor render-loop safety — 2026-09-14
+
+- [x] Hidden async timer-event subscription identified.
+- [x] Notification refresh is serialized, observed and component-cancelable.
+- [x] Web compiles with 0 warnings/errors and the focused architecture gate passes 1/1.
+- [x] Assertion review: the gate scans every Razor/C# component source for all
+  three unobservable callback patterns rather than naming `InboxBell`.
+- [x] Pseudo-mutation review: restoring `async void`, `Elapsed += async` or
+  `ContinueWith` anywhere under Web fails the source gate.

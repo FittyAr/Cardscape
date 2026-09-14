@@ -1078,3 +1078,11 @@
 - The custom `HorizontalRule` existed only because Radzen has no divider in the
   installed version, but the same result is expressible by composing a Radzen
   stack with its border utility, so the bespoke component is unnecessary.
+
+# Blazor render-loop safety — 2026-09-14
+
+- `InboxBell` subscribed an async lambda to `System.Timers.Timer.Elapsed`; the
+  event contract converts it to unobservable `async void`, permits overlapping
+  refreshes and cannot propagate component disposal to the HTTP request.
+- `PeriodicTimer` provides one observed loop, naturally serializes refreshes and
+  accepts the component-owned cancellation token for both waiting and I/O.
