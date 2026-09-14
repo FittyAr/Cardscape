@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Calendar/Planner state integrity — 2026-09-14
+
+1. Add explicit loading and error state to Calendar and Planner.
+2. Disable month navigation during requests and retain valid empty semantics.
+3. Add `WebCalendarViews_DistinguishLoadingErrorAndEmptyStates`.
+4. Build Web and run architecture regressions.
+
+Status: complete. All four steps are implemented and validated.
+
 # Keyboard, focus and icon-button accessibility — 2026-09-14
 
 1. Inventory non-semantic click targets, focus CSS and icon-only buttons.

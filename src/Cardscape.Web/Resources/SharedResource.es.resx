@@ -69,6 +69,10 @@
   <data name="CalendarPreviousMonth" xml:space="preserve"><value>Mes anterior ({0})</value></data>
   <data name="CalendarCurrentMonth" xml:space="preserve"><value>Ir al mes actual</value></data>
   <data name="CalendarNextMonth" xml:space="preserve"><value>Mes siguiente ({0})</value></data>
+  <data name="CalendarSubtitle" xml:space="preserve"><value>Tarjetas con vencimiento en {0}. Seleccioná una tarjeta para abrirla.</value></data>
+  <data name="PlannerSubtitle" xml:space="preserve"><value>Tarjetas con vencimiento en {0}, agrupadas por lista.</value></data>
+  <data name="PlannerEmpty" xml:space="preserve"><value>No hay vencimientos en este período.</value></data>
+  <data name="CalendarLoadFailed" xml:space="preserve"><value>No se pudieron cargar los vencimientos.</value></data>
   <data name="SearchAriaLabel" xml:space="preserve"><value>Buscar</value></data>
   <data name="InvitationsTitle" xml:space="preserve"><value>Invitaciones</value></data>
   <data name="InvitationsSubtitle" xml:space="preserve"><value>Invitaciones pendientes para tu email</value></data>

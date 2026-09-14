@@ -9,20 +9,29 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Calendar — Cardscape</PageTitle>
+<PageTitle>@L["NavCalendar"] @L["PageTitleSuffix"]</PageTitle>
 
-<PageHeader Title="@monthLabel"
-            Subtitle="@($"Cards with a due date in {monthLabel}. Click a card to open it; click an empty day to add a new card (coming soon).")">
+<PageHeader Title="@monthLabel" Subtitle="@L["CalendarSubtitle", monthLabel]">
     <Actions>
-        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonthAsync"
+        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonthAsync" Disabled="@loading"
                       aria-label="@L["CalendarPreviousMonth", firstOfMonth.AddMonths(-1).ToString("Y")]" />
-        <RadzenButton Text="Today" ButtonStyle="ButtonStyle.Light" Click="@GoToCurrentMonthAsync"
+        <RadzenButton Text="Today" ButtonStyle="ButtonStyle.Light" Click="@GoToCurrentMonthAsync" Disabled="@loading"
                       aria-label="@L["CalendarCurrentMonth"]" />
-        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonthAsync"
+        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonthAsync" Disabled="@loading"
                       aria-label="@L["CalendarNextMonth", firstOfMonth.AddMonths(1).ToString("Y")]" />
     </Actions>
 </PageHeader>
 
+@if (loading)
+{
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else if (error is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@error</RadzenAlert>
+}
+else
+{
 <RadzenScheduler @key="@schedulerKey"
                  TItem="CalendarSchedulerItem"
                  Data="@SchedulerItems"
@@ -34,6 +43,7 @@
                  Style="height: 700px">
     <RadzenMonthView />
 </RadzenScheduler>
+}
 
 @code {
     // BUG-A6-002 — see test-results/beta/reports/A6-views.md. The
@@ -49,6 +59,8 @@
     private DateTimeOffset firstOfMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
     private IReadOnlyList<CalendarEntryDto> entries = [];
     private string monthLabel = string.Empty;
+    private bool loading;
+    private string? error;
 
     // The RadzenScheduler takes a plain DateTime (not DateTimeOffset)
     // for Date; we project at the boundary so the scheduler
@@ -66,6 +78,8 @@
 
     private async Task ReloadAsync()
     {
+        loading = true;
+        error = null;
         // BUG-A6-002 — set the label and scheduler key BEFORE the
         // await so the page header updates in lock-step with the
         // scheduler grid. Without this, the scheduler re-mounts
@@ -80,10 +94,23 @@
         DateTimeOffset from = firstOfMonth;
         DateTimeOffset to = firstOfMonth.AddMonths(1);
 
-        ApiResult<IReadOnlyList<CalendarEntryDto>> result = await Cards.CalendarAsync(from, to, boardId: null);
-        entries = result.IsSuccess && result.Value is not null
-            ? result.Value
-            : (IReadOnlyList<CalendarEntryDto>)Array.Empty<CalendarEntryDto>();
+        try
+        {
+            ApiResult<IReadOnlyList<CalendarEntryDto>> result = await Cards.CalendarAsync(from, to, boardId: null);
+            if (result.IsSuccess && result.Value is not null)
+            {
+                entries = result.Value;
+            }
+            else
+            {
+                entries = [];
+                error = result.Error ?? L["CalendarLoadFailed"];
+            }
+        }
+        finally
+        {
+            loading = false;
+        }
     }
 
     private async Task PrevMonthAsync()

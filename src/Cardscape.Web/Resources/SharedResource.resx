@@ -69,6 +69,10 @@
   <data name="CalendarPreviousMonth" xml:space="preserve"><value>Previous month ({0})</value></data>
   <data name="CalendarCurrentMonth" xml:space="preserve"><value>Jump to current month</value></data>
   <data name="CalendarNextMonth" xml:space="preserve"><value>Next month ({0})</value></data>
+  <data name="CalendarSubtitle" xml:space="preserve"><value>Cards due in {0}. Select a card to open it.</value></data>
+  <data name="PlannerSubtitle" xml:space="preserve"><value>Cards due in {0}, grouped by list.</value></data>
+  <data name="PlannerEmpty" xml:space="preserve"><value>No due dates in this range.</value></data>
+  <data name="CalendarLoadFailed" xml:space="preserve"><value>Could not load due dates.</value></data>
   <data name="SearchAriaLabel" xml:space="preserve"><value>Search</value></data>
   <data name="InvitationsTitle" xml:space="preserve"><value>Invitations</value></data>
   <data name="InvitationsSubtitle" xml:space="preserve"><value>Pending invites to your email address</value></data>

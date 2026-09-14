@@ -361,6 +361,28 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebCalendarViews_DistinguishLoadingErrorAndEmptyStates()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string pagesRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages");
+        string[] pages = ["Calendar.razor", "Planner.razor"];
+
+        string[] violations = pages
+            .Where(page =>
+            {
+                string source = File.ReadAllText(Path.Combine(pagesRoot, page));
+                return !source.Contains("@if (loading)", StringComparison.Ordinal)
+                    || !source.Contains("else if (error is not null)", StringComparison.Ordinal)
+                    || !source.Contains("result.Error", StringComparison.Ordinal);
+            })
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "calendar experiences must not misrepresent transport failures as valid empty schedules");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

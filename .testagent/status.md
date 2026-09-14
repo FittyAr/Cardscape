@@ -1049,3 +1049,17 @@
 - [x] Pseudo-mutation review: removing any icon-button label fails
   `WebIconOnlyRadzenButtons_HaveAccessibleNames`; resource drift fails
   `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Calendar/Planner state integrity — 2026-09-14
+
+- [x] Failed API responses no longer render as valid empty schedules.
+- [x] Loading disables navigation and uses Radzen progress feedback.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors.
+- [x] Architecture suite: 38/38 pass; translation catalog: 5/5 pass.
+- [x] Assertion-quality review: the repository-level assertion reports the exact
+  violating page names instead of merely asserting a boolean condition.
+- [x] Pseudo-mutation review: removing loading state, error state, or propagation
+  of the API error from either page fails
+  `WebCalendarViews_DistinguishLoadingErrorAndEmptyStates`; removing a localized
+  key from either culture fails `EverySupportedCulture_ReturnsCompleteCatalog`.

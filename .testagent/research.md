@@ -1144,3 +1144,10 @@
 - Four icon-only buttons lacked accessible names: title edit, checklist delete,
   checklist-item delete and notification bell.
 - Acceptance: localized names on every icon-only button and a repository gate.
+
+# Calendar/Planner state integrity — 2026-09-14
+
+- Both pages converted every failed Calendar API response into an empty list,
+  visually conflating transport failure with a valid empty schedule.
+- Neither exposed loading state or disabled month navigation during requests.
+- Acceptance: distinct Radzen loading/error/content states and a regression gate.
