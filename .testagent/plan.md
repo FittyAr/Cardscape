@@ -679,6 +679,16 @@ Status: complete. All four steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Collection-page load-state integrity — 2026-09-14
+
+1. Separate load errors from command errors in Automation and BoardDashboard.
+2. Make loading/error/empty/content mutually exclusive in all three pages.
+3. Surface Automation enable, disable, and delete failures.
+4. Add `WebCollectionPages_DoNotRenderLoadFailuresAsEmptyState`.
+5. Build Web and run architecture plus translation regressions.
+
+Status: complete. All five steps are implemented and validated.
+
 # Keyboard, focus and icon-button accessibility — 2026-09-14
 
 1. Inventory non-semantic click targets, focus CSS and icon-only buttons.

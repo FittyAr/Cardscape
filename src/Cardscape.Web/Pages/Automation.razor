@@ -54,12 +54,6 @@
                                    Style="width:100%" />
                 </LabeledField>
 
-                @if (error is not null)
-                {
-                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" Class="rz-mt-2">
-                        @error
-                    </RadzenAlert>
-                }
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
                     <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
                     <RadzenButton Text="Create" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
@@ -69,15 +63,24 @@
         </RadzenCard>
     }
 
-    @if (rules is null)
+    @if (error is not null)
     {
-        <RadzenText Text="Loading…" />
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@error</RadzenAlert>
     }
-    else if (rules.Count == 0)
+
+    @if (loading)
+    {
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (loadError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@loadError</RadzenAlert>
+    }
+    else if (rules is { Count: 0 })
     {
         <RadzenText Text="No automation rules yet. Create one above to get started." />
     }
-    else
+    else if (rules is not null)
     {
         <RadzenStack Gap="0.5rem">
             @foreach (BoardAutomationRuleDto rule in rules)
@@ -126,7 +129,9 @@
     private IReadOnlyList<BoardAutomationRuleDto>? rules;
     private bool showCreate;
     private bool busy;
+    private bool loading;
     private string? error;
+    private string? loadError;
     private readonly NewRuleModel newRule = new();
 
     private readonly List<TriggerOption> triggerOptions = new()
@@ -155,11 +160,23 @@
 
     private async Task ReloadAsync()
     {
-        ApiResult<IReadOnlyList<BoardAutomationRuleDto>> result = await AutomationClient.ListRulesAsync(BoardId);
-        rules = result.IsSuccess ? result.Value : [];
-        if (!result.IsSuccess)
+        loading = true;
+        loadError = null;
+        try
         {
-            error = result.Error;
+            ApiResult<IReadOnlyList<BoardAutomationRuleDto>> result = await AutomationClient.ListRulesAsync(BoardId);
+            if (result.IsSuccess && result.Value is not null)
+            {
+                rules = result.Value;
+                return;
+            }
+
+            rules = null;
+            loadError = result.Error ?? L["AutomationLoadFailed"];
+        }
+        finally
+        {
+            loading = false;
         }
     }
 
@@ -220,18 +237,21 @@
     {
         ApiResult r = await AutomationClient.EnableRuleAsync(BoardId, rule.Id);
         if (r.IsSuccess) await ReloadAsync();
+        else error = r.Error;
     }
 
     private async Task DisableAsync(BoardAutomationRuleDto rule)
     {
         ApiResult r = await AutomationClient.DisableRuleAsync(BoardId, rule.Id);
         if (r.IsSuccess) await ReloadAsync();
+        else error = r.Error;
     }
 
     private async Task DeleteAsync(BoardAutomationRuleDto rule)
     {
         ApiResult r = await AutomationClient.DeleteRuleAsync(BoardId, rule.Id);
         if (r.IsSuccess) await ReloadAsync();
+        else error = r.Error;
     }
 
     private static string TriggerName(AutomationTrigger t) => t switch

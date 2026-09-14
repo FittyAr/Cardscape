@@ -41,15 +41,19 @@
     </RadzenCard>
 }
 
-@if (dashcards is null)
+@if (loading)
 {
-    <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
 }
-else if (dashcards.Count == 0)
+else if (loadError is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@loadError</RadzenAlert>
+}
+else if (dashcards is { Count: 0 })
 {
     <RadzenText Text="@L["DashboardEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
-else
+else if (dashcards is not null)
 {
     <RadzenRow Gap="1rem">
         @foreach (DashcardDto d in dashcards)
@@ -82,7 +86,9 @@ else
     private IReadOnlyList<DashcardDto>? dashcards;
     private bool showCreate;
     private bool busy;
+    private bool loading;
     private string? error;
+    private string? loadError;
     private readonly CreateModel createModel = new();
 
     private record KindOption(DashcardKind Kind, string Label);
@@ -98,8 +104,23 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await DashboardsApi.ListAsync(BoardId);
-        dashcards = result.IsSuccess ? result.Value : [];
+        loading = true;
+        try
+        {
+            var result = await DashboardsApi.ListAsync(BoardId);
+            if (result.IsSuccess && result.Value is not null)
+            {
+                dashcards = result.Value;
+                return;
+            }
+
+            dashcards = null;
+            loadError = result.Error ?? L["DashboardLoadFailed"];
+        }
+        finally
+        {
+            loading = false;
+        }
     }
 
     private async Task CreateDashcardAsync()

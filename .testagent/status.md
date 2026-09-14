@@ -1089,3 +1089,18 @@
   restoring the failure-to-empty assignment, fails
   `WebApiTokens_DistinguishesLoadFailureAndLoadsStatusesConcurrently`; catalog drift
   fails `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Collection-page load-state integrity — 2026-09-14
+
+- [x] Automation, BoardDashboard, and Invitations have mutually exclusive load states.
+- [x] Remote errors without messages receive localized fallbacks.
+- [x] Automation mutation failures are visible outside the optional create form.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 41/41 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion-quality review: the collection assertion reports every violating
+  filename and the reason defines the observable state contract.
+- [x] Pseudo-mutation review: removing loading or localized error propagation, or
+  restoring a failure-to-empty ternary in any audited page, fails
+  `WebCollectionPages_DoNotRenderLoadFailuresAsEmptyState`; resource drift fails
+  `EverySupportedCulture_ReturnsCompleteCatalog`.

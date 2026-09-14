@@ -1168,3 +1168,12 @@
   awaited one HTTP request per active token serially.
 - Acceptance: distinct load failure, visible revoke failure, Radzen loading
   feedback, and concurrent live-status requests after the EF-backed list succeeds.
+
+# Collection-page load-state integrity — 2026-09-14
+
+- Automation rendered its load error only inside a create form that is closed by
+  default; enable, disable, and delete failures were also invisible.
+- BoardDashboard silently converted an initial request failure into an empty list.
+- Invitations rendered both its valid-empty message and an error after a failed load.
+- Acceptance: mutually exclusive Radzen loading/error/empty/content branches and
+  visible mutation failures for all three pages.

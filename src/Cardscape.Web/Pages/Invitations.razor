@@ -13,15 +13,19 @@
 <PageHeader Title="@L["InvitationsTitle"]"
             Subtitle="@L["InvitationsSubtitle"]" />
 
-@if (invitations is null)
+@if (loading)
 {
-    <RadzenText Text="@L["InvitationsLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
 }
-else if (invitations.Count == 0)
+else if (error is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@error</RadzenAlert>
+}
+else if (invitations is { Count: 0 })
 {
     <RadzenText Text="@L["InvitationsEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
-else
+else if (invitations is not null)
 {
     <RadzenStack Gap="0.75rem">
         @foreach (WorkspaceInvitationDto inv in invitations)
@@ -39,24 +43,29 @@ else
     </RadzenText>
 }
 
-@if (error is not null)
-{
-    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" class="rz-mt-3">
-        @error
-    </RadzenAlert>
-}
-
 @code {
     private IReadOnlyList<WorkspaceInvitationDto>? invitations;
+    private bool loading;
     private string? error;
 
     protected override async Task OnInitializedAsync()
     {
-        ApiResult<IReadOnlyList<WorkspaceInvitationDto>> result = await InvitationsApi.ListPendingAsync();
-        invitations = result.IsSuccess ? result.Value : [];
-        if (!result.IsSuccess)
+        loading = true;
+        try
         {
-            error = result.Error;
+            ApiResult<IReadOnlyList<WorkspaceInvitationDto>> result = await InvitationsApi.ListPendingAsync();
+            if (result.IsSuccess && result.Value is not null)
+            {
+                invitations = result.Value;
+                return;
+            }
+
+            invitations = null;
+            error = result.Error ?? L["InvitationsLoadFailed"];
+        }
+        finally
+        {
+            loading = false;
         }
     }
 

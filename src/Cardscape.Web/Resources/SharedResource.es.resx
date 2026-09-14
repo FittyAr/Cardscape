@@ -163,6 +163,9 @@
   <data name="NavApiTokens" xml:space="preserve"><value>Tokens de API</value></data>
   <data name="ApiTokensLoadFailed" xml:space="preserve"><value>No se pudieron cargar los tokens de API.</value></data>
   <data name="ApiTokensRevokeFailed" xml:space="preserve"><value>No se pudo revocar el token de API.</value></data>
+  <data name="AutomationLoadFailed" xml:space="preserve"><value>No se pudieron cargar las reglas de automatización.</value></data>
+  <data name="DashboardLoadFailed" xml:space="preserve"><value>No se pudo cargar el dashboard del tablero.</value></data>
+  <data name="InvitationsLoadFailed" xml:space="preserve"><value>No se pudieron cargar las invitaciones pendientes.</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>
   <data name="AuthSignInTitle" xml:space="preserve"><value>Iniciar sesión</value></data>

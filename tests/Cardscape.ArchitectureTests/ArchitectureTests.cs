@@ -407,6 +407,28 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebCollectionPages_DoNotRenderLoadFailuresAsEmptyState()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string pagesRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages");
+        string[] pages = ["Automation.razor", "BoardDashboard.razor", "Invitations.razor"];
+
+        string[] violations = pages
+            .Where(page =>
+            {
+                string source = File.ReadAllText(Path.Combine(pagesRoot, page));
+                return !source.Contains("if (loading)", StringComparison.Ordinal)
+                    || !source.Contains("result.Error ?? L[", StringComparison.Ordinal)
+                    || source.Contains("result.IsSuccess ? result.Value : []", StringComparison.Ordinal);
+            })
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "collection pages must distinguish a failed request from a successful empty result");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
