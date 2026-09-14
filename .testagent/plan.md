@@ -643,6 +643,16 @@
 
 Status: complete. All five steps are implemented and validated.
 
+# Invitation-flow localization — 2026-09-14
+
+1. Inventory routable pages without `IStringLocalizer<SharedResource>`.
+2. Localize list/accept invitation titles, states, roles, metadata and actions.
+3. Replace fixed display date formatting with active-culture short date.
+4. Build Web and run the translation endpoint parity suite.
+5. Record assertion-quality and pseudo-mutation review.
+
+Status: complete. All five steps are implemented and validated.
+
 # Accessible-name localization — 2026-09-14
 
 1. Add shared English/Spanish resource keys for month navigation and search.

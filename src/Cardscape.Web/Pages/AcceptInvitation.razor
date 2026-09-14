@@ -3,32 +3,34 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject IInvitationsApiClient InvitationsApi
 @inject Microsoft.AspNetCore.Components.NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Accept invitation — Cardscape</PageTitle>
+<PageTitle>@L["InvitationAcceptTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 32rem;">
-    <PageHeader Title="Accept invitation" />
+    <PageHeader Title="@L["InvitationAcceptTitle"]" />
 
     @if (string.IsNullOrWhiteSpace(Token))
     {
         <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
-            The invitation link is missing a <code>token</code> query
-            parameter. Open the link the workspace owner sent you.
+            @L["InvitationMissingToken"]
         </RadzenAlert>
     }
     else if (busy)
     {
-        <RadzenText Text="Accepting…" />
+        <RadzenText Text="@L["InvitationAccepting"]" />
     }
     else if (accepted is not null)
     {
         <RadzenCard>
             <RadzenStack Gap="0.75rem">
                 <RadzenText Text="@accepted.Name" TextStyle="TextStyle.H5" TagName="TagName.H2" />
-                <RadzenText Text="@($"You are now a member of {accepted.Name}.")" />
-                <RadzenButton Text="Open workspace"
+                <RadzenText Text="@L["InvitationAccepted", accepted.Name]" />
+                <RadzenButton Text="@L["InvitationOpenWorkspace"]"
                               Icon="open_in_new"
                               ButtonStyle="ButtonStyle.Primary"
                               Click="@(() => Nav.NavigateTo($"workspaces/{accepted.Id}"))" />
@@ -38,14 +40,11 @@
     else if (error is not null)
     {
         <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
-            <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Span">Could not accept the invitation.</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Span">@L["InvitationAcceptFailed"]</RadzenText>
             <RadzenText>@error</RadzenText>
         </RadzenAlert>
         <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
-            If the link came from someone other than your workspace
-            owner, it may be addressed to a different email. Sign in
-            with the email that received the invite, or ask the
-            owner to resend.
+            @L["InvitationAcceptFailedHint"]
         </RadzenText>
     }
 </RadzenStack>

@@ -1106,3 +1106,12 @@
 - Month navigation labels also need culture-aware month/year formatting.
 - Acceptance: accessible names use shared resources, both catalogs contain the
   same keys, and a repository gate rejects new literal `aria-label` values.
+
+# Invitation-flow localization — 2026-09-14
+
+- Only five routable pages remained without the shared localizer; the two
+  invitation routes were the complete authentication-adjacent subset.
+- Their titles, state messages, roles, metadata and actions were literal
+  English, and expiry used a fixed ISO presentation rather than active culture.
+- Acceptance: both routes use shared resources exclusively for user-facing
+  copy, format dates with active culture, compile, and retain catalog parity.

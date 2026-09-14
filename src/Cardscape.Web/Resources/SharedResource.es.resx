@@ -70,6 +70,24 @@
   <data name="CalendarCurrentMonth" xml:space="preserve"><value>Ir al mes actual</value></data>
   <data name="CalendarNextMonth" xml:space="preserve"><value>Mes siguiente ({0})</value></data>
   <data name="SearchAriaLabel" xml:space="preserve"><value>Buscar</value></data>
+  <data name="InvitationsTitle" xml:space="preserve"><value>Invitaciones</value></data>
+  <data name="InvitationsSubtitle" xml:space="preserve"><value>Invitaciones pendientes para tu email</value></data>
+  <data name="InvitationsLoading" xml:space="preserve"><value>Cargando…</value></data>
+  <data name="InvitationsEmpty" xml:space="preserve"><value>No tenés invitaciones pendientes. El propietario del workspace te enviará un enlace por email cuando haya una.</value></data>
+  <data name="InvitationsMetadata" xml:space="preserve"><value>Rol: {0} · Invitación de {1} · Vence {2}</value></data>
+  <data name="InvitationsSystem" xml:space="preserve"><value>sistema</value></data>
+  <data name="InvitationsAcceptHint" xml:space="preserve"><value>Para aceptar una invitación, seguí el enlace de un solo uso que te envió el propietario. Está vinculado al email de tu cuenta.</value></data>
+  <data name="InvitationAcceptTitle" xml:space="preserve"><value>Aceptar invitación</value></data>
+  <data name="InvitationMissingToken" xml:space="preserve"><value>Al enlace de invitación le falta el token. Abrí el enlace que te envió el propietario del workspace.</value></data>
+  <data name="InvitationAccepting" xml:space="preserve"><value>Aceptando…</value></data>
+  <data name="InvitationAccepted" xml:space="preserve"><value>Ahora sos miembro de {0}.</value></data>
+  <data name="InvitationOpenWorkspace" xml:space="preserve"><value>Abrir workspace</value></data>
+  <data name="InvitationAcceptFailed" xml:space="preserve"><value>No se pudo aceptar la invitación.</value></data>
+  <data name="InvitationAcceptFailedHint" xml:space="preserve"><value>Si el enlace provino de alguien que no es el propietario del workspace, puede estar dirigido a otro email. Iniciá sesión con el email que recibió la invitación o pedile al propietario que la reenvíe.</value></data>
+  <data name="WorkspaceRoleAdmin" xml:space="preserve"><value>Administrador</value></data>
+  <data name="WorkspaceRoleMember" xml:space="preserve"><value>Miembro</value></data>
+  <data name="WorkspaceRoleObserver" xml:space="preserve"><value>Observador</value></data>
+  <data name="CommonUnknown" xml:space="preserve"><value>Desconocido</value></data>
   <data name="NavApiTokens" xml:space="preserve"><value>Tokens de API</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>

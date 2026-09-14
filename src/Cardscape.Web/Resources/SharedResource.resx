@@ -70,6 +70,24 @@
   <data name="CalendarCurrentMonth" xml:space="preserve"><value>Jump to current month</value></data>
   <data name="CalendarNextMonth" xml:space="preserve"><value>Next month ({0})</value></data>
   <data name="SearchAriaLabel" xml:space="preserve"><value>Search</value></data>
+  <data name="InvitationsTitle" xml:space="preserve"><value>Invitations</value></data>
+  <data name="InvitationsSubtitle" xml:space="preserve"><value>Pending invites to your email address</value></data>
+  <data name="InvitationsLoading" xml:space="preserve"><value>Loading…</value></data>
+  <data name="InvitationsEmpty" xml:space="preserve"><value>You have no pending invitations. Workspace owners will email you a link when one is waiting.</value></data>
+  <data name="InvitationsMetadata" xml:space="preserve"><value>Role: {0} · Invited by {1} · Expires {2}</value></data>
+  <data name="InvitationsSystem" xml:space="preserve"><value>system</value></data>
+  <data name="InvitationsAcceptHint" xml:space="preserve"><value>To accept an invitation, follow the single-use link the owner emailed you. It is bound to your account's email.</value></data>
+  <data name="InvitationAcceptTitle" xml:space="preserve"><value>Accept invitation</value></data>
+  <data name="InvitationMissingToken" xml:space="preserve"><value>The invitation link is missing its token. Open the link the workspace owner sent you.</value></data>
+  <data name="InvitationAccepting" xml:space="preserve"><value>Accepting…</value></data>
+  <data name="InvitationAccepted" xml:space="preserve"><value>You are now a member of {0}.</value></data>
+  <data name="InvitationOpenWorkspace" xml:space="preserve"><value>Open workspace</value></data>
+  <data name="InvitationAcceptFailed" xml:space="preserve"><value>Could not accept the invitation.</value></data>
+  <data name="InvitationAcceptFailedHint" xml:space="preserve"><value>If the link came from someone other than your workspace owner, it may be addressed to a different email. Sign in with the email that received the invite, or ask the owner to resend it.</value></data>
+  <data name="WorkspaceRoleAdmin" xml:space="preserve"><value>Admin</value></data>
+  <data name="WorkspaceRoleMember" xml:space="preserve"><value>Member</value></data>
+  <data name="WorkspaceRoleObserver" xml:space="preserve"><value>Observer</value></data>
+  <data name="CommonUnknown" xml:space="preserve"><value>Unknown</value></data>
   <data name="NavApiTokens" xml:space="preserve"><value>API tokens</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Create account</value></data>

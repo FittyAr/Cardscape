@@ -993,3 +993,13 @@
 - [x] Pseudo-mutation review: replacing a localized accessible name with a
   literal fails `WebRazorViews_DoNotHardcodeAccessibleNames`; deleting either
   translated key fails `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Invitation-flow localization — 2026-09-14
+
+- [x] Both invitation routes use the shared localizer for user-facing copy.
+- [x] Web build passes with 0 warnings/errors; TranslationEndpointTests pass
+  5/5, with 0 failed and 0 skipped.
+- [x] Assertion-quality review: catalog tests compare exact key sets for every
+  supported culture and exercise the HTTP representation consumed by Web.
+- [x] Pseudo-mutation review: deleting an English/Spanish invitation key or
+  allowing one catalog to drift fails `EverySupportedCulture_ReturnsCompleteCatalog`.

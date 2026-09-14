@@ -3,20 +3,23 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject IInvitationsApiClient InvitationsApi
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Invitations — Cardscape</PageTitle>
+<PageTitle>@L["InvitationsTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<PageHeader Title="Invitations"
-            Subtitle="Pending invites to your email address" />
+<PageHeader Title="@L["InvitationsTitle"]"
+            Subtitle="@L["InvitationsSubtitle"]" />
 
 @if (invitations is null)
 {
-    <RadzenText Text="Loading…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenText Text="@L["InvitationsLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else if (invitations.Count == 0)
 {
-    <RadzenText Text="You have no pending invitations. Workspace owners will email you a link when one is waiting." TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenText Text="@L["InvitationsEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else
 {
@@ -26,17 +29,13 @@ else
             <RadzenCard>
                 <RadzenText Text="@inv.WorkspaceName" TextStyle="TextStyle.H5" TagName="TagName.H3" />
                 <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
-                    Role: @RoleName(inv.Role) ·
-                    Invited by @(inv.InvitedBy == Guid.Empty ? "system" : inv.InvitedBy.ToString()) ·
-                    Expires @inv.ExpiresAt.LocalDateTime.ToString("yyyy-MM-dd")
+                    @L["InvitationsMetadata", RoleName(inv.Role), inv.InvitedBy == Guid.Empty ? L["InvitationsSystem"] : inv.InvitedBy.ToString(), inv.ExpiresAt.LocalDateTime.ToString("d")]
                 </RadzenText>
             </RadzenCard>
         }
     </RadzenStack>
     <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary rz-mt-3">
-        To accept an invitation, follow the link the owner emailed you
-        (it points to <code>/invitations/accept?token=...</code>). The
-        link is single-use and bound to your account's email.
+        @L["InvitationsAcceptHint"]
     </RadzenText>
 }
 
@@ -61,11 +60,11 @@ else
         }
     }
 
-    private static string RoleName(WorkspaceRole role) => role switch
+    private string RoleName(WorkspaceRole role) => role switch
     {
-        WorkspaceRole.Admin => "Admin",
-        WorkspaceRole.Member => "Member",
-        WorkspaceRole.Observer => "Observer",
-        _ => "Unknown"
+        WorkspaceRole.Admin => L["WorkspaceRoleAdmin"],
+        WorkspaceRole.Member => L["WorkspaceRoleMember"],
+        WorkspaceRole.Observer => L["WorkspaceRoleObserver"],
+        _ => L["CommonUnknown"]
     };
 }
