@@ -1003,3 +1003,14 @@
   supported culture and exercise the HTTP representation consumed by Web.
 - [x] Pseudo-mutation review: deleting an English/Spanish invitation key or
   allowing one catalog to drift fails `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Inbox localization — 2026-09-14
+
+- [x] Known Inbox UI and summaries use shared localized resources.
+- [x] Web build passes with 0 warnings/errors.
+- [x] TranslationEndpointTests pass 5/5, with 0 failed and 0 skipped.
+- [x] Assertion-quality review: catalog tests compare exact keys across every
+  supported culture and the build compiles each localized formatter.
+- [x] Pseudo-mutation review: deleting one localized Inbox key fails
+  `EverySupportedCulture_ReturnsCompleteCatalog`; breaking a formatter fails
+  the warnings-as-errors Web build.

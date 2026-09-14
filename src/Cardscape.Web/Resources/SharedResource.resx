@@ -88,6 +88,29 @@
   <data name="WorkspaceRoleMember" xml:space="preserve"><value>Member</value></data>
   <data name="WorkspaceRoleObserver" xml:space="preserve"><value>Observer</value></data>
   <data name="CommonUnknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="InboxTitle" xml:space="preserve"><value>Inbox</value></data>
+  <data name="InboxAll" xml:space="preserve"><value>All</value></data>
+  <data name="InboxUnread" xml:space="preserve"><value>Unread</value></data>
+  <data name="InboxMarkAllRead" xml:space="preserve"><value>Mark all read</value></data>
+  <data name="InboxEmptyUnread" xml:space="preserve"><value>You have no unread notifications.</value></data>
+  <data name="InboxEmpty" xml:space="preserve"><value>Your inbox is empty. Workspace activity will show up here.</value></data>
+  <data name="InboxMarkRead" xml:space="preserve"><value>Mark read</value></data>
+  <data name="InboxOpenCard" xml:space="preserve"><value>Open card</value></data>
+  <data name="NotificationAddedAsMember" xml:space="preserve"><value>Added as member</value></data>
+  <data name="NotificationAssignedToCard" xml:space="preserve"><value>Assigned to card</value></data>
+  <data name="NotificationMentioned" xml:space="preserve"><value>Mentioned</value></data>
+  <data name="NotificationDueSoon" xml:space="preserve"><value>Due soon</value></data>
+  <data name="NotificationOverdue" xml:space="preserve"><value>Overdue</value></data>
+  <data name="NotificationAddedWorkspace" xml:space="preserve"><value>You were added to a workspace.</value></data>
+  <data name="NotificationAssigned" xml:space="preserve"><value>You were assigned to {0} by {1}.</value></data>
+  <data name="NotificationAdded" xml:space="preserve"><value>You were added to {0}.</value></data>
+  <data name="NotificationAddedWithRole" xml:space="preserve"><value>You were added to {0} as {1}.</value></data>
+  <data name="NotificationMention" xml:space="preserve"><value>You were mentioned in {0}.</value></data>
+  <data name="NotificationDue" xml:space="preserve"><value>{0} is due soon.</value></data>
+  <data name="NotificationPastDue" xml:space="preserve"><value>{0} is overdue.</value></data>
+  <data name="NotificationFallbackCard" xml:space="preserve"><value>a card</value></data>
+  <data name="NotificationFallbackWorkspace" xml:space="preserve"><value>a workspace</value></data>
+  <data name="NotificationFallbackPerson" xml:space="preserve"><value>Someone</value></data>
   <data name="NavApiTokens" xml:space="preserve"><value>API tokens</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Create account</value></data>

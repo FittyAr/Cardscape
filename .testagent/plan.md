@@ -643,6 +643,15 @@
 
 Status: complete. All five steps are implemented and validated.
 
+# Inbox localization — 2026-09-14
+
+1. Localize page chrome, filters, loading/empty states and actions.
+2. Localize known notification kinds, payload summaries and fallbacks.
+3. Use active-culture timestamp formatting; preserve unknown payload fallback.
+4. Build Web and run translation catalog parity tests.
+
+Status: complete. All four steps are implemented and validated.
+
 # Invitation-flow localization — 2026-09-14
 
 1. Inventory routable pages without `IStringLocalizer<SharedResource>`.

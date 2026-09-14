@@ -88,6 +88,29 @@
   <data name="WorkspaceRoleMember" xml:space="preserve"><value>Miembro</value></data>
   <data name="WorkspaceRoleObserver" xml:space="preserve"><value>Observador</value></data>
   <data name="CommonUnknown" xml:space="preserve"><value>Desconocido</value></data>
+  <data name="InboxTitle" xml:space="preserve"><value>Bandeja de entrada</value></data>
+  <data name="InboxAll" xml:space="preserve"><value>Todas</value></data>
+  <data name="InboxUnread" xml:space="preserve"><value>No leídas</value></data>
+  <data name="InboxMarkAllRead" xml:space="preserve"><value>Marcar todas como leídas</value></data>
+  <data name="InboxEmptyUnread" xml:space="preserve"><value>No tenés notificaciones sin leer.</value></data>
+  <data name="InboxEmpty" xml:space="preserve"><value>Tu bandeja está vacía. La actividad del workspace aparecerá acá.</value></data>
+  <data name="InboxMarkRead" xml:space="preserve"><value>Marcar como leída</value></data>
+  <data name="InboxOpenCard" xml:space="preserve"><value>Abrir tarjeta</value></data>
+  <data name="NotificationAddedAsMember" xml:space="preserve"><value>Agregado como miembro</value></data>
+  <data name="NotificationAssignedToCard" xml:space="preserve"><value>Asignado a una tarjeta</value></data>
+  <data name="NotificationMentioned" xml:space="preserve"><value>Mencionado</value></data>
+  <data name="NotificationDueSoon" xml:space="preserve"><value>Vence pronto</value></data>
+  <data name="NotificationOverdue" xml:space="preserve"><value>Vencida</value></data>
+  <data name="NotificationAddedWorkspace" xml:space="preserve"><value>Te agregaron a un workspace.</value></data>
+  <data name="NotificationAssigned" xml:space="preserve"><value>Te asignaron a {0}; asignación de {1}.</value></data>
+  <data name="NotificationAdded" xml:space="preserve"><value>Te agregaron a {0}.</value></data>
+  <data name="NotificationAddedWithRole" xml:space="preserve"><value>Te agregaron a {0} con el rol {1}.</value></data>
+  <data name="NotificationMention" xml:space="preserve"><value>Te mencionaron en {0}.</value></data>
+  <data name="NotificationDue" xml:space="preserve"><value>{0} vence pronto.</value></data>
+  <data name="NotificationPastDue" xml:space="preserve"><value>{0} está vencida.</value></data>
+  <data name="NotificationFallbackCard" xml:space="preserve"><value>una tarjeta</value></data>
+  <data name="NotificationFallbackWorkspace" xml:space="preserve"><value>un workspace</value></data>
+  <data name="NotificationFallbackPerson" xml:space="preserve"><value>Alguien</value></data>
   <data name="NavApiTokens" xml:space="preserve"><value>Tokens de API</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>

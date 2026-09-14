@@ -1115,3 +1115,10 @@
   English, and expiry used a fixed ISO presentation rather than active culture.
 - Acceptance: both routes use shared resources exclusively for user-facing
   copy, format dates with active culture, compile, and retain catalog parity.
+
+# Inbox localization — 2026-09-14
+
+- Inbox mixed localized navigation with literal English states, actions,
+  notification kinds and JSON-derived summaries.
+- Acceptance: the complete known-notification experience uses shared EN/ES
+  resources and culture-aware timestamps while unknown payloads remain intact.

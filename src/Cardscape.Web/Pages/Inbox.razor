@@ -4,38 +4,41 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject INotificationsApiClient Notifications
 @inject Microsoft.AspNetCore.Components.NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Inbox — Cardscape</PageTitle>
+<PageTitle>@L["InboxTitle"] @L["PageTitleSuffix"]</PageTitle>
 
-<PageHeader Title="Inbox">
+<PageHeader Title="@L["InboxTitle"]">
     <Actions>
         <RadzenSelectBar @bind-Value="filter" TValue="string" Change="@OnFilterChangedAsync">
             <Items>
-                <RadzenSelectBarItem Text="All" Value="@("all")" />
-                <RadzenSelectBarItem Text="Unread" Value="@("unread")" />
+                <RadzenSelectBarItem Text="@L["InboxAll"]" Value="@("all")" />
+                <RadzenSelectBarItem Text="@L["InboxUnread"]" Value="@("unread")" />
             </Items>
         </RadzenSelectBar>
-        <RadzenButton Text="Mark all read" Icon="done_all" ButtonStyle="ButtonStyle.Light"
+        <RadzenButton Text="@L["InboxMarkAllRead"]" Icon="done_all" ButtonStyle="ButtonStyle.Light"
                       Disabled="@(unreadCount == 0)" Click="@MarkAllReadAsync" />
     </Actions>
 </PageHeader>
 
 @if (notifications is null)
 {
-    <RadzenText Text="Loading…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenText Text="@L["InvitationsLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else if (notifications.Count == 0)
 {
     <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">
         @if (filter == "unread")
         {
-            <span>You have no unread notifications.</span>
+            <span>@L["InboxEmptyUnread"]</span>
         }
         else
         {
-            <span>Your inbox is empty. Workspace activity will show up here.</span>
+            <span>@L["InboxEmpty"]</span>
         }
     </RadzenText>
 }
@@ -51,18 +54,18 @@ else
                         <RadzenBadge Text="@KindLabel(n.Kind)" BadgeStyle="@KindBadgeStyle(n.Kind)" />
                         <RadzenText Text="@FormatPayload(n)" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
                         <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
-                            · @n.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")
+                            · @n.CreatedAt.LocalDateTime.ToString("g")
                         </RadzenText>
                     </RadzenStack>
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
                         @if (!n.IsRead)
                         {
-                            <RadzenButton Text="Mark read" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                            <RadzenButton Text="@L["InboxMarkRead"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
                                           Click="@(() => MarkReadAsync(n))" />
                         }
                         @if (TryGetCardId(n, out Guid cardId))
                         {
-                            <RadzenButton Text="Open card" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                            <RadzenButton Text="@L["InboxOpenCard"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
                                           Click="@(() => Nav.NavigateTo($"cards/{cardId}"))" />
                         }
                     </RadzenStack>
@@ -127,13 +130,13 @@ else
         }
     }
 
-    private static string KindLabel(string kind) => kind switch
+    private string KindLabel(string kind) => kind switch
     {
-        "AddedAsMember" => "Added as member",
-        "AssignedToCard" => "Assigned to card",
-        "Mentioned" => "Mentioned",
-        "DueSoon" => "Due soon",
-        "Overdue" => "Overdue",
+        "AddedAsMember" => L["NotificationAddedAsMember"],
+        "AssignedToCard" => L["NotificationAssignedToCard"],
+        "Mentioned" => L["NotificationMentioned"],
+        "DueSoon" => L["NotificationDueSoon"],
+        "Overdue" => L["NotificationOverdue"],
         _ => kind
     };
 
@@ -147,7 +150,7 @@ else
         _ => BadgeStyle.Light
     };
 
-    private static string FormatPayload(NotificationDto n)
+    private string FormatPayload(NotificationDto n)
     {
         // BUG-A6-010 — see test-results/beta/reports/A6-views.md.
         // The Inbox used to dump the raw payload as
@@ -161,7 +164,7 @@ else
         {
             return n.Kind switch
             {
-                "AddedAsMember" => "You were added to a workspace.",
+                "AddedAsMember" => L["NotificationAddedWorkspace"],
                 _ => n.Kind
             };
         }
@@ -190,41 +193,41 @@ else
         return n.PayloadJson;
     }
 
-    private static string FormatAssignedToCard(JsonElement root)
+    private string FormatAssignedToCard(JsonElement root)
     {
         // The payload is { cardId, cardTitle, assignedBy, boardId }.
         // We render the human-facing message; the IDs stay accessible
         // via the "Open card" button rather than the body text.
-        string cardTitle = TryGetString(root, "cardTitle") ?? "a card";
-        string assignedBy = TryGetString(root, "assignedBy") ?? "Someone";
-        return $"You were assigned to {cardTitle} by {ShortenId(assignedBy)}.";
+        string cardTitle = TryGetString(root, "cardTitle") ?? L["NotificationFallbackCard"];
+        string assignedBy = TryGetString(root, "assignedBy") ?? L["NotificationFallbackPerson"];
+        return L["NotificationAssigned", cardTitle, ShortenId(assignedBy)];
     }
 
-    private static string FormatAddedAsMember(JsonElement root)
+    private string FormatAddedAsMember(JsonElement root)
     {
-        string workspace = TryGetString(root, "workspaceName") ?? TryGetString(root, "workspaceId") ?? "a workspace";
+        string workspace = TryGetString(root, "workspaceName") ?? TryGetString(root, "workspaceId") ?? L["NotificationFallbackWorkspace"];
         string? role = TryGetString(root, "role");
         return string.IsNullOrWhiteSpace(role)
-            ? $"You were added to {workspace}."
-            : $"You were added to {workspace} as {role}.";
+            ? L["NotificationAdded", workspace]
+            : L["NotificationAddedWithRole", workspace, role];
     }
 
-    private static string FormatMentioned(JsonElement root)
+    private string FormatMentioned(JsonElement root)
     {
-        string where = TryGetString(root, "cardTitle") ?? TryGetString(root, "commentId") ?? "a card";
-        return $"You were mentioned in {where}.";
+        string where = TryGetString(root, "cardTitle") ?? TryGetString(root, "commentId") ?? L["NotificationFallbackCard"];
+        return L["NotificationMention", where];
     }
 
-    private static string FormatDueSoon(JsonElement root)
+    private string FormatDueSoon(JsonElement root)
     {
-        string cardTitle = TryGetString(root, "cardTitle") ?? "a card";
-        return $"{cardTitle} is due soon.";
+        string cardTitle = TryGetString(root, "cardTitle") ?? L["NotificationFallbackCard"];
+        return L["NotificationDue", cardTitle];
     }
 
-    private static string FormatOverdue(JsonElement root)
+    private string FormatOverdue(JsonElement root)
     {
-        string cardTitle = TryGetString(root, "cardTitle") ?? "a card";
-        return $"{cardTitle} is overdue.";
+        string cardTitle = TryGetString(root, "cardTitle") ?? L["NotificationFallbackCard"];
+        return L["NotificationPastDue", cardTitle];
     }
 
     private static string FormatGeneric(JsonElement root)
