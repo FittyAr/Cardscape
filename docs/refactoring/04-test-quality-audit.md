@@ -39,6 +39,14 @@ cancelable. No se usan sleeps como sustituto de una assertion. Se retiraron dos
 4. `Activity.KindLabel`/`KindBadgeStyle`: CRAP 1806/1482 y cobertura 0%.
    Conviene extraer la política del Razor y probar todos los valores.
 
+## Remediación ejecutada
+
+- `AttachmentUploadPolicy.IsBlockedMimeType` dejó de ser un switch de 27 ramas
+  y usa un `FrozenSet<string>` ordinal e inmutable.
+- Una theory valida los 27 MIME bloqueados después de normalizar casing/espacios,
+  el código de error estable y la ausencia de I/O/persistencia. Junto con los
+  escenarios de éxito y compensación, el grupo ejecuta 29/29 tests.
+
 El informe reproducible de esta ejecución está en
 `TestResults/coverage-analysis/coverage-analysis.md`; `TestResults` es un
 artefacto local ignorado y no forma parte del historial Git.

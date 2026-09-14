@@ -1297,3 +1297,11 @@
 - The advertised .NET extension and coverage scripts are absent; documented
   fallbacks were used. Highest risks: attachment MIME, internal broadcast,
   SCIM group patch, Activity presentation policy.
+
+# Attachment MIME policy hotspot — 2026-09-14
+
+- `IsBlockedMimeType` was the highest maintainable-code CRAP hotspot: a 27-arm
+  switch scored complexity 128 with only one representative MIME test.
+- Acceptance: immutable O(1) data policy, exact ordinal matching after existing
+  normalization, all 27 blocked values reject without storage/metadata/UoW work,
+  and the existing allowed-MIME persistence test remains green.

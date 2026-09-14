@@ -19,6 +19,22 @@ public sealed class UploadAttachmentCommandHandlerTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 30, 12, 0, 0, TimeSpan.Zero);
 
+    public static TheoryData<string> BlockedMimeTypes => new()
+    {
+        "application/x-msdownload", "application/x-msdos-program", "application/x-exe",
+        "application/exe", "application/x-dosexec", "application/x-winexe",
+        "application/x-apple-diskimage", "application/vnd.microsoft.portable-executable",
+        "application/vnd.ms-excel.addin.macroenabled.12",
+        "application/vnd.ms-word.document.macroenabled.12",
+        "application/vnd.ms-powerpoint.presentation.macroenabled.12",
+        "application/vnd.ms-excel.sheet.macroenabled.12", "text/html",
+        "application/xhtml+xml", "application/javascript", "application/x-javascript",
+        "text/javascript", "text/x-shellscript", "application/x-shellscript",
+        "application/x-perl", "application/x-python", "application/x-httpd-php",
+        "text/x-server-parsed-html", "application/x-httpd-cgi",
+        "application/x-shockwave-flash", "application/java-archive", "application/java-vm"
+    };
+
     [Fact]
     public async Task Handle_ValidUpload_PersistsBlobAndMetadataWithSanitizedName()
     {
@@ -62,13 +78,14 @@ public sealed class UploadAttachmentCommandHandlerTests
             Times.Once);
     }
 
-    [Fact]
-    public async Task Handle_BlockedMimeType_DoesNotTouchStorageMetadataOrUnitOfWork()
+    [Theory]
+    [MemberData(nameof(BlockedMimeTypes))]
+    public async Task Handle_EachBlockedMimeType_DoesNotTouchStorageMetadataOrUnitOfWork(string blockedMimeType)
     {
         HandlerFixture fixture = CreateFixture();
         using var content = new MemoryStream([6]);
         var command = new UploadAttachmentCommand(
-            fixture.Card.Id.Value, "payload.exe", " APPLICATION/X-MSDOWNLOAD ", 1, content);
+            fixture.Card.Id.Value, "payload.bin", $" {blockedMimeType.ToUpperInvariant()} ", 1, content);
 
         var result = await fixture.HandleAsync(command);
 

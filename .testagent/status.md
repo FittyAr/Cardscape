@@ -1298,3 +1298,15 @@
 - [x] Generated/migration artifacts excluded and duplicate coverage merged.
 - [x] Coverage/CRAP worklist documented with four prioritized critical areas.
 - [x] Region regression: 4/4 pass; solution build: 0 warnings, 0 errors.
+
+# Attachment MIME policy hotspot — 2026-09-14
+
+- [x] Branch-heavy switch replaced by immutable ordinal FrozenSet lookup.
+- [x] All 27 blocked MIME values mapped to theory cases with normalization pressure.
+- [x] Each case asserts exact error code and zero storage/metadata/UoW effects.
+- [x] Focused attachment tests: 29/29 pass; solution build: 0 warnings, 0 errors.
+- [x] Assertion review: four independent assertions verify result, stable error and
+  three effect boundaries; the allowed test verifies normalized value and persistence.
+- [x] Pseudo-mutation review: removing any set entry, changing ordinal membership,
+  bypassing normalization or touching a side effect fails
+  `Handle_EachBlockedMimeType_DoesNotTouchStorageMetadataOrUnitOfWork`.

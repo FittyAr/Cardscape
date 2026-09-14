@@ -851,6 +851,14 @@ Status: complete. All five steps are implemented and validated.
 4. Calculate line/branch coverage and per-method CRAP risk.
 5. Publish a durable audit, update the modernization plan and validate cleanup.
 
+# Attachment MIME policy hotspot — 2026-09-14
+
+1. Replace the branching switch with an ordinal `FrozenSet<string>` policy.
+2. Convert the representative rejection test into a 27-case xUnit theory.
+3. Assert exact domain error and absence of storage, metadata and persistence effects.
+4. Retain the existing allowed/normalized MIME success regression.
+5. Run focused tests, assertion/pseudo-mutation review, build and commit.
+
 # Accessible-name localization — 2026-09-14
 
 1. Add shared English/Spanish resource keys for month navigation and search.
