@@ -1278,3 +1278,11 @@
   forms; the surface must remain visible at the top of the loaded card.
 - Acceptance: every core/planning result captures a localized fallback, invalid
   snooze is explained, and the persistent Radzen alert is architecture-gated.
+
+# Card detail attachment and AI mutation outcomes — 2026-09-14
+
+- Upload/download/delete and four AI workflows silently discarded remote failures.
+- AI checklist generation ignored each item result, leaving a partial checklist;
+  owner suggestions were removed even when assignment failed.
+- Acceptance: every outcome reaches the persistent alert, partial AI checklists are
+  compensated, failed assignment preserves its suggestion, and generated titles localize.

@@ -835,6 +835,14 @@ Status: complete. All five steps are implemented and validated.
 4. Add `WebCardDetail_CoreMutationsExposeFailuresOutsideConditionalForms`.
 5. Build Web and run architecture/catalog regressions.
 
+# Card detail attachment and AI mutation outcomes — 2026-09-14
+
+1. Capture all attachment result failures and recover a failed initial list on upload.
+2. Capture missing/failed AI results with localized action context.
+3. Check every generated checklist item and compensate partial persistence on failure.
+4. Preserve owner suggestions unless assignment succeeds.
+5. Add the architecture gate and run Web/architecture/catalog validation.
+
 # Accessible-name localization — 2026-09-14
 
 1. Add shared English/Spanish resource keys for month navigation and search.

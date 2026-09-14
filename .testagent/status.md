@@ -1272,3 +1272,19 @@
 - [x] Pseudo-mutation review: removing the alert, either helper, result capture or
   the snooze feedback fails
   `WebCardDetail_CoreMutationsExposeFailuresOutsideConditionalForms`.
+
+# Card detail attachment and AI mutation outcomes — 2026-09-14
+
+- [x] Upload/download/delete failures reach the persistent localized alert.
+- [x] Generate/summarize/suggest/assign failures and missing values remain visible.
+- [x] Failed AI item creation compensates the partially created checklist.
+- [x] Failed owner assignment no longer removes a valid suggestion.
+- [x] AI checklist titles use the active localization catalog.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 54/54 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion review independently covers all attachment outcomes, AI outcome
+  count, compensation, assignment ordering and removal of the literal title.
+- [x] Pseudo-mutation review: dropping a captured outcome, compensation, success
+  guard or localized title fails
+  `WebCardDetail_AttachmentAndAiMutationsPreserveFailuresAndAvoidPartialSuccess`.

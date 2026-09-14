@@ -94,9 +94,11 @@ public partial class CardDetail
             await using Stream stream = file.OpenReadStream(maxAllowedSize: 25L * 1024L * 1024L);
             ApiResult<AttachmentDto> result = await Attachments.UploadAsync(
                 CardId, stream, file.Name, file.ContentType ?? "application/octet-stream");
-            if (result.IsSuccess && _attachments is not null)
+            CaptureCommandOutcome(result, L["CardChooseAttachment"]);
+            if (result.IsSuccess && result.Value is not null)
             {
-                _attachments = [.. _attachments, result.Value!];
+                _attachments = [.. (_attachments ?? []), result.Value];
+                _attachmentsError = null;
             }
         }
         finally
@@ -108,6 +110,7 @@ public partial class CardDetail
     private async Task DownloadAttachmentAsync(AttachmentDto attachment)
     {
         ApiResult<byte[]> result = await Attachments.DownloadAsync(CardId, attachment.Id);
+        CaptureCommandOutcome(result, L["CardDownload"]);
         if (!result.IsSuccess || result.Value is null)
         {
             return;
@@ -122,6 +125,7 @@ public partial class CardDetail
     private async Task DeleteAttachmentAsync(AttachmentDto attachment)
     {
         ApiResult<bool> result = await Attachments.DeleteAsync(CardId, attachment.Id);
+        CaptureCommandOutcome(result, L["ActionDelete"]);
         if (result.IsSuccess && _attachments is not null)
         {
             _attachments = _attachments.Where(a => a.Id != attachment.Id).ToList();

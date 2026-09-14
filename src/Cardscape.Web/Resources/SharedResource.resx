@@ -680,4 +680,5 @@
   <data name="CardSnoozeFuture" xml:space="preserve"><value>Choose a future date and time.</value></data>
   <data name="CardRefresh" xml:space="preserve"><value>Refresh card</value></data>
   <data name="CardUpdateChecklistItem" xml:space="preserve"><value>Update checklist item</value></data>
+  <data name="CardAiChecklistTitle" xml:space="preserve"><value>AI suggestions</value></data>
 </root>

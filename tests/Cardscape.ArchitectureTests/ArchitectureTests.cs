@@ -639,6 +639,24 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebCardDetail_AttachmentAndAiMutationsPreserveFailuresAndAvoidPartialSuccess()
+    {
+        string pages = Path.Combine(FindRepositoryRoot().FullName, "src", "Cardscape.Web", "Pages");
+        string attachments = File.ReadAllText(Path.Combine(pages, "CardDetail.AttachmentsAndFormatting.cs"));
+        string ai = File.ReadAllText(Path.Combine(pages, "CardDetail.Ai.cs"));
+
+        attachments.Split("CaptureCommandOutcome(", StringSplitOptions.None).Length.Should().Be(4);
+        attachments.Should().Contain("_attachmentsError = null");
+        ai.Split("CaptureAiOutcome(", StringSplitOptions.None).Length.Should().BeGreaterThanOrEqualTo(7);
+        ai.Should().Contain("await Checklists.DeleteAsync(newChecklistId)",
+            "a partially generated checklist must be compensated when any item fails");
+        ai.Should().Contain("if (result.IsSuccess && result.Value is not null)");
+        ai.IndexOf("_aiSuggestedOwners = _aiSuggestedOwners", StringComparison.Ordinal)
+            .Should().BeGreaterThan(ai.IndexOf("if (result.IsSuccess && result.Value is not null)", StringComparison.Ordinal));
+        ai.Should().NotContain("CreateAsync(CardId, \"AI suggestions\")");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

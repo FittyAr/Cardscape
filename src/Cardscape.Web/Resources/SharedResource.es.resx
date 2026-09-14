@@ -679,4 +679,5 @@
   <data name="CardSnoozeFuture" xml:space="preserve"><value>Elegí una fecha y hora futuras.</value></data>
   <data name="CardRefresh" xml:space="preserve"><value>Actualizar tarjeta</value></data>
   <data name="CardUpdateChecklistItem" xml:space="preserve"><value>Actualizar elemento de la lista</value></data>
+  <data name="CardAiChecklistTitle" xml:space="preserve"><value>Sugerencias de IA</value></data>
 </root>
