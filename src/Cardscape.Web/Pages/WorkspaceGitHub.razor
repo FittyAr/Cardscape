@@ -164,7 +164,14 @@
     protected override async Task OnInitializedAsync()
     {
         var result = await BoardsApi.ListForWorkspaceAsync(WorkspaceId);
-        boards = result.IsSuccess ? result.Value : [];
+        if (result.IsSuccess && result.Value is not null)
+        {
+            boards = result.Value;
+            return;
+        }
+
+        boards = null;
+        error = result.Error ?? L["GitHubBoardsLoadFailed"];
     }
 
     private async Task LinkRepoAsync()

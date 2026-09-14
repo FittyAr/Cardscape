@@ -1148,3 +1148,16 @@
 - [x] Pseudo-mutation review: dropping any section error or restoring either empty
   fallback fails `WebWorkspaceMembers_PreservesIndependentLoadOutcomes`; catalog
   drift fails `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Failed API collection coercion repository gate — 2026-09-14
+
+- [x] WorkspaceGitHub no longer presents failed board loading as an empty selector.
+- [x] Repository-wide Razor gate added without a page allowlist.
+- [x] Web build: 0 warnings, 0 errors; rebuilt architecture suite: 45/45 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion-quality review: the repository assertion reports every violating
+  relative path and uses a bounded single-expression regex to avoid file-level
+  token false positives.
+- [x] Pseudo-mutation review: restoring `IsSuccess ? Value : []` in any Razor page
+  fails `WebPages_DoNotCoerceFailedApiCollectionsToEmpty`; removing the GitHub
+  fallback fails `EverySupportedCulture_ReturnsCompleteCatalog` through catalog drift.

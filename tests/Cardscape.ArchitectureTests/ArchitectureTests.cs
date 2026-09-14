@@ -478,6 +478,25 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebPages_DoNotCoerceFailedApiCollectionsToEmpty()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string pagesRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages");
+
+        string[] violations = Directory.GetFiles(pagesRoot, "*.razor", SearchOption.AllDirectories)
+            .Where(path => Regex.IsMatch(
+                File.ReadAllText(path),
+                @"IsSuccess\s*\?[^;\r\n]+:\s*\[\]",
+                RegexOptions.CultureInvariant))
+            .Select(path => Path.GetRelativePath(repositoryRoot.FullName, path))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "API collection failures must remain distinguishable from successful empty responses");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

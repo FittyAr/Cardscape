@@ -176,6 +176,7 @@
   <data name="WorkspaceMembersWorkspaceLoadFailed" xml:space="preserve"><value>Could not load workspace details.</value></data>
   <data name="WorkspaceMembersLoadFailed" xml:space="preserve"><value>Could not load workspace members.</value></data>
   <data name="WorkspaceInvitationsLoadFailed" xml:space="preserve"><value>Could not load workspace invitations.</value></data>
+  <data name="GitHubBoardsLoadFailed" xml:space="preserve"><value>Could not load workspace boards for GitHub integration.</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Create account</value></data>
   <data name="AuthSignInTitle" xml:space="preserve"><value>Sign in</value></data>

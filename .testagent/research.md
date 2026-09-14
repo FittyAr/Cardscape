@@ -1202,3 +1202,10 @@
 - Command errors lived inside the optional invite form, hiding revoke failures.
 - Acceptance: independent visible outcomes for all three requests and a global
   command-error surface that does not discard successful sections.
+
+# Failed API collection coercion repository gate — 2026-09-14
+
+- WorkspaceGitHub was the final page with a direct `IsSuccess ? Value : []`
+  fallback, causing a failed board catalog to look like a valid empty selector.
+- Acceptance: surface that failure and prohibit the coercion pattern across every
+  Razor page rather than maintaining a page-name allowlist.

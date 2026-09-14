@@ -718,6 +718,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Failed API collection coercion repository gate — 2026-09-14
+
+1. Preserve WorkspaceGitHub board-list failure with a localized fallback.
+2. Confirm no direct failure-to-empty ternary remains in Razor pages.
+3. Add `WebPages_DoNotCoerceFailedApiCollectionsToEmpty` across the full page tree.
+4. Build Web and run architecture plus translation regressions.
+
+Status: complete. All four steps are implemented and validated.
+
 # Keyboard, focus and icon-button accessibility — 2026-09-14
 
 1. Inventory non-semantic click targets, focus CSS and icon-only buttons.
