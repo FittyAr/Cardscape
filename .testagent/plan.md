@@ -643,6 +643,16 @@
 
 Status: complete. All five steps are implemented and validated.
 
+# Accessible-name localization — 2026-09-14
+
+1. Add shared English/Spanish resource keys for month navigation and search.
+2. Localize Calendar, Planner and topbar-search accessible names.
+3. Add `WebRazorViews_DoNotHardcodeAccessibleNames` across every Razor view.
+4. Build Web and run architecture/localization regressions.
+5. Record assertion-quality and pseudo-mutation review.
+
+Status: complete. All five steps are implemented and validated.
+
 # Radzen forms and grids — 2026-09-14
 
 1. Add localized reusable required/email validation messages.

@@ -66,6 +66,10 @@
   <data name="NavInbox" xml:space="preserve"><value>Inbox</value></data>
   <data name="NavCalendar" xml:space="preserve"><value>Calendar</value></data>
   <data name="NavPlanner" xml:space="preserve"><value>Planner</value></data>
+  <data name="CalendarPreviousMonth" xml:space="preserve"><value>Previous month ({0})</value></data>
+  <data name="CalendarCurrentMonth" xml:space="preserve"><value>Jump to current month</value></data>
+  <data name="CalendarNextMonth" xml:space="preserve"><value>Next month ({0})</value></data>
+  <data name="SearchAriaLabel" xml:space="preserve"><value>Search</value></data>
   <data name="NavApiTokens" xml:space="preserve"><value>API tokens</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Create account</value></data>

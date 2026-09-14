@@ -1098,3 +1098,11 @@
 - Acceptance: required command fields have named controls and matching Radzen
   validators; email inputs also validate format; every grid keeps an explicit
   paging policy; Web and architecture tests pass.
+
+# Accessible-name localization — 2026-09-14
+
+- Calendar, Planner and topbar search exposed literal English accessible names
+  even though the visible application supports English and Spanish.
+- Month navigation labels also need culture-aware month/year formatting.
+- Acceptance: accessible names use shared resources, both catalogs contain the
+  same keys, and a repository gate rejects new literal `aria-label` values.

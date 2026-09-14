@@ -3,8 +3,11 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject ICardsApiClient Cards
 @inject Microsoft.AspNetCore.Components.NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 
 <PageTitle>Calendar — Cardscape</PageTitle>
 
@@ -12,11 +15,11 @@
             Subtitle="@($"Cards with a due date in {monthLabel}. Click a card to open it; click an empty day to add a new card (coming soon).")">
     <Actions>
         <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonthAsync"
-                      aria-label="@($"Previous month ({firstOfMonth.AddMonths(-1):MMMM yyyy})")" />
+                      aria-label="@L["CalendarPreviousMonth", firstOfMonth.AddMonths(-1).ToString("Y")]" />
         <RadzenButton Text="Today" ButtonStyle="ButtonStyle.Light" Click="@GoToCurrentMonthAsync"
-                      aria-label="Jump to current month" />
+                      aria-label="@L["CalendarCurrentMonth"]" />
         <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonthAsync"
-                      aria-label="@($"Next month ({firstOfMonth.AddMonths(1):MMMM yyyy})")" />
+                      aria-label="@L["CalendarNextMonth", firstOfMonth.AddMonths(1).ToString("Y")]" />
     </Actions>
 </PageHeader>
 

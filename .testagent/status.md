@@ -980,3 +980,16 @@
   omitting a grid paging decision, or restoring the naive tag parser fails an
   exact gate (`WebRadzenForms_ValidateRequiredInputs` or
   `WebRadzenDataGrids_DeclarePagingPolicy`).
+
+# Accessible-name localization — 2026-09-14
+
+- [x] Literal accessible-name inventory complete.
+- [x] Calendar, Planner and topbar search use shared localized names.
+- [x] Repository-wide literal `aria-label` gate added.
+- [x] Web build passes with 0 warnings/errors; ArchitectureTests pass 35/35;
+  TranslationEndpointTests pass 5/5, with 0 failed and 0 skipped.
+- [x] Assertion-quality review: the source gate scans every Razor view and the
+  endpoint tests assert the invariant catalog plus every supported culture.
+- [x] Pseudo-mutation review: replacing a localized accessible name with a
+  literal fails `WebRazorViews_DoNotHardcodeAccessibleNames`; deleting either
+  translated key fails `EverySupportedCulture_ReturnsCompleteCatalog`.

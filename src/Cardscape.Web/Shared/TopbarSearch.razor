@@ -1,8 +1,11 @@
 @using System.Text.Json
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject ISearchApiClient Search
 @inject Microsoft.AspNetCore.Components.NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 @implements IDisposable
 
 <div class="topbar-search rz-display-flex rz-align-items-center">
@@ -12,7 +15,7 @@
                    @onfocus="@ShowResults"
                    @onblur="@HideResultsAsync"
                    Placeholder="@Placeholder"
-                   aria-label="Search"
+                   aria-label="@L["SearchAriaLabel"]"
                    Style="width: 240px;" />
     @if (resultsVisible && results is not null && results.Count > 0)
     {
