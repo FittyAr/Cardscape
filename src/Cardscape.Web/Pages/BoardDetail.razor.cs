@@ -29,7 +29,14 @@ public partial class BoardDetail
     private bool _showSettings;
     private readonly RenameBoardModel _renameModel = new();
     private readonly DescriptionBoardModel _descriptionModel = new();
-    private readonly IReadOnlyList<string> _visibilityOptions = ["private", "workspace", "public"];
+    private IReadOnlyList<VisibilityOption> VisibilityOptions =>
+    [
+        new("private", L["BoardsVisibilityPrivate"]),
+        new("workspace", L["BoardsVisibilityWorkspace"]),
+        new("public", L["BoardsVisibilityPublic"])
+    ];
+
+    private sealed record VisibilityOption(string Value, string Label);
     private string _newVisibility = "private";
 
     private Guid? _openAddCardFor;

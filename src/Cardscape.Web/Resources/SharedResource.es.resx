@@ -596,4 +596,23 @@
   <data name="DescriptionCancel" xml:space="preserve"><value>Cancelar</value></data>
   <data name="DescriptionEmpty" xml:space="preserve"><value>Agregar descripción</value></data>
   <data name="ChecklistProgress" xml:space="preserve"><value>{0}% hecho</value></data>
+  <data name="BoardLoading" xml:space="preserve"><value>Cargando tablero…</value></data>
+  <data name="BoardLive" xml:space="preserve"><value>● En vivo</value></data>
+  <data name="BoardOffline" xml:space="preserve"><value>○ Sin conexión</value></data>
+  <data name="BoardLiveHint" xml:space="preserve"><value>Actualizaciones en vivo activas</value></data>
+  <data name="BoardOfflineHint" xml:space="preserve"><value>Actualizaciones en vivo desactivadas — se actualiza al navegar</value></data>
+  <data name="BoardStar" xml:space="preserve"><value>☆ Destacar</value></data>
+  <data name="BoardSettings" xml:space="preserve"><value>Configuración del tablero</value></data>
+  <data name="BoardListName" xml:space="preserve"><value>Nombre de la lista…</value></data>
+  <data name="BoardNewName" xml:space="preserve"><value>Nuevo nombre del tablero…</value></data>
+  <data name="BoardNewDescription" xml:space="preserve"><value>Nueva descripción…</value></data>
+  <data name="BoardUpdateDescription" xml:space="preserve"><value>Actualizar descripción</value></data>
+  <data name="BoardUnarchive" xml:space="preserve"><value>Desarchivar</value></data>
+  <data name="BoardMoveListStart" xml:space="preserve"><value>Mover al inicio</value></data>
+  <data name="BoardMoveListEnd" xml:space="preserve"><value>Mover al final</value></data>
+  <data name="BoardCardAria" xml:space="preserve"><value>Tarjeta: {0}{1}{2}</value></data>
+  <data name="BoardCompletedSuffix" xml:space="preserve"><value> (completada)</value></data>
+  <data name="BoardMirrorSuffix" xml:space="preserve"><value> (espejo)</value></data>
+  <data name="BoardMirrorCard" xml:space="preserve"><value>Tarjeta espejo</value></data>
+  <data name="BoardCardTitle" xml:space="preserve"><value>Título de la tarjeta…</value></data>
 </root>

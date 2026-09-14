@@ -597,4 +597,23 @@
   <data name="DescriptionCancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="DescriptionEmpty" xml:space="preserve"><value>Add a description</value></data>
   <data name="ChecklistProgress" xml:space="preserve"><value>{0}% done</value></data>
+  <data name="BoardLoading" xml:space="preserve"><value>Loading board…</value></data>
+  <data name="BoardLive" xml:space="preserve"><value>● Live</value></data>
+  <data name="BoardOffline" xml:space="preserve"><value>○ Offline</value></data>
+  <data name="BoardLiveHint" xml:space="preserve"><value>Live updates on</value></data>
+  <data name="BoardOfflineHint" xml:space="preserve"><value>Live updates off — refreshes on navigation only</value></data>
+  <data name="BoardStar" xml:space="preserve"><value>☆ Star</value></data>
+  <data name="BoardSettings" xml:space="preserve"><value>Board settings</value></data>
+  <data name="BoardListName" xml:space="preserve"><value>List name…</value></data>
+  <data name="BoardNewName" xml:space="preserve"><value>New board name…</value></data>
+  <data name="BoardNewDescription" xml:space="preserve"><value>New description…</value></data>
+  <data name="BoardUpdateDescription" xml:space="preserve"><value>Update description</value></data>
+  <data name="BoardUnarchive" xml:space="preserve"><value>Unarchive</value></data>
+  <data name="BoardMoveListStart" xml:space="preserve"><value>Move to start</value></data>
+  <data name="BoardMoveListEnd" xml:space="preserve"><value>Move to end</value></data>
+  <data name="BoardCardAria" xml:space="preserve"><value>Card: {0}{1}{2}</value></data>
+  <data name="BoardCompletedSuffix" xml:space="preserve"><value> (completed)</value></data>
+  <data name="BoardMirrorSuffix" xml:space="preserve"><value> (mirror)</value></data>
+  <data name="BoardMirrorCard" xml:space="preserve"><value>Mirror card</value></data>
+  <data name="BoardCardTitle" xml:space="preserve"><value>Card title…</value></data>
 </root>

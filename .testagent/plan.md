@@ -803,6 +803,14 @@ Status: complete. All four steps are implemented and validated.
 
 Status: complete. All five steps are implemented and validated.
 
+# Board detail visible-copy localization — 2026-09-14
+
+1. Replace literal board-detail states, actions, fields and accessible names with resources.
+2. Bind stable visibility values to render-time localized labels.
+3. Format due dates with the active culture.
+4. Add `WebBoardDetail_UsesLocalizedVisibleCopyAndCultureAwareDates`.
+5. Build Web and run focused architecture/catalog regressions.
+
 # Accessible-name localization — 2026-09-14
 
 1. Add shared English/Spanish resource keys for month navigation and search.

@@ -560,6 +560,21 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebBoardDetail_UsesLocalizedVisibleCopyAndCultureAwareDates()
+    {
+        string source = File.ReadAllText(Path.Combine(FindRepositoryRoot().FullName, "src", "Cardscape.Web", "Pages", "BoardDetail.razor"));
+
+        source.Should().Contain("Data=\"@VisibilityOptions\"");
+        source.Should().Contain("TextProperty=\"Label\" ValueProperty=\"Value\"");
+        source.Should().Contain("L[\"BoardCardAria\"");
+        source.Should().Contain("LocalDateTime:d");
+        source.Should().NotContain("Text=\"Loading board…\"");
+        source.Should().NotContain("Text=\"Settings\"");
+        source.Should().NotContain("title=\"Mirror card\"");
+        source.Should().NotContain("yyyy-MM-dd");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

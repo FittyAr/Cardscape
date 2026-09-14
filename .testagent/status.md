@@ -1213,3 +1213,18 @@
   dates, headings and actions. Restoring any checked literal/fixed date fails
   `WebWorkspaceMembers_UsesLocalizedVisibleCopyAndDates`; catalog drift fails
   `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Board detail visible-copy localization — 2026-09-14
+
+- [x] Visible and accessible board-detail copy uses shared resources.
+- [x] Visibility labels resolve at render without translating protocol values.
+- [x] Due dates follow the active culture.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 50/50 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion review independently covers dynamic option binding, accessible
+  names, culture dates and representative forbidden literals.
+- [x] Pseudo-mutation review: restoring literal states/tooltips or a fixed date,
+  or removing localized option metadata fails
+  `WebBoardDetail_UsesLocalizedVisibleCopyAndCultureAwareDates`; resource drift
+  fails `EverySupportedCulture_ReturnsCompleteCatalog`.

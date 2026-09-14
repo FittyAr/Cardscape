@@ -1241,3 +1241,12 @@
 
 - Members retained literal headings, form/table labels, actions, states, role options,
   validation, and fixed dates. Acceptance: shared resources, render-time roles, culture dates.
+
+# Board detail visible-copy localization — 2026-09-14
+
+- Board detail retained literal loading/realtime states, actions, settings fields,
+  list/card controls, accessible card names and a fixed display date.
+- Visibility protocol values must remain `private`, `workspace` and `public`, while
+  their Radzen dropdown labels resolve through the active culture at render time.
+- Acceptance: all identified visible and accessible copy uses the shared catalog,
+  display dates follow culture, and an architecture gate prevents regression.
