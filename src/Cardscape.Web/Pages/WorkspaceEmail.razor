@@ -29,12 +29,16 @@
                     <RadzenTextBox @bind-Value="addModel.EmailAddress" Name="email-address"
                                    Placeholder="board-123@cardscape.example.com" Style="width:100%" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="email-address" Text="@L["ValidationRequired"]" />
+                <RadzenEmailValidator Component="email-address" Text="@L["ValidationEmail"]" />
                 <LabeledField Text="@L["EmailLabelLabel"]" Component="email-label">
                     <RadzenTextBox @bind-Value="addModel.Label" Name="email-label" Style="width:100%" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="email-label" Text="@L["ValidationRequired"]" />
                 <LabeledField Text="@L["EmailTargetListId"]" Component="email-list">
                     <RadzenTextBox @bind-Value="addModel.TargetListIdText" Name="email-list" Style="width:100%" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="email-list" Text="@L["ValidationRequired"]" />
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
                     <RadzenButton Text="@L["EmailAddAddress"]" ButtonType="ButtonType.Submit"
                                   ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />

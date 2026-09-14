@@ -25,6 +25,7 @@
             <LabeledField Text="@L["WorkspacesName"]" Component="ws-name">
                 <RadzenTextBox @bind-Value="createModel.Name" Name="ws-name" Style="width:100%" />
             </LabeledField>
+            <RadzenRequiredValidator Component="ws-name" Text="@L["ValidationRequired"]" />
 
             @* Data residency is an opt-in feature. The dropdown only
                appears when `Features:DataResidencyEnabled` is true in

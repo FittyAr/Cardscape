@@ -324,8 +324,9 @@ else
 
                 <RadzenTemplateForm TItem="AddCommentModel" Data="@_addCommentModel" Submit="@AddCommentAsync">
                     <RadzenStack Gap="0.5rem" Class="rz-mt-2">
-                        <RadzenTextArea @bind-Value="_addCommentModel.Body" Rows="2" Placeholder="Write a comment…"
+                        <RadzenTextArea @bind-Value="_addCommentModel.Body" Name="comment-body" Rows="2" Placeholder="Write a comment…"
                                         Style="width:100%" />
+                        <RadzenRequiredValidator Component="comment-body" Text="@L["ValidationRequired"]" />
                         <RadzenButton Text="Comment" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
                                       IsBusy="@_addingComment" />
                     </RadzenStack>

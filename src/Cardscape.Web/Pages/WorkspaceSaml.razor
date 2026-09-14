@@ -24,18 +24,23 @@
                     <LabeledField Text="@L["SamlSlug"]" Component="s-slug">
                         <RadzenTextBox @bind-Value="model.Slug" Name="s-slug" Style="width:100%" />
                     </LabeledField>
+                    <RadzenRequiredValidator Component="s-slug" Text="@L["ValidationRequired"]" />
                     <LabeledField Text="@L["SamlDisplayName"]" Component="s-name">
                         <RadzenTextBox @bind-Value="model.DisplayName" Name="s-name" Style="width:100%" />
                     </LabeledField>
+                    <RadzenRequiredValidator Component="s-name" Text="@L["ValidationRequired"]" />
                     <LabeledField Text="@L["SamlIdpEntityId"]" Component="s-idp">
                         <RadzenTextBox @bind-Value="model.IdpEntityId" Name="s-idp" Style="width:100%" />
                     </LabeledField>
+                    <RadzenRequiredValidator Component="s-idp" Text="@L["ValidationRequired"]" />
                     <LabeledField Text="@L["SamlIdpMetadataUrl"]" Component="s-meta">
                         <RadzenTextBox @bind-Value="model.IdpMetadataUrl" Name="s-meta" Style="width:100%" />
                     </LabeledField>
+                    <RadzenRequiredValidator Component="s-meta" Text="@L["ValidationRequired"]" />
                     <LabeledField Text="@L["SamlSpEntityId"]" Component="s-sp">
                         <RadzenTextBox @bind-Value="model.SpEntityId" Name="s-sp" Style="width:100%" />
                     </LabeledField>
+                    <RadzenRequiredValidator Component="s-sp" Text="@L["ValidationRequired"]" />
                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
                         <RadzenButton Text="@L["SamlConfigure"]" ButtonType="ButtonType.Submit"
                                       ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />

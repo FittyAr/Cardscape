@@ -3,7 +3,10 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject ISecurityApiClient Security
+@inject IStringLocalizer<SharedResource> L
 
 <PageTitle>API tokens — Cardscape</PageTitle>
 
@@ -25,6 +28,7 @@
                     <RadzenTextBox @bind-Value="createModel.Name" Name="token-name"
                                    Placeholder="e.g. Cursor on laptop" Style="width:100%" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="token-name" Text="@L["ValidationRequired"]" />
 
                 <LabeledField Text="Scopes" Component="token-scopes">
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">

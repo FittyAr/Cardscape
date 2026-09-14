@@ -3,12 +3,15 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject IBoardsApiClient BoardsApi
 @inject IListsApiClient ListsApi
 @inject ICardsApiClient CardsApi
 @inject IBoardExtensionsApiClient ExtensionsApi
 @inject BoardHubClient HubClient
 @inject DialogService DialogService
+@inject IStringLocalizer<SharedResource> L
 @implements IAsyncDisposable
 
 <PageTitle>@(_board?.Name ?? "Board") — Cardscape</PageTitle>
@@ -52,9 +55,10 @@ else
                        next to several Light-style buttons above, so
                        we wire Enter explicitly through @onkeydown —
                        that works regardless of button order. *@
-                    <RadzenTextBox @bind-Value="_addListModel.Name" Placeholder="List name…"
+                    <RadzenTextBox @bind-Value="_addListModel.Name" Name="list-name" Placeholder="List name…"
                                    Style="width:100%"
                                    @onkeydown="@OnAddListKeyDownAsync" />
+                    <RadzenRequiredValidator Component="list-name" Text="@L["ValidationRequired"]" />
                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
                                  Gap="0.5rem" Class="rz-mt-3">
                         <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => _showAddList = false)" />
@@ -81,8 +85,9 @@ else
                 <RadzenText Text="Board settings" TextStyle="TextStyle.H6" TagName="TagName.H3" />
                 <RadzenTemplateForm TItem="RenameBoardModel" Data="@_renameModel" Submit="@RenameBoardAsync">
                     <RadzenStack Gap="0.5rem">
-                        <RadzenTextBox @bind-Value="_renameModel.NewName" Placeholder="New board name…"
+                        <RadzenTextBox @bind-Value="_renameModel.NewName" Name="board-name" Placeholder="New board name…"
                                        Style="width:100%" />
+                        <RadzenRequiredValidator Component="board-name" Text="@L["ValidationRequired"]" />
                         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
                             <RadzenButton Text="Rename" ButtonType="ButtonType.Submit"
                                           ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" />

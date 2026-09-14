@@ -105,6 +105,8 @@
   <data name="AuthResetPasswordSuccess" xml:space="preserve"><value>Tu contraseña fue restablecida. Ya podés iniciar sesión con la nueva.</value></data>
   <data name="AuthRemembered" xml:space="preserve"><value>¿La recordaste?</value></data>
   <data name="AuthEmailRequired" xml:space="preserve"><value>El email es obligatorio.</value></data>
+  <data name="ValidationRequired" xml:space="preserve"><value>Este campo es obligatorio.</value></data>
+  <data name="ValidationEmail" xml:space="preserve"><value>Ingresá una dirección de email válida.</value></data>
   <data name="AuthSignInWithGoogle" xml:space="preserve"><value>Iniciar sesión con Google</value></data>
   <data name="AuthSignInWithMicrosoft" xml:space="preserve"><value>Iniciar sesión con Microsoft</value></data>
   <data name="AuthSignInWithApple" xml:space="preserve"><value>Iniciar sesión con Apple</value></data>

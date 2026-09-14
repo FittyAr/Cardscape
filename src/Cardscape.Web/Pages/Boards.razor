@@ -3,7 +3,10 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject IBoardsApiClient BoardsApi
+@inject IStringLocalizer<SharedResource> L
 
 <PageTitle>Boards — Cardscape</PageTitle>
 
@@ -21,6 +24,7 @@
             <LabeledField Text="Name" Component="b-name">
                 <RadzenTextBox @bind-Value="createModel.Name" Name="b-name" Style="width:100%" />
             </LabeledField>
+            <RadzenRequiredValidator Component="b-name" Text="@L["ValidationRequired"]" />
 
             <LabeledField Text="Description" Component="b-desc">
                 <RadzenTextArea @bind-Value="createModel.Description" Name="b-desc" Style="width:100%" Rows="2" />

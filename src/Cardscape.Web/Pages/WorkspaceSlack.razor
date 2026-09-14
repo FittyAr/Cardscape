@@ -26,12 +26,15 @@
                     <LabeledField Text="@L["SlackTeamId"]" Component="slack-team-id">
                         <RadzenTextBox @bind-Value="connectModel.TeamId" Name="slack-team-id" Style="width:100%" />
                     </LabeledField>
+                    <RadzenRequiredValidator Component="slack-team-id" Text="@L["ValidationRequired"]" />
                     <LabeledField Text="@L["SlackTeamName"]" Component="slack-team-name">
                         <RadzenTextBox @bind-Value="connectModel.TeamName" Name="slack-team-name" Style="width:100%" />
                     </LabeledField>
+                    <RadzenRequiredValidator Component="slack-team-name" Text="@L["ValidationRequired"]" />
                     <LabeledField Text="@L["SlackBotToken"]" Component="slack-bot-token">
                         <RadzenPassword @bind-Value="connectModel.BotToken" Name="slack-bot-token" Style="width:100%" />
                     </LabeledField>
+                    <RadzenRequiredValidator Component="slack-bot-token" Text="@L["ValidationRequired"]" />
                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
                         <RadzenButton Text="@L["SlackConnect"]" ButtonType="ButtonType.Submit"
                                       ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />

@@ -1086,3 +1086,15 @@
   refreshes and cannot propagate component disposal to the HTTP request.
 - `PeriodicTimer` provides one observed loop, naturally serializes refreshes and
   accepts the component-owned cancellation token for both waiting and I/O.
+
+# Radzen forms and grids — 2026-09-14
+
+- Inventory: 20 `RadzenTemplateForm` instances and 9 `RadzenDataGrid` instances
+  across routable Web pages.
+- Only the TOTP enrollment form declared a Radzen validator; required command
+  inputs otherwise depended exclusively on a later HTTP failure.
+- Every grid already has a deliberate paging choice: seven paged datasets and
+  two small operational snapshots with paging explicitly disabled.
+- Acceptance: required command fields have named controls and matching Radzen
+  validators; email inputs also validate format; every grid keeps an explicit
+  paging policy; Web and architecture tests pass.

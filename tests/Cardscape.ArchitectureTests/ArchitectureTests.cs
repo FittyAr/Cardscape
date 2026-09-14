@@ -321,6 +321,68 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebRadzenForms_ValidateRequiredInputs()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string pagesRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages");
+        Dictionary<string, string[]> requiredInputs = new(StringComparer.Ordinal)
+        {
+            ["ApiTokens.razor"] = ["token-name"],
+            ["Automation.razor"] = ["rule-name"],
+            ["BoardDetail.razor"] = ["list-name", "board-name"],
+            ["Boards.razor"] = ["b-name"],
+            ["CardDetail.razor"] = ["comment-body"],
+            ["ForgotPassword.razor"] = ["email"],
+            ["Login.razor"] = ["email", "password", "totp"],
+            ["Register.razor"] = ["displayName", "email", "password", "confirmPassword"],
+            ["ResetPassword.razor"] = ["token", "password", "confirmPassword"],
+            ["SettingsOAuthApps.razor"] = ["name", "redirect", "scopes"],
+            ["SettingsTwoFactor.razor"] = ["confirmation-code"],
+            ["WorkspaceEmail.razor"] = ["email-address", "email-label", "email-list"],
+            ["WorkspaceGitHub.razor"] = ["gh-board", "gh-repo", "gh-events", "gh-issue-card", "gh-issue-repo", "gh-issue-title"],
+            ["WorkspaceMembers.razor"] = ["invite-email"],
+            ["WorkspaceSaml.razor"] = ["s-slug", "s-name", "s-idp", "s-meta", "s-sp"],
+            ["WorkspaceScim.razor"] = ["scim-name"],
+            ["WorkspaceSlack.razor"] = ["slack-team-id", "slack-team-name", "slack-bot-token"],
+            ["Workspaces.razor"] = ["ws-name"]
+        };
+
+        string[] violations = requiredInputs
+            .SelectMany(entry => entry.Value.Select(component => (entry.Key, Component: component)))
+            .Where(input => !File.ReadAllText(Path.Combine(pagesRoot, input.Key)).Contains(
+                $"<RadzenRequiredValidator Component=\"{input.Component}\"",
+                StringComparison.Ordinal))
+            .Select(input => $"{input.Key}:{input.Component}")
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "every command input required by the application must provide immediate Radzen validation");
+    }
+
+    [Fact]
+    public void WebRadzenDataGrids_DeclarePagingPolicy()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string webRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web");
+        Regex dataGrid = new(
+            "<RadzenDataGrid\\b(?<attributes>(?:\"[^\"]*\"|[^>])*)>",
+            RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1));
+
+        string[] violations = Directory.GetFiles(webRoot, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(file => dataGrid.Matches(File.ReadAllText(file))
+                .Where(match => !match.Groups["attributes"].Value.Contains("AllowPaging=", StringComparison.Ordinal))
+                .Select(_ => Path.GetRelativePath(repositoryRoot.FullName, file)))
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "every data grid must explicitly opt into paging or document its bounded data set by opting out");
+    }
+
+    [Fact]
     public void ApiEndpoints_DoNotConstructProblemDetailsDirectly()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

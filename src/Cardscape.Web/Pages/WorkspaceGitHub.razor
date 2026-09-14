@@ -22,14 +22,17 @@
                                     Data="@boards" TextProperty="Name" ValueProperty="Id"
                                     AllowClear="true" Placeholder="@L["GitHubSelectBoard"]" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="gh-board" Text="@L["ValidationRequired"]" />
                 <LabeledField Text="@L["GitHubRepoFullName"]" Component="gh-repo">
                     <RadzenTextBox @bind-Value="linkModel.RepoFullName" Name="gh-repo"
                                    Placeholder="owner/name" Style="width:100%" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="gh-repo" Text="@L["GitHubRepoRequired"]" />
                 <LabeledField Text="@L["GitHubEvents"]" Component="gh-events">
                     <RadzenTextBox @bind-Value="linkModel.Events" Name="gh-events"
                                    Placeholder="pull_request,issues" Style="width:100%" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="gh-events" Text="@L["ValidationRequired"]" />
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
                     <RadzenButton Text="@L["GitHubLinkRepo"]" ButtonType="ButtonType.Submit"
                                   ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
@@ -101,12 +104,15 @@
                 <LabeledField Text="@L["GitHubCardId"]" Component="gh-issue-card">
                     <RadzenTextBox @bind-Value="issueModel.CardIdText" Name="gh-issue-card" Style="width:100%" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="gh-issue-card" Text="@L["ValidationRequired"]" />
                 <LabeledField Text="@L["GitHubRepoFullName"]" Component="gh-issue-repo">
                     <RadzenTextBox @bind-Value="issueModel.RepoFullName" Name="gh-issue-repo" Style="width:100%" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="gh-issue-repo" Text="@L["GitHubRepoRequired"]" />
                 <LabeledField Text="@L["GitHubIssueTitle"]" Component="gh-issue-title">
                     <RadzenTextBox @bind-Value="issueModel.Title" Name="gh-issue-title" Style="width:100%" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="gh-issue-title" Text="@L["ValidationRequired"]" />
                 <LabeledField Text="@L["GitHubIssueBody"]" Component="gh-issue-body">
                     <RadzenTextArea @bind-Value="issueModel.Body" Name="gh-issue-body" Rows="4" Style="width:100%" />
                 </LabeledField>

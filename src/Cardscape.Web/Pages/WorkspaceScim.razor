@@ -20,6 +20,7 @@
                 <LabeledField Text="@L["ScimTokenName"]" Component="scim-name">
                     <RadzenTextBox @bind-Value="issueModel.Name" Name="scim-name" Style="width:100%" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="scim-name" Text="@L["ValidationRequired"]" />
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
                     <RadzenButton Text="@L["ScimIssueToken"]" ButtonType="ButtonType.Submit"
                                   ButtonStyle="ButtonStyle.Primary" IsBusy="@issuing" />

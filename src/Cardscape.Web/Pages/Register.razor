@@ -25,17 +25,21 @@
                 <RadzenTextBox @bind-Value="model.DisplayName" Name="displayName" Style="width:100%"
                                autocomplete="name" Placeholder="@L["AuthDisplayNamePlaceholder"]" />
             </RadzenFormField>
+            <RadzenRequiredValidator Component="displayName" Text="@L["ValidationRequired"]" />
 
             <RadzenFormField Text="@L["AuthEmail"]" Component="email">
                 <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%"
                                autocomplete="email" Placeholder="you@company.com" />
             </RadzenFormField>
+            <RadzenRequiredValidator Component="email" Text="@L["AuthEmailRequired"]" />
+            <RadzenEmailValidator Component="email" Text="@L["ValidationEmail"]" />
 
             <RadzenFormField Text="@L["AuthPassword"]" Component="password">
                 <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%"
                                 autocomplete="new-password" />
                 <RadzenText Text="@L["AuthPasswordHint"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
             </RadzenFormField>
+            <RadzenRequiredValidator Component="password" Text="@L["ValidationRequired"]" />
 
             @* BUG-A8-012 — see test-results/beta/reports/A8-settings.md.
                The form previously only collected the password
@@ -55,6 +59,7 @@
                                 Style="color: var(--rz-danger);" />
                 }
             </RadzenFormField>
+            <RadzenRequiredValidator Component="confirmPassword" Text="@L["ValidationRequired"]" />
 
             @if (error is not null)
             {

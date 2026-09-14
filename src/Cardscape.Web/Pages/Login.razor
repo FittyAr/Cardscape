@@ -50,10 +50,13 @@
                     <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%"
                                    autocomplete="email" Placeholder="you@company.com" />
                 </RadzenFormField>
+                <RadzenRequiredValidator Component="email" Text="@L["AuthEmailRequired"]" />
+                <RadzenEmailValidator Component="email" Text="@L["ValidationEmail"]" />
                 <RadzenFormField Text="@L["AuthPassword"]" Component="password">
                     <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%"
                                     autocomplete="current-password" />
                 </RadzenFormField>
+                <RadzenRequiredValidator Component="password" Text="@L["ValidationRequired"]" />
                 @if (error is not null)
                 {
                     <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" Size="AlertSize.Small" AllowClose="false">
@@ -83,6 +86,7 @@
                                    inputmode="numeric" maxlength="6"
                                    Placeholder="••••••" />
                 </RadzenFormField>
+                <RadzenRequiredValidator Component="totp" Text="@L["Login_TotpCode_Required"]" />
                 @if (error is not null)
                 {
                     <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" Size="AlertSize.Small" AllowClose="false">

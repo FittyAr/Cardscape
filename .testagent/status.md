@@ -965,3 +965,18 @@
   three unobservable callback patterns rather than naming `InboxBell`.
 - [x] Pseudo-mutation review: restoring `async void`, `Elapsed += async` or
   `ContinueWith` anywhere under Web fails the source gate.
+
+# Radzen forms and grids — 2026-09-14
+
+- [x] Full form/grid inventory recorded.
+- [x] Required and email-format validators implemented with localized messages.
+- [x] Repository architecture gates added for required fields and grid paging.
+- [x] Web build passes with 0 warnings/errors; ArchitectureTests pass 34/34,
+  with 0 failed and 0 skipped.
+- [x] Assertion-quality review: the required-input gate names each backend
+  command field and checks its matching component id; the grid gate scans every
+  Razor view and correctly parses `>` characters inside quoted generic types.
+- [x] Pseudo-mutation review: removing or misnaming any required validator,
+  omitting a grid paging decision, or restoring the naive tag parser fails an
+  exact gate (`WebRadzenForms_ValidateRequiredInputs` or
+  `WebRadzenDataGrids_DeclarePagingPolicy`).

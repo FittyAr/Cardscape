@@ -3,7 +3,10 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject IAutomationApiClient AutomationClient
+@inject IStringLocalizer<SharedResource> L
 
 <PageTitle>Automation — Cardscape</PageTitle>
 
@@ -24,6 +27,7 @@
                 <LabeledField Text="Name" Component="rule-name">
                     <RadzenTextBox @bind-Value="newRule.Name" Name="rule-name" Style="width:100%" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="rule-name" Text="@L["ValidationRequired"]" />
 
                 <LabeledField Text="When…" Component="rule-trigger">
                     <RadzenDropDown @bind-Value="newRule.Trigger" Data="@triggerOptions"

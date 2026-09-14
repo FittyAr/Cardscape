@@ -3,8 +3,11 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
 @inject IWorkspacesApiClient WorkspacesApi
 @inject IInvitationsApiClient InvitationsApi
+@inject IStringLocalizer<SharedResource> L
 
 <PageTitle>Members — Cardscape</PageTitle>
 
@@ -20,6 +23,8 @@
                 <LabeledField Text="Email" Component="invite-email">
                     <RadzenTextBox @bind-Value="inviteModel.Email" Name="invite-email" Style="width:100%" />
                 </LabeledField>
+                <RadzenRequiredValidator Component="invite-email" Text="@L["ValidationRequired"]" />
+                <RadzenEmailValidator Component="invite-email" Text="@L["ValidationEmail"]" />
 
                 <LabeledField Text="Role" Component="invite-role">
                     <RadzenDropDown @bind-Value="inviteModel.Role" Data="@roles"

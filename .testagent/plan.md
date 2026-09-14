@@ -643,6 +643,17 @@
 
 Status: complete. All five steps are implemented and validated.
 
+# Radzen forms and grids — 2026-09-14
+
+1. Add localized reusable required/email validation messages.
+2. Associate every required command input with a `RadzenRequiredValidator` and
+   every user-entered email with `RadzenEmailValidator`.
+3. Add `WebRadzenForms_ValidateRequiredInputs` for the required-field contract.
+4. Add `WebRadzenDataGrids_DeclarePagingPolicy` for explicit boundedness.
+5. Build Web, run architecture tests, review assertions and mutation resistance.
+
+Status: complete. All five steps are implemented and validated.
+
 # Blazor render-loop safety — 2026-09-14
 
 1. Audit event/timer callbacks that evade normal C# async-method scans.
