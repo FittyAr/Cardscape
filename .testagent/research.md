@@ -1151,3 +1151,11 @@
   visually conflating transport failure with a valid empty schedule.
 - Neither exposed loading state or disabled month navigation during requests.
 - Acceptance: distinct Radzen loading/error/content states and a regression gate.
+
+# Home unused data loading — 2026-09-14
+
+- The authenticated Home experience fetched workspaces, starred boards, and the
+  unread notification count, then stored all three results in fields never read by
+  the render tree.
+- The blanket catch concealed failures from three unnecessary requests.
+- Acceptance: remove the dead clients, state, lifecycle, and silent exception path.

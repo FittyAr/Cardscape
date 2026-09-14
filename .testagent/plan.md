@@ -661,6 +661,15 @@ Status: complete. All four steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Home unused data loading — 2026-09-14
+
+1. Prove whether Home renders any of its remotely loaded state.
+2. Remove unused API clients, fields, and initialization lifecycle.
+3. Add `WebHome_DoesNotFetchDataItDoesNotRender`.
+4. Build Web and run architecture regressions.
+
+Status: complete. All four steps are implemented and validated.
+
 # Keyboard, focus and icon-button accessibility — 2026-09-14
 
 1. Inventory non-semantic click targets, focus CSS and icon-only buttons.

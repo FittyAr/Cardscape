@@ -1063,3 +1063,14 @@
   of the API error from either page fails
   `WebCalendarViews_DistinguishLoadingErrorAndEmptyStates`; removing a localized
   key from either culture fails `EverySupportedCulture_ReturnsCompleteCatalog`.
+
+# Home unused data loading — 2026-09-14
+
+- [x] Removed three unused API requests and their injected clients.
+- [x] Removed unread state and the blanket exception handler that hid request failures.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture suite: 39/39 pass.
+- [x] Assertion-quality review: two independent assertions distinguish client
+  coupling from lifecycle coupling and carry requirement-specific failure reasons.
+- [x] Pseudo-mutation review: adding any `ApiClient` dependency or restoring the
+  data-loading lifecycle fails `WebHome_DoesNotFetchDataItDoesNotRender`.

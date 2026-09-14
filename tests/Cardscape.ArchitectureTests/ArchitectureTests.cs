@@ -383,6 +383,17 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebHome_DoesNotFetchDataItDoesNotRender()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string homePath = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "Home.razor");
+        string source = File.ReadAllText(homePath);
+
+        source.Should().NotContain("ApiClient", "the home page must not issue requests for data absent from its UI");
+        source.Should().NotContain("OnInitializedAsync", "the static home experience requires no data-loading lifecycle");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
