@@ -1159,3 +1159,12 @@
   the render tree.
 - The blanket catch concealed failures from three unnecessary requests.
 - Acceptance: remove the dead clients, state, lifecycle, and silent exception path.
+
+# API token load-state integrity — 2026-09-14
+
+- Initial list failure was coerced to an empty collection and displayed as if the
+  account had never issued a token; revoke failures were invisible.
+- Live rate-limit status is held outside SQL and has no bulk endpoint, but the UI
+  awaited one HTTP request per active token serially.
+- Acceptance: distinct load failure, visible revoke failure, Radzen loading
+  feedback, and concurrent live-status requests after the EF-backed list succeeds.

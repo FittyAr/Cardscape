@@ -161,6 +161,8 @@
   <data name="ChecklistDelete" xml:space="preserve"><value>Eliminar checklist</value></data>
   <data name="ChecklistItemDelete" xml:space="preserve"><value>Eliminar elemento del checklist</value></data>
   <data name="NavApiTokens" xml:space="preserve"><value>Tokens de API</value></data>
+  <data name="ApiTokensLoadFailed" xml:space="preserve"><value>No se pudieron cargar los tokens de API.</value></data>
+  <data name="ApiTokensRevokeFailed" xml:space="preserve"><value>No se pudo revocar el token de API.</value></data>
   <data name="NavSignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="NavCreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>
   <data name="AuthSignInTitle" xml:space="preserve"><value>Iniciar sesión</value></data>

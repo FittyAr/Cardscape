@@ -1074,3 +1074,18 @@
   coupling from lifecycle coupling and carry requirement-specific failure reasons.
 - [x] Pseudo-mutation review: adding any `ApiClient` dependency or restoring the
   data-loading lifecycle fails `WebHome_DoesNotFetchDataItDoesNotRender`.
+
+# API token load-state integrity — 2026-09-14
+
+- [x] Initial load and revoke failures are visible and have localized fallbacks.
+- [x] Valid empty state remains distinct from failure.
+- [x] Live external status requests execute concurrently after the EF-backed list.
+- [x] Architecture regression gate added.
+- [x] Web build: 0 warnings, 0 errors; architecture: 40/40 pass;
+  translation catalog: 5/5 pass.
+- [x] Assertion-quality review: assertions independently cover visible failure,
+  concurrency, and prohibition of failure-to-empty coercion with diagnostic reasons.
+- [x] Pseudo-mutation review: removing the load-error branch or `Task.WhenAll`, or
+  restoring the failure-to-empty assignment, fails
+  `WebApiTokens_DistinguishesLoadFailureAndLoadsStatusesConcurrently`; catalog drift
+  fails `EverySupportedCulture_ReturnsCompleteCatalog`.

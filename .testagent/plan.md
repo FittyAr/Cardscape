@@ -670,6 +670,15 @@ Status: complete. All four steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# API token load-state integrity — 2026-09-14
+
+1. Separate list-loading failures from valid empty token state.
+2. Surface revoke failures and use Radzen loading feedback.
+3. Replace the serial live-status waterfall with `Task.WhenAll`.
+4. Add an architecture gate, build Web, and run focused regressions.
+
+Status: complete. All four steps are implemented and validated.
+
 # Keyboard, focus and icon-button accessibility — 2026-09-14
 
 1. Inventory non-semantic click targets, focus CSS and icon-only buttons.

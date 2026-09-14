@@ -79,15 +79,19 @@
         </RadzenCard>
     }
 
-    @if (tokens is null)
+    @if (loading)
     {
-        <RadzenText Text="Loading…" />
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
     }
-    else if (tokens.Count == 0)
+    else if (loadError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@loadError</RadzenAlert>
+    }
+    else if (tokens is { Count: 0 })
     {
         <RadzenText Text="You haven't minted any API tokens yet." />
     }
-    else
+    else if (tokens is not null)
     {
         <RadzenStack Gap="0.5rem">
             @foreach (ApiTokenSummaryDto token in tokens)
@@ -147,7 +151,9 @@
     private Dictionary<Guid, ApiTokenRateLimitStatusDto> rateLimitById = new();
     private bool showCreate;
     private bool busy;
+    private bool loading;
     private string? error;
+    private string? loadError;
     private string? issuedSecret;
     private readonly CreateModel createModel = new();
 
@@ -164,27 +170,32 @@
 
     private async Task RefreshAsync()
     {
-        ApiResult<IReadOnlyList<ApiTokenSummaryDto>> result = await Security.ListTokensAsync();
-        tokens = result.IsSuccess ? result.Value : [];
-
-        rateLimitById.Clear();
-        if (tokens is null)
+        loading = true;
+        loadError = null;
+        try
         {
-            return;
+            ApiResult<IReadOnlyList<ApiTokenSummaryDto>> result = await Security.ListTokensAsync();
+            if (!result.IsSuccess || result.Value is null)
+            {
+                tokens = null;
+                rateLimitById.Clear();
+                loadError = result.Error ?? L["ApiTokensLoadFailed"];
+                return;
+            }
+
+            tokens = result.Value;
+            ApiTokenSummaryDto[] activeTokens = tokens.Where(t => t.RevokedAt is null).ToArray();
+            ApiResult<ApiTokenRateLimitStatusDto>[] statuses = await Task.WhenAll(
+                activeTokens.Select(t => Security.GetRateLimitStatusAsync(t.Id)));
+
+            rateLimitById = activeTokens
+                .Zip(statuses)
+                .Where(pair => pair.Second.IsSuccess && pair.Second.Value is not null)
+                .ToDictionary(pair => pair.First.Id, pair => pair.Second.Value!);
         }
-
-        foreach (ApiTokenSummaryDto t in tokens)
+        finally
         {
-            if (t.RevokedAt is not null)
-            {
-                continue;
-            }
-
-            ApiResult<ApiTokenRateLimitStatusDto> s = await Security.GetRateLimitStatusAsync(t.Id);
-            if (s.IsSuccess && s.Value is not null)
-            {
-                rateLimitById[t.Id] = s.Value;
-            }
+            loading = false;
         }
     }
 
@@ -255,7 +266,10 @@
         if (result.IsSuccess)
         {
             await RefreshAsync();
+            return;
         }
+
+        loadError = result.Error ?? L["ApiTokensRevokeFailed"];
     }
 
     private sealed class CreateModel

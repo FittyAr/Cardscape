@@ -394,6 +394,19 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebApiTokens_DistinguishesLoadFailureAndLoadsStatusesConcurrently()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string path = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "ApiTokens.razor");
+        string source = File.ReadAllText(path);
+
+        source.Should().Contain("else if (loadError is not null)");
+        source.Should().Contain("Task.WhenAll(", "live rate-limit status requests must not form a serial N+1 waterfall");
+        source.Should().NotContain("tokens = result.IsSuccess ? result.Value : []",
+            "a transport failure is not a valid empty token collection");
+    }
+
+    [Fact]
     public void WebRazorComponents_DoNotUseUnobservableAsyncCallbacks()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
