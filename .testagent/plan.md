@@ -661,6 +661,15 @@ Status: complete. All four steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Architecture gate closure — 2026-09-14
+
+1. Map existing gates to the defect classes recorded by the modernization plan.
+2. Identify defects fixed without durable automated enforcement.
+3. Add the missing functional/E2E host-internal resolution gate.
+4. Run the complete architecture project and mutation-review the new assertion.
+
+Status: complete. All four steps are implemented and validated.
+
 # Calendar/Planner state integrity — 2026-09-14
 
 1. Add explicit loading and error state to Calendar and Planner.

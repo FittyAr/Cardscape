@@ -1322,3 +1322,15 @@
 - [x] Pseudo-mutation review: bypassing the public mutation, accepting anonymous MCP,
   sharing host addresses, dropping internal authentication or failing to archive the
   card breaks its corresponding named functional/E2E contract.
+
+# Architecture gate closure — 2026-09-14
+
+- [x] Existing gate coverage mapped to dependency, ownership, API, MCP and UI defects.
+- [x] Missing regression class isolated to concrete host resolution from black-box suites.
+- [x] Source gate added for Functional and E2E projects.
+- [x] Architecture suite passes 55/55 with no skips.
+- [x] Assertion review: the gate reports repository-relative violating files and
+  restricts only concrete API/MCP host resolution in the two black-box projects.
+- [x] Pseudo-mutation review: reintroducing the removed
+  `GetRequiredService<Cardscape.Api.Realtime.HttpMcpResourceNotifier>` expression
+  makes `FunctionalAndE2ETests_DoNotResolveConcreteHostTypes` fail.

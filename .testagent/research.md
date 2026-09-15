@@ -1315,3 +1315,12 @@
 - `Api_Notifier_Can_Call_Mcp_Directly_Across_Processes` resolved the concrete
   `HttpMcpResourceNotifier` and invoked it directly, duplicating the public API mutation
   scenario; acceptance requires removing that implementation-coupled test and its dead helper.
+
+# Architecture gate closure — 2026-09-14
+
+- The architecture suite already covers the approved project graph, inward dependencies,
+  abstraction ownership/naming, sealed domain/handlers, MCP scope/current-user/alias rules,
+  API cancellation and Problem Details, and the audited Radzen/UI conventions.
+- The functional/E2E audit exposed one unguarded regression class: resolving concrete API or
+  MCP host types from black-box suites. A source gate over those two projects is appropriate;
+  it permits fixture setup through infrastructure abstractions while rejecting host internals.

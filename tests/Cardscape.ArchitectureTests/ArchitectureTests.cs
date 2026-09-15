@@ -209,6 +209,32 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void FunctionalAndE2ETests_DoNotResolveConcreteHostTypes()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        Regex concreteHostResolution = new(
+            @"GetRequiredService\s*<\s*Cardscape\.(?:Api|Mcp)\.",
+            RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1));
+        string[] testRoots =
+        [
+            Path.Combine(repositoryRoot.FullName, "tests", "Cardscape.FunctionalTests"),
+            Path.Combine(repositoryRoot.FullName, "tests", "Cardscape.E2ETests")
+        ];
+
+        string[] violations = testRoots
+            .SelectMany(root => Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories))
+            .Where(file => concreteHostResolution.IsMatch(File.ReadAllText(file)))
+            .Select(file => Path.GetRelativePath(repositoryRoot.FullName, file))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "functional and E2E behavior must be driven through HTTP/protocol boundaries, " +
+            "not by resolving concrete API or MCP implementation types");
+    }
+
+    [Fact]
     public void AsyncApiEndpointLambdas_AcceptCancellationToken()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
