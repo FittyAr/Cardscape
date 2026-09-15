@@ -1334,3 +1334,16 @@
 - [x] Pseudo-mutation review: reintroducing the removed
   `GetRequiredService<Cardscape.Api.Realtime.HttpMcpResourceNotifier>` expression
   makes `FunctionalAndE2ETests_DoNotResolveConcreteHostTypes` fail.
+
+# Internal board broadcast dispatch hotspot — 2026-09-14
+
+- [x] Twenty supported dispatch branches and existing negative contracts inventoried.
+- [x] Immutable ordinal typed dispatch registry implemented without reflection/dynamic.
+- [x] All twenty public HTTP method/payload combinations pass.
+- [x] Complete endpoint class passes 30/30, including auth, size, resolution and malformed input.
+- [x] API and Integration projects compile with 0 warnings and 0 errors.
+- [x] Assertion review: every supported protocol key has its own theory row and exact 202
+  assertion; negative tests retain exact status/body assertions for distinct failure classes.
+- [x] Pseudo-mutation review: deleting or renaming any registry key, changing its payload type,
+  or mapping it to an incompatible client method fails the corresponding row of
+  `Broadcast_EachSupportedMethod_WithMatchingPayload_Returns202`.

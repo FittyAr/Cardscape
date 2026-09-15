@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -44,6 +45,37 @@ public static class BoardBroadcastEndpoints
     {
         PropertyNameCaseInsensitive = true
     };
+
+    private delegate Task<bool> BroadcastHandler(
+        IBoardNotifier notifier,
+        Guid boardId,
+        string? rawPayload,
+        CancellationToken ct);
+
+    private static readonly FrozenDictionary<string, BroadcastHandler> BroadcastHandlers =
+        new Dictionary<string, BroadcastHandler>(StringComparer.Ordinal)
+        {
+            [nameof(IBoardClient.CardCreated)] = CreateHandler<CardEventPayload>(static (client, payload) => client.CardCreated(payload)),
+            [nameof(IBoardClient.CardUpdated)] = CreateHandler<CardEventPayload>(static (client, payload) => client.CardUpdated(payload)),
+            [nameof(IBoardClient.CardMoved)] = CreateHandler<CardMovedPayload>(static (client, payload) => client.CardMoved(payload)),
+            [nameof(IBoardClient.CardCompleted)] = CreateHandler<CardEventPayload>(static (client, payload) => client.CardCompleted(payload)),
+            [nameof(IBoardClient.CardReopened)] = CreateHandler<CardEventPayload>(static (client, payload) => client.CardReopened(payload)),
+            [nameof(IBoardClient.CardArchived)] = CreateHandler<CardEventPayload>(static (client, payload) => client.CardArchived(payload)),
+            [nameof(IBoardClient.CardRestored)] = CreateHandler<CardEventPayload>(static (client, payload) => client.CardRestored(payload)),
+            [nameof(IBoardClient.CardAssigned)] = CreateHandler<CardAssignedPayload>(static (client, payload) => client.CardAssigned(payload)),
+            [nameof(IBoardClient.CardUnassigned)] = CreateHandler<CardAssignedPayload>(static (client, payload) => client.CardUnassigned(payload)),
+            [nameof(IBoardClient.CardLabelAttached)] = CreateHandler<CardLabelPayload>(static (client, payload) => client.CardLabelAttached(payload)),
+            [nameof(IBoardClient.CardLabelDetached)] = CreateHandler<CardLabelPayload>(static (client, payload) => client.CardLabelDetached(payload)),
+            [nameof(IBoardClient.ListCreated)] = CreateHandler<ListEventPayload>(static (client, payload) => client.ListCreated(payload)),
+            [nameof(IBoardClient.ListRenamed)] = CreateHandler<ListEventPayload>(static (client, payload) => client.ListRenamed(payload)),
+            [nameof(IBoardClient.ListArchived)] = CreateHandler<ListEventPayload>(static (client, payload) => client.ListArchived(payload)),
+            [nameof(IBoardClient.ListRestored)] = CreateHandler<ListEventPayload>(static (client, payload) => client.ListRestored(payload)),
+            [nameof(IBoardClient.CommentAdded)] = CreateHandler<CommentEventPayload>(static (client, payload) => client.CommentAdded(payload)),
+            [nameof(IBoardClient.LabelCreated)] = CreateHandler<LabelEventPayload>(static (client, payload) => client.LabelCreated(payload)),
+            [nameof(IBoardClient.BoardRenamed)] = CreateHandler<BoardEventPayload>(static (client, payload) => client.BoardRenamed(payload)),
+            [nameof(IBoardClient.BoardStarred)] = CreateHandler<BoardEventPayload>(static (client, payload) => client.BoardStarred(payload)),
+            [nameof(IBoardClient.BoardUnstarred)] = CreateHandler<BoardEventPayload>(static (client, payload) => client.BoardUnstarred(payload))
+        }.ToFrozenDictionary(StringComparer.Ordinal);
 
     public static IEndpointRouteBuilder MapBoardBroadcastEndpoints(this IEndpointRouteBuilder app)
     {
@@ -222,157 +254,26 @@ public static class BoardBroadcastEndpoints
         string? rawPayload,
         CancellationToken ct)
     {
-        static T? Read<T>(string? raw) =>
-            string.IsNullOrWhiteSpace(raw)
-                ? default
-                : JsonSerializer.Deserialize<T>(raw, PayloadOptions);
-
-        switch (method)
-        {
-            case "CardCreated":
-                {
-                    var payload = Read<CardEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.CardCreated(payload), ct);
-                    return true;
-                }
-            case "CardUpdated":
-                {
-                    var payload = Read<CardEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.CardUpdated(payload), ct);
-                    return true;
-                }
-            case "CardMoved":
-                {
-                    var payload = Read<CardMovedPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.CardMoved(payload), ct);
-                    return true;
-                }
-            case "CardCompleted":
-                {
-                    var payload = Read<CardEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.CardCompleted(payload), ct);
-                    return true;
-                }
-            case "CardReopened":
-                {
-                    var payload = Read<CardEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.CardReopened(payload), ct);
-                    return true;
-                }
-            case "CardArchived":
-                {
-                    var payload = Read<CardEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.CardArchived(payload), ct);
-                    return true;
-                }
-            case "CardRestored":
-                {
-                    var payload = Read<CardEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.CardRestored(payload), ct);
-                    return true;
-                }
-            case "CardAssigned":
-                {
-                    var payload = Read<CardAssignedPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.CardAssigned(payload), ct);
-                    return true;
-                }
-            case "CardUnassigned":
-                {
-                    var payload = Read<CardAssignedPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.CardUnassigned(payload), ct);
-                    return true;
-                }
-            case "CardLabelAttached":
-                {
-                    var payload = Read<CardLabelPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.CardLabelAttached(payload), ct);
-                    return true;
-                }
-            case "CardLabelDetached":
-                {
-                    var payload = Read<CardLabelPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.CardLabelDetached(payload), ct);
-                    return true;
-                }
-            case "ListCreated":
-                {
-                    var payload = Read<ListEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.ListCreated(payload), ct);
-                    return true;
-                }
-            case "ListRenamed":
-                {
-                    var payload = Read<ListEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.ListRenamed(payload), ct);
-                    return true;
-                }
-            case "ListArchived":
-                {
-                    var payload = Read<ListEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.ListArchived(payload), ct);
-                    return true;
-                }
-            case "ListRestored":
-                {
-                    var payload = Read<ListEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.ListRestored(payload), ct);
-                    return true;
-                }
-            case "CommentAdded":
-                {
-                    var payload = Read<CommentEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.CommentAdded(payload), ct);
-                    return true;
-                }
-            case "LabelCreated":
-                {
-                    var payload = Read<LabelEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.LabelCreated(payload), ct);
-                    return true;
-                }
-            case "BoardRenamed":
-                {
-                    var payload = Read<BoardEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.BoardRenamed(payload), ct);
-                    return true;
-                }
-            case "BoardStarred":
-                {
-                    var payload = Read<BoardEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.BoardStarred(payload), ct);
-                    return true;
-                }
-            case "BoardUnstarred":
-                {
-                    var payload = Read<BoardEventPayload>(rawPayload);
-                    if (payload is null) { return false; }
-                    await notifier.BroadcastAsync(boardId, c => c.BoardUnstarred(payload), ct);
-                    return true;
-                }
-            default:
-                return false;
-        }
+        return BroadcastHandlers.TryGetValue(method, out BroadcastHandler? handler)
+            && await handler(notifier, boardId, rawPayload, ct);
     }
+
+    private static BroadcastHandler CreateHandler<TPayload>(
+        Func<IBoardClient, TPayload, Task> dispatch)
+        where TPayload : class =>
+        async (notifier, boardId, rawPayload, ct) =>
+        {
+            TPayload? payload = string.IsNullOrWhiteSpace(rawPayload)
+                ? null
+                : JsonSerializer.Deserialize<TPayload>(rawPayload, PayloadOptions);
+            if (payload is null)
+            {
+                return false;
+            }
+
+            await notifier.BroadcastAsync(boardId, client => dispatch(client, payload), ct);
+            return true;
+        };
 
     /// <summary>Wire format the MCP sends. <c>BoardId</c> wins;
     /// if it's empty, the API looks up <c>ListId</c>; if that's

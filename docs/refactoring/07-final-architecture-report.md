@@ -35,8 +35,8 @@ gate y un responsable claro. No se conservó compatibilidad legacy del producto.
 
 La medición depurada es 47,27% de líneas y 32,93% de ramas, con 185 de 3.407
 métodos por encima de CRAP 30. No se presenta como cobertura suficiente. El
-hotspot MIME principal ya fue reducido; los siguientes bloques deben atender,
-en orden, broadcast interno, SCIM Groups y políticas de presentación Activity.
+hotspot MIME principal y el dispatch de broadcast ya fueron reducidos; los
+siguientes bloques deben atender, en orden, SCIM Groups y políticas de presentación Activity.
 Responsable: mantenedores de Application/Infrastructure. Gate: cobertura y
 regresiones focalizadas en cada cambio.
 

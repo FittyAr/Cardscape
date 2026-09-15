@@ -396,3 +396,7 @@ Reglas permanentes:
 ## 5. Criterio de completitud
 
 El plan estará completo cuando todas las fases estén verificadas o cada excepción restante tenga una decisión explícita, evidencia y responsable. “Compila” no es suficiente: la arquitectura declarada, el código, las pruebas, la UI Radzen y la documentación deben describir el mismo sistema.
+
+## 6. Mejora continua posterior al cierre
+
+- [x] Reducir el hotspot de dispatch del broadcast interno: el switch repetitivo fue reemplazado por una tabla `FrozenDictionary` ordinal de handlers genéricos tipados, con claves derivadas de `IBoardClient` y sin reflection/dynamic. Una theory HTTP recorre las 20 operaciones admitidas y la clase completa pasa 30/30 preservando autenticación, límites, resolución EF Core y errores canónicos. Evidencia detallada en `docs/refactoring/08-internal-broadcast-dispatch.md`.

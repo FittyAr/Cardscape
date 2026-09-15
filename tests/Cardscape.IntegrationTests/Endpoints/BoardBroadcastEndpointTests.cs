@@ -80,22 +80,37 @@ public sealed class BoardBroadcastEndpointTests
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
-    public async Task Broadcast_CardCreated_With_BoardId_Returns_202()
+    [Theory]
+    [InlineData("CardCreated", "card")]
+    [InlineData("CardUpdated", "card")]
+    [InlineData("CardMoved", "move")]
+    [InlineData("CardCompleted", "card")]
+    [InlineData("CardReopened", "card")]
+    [InlineData("CardArchived", "card")]
+    [InlineData("CardRestored", "card")]
+    [InlineData("CardAssigned", "assignment")]
+    [InlineData("CardUnassigned", "assignment")]
+    [InlineData("CardLabelAttached", "card-label")]
+    [InlineData("CardLabelDetached", "card-label")]
+    [InlineData("ListCreated", "list")]
+    [InlineData("ListRenamed", "list")]
+    [InlineData("ListArchived", "list")]
+    [InlineData("ListRestored", "list")]
+    [InlineData("CommentAdded", "comment")]
+    [InlineData("LabelCreated", "label")]
+    [InlineData("BoardRenamed", "board")]
+    [InlineData("BoardStarred", "board")]
+    [InlineData("BoardUnstarred", "board")]
+    public async Task Broadcast_EachSupportedMethod_WithMatchingPayload_Returns202(
+        string method,
+        string payloadKind)
     {
         HttpClient client = CreateClientWithSecret();
         Guid boardId = Guid.NewGuid();
         HttpResponseMessage response = await PostAsync(client,
-            method: "CardCreated",
+            method,
             boardId: boardId,
-            payload: new
-            {
-                cardId = Guid.NewGuid(),
-                boardId,
-                listId = Guid.NewGuid(),
-                title = "AI created this",
-                at = DateTimeOffset.UtcNow
-            });
+            payload: CreateValidPayload(payloadKind, boardId));
         string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.Accepted, body);
     }
@@ -343,6 +358,23 @@ public sealed class BoardBroadcastEndpointTests
         });
         bytes.Should().HaveCount(size);
         return bytes;
+    }
+
+    private static object CreateValidPayload(string payloadKind, Guid boardId)
+    {
+        DateTimeOffset at = new(2026, 9, 14, 12, 0, 0, TimeSpan.Zero);
+        return payloadKind switch
+        {
+            "card" => new { cardId = Guid.NewGuid(), boardId, listId = Guid.NewGuid(), title = "Card", at },
+            "move" => new { cardId = Guid.NewGuid(), boardId, fromListId = Guid.NewGuid(), toListId = Guid.NewGuid(), newPosition = 2.0, at },
+            "assignment" => new { cardId = Guid.NewGuid(), boardId, userId = Guid.NewGuid(), at },
+            "card-label" => new { cardId = Guid.NewGuid(), boardId, labelId = Guid.NewGuid(), at },
+            "list" => new { listId = Guid.NewGuid(), boardId, name = "List", at },
+            "comment" => new { commentId = Guid.NewGuid(), cardId = Guid.NewGuid(), boardId, authorId = Guid.NewGuid(), at },
+            "label" => new { labelId = Guid.NewGuid(), boardId, name = "Label", color = "blue", at },
+            "board" => new { boardId, name = "Board", at },
+            _ => throw new ArgumentOutOfRangeException(nameof(payloadKind), payloadKind, "Unknown test payload kind.")
+        };
     }
 
     private sealed class UnknownLengthContent(byte[] bytes) : HttpContent

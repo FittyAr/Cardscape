@@ -670,6 +670,15 @@ Status: complete. All four steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Internal board broadcast dispatch hotspot — 2026-09-14
+
+1. Replace the branch-heavy switch with an immutable typed handler registry.
+2. Derive protocol keys from `IBoardClient` method names and retain ordinal matching.
+3. Convert the single positive case into a 20-case behavioral HTTP theory.
+4. Run the complete endpoint class, build API and review assertions/pseudo-mutations.
+
+Status: complete. All four steps are implemented and validated.
+
 # Calendar/Planner state integrity — 2026-09-14
 
 1. Add explicit loading and error state to Calendar and Planner.

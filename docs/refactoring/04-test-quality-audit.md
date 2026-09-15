@@ -46,6 +46,10 @@ cancelable. No se usan sleeps como sustituto de una assertion. Se retiraron dos
 - Una theory valida los 27 MIME bloqueados después de normalizar casing/espacios,
   el código de error estable y la ausencia de I/O/persistencia. Junto con los
   escenarios de éxito y compensación, el grupo ejecuta 29/29 tests.
+- `BoardBroadcastEndpoints.DispatchAsync` dejó de contener 20 ramas duplicadas:
+  usa un registro `FrozenDictionary` de handlers genéricos tipados y claves
+  `nameof(IBoardClient.*)`. Una theory ejercita las 20 combinaciones método/payload
+  por HTTP; la clase completa ejecuta 30/30 tests conservando sus negativos.
 
 El informe reproducible de esta ejecución está en
 `TestResults/coverage-analysis/coverage-analysis.md`; `TestResults` es un

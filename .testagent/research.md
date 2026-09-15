@@ -1324,3 +1324,13 @@
 - The functional/E2E audit exposed one unguarded regression class: resolving concrete API or
   MCP host types from black-box suites. A source gate over those two projects is appropriate;
   it permits fixture setup through infrastructure abstractions while rejecting host internals.
+
+# Internal board broadcast dispatch hotspot — 2026-09-14
+
+- `BoardBroadcastEndpoints.DispatchAsync` is a 20-case switch with identical deserialize,
+  validate, broadcast and success branches; the coverage audit ranked it second by CRAP.
+- Positive endpoint coverage exists only for `CardCreated`; unknown method and incompatible
+  payload cover negative behavior, but 19 supported protocol names can drift unnoticed.
+- `IBoardClient` already owns the canonical method names and strongly typed payload signatures.
+- Acceptance: immutable ordinal dispatch registry, no reflection/dynamic dispatch, all 20
+  methods accept their matching payload through HTTP, and negative contracts remain stable.
