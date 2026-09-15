@@ -652,6 +652,15 @@ Status: complete. All five steps are implemented and validated.
 
 Status: complete. All four steps are implemented and validated.
 
+# Functional and E2E behavior audit — 2026-09-14
+
+1. Inventory every declared functional and E2E test.
+2. Classify assertions by public/deployment contract versus implementation detail.
+3. Remove the redundant direct concrete-notifier test and dead diagnostic helper.
+4. Run both complete projects and record assertion and pseudo-mutation review.
+
+Status: complete. All four steps are implemented and validated.
+
 # Calendar/Planner state integrity — 2026-09-14
 
 1. Add explicit loading and error state to Calendar and Planner.

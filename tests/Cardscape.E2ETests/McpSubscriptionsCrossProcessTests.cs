@@ -204,52 +204,6 @@ public sealed class McpSubscriptionsCrossProcessTests
     }
 
     [Fact]
-    public async Task Api_Notifier_Can_Call_Mcp_Directly_Across_Processes()
-    {
-        // The wiring is correct end-to-end: a direct call
-        // to the API's HttpMcpResourceNotifier results in
-        // an event landing on the MCP. The test is the
-        // contract: the notifier is configured with the
-        // right base URL and secret.
-        using IServiceScope scope = _factory.Api.Services.CreateScope();
-        var notifier = scope.ServiceProvider
-            .GetRequiredService<Cardscape.Api.Realtime.HttpMcpResourceNotifier>();
-
-        // Reset the recording sink so we only see the
-        // call we are about to make.
-        foreach (RecordedCall _ in _factory.RecordingSink.Snapshot())
-        {
-            // no-op: we just want the count below
-        }
-        int beforeCallCount = _factory.RecordingSink.Snapshot().Count;
-
-        Guid boardId = Guid.NewGuid();
-        await notifier.NotifyAsync(boardId, TestContext.Current.CancellationToken);
-        await Task.Delay(500, TestContext.Current.CancellationToken);
-
-        IReadOnlyList<RecordedCall> calls = _factory.RecordingSink.Snapshot();
-        var ours = calls
-            .Skip(beforeCallCount)
-            .Where(c => c.Uri.Contains("api/internal/board-event", StringComparison.Ordinal))
-            .ToList();
-
-        ours.Should().NotBeEmpty(
-            "the API's HttpMcpResourceNotifier must have made at least one HTTP call to the MCP's " +
-            "/api/internal/board-event endpoint; the recording sink should show it. " +
-            $"Total recorded calls: {calls.Count}, by method: {string.Join(", ", calls.Select(c => c.Method + " " + c.Uri))}");
-        ours[0].StatusCode.Should().BeInRange(200, 299,
-            $"the cross-process broadcast call must have succeeded; a 4xx/5xx means " +
-            $"the MCP rejected the call (auth or path mismatch) and the event was not recorded. " +
-            $"Failure: {ours[0].Failure ?? "(none)"}");
-
-        int count = await CountBroadcastEventsForBoardAsync(boardId);
-        count.Should().BeGreaterThan(0,
-            $"the broadcast call returned 2xx (recorded as {ours[0].StatusCode}) but the MCP " +
-            $"event log has no Broadcast event for the matching board URI {boardId:N}; " +
-            "the broadcaster's event-recording path is broken");
-    }
-
-    [Fact]
     public async Task Api_Mutation_Reaches_Mcp_Broadcaster_Across_Processes()
     {
         // The cross-process E2E test. Steps:
@@ -278,8 +232,7 @@ public sealed class McpSubscriptionsCrossProcessTests
 
         Guid cardId = await CreateCardAsync(apiClient, listId, "e2e-card");
 
-        // The HTTP-call from the API to the MCP is
-        // fire-and-forget. Poll the MCP for up to
+        // The delivery crosses process boundaries. Poll the MCP for up to
         // 5 seconds for the event to land.
         bool found = false;
         int afterCount = beforeCount;
@@ -378,17 +331,6 @@ public sealed class McpSubscriptionsCrossProcessTests
         resp.IsSuccessStatusCode.Should().BeTrue();
         using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         return doc.RootElement.GetProperty("id").GetGuid();
-    }
-
-    private async Task<string> DumpMcpSubscriptionsAsync()
-    {
-        HttpClient mcpClient = _factory.Mcp.CreateClient();
-        using var req = new HttpRequestMessage(HttpMethod.Get, "api/internal/board-event/subscriptions");
-        req.Headers.Add("X-Internal-Secret", TwoHostWebApplicationFactory.SharedSecret);
-        HttpResponseMessage resp = await mcpClient.SendAsync(
-            req, TestContext.Current.CancellationToken);
-        string body = await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        return $"[{(int)resp.StatusCode}] {body}";
     }
 
     private async Task<int> CountBroadcastEventsForBoardAsync(Guid boardId)

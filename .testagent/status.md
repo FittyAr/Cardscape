@@ -1310,3 +1310,15 @@
 - [x] Pseudo-mutation review: removing any set entry, changing ordinal membership,
   bypassing normalization or touching a side effect fails
   `Handle_EachBlockedMimeType_DoesNotTouchStorageMetadataOrUnitOfWork`.
+
+# Functional and E2E behavior audit — 2026-09-14
+
+- [x] One functional and eight E2E declarations inventoried.
+- [x] Public/protocol/deployment contracts distinguished from Arrange-only internals.
+- [x] Redundant direct concrete-notifier test and unused diagnostic helper removed.
+- [x] Functional 1/1 and rebuilt E2E 7/7 pass with no skips.
+- [x] Assertion review: every retained test asserts an observable response, state,
+  protocol result or deployment boundary; no concrete implementation is asserted.
+- [x] Pseudo-mutation review: bypassing the public mutation, accepting anonymous MCP,
+  sharing host addresses, dropping internal authentication or failing to archive the
+  card breaks its corresponding named functional/E2E contract.

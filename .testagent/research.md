@@ -1305,3 +1305,13 @@
 - Acceptance: immutable O(1) data policy, exact ordinal matching after existing
   normalization, all 27 blocked values reject without storage/metadata/UoW work,
   and the existing allowed-MIME persistence test remains green.
+
+# Functional and E2E behavior audit — 2026-09-14
+
+- One functional and eight E2E tests were inventoried before remediation.
+- The functional golden path uses only public HTTP operations and resulting DTO state.
+- Seven E2E tests exercise HTTP/MCP/health/deployment boundaries. Direct database or
+  token-service access is limited to Arrange for readiness and authenticated MCP setup.
+- `Api_Notifier_Can_Call_Mcp_Directly_Across_Processes` resolved the concrete
+  `HttpMcpResourceNotifier` and invoked it directly, duplicating the public API mutation
+  scenario; acceptance requires removing that implementation-coupled test and its dead helper.
