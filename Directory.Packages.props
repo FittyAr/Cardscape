@@ -7,12 +7,13 @@
   <ItemGroup>
     <!--
       NOTE: We target net10.0 (LTS), so the whole Microsoft.* / ASP.NET Core
-      stack is on the 10.0.x line. EF Core 11 preview providers for MariaDB
-      have not shipped yet, so we use EF Core 10.0.12 (current LTS) for all
-      three database engines: SQLite, PostgreSQL, and MariaDB (via Oracle's
-      MySql.EntityFrameworkCore, which is wire-compatible with MariaDB).
-      This decision will be revisited once Pomelo / Oracle ship EF Core 11
-      providers for MariaDB.
+      stack is on the 10.0.x line. SQLite, PostgreSQL and MySQL use stable
+      EF Core 10 providers. MariaDB remains a mandatory release target, but
+      Oracle's provider fails its migration lock against MariaDB 11.4 and
+      Pomelo has no stable EF Core 10 release. A final release that promises
+      MariaDB is therefore blocked until the explicit real-service gate in
+      docs/operations/12-mariadb-future-work.md is green; wire compatibility
+      alone is not treated as EF Core compatibility.
     -->
     <!-- Application layer. -->
     <PackageVersion Include="Serilog" Version="4.4.0" />
