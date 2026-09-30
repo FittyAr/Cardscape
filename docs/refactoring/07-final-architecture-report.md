@@ -114,8 +114,11 @@ y 0 errores. Suite integral 1.188/1.188, sin fallos ni omitidos: arquitectura
 SCIM unit 83/83 y HTTP 18/18. No se recalculó cobertura/CRAP; sus cifras
 anteriores conservan su fecha original. Gate de providers 12/12 (SQLite incluido),
 Production-image smoke SQLite/MariaDB verde y NuGet sin vulnerabilidades conocidas.
-Formato y actionlint limpios. Ningún checklist activo pendiente en `refactoring`;
-la cobertura y excepción SAML siguen como deuda residual explícita.
+Formato y actionlint limpios. La publicación autorizada abrió la verificación
+remota del §8 del plan: se corrigieron configuración del runtime, redirección
+Bash, restores independientes y lectura de referencias MSBuild en Linux.
+Su cierre requiere observar CI verde; los resultados locales no lo sustituyen.
+La cobertura y excepción SAML siguen como deuda residual explícita.
 
 Evidencia histórica del cierre 2026-09-14:
 

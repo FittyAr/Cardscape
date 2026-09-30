@@ -192,7 +192,7 @@ public sealed class ArchitectureTests
         return project.Descendants("ProjectReference")
             .Select(reference => reference.Attribute("Include")?.Value)
             .Where(path => !string.IsNullOrWhiteSpace(path))
-            .Select(path => Path.GetFileNameWithoutExtension(path!))
+            .Select(path => Path.GetFileNameWithoutExtension(path!.Replace('\\', '/')))
             .Order(StringComparer.Ordinal)
             .ToArray();
     }
