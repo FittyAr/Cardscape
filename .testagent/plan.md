@@ -663,6 +663,13 @@ Status: complete. All four steps are implemented and validated.
 
 # Architecture gate closure — 2026-09-14
 
+## Activity presentation — 2026-09-30
+
+1. Extract typed `ActivityPresentation`, reusing complete CardActivity resources.
+2. Use every enum kind in the filter; remove duplicate raw-enum text and dead branches.
+3. Verify all 25 exact label/style pairs with `KnownActivity_HasExactLocalizedKeyAndRadzenStyle`.
+4. Compile Web, run focused unit tests and review translation catalog completeness.
+
 1. Map existing gates to the defect classes recorded by the modernization plan.
 2. Identify defects fixed without durable automated enforcement.
 3. Add the missing functional/E2E host-internal resolution gate.

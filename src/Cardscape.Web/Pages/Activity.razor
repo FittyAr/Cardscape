@@ -63,8 +63,7 @@ else
         {
             <RadzenCard>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                    <RadzenBadge Text="@KindLabel(a.Kind.ToString())" BadgeStyle="@KindBadgeStyle(a.Kind.ToString())" />
-                    <RadzenText Text="@a.Kind.ToString()" TextStyle="TextStyle.Body1" TagName="TagName.Span" />
+                    <RadzenBadge Text="@L[ActivityPresentation.LabelKey(a.Kind)]" BadgeStyle="@ActivityPresentation.Style(a.Kind)" />
                     <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
                         · @a.OccurredAt.LocalDateTime.ToString("g")
                     </RadzenText>
@@ -114,18 +113,9 @@ else
     // the filters run over the already-loaded `items` list.
     private string? kindFilter;
     private string? cardIdFilter;
-    private IReadOnlyList<ActivityKindOption> KindOptions =>
-    [
-        new("BoardCreated", L["ActivityKindBoard"]),
-        new("CardCreated", L["ActivityKindCard"]),
-        new("CardMoved", L["ActivityKindMove"]),
-        new("CardCompleted", L["ActivityKindDone"]),
-        new("CardReopened", L["ActivityKindReopen"]),
-        new("CardRenamed", L["ActivityKindRename"]),
-        new("CardArchived", L["ActivityKindArchive"]),
-        new("CardRestored", L["ActivityKindRestore"]),
-        new("CommentAdded", L["ActivityKindComment"])
-    ];
+    private IReadOnlyList<ActivityKindOption> KindOptions => Enum.GetValues<ActivityKind>()
+        .Select(kind => new ActivityKindOption(kind.ToString(), L[ActivityPresentation.LabelKey(kind)]))
+        .ToArray();
 
     private List<ActivityDto> FilteredItems()
     {
@@ -209,33 +199,6 @@ else
             loading = false;
         }
     }
-
-    private string KindLabel(string kind) => kind switch
-    {
-        "BoardCreated" => L["ActivityKindBoard"],
-        "CardCreated" => L["ActivityKindCard"],
-        "CardMoved" => L["ActivityKindMove"],
-        "CardCompleted" => L["ActivityKindDone"],
-        "CardReopened" => L["ActivityKindReopen"],
-        "CardRenamed" => L["ActivityKindRename"],
-        "CardArchived" => L["ActivityKindArchive"],
-        "CardRestored" => L["ActivityKindRestore"],
-        "CommentAdded" => L["ActivityKindComment"],
-        _ => kind
-    };
-
-    private static BadgeStyle KindBadgeStyle(string kind) => kind switch
-    {
-        "CardCreated" => BadgeStyle.Success,
-        "CardMoved" => BadgeStyle.Info,
-        "CardCompleted" => BadgeStyle.Success,
-        "CardReopened" => BadgeStyle.Warning,
-        "CardArchived" => BadgeStyle.Dark,
-        "CardRestored" => BadgeStyle.Light,
-        "CommentAdded" => BadgeStyle.Info,
-        "BoardCreated" => BadgeStyle.Primary,
-        _ => BadgeStyle.Light
-    };
 
     private static string FormatPayload(ActivityDto a)
     {

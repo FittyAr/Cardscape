@@ -41,6 +41,11 @@ cancelable. No se usan sleeps como sustituto de una assertion. Se retiraron dos
 
 ## Remediación ejecutada
 
+- Activity: eliminados los switches string y las ramas de eventos inexistentes;
+  `ActivityPresentation` expresa la política con `ActivityKind`. El filtro y
+  badge usan las 25 etiquetas completas y se retira texto CLR visible.
+  25/25 contratos exactos de etiqueta/estilo Radzen pasan (2026-09-30).
+
 - SCIM Groups: corregido el parser de eliminación filtrada que retenía `]` y
   convertía una operación válida en éxito sin efecto. Tres regresiones fallaron
   antes de la corrección; ocho casos de paths válidos/malformados ahora verifican

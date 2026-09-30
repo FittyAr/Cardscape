@@ -1318,6 +1318,13 @@
 
 # Architecture gate closure — 2026-09-14
 
+## Activity presentation — 2026-09-30
+
+Activity used string switches with two nonexistent enum kinds and only nine
+localized labels/filter choices. Acceptance: typed policy tested for all 25 enum
+values, existing translation keys, exhaustive filter choices, Radzen badges and
+no raw CLR enum rendered as user-facing text.
+
 - The architecture suite already covers the approved project graph, inward dependencies,
   abstraction ownership/naming, sealed domain/handlers, MCP scope/current-user/alias rules,
   API cancellation and Problem Details, and the audited Radzen/UI conventions.

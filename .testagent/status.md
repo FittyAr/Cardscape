@@ -1325,6 +1325,16 @@
 
 # Architecture gate closure — 2026-09-14
 
+## Activity presentation — 2026-09-30
+
+- [x] Extracted typed policy, preserving meaningful Radzen styles.
+- [x] All 25 enum values exposed by filter and localized via existing CardActivity resources.
+- [x] Removed raw enum visible text and two impossible kind branches.
+- [x] `KnownActivity_HasExactLocalizedKeyAndRadzenStyle`: 25/25 pass.
+- [x] Combined Activity/SCIM regressions: 41/41; Web build: 0 warnings/errors.
+- [x] Assertion/gap review: exact key/style pair per kind catches prefix drift,
+  incorrect category style and default-style regression; no branch copied into tests.
+
 ## SCIM filtered removal — 2026-09-30
 
 - [x] Three valid paths reproduced the defect before production changes (3 failures).
