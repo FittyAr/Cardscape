@@ -25,8 +25,14 @@ public class ScimGroupsEndpointsTests
 
     public ScimGroupsEndpointsTests(CardscapeWebApplicationFactory factory) => _factory = factory;
 
-    [Fact]
-    public async Task ListGroups_ForWorkspace_Returns200_WithWorkspaceGroup()
+    [Theory]
+    [InlineData(1, 50, 1, 1)]
+    [InlineData(0, 50, 1, 1)]
+    [InlineData(2, 50, 2, 0)]
+    [InlineData(1, 0, 1, 0)]
+    [InlineData(1, -1, 1, 0)]
+    public async Task ListGroups_ForWorkspace_ReturnsPaginatedWorkspaceGroup(
+        int startIndex, int count, int expectedIndex, int expectedItems)
     {
         HttpClient admin = _factory.CreateApiClient();
         AuthResponse auth = await RegisterAndLogin(admin);
@@ -53,20 +59,26 @@ public class ScimGroupsEndpointsTests
         idp.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", issue.PlaintextToken);
 
-        HttpResponseMessage listResp = await idp.GetAsync("scim/v2/Groups", TestContext.Current.CancellationToken);
-        listResp.IsSuccessStatusCode.Should().BeTrue();
+        HttpResponseMessage listResp = await idp.GetAsync(
+            $"scim/v2/Groups?startIndex={startIndex}&count={count}", TestContext.Current.CancellationToken);
+        listResp.StatusCode.Should().Be(HttpStatusCode.OK);
         ScimListResponseBody? list =
             (await listResp.Content.ReadFromJsonAsync<ScimListResponseBody>(TestJson.Options, TestContext.Current.CancellationToken))!;
         list.Should().NotBeNull();
         list!.TotalResults.Should().Be(1);
-        list.Resources.Should().HaveCount(1);
-        list.Resources[0].Id.Should().Be($"workspace-{ws.Id:D}");
-        list.Resources[0].DisplayName.Should().Be("SCIM Groups List WS");
-        list.Resources[0].Schemas
-            .Should().Contain("urn:ietf:params:scim:schemas:core:2.0:Group");
-        // The owner is the only member right after creation.
-        list.Resources[0].Members.Should().HaveCount(1);
-        list.Resources[0].Members[0].Value.Should().Be(auth.User.Id.ToString("D"));
+        list.StartIndex.Should().Be(expectedIndex);
+        list.ItemsPerPage.Should().Be(expectedItems);
+        list.Resources.Should().HaveCount(expectedItems);
+        if (expectedItems == 1)
+        {
+            list.Resources[0].Id.Should().Be($"workspace-{ws.Id:D}");
+            list.Resources[0].DisplayName.Should().Be("SCIM Groups List WS");
+            list.Resources[0].Schemas
+                .Should().Contain("urn:ietf:params:scim:schemas:core:2.0:Group");
+            // The owner is the only member right after creation.
+            list.Resources[0].Members.Should().HaveCount(1);
+            list.Resources[0].Members[0].Value.Should().Be(auth.User.Id.ToString("D"));
+        }
 
         HttpResponseMessage tokenListResponse = await admin.GetAsync(
             $"api/workspaces/{ws.Id}/scim/tokens", TestContext.Current.CancellationToken);

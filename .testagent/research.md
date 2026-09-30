@@ -1387,3 +1387,14 @@ invalid paths and remove without path currently succeed/save; rename can apply
 before them. Requirement: explicit invalidSyntax/invalidPath/noTarget errors,
 no mutation/query/save, retaining valid typed/JSON/ordered operations. Existing
 invalid-path theories must change their contract instead of preserving no-op success.
+
+# SCIM Groups pagination — 2026-09-30
+
+Bounded target: ListGroupsAsync and ScimServiceTests. The endpoint forwards
+startIndex/count unchanged (defaults 1/50). Service always builds the group,
+ignores startIndex and treats count <= 0 as 50; itemsPerPage is the requested
+limit, not the returned resource count. RFC 7644 3.4.2.4 requires negative count
+to mean zero, count zero to return totals only, and startIndex below one to mean
+one. Acceptance: exact total/page/index metadata, no member lookup for empty
+pages, no persistence, and missing workspace returns total zero. Strict Moq,
+xUnit v3 and FluentAssertions conventions remain; inline generation fallback.

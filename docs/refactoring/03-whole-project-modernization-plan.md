@@ -399,6 +399,8 @@ El plan estará completo cuando todas las fases estén verificadas o cada excepc
 
 ## 6. Mejora continua posterior al cierre
 
+- [x] Corregir paginación SCIM Groups conforme a RFC 7644 3.4.2.4: count cero/negativo devuelve sólo el total, startIndex mayor que uno devuelve página vacía y los metadatos reflejan los elementos realmente entregados. Se evita consultar miembros en páginas vacías. Seis regresiones fallaron antes; ocho casos unitarios nuevos y cinco límites HTTP. SCIM unit 60/60, unitarias completas 747/747, SCIM HTTP 16/16; API/Infrastructure Release build 0/0.
+
 - [x] Eliminar éxitos silenciosos de PATCH SCIM Groups: operaciones desconocidas, paths no admitidos, remove sin path, atributos protegidos y requests vacíos fallan antes de mutar/consultar/guardar. Diez regresiones fallaron antes; teorías antiguas de paths inválidos adoptan el contrato estricto. HTTP publica invalidSyntax/invalidPath/noTarget/mutability. Unitarias 739/739; SCIM HTTP 12/12; API/Infrastructure Release 0/0. Sin compatibilidad con los no-op legacy.
 
 - [x] Rechazar eliminación SCIM del propietario sin cambios parciales: el resultado de dominio era ignorado y se respondía éxito. Prevalidación del filtro contra OwnerId antes de cualquier mutación; error `scim.mutability`/HTTP 400 con scimType `mutability`. Dos regresiones fallaron antes; SCIM unit 42/42, unitarias completas 729/729, SCIM HTTP 9/9; API/Infrastructure Release build 0/0. Se conserva el propietario, nombre y pares incluso tras un rename previo en el payload.

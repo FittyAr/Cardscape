@@ -54,11 +54,20 @@ public sealed partial class ScimService : IScimService
         // group. If the workspace was deleted between token
         // issuance and this call we return an empty
         // list — the IdP will reconcile.
+        int normalizedStartIndex = Math.Max(1, startIndex);
         var workspace = await _workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
         if (workspace is null)
         {
             return new ScimListResponse<ScimGroup>(
-                [ScimListResponseSchema], 0, 0, Math.Max(1, startIndex), []);
+                [ScimListResponseSchema], 0, 0, normalizedStartIndex, []);
+        }
+
+        // The token-scoped result set has one item. RFC 7644 3.4.2.4:
+        // nonpositive count requests totals only, not a default-sized page.
+        if (count <= 0 || normalizedStartIndex > 1)
+        {
+            return new ScimListResponse<ScimGroup>(
+                [ScimListResponseSchema], 1, 0, normalizedStartIndex, []);
         }
 
         IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(workspace, ct);
@@ -68,14 +77,13 @@ public sealed partial class ScimService : IScimService
             workspace.Name.Value,
             members);
 
-        int pageSize = count <= 0 ? 50 : Math.Min(count, 200);
         IReadOnlyList<ScimGroup> page = [group];
 
         return new ScimListResponse<ScimGroup>(
             [ScimListResponseSchema],
+            1,
             page.Count,
-            pageSize,
-            Math.Max(1, startIndex),
+            normalizedStartIndex,
             page);
     }
 

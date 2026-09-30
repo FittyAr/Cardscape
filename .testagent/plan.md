@@ -1134,3 +1134,14 @@ Status: complete. All five steps are implemented and validated.
 - PatchGroupAsync_UnsupportedOperationOrPath_RejectsWholeRequest.
 - Update invalid branches of exact-add and filtered-remove theories to verify
   failure and no persistence. Add preflight checks before any domain changes.
+
+# SCIM Groups pagination — 2026-09-30
+
+- ListGroupsAsync_Pagination_ReturnsExactMetadataAndSkipsEmptyPageLookup:
+  page 1, normalized nonpositive index, zero/negative count, second/last page.
+- ListGroupsAsync_MissingWorkspace_ReturnsEmptyPageWithoutMemberLookup:
+  total zero, normalized index, exact schema, no collaborators beyond workspace.
+- Reproduce before changing service; apply page guards before BuildMembersAsync.
+- Validate SCIM class, full unit suite and unchanged SCIM HTTP contracts.
+- ListGroups_ForWorkspace_ReturnsPaginatedWorkspaceGroup replaces the list Fact
+  with five HTTP rows: normal/normalized index, next page, zero/negative count.

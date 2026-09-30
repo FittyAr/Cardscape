@@ -55,6 +55,9 @@ parciales (unitarias 739/739, SCIM HTTP 12/12). La superficie Groups implementad
 queda delimitada; no se promete soporte de filtros arbitrarios o subatributos.
 La matriz completa de errores del recurso Users sigue fuera de este bloque;
 estas correcciones puntuales no constituyen una certificación del protocolo completo.
+La paginación Groups también respeta count cero/negativo e índices fuera de
+página, devuelve metadatos exactos y evita el lookup de miembros si no entrega
+recursos (SCIM unit 60/60, unitarias 747/747, SCIM HTTP 16/16).
 Responsable: mantenedores de Application/Infrastructure. Gate: cobertura y
 regresiones focalizadas en cada cambio.
 

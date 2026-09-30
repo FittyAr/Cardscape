@@ -167,6 +167,59 @@ public sealed class ScimServiceTests
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Theory]
+    [InlineData(1, 50, 1, 1)]
+    [InlineData(0, 1, 1, 1)]
+    [InlineData(-10, 200, 1, 1)]
+    [InlineData(1, 0, 1, 0)]
+    [InlineData(1, -1, 1, 0)]
+    [InlineData(2, 50, 2, 0)]
+    [InlineData(int.MaxValue, 1, int.MaxValue, 0)]
+    public async Task ListGroupsAsync_Pagination_ReturnsExactMetadataAndSkipsEmptyPageLookup(
+        int startIndex, int count, int expectedIndex, int expectedItems)
+    {
+        var (context, _, _) = CreateGroupContext();
+
+        ScimListResponse<ScimGroup> result = await context.Service.ListGroupsAsync(
+            context.WorkspaceId.Value, startIndex, count, TestContext.Current.CancellationToken);
+
+        result.Schemas.Should().Equal("urn:ietf:params:scim:api:messages:2.0:ListResponse");
+        result.TotalResults.Should().Be(1);
+        result.StartIndex.Should().Be(expectedIndex);
+        result.ItemsPerPage.Should().Be(expectedItems);
+        result.Resources.Should().HaveCount(expectedItems);
+        if (expectedItems == 1)
+        {
+            result.Resources[0].Id.Should().Be($"workspace-{context.WorkspaceId.Value:D}");
+            result.Resources[0].DisplayName.Should().Be("SCIM Workspace");
+        }
+        context.Users.Verify(x => x.ListByIdsAsync(
+            It.IsAny<IReadOnlyList<UserId>>(), TestContext.Current.CancellationToken),
+            expectedItems == 1 ? Times.Once() : Times.Never());
+        context.GlobalUsers.VerifyNoOtherCalls();
+        context.UnitOfWork.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task ListGroupsAsync_MissingWorkspace_ReturnsEmptyPageWithoutMemberLookup()
+    {
+        var context = CreateContext();
+        context.Workspaces.Setup(x => x.GetByIdAsync(context.WorkspaceId, TestContext.Current.CancellationToken))
+            .ReturnsAsync((Workspace?)null);
+
+        ScimListResponse<ScimGroup> result = await context.Service.ListGroupsAsync(
+            context.WorkspaceId.Value, 0, 50, TestContext.Current.CancellationToken);
+
+        result.Schemas.Should().Equal("urn:ietf:params:scim:api:messages:2.0:ListResponse");
+        result.TotalResults.Should().Be(0);
+        result.StartIndex.Should().Be(1);
+        result.ItemsPerPage.Should().Be(0);
+        result.Resources.Should().BeEmpty();
+        context.Users.VerifyNoOtherCalls();
+        context.GlobalUsers.VerifyNoOtherCalls();
+        context.UnitOfWork.VerifyNoOtherCalls();
+    }
+
     [Fact]
     public async Task GetUserAsync_UserInsideTokenWorkspace_ReturnsExactUser()
     {

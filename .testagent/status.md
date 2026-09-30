@@ -1471,3 +1471,23 @@
 - [x] Pseudo-mutation review: deleting or renaming any registry key, changing its payload type,
   or mapping it to an incompatible client method fails the corresponding row of
   `Broadcast_EachSupportedMethod_WithMatchingPayload_Returns202`.
+# SCIM Groups pagination — 2026-09-30
+
+- [x] Research/Plan/Implement inline; named generator and .NET analysis extension unavailable.
+- [x] Six of eight new unit cases fail before correction (two passing controls);
+  ListGroupsAsync_Pagination_ReturnsExactMetadataAndSkipsEmptyPageLookup checks
+  exact totals/index/items/resources and absence of lookup on empty pages.
+- [x] ListGroupsAsync_MissingWorkspace_ReturnsEmptyPageWithoutMemberLookup
+  checks zero totals, normalized index, schema and no user/save calls.
+- [x] ListGroups_ForWorkspace_ReturnsPaginatedWorkspaceGroup verifies five HTTP
+  boundaries against real SQLite persistence and scoped tokens.
+- [x] SCIM unit 60/60, complete unit suite 747/747, SCIM HTTP 16/16, no skips;
+  API/Infrastructure Release build 0 warnings/errors.
+- [x] Assertion review: pagination theory has 8 assertions on every row and
+  2 additional exact resource assertions on populated pages; missing-workspace
+  has 8. Equality/collection/negative collaborator categories, no zero/trivial
+  or self-referential-only tests. Existing batched member test checks contents.
+- [x] Static gap review: changing >1 to >=1, <=0 to <0, or returning page count
+  as total breaks boundary rows; eager member lookup breaks empty-page mocks.
+  Missing-workspace control covers the null branch. This is reasoned analysis,
+  not an executed mutation score or a new global coverage measurement.
