@@ -38,8 +38,9 @@ métodos por encima de CRAP 30. No se presenta como cobertura suficiente. El
 hotspot MIME principal y el dispatch de broadcast ya fueron reducidos. El
 2026-09-30 se corrigió además la eliminación filtrada de miembros SCIM, con
 regresiones que fallaron antes del cambio, y se extrajo/probó la presentación
-Activity para los 25 tipos reales. La cobertura restante de SCIM Groups
-(add/replace y combinaciones de operaciones) requiere todavía ampliar la matriz;
+Activity para los 25 tipos reales. La matriz SCIM Groups ahora cubre además
+add/replace en ambos órdenes, valores tipados/JSON y reemplazo vacío (21/21).
+Quedan por evaluar validación de payloads inválidos y operaciones sin path;
 estas correcciones puntuales no constituyen una certificación del protocolo completo.
 Responsable: mantenedores de Application/Infrastructure. Gate: cobertura y
 regresiones focalizadas en cada cambio.

@@ -1348,3 +1348,12 @@ preserve owner and peer, return the exact membership and save with caller cancel
 - `IBoardClient` already owns the canonical method names and strongly typed payload signatures.
 - Acceptance: immutable ordinal dispatch registry, no reflection/dynamic dispatch, all 20
   methods accept their matching payload through HTTP, and negative contracts remain stable.
+# SCIM Groups ordered operations — 2026-09-30
+
+Bounded inventory: ScimService.PatchGroupAsync, GroupMapping and existing
+ScimServiceTests (xUnit v3/VSTest, strict Moq, FluentAssertions).
+Acceptance: add then replace differs from replace then add; replacement retains
+the owner, removes obsolete members, resolves new members in batches and saves
+once with cancellation. Exercise typed values and JSON HTTP-shaped arrays.
+The referenced unit-test-generation prompt and .NET analysis extension are absent;
+use the existing conventions and base skill rubrics inline.

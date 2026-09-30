@@ -1103,3 +1103,9 @@ Status: complete. All four steps are implemented and validated.
 5. Update exact status/problem assertions and run all affected regressions.
 
 Status: complete. All five steps are implemented and validated.
+# SCIM Groups ordered operations — 2026-09-30
+
+- Order/typed/JSON: PatchGroupAsync_AddAndReplace_ApplyInOrderAndPreserveOwner.
+- Empty replacement: PatchGroupAsync_EmptyReplacement_RetainsOnlyOwner.
+- Assert exact aggregate and response memberships, lookup counts and cancelable
+  single save; execute the whole ScimServiceTests class, then commit hooks.

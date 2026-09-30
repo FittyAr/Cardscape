@@ -253,6 +253,77 @@ public sealed class ScimServiceTests
         context.UnitOfWork.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Once);
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task PatchGroupAsync_AddAndReplace_ApplyInOrderAndPreserveOwner(
+        bool replaceFirst, bool jsonValues)
+    {
+        var context = CreateContext();
+        User added = BuildUser("added@example.com", "Added");
+        User replacement = BuildUser("replacement@example.com", "Replacement");
+        User obsolete = BuildUser("obsolete@example.com", "Obsolete");
+        Workspace workspace = BuildWorkspace(context.WorkspaceId, context.User.Id.Value);
+        workspace.AddMember(obsolete.Id.Value, WorkspaceRole.Member, Now).IsSuccess.Should().BeTrue();
+        context.Workspaces.Setup(x => x.GetByIdAsync(context.WorkspaceId, TestContext.Current.CancellationToken))
+            .ReturnsAsync(workspace);
+        User[] available = [context.User, added, replacement, obsolete];
+        context.Users.Setup(x => x.ListByIdsAsync(It.IsAny<IReadOnlyList<UserId>>(), TestContext.Current.CancellationToken))
+            .ReturnsAsync((IReadOnlyList<UserId> ids, CancellationToken _) =>
+                available.Where(user => ids.Contains(user.Id)).ToArray());
+        context.UnitOfWork.Setup(x => x.SaveChangesAsync(TestContext.Current.CancellationToken)).ReturnsAsync(1);
+        object Members(User user)
+        {
+            ScimGroupMember[] members = [new(user.Id.Value.ToString("D"), null)];
+            return jsonValues
+                ? System.Text.Json.JsonSerializer.SerializeToElement(members, System.Text.Json.JsonSerializerOptions.Web)
+                : members;
+        }
+        var add = new ScimPatchOperation("add", "members", Members(added));
+        var replace = new ScimPatchOperation("replace", "members", Members(replacement));
+
+        Result<ScimGroup> result = await context.Service.PatchGroupAsync(
+            context.WorkspaceId.Value, $"workspace-{context.WorkspaceId.Value:D}",
+            new ScimPatchRequest(replaceFirst ? [replace, add] : [add, replace]),
+            TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        Guid[] expected = replaceFirst
+            ? [context.User.Id.Value, replacement.Id.Value, added.Id.Value]
+            : [context.User.Id.Value, replacement.Id.Value];
+        workspace.Members.Select(member => member.UserId).Should().BeEquivalentTo(expected);
+        result.Value.Members.Should().BeEquivalentTo(available.Where(user => expected.Contains(user.Id.Value))
+            .Select(user => new ScimGroupMember(user.Id.Value.ToString("D"), user.DisplayName.Value)));
+        context.Users.Verify(x => x.ListByIdsAsync(It.IsAny<IReadOnlyList<UserId>>(), TestContext.Current.CancellationToken), Times.Exactly(3));
+        context.UnitOfWork.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Once);
+        context.GlobalUsers.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task PatchGroupAsync_EmptyReplacement_RetainsOnlyOwner()
+    {
+        var context = CreateContext();
+        User obsolete = BuildUser("obsolete@example.com", "Obsolete");
+        Workspace workspace = BuildWorkspace(context.WorkspaceId, context.User.Id.Value);
+        workspace.AddMember(obsolete.Id.Value, WorkspaceRole.Member, Now).IsSuccess.Should().BeTrue();
+        context.Workspaces.Setup(x => x.GetByIdAsync(context.WorkspaceId, TestContext.Current.CancellationToken)).ReturnsAsync(workspace);
+        context.Users.Setup(x => x.ListByIdsAsync(It.Is<IReadOnlyList<UserId>>(ids => ids.Count == 0), TestContext.Current.CancellationToken)).ReturnsAsync([]);
+        context.Users.Setup(x => x.ListByIdsAsync(It.Is<IReadOnlyList<UserId>>(ids => ids.Count == 1 && ids.Contains(context.User.Id)), TestContext.Current.CancellationToken)).ReturnsAsync([context.User]);
+        context.UnitOfWork.Setup(x => x.SaveChangesAsync(TestContext.Current.CancellationToken)).ReturnsAsync(1);
+
+        Result<ScimGroup> result = await context.Service.PatchGroupAsync(
+            context.WorkspaceId.Value, $"workspace-{context.WorkspaceId.Value:D}",
+            new ScimPatchRequest([new ScimPatchOperation("replace", "members", Array.Empty<ScimGroupMember>())]),
+            TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        workspace.Members.Should().ContainSingle().Which.UserId.Should().Be(context.User.Id.Value);
+        result.Value.Members.Should().ContainSingle().Which.Should().Be(new ScimGroupMember(context.User.Id.Value.ToString("D"), "Member User"));
+        context.UnitOfWork.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Once);
+    }
+
     private static ScimTestContext CreateContext(bool userBelongsToWorkspace = false)
     {
         WorkspaceId workspaceId = WorkspaceId.New();

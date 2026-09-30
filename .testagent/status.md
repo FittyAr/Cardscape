@@ -1,5 +1,19 @@
 # Test status
 
+## SCIM Groups ordered operations (2026-09-30)
+
+- Complete: 21/21 ScimServiceTests pass in Release, zero skipped.
+- New evidence: `PatchGroupAsync_AddAndReplace_ApplyInOrderAndPreserveOwner`
+  (four cases), `PatchGroupAsync_EmptyReplacement_RetainsOnlyOwner`.
+- Quality review using assertion-quality/test-gap-analysis base rubrics:
+  exact state and deep DTO contents, owner preservation, bounded batch calls,
+  single cancelable save and no global lookup; no trivial-only/empty assertions.
+  Static reasoning predicts detection of dropped add/replace, reversed order,
+  missing removal, owner removal, empty DTO and repeated persistence. This is
+  not an executed mutation score. Invalid payloads and pathless operations remain
+  explicit next targets. Referenced .NET analysis extension is absent.
+- CA1869 in the new test was resolved with JsonSerializerOptions.Web; no suppression.
+
 ## Application public-port namespace boundary (2026-08-22)
 
 - Research: complete; the old test was one-sided and the Realtime test encoded three legacy exceptions.
