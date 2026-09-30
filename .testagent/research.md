@@ -1361,3 +1361,11 @@ the owner, removes obsolete members, resolves new members in batches and saves
 once with cancellation. Exercise typed values and JSON HTTP-shaped arrays.
 The referenced unit-test-generation prompt and .NET analysis extension are absent;
 use the existing conventions and base skill rubrics inline.
+# SCIM pathless PATCH and invalid member payloads — 2026-09-30
+
+Target: PatchGroupAsync and its member extraction; strict mocks in existing
+ScimServiceTests. RFC 7644 sections 3.5.2.1/3 specify pathless add/replace as
+attribute objects, not member arrays. Current replace treats any object as []
+and removes memberships. Acceptance: name-only patch preserves all members;
+object members patch applies add/replace; malformed arrays fail before mutation,
+lookup or save, even after an earlier valid rename in the request.

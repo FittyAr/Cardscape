@@ -42,7 +42,10 @@ Activity para los 25 tipos reales. La matriz SCIM Groups ahora cubre además
 add/replace en ambos órdenes, valores tipados/JSON y reemplazo vacío. Se corrigió
 además el alta indebida por paths con prefijo `members` (SCIM 25/25;
 unitarias completas 712/712, sin fallos ni omitidos, 2026-09-30).
-Quedan por evaluar validación de payloads inválidos y operaciones sin path;
+También se corrigieron operaciones sin path y payloads de miembros inválidos:
+normalización por atributos y validación previa evitan eliminar membresías
+omitidas o aplicar parcialmente un request con valores malformados (SCIM 40/40,
+unitarias 727/727). Queda por evaluar la matriz completa de errores HTTP SCIM;
 estas correcciones puntuales no constituyen una certificación del protocolo completo.
 Responsable: mantenedores de Application/Infrastructure. Gate: cobertura y
 regresiones focalizadas en cada cambio.

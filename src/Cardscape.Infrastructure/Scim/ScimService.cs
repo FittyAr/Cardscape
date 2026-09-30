@@ -220,13 +220,13 @@ public sealed partial class ScimService : IScimService
                 "scim.group_not_found", $"Group {groupId} was not found."));
         }
 
-        // The minimal SCIM v2 patch surface for Groups:
-        // - `replace displayName` (rename)
-        // - `add` / `remove` on members
-        // IdPs (Okta, Entra ID, Google Workspace) only send
-        // these three shapes today; the spec is rich but
-        // unused in practice.
-        foreach (var op in patch.Operations)
+        Result<IReadOnlyList<ScimPatchOperation>> normalized = NormalizeGroupPatch(patch);
+        if (normalized.IsFailure)
+        {
+            return Result.Failure<ScimGroup>(normalized.Error);
+        }
+
+        foreach (var op in normalized.Value)
         {
             string opName = (op.Op ?? string.Empty).ToLowerInvariant();
             if (opName != "add" && opName != "remove" && opName != "replace")
@@ -261,8 +261,7 @@ public sealed partial class ScimService : IScimService
             }
 
             if (opName == "replace"
-                && (op.Path is null
-                    || string.Equals(op.Path, "members", StringComparison.OrdinalIgnoreCase)))
+                && string.Equals(op.Path, "members", StringComparison.OrdinalIgnoreCase))
             {
                 // `replace members` with a new list is
                 // treated as a full member-list replace.
@@ -271,8 +270,7 @@ public sealed partial class ScimService : IScimService
                 continue;
             }
 
-            if (opName == "add" && (op.Path is null
-                || string.Equals(op.Path, "members", StringComparison.OrdinalIgnoreCase)))
+            if (opName == "add" && string.Equals(op.Path, "members", StringComparison.OrdinalIgnoreCase))
             {
                 IReadOnlyList<ScimGroupMember> incoming = ExtractMembers(op.Value);
                 IReadOnlyList<User> incomingUsers = await LoadValidUsersAsync(incoming, ct);

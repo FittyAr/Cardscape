@@ -1,5 +1,24 @@
 # Test status
 
+## SCIM pathless and malformed members (2026-09-30)
+
+- Ten new cases failed before the fix; after normalization and prevalidation,
+  ScimServiceTests pass 40/40 and the complete unit suite passes 727/727.
+- Exact tests: PatchGroupAsync_PathlessNameChange_PreservesMembers;
+  PatchGroupAsync_PathlessMembers_AppliesOperation;
+  PatchGroupAsync_InvalidMembers_RejectsBeforeAnyMutation;
+  PatchGroupAsync_PathlessArray_RejectsWithoutChangingMembers.
+- Infrastructure Release compiles with zero warnings/errors.
+- assertion-quality/test-gap-analysis review: state, exact collections, errors
+  and side effects are asserted; zero empty/trivial-only methods. Invalid input
+  verifies both no save and no user lookup and unchanged earlier rename.
+  Static reasoning detects omitted-attribute clearing, ignored object attributes,
+  partial validation, numeric/missing/empty IDs and legacy pathless arrays.
+  No executed mutation score. Typed-invalid IDs, invalid displayName and complete
+  HTTP scimType/error mapping remain explicit review targets.
+- The referenced .NET analysis extension is absent; used base rubrics inline.
+- Protocol reference: https://www.rfc-editor.org/rfc/rfc7644.html#section-3.5.2
+
 ## SCIM exact add attribute (2026-09-30)
 
 - Regression `PatchGroupAsync_AddMembers_RequiresExactAttribute`: members and

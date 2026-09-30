@@ -399,6 +399,8 @@ El plan estará completo cuando todas las fases estén verificadas o cada excepc
 
 ## 6. Mejora continua posterior al cierre
 
+- [x] Corregir PATCH SCIM sin path y payloads de miembros inválidos: normalización de objetos de atributos conforme a RFC 7644 3.5.2.1/3, validación completa antes de mutar y rechazo de GUID vacío/shape incorrecto. Diez regresiones fallaron antes; matriz SCIM 40/40 y unitarias 727/727, Infrastructure build 0/0. Sin aliases de arrays legacy sin path. Queda explícitamente fuera la certificación integral del protocolo y su matriz completa de errores HTTP.
+
 - [x] Restringir altas SCIM al atributo `members` exacto: `membersOther` y `members.display` agregaban usuarios por la comparación por prefijo. Ambas regresiones fallaron antes del cambio; comparación ordinal case-insensitive alineada con replace. SCIM 25/25, unitarias completas 712/712, Infrastructure build 0/0.
 
 - [x] Ampliar matriz SCIM Groups add/replace: cuatro combinaciones de orden y representación (objetos/JSON) verifican membresía y DTO exactos, propietario conservado, tres consultas batch y un único save cancelable; reemplazo vacío conserva sólo al propietario. Suite SCIM 21/21. No se declara certificación completa del protocolo.
