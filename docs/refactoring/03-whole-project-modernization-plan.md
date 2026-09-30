@@ -1,6 +1,6 @@
 # Plan de modernización integral de Cardscape
 
-> **Estado**: checklist activo completado al 100% (2026-09-30); gate local MariaDB verificado (§7), CI obligatorio para cada release. No equivale a deuda cero ni certificación exhaustiva de todas las funcionalidades.
+> **Estado**: modernización y gate local completados (2026-09-30); verificación CI tras push en ejecución (§8). No equivale a deuda cero ni certificación exhaustiva de todas las funcionalidades.
 > **Inicio**: 2026-08-11  
 > **Stack objetivo**: .NET 10, ASP.NET Core 10, Blazor WebAssembly 10, EF Core 10 y Radzen.Blazor  
 > **Rama de entrega**: `master` (rama principal real del repositorio; `origin/HEAD` apunta a `origin/master`)  
@@ -431,6 +431,8 @@ El plan estará completo cuando todas las fases estén verificadas o cada excepc
 
 ## 7. Gate obligatorio multi-provider completado localmente
 
+Seguimiento remoto después del push autorizado: ver §8.
+
 La verificación local satisface el gate de modernización. Cada release debe
 repetirlo en CI; no se presenta la configuración del workflow como una ejecución
 GitHub Actions observada. El cierre no elimina la deuda residual documentada.
@@ -438,3 +440,9 @@ GitHub Actions observada. El cierre no elimina la deuda residual documentada.
 - [x] Adoptar provider MariaDB estable y verificar los motores reales (2026-09-30): Microting 10.0.12, historia nativa `InitialMariaDb`, persistencia Unicode/concurrencia/modelo alineado; readiness/registro/workspace por HTTP en imágenes Production SQLite y MariaDB. CI incluye MariaDB y los tests externos; actionlint 1.7.7 pasa. ADR 0013 justifica la dependencia. Certaro no se modificó.
 
 - [x] Completar el gate MariaDB con provider EF Core 10 estable: migración nativa generada y aplicada desde cero, historial idempotente, snapshot sin deriva, tres pruebas por motor sobre SQLite/PostgreSQL 17/MySQL 8.4/MariaDB 11.4 (12/12), CI validado y Compose de imagen Production real. Se exige Throw explícito ante cambios pendientes. Suite integral 1.188/1.188 sin omitidos; rebuild Release 0/0; formato y NuGetAudit sin vulnerabilidades. El publish MCP contiene providers e historias externas. Evidencia reproducible en `../operations/12-mariadb-future-work.md`; no SQL manual, previews ni compatibilidad wire como sustituto.
+
+## 8. Verificación CI tras publicación — 2026-09-30
+
+- [x] Publicar los 13 commits pendientes en `origin/master`, hasta `69e2a10`, sin force-push ni pull automático.
+- [x] Diagnosticar el run [36737633940](https://github.com/FittyAr/Cardscape/actions/runs/36737633940): falla antes de formato porque `DOTNET_ROLL_FORWARD=LatestFeature` es inválido para el runtime. Reproducido con `dotnet --version`; retirar el override y conservar `global.json` sin cambios.
+- [ ] Observar CI verde sobre el commit corregido y resolver cada fallo real antes del cierre remoto. Los resultados locales no sustituyen esta ejecución.
