@@ -25,41 +25,17 @@ jobs:
           fetch-depth: 0
           path: master
 
-      - name: Checkout site branch into a sibling work tree
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          ref: site
-          fetch-depth: 0
-          path: site
-          # The site branch starts as an orphan; the
-          # initial clone may fail with "Repository not
-          # found" the first time the workflow runs.
-          # The next step (ensure-site-branch) handles the
-          # bootstrap case.
-
-      - name: Ensure site branch exists (bootstrap on first run)
+      - name: Prepare site work tree (bootstrap on first run)
         shell: bash
+        working-directory: master
         run: |
-          set -e
-          if [ ! -d site/.git ]; then
-            echo "site branch does not exist yet; creating an empty orphan"
-            mkdir -p site
-            cd site
-            git init -q
-            git checkout -q --orphan site
-            git commit --allow-empty -m "chore: initial empty site branch"
-            cd ..
-            # Re-add the work tree to the parent's git so
-            # the push below can reach the remote.
-            rm -rf site/.git
-            git fetch origin site || true
-            git worktree add site origin/site || git worktree add site -B site
-            cd site
-            git config user.name  "Cardscape site bot"
-            git config user.email "site-bot@cardscape.local"
-            git commit --allow-empty -m "chore: bootstrap site branch"
-            git push -u origin site || true
-            cd ..
+          set -euo pipefail
+          site_ref="$(git ls-remote --heads origin refs/heads/site)"
+          if [ -n "$site_ref" ]; then
+            git fetch origin refs/heads/site:refs/remotes/origin/site
+            git worktree add --track -b site ../site origin/site
+          else
+            git worktree add --orphan -b site ../site
           fi
 
       - name: Sync static site assets (site/) into the work tree
@@ -77,9 +53,9 @@ jobs:
 
       - name: Commit and push
         shell: bash
+        working-directory: site
         run: |
           set -e
-          cd site
           git config user.name  "Cardscape site bot"
           git config user.email "site-bot@cardscape.local"
           git add -A

@@ -52,7 +52,11 @@ if ($projects.Count -eq 0) {
     $projects = @(
         (Join-Path $TestsDir 'Cardscape.UnitTests/Cardscape.UnitTests.csproj'),
         (Join-Path $TestsDir 'Cardscape.IntegrationTests/Cardscape.IntegrationTests.csproj'),
-        (Join-Path $TestsDir 'Cardscape.ArchitectureTests/Cardscape.ArchitectureTests.csproj')
+        (Join-Path $TestsDir 'Cardscape.ArchitectureTests/Cardscape.ArchitectureTests.csproj'),
+        (Join-Path $TestsDir 'Cardscape.FunctionalTests/Cardscape.FunctionalTests.csproj'),
+        (Join-Path $TestsDir 'Cardscape.SecurityTests/Cardscape.SecurityTests.csproj'),
+        (Join-Path $TestsDir 'Cardscape.E2ETests/Cardscape.E2ETests.csproj'),
+        (Join-Path $TestsDir 'Cardscape.Sdk.Tests/Cardscape.Sdk.Tests.csproj')
     )
 }
 

@@ -33,20 +33,16 @@ if (-not $Configuration) { $Configuration = 'Debug' }
 
 if (-not (Test-Dotnet)) { exit 1 }
 
-$dotnetArgs = @('build')
-
 if (-not $NoRestore) {
-    $dotnetArgs = @('restore') + $dotnetArgs[1..0]  # keep 'build' as last, prepend restore
-    # Simpler: split into two steps.
     Invoke-Step -Message "Restoring packages ($Configuration)" -Action {
         Run-Dotnet -Args @('restore', $Script:Solution) | Out-Null
     }
 }
 
-$targetArgs = @('build', $Script:Solution, '--configuration', $Configuration, '--no-incremental')
+$targetArgs = @('build', $Script:Solution, '--configuration', $Configuration, '--no-incremental', '--no-restore')
 
 if ($Project) {
-    $targetArgs = @('build', $Project, '--configuration', $Configuration, '--no-incremental')
+    $targetArgs = @('build', $Project, '--configuration', $Configuration, '--no-incremental', '--no-restore')
 }
 
 if ($Forward.Count -gt 0) {
@@ -61,7 +57,10 @@ Write-Ok "Build succeeded ($Configuration)."
 
 if ($RunTests) {
     Write-Step "Running test suite"
-    & (Join-Path $PSScriptRoot 'test.ps1') @Forward
+    # A project-scoped build may not have built every test project yet.
+    $testOptions = @{ Configuration = $Configuration; NoBuild = (-not $Project) }
+    if ($Forward.Count -gt 0) { $testOptions.Forward = $Forward }
+    & (Join-Path $PSScriptRoot 'test.ps1') @testOptions
     if ($LASTEXITCODE -ne 0) {
         Write-Err "Tests failed (exit $LASTEXITCODE)."
         exit $LASTEXITCODE
