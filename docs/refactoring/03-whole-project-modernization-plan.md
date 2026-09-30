@@ -1,6 +1,6 @@
 # Plan de modernización integral de Cardscape
 
-> **Estado**: modernización y gate local completados (2026-09-30); verificación CI tras push en ejecución (§8). No equivale a deuda cero ni certificación exhaustiva de todas las funcionalidades.
+> **Estado**: plan activo completado al 100% (2026-09-30), con gates locales y CI observados en verde (§8). No equivale a deuda cero ni certificación exhaustiva de todas las funcionalidades.
 > **Inicio**: 2026-08-11  
 > **Stack objetivo**: .NET 10, ASP.NET Core 10, Blazor WebAssembly 10, EF Core 10 y Radzen.Blazor  
 > **Rama de entrega**: `master` (rama principal real del repositorio; `origin/HEAD` apunta a `origin/master`)  
@@ -450,4 +450,4 @@ GitHub Actions observada. El cierre no elimina la deuda residual documentada.
 - [x] Corregir la lectura de `ProjectReference` en Linux: normalizar los separadores MSBuild antes de extraer el nombre. El run `36739483957` reproduce el fallo; se conserva íntegro el grafo aprobado y sus aserciones exactas.
 - [x] Actualizar las cinco acciones CI a releases mantenidas con Node.js 24, fijadas por SHA verificado: checkout 7.0.1, setup-dotnet 6.0.0, cache 6.1.0, upload-artifact 7.0.1 y sticky-pull-request-comment 3.0.5. El archivado múltiple continúa siendo el default oficial de upload-artifact.
 - [x] Sustituir el falso filtrado de cobertura y el promedio de porcentajes: incluir únicamente assemblies de producto, combinar los dos informes Cobertura con `dotnet-coverage` 18.9.0 del manifest y resumir los contadores combinados. Pruebas locales instrumentadas: unitarias 770/770 e integración 313/313; merge real verificado. Retirar instalación global obsoleta tolerada con `|| true`, nombres lcov incorrectos y fallback silencioso ante ausencia de informes. Comentario PR limitado al repositorio propio, con permiso explícito por job.
-- [ ] Observar CI verde sobre el commit corregido y resolver cada fallo real antes del cierre remoto. Los resultados locales no sustituyen esta ejecución.
+- [x] Observar CI verde sobre `d96ddb0` en el run [36742533510](https://github.com/FittyAr/Cardscape/actions/runs/36742533510): ocho jobs obligatorios completados, siete suites ordinarias, migraciones/pruebas PostgreSQL/MySQL/MariaDB, imágenes Production SQLite/MariaDB y combinación/publicación real de cobertura Cobertura. El job Release se omite deliberadamente en un push sin tag; no se publicó una release ni se ejecutó su empaquetado por tag. También pasó íntegro el run `36741560269` de `8199e14`. No quedan checks activos abiertos en `docs/refactoring/`; permanecen las deudas residuales explícitas del informe final.

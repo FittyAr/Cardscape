@@ -1,6 +1,6 @@
 # MariaDB compatibility gate
 
-Current status (2026-09-30): the local MariaDB gate passed. All release engines
+Current status (2026-09-30): the local and CI MariaDB gates passed. All release engines
 have native EF Core migration assemblies and a required CI service gate.
 SQLite remains the ordinary development/test engine.
 
@@ -48,8 +48,12 @@ The isolated services passed three exact integration tests each:
   failure explicitly because provider defaults differ. This test failed first.
 
 SQLite also passed all three tests. CI now runs these tests on PostgreSQL 17,
-MySQL 8.4 and MariaDB 11.4; the release job requires that job. This is a local
-verification plus validated workflow configuration, not a claimed CI run.
+MySQL 8.4 and MariaDB 11.4; the release job requires that job. The observed run
+[36742533510](https://github.com/FittyAr/Cardscape/actions/runs/36742533510) on
+`d96ddb0` completed successfully, including native migrations and all three
+provider test executions, plus the production image smoke job. The tag-only
+release job was intentionally skipped on this branch push; no release was
+published by this validation.
 
 ## Reproduce the isolated gate
 

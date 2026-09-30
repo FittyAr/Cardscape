@@ -1,6 +1,6 @@
 # Informe final de arquitectura y modernización
 
-Fecha de cierre de fases: 2026-09-14; cierre del gate multi-provider: 2026-09-30.
+Fecha de cierre de fases: 2026-09-14; cierre del gate multi-provider y CI observado: 2026-09-30.
 
 ## Dictamen
 
@@ -11,8 +11,8 @@ explícitos, UI Blazor basada en Radzen y observabilidad estructurada mediante
 `LoggerMessage` y OpenTelemetry.
 
 El cierre del checklist no significa deuda cero ni pruebas exhaustivas de cada
-funcionalidad en cada motor. El gate MariaDB se verificó localmente el 2026-09-30
-con un provider estable, servicios reales e imagen Production. Cada hallazgo quedó
+funcionalidad en cada motor. El gate MariaDB se verificó localmente y en CI el
+2026-09-30 con un provider estable, servicios reales e imagen Production. Cada hallazgo quedó
 corregido, protegido por evidencia automatizada o registrado como riesgo con un
 gate y un responsable claro. No se conservó compatibilidad legacy del producto.
 
@@ -117,8 +117,15 @@ Production-image smoke SQLite/MariaDB verde y NuGet sin vulnerabilidades conocid
 Formato y actionlint limpios. La publicación autorizada abrió la verificación
 remota del §8 del plan: se corrigieron configuración del runtime, redirección
 Bash, restores independientes y lectura de referencias MSBuild en Linux.
-Su cierre requiere observar CI verde; los resultados locales no lo sustituyen.
-La cobertura y excepción SAML siguen como deuda residual explícita.
+El run [36742533510](https://github.com/FittyAr/Cardscape/actions/runs/36742533510)
+de `d96ddb0` terminó `success`: ocho jobs obligatorios, las siete suites,
+providers externos y ambas imágenes Production. El gate de cobertura usa el
+manifest local, mide únicamente producto y combina los informes reales antes
+de calcular porcentajes; el artefacto es Cobertura, no lcov. Esta medición de CI
+no sustituye la auditoría depurada ni recalcula sus CRAP históricos.
+No quedan checks activos abiertos en `docs/refactoring/`. La cobertura y
+excepción SAML siguen como deuda residual explícita. El job de release por tag
+no se ejecutó: este cierre no afirma haber publicado una release.
 
 Evidencia histórica del cierre 2026-09-14:
 
