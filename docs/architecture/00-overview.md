@@ -112,6 +112,7 @@ src/
 │
 ├── Cardscape.Migrations.PostgreSql/   ← PostgreSQL EF Core history
 ├── Cardscape.Migrations.MySql/        ← MySQL EF Core history
+├── Cardscape.Migrations.MariaDb/      ← MariaDB EF Core history
 │
 ├── Cardscape.Api/
 │   ├── Endpoints/               ← Boards/, Lists/, Cards/, Members/, Auth/

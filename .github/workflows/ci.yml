@@ -205,6 +205,20 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_DATABASE: cardscape
+          MARIADB_USER: cardscape
+          MARIADB_PASSWORD: cardscape
+          MARIADB_ROOT_PASSWORD: cardscape-root
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Setup .NET
@@ -233,6 +247,30 @@ jobs:
           --project src/Cardscape.Migrations.MySql/Cardscape.Migrations.MySql.csproj
           --startup-project src/Cardscape.Api/Cardscape.Api.csproj
           --configuration Release --no-build
+      - name: Apply MariaDB migrations
+        env:
+          Database__Provider: MariaDB
+          ConnectionStrings__Default: Server=localhost;Port=3307;Database=cardscape;User=cardscape;Password=cardscape
+        run: >-
+          dotnet ef database update
+          --project src/Cardscape.Migrations.MariaDb/Cardscape.Migrations.MariaDb.csproj
+          --startup-project src/Cardscape.Api/Cardscape.Api.csproj
+          --configuration Release --no-build
+      - name: Verify PostgreSQL persistence and concurrency
+        env:
+          CARDSCAPE_TEST_PROVIDER: PostgreSQL
+          CARDSCAPE_TEST_CONNECTION: Host=localhost;Port=5432;Database=cardscape;Username=cardscape;Password=cardscape
+        run: dotnet test tests/Cardscape.IntegrationTests/Cardscape.IntegrationTests.csproj --no-build --no-restore --configuration Release --filter "Category=Provider"
+      - name: Verify MySQL persistence and concurrency
+        env:
+          CARDSCAPE_TEST_PROVIDER: MySql
+          CARDSCAPE_TEST_CONNECTION: Server=localhost;Port=3306;Database=cardscape;User=cardscape;Password=cardscape
+        run: dotnet test tests/Cardscape.IntegrationTests/Cardscape.IntegrationTests.csproj --no-build --no-restore --configuration Release --filter "Category=Provider"
+      - name: Verify MariaDB persistence and concurrency
+        env:
+          CARDSCAPE_TEST_PROVIDER: MariaDB
+          CARDSCAPE_TEST_CONNECTION: Server=localhost;Port=3307;Database=cardscape;User=cardscape;Password=cardscape
+        run: dotnet test tests/Cardscape.IntegrationTests/Cardscape.IntegrationTests.csproj --no-build --no-restore --configuration Release --filter "Category=Provider"
 
   coverage:
     name: Coverage
@@ -348,6 +386,7 @@ jobs:
         run: >-
           docker run --detach --name cardscape-api-ci --publish 18081:8080
           --env Jwt__SigningKey=ci-only-signing-key-at-least-32-characters
+          --env Cors__AllowedOrigins__0=http://127.0.0.1:18081
           --env Cardscape__Database__RunMigrationsOnStartup=true
           cardscape/api:ci
       - name: Wait for readiness

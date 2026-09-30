@@ -33,6 +33,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Cardscape.Application\Cardscape.Application.csproj" />
     <ProjectReference Include="..\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
+    <ProjectReference Include="..\Cardscape.Migrations.PostgreSql\Cardscape.Migrations.PostgreSql.csproj" />
+    <ProjectReference Include="..\Cardscape.Migrations.MySql\Cardscape.Migrations.MySql.csproj" />
+    <ProjectReference Include="..\Cardscape.Migrations.MariaDb\Cardscape.Migrations.MariaDb.csproj" />
   </ItemGroup>
 
 </Project>

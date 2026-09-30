@@ -58,6 +58,7 @@
     -->
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="MySql.EntityFrameworkCore" />
+    <PackageReference Include="Microting.EntityFrameworkCore.MySql" />
     <PackageReference Include="Sustainsys.Saml2.AspNetCore2" />
   </ItemGroup>
 
@@ -66,6 +67,7 @@
     <ProjectReference Include="..\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
     <ProjectReference Include="..\Cardscape.Migrations.PostgreSql\Cardscape.Migrations.PostgreSql.csproj" />
     <ProjectReference Include="..\Cardscape.Migrations.MySql\Cardscape.Migrations.MySql.csproj" />
+    <ProjectReference Include="..\Cardscape.Migrations.MariaDb\Cardscape.Migrations.MariaDb.csproj" />
     <ProjectReference Include="..\Cardscape.Web\Cardscape.Web.csproj" />
     <!--
       Optional, feature-gated seeder. Creates a demo dataset

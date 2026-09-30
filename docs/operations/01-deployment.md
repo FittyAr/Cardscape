@@ -19,7 +19,7 @@
 The simplest self-hostable Cardscape deployment is a
 single Linux host with Docker and Docker Compose. The host
 runs the API, its hosted Blazor WebAssembly client, and SQLite.
-PostgreSQL and MySQL are supported release targets through
+PostgreSQL, MySQL and MariaDB are supported release targets through
 their provider-specific EF Core migrations. The MCP server is a
 separate deployable and is not part of the default Compose stack.
 
@@ -271,8 +271,8 @@ configuration in
 [`src/Cardscape.Infrastructure/Persistence/`](../../src/Cardscape.Infrastructure/Persistence/)
 to call `UseNpgsql` instead of `UseSqlite`.
 
-> PostgreSQL and MySQL use provider-specific EF Core migration assemblies.
-> MariaDB remains gated; see
+> PostgreSQL, MySQL and MariaDB use provider-specific EF Core migration assemblies.
+> Every release requires the real-service gate; see
 > [`12-mariadb-future-work.md`](12-mariadb-future-work.md).
 
 ---
@@ -280,8 +280,15 @@ to call `UseNpgsql` instead of `UseSqlite`.
 ## 6. The MySQL deployment
 
 Use `Database__Provider=MySql` with a MySQL connection string. The
-validated release image is `mysql:8.4`. MariaDB is not currently a
-supported alias; see `12-mariadb-future-work.md`.
+validated release image is `mysql:8.4`. For MariaDB 11.4 LTS, use
+`Database__Provider=MariaDB` with a MariaDB connection string; this selects
+the distinct Microting EF Core 10 provider and `Cardscape.Migrations.MariaDb`,
+not Oracle's MySQL provider. The API/MCP artifacts include that history.
+Configure your database service with durable storage and operator credentials,
+and override `Database__Provider`/`ConnectionStrings__Default` on the API service
+while retaining the production Compose signing key, CORS, upload and Data
+Protection settings. See `12-mariadb-future-work.md` for the reproducible isolated
+Compose verification; its fixed test credentials must not be deployed.
 
 ---
 

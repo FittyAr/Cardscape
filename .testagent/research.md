@@ -1407,3 +1407,12 @@ silently skips everything else. Existing success test passes a CLR bool and
 cannot detect the wire mismatch. Acceptance: typed/JSON bool and pathless
 active attribute objects update state; unsupported/malformed/empty operations
 fail before any mutation/save; HTTP deactivate/reactivate survives a fresh GET.
+# MariaDB release gate — 2026-09-30
+
+Docker is running; isolated Compose engines avoid Certaro data. Stable Microting
+10.0.12 explicitly supports MariaDB and depends on EF Relational 10.0.12.
+Add a native migration assembly and exact MariaDB selector to runtime/design
+time; retain Oracle for existing MySQL history. API and MCP must ship every
+assembly/provider. Acceptance: generated native history without SQL patches,
+clean migrate and idempotency, no pending changes, domain roundtrip and optimistic
+concurrency on SQLite/PostgreSQL/MySQL/MariaDB, CI gate and actual image readiness.

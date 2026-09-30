@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Cardscape.Migrations.MariaDb</AssemblyName>
+    <RootNamespace>Cardscape.Migrations.MariaDb</RootNamespace>
+    <Description>Native EF Core migration history for Cardscape on MariaDB.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microting.EntityFrameworkCore.MySql" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

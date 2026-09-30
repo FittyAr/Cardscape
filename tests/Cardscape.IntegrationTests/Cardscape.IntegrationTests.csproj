@@ -5,7 +5,7 @@
     <RootNamespace>Cardscape.IntegrationTests</RootNamespace>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <Description>Integration tests that boot the API and persistence layers in-process against SQLite. Release CI separately applies native EF Core migrations to PostgreSQL and MySQL.</Description>
+    <Description>API integration tests on SQLite; release CI validates native EF Core migrations, persistence and concurrency on PostgreSQL, MySQL and MariaDB.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <!-- Fast API integration scenarios use SQLite. The release workflow independently
-       validates the provider-owned histories against PostgreSQL 17 and MySQL 8.4. -->
+       validates native histories and provider tests on PostgreSQL 17, MySQL 8.4 and MariaDB 11.4. -->
 
   <ItemGroup>
     <ProjectReference Include="..\TestCommon\TestCommon.csproj" />

@@ -102,10 +102,15 @@ public static partial class InfrastructureServiceCollectionExtensions
                     options.UseMySQL(connectionString,
                         mySql => mySql.MigrationsAssembly("Cardscape.Migrations.MySql"));
                     break;
+                case "mariadb":
+                    // MariaDB is a distinct engine/provider, not an Oracle MySQL alias (ADR 0013).
+                    options.UseMySql(connectionString, new MariaDbServerVersion(new Version(11, 4, 0)),
+                        mariaDb => mariaDb.MigrationsAssembly("Cardscape.Migrations.MariaDb"));
+                    break;
                 default:
                     throw new InvalidOperationException(
                         $"Unsupported database provider: {provider}. " +
-                        "Use Sqlite, PostgreSQL, or MySql.");
+                        "Use Sqlite, PostgreSQL, MySql, or MariaDB.");
             }
         });
 

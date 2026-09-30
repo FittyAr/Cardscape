@@ -22,8 +22,9 @@ with hosted kanban tools, and an AI integration that no other
 self-hostable kanban has. We do not cut corners. We do not
 ship a "demo MVP" and call it done.
 
-The persistence layer supports **SQLite**, **PostgreSQL**, and
-**MariaDB**; the test matrix currently runs **only on SQLite**.
+The persistence layer supports **SQLite**, **PostgreSQL**, **MySQL** and
+**MariaDB**. The ordinary suite uses SQLite; the required release gate applies
+native migrations and verifies persistence/concurrency on real external engines.
 See [ADR 0001](adr/0001-multi-provider-strategy.md) for the
 rationale and the test-trait convention we use to grow the
 matrix later. See [ADR 0002](adr/0002-mcp-server.md) for the
@@ -38,7 +39,7 @@ MCP server decision.
 | Client | Blazor WebAssembly | 10.0.12 |
 | UI components | Radzen.Blazor | 11.2.8 |
 | ORM | Entity Framework Core | 10.0.12 LTS |
-| DB providers (runtime) | Sqlite, Npgsql, MySql.EntityFrameworkCore | 10.0.12 / 10.0.3 / 10.0.9 |
+| DB providers (runtime) | Sqlite, Npgsql, Oracle MySQL, Microting MariaDB | 10.0.12 / 10.0.3 / 10.0.9 / 10.0.12 |
 | Validation | FluentValidation | 12.1.1 |
 | CQRS / Mediator | Wolverine | 6.24.10 |
 | API docs | Microsoft.AspNetCore.OpenApi + Scalar.AspNetCore | 10.0.12 / 2.12.54 |
@@ -48,7 +49,7 @@ MCP server decision.
 
 ## 3. Architecture
 
-Clean Architecture, **seven source projects**, one public SDK and
+Clean Architecture, **ten source projects** (including three external migration assemblies), one public SDK and
 **seven test suites plus TestCommon**. The dependency graph is
 strict and one-directional:
 
@@ -123,15 +124,15 @@ See [`architecture/03-mcp-server.md`](architecture/03-mcp-server.md)
 for the operational guide and [ADR 0002](adr/0002-mcp-server.md)
 for the decision.
 
-## 5. Design philosophy: design for three, test on one
+## 5. Design philosophy: all release engines, ordinary tests on SQLite
 
 > *"todo el desarrollo debe ser pensado, diseñador y programado
 > pensando en los 3."*
 
 The application is designed, implemented, and packaged for SQLite,
-PostgreSQL, and MySQL. The ordinary test suite uses SQLite; CI additionally
-applies every provider-owned migration to clean PostgreSQL 17 and MySQL 8.4
-services. MariaDB remains an explicit future compatibility gate.
+PostgreSQL, MySQL and MariaDB. The ordinary test suite uses SQLite; CI additionally
+applies native migrations and runs provider integration tests on PostgreSQL 17,
+MySQL 8.4 and MariaDB 11.4. ADR 0013 records the distinct MariaDB provider.
 
 See [ADR 0001](adr/0001-multi-provider-strategy.md) and the current
 [multi-provider architecture](architecture/02-multi-provider-persistence.md).
@@ -139,7 +140,7 @@ See [ADR 0001](adr/0001-multi-provider-strategy.md) and the current
 **What this means in code**:
 
 - The runtime projects (`Cardscape.Api`, `Cardscape.Mcp`)
-  reference all three provider packages and select the engine
+  include all four providers and external migration assemblies and select the engine
   at boot time via `Database:Provider` configuration.
 - The ordinary integration tests use SQLite; the CI provider gate uses the
   production migration projects against real database services.
@@ -163,14 +164,14 @@ real-service migration gate defined in `.github/workflows/ci.yml`.
 
 1. **Never edit `global.json` without explicit human approval.**
 2. **Never bump EF Core provider versions** without verifying all
-   three supported engines (SQLite, PostgreSQL, MySQL) are still working.
+   four supported engines (SQLite, PostgreSQL, MySQL, MariaDB) are still working.
 3. **Never delete ADR files.** Mark as `Superseded by ADR NNNN`
    instead.
 4. **When adding a NuGet package, declare its version in
    `Directory.Packages.props` only.**
-5. **Migrations**: SQLite is owned by Infrastructure; PostgreSQL and MySQL
+5. **Migrations**: SQLite is owned by Infrastructure; PostgreSQL, MySQL and MariaDB
    own `src/Cardscape.Migrations.PostgreSql` and
-   `src/Cardscape.Migrations.MySql` respectively.
+   `src/Cardscape.Migrations.MySql` and `src/Cardscape.Migrations.MariaDb` respectively.
 6. **Don't touch the `.gitignore` for `obj/`, `bin/`, `.vs/`, etc.**
 7. **No provider-specific code paths without a comment**
    explaining why the abstraction failed and pointing at the ADR.
@@ -205,9 +206,16 @@ dotnet ef migrations add <Name> \
   --project src/Cardscape.Migrations.MySql \
   --startup-project src/Cardscape.Api \
   --output-dir Migrations
+
+# MariaDB (set Database__Provider=MariaDB)
+dotnet ef migrations add <Name> \
+  --project src/Cardscape.Migrations.MariaDb \
+  --startup-project src/Cardscape.Api \
+  --output-dir Migrations
 ```
 
-Always run all three. The first migration is hand-diffed before
+Always generate for all four. Set the matching Database__Provider for each command.
+The first migration is hand-diffed before
 merge to catch the cases where the abstraction is too thin.
 
 ## 8. Available agent skills (project-local)

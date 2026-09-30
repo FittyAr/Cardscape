@@ -34,6 +34,12 @@ public sealed class DesignTimeCardscapeDbContextFactory : IDesignTimeDbContextFa
                     ?? "server=localhost;database=cardscape;user=cardscape;password=cardscape",
                     b => b.MigrationsAssembly("Cardscape.Migrations.MySql"));
                 break;
+            case "mariadb":
+                builder.UseMySql(configuredConnectionString
+                    ?? "server=localhost;database=cardscape;user=cardscape;password=cardscape",
+                    new MariaDbServerVersion(new Version(11, 4, 0)),
+                    b => b.MigrationsAssembly("Cardscape.Migrations.MariaDb"));
+                break;
             default:
                 throw new InvalidOperationException($"Unsupported database provider: {provider}");
         }

@@ -30,7 +30,6 @@
 .dockerignore
 .gitattributes
 .gitignore
-.editorconfig
 Dockerfile
 Dockerfile.*
 docker-compose*.yml

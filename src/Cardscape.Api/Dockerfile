@@ -7,12 +7,13 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy build configuration first so the package restore layer caches.
-COPY Directory.Build.props Directory.Packages.props global.json ./
+COPY Directory.Build.props Directory.Packages.props global.json .editorconfig ./
 COPY src/Cardscape.Domain/Cardscape.Domain.csproj           src/Cardscape.Domain/
 COPY src/Cardscape.Application/Cardscape.Application.csproj src/Cardscape.Application/
 COPY src/Cardscape.Infrastructure/Cardscape.Infrastructure.csproj src/Cardscape.Infrastructure/
 COPY src/Cardscape.Migrations.PostgreSql/Cardscape.Migrations.PostgreSql.csproj src/Cardscape.Migrations.PostgreSql/
 COPY src/Cardscape.Migrations.MySql/Cardscape.Migrations.MySql.csproj src/Cardscape.Migrations.MySql/
+COPY src/Cardscape.Migrations.MariaDb/Cardscape.Migrations.MariaDb.csproj src/Cardscape.Migrations.MariaDb/
 COPY src/Cardscape.Web/Cardscape.Web.csproj                 src/Cardscape.Web/
 COPY src/Cardscape.Api/Cardscape.Api.csproj                 src/Cardscape.Api/
 # Seeder ships in its own project (added in the seeder
@@ -156,7 +157,7 @@ USER cardscape
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV Database__Provider=Sqlite
-ENV ConnectionStrings__Default=Data Source=/app/Data/cardscape.db
+ENV ConnectionStrings__Default="Data Source=/app/Data/cardscape.db"
 ENV Storage__LocalRoot=/app/Storage
 ENV Cardscape__DataProtection__KeyDirectory=/app/DataProtectionKeys
 EXPOSE 8080

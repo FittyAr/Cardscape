@@ -1159,3 +1159,20 @@ Status: complete. All five steps are implemented and validated.
 - PatchUserAsync_OrderedActiveOperations_LastValueWinsWithSingleSave: two
   ordered transitions, one lookup/save; reject JSON scalar coercion, empty
   attribute object, unsupported object attribute and remove without path.
+# MariaDB release gate — 2026-09-30
+
+- ProviderMigrations_ApplyWithoutDriftAndPersistDomainValues: ordinary SQLite;
+  explicit external gate provider/connection env vars select real engines.
+- ProviderConcurrency_StaleUpdateIsRejected: independently tracked copies.
+- Configure providers consistently; generate MariaDB migration via dotnet ef.
+- Add MariaDB CI service, run exact provider tests for all release engines;
+  production Compose and Docker image readiness must be real, not assumed.
+- SourceProjects_HaveOnlyTheApprovedDirectProjectReferences: preserve exact graph
+  assertions while adding MariaDB history and all three histories to MCP packaging.
+- Quality self-review: .NET analysis extension is absent locally; fallback to
+  xUnit/FluentAssertions APIs. Neither new test is assertion-free or trivial-only.
+  Schema/domain round trip asserts collections, booleans and exact persisted
+  values; concurrency asserts the exception and independent final state/version.
+  Static mutation reasoning detects removed migration catalogs, drift, broken
+  conversions and missing concurrency protection; no mutation tool was run.
+  This bounded provider suite does not cover every query/feature or outbox retry.

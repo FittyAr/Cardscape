@@ -1,0 +1,82 @@
+name: cardscape-provider-gate
+services:
+  api-mariadb:
+    profiles: [smoke]
+    image: cardscape/refactoring:20260930
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      Database__Provider: MariaDB
+      ConnectionStrings__Default: Server=mariadb;Port=3306;Database=cardscape;User=cardscape;Password=cardscape-test
+      Jwt__SigningKey: isolated-provider-smoke-key-not-for-deployment
+      Cors__AllowedOrigins__0: http://127.0.0.1:28080
+      Cardscape__Database__RunMigrationsOnStartup: "true"
+    ports:
+      - "127.0.0.1:28080:8080"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  api-sqlite:
+    profiles: [smoke]
+    image: cardscape/refactoring:20260930
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      Jwt__SigningKey: isolated-provider-smoke-key-not-for-deployment
+      Cors__AllowedOrigins__0: http://127.0.0.1:28081
+      Cardscape__Database__RunMigrationsOnStartup: "true"
+    ports:
+      - "127.0.0.1:28081:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: cardscape
+      POSTGRES_USER: cardscape
+      POSTGRES_PASSWORD: cardscape-test
+    ports:
+      - "127.0.0.1:25432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cardscape -d cardscape"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: cardscape
+      MYSQL_USER: cardscape
+      MYSQL_PASSWORD: cardscape-test
+      MYSQL_ROOT_PASSWORD: cardscape-root-test
+    ports:
+      - "127.0.0.1:23306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  mariadb:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: cardscape
+      MARIADB_USER: cardscape
+      MARIADB_PASSWORD: cardscape-test
+      MARIADB_ROOT_PASSWORD: cardscape-root-test
+    ports:
+      - "127.0.0.1:23307:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30

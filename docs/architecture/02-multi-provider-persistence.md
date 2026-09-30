@@ -9,16 +9,15 @@
 | `Sqlite` | SQLite | `Microsoft.EntityFrameworkCore.Sqlite` | `Cardscape.Infrastructure` |
 | `PostgreSQL` | PostgreSQL 17 | `Npgsql.EntityFrameworkCore.PostgreSQL` | `Cardscape.Migrations.PostgreSql` |
 | `MySql` | MySQL 8.4 | `MySql.EntityFrameworkCore` | `Cardscape.Migrations.MySql` |
+| `MariaDB` | MariaDB 11.4 LTS | `Microting.EntityFrameworkCore.MySql` | `Cardscape.Migrations.MariaDb` |
 
-SQLite is the ordinary local and automated test engine. PostgreSQL and
-MySQL use real service containers in CI to verify that their complete EF
-Core migration histories apply to clean databases before a release.
+SQLite is the ordinary local and automated test engine. PostgreSQL, MySQL and
+MariaDB use real service containers in CI to verify native histories,
+model alignment, persisted domain values and optimistic concurrency.
 
-MariaDB is not currently a verified target. Oracle's EF Core 10 provider
-documents MySQL 8+ support and fails while acquiring its migration lock on
-MariaDB 11.4. Pomelo verifies MariaDB but has no stable EF Core 10 release.
-Cardscape must not advertise MariaDB compatibility until a stable provider
-passes the same migration and integration gates.
+MariaDB uses a distinct stable EF Core 10 provider, not an alias for Oracle's
+MySQL provider. [ADR 0013](../adr/0013-mariadb-ef-core-provider.md) records the
+decision and verified engine versions. The release gate is mandatory.
 
 ## Runtime configuration
 
@@ -36,6 +35,7 @@ Only migration artifacts are provider-specific:
 src/Cardscape.Infrastructure/Persistence/Migrations/  # SQLite
 src/Cardscape.Migrations.PostgreSql/Migrations/      # PostgreSQL
 src/Cardscape.Migrations.MySql/Migrations/            # MySQL
+src/Cardscape.Migrations.MariaDb/Migrations/          # MariaDB
 ```
 
 After changing the model, create the same logical migration separately for
@@ -49,7 +49,7 @@ EF Core cannot express the operation and tests for every release engine.
 A final release requires:
 
 1. SQLite model without pending changes and a clean full-history apply.
-2. Non-empty, aligned PostgreSQL and MySQL migration catalogs.
-3. Clean applies to PostgreSQL 17 and MySQL 8.4 services in CI.
-4. Provider integration suites when those suites are introduced.
-5. MariaDB advertising only after its own real-service gate is green.
+2. Non-empty, model-aligned PostgreSQL, MySQL and MariaDB migration catalogs.
+3. Clean applies to PostgreSQL 17, MySQL 8.4 and MariaDB 11.4 services in CI.
+4. Provider persistence and concurrency tests on each external engine.
+5. Production-image readiness smoke, without weakening security validation.

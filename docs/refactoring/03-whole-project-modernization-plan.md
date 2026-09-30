@@ -426,4 +426,6 @@ El plan estará completo cuando todas las fases estén verificadas o cada excepc
 El cierre histórico de fases no equivale al 100% de los requisitos de release.
 La excepción registrada no puede presentarse como compatibilidad completada.
 
+- [x] Adoptar provider MariaDB estable y verificar los motores reales (2026-09-30): Microting 10.0.12, historia nativa `InitialMariaDb`, dos pruebas por motor con persistencia Unicode/concurrencia/modelo alineado; build Release completo 0/0 y readiness/registro/workspace por HTTP en imágenes Production SQLite y MariaDB. CI incluye MariaDB y los tests externos; actionlint 1.7.7 pasa. ADR 0013 justifica la dependencia. Certaro no se modificó. Queda en ejecución la regresión integral de cierre.
+
 - [ ] Certificar MariaDB con provider EF Core 10 estable: generación de migraciones nativas, historial limpio, integración CI y Compose contra MariaDB LTS real. Revalidado 2026-09-30: Pomelo estable declara EF Core 9; el provider instalado conserva el bloqueo registrado y Docker local no tiene daemon accesible. Evidencia y criterios en `../operations/12-mariadb-future-work.md`. No se elimina el requisito ni se sustituye por SQL manual, previews o compatibilidad wire.
