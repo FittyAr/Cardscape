@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Common;
@@ -21,6 +22,9 @@ public sealed partial class ScimService : IScimService
     private const string ScimGroupSchema = "urn:ietf:params:scim:schemas:core:2.0:Group";
     private const string ScimListResponseSchema = "urn:ietf:params:scim:api:messages:2.0:ListResponse";
     private const string ScimGroupIdPrefix = "workspace-";
+
+    [GeneratedRegex("^\\s*members\\s*\\[\\s*value\\s+eq\\s+\"(?<id>[0-9a-f-]+)\"\\s*\\]\\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, 1000)]
+    private static partial Regex MemberRemovalPath();
 
     private readonly IRepository<User, UserId> _users;
     private readonly IUserRepository _userRepository;
@@ -279,28 +283,10 @@ public sealed partial class ScimService : IScimService
                 continue;
             }
 
-            if (opName == "remove" && op.Path is not null
-                && op.Path.StartsWith("members", StringComparison.OrdinalIgnoreCase))
+            if (opName == "remove" && op.Path is not null)
             {
-                // RFC 7644 paths look like
-                // `members[value eq "user-guid"]` or just
-                // `members`. For the bare `members` form we
-                // can't infer which entry to drop, so we
-                // no-op (the IdP should always send the
-                // filtered form).
-                int eqIdx = op.Path.IndexOf(" eq ", StringComparison.OrdinalIgnoreCase);
-                if (eqIdx < 0)
-                {
-                    continue;
-                }
-
-                string tail = op.Path[(eqIdx + " eq ".Length)..].Trim();
-                if (tail.Length >= 2 && tail[0] == '"' && tail[^1] == '"')
-                {
-                    tail = tail[1..^1];
-                }
-
-                if (Guid.TryParse(tail, out Guid userGuid))
+                Match match = MemberRemovalPath().Match(op.Path);
+                if (match.Success && Guid.TryParse(match.Groups["id"].Value, out Guid userGuid))
                 {
                     workspace.RemoveMember(userGuid, _clock.UtcNow);
                 }

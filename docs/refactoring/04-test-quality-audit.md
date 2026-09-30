@@ -41,6 +41,11 @@ cancelable. No se usan sleeps como sustituto de una assertion. Se retiraron dos
 
 ## Remediación ejecutada
 
+- SCIM Groups: corregido el parser de eliminación filtrada que retenía `]` y
+  convertía una operación válida en éxito sin efecto. Tres regresiones fallaron
+  antes de la corrección; ocho casos de paths válidos/malformados ahora verifican
+  membresía exacta y persistencia. Suite de servicio 16/16 (2026-09-30).
+
 - `AttachmentUploadPolicy.IsBlockedMimeType` dejó de ser un switch de 27 ramas
   y usa un `FrozenSet<string>` ordinal e inmutable.
 - Una theory valida los 27 MIME bloqueados después de normalizar casing/espacios,

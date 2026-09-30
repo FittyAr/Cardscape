@@ -212,6 +212,47 @@ public sealed class ScimServiceTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Theory]
+    [InlineData("members[value eq \"{0}\"]", true)]
+    [InlineData("MEMBERS[VALUE EQ \"{0}\"]", true)]
+    [InlineData(" members [ value eq \"{0}\" ] ", true)]
+    [InlineData("members[value eq \"{0}\"", false)]
+    [InlineData("members[display eq \"{0}\"]", false)]
+    [InlineData("members[value ne \"{0}\"]", false)]
+    [InlineData("membersOther[value eq \"{0}\"]", false)]
+    [InlineData("members[value eq \"{0}\"]suffix", false)]
+    public async Task PatchGroupAsync_FilteredMemberRemoval_RemovesOnlyTargetAndPersists(
+        string pathFormat, bool removesTarget)
+    {
+        var context = CreateContext();
+        User target = BuildUser("target@example.com", "Target");
+        User retained = BuildUser("retained@example.com", "Retained");
+        Workspace workspace = BuildWorkspace(context.WorkspaceId, context.User.Id.Value);
+        workspace.AddMember(target.Id.Value, WorkspaceRole.Member, Now).IsSuccess.Should().BeTrue();
+        workspace.AddMember(retained.Id.Value, WorkspaceRole.Member, Now).IsSuccess.Should().BeTrue();
+        context.Workspaces.Setup(x => x.GetByIdAsync(context.WorkspaceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(workspace);
+        context.Users.Setup(x => x.ListByIdsAsync(It.IsAny<IReadOnlyList<UserId>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([context.User, target, retained]);
+        context.UnitOfWork.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        string path = string.Format(System.Globalization.CultureInfo.InvariantCulture, pathFormat, target.Id.Value);
+
+        Result<ScimGroup> result = await context.Service.PatchGroupAsync(
+            context.WorkspaceId.Value,
+            $"workspace-{context.WorkspaceId.Value:D}",
+            new ScimPatchRequest([new ScimPatchOperation("remove", path, null)]),
+            TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        Guid[] expectedMembers = removesTarget
+            ? [context.User.Id.Value, retained.Id.Value]
+            : [context.User.Id.Value, target.Id.Value, retained.Id.Value];
+        workspace.Members.Select(member => member.UserId).Should().BeEquivalentTo(expectedMembers);
+        result.Value.Members.Select(member => member.Value).Should().BeEquivalentTo(
+            expectedMembers.Select(id => id.ToString("D")));
+        context.UnitOfWork.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Once);
+    }
+
     private static ScimTestContext CreateContext(bool userBelongsToWorkspace = false)
     {
         WorkspaceId workspaceId = WorkspaceId.New();

@@ -1327,6 +1327,13 @@
 
 # Internal board broadcast dispatch hotspot — 2026-09-14
 
+## SCIM filtered removal — 2026-09-30
+
+The current parser leaves the closing bracket attached to the quoted GUID. Target:
+`ScimService.PatchGroupAsync`; existing xUnit/Moq conventions apply. Acceptance:
+canonical/case-insensitive/whitespace paths remove exactly the selected member,
+preserve owner and peer, return the exact membership and save with caller cancellation.
+
 - `BoardBroadcastEndpoints.DispatchAsync` is a 20-case switch with identical deserialize,
   validate, broadcast and success branches; the coverage audit ranked it second by CRAP.
 - Positive endpoint coverage exists only for `CardCreated`; unknown method and incompatible

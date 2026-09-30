@@ -672,6 +672,12 @@ Status: complete. All four steps are implemented and validated.
 
 # Internal board broadcast dispatch hotspot — 2026-09-14
 
+## SCIM filtered removal — 2026-09-30
+
+1. Reproduce with `PatchGroupAsync_FilteredMemberRemoval_RemovesOnlyTargetAndPersists`.
+2. Parse the whole supported value-equality path with bounded matching.
+3. Run the SCIM service suite; review exact membership and persistence assertions.
+
 1. Replace the branch-heavy switch with an immutable typed handler registry.
 2. Derive protocol keys from `IBoardClient` method names and retain ordinal matching.
 3. Convert the single positive case into a 20-case behavioral HTTP theory.

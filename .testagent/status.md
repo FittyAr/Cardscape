@@ -1325,6 +1325,17 @@
 
 # Architecture gate closure — 2026-09-14
 
+## SCIM filtered removal — 2026-09-30
+
+- [x] Three valid paths reproduced the defect before production changes (3 failures).
+- [x] Generated, anchored, culture-independent regex with timeout parses the complete filter.
+- [x] Eight cases cover valid casing/whitespace and malformed/wrong-attribute/wrong-operator paths.
+- [x] Exact domain and response membership preserve owner/peer and reject unintended removals.
+- [x] Caller cancellation and exactly one save asserted.
+- [x] ScimServiceTests: 16/16 pass; Infrastructure build: 0 warnings/errors.
+- [x] Assertion/gap review: restoring old parsing fails all positive cases; relaxing anchors
+  or matching display/ne/membersOther breaks negative exact-membership assertions.
+
 - [x] Existing gate coverage mapped to dependency, ownership, API, MCP and UI defects.
 - [x] Missing regression class isolated to concrete host resolution from black-box suites.
 - [x] Source gate added for Functional and E2E projects.

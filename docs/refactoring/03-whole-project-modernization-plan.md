@@ -399,4 +399,6 @@ El plan estará completo cuando todas las fases estén verificadas o cada excepc
 
 ## 6. Mejora continua posterior al cierre
 
+- [x] Corregir la eliminación filtrada de miembros SCIM: tres paths válidos fallaron antes de corregir el parser que retenía el corchete final. Un `GeneratedRegex` anclado, independiente de cultura y con timeout reconoce el filtro completo; ocho casos verifican paths válidos/malformados, membresía exacta y persistencia cancelable. Suite SCIM 16/16; Infrastructure build 0/0.
+
 - [x] Reducir el hotspot de dispatch del broadcast interno: el switch repetitivo fue reemplazado por una tabla `FrozenDictionary` ordinal de handlers genéricos tipados, con claves derivadas de `IBoardClient` y sin reflection/dynamic. Una theory HTTP recorre las 20 operaciones admitidas y la clase completa pasa 30/30 preservando autenticación, límites, resolución EF Core y errores canónicos. Evidencia detallada en `docs/refactoring/08-internal-broadcast-dispatch.md`.
