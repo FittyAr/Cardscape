@@ -7,7 +7,7 @@ namespace Cardscape.Infrastructure.Scim;
 
 public sealed partial class ScimService
 {
-    private static Result<IReadOnlyList<ScimPatchOperation>> NormalizeGroupPatch(ScimPatchRequest patch)
+    private static Result<IReadOnlyList<ScimPatchOperation>> NormalizeGroupPatch(ScimPatchRequest patch, Guid ownerId)
     {
         List<ScimPatchOperation> operations = [];
         foreach (ScimPatchOperation operation in patch.Operations)
@@ -37,6 +37,18 @@ public sealed partial class ScimService
         // Validate the complete payload before changing a tracked aggregate.
         foreach (ScimPatchOperation operation in operations)
         {
+            if (string.Equals(operation.Op, "remove", StringComparison.OrdinalIgnoreCase)
+                && operation.Path is not null)
+            {
+                var match = MemberRemovalPath().Match(operation.Path);
+                if (match.Success && Guid.TryParse(match.Groups["id"].Value, out Guid targetId)
+                    && targetId == ownerId)
+                {
+                    return Result.Failure<IReadOnlyList<ScimPatchOperation>>(DomainError.Validation(
+                        "scim.mutability", "The workspace owner cannot be removed from the group."));
+                }
+            }
+
             if (!string.Equals(operation.Op, "add", StringComparison.OrdinalIgnoreCase)
                 && !string.Equals(operation.Op, "replace", StringComparison.OrdinalIgnoreCase))
             {

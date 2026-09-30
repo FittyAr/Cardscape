@@ -452,6 +452,30 @@ public sealed class ScimServiceTests
         context.UnitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PatchGroupAsync_OwnerRemoval_RejectsBeforeAnyMutation(bool precedingRename)
+    {
+        var (context, workspace, peer) = CreateGroupContext();
+        var removal = new ScimPatchOperation("remove", $"members[value eq \"{context.User.Id.Value:D}\"]", null);
+        ScimPatchOperation[] operations = precedingRename
+            ? [new("replace", "displayName", "Must not apply"), removal]
+            : [removal];
+
+        Result<ScimGroup> result = await context.Service.PatchGroupAsync(
+            context.WorkspaceId.Value, $"workspace-{context.WorkspaceId.Value:D}",
+            new ScimPatchRequest(operations), TestContext.Current.CancellationToken);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Validation);
+        result.Error.Code.Should().Be("scim.mutability");
+        workspace.Name.Value.Should().Be("SCIM Workspace");
+        workspace.Members.Select(member => member.UserId).Should().BeEquivalentTo([context.User.Id.Value, peer.Id.Value]);
+        context.Users.VerifyNoOtherCalls();
+        context.UnitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private static (ScimTestContext Context, Workspace Workspace, User Peer) CreateGroupContext()
     {
         var context = CreateContext();

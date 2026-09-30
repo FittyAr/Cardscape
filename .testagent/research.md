@@ -1374,3 +1374,9 @@ attribute objects, not member arrays. Current replace treats any object as []
 and removes memberships. Acceptance: name-only patch preserves all members;
 object members patch applies add/replace; malformed arrays fail before mutation,
 lookup or save, even after an earlier valid rename in the request.
+# SCIM owner mutability — 2026-09-30
+
+Bounded target: filtered member removal in PatchGroupAsync. Workspace.RemoveMember
+returns CannotRemoveOwner, but SCIM ignores the result and persists preceding
+operations. Acceptance: owner removal alone or following a rename fails before
+any mutation, lookup or save; retained owner/peer membership and name exact.

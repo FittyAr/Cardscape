@@ -1,5 +1,21 @@
 # Test status
 
+## SCIM owner mutability (2026-09-30)
+
+- `PatchGroupAsync_OwnerRemoval_RejectsBeforeAnyMutation` failed in both rows
+  before fix: the ignored domain failure returned success and saved earlier rename.
+- Complete: preflight compares filtered target to owner before applying operations;
+  HTTP mapping emits mutability. `GroupErrors_ReportHttpStatusAndPreservePersistedState`
+  includes owner removal after rename, exact 400/schema/scimType and independent GET.
+- SCIM unit 42/42, all unit 729/729, SCIM HTTP 9/9, no skips;
+  Infrastructure/API Release builds zero warnings/errors.
+- Assertion-quality/gap review: 7 meaningful assertions in the new unit method,
+  exact state/collections/error code and no lookup/save; HTTP separately proves
+  persisted state. No trivial-only assertions. Static review predicts detection
+  of ignored failures, delayed validation and missing mutability mapping; no
+  executed mutation score. Unsupported ops/paths remain a separate review target.
+- .NET analysis extension is absent; base rubrics used inline.
+
 ## SCIM HTTP error contract (2026-09-30)
 
 - `GroupErrors_ReportHttpStatusAndPreservePersistedState` failed for both 400

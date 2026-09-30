@@ -132,10 +132,11 @@ public class ScimGroupsEndpointsTests
     }
 
     [Theory]
-    [InlineData(false, HttpStatusCode.BadRequest, "invalidValue")]
-    [InlineData(true, HttpStatusCode.NotFound, null)]
+    [InlineData(false, false, HttpStatusCode.BadRequest, "invalidValue")]
+    [InlineData(true, false, HttpStatusCode.NotFound, null)]
+    [InlineData(false, true, HttpStatusCode.BadRequest, "mutability")]
     public async Task GroupErrors_ReportHttpStatusAndPreservePersistedState(
-        bool missingGroup, HttpStatusCode expectedStatus, string? expectedScimType)
+        bool missingGroup, bool removeOwner, HttpStatusCode expectedStatus, string? expectedScimType)
     {
         using HttpClient admin = _factory.CreateApiClient();
         AuthResponse auth = await RegisterAndLogin(admin);
@@ -159,7 +160,9 @@ public class ScimGroupsEndpointsTests
                 Operations = new object[]
                 {
                     new { op = "replace", path = "displayName", value = "Must not persist" },
-                    new { op = "replace", path = "members", value = new { invalid = true } }
+                    removeOwner
+                        ? (object)new { op = "remove", path = $"members[value eq \"{auth.User.Id:D}\"]" }
+                        : new { op = "replace", path = "members", value = new { invalid = true } }
                 }
             }, TestContext.Current.CancellationToken);
 

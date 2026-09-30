@@ -220,7 +220,7 @@ public sealed partial class ScimService : IScimService
                 "scim.group_not_found", $"Group {groupId} was not found."));
         }
 
-        Result<IReadOnlyList<ScimPatchOperation>> normalized = NormalizeGroupPatch(patch);
+        Result<IReadOnlyList<ScimPatchOperation>> normalized = NormalizeGroupPatch(patch, workspace.OwnerId);
         if (normalized.IsFailure)
         {
             return Result.Failure<ScimGroup>(normalized.Error);

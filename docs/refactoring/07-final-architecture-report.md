@@ -47,7 +47,10 @@ normalización por atributos y validación previa evitan eliminar membresías
 omitidas o aplicar parcialmente un request con valores malformados (SCIM 40/40,
 unitarias 727/727). El status del cuerpo de errores SCIM ahora coincide con HTTP,
 y valores inválidos publican `invalidValue`: integración SCIM 8/8 y arquitectura
-55/55. Quedan por evaluar las demás combinaciones de errores y mutabilidad;
+55/55. También se rechaza el borrado explícito del propietario antes de mutar,
+con error de mutabilidad verificable por HTTP y GET posterior (SCIM unit 42/42,
+unitarias 729/729, SCIM HTTP 9/9). Quedan por evaluar las demás combinaciones
+de errores, paths no admitidos y operaciones;
 estas correcciones puntuales no constituyen una certificación del protocolo completo.
 Responsable: mantenedores de Application/Infrastructure. Gate: cobertura y
 regresiones focalizadas en cada cambio.

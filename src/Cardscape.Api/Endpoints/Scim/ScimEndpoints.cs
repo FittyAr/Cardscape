@@ -338,7 +338,12 @@ public static class ScimEndpoints
             schemas = ErrorSchemas,
             status = statusCode.ToString(CultureInfo.InvariantCulture),
             detail = error.Message,
-            scimType = error.Code == "scim.invalid_value" ? "invalidValue" : (string?)null
+            scimType = error.Code switch
+            {
+                "scim.invalid_value" => "invalidValue",
+                "scim.mutability" => "mutability",
+                _ => (string?)null
+            }
         }, statusCode: statusCode);
     }
 

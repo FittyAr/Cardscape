@@ -1120,3 +1120,8 @@ Status: complete. All five steps are implemented and validated.
 - PatchGroupAsync_PathlessMembers_AppliesOperation (add/replace).
 - PatchGroupAsync_InvalidMembers_RejectsBeforeAnyMutation (JSON shape matrix).
 - Normalize and validate entire patch before applying operations, preserving order.
+# SCIM owner mutability — 2026-09-30
+
+- PatchGroupAsync_OwnerRemoval_RejectsBeforeAnyMutation (with/without earlier rename).
+- Preflight normalized filtered removal against owner identity; preserve ordinary
+  and absent-user removal behavior. Return scim.mutability, not false success.
