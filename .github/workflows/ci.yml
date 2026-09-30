@@ -280,6 +280,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests]
     timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
     env:
       Configuration: Release
       Database__Provider: Sqlite
@@ -301,78 +304,66 @@ jobs:
             ${{ runner.os }}-
       - name: Restore solution
         run: dotnet restore Cardscape.slnx
+      - name: Restore coverage CLI
+        run: dotnet tool restore
       - name: Run unit tests with coverage
         run: >
           dotnet test tests/Cardscape.UnitTests/Cardscape.UnitTests.csproj
           --no-restore --configuration Release
           --collect:"XPlat Code Coverage"
           --results-directory TestResults/coverage/unit
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[Cardscape.Domain]*,[Cardscape.Application]*,[Cardscape.Infrastructure]*,[Cardscape.Api]*,[Cardscape.Web]*,[Cardscape.Mcp]*,[Cardscape.Seeder]*,[Cardscape.Sdk]*"
       - name: Run integration tests with coverage
         run: >
           dotnet test tests/Cardscape.IntegrationTests/Cardscape.IntegrationTests.csproj
           --no-restore --configuration Release
           --collect:"XPlat Code Coverage"
           --results-directory TestResults/coverage/integration
-      - name: Filter coverage (Application + Api + Web + Mcp only)
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[Cardscape.Domain]*,[Cardscape.Application]*,[Cardscape.Infrastructure]*,[Cardscape.Api]*,[Cardscape.Web]*,[Cardscape.Mcp]*,[Cardscape.Seeder]*,[Cardscape.Sdk]*"
+      - name: Merge product coverage
+        shell: bash
         run: |
-          dotnet tool install --global dotnet-coverage --version 17.12.0 || true
-          ls TestResults/coverage
-      - name: Upload coverage (lcov)
+          mapfile -d '' reports < <(find TestResults/coverage -name coverage.cobertura.xml -print0)
+          if (( ${#reports[@]} != 2 )); then
+            echo "::error::Expected one unit and one integration coverage report."
+            exit 1
+          fi
+          dotnet coverage merge "${reports[@]}" --output-format cobertura --output TestResults/coverage/merged.cobertura.xml
+      - name: Upload coverage (Cobertura)
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: coverage-lcov-${{ github.sha }}
-          path: TestResults/coverage/**/coverage.cobertura.xml
-          if-no-files-found: ignore
-      - name: Summarise coverage for PR comment (D8 — v1.2.0 plan, G17)
-        if: github.event_name == 'pull_request'
+          name: coverage-cobertura-${{ github.sha }}
+          path: TestResults/coverage/**/*.xml
+          if-no-files-found: error
+      - name: Summarise merged product coverage
         id: coverage-summary
+        shell: bash
         run: |
-          # Extract the line-rate (%) and branch-rate (%) from every
-          # coverage.cobertura.xml under TestResults/coverage/ and
-          # average them. The exact line/branch breakdown is in
-          # the lcov artifact linked from the PR comment.
-          set -e
-          total_lines=0
-          total_branches=0
-          count=0
-          for f in TestResults/coverage/**/coverage.cobertura.xml; do
-            [ -e "$f" ] || continue
-            line_rate=$(xmllint --xpath 'string(/coverage/@line-rate)' "$f" 2>/dev/null || echo "0")
-            branch_rate=$(xmllint --xpath 'string(/coverage/@branch-rate)' "$f" 2>/dev/null || echo "0")
-            total_lines=$(echo "$total_lines + $line_rate" | bc -l)
-            total_branches=$(echo "$total_branches + $branch_rate" | bc -l)
-            count=$((count + 1))
-          done
-          if [ "$count" = "0" ]; then
-            echo "No coverage XML found; skipping summary."
-            {
-              echo "summary<<EOF"
-              echo "## Coverage summary"
-              echo ""
-              echo "_No coverage data was produced on this run._"
-              echo "EOF"
-            } >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          avg_line=$(echo "scale=2; ($total_lines / $count) * 100" | bc -l)
-          avg_branch=$(echo "scale=2; ($total_branches / $count) * 100" | bc -l)
-          echo "avg-line=$avg_line"
-          echo "avg-branch=$avg_branch"
-          {
-            echo "summary<<EOF"
-            echo "## Coverage summary"
-            echo ""
-            echo "**Line coverage**: ${avg_line}%"
-            echo "**Branch coverage**: ${avg_branch}%"
-            echo "**Files**: $count cobertura XML report(s) merged"
-            echo ""
-            echo "Detailed line/branch breakdown is in the workflow run artifacts."
-            echo "Posted by the v1.2.0 D8 / G17 work."
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          python3 - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+
+          coverage = ET.parse('TestResults/coverage/merged.cobertura.xml').getroot()
+          lines = int(coverage.attrib['lines-valid'])
+          branches = int(coverage.attrib['branches-valid'])
+          if lines <= 0 or branches <= 0:
+              raise SystemExit('Product coverage must contain measurable lines and branches.')
+          covered_lines = int(coverage.attrib['lines-covered'])
+          covered_branches = int(coverage.attrib['branches-covered'])
+          summary = (
+              '## Product coverage (unit + integration, merged)\n\n'
+              f'Lines: {covered_lines}/{lines} ({covered_lines / lines:.2%})\n\n'
+              f'Branches: {covered_branches}/{branches} ({covered_branches / branches:.2%})\n\n'
+              'Exact counters are in the Cobertura artifact; percentages are not averaged.'
+          )
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as output:
+              output.write(summary + '\n')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write('summary<<CARDSCAPE_COVERAGE\n' + summary + '\nCARDSCAPE_COVERAGE\n')
+          PY
       - name: Post coverage diff comment to PR
-        if: github.event_name == 'pull_request' && steps.coverage-summary.outputs.summary != ''
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.coverage-summary.outputs.summary != ''
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           header: cardscape-coverage
