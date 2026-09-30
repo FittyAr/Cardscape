@@ -35,8 +35,12 @@ gate y un responsable claro. No se conservó compatibilidad legacy del producto.
 
 La medición depurada es 47,27% de líneas y 32,93% de ramas, con 185 de 3.407
 métodos por encima de CRAP 30. No se presenta como cobertura suficiente. El
-hotspot MIME principal y el dispatch de broadcast ya fueron reducidos; los
-siguientes bloques deben atender, en orden, SCIM Groups y políticas de presentación Activity.
+hotspot MIME principal y el dispatch de broadcast ya fueron reducidos. El
+2026-09-30 se corrigió además la eliminación filtrada de miembros SCIM, con
+regresiones que fallaron antes del cambio, y se extrajo/probó la presentación
+Activity para los 25 tipos reales. La cobertura restante de SCIM Groups
+(add/replace y combinaciones de operaciones) requiere todavía ampliar la matriz;
+estas correcciones puntuales no constituyen una certificación del protocolo completo.
 Responsable: mantenedores de Application/Infrastructure. Gate: cobertura y
 regresiones focalizadas en cada cambio.
 
@@ -74,6 +78,12 @@ condición obligatoria de release y repetir localmente cuando el daemon esté
 disponible.
 
 ## Verificación de cierre
+
+Actualización 2026-09-30: SCIM 16/16 y presentación Activity 25/25, ambos en
+Release; Infrastructure y Web compilan con 0 warnings/errores. Los hooks de cada
+commit verificaron formato y build de solución con 0 warnings/errores. La
+medición integral y de cobertura que sigue corresponde al cierre 2026-09-14 y
+no se presenta como una nueva medición tras estos cambios.
 
 - Build Release del hook: 0 warnings, 0 errores.
 - Suite integral: 1.011/1.011 pruebas, 0 fallos, 0 omitidos.

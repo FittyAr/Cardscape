@@ -1334,6 +1334,12 @@
 - [x] Combined Activity/SCIM regressions: 41/41; Web build: 0 warnings/errors.
 - [x] Assertion/gap review: exact key/style pair per kind catches prefix drift,
   incorrect category style and default-style regression; no branch copied into tests.
+- [x] Review uses `assertion-quality` and `test-gap-analysis` rubric inline: the
+  advertised .NET analysis extension remains absent. SCIM asserts success, exact
+  aggregate and response membership, and one cancellable save; Activity asserts
+  exact resource key/style pairs. These are static mutation checks, not an executed
+  mutation score. Remaining SCIM add/replace combinations are explicitly outside
+  the filtered-removal regression scope.
 
 ## SCIM filtered removal — 2026-09-30
 
