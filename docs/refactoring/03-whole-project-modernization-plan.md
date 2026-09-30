@@ -399,6 +399,8 @@ El plan estará completo cuando todas las fases estén verificadas o cada excepc
 
 ## 6. Mejora continua posterior al cierre
 
+- [x] Restringir altas SCIM al atributo `members` exacto: `membersOther` y `members.display` agregaban usuarios por la comparación por prefijo. Ambas regresiones fallaron antes del cambio; comparación ordinal case-insensitive alineada con replace. SCIM 25/25, unitarias completas 712/712, Infrastructure build 0/0.
+
 - [x] Ampliar matriz SCIM Groups add/replace: cuatro combinaciones de orden y representación (objetos/JSON) verifican membresía y DTO exactos, propietario conservado, tres consultas batch y un único save cancelable; reemplazo vacío conserva sólo al propietario. Suite SCIM 21/21. No se declara certificación completa del protocolo.
 
 - [x] Completar presentación de Activity: `ActivityPresentation` usa el enum tipado y las 25 etiquetas existentes `CardActivity*`; el filtro recorre todos los tipos reales y se retiran dos ramas inexistentes y el texto CLR duplicado. Los 25 contratos exactos de etiqueta/estilo Radzen pasan; Web build 0/0.

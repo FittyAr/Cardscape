@@ -39,7 +39,9 @@ hotspot MIME principal y el dispatch de broadcast ya fueron reducidos. El
 2026-09-30 se corrigió además la eliminación filtrada de miembros SCIM, con
 regresiones que fallaron antes del cambio, y se extrajo/probó la presentación
 Activity para los 25 tipos reales. La matriz SCIM Groups ahora cubre además
-add/replace en ambos órdenes, valores tipados/JSON y reemplazo vacío (21/21).
+add/replace en ambos órdenes, valores tipados/JSON y reemplazo vacío. Se corrigió
+además el alta indebida por paths con prefijo `members` (SCIM 25/25;
+unitarias completas 712/712, sin fallos ni omitidos, 2026-09-30).
 Quedan por evaluar validación de payloads inválidos y operaciones sin path;
 estas correcciones puntuales no constituyen una certificación del protocolo completo.
 Responsable: mantenedores de Application/Infrastructure. Gate: cobertura y

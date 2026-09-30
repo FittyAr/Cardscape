@@ -324,6 +324,36 @@ public sealed class ScimServiceTests
         context.UnitOfWork.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Once);
     }
 
+    [Theory]
+    [InlineData("members", true)]
+    [InlineData("MEMBERS", true)]
+    [InlineData("membersOther", false)]
+    [InlineData("members.display", false)]
+    public async Task PatchGroupAsync_AddMembers_RequiresExactAttribute(string path, bool addsMember)
+    {
+        var context = CreateContext();
+        User incoming = BuildUser("incoming@example.com", "Incoming");
+        Workspace workspace = BuildWorkspace(context.WorkspaceId, context.User.Id.Value);
+        context.Workspaces.Setup(x => x.GetByIdAsync(context.WorkspaceId, TestContext.Current.CancellationToken)).ReturnsAsync(workspace);
+        User[] available = [context.User, incoming];
+        context.Users.Setup(x => x.ListByIdsAsync(It.IsAny<IReadOnlyList<UserId>>(), TestContext.Current.CancellationToken))
+            .ReturnsAsync((IReadOnlyList<UserId> ids, CancellationToken _) => available.Where(user => ids.Contains(user.Id)).ToArray());
+        context.UnitOfWork.Setup(x => x.SaveChangesAsync(TestContext.Current.CancellationToken)).ReturnsAsync(1);
+
+        Result<ScimGroup> result = await context.Service.PatchGroupAsync(
+            context.WorkspaceId.Value, $"workspace-{context.WorkspaceId.Value:D}",
+            new ScimPatchRequest([new ScimPatchOperation("add", path,
+                new ScimGroupMember[] { new(incoming.Id.Value.ToString("D"), null) })]),
+            TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        Guid[] expected = addsMember ? [context.User.Id.Value, incoming.Id.Value] : [context.User.Id.Value];
+        workspace.Members.Select(member => member.UserId).Should().BeEquivalentTo(expected);
+        result.Value.Members.Select(member => member.Value).Should().BeEquivalentTo(expected.Select(id => id.ToString("D")));
+        context.Users.Verify(x => x.ListByIdsAsync(It.IsAny<IReadOnlyList<UserId>>(), TestContext.Current.CancellationToken), Times.Exactly(addsMember ? 2 : 1));
+        context.UnitOfWork.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Once);
+    }
+
     private static ScimTestContext CreateContext(bool userBelongsToWorkspace = false)
     {
         WorkspaceId workspaceId = WorkspaceId.New();

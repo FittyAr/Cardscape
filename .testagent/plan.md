@@ -1105,6 +1105,9 @@ Status: complete. All four steps are implemented and validated.
 Status: complete. All five steps are implemented and validated.
 # SCIM Groups ordered operations — 2026-09-30
 
+- Exact add attribute: PatchGroupAsync_AddMembers_RequiresExactAttribute (four
+  positive/negative rows). Replace StartsWith with ordinal-ignore-case Equals.
+
 - Order/typed/JSON: PatchGroupAsync_AddAndReplace_ApplyInOrderAndPreserveOwner.
 - Empty replacement: PatchGroupAsync_EmptyReplacement_RetainsOnlyOwner.
 - Assert exact aggregate and response memberships, lookup counts and cancelable

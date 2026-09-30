@@ -272,7 +272,7 @@ public sealed partial class ScimService : IScimService
             }
 
             if (opName == "add" && (op.Path is null
-                || op.Path.StartsWith("members", StringComparison.OrdinalIgnoreCase)))
+                || string.Equals(op.Path, "members", StringComparison.OrdinalIgnoreCase)))
             {
                 IReadOnlyList<ScimGroupMember> incoming = ExtractMembers(op.Value);
                 IReadOnlyList<User> incomingUsers = await LoadValidUsersAsync(incoming, ct);

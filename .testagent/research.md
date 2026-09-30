@@ -1350,6 +1350,10 @@ preserve owner and peer, return the exact membership and save with caller cancel
   methods accept their matching payload through HTTP, and negative contracts remain stable.
 # SCIM Groups ordered operations — 2026-09-30
 
+Follow-up exact-path defect: `add` used StartsWith while `replace` used Equals;
+membersOther/members.display unexpectedly added users. Both negative cases
+failed before the fix. Scope: exact attribute matching, not SCIM error semantics.
+
 Bounded inventory: ScimService.PatchGroupAsync, GroupMapping and existing
 ScimServiceTests (xUnit v3/VSTest, strict Moq, FluentAssertions).
 Acceptance: add then replace differs from replace then add; replacement retains

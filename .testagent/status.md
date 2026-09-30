@@ -1,5 +1,19 @@
 # Test status
 
+## SCIM exact add attribute (2026-09-30)
+
+- Regression `PatchGroupAsync_AddMembers_RequiresExactAttribute`: members and
+  MEMBERS pass; membersOther and members.display failed before the fix.
+- Root cause: StartsWith admitted different attributes; replace already used
+  exact matching. Changed only the add comparison to ordinal-ignore-case Equals.
+- Validation: SCIM 25/25; full unit suite 712/712, zero skipped;
+  Infrastructure Release build zero warnings/errors.
+- Assertion/gap review: exact aggregate/response membership plus lookup count
+  catches unwanted additions and prevents incoming-user lookups for other paths;
+  single cancelable save preserves existing unsupported-path behavior. Static
+  review only, no executed mutation score. Error semantics/pathless operations
+  remain outside this bounded fix; no protocol certification claim.
+
 ## SCIM Groups ordered operations (2026-09-30)
 
 - Complete: 21/21 ScimServiceTests pass in Release, zero skipped.
