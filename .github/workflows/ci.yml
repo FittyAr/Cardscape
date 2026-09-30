@@ -60,7 +60,7 @@ jobs:
                 unexpected=1
                 ;;
             esac
-          done < < <(jq -r '.. | objects | select(has("deprecationReasons")) | .id' deprecated-packages.json | sort -u)
+          done < <(jq -r '.. | objects | select(has("deprecationReasons")) | .id' deprecated-packages.json | sort -u)
           exit "$unexpected"
 
   build:

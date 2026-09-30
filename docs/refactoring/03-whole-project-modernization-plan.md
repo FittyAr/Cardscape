@@ -445,4 +445,5 @@ GitHub Actions observada. El cierre no elimina la deuda residual documentada.
 
 - [x] Publicar los 13 commits pendientes en `origin/master`, hasta `69e2a10`, sin force-push ni pull automático.
 - [x] Diagnosticar el run [36737633940](https://github.com/FittyAr/Cardscape/actions/runs/36737633940): falla antes de formato porque `DOTNET_ROLL_FORWARD=LatestFeature` es inválido para el runtime. Reproducido con `dotnet --version`; retirar el override y conservar `global.json` sin cambios.
+- [x] Corregir la redirección Bash inválida del gate de deprecaciones: `bash -n` sobre el bloque real reproduce el error antes del cambio; conservar el rechazo de paquetes no permitidos y validar todos los bloques multilinea.
 - [ ] Observar CI verde sobre el commit corregido y resolver cada fallo real antes del cierre remoto. Los resultados locales no sustituyen esta ejecución.
