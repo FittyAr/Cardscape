@@ -1363,6 +1363,11 @@ The referenced unit-test-generation prompt and .NET analysis extension are absen
 use the existing conventions and base skill rubrics inline.
 # SCIM pathless PATCH and invalid member payloads — 2026-09-30
 
+Follow-up HTTP boundary: MapError serializes ErrorType's numeric enum as status,
+not its mapped HTTP code. Integration target: ScimGroupsEndpointsTests, real API
+host/SQLite. Verify 400 invalidValue and 404 status/schema, then independent GET
+proves name/membership unchanged after rejected payload.
+
 Target: PatchGroupAsync and its member extraction; strict mocks in existing
 ScimServiceTests. RFC 7644 sections 3.5.2.1/3 specify pathless add/replace as
 attribute objects, not member arrays. Current replace treats any object as []

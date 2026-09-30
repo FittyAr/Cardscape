@@ -1114,6 +1114,8 @@ Status: complete. All five steps are implemented and validated.
   single save; execute the whole ScimServiceTests class, then commit hooks.
 # SCIM pathless PATCH and invalid member payloads — 2026-09-30
 
+- HTTP status/scimType/persistence: GroupErrors_ReportHttpStatusAndPreservePersistedState.
+
 - PatchGroupAsync_PathlessNameChange_PreservesMembers (add/replace).
 - PatchGroupAsync_PathlessMembers_AppliesOperation (add/replace).
 - PatchGroupAsync_InvalidMembers_RejectsBeforeAnyMutation (JSON shape matrix).

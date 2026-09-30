@@ -45,7 +45,9 @@ unitarias completas 712/712, sin fallos ni omitidos, 2026-09-30).
 También se corrigieron operaciones sin path y payloads de miembros inválidos:
 normalización por atributos y validación previa evitan eliminar membresías
 omitidas o aplicar parcialmente un request con valores malformados (SCIM 40/40,
-unitarias 727/727). Queda por evaluar la matriz completa de errores HTTP SCIM;
+unitarias 727/727). El status del cuerpo de errores SCIM ahora coincide con HTTP,
+y valores inválidos publican `invalidValue`: integración SCIM 8/8 y arquitectura
+55/55. Quedan por evaluar las demás combinaciones de errores y mutabilidad;
 estas correcciones puntuales no constituyen una certificación del protocolo completo.
 Responsable: mantenedores de Application/Infrastructure. Gate: cobertura y
 regresiones focalizadas en cada cambio.

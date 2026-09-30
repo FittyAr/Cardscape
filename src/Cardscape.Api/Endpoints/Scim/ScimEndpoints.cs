@@ -323,19 +323,24 @@ public static class ScimEndpoints
         return false;
     }
 
-    private static IResult MapError(DomainError error) => Results.Json(new
+    private static IResult MapError(DomainError error)
     {
-        schemas = ErrorSchemas,
-        status = ((int)error.Type).ToString(CultureInfo.InvariantCulture),
-        detail = error.Message
-    }, statusCode: error.Type switch
-    {
-        ErrorType.NotFound => StatusCodes.Status404NotFound,
-        ErrorType.Forbidden => StatusCodes.Status403Forbidden,
-        ErrorType.Unauthenticated => StatusCodes.Status401Unauthorized,
-        ErrorType.Conflict => StatusCodes.Status409Conflict,
-        _ => StatusCodes.Status400BadRequest
-    });
+        int statusCode = error.Type switch
+        {
+            ErrorType.NotFound => StatusCodes.Status404NotFound,
+            ErrorType.Forbidden => StatusCodes.Status403Forbidden,
+            ErrorType.Unauthenticated => StatusCodes.Status401Unauthorized,
+            ErrorType.Conflict => StatusCodes.Status409Conflict,
+            _ => StatusCodes.Status400BadRequest
+        };
+        return Results.Json(new
+        {
+            schemas = ErrorSchemas,
+            status = statusCode.ToString(CultureInfo.InvariantCulture),
+            detail = error.Message,
+            scimType = error.Code == "scim.invalid_value" ? "invalidValue" : (string?)null
+        }, statusCode: statusCode);
+    }
 
     // The SCIM v2 wire shape (subset) used for create +
     // replace. We deserialize into these records rather than

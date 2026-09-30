@@ -1,5 +1,20 @@
 # Test status
 
+## SCIM HTTP error contract (2026-09-30)
+
+- `GroupErrors_ReportHttpStatusAndPreservePersistedState` failed for both 400
+  and 404 before fix (body status 0/1). Root cause: enum ordinal serialization.
+- A single mapped status now supplies body and HTTP; invalid member payloads
+  include scimType invalidValue. No endpoint aliases or persistence shortcuts.
+- Validation: SCIM integration classes 8/8; ArchitectureTests 55/55; API
+  Release/transitive build zero warnings/errors.
+- Assertion-quality review: exact status/schema/scimType, nonempty detail and
+  independent HTTP GET of persisted name/owner. Meaningful state, collection,
+  equality and error assertions, not just status smoke.
+- Gap review (static, not executed mutations): wrong enum status, omitted type,
+  premature rename/save and wrong schema are observable. Full forbidden/conflict
+  and mutability error matrix remains outside these two regressions.
+
 ## SCIM pathless and malformed members (2026-09-30)
 
 - Ten new cases failed before the fix; after normalization and prevalidation,

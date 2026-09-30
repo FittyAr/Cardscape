@@ -131,6 +131,53 @@ public class ScimGroupsEndpointsTests
         all!.Select(w => w.Name).Should().Contain("Provisioned From IdP");
     }
 
+    [Theory]
+    [InlineData(false, HttpStatusCode.BadRequest, "invalidValue")]
+    [InlineData(true, HttpStatusCode.NotFound, null)]
+    public async Task GroupErrors_ReportHttpStatusAndPreservePersistedState(
+        bool missingGroup, HttpStatusCode expectedStatus, string? expectedScimType)
+    {
+        using HttpClient admin = _factory.CreateApiClient();
+        AuthResponse auth = await RegisterAndLogin(admin);
+        admin.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        using HttpResponseMessage created = await admin.PostAsJsonAsync(
+            "api/workspaces/", new CreateWorkspaceRequest("SCIM Error State"), TestJson.Options, TestContext.Current.CancellationToken);
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        WorkspaceDto workspace = (await created.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
+        using HttpResponseMessage issued = await admin.PostAsJsonAsync(
+            $"api/workspaces/{workspace.Id}/scim/tokens", new { name = "Error contract" }, TestContext.Current.CancellationToken);
+        issued.IsSuccessStatusCode.Should().BeTrue();
+        ScimIssueResponseDto token = (await issued.Content.ReadFromJsonAsync<ScimIssueResponseDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
+        using HttpClient idp = _factory.CreateApiClient();
+        idp.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.PlaintextToken);
+        string path = $"scim/v2/Groups/workspace-{workspace.Id:D}";
+
+        using HttpResponseMessage response = missingGroup
+            ? await idp.GetAsync($"scim/v2/Groups/workspace-{Guid.NewGuid():D}", TestContext.Current.CancellationToken)
+            : await idp.PatchAsJsonAsync(path, new
+            {
+                Operations = new object[]
+                {
+                    new { op = "replace", path = "displayName", value = "Must not persist" },
+                    new { op = "replace", path = "members", value = new { invalid = true } }
+                }
+            }, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(expectedStatus);
+        ScimErrorBody error = (await response.Content.ReadFromJsonAsync<ScimErrorBody>(TestJson.Options, TestContext.Current.CancellationToken))!;
+        error.Status.Should().Be(((int)expectedStatus).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        error.Schemas.Should().Equal("urn:ietf:params:scim:api:messages:2.0:Error");
+        error.ScimType.Should().Be(expectedScimType);
+        error.Detail.Should().NotBeNullOrWhiteSpace();
+        using HttpResponseMessage read = await idp.GetAsync(path, TestContext.Current.CancellationToken);
+        read.StatusCode.Should().Be(HttpStatusCode.OK);
+        ScimGroupBody persisted = (await read.Content.ReadFromJsonAsync<ScimGroupBody>(TestJson.Options, TestContext.Current.CancellationToken))!;
+        persisted.DisplayName.Should().Be("SCIM Error State");
+        persisted.Members.Should().ContainSingle().Which.Value.Should().Be(auth.User.Id.ToString("D"));
+    }
+
+    public sealed record ScimErrorBody(IReadOnlyList<string> Schemas, string Status, string Detail, string? ScimType);
+
     // ── helpers ────────────────────────────────────────────────
 
     private static async Task<AuthResponse> RegisterAndLogin(HttpClient client)
