@@ -1125,3 +1125,12 @@ Status: complete. All five steps are implemented and validated.
 - PatchGroupAsync_OwnerRemoval_RejectsBeforeAnyMutation (with/without earlier rename).
 - Preflight normalized filtered removal against owner identity; preserve ordinary
   and absent-user removal behavior. Return scim.mutability, not false success.
+# SCIM unsupported operations/paths — 2026-09-30
+
+- Empty requests/attribute objects: PatchGroupAsync_EmptyPatch_RejectsWithoutPersistence.
+- HTTP codes and persisted state: GroupErrors_ReportHttpStatusAndPreservePersistedState
+  extended with invalidSyntax, invalidPath and noTarget rows.
+
+- PatchGroupAsync_UnsupportedOperationOrPath_RejectsWholeRequest.
+- Update invalid branches of exact-add and filtered-remove theories to verify
+  failure and no persistence. Add preflight checks before any domain changes.

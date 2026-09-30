@@ -342,6 +342,9 @@ public static class ScimEndpoints
             {
                 "scim.invalid_value" => "invalidValue",
                 "scim.mutability" => "mutability",
+                "scim.invalid_syntax" => "invalidSyntax",
+                "scim.invalid_path" => "invalidPath",
+                "scim.no_target" => "noTarget",
                 _ => (string?)null
             }
         }, statusCode: statusCode);

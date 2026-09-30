@@ -399,6 +399,8 @@ El plan estará completo cuando todas las fases estén verificadas o cada excepc
 
 ## 6. Mejora continua posterior al cierre
 
+- [x] Eliminar éxitos silenciosos de PATCH SCIM Groups: operaciones desconocidas, paths no admitidos, remove sin path, atributos protegidos y requests vacíos fallan antes de mutar/consultar/guardar. Diez regresiones fallaron antes; teorías antiguas de paths inválidos adoptan el contrato estricto. HTTP publica invalidSyntax/invalidPath/noTarget/mutability. Unitarias 739/739; SCIM HTTP 12/12; API/Infrastructure Release 0/0. Sin compatibilidad con los no-op legacy.
+
 - [x] Rechazar eliminación SCIM del propietario sin cambios parciales: el resultado de dominio era ignorado y se respondía éxito. Prevalidación del filtro contra OwnerId antes de cualquier mutación; error `scim.mutability`/HTTP 400 con scimType `mutability`. Dos regresiones fallaron antes; SCIM unit 42/42, unitarias completas 729/729, SCIM HTTP 9/9; API/Infrastructure Release build 0/0. Se conserva el propietario, nombre y pares incluso tras un rename previo en el payload.
 
 - [x] Corregir status de errores SCIM: el body exponía el ordinal de `ErrorType` (0/1) en lugar de 400/404. Un único cálculo gobierna body y HTTP; `scim.invalid_value` publica `invalidValue`. Dos regresiones HTTP fallaron antes y verifican esquema/error y estado persistido mediante GET independiente. SCIM integration 8/8, arquitectura 55/55, API Release build 0/0.

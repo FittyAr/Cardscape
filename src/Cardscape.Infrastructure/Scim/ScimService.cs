@@ -228,11 +228,7 @@ public sealed partial class ScimService : IScimService
 
         foreach (var op in normalized.Value)
         {
-            string opName = (op.Op ?? string.Empty).ToLowerInvariant();
-            if (opName != "add" && opName != "remove" && opName != "replace")
-            {
-                continue;
-            }
+            string opName = op.Op.ToLowerInvariant();
 
             if (string.Equals(op.Path, "displayName", StringComparison.OrdinalIgnoreCase))
             {

@@ -132,11 +132,14 @@ public class ScimGroupsEndpointsTests
     }
 
     [Theory]
-    [InlineData(false, false, HttpStatusCode.BadRequest, "invalidValue")]
-    [InlineData(true, false, HttpStatusCode.NotFound, null)]
-    [InlineData(false, true, HttpStatusCode.BadRequest, "mutability")]
+    [InlineData("value", HttpStatusCode.BadRequest, "invalidValue")]
+    [InlineData("missing", HttpStatusCode.NotFound, null)]
+    [InlineData("owner", HttpStatusCode.BadRequest, "mutability")]
+    [InlineData("operation", HttpStatusCode.BadRequest, "invalidSyntax")]
+    [InlineData("path", HttpStatusCode.BadRequest, "invalidPath")]
+    [InlineData("noTarget", HttpStatusCode.BadRequest, "noTarget")]
     public async Task GroupErrors_ReportHttpStatusAndPreservePersistedState(
-        bool missingGroup, bool removeOwner, HttpStatusCode expectedStatus, string? expectedScimType)
+        string scenario, HttpStatusCode expectedStatus, string? expectedScimType)
     {
         using HttpClient admin = _factory.CreateApiClient();
         AuthResponse auth = await RegisterAndLogin(admin);
@@ -153,16 +156,21 @@ public class ScimGroupsEndpointsTests
         idp.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.PlaintextToken);
         string path = $"scim/v2/Groups/workspace-{workspace.Id:D}";
 
-        using HttpResponseMessage response = missingGroup
+        using HttpResponseMessage response = scenario == "missing"
             ? await idp.GetAsync($"scim/v2/Groups/workspace-{Guid.NewGuid():D}", TestContext.Current.CancellationToken)
             : await idp.PatchAsJsonAsync(path, new
             {
                 Operations = new object[]
                 {
                     new { op = "replace", path = "displayName", value = "Must not persist" },
-                    removeOwner
-                        ? (object)new { op = "remove", path = $"members[value eq \"{auth.User.Id:D}\"]" }
-                        : new { op = "replace", path = "members", value = new { invalid = true } }
+                    scenario switch
+                    {
+                        "owner" => (object)new { op = "remove", path = $"members[value eq \"{auth.User.Id:D}\"]" },
+                        "operation" => new { op = "move", path = "members" },
+                        "path" => new { op = "replace", path = "unknown" },
+                        "noTarget" => new { op = "remove" },
+                        _ => new { op = "replace", path = "members", value = new { invalid = true } }
+                    }
                 }
             }, TestContext.Current.CancellationToken);
 

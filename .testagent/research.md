@@ -1380,3 +1380,10 @@ Bounded target: filtered member removal in PatchGroupAsync. Workspace.RemoveMemb
 returns CannotRemoveOwner, but SCIM ignores the result and persists preceding
 operations. Acceptance: owner removal alone or following a rename fails before
 any mutation, lookup or save; retained owner/peer membership and name exact.
+# SCIM unsupported operations/paths — 2026-09-30
+
+Target: GroupPatch preflight and existing ScimServiceTests. Unknown operations,
+invalid paths and remove without path currently succeed/save; rename can apply
+before them. Requirement: explicit invalidSyntax/invalidPath/noTarget errors,
+no mutation/query/save, retaining valid typed/JSON/ordered operations. Existing
+invalid-path theories must change their contract instead of preserving no-op success.

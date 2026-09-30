@@ -1,5 +1,24 @@
 # Test status
 
+## SCIM unsupported operations/paths and empty requests (2026-09-30)
+
+- Ten new rows failed before fixes. Exact methods:
+  PatchGroupAsync_UnsupportedOperationOrPath_RejectsWholeRequest and
+  PatchGroupAsync_EmptyPatch_RejectsWithoutPersistence. Updated existing invalid
+  add/removal rows to reject instead of silently succeeding.
+- HTTP GroupErrors_ReportHttpStatusAndPreservePersistedState now covers
+  invalidSyntax/invalidPath/noTarget plus previous invalidValue/mutability/404.
+- Validation: all unit tests 739/739, SCIM HTTP 12/12, zero skips;
+  Infrastructure and API Release builds zero warnings/errors.
+- Assertion-quality: new methods have 7 and 6 meaningful assertions respectively,
+  covering errors, exact state and negative query/save effects, with no trivial-only
+  tests. HTTP independently reads persisted state. Base rubrics used inline because
+  the referenced .NET analysis extension is absent.
+- Static gap review: unknown-op skip, unsupported-path pass-through, missing remove
+  path, premature rename, empty-payload acceptance and missing scimType mapping are
+  observable. No executed mutation score. Arbitrary filters/subattributes are not
+  implemented; unsupported shapes fail explicitly. Users protocol is separate.
+
 ## SCIM owner mutability (2026-09-30)
 
 - `PatchGroupAsync_OwnerRemoval_RejectsBeforeAnyMutation` failed in both rows

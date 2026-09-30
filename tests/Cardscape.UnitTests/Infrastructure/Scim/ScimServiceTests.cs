@@ -243,6 +243,16 @@ public sealed class ScimServiceTests
             new ScimPatchRequest([new ScimPatchOperation("remove", path, null)]),
             TestContext.Current.CancellationToken);
 
+        if (!removesTarget)
+        {
+            result.IsFailure.Should().BeTrue();
+            result.Error.Code.Should().Be("scim.invalid_path");
+            workspace.Members.Select(member => member.UserId).Should().BeEquivalentTo(
+                [context.User.Id.Value, target.Id.Value, retained.Id.Value]);
+            context.Users.VerifyNoOtherCalls();
+            context.UnitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            return;
+        }
         result.IsSuccess.Should().BeTrue();
         Guid[] expectedMembers = removesTarget
             ? [context.User.Id.Value, retained.Id.Value]
@@ -346,6 +356,15 @@ public sealed class ScimServiceTests
                 new ScimGroupMember[] { new(incoming.Id.Value.ToString("D"), null) })]),
             TestContext.Current.CancellationToken);
 
+        if (!addsMember)
+        {
+            result.IsFailure.Should().BeTrue();
+            result.Error.Code.Should().Be("scim.invalid_path");
+            workspace.Members.Should().ContainSingle().Which.UserId.Should().Be(context.User.Id.Value);
+            context.Users.VerifyNoOtherCalls();
+            context.UnitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            return;
+        }
         result.IsSuccess.Should().BeTrue();
         Guid[] expected = addsMember ? [context.User.Id.Value, incoming.Id.Value] : [context.User.Id.Value];
         workspace.Members.Select(member => member.UserId).Should().BeEquivalentTo(expected);
@@ -470,6 +489,56 @@ public sealed class ScimServiceTests
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Validation);
         result.Error.Code.Should().Be("scim.mutability");
+        workspace.Name.Value.Should().Be("SCIM Workspace");
+        workspace.Members.Select(member => member.UserId).Should().BeEquivalentTo([context.User.Id.Value, peer.Id.Value]);
+        context.Users.VerifyNoOtherCalls();
+        context.UnitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("move", "members", "scim.invalid_syntax")]
+    [InlineData("", "members", "scim.invalid_syntax")]
+    [InlineData("remove", null, "scim.no_target")]
+    [InlineData("replace", "unknown", "scim.invalid_path")]
+    [InlineData("add", "membersOther", "scim.invalid_path")]
+    [InlineData("remove", "members[broken]", "scim.invalid_path")]
+    [InlineData("replace", "id", "scim.mutability")]
+    [InlineData("remove", "displayName", "scim.mutability")]
+    public async Task PatchGroupAsync_UnsupportedOperationOrPath_RejectsWholeRequest(
+        string operation, string? path, string errorCode)
+    {
+        var (context, workspace, peer) = CreateGroupContext();
+
+        Result<ScimGroup> result = await context.Service.PatchGroupAsync(
+            context.WorkspaceId.Value, $"workspace-{context.WorkspaceId.Value:D}",
+            new ScimPatchRequest([new("replace", "displayName", "Must not apply"), new(operation, path, Array.Empty<ScimGroupMember>())]),
+            TestContext.Current.CancellationToken);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Validation);
+        result.Error.Code.Should().Be(errorCode);
+        workspace.Name.Value.Should().Be("SCIM Workspace");
+        workspace.Members.Select(member => member.UserId).Should().BeEquivalentTo([context.User.Id.Value, peer.Id.Value]);
+        context.Users.VerifyNoOtherCalls();
+        context.UnitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(false, "scim.invalid_syntax")]
+    [InlineData(true, "scim.invalid_value")]
+    public async Task PatchGroupAsync_EmptyPatch_RejectsWithoutPersistence(bool pathlessObject, string errorCode)
+    {
+        var (context, workspace, peer) = CreateGroupContext();
+        ScimPatchOperation[] operations = pathlessObject
+            ? [new("replace", null, System.Text.Json.JsonSerializer.SerializeToElement(new { }))]
+            : [];
+
+        Result<ScimGroup> result = await context.Service.PatchGroupAsync(
+            context.WorkspaceId.Value, $"workspace-{context.WorkspaceId.Value:D}",
+            new ScimPatchRequest(operations), TestContext.Current.CancellationToken);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be(errorCode);
         workspace.Name.Value.Should().Be("SCIM Workspace");
         workspace.Members.Select(member => member.UserId).Should().BeEquivalentTo([context.User.Id.Value, peer.Id.Value]);
         context.Users.VerifyNoOtherCalls();
