@@ -29,6 +29,8 @@ jobs:
           global-json-file: ./global.json
       - name: Restore CLI tools
         run: dotnet tool restore
+      - name: Restore solution
+        run: dotnet restore Cardscape.slnx
       - name: Verify formatting
         run: dotnet format --verify-no-changes --no-restore --verbosity diagnostic
 
@@ -89,19 +91,15 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration Release
       - name: Run ArchitectureTests
-        run: |
-          if compgen -G "tests/Cardscape.ArchitectureTests/bin/Release/**/Cardscape.ArchitectureTests.dll" > /dev/null; then
-            dotnet test tests/Cardscape.ArchitectureTests/Cardscape.ArchitectureTests.csproj --no-build --configuration Release --logger "console;verbosity=normal"
-          else
-            echo "::notice::ArchitectureTests project has no build output; skipping."
-          fi
+        run: dotnet test tests/Cardscape.ArchitectureTests/Cardscape.ArchitectureTests.csproj --no-build --no-restore --configuration Release
       - name: Run FunctionalTests
-        run: |
-          if compgen -G "tests/Cardscape.FunctionalTests/bin/Release/**/Cardscape.FunctionalTests.dll" > /dev/null; then
-            dotnet test tests/Cardscape.FunctionalTests/Cardscape.FunctionalTests.csproj --no-build --configuration Release --logger "console;verbosity=normal"
-          else
-            echo "::notice::FunctionalTests project has no build output; skipping."
-          fi
+        run: dotnet test tests/Cardscape.FunctionalTests/Cardscape.FunctionalTests.csproj --no-build --no-restore --configuration Release
+      - name: Run E2E tests
+        run: dotnet test tests/Cardscape.E2ETests/Cardscape.E2ETests.csproj --no-build --no-restore --configuration Release
+      - name: Run security tests
+        run: dotnet test tests/Cardscape.SecurityTests/Cardscape.SecurityTests.csproj --no-build --no-restore --configuration Release
+      - name: Run SDK tests
+        run: dotnet test tests/Cardscape.Sdk.Tests/Cardscape.Sdk.Tests.csproj --no-build --no-restore --configuration Release
 
   unit-tests:
     name: Unit tests
@@ -124,6 +122,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
             ${{ runner.os }}-
+      - name: Restore unit test dependencies
+        run: dotnet restore tests/Cardscape.UnitTests/Cardscape.UnitTests.csproj
       - name: Run unit tests
         run: >
           dotnet test tests/Cardscape.UnitTests/Cardscape.UnitTests.csproj
@@ -156,6 +156,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
             ${{ runner.os }}-
+      - name: Restore integration test dependencies
+        run: dotnet restore tests/Cardscape.IntegrationTests/Cardscape.IntegrationTests.csproj
       - name: Run integration tests
         run: >
           dotnet test tests/Cardscape.IntegrationTests/Cardscape.IntegrationTests.csproj
@@ -228,6 +230,8 @@ jobs:
         run: dotnet restore
       - name: Build migration assemblies
         run: dotnet build Cardscape.slnx --no-restore --configuration Release
+      - name: Restore migration CLI
+        run: dotnet tool restore
       - name: Apply PostgreSQL migrations
         env:
           Database__Provider: PostgreSQL
@@ -295,6 +299,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
             ${{ runner.os }}-
+      - name: Restore solution
+        run: dotnet restore Cardscape.slnx
       - name: Run unit tests with coverage
         run: >
           dotnet test tests/Cardscape.UnitTests/Cardscape.UnitTests.csproj
