@@ -18,3 +18,13 @@ MariaDB support may be enabled only when a stable EF Core 10 provider can:
 
 Do not bypass this gate with SQL scripts or by treating wire-protocol
 compatibility as proof of EF Core provider compatibility.
+
+## Revalidation — 2026-09-30
+
+The [upstream Pomelo releases](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/releases)
+still list 9.0.0 as latest stable, with EF Core 9.0.x compatibility, not EF Core
+10. This does not satisfy Cardscape's gate. No package downgrade, nightly build
+or handwritten migration workaround was introduced. The local Docker daemon is
+also unavailable (`docker info` cannot connect to `dockerDesktopLinuxEngine`),
+so this host cannot certify a real MariaDB run. The release requirement remains
+mandatory and blocked, not completed.

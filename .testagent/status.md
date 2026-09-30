@@ -1,5 +1,32 @@
 # Test status
 
+## SCIM Users active PATCH (2026-09-30)
+
+- [x] Inline Research/Plan/Implement fallback; unchanged repository test stack.
+- [x] Twelve new regressions failed before correction; two typed controls passed.
+  PatchUserAsync_ActiveRepresentations_ApplyAndPersist covers six typed/JSON/
+  pathless true/false transitions, exact state/timestamp and one cancelable save.
+- [x] PatchUserAsync_InvalidOperations_RejectBeforeMutation covers fifteen
+  malformed/unsupported/empty requests after an earlier valid operation, exact
+  validation code/type and unchanged state/timestamp/no save/global lookup.
+- [x] PatchUserAsync_OrderedActiveOperations_LastValueWinsWithSingleSave
+  covers both final values, exact timestamp, single scoped lookup/save.
+- [x] ScimUserPatch_ActiveRoundtrip_PersistsAndRejectsInvalidValueAtomically
+  exercises explicit replace/pathless add over HTTP, false then true with GET
+  after each; string boolean rejects with exact 400/invalidValue and fresh GET.
+- [x] SCIM unit 83/83, SCIM HTTP 18/18. Full solution Release rebuild has
+  zero warnings/errors. Full suite 1,185/1,185: Architecture 55, E2E 7,
+  Functional 1, Integration 310, SDK 19, Security 23, Unit 770; no skips.
+- [x] Assertion review: three new unit methods have seven meaningful assertions
+  each; HTTP method has twenty across both transitions and rejection. Equality,
+  collection/structural, state and negative collaborator checks; no assertion-free,
+  trivial-only or tautological tests. No artificial exception assertions required
+  for Result contracts. Referenced .NET analysis extension remains unavailable.
+- [x] Static gap review: ignoring JSON, coercing strings/numbers, skipping bad
+  paths/ops, delayed validation, reordering operations or saving per operation
+  breaks the named rows. Existing outside-workspace guard remains covered.
+  Analysis is reasoned, not an executed mutation score or global coverage claim.
+
 ## SCIM unsupported operations/paths and empty requests (2026-09-30)
 
 - Ten new rows failed before fixes. Exact methods:

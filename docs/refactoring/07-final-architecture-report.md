@@ -10,7 +10,8 @@ comprobables, persistencia EF Core como vía única, contratos HTTP/OpenAPI
 explícitos, UI Blazor basada en Radzen y observabilidad estructurada mediante
 `LoggerMessage` y OpenTelemetry.
 
-El cierre del plan no significa deuda cero. Significa que cada hallazgo quedó
+El cierre histórico de fases no significa deuda cero ni certificación final
+de MariaDB: ese requisito permanece abierto en el plan activo. Cada hallazgo quedó
 corregido, protegido por evidencia automatizada o registrado como riesgo con un
 gate y un responsable claro. No se conservó compatibilidad legacy del producto.
 
@@ -58,6 +59,11 @@ estas correcciones puntuales no constituyen una certificación del protocolo com
 La paginación Groups también respeta count cero/negativo e índices fuera de
 página, devuelve metadatos exactos y evita el lookup de miembros si no entrega
 recursos (SCIM unit 60/60, unitarias 747/747, SCIM HTTP 16/16).
+PATCH active de Users ya normaliza bool CLR/JSON y objetos sin path; antes
+ignoraba los cambios provenientes de HTTP. Los requests inválidos fallan antes
+de mutar y las operaciones válidas conservan el orden y un único save.
+SCIM unit 83/83 y SCIM HTTP 18/18 verifican esos contratos, sin certificar
+el resto de atributos ni la totalidad del protocolo.
 Responsable: mantenedores de Application/Infrastructure. Gate: cobertura y
 regresiones focalizadas en cada cambio.
 
@@ -96,17 +102,20 @@ disponible.
 
 ## Verificación de cierre
 
-Actualización 2026-09-30: SCIM 16/16 y presentación Activity 25/25, ambos en
-Release; Infrastructure y Web compilan con 0 warnings/errores. Los hooks de cada
-commit verificaron formato y build de solución con 0 warnings/errores. La
-medición integral y de cobertura que sigue corresponde al cierre 2026-09-14 y
-no se presenta como una nueva medición tras estos cambios.
+Actualización 2026-09-30: rebuild completo Release no incremental, 0 warnings
+y 0 errores. Suite integral 1.185/1.185, sin fallos ni omitidos: arquitectura
+55, E2E 7, funcional 1, integración 310, SDK 19, seguridad 23 y unitarias 770.
+SCIM unit 83/83 y HTTP 18/18. No se recalculó cobertura/CRAP; sus cifras
+anteriores conservan su fecha original. MariaDB sigue sin certificación.
+
+Evidencia histórica del cierre 2026-09-14:
 
 - Build Release del hook: 0 warnings, 0 errores.
 - Suite integral: 1.011/1.011 pruebas, 0 fallos, 0 omitidos.
 - Arquitectura: 55/55; E2E: 7/7; Funcional: 1/1; Integración: 266/266;
   SDK: 19/19; Seguridad: 23/23; Unitarias: 640/640.
-- Checkboxes abiertos en el plan activo: 0.
+- Checkboxes abiertos al cierre histórico: 0. El plan actual explicita un
+  gate obligatorio MariaDB pendiente; no equivale a una release certificada.
 - SQL manual en fuentes de producto: 0.
 - Llamadas legacy `ILogger.Log*` en fuentes de producto: 0.
 

@@ -1398,3 +1398,12 @@ to mean zero, count zero to return totals only, and startIndex below one to mean
 one. Acceptance: exact total/page/index metadata, no member lookup for empty
 pages, no persistence, and missing workspace returns total zero. Strict Moq,
 xUnit v3 and FluentAssertions conventions remain; inline generation fallback.
+
+# SCIM Users active PATCH — 2026-09-30
+
+Target: PatchUserAsync, ScimServiceTests, ScimEndpointTests. HTTP operation Value
+is object and deserializes to JsonElement; service only accepts CLR bool and
+silently skips everything else. Existing success test passes a CLR bool and
+cannot detect the wire mismatch. Acceptance: typed/JSON bool and pathless
+active attribute objects update state; unsupported/malformed/empty operations
+fail before any mutation/save; HTTP deactivate/reactivate survives a fresh GET.

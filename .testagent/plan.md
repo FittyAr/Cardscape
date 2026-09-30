@@ -1145,3 +1145,17 @@ Status: complete. All five steps are implemented and validated.
 - Validate SCIM class, full unit suite and unchanged SCIM HTTP contracts.
 - ListGroups_ForWorkspace_ReturnsPaginatedWorkspaceGroup replaces the list Fact
   with five HTTP rows: normal/normalized index, next page, zero/negative count.
+
+# SCIM Users active PATCH — 2026-09-30
+
+- PatchUserAsync_ActiveRepresentations_ApplyAndPersist: typed/JSON and pathless
+  object, true/false transitions, exact timestamp and one cancelable save.
+- PatchUserAsync_InvalidOperations_RejectBeforeMutation: earlier valid change
+  followed by bad op/path/value; empty request; exact error/no save/state.
+- ScimUserPatch_ActiveRoundtrip_PersistsAndRejectsInvalidValueAtomically: explicit/pathless HTTP operations,
+  deactivate then reactivate with independent GET after each transition.
+- Reproduce wire mismatch, normalize/validate the complete request first;
+  do not introduce unsupported attribute aliases or legacy no-op acceptance.
+- PatchUserAsync_OrderedActiveOperations_LastValueWinsWithSingleSave: two
+  ordered transitions, one lookup/save; reject JSON scalar coercion, empty
+  attribute object, unsupported object attribute and remove without path.

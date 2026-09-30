@@ -598,6 +598,119 @@ public sealed class ScimServiceTests
         context.UnitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Theory]
+    [InlineData("typed", false)]
+    [InlineData("typed", true)]
+    [InlineData("json", false)]
+    [InlineData("json", true)]
+    [InlineData("pathless", false)]
+    [InlineData("pathless", true)]
+    public async Task PatchUserAsync_ActiveRepresentations_ApplyAndPersist(string representation, bool active)
+    {
+        var context = CreateContext(userBelongsToWorkspace: true);
+        if (active)
+        {
+            context.User.Deactivate(Now.AddMinutes(-1));
+        }
+        context.UnitOfWork.Setup(x => x.SaveChangesAsync(TestContext.Current.CancellationToken)).ReturnsAsync(1);
+        object value = representation switch
+        {
+            "typed" => active,
+            "json" => System.Text.Json.JsonSerializer.SerializeToElement(active),
+            _ => System.Text.Json.JsonSerializer.SerializeToElement(new { active })
+        };
+
+        Result<ScimUserResponse> result = await context.Service.PatchUserAsync(
+            context.WorkspaceId.Value, context.User.Id.Value,
+            new ScimPatchRequest([new("RePlAcE", representation == "pathless" ? null : "ACTIVE", value)]),
+            TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Id.Should().Be(context.User.Id.Value);
+        result.Value.Active.Should().Be(active);
+        result.Value.LastModifiedAt.Should().Be(Now);
+        context.User.IsActive.Should().Be(active);
+        context.UnitOfWork.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Once);
+        context.GlobalUsers.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData("operation", "scim.invalid_syntax")]
+    [InlineData("path", "scim.invalid_path")]
+    [InlineData("string", "scim.invalid_value")]
+    [InlineData("null", "scim.invalid_value")]
+    [InlineData("remove", "scim.mutability")]
+    [InlineData("pathlessScalar", "scim.invalid_value")]
+    [InlineData("readOnly", "scim.mutability")]
+    [InlineData("empty", "scim.invalid_syntax")]
+    [InlineData("jsonString", "scim.invalid_value")]
+    [InlineData("jsonNumber", "scim.invalid_value")]
+    [InlineData("pathlessEmpty", "scim.invalid_value")]
+    [InlineData("pathlessAttribute", "scim.invalid_path")]
+    [InlineData("pathlessBadBoolean", "scim.invalid_value")]
+    [InlineData("removeWithoutPath", "scim.no_target")]
+    [InlineData("removeUnknown", "scim.invalid_path")]
+    public async Task PatchUserAsync_InvalidOperations_RejectBeforeMutation(string scenario, string errorCode)
+    {
+        var context = CreateContext(userBelongsToWorkspace: true);
+        context.UnitOfWork.Setup(x => x.SaveChangesAsync(TestContext.Current.CancellationToken)).ReturnsAsync(1);
+        ScimPatchOperation invalid = scenario switch
+        {
+            "operation" => new("move", "active", false),
+            "path" => new("replace", "activeOther", false),
+            "string" => new("replace", "active", "false"),
+            "null" => new("replace", "active", null),
+            "remove" => new("remove", "active", null),
+            "pathlessScalar" => new("replace", null, false),
+            "jsonString" => new("replace", "active", System.Text.Json.JsonSerializer.SerializeToElement("false")),
+            "jsonNumber" => new("replace", "active", System.Text.Json.JsonSerializer.SerializeToElement(0)),
+            "pathlessEmpty" => new("replace", null, System.Text.Json.JsonSerializer.SerializeToElement(new { })),
+            "pathlessAttribute" => new("add", null, System.Text.Json.JsonSerializer.SerializeToElement(new { active = false, unknown = true })),
+            "pathlessBadBoolean" => new("replace", null, System.Text.Json.JsonSerializer.SerializeToElement(new { active = "false" })),
+            "removeWithoutPath" => new("remove", null, null),
+            "removeUnknown" => new("remove", "unknown", null),
+            _ => new("replace", "id", context.User.Id.Value)
+        };
+        ScimPatchOperation[] operations = scenario == "empty" ? [] : [new("replace", "active", false), invalid];
+
+        Result<ScimUserResponse> result = await context.Service.PatchUserAsync(
+            context.WorkspaceId.Value, context.User.Id.Value,
+            new ScimPatchRequest(operations), TestContext.Current.CancellationToken);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Validation);
+        result.Error.Code.Should().Be(errorCode);
+        context.User.IsActive.Should().BeTrue();
+        context.User.UpdatedAt.Should().BeNull();
+        context.UnitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        context.GlobalUsers.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PatchUserAsync_OrderedActiveOperations_LastValueWinsWithSingleSave(bool finalActive)
+    {
+        var context = CreateContext(userBelongsToWorkspace: true);
+        context.UnitOfWork.Setup(x => x.SaveChangesAsync(TestContext.Current.CancellationToken)).ReturnsAsync(1);
+
+        Result<ScimUserResponse> result = await context.Service.PatchUserAsync(
+            context.WorkspaceId.Value, context.User.Id.Value,
+            new ScimPatchRequest([
+                new("add", "active", System.Text.Json.JsonSerializer.SerializeToElement(!finalActive)),
+                new("replace", null, System.Text.Json.JsonSerializer.SerializeToElement(new { active = finalActive }))]),
+            TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Active.Should().Be(finalActive);
+        result.Value.LastModifiedAt.Should().Be(Now);
+        context.User.IsActive.Should().Be(finalActive);
+        context.UnitOfWork.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Once);
+        context.Users.Verify(x => x.FindWorkspaceUserAsync(context.WorkspaceId, context.User.Id,
+            TestContext.Current.CancellationToken), Times.Once);
+        context.GlobalUsers.VerifyNoOtherCalls();
+    }
+
     private static (ScimTestContext Context, Workspace Workspace, User Peer) CreateGroupContext()
     {
         var context = CreateContext();

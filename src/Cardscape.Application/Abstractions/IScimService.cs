@@ -28,8 +28,8 @@ namespace Cardscape.Application.Abstractions;
 /// methods do.</para>
 ///
 /// <para>Because the per-workspace <c>ScimToken</c> scopes
-/// the IdP to a single workspace, <c>ListGroups</c> always
-/// returns exactly one group (the token's workspace), and
+/// the IdP to a single workspace, <c>ListGroups</c> has at most
+/// one matching group (the token's workspace), subject to pagination, and
 /// the <c>GetGroup</c> / <c>UpdateGroup</c> /
 /// <c>PatchGroup</c> / <c>DeleteGroup</c> operations all
 /// act on the same workspace. The <c>CreateGroup</c> POST
@@ -61,8 +61,8 @@ public interface IScimService
     /// <summary>Returns the SCIM v2 <c>ListResponse</c>
     /// envelope (RFC 7644 §3.4.2.2). With a per-workspace
     /// <c>ScimToken</c> the <see cref="ScimListResponse{T}.Resources"/>
-    /// list always contains exactly one group — the
-    /// workspace the token is scoped to.</summary>
+    /// list contains at most one group — the workspace the token is scoped to.
+    /// Empty pages preserve totalResults and do not load group members.</summary>
     Task<ScimListResponse<ScimGroup>> ListGroupsAsync(
         Guid workspaceId, int startIndex, int count, CancellationToken ct = default);
 

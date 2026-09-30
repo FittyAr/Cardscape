@@ -1,6 +1,6 @@
 # Plan de modernización integral de Cardscape
 
-> **Estado**: Completado (2026-09-14)
+> **Estado**: fases de modernización cerradas (2026-09-14); certificación final MariaDB pendiente (§7).
 > **Inicio**: 2026-08-11  
 > **Stack objetivo**: .NET 10, ASP.NET Core 10, Blazor WebAssembly 10, EF Core 10 y Radzen.Blazor  
 > **Rama de entrega**: `master` (rama principal real del repositorio; `origin/HEAD` apunta a `origin/master`)  
@@ -399,6 +399,8 @@ El plan estará completo cuando todas las fases estén verificadas o cada excepc
 
 ## 6. Mejora continua posterior al cierre
 
+- [x] Corregir PATCH active de SCIM Users: HTTP entrega JsonElement, que antes era ignorado por aceptar sólo bool CLR. Normalización tipada/JSON y objetos sin path, validación completa antes de mutar, rechazo explícito de operaciones/paths/valores inválidos y aplicación ordenada con un save. Doce regresiones fallaron antes; transiciones HTTP false/true comprobadas por GET independiente y rechazo sin persistencia parcial. SCIM unit 83/83 y HTTP 18/18; rebuild completo Release 0/0; suite integral 1.185/1.185 (unitarias 770, integración 310, arquitectura 55, E2E 7, funcional 1, SDK 19, seguridad 23), sin omitidos. El bloque incluye corrección de la documentación del contrato de paginación Groups.
+
 - [x] Corregir paginación SCIM Groups conforme a RFC 7644 3.4.2.4: count cero/negativo devuelve sólo el total, startIndex mayor que uno devuelve página vacía y los metadatos reflejan los elementos realmente entregados. Se evita consultar miembros en páginas vacías. Seis regresiones fallaron antes; ocho casos unitarios nuevos y cinco límites HTTP. SCIM unit 60/60, unitarias completas 747/747, SCIM HTTP 16/16; API/Infrastructure Release build 0/0.
 
 - [x] Eliminar éxitos silenciosos de PATCH SCIM Groups: operaciones desconocidas, paths no admitidos, remove sin path, atributos protegidos y requests vacíos fallan antes de mutar/consultar/guardar. Diez regresiones fallaron antes; teorías antiguas de paths inválidos adoptan el contrato estricto. HTTP publica invalidSyntax/invalidPath/noTarget/mutability. Unitarias 739/739; SCIM HTTP 12/12; API/Infrastructure Release 0/0. Sin compatibilidad con los no-op legacy.
@@ -418,3 +420,10 @@ El plan estará completo cuando todas las fases estén verificadas o cada excepc
 - [x] Corregir la eliminación filtrada de miembros SCIM: tres paths válidos fallaron antes de corregir el parser que retenía el corchete final. Un `GeneratedRegex` anclado, independiente de cultura y con timeout reconoce el filtro completo; ocho casos verifican paths válidos/malformados, membresía exacta y persistencia cancelable. Suite SCIM 16/16; Infrastructure build 0/0.
 
 - [x] Reducir el hotspot de dispatch del broadcast interno: el switch repetitivo fue reemplazado por una tabla `FrozenDictionary` ordinal de handlers genéricos tipados, con claves derivadas de `IBoardClient` y sin reflection/dynamic. Una theory HTTP recorre las 20 operaciones admitidas y la clase completa pasa 30/30 preservando autenticación, límites, resolución EF Core y errores canónicos. Evidencia detallada en `docs/refactoring/08-internal-broadcast-dispatch.md`.
+
+## 7. Gate obligatorio pendiente de certificación final
+
+El cierre histórico de fases no equivale al 100% de los requisitos de release.
+La excepción registrada no puede presentarse como compatibilidad completada.
+
+- [ ] Certificar MariaDB con provider EF Core 10 estable: generación de migraciones nativas, historial limpio, integración CI y Compose contra MariaDB LTS real. Revalidado 2026-09-30: Pomelo estable declara EF Core 9; el provider instalado conserva el bloqueo registrado y Docker local no tiene daemon accesible. Evidencia y criterios en `../operations/12-mariadb-future-work.md`. No se elimina el requisito ni se sustituye por SQL manual, previews o compatibilidad wire.

@@ -193,6 +193,67 @@ public class ScimEndpointTests
         crossTenantRead.StatusCode.Should().Be(HttpStatusCode.NotFound, responseBody);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ScimUserPatch_ActiveRoundtrip_PersistsAndRejectsInvalidValueAtomically(bool pathless)
+    {
+        using HttpClient admin = _factory.CreateApiClient();
+        AuthResponse auth = await RegisterAndLogin(admin);
+        admin.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        WorkspaceDto workspace = await CreateWorkspaceAsync(admin, "SCIM active transitions");
+        ScimIssueResponseDto token = await IssueTokenAsync(admin, workspace.Id, "Active contract");
+        using HttpClient idp = _factory.CreateApiClient();
+        idp.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.PlaintextToken);
+        string email = $"active-{Guid.NewGuid():N}@cardscape.local";
+        using HttpResponseMessage created = await idp.PostAsJsonAsync(
+            "scim/v2/Users", new { userName = email }, TestContext.Current.CancellationToken);
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        ScimUserResponse provisioned = (await created.Content.ReadFromJsonAsync<ScimUserResponse>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+        string path = $"scim/v2/Users/{provisioned.Id:D}";
+
+        foreach (bool active in new[] { false, true })
+        {
+            object operation = pathless
+                ? new { op = "add", value = new { active } }
+                : new { op = "replace", path = "active", value = active };
+            using HttpResponseMessage changed = await idp.PatchAsJsonAsync(
+                path, new { Operations = new[] { operation } }, TestContext.Current.CancellationToken);
+            changed.StatusCode.Should().Be(HttpStatusCode.OK);
+            ScimUserResponse response = (await changed.Content.ReadFromJsonAsync<ScimUserResponse>(
+                TestJson.Options, TestContext.Current.CancellationToken))!;
+            response.Active.Should().Be(active);
+            response.Id.Should().Be(provisioned.Id);
+            response.LastModifiedAt.Should().NotBeNull();
+            using HttpResponseMessage read = await idp.GetAsync(path, TestContext.Current.CancellationToken);
+            read.StatusCode.Should().Be(HttpStatusCode.OK);
+            ScimUserResponse persisted = (await read.Content.ReadFromJsonAsync<ScimUserResponse>(
+                TestJson.Options, TestContext.Current.CancellationToken))!;
+            persisted.Active.Should().Be(active);
+            persisted.UserName.Should().Be(email);
+        }
+
+        using HttpResponseMessage rejected = await idp.PatchAsJsonAsync(path, new
+        {
+            Operations = new object[]
+            {
+                new { op = "replace", path = "active", value = false },
+                new { op = "replace", path = "active", value = "false" }
+            }
+        }, TestContext.Current.CancellationToken);
+        rejected.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        using System.Text.Json.JsonDocument error = System.Text.Json.JsonDocument.Parse(
+            await rejected.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        error.RootElement.GetProperty("status").GetString().Should().Be("400");
+        error.RootElement.GetProperty("scimType").GetString().Should().Be("invalidValue");
+        using HttpResponseMessage unchanged = await idp.GetAsync(path, TestContext.Current.CancellationToken);
+        unchanged.StatusCode.Should().Be(HttpStatusCode.OK);
+        ScimUserResponse current = (await unchanged.Content.ReadFromJsonAsync<ScimUserResponse>(
+            TestJson.Options, TestContext.Current.CancellationToken))!;
+        current.Active.Should().BeTrue();
+    }
+
     private static async Task<WorkspaceDto> CreateWorkspaceAsync(HttpClient client, string name)
     {
         HttpResponseMessage response = await client.PostAsJsonAsync(

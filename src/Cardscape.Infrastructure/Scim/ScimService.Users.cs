@@ -118,17 +118,14 @@ public sealed partial class ScimService
             return Result.Failure<ScimUserResponse>(UserNotFound(userId));
         }
 
-        foreach (var operation in request.Operations)
+        Result<IReadOnlyList<bool>> normalized = NormalizeUserPatch(request);
+        if (normalized.IsFailure)
         {
-            bool supported = string.Equals(operation.Op, "replace", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(operation.Op, "add", StringComparison.OrdinalIgnoreCase);
-            if (!supported
-                || !string.Equals(operation.Path, "active", StringComparison.OrdinalIgnoreCase)
-                || operation.Value is not bool active)
-            {
-                continue;
-            }
+            return Result.Failure<ScimUserResponse>(normalized.Error);
+        }
 
+        foreach (bool active in normalized.Value)
+        {
             if (active)
             {
                 user.Reactivate(_clock.UtcNow);
