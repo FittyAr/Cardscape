@@ -2,7 +2,7 @@ name: cardscape-provider-gate
 services:
   api-mariadb:
     profiles: [smoke]
-    image: cardscape/refactoring:20260930
+    image: ${CARDSCAPE_GATE_IMAGE:-cardscape/refactoring:20260930}
     init: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
@@ -24,7 +24,7 @@ services:
       retries: 30
   api-sqlite:
     profiles: [smoke]
-    image: cardscape/refactoring:20260930
+    image: ${CARDSCAPE_GATE_IMAGE:-cardscape/refactoring:20260930}
     init: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]

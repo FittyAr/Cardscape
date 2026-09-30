@@ -7,6 +7,8 @@ using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Tests.Common.Fakes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -18,6 +20,18 @@ namespace Cardscape.IntegrationTests.Persistence;
 public sealed class ProviderPersistenceTests
 {
     private static readonly DateTimeOffset Now = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public async Task ProviderConfiguration_ModelDriftIsAnError()
+    {
+        await using ServiceProvider services = CreateServices();
+        await using AsyncServiceScope scope = services.CreateAsyncScope();
+        CardscapeDbContext db = scope.ServiceProvider.GetRequiredService<CardscapeDbContext>();
+        CoreOptionsExtension options = db.GetService<IDbContextOptions>().Extensions
+            .OfType<CoreOptionsExtension>().Single();
+        options.WarningsConfiguration.GetBehavior(RelationalEventId.PendingModelChangesWarning)
+            .Should().Be(WarningBehavior.Throw);
+    }
 
     [Fact]
     public async Task ProviderMigrations_ApplyWithoutDriftAndPersistDomainValues()

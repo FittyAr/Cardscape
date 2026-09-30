@@ -15,6 +15,7 @@ public sealed class DesignTimeCardscapeDbContextFactory : IDesignTimeDbContextFa
         var configuredConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Default");
 
         var builder = new DbContextOptionsBuilder<CardscapeDbContext>();
+        builder.ConfigureWarnings(w => w.Throw(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
         switch (provider.ToLowerInvariant())
         {

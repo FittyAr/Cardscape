@@ -1,6 +1,6 @@
 # Informe final de arquitectura y modernización
 
-Fecha de cierre: 2026-09-14
+Fecha de cierre de fases: 2026-09-14; cierre del gate multi-provider: 2026-09-30.
 
 ## Dictamen
 
@@ -10,8 +10,9 @@ comprobables, persistencia EF Core como vía única, contratos HTTP/OpenAPI
 explícitos, UI Blazor basada en Radzen y observabilidad estructurada mediante
 `LoggerMessage` y OpenTelemetry.
 
-El cierre histórico de fases no significa deuda cero ni certificación final
-de MariaDB: ese requisito permanece abierto en el plan activo. Cada hallazgo quedó
+El cierre del checklist no significa deuda cero ni pruebas exhaustivas de cada
+funcionalidad en cada motor. El gate MariaDB se verificó localmente el 2026-09-30
+con un provider estable, servicios reales e imagen Production. Cada hallazgo quedó
 corregido, protegido por evidencia automatizada o registrado como riesgo con un
 gate y un responsable claro. No se conservó compatibilidad legacy del producto.
 
@@ -67,22 +68,25 @@ el resto de atributos ni la totalidad del protocolo.
 Responsable: mantenedores de Application/Infrastructure. Gate: cobertura y
 regresiones focalizadas en cada cambio.
 
-### 2. MariaDB es requisito, no compatibilidad actual
+### 2. Compatibilidad multi-provider y mantenimiento del gate
 
 Las releases finales deben ser compatibles con PostgreSQL, MySQL y MariaDB.
 SQLite sigue siendo el motor ordinario de desarrollo y pruebas. PostgreSQL 17 y
-MySQL 8.4 tienen providers EF Core 10 estables, migraciones nativas y matriz CI.
+MySQL 8.4 y MariaDB 11.4 tienen providers EF Core 10 estables, migraciones nativas
+y matriz CI. MariaDB usa Microting 10.0.12 mediante ADR 0013, no Oracle ni un alias.
 
-MariaDB 11.4 continúa bloqueado porque `MySql.EntityFrameworkCore` falla antes de
-aplicar el esquema y Pomelo todavía no publica una versión estable para EF Core
-10. Por tanto, no puede salir una release final que prometa MariaDB hasta que el
-gate de `docs/operations/12-mariadb-future-work.md` pase sobre un servicio real.
-Esto preserva la instrucción de compatibilidad y evita el apaño de equiparar
-protocolo wire con soporte EF Core.
+Los cuatro motores pasaron persistencia/concurrencia/modelo alineado. La política
+EF Core de cambios pendientes es `Throw` explícito en runtime/design-time;
+se retiró la supresión global y una regresión falló antes de corregirla.
+API y MCP incluyen todas las historias externas; el publish de MCP se comprobó.
+CI exige historias externas, pruebas por motor y smoke Production SQLite/MariaDB
+antes de release. Es configuración validada localmente con actionlint, no una
+ejecución GitHub Actions que todavía no se haya observado.
 
-Responsable: mantenedores de persistencia/release. Decisión siguiente: adoptar el
-primer provider EF Core 10 estable que supere generación, migración limpia,
-integración y Compose sobre MariaDB LTS; no usar previews ni SQL manual.
+Responsable: mantenedores de persistencia/release. Siguiente decisión: mantener
+el gate verde con cada cambio de modelo/provider, revisar mantenimiento y
+advisories del fork y ampliar contratos funcionales por motor según riesgo.
+Esta suite acotada no certifica todas las consultas ni todas las funcionalidades.
 
 ### 3. Dependencia SAML legacy
 
@@ -92,21 +96,26 @@ otra deprecación y ante vulnerabilidades. Responsable: mantenedores de segurida
 Decisión siguiente: migrar cuando exista una línea mantenida para .NET 10 o
 reemplazar el adaptador SAML completo, sin fijar transitivos antiguos.
 
-### 4. Smoke local de imagen
+### 4. Smoke local de imagen verificado
 
-El daemon Docker no fue accesible desde este host. Compose fue validado y CI
-construye, inicia y exige readiness de la imagen, por lo que el gate no se omite.
-Responsable: pipeline de release. Decisión siguiente: conservar el smoke como
-condición obligatoria de release y repetir localmente cuando el daemon esté
-disponible.
+Con Docker disponible se construyó e inició la imagen real en Production para
+SQLite y MariaDB. Ambos contenedores alcanzaron readiness 200 y pasaron
+registro y escritura/lectura autenticada de un workspace Unicode. Se corrigieron
+el contexto Docker sin `.editorconfig`, el `ENV` SQLite truncado por un espacio
+y la configuración CORS ausente del smoke CI. El stack aislado no modificó Certaro.
+Responsable: pipeline de release. Conservar este smoke obligatorio y usar secretos
+y volúmenes durables en despliegues reales, nunca las credenciales del fixture.
 
 ## Verificación de cierre
 
 Actualización 2026-09-30: rebuild completo Release no incremental, 0 warnings
-y 0 errores. Suite integral 1.185/1.185, sin fallos ni omitidos: arquitectura
-55, E2E 7, funcional 1, integración 310, SDK 19, seguridad 23 y unitarias 770.
+y 0 errores. Suite integral 1.188/1.188, sin fallos ni omitidos: arquitectura
+55, E2E 7, funcional 1, integración 313, SDK 19, seguridad 23 y unitarias 770.
 SCIM unit 83/83 y HTTP 18/18. No se recalculó cobertura/CRAP; sus cifras
-anteriores conservan su fecha original. MariaDB sigue sin certificación.
+anteriores conservan su fecha original. Gate de providers 12/12 (SQLite incluido),
+Production-image smoke SQLite/MariaDB verde y NuGet sin vulnerabilidades conocidas.
+Formato y actionlint limpios. Ningún checklist activo pendiente en `refactoring`;
+la cobertura y excepción SAML siguen como deuda residual explícita.
 
 Evidencia histórica del cierre 2026-09-14:
 

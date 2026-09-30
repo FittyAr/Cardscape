@@ -36,15 +36,18 @@ for MariaDB 11.4. This stable provider supports EF Core 10; Oracle remains the
 MySQL provider. The shared model generated `InitialMariaDb` with `dotnet ef`.
 No raw SQL, downgrade or preview was introduced.
 
-The isolated services passed two exact integration tests each:
+The isolated services passed three exact integration tests each:
 
 - `ProviderMigrations_ApplyWithoutDriftAndPersistDomainValues`: nonempty native
   history, no model drift, complete clean application and repeat application,
   Unicode workspace, owner membership, enums, timestamp and active user.
 - `ProviderConcurrency_StaleUpdateIsRejected`: separate tracked copies,
   `DbUpdateConcurrencyException`, winner retained and version incremented once.
+- `ProviderConfiguration_ModelDriftIsAnError`: exact `Throw` behavior for model
+  drift. The global Ignore rule was removed; both runtime/design-time enforce
+  failure explicitly because provider defaults differ. This test failed first.
 
-SQLite also passed both tests. CI now runs these tests on PostgreSQL 17,
+SQLite also passed all three tests. CI now runs these tests on PostgreSQL 17,
 MySQL 8.4 and MariaDB 11.4; the release job requires that job. This is a local
 verification plus validated workflow configuration, not a claimed CI run.
 

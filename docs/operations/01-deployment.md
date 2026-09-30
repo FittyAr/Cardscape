@@ -215,7 +215,7 @@ sections:
 | Variable | Section | Default | Notes |
 |---|---|---|---|
 | `ASPNETCORE_ENVIRONMENT` | top | `Production` | `Development` for local dev |
-| `Database__Provider` | `Database` | `Sqlite` | one of `Sqlite`, `PostgreSQL`, `MySql` |
+| `Database__Provider` | `Database` | `Sqlite` | one of `Sqlite`, `PostgreSQL`, `MySql`, `MariaDB` |
 | `ConnectionStrings__Default` | `ConnectionStrings` | `Data Source=/app/Data/cardscape.db` | provider-specific |
 | `Jwt__SigningKey` | `Jwt` | (required) | 32+ random bytes; never reuse the development value |
 | `Cardscape__DataProtection__KeyDirectory` | `Cardscape:DataProtection` | `/app/DataProtectionKeys` in Compose | must be persistent |

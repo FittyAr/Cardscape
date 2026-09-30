@@ -377,31 +377,23 @@ jobs:
     name: Docker image smoke test
     runs-on: ubuntu-latest
     needs: build
-    timeout-minutes: 15
+    timeout-minutes: 20
+    env:
+      CARDSCAPE_GATE_IMAGE: cardscape/api:ci
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Build image from a clean context
         run: docker build --file src/Cardscape.Api/Dockerfile --tag cardscape/api:ci .
-      - name: Start image
+      - name: Start production images on SQLite and MariaDB
         run: >-
-          docker run --detach --name cardscape-api-ci --publish 18081:8080
-          --env Jwt__SigningKey=ci-only-signing-key-at-least-32-characters
-          --env Cors__AllowedOrigins__0=http://127.0.0.1:18081
-          --env Cardscape__Database__RunMigrationsOnStartup=true
-          cardscape/api:ci
-      - name: Wait for readiness
-        run: |
-          for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:18081/health/ready >/dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          docker logs cardscape-api-ci
-          exit 1
-      - name: Stop image
+          docker compose -f docker-compose.providers.yml --profile smoke
+          up --detach --wait --wait-timeout 180
+      - name: Capture image diagnostics
+        if: failure()
+        run: docker compose -f docker-compose.providers.yml --profile smoke logs --tail 100
+      - name: Stop isolated smoke stack
         if: always()
-        run: docker rm --force cardscape-api-ci
+        run: docker compose -f docker-compose.providers.yml --profile smoke down --volumes
 
   release:
     name: Release

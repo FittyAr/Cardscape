@@ -1176,3 +1176,18 @@ Status: complete. All five steps are implemented and validated.
   Static mutation reasoning detects removed migration catalogs, drift, broken
   conversions and missing concurrency protection; no mutation tool was run.
   This bounded provider suite does not cover every query/feature or outbox retry.
+
+# Fail-closed model alignment — 2026-09-30
+
+- ProviderConfiguration_ModelDriftIsAnError: resolve production DbContext options,
+  assert PendingModelChangesWarning has exact Throw behavior on every engine.
+- Reproduce Ignore failure; remove global suppression without replacing it with
+  a permissive warning rule. Re-run four engine tests and production image smoke.
+- Oracle defaults do not explicitly configure this warning; enforce exact Throw
+  in runtime and design-time instead of inferring behavior from other providers.
+  The policy test is deliberately a single meaningful configuration assertion.
+  Static removal/Ignore mutations would fail it; no mutation runner was invoked.
+- Verified: pre-fix SQLite test fails with Ignore; final four-engine policy,
+  migration/persistence and concurrency gate passes 12/12. Full suite 1,188/1,188
+  without skips; sequential Release rebuild 0 warnings/errors; real image smoke
+  and MCP published migration/provider assemblies verified. No coverage recalculation.

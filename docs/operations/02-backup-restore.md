@@ -1,8 +1,8 @@
 # Backup and restore
 
 > The backup and restore procedure for a self-hosted
-> Cardscape instance. The procedure covers the three
-> supported database providers (SQLite, PostgreSQL, MySQL), the
+> Cardscape instance. The procedure covers the four
+> supported database providers (SQLite, PostgreSQL, MySQL, MariaDB), the
 > attached volumes, and the `OTel` and `Smtp`
 > configuration. The procedure is meant to be run on a
 > schedule (cron, systemd timer, or a managed backup
@@ -146,9 +146,14 @@ databases). The script is a future addition; the
 
 ---
 
-## 4. The MySQL backup
+## 4. The MySQL and MariaDB backup
 
 The MySQL backup is a logical dump via `mysqldump`.
+For MariaDB 11.4 use `mariadb-dump` from the matching MariaDB image instead,
+and restore with its `mariadb` client. Use the actual database service name,
+operator credentials and a separate MariaDB backup destination. Do not apply
+Oracle-specific client options or treat a successful dump as a restore test;
+verify restoration on the matching engine and run its EF Core provider gate.
 The script is the same shape as the PostgreSQL one:
 
 ```bash

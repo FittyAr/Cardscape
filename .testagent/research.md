@@ -1416,3 +1416,11 @@ time; retain Oracle for existing MySQL history. API and MCP must ship every
 assembly/provider. Acceptance: generated native history without SQL patches,
 clean migrate and idempotency, no pending changes, domain roundtrip and optimistic
 concurrency on SQLite/PostgreSQL/MySQL/MariaDB, CI gate and actual image readiness.
+
+# Fail-closed model alignment — 2026-09-30
+
+Runtime DI globally ignores PendingModelChangesWarning despite current native
+histories being aligned on all four engines. This hides future missing model
+migrations at startup. Acceptance: exact EF warning behavior Throw in production
+composition, regression fails before removing Ignore, all four persistence gates
+and published-image startup still pass without that suppression.

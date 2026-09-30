@@ -256,7 +256,7 @@ file before running.
 
 ### 3. Picking a database
 
-Cardscape supports three providers, all switchable at runtime
+Cardscape supports four providers, all switchable at runtime
 through configuration:
 
 | Provider | Connection string example | When to use |
@@ -655,7 +655,7 @@ codebase. It covers:
 - The stack and pinned versions.
 - The Clean Architecture rules.
 - The MCP server as the differentiator pillar.
-- The "design for three, test on one" persistence strategy.
+- All release engines are designed/tested, with SQLite for the ordinary suite.
 - The "no corners cut, no demo MVP" rule.
 - The 10 working rules for any agent (working tree hygiene,
   ADR append-only, migration incantation, etc.).

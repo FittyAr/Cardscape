@@ -5,7 +5,7 @@
 
 ## 1. The Clean Architecture stack
 
-Cardscape follows a Clean Architecture with **seven source
+Cardscape follows a Clean Architecture with **ten source
 projects**, one public SDK and **seven test suites plus
 TestCommon**. Runtime dependencies remain inward-facing; the
 API also has build-time references to the Web and Seeder
@@ -235,7 +235,8 @@ for the recipe. The short version:
 4. Add a validator in `Application/<Context>/Validations/`.
 5. Add an EF Core configuration in
    `Infrastructure/Persistence/Configurations/`.
-6. Add a migration in all three provider folders.
+6. Generate the logical model change in all four provider histories (SQLite,
+   PostgreSQL, MySQL and MariaDB), then run the real-engine provider gate.
 7. **For the REST surface**: add an endpoint in
    `Api/Endpoints/<Context>/`.
 8. **For the AI surface**: add a tool method in
