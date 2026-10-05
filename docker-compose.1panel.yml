@@ -1,0 +1,123 @@
+# ============================================================================
+# Cardscape - Docker Compose para 1Panel (Home Server / Producción)
+# Compatible con: OpenResty (Proxy Inverso), 1Panel Network, SSL/HTTPS
+# ============================================================================
+#
+# Configuración recomendada en 1Panel / OpenResty:
+#   - Dominio: cardscape.home.fitty.ar
+#   - Destino de Proxy Inverso (Origin): http://127.0.0.1:7420
+#   - Protocolo: HTTP hacia el contenedor, HTTPS público con certificado SSL
+#   - Red: 1panel-network (red compartida de 1Panel)
+#
+# Variables y secretos:
+#   - Configurar variables en .env (copiar de .env.1panel.example).
+#   - NUNCA incluir contraseñas ni claves secretas en este archivo.
+#
+# Levantar el stack:
+#   docker compose -f docker-compose.1panel.yml up -d --build
+# ============================================================================
+
+services:
+  # --------------------------------------------------------------------------
+  # 1. Base de Datos PostgreSQL 17
+  # --------------------------------------------------------------------------
+  cardscape-postgres:
+    image: postgres:17-alpine
+    container_name: cardscape-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cardscape}
+      POSTGRES_USER: ${POSTGRES_USER:-cardscape}
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?ERROR Configure POSTGRES_PASSWORD en el archivo .env}"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - cardscape-postgres-data:/var/lib/postgresql/data
+    ports:
+      # Acceso local opcional en el host para herramientas de administración / mantenimiento
+      - "127.0.0.1:${POSTGRES_PORT:-5434}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - cardscape-network
+      - 1panel-network
+
+  # --------------------------------------------------------------------------
+  # 2. Cardscape API & Blazor WebAssembly (.NET 10)
+  # --------------------------------------------------------------------------
+  cardscape-api:
+    build:
+      context: .
+      dockerfile: src/Cardscape.Api/Dockerfile
+    image: cardscape/api:0.1.0-mvp
+    container_name: cardscape-api
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    depends_on:
+      cardscape-postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      Database__Provider: PostgreSQL
+      ConnectionStrings__Default: "Host=cardscape-postgres;Port=5432;Database=${POSTGRES_DB:-cardscape};Username=${POSTGRES_USER:-cardscape};Password=${POSTGRES_PASSWORD:?ERROR Configure POSTGRES_PASSWORD en el archivo .env}"
+      Storage__LocalRoot: /app/Storage
+      Cardscape__DataProtection__KeyDirectory: /app/DataProtectionKeys
+      Jwt__SigningKey: "${CARDS_CAPE_JWT_KEY:?ERROR Configure CARDS_CAPE_JWT_KEY en el archivo .env (openssl rand -base64 48)}"
+      Jwt__Issuer: ${JWT_ISSUER:-Cardscape}
+      Jwt__Audience: ${JWT_AUDIENCE:-Cardscape}
+      Cors__AllowedOrigins__0: http://localhost:7420
+      Cors__AllowedOrigins__1: http://127.0.0.1:7420
+      Cors__AllowedOrigins__2: https://cardscape.home.fitty.ar
+      Cardscape__Database__RunMigrationsOnStartup: "true"
+    ports:
+      # Expuesto en 127.0.0.1 para que el tráfico pase por OpenResty en el host
+      - "127.0.0.1:${CARDSCAPE_PORT:-7420}:8080"
+    volumes:
+      - cardscape-data:/app/Data
+      - cardscape-uploads:/app/Storage
+      - cardscape-keys:/app/DataProtectionKeys
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail --max-time 4 http://localhost:8080/health/ready || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - cardscape-network
+      - 1panel-network
+
+# ----------------------------------------------------------------------------
+# Volúmenes Persistentes
+# ----------------------------------------------------------------------------
+volumes:
+  cardscape-postgres-data:
+    name: ${CARDSCAPE_POSTGRES_VOLUME:-cardscape-1panel-postgres-data}
+  cardscape-data:
+    name: ${CARDSCAPE_DATA_VOLUME:-cardscape-1panel-data}
+  cardscape-uploads:
+    name: ${CARDSCAPE_UPLOADS_VOLUME:-cardscape-1panel-uploads}
+  cardscape-keys:
+    name: ${CARDSCAPE_KEYS_VOLUME:-cardscape-1panel-keys}
+
+# ----------------------------------------------------------------------------
+# Redes de Comunicación
+# ----------------------------------------------------------------------------
+networks:
+  # Red aislada interna entre los contenedores de Cardscape
+  cardscape-network:
+    name: cardscape-network
+    driver: bridge
+
+  # Red preexistente de 1Panel compartida con OpenResty
+  1panel-network:
+    name: ${PANEL_NETWORK:-1panel-network}
+    external: true
