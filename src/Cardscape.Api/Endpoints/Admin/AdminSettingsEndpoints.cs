@@ -36,6 +36,37 @@ public static class AdminSettingsEndpoints
         })
         .Produces<SystemSettingsDto>();
 
+        group.MapPost("/reset", async (
+            ISystemSettingsService settingsService,
+            ICurrentUser currentUser,
+            CancellationToken ct) =>
+        {
+            SystemSettingsDto defaults = await settingsService.ResetToDefaultsAsync(
+                currentUser.Email, ct);
+            return Results.Ok(defaults);
+        })
+        .Produces<SystemSettingsDto>();
+
+        group.MapPost("/test-email", async (
+            TestEmailRequest request,
+            ISystemSettingsService settingsService,
+            CancellationToken ct) =>
+        {
+            TestEmailResponse result = await settingsService.TestEmailAsync(
+                request.TargetEmail, ct);
+            return Results.Ok(result);
+        })
+        .Produces<TestEmailResponse>();
+
+        group.MapPost("/test-ai", async (
+            ISystemSettingsService settingsService,
+            CancellationToken ct) =>
+        {
+            TestAiResponse result = await settingsService.TestAiConnectionAsync(ct);
+            return Results.Ok(result);
+        })
+        .Produces<TestAiResponse>();
+
         return app;
     }
 }

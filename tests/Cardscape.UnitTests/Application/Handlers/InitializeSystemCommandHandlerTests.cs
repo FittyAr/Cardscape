@@ -42,7 +42,7 @@ public class InitializeSystemCommandHandlerTests
         var ctx = new HandlersTestContext();
         var mockSettings = new Mock<ISystemSettingsService>();
         mockSettings.Setup(s => s.UpdateSettingsAsync(It.IsAny<UpdateSystemSettingsRequest>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new SystemSettingsDto("Cardscape Test", true, "es", 60, "Sqlite", "Test", "Storage", "1.2.0"));
+            .ReturnsAsync(new SystemSettingsDto(InstanceTitle: "Cardscape Test", AllowPublicRegistration: true, DefaultLanguage: "es", JwtAccessTokenMinutes: 60, DatabaseProvider: "Sqlite", Environment: "Test", StorageRoot: "Storage", AppVersion: "1.2.0"));
 
         var command = new InitializeSystemCommand(
             "Admin User", "admin@cardscape.test", "AdminPassword123!", "Cardscape Test", "Equipo Alpha");

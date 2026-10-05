@@ -1,26 +1,29 @@
 @page "/admin/settings"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
 @inherits Cardscape.Web.Shared.CultureReactiveComponentBase
+@using System.Text.Json
 @using Cardscape.Web.Resources
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
 @using Microsoft.Extensions.Localization
 @inject AdminSettingsApiClient SettingsApi
 @inject NotificationService Notify
+@inject DialogService Dialogs
+@inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Configuración del Sistema @L["PageTitleSuffix"]</PageTitle>
+<PageTitle>Configuración Integral del Sistema @L["PageTitleSuffix"]</PageTitle>
 
-<RadzenStack Gap="1.5rem" Class="rz-mx-auto" Style="max-width: 60rem;">
+<RadzenStack Gap="1.5rem" Class="rz-mx-auto" Style="max-width: 75rem;">
     <PageHeader Title="Configuración del Sistema"
-                Subtitle="Administra parámetros de la instancia, políticas de registro y revisa la infraestructura." />
+                Subtitle="Panel de administración global para parametrizar todos los subsistemas, seguridad e infraestructura de Cardscape." />
 
     @if (_loading)
     {
         <RadzenCard>
-            <RadzenStack AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.Center" Class="rz-p-4">
+            <RadzenStack AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.Center" Class="rz-p-6">
                 <RadzenProgressBarCircular ShowValue="false" Mode="@ProgressBarMode.Indeterminate" Size="@ProgressBarCircularSize.Medium" />
-                <RadzenText Text="Cargando configuración..." TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary rz-mt-2" />
+                <RadzenText Text="Cargando configuración del sistema..." TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary rz-mt-2" />
             </RadzenStack>
         </RadzenCard>
     }
@@ -28,19 +31,35 @@
     {
         <RadzenTabs RenderMode="@TabRenderMode.Client">
             <Tabs>
-                <RadzenTabsItem Text="General y Registro" Icon="tune">
+                @* 1. General & Marca *@
+                <RadzenTabsItem Text="General" Icon="tune">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenFormField Text="Título de la Instancia" Component="title">
-                                <RadzenTextBox @bind-Value="_model.InstanceTitle" Name="title" Style="width:100%" />
+                            <RadzenText Text="Identidad de la Plataforma y Registro" TextStyle="@TextStyle.H6" />
+
+                            <RadzenFormField Text="Título de la Instancia" Component="instanceTitle">
+                                <RadzenTextBox @bind-Value="_model.InstanceTitle" Name="instanceTitle" Style="width:100%" />
                             </RadzenFormField>
-                            <RadzenText Text="Nombre visible en la barra de navegación y comunicaciones del sistema."
+                            <RadzenText Text="Nombre visible en la barra de navegación, correos y títulos de pestaña."
                                         TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+
+                            <RadzenFormField Text="Correo de Soporte y Contacto" Component="supportEmail">
+                                <RadzenTextBox @bind-Value="_model.SupportEmail" Name="supportEmail" Style="width:100%" />
+                            </RadzenFormField>
+
+                            <RadzenFormField Text="Idioma Predeterminado" Component="defaultLang">
+                                <RadzenDropDown @bind-Value="_model.DefaultLanguage" Data="@_languages"
+                                                TextProperty="Name" ValueProperty="Code" Name="defaultLang" Style="width:100%" />
+                            </RadzenFormField>
+
+                            <RadzenFormField Text="Tema Visual Predeterminado" Component="defaultTheme">
+                                <RadzenDropDown @bind-Value="_model.DefaultTheme" Data="@_themes" Name="defaultTheme" Style="width:100%" />
+                            </RadzenFormField>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-2">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Permitir Registro Público" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Si está deshabilitado, los usuarios sólo podrán ingresar si son invitados por un administrador o miembro."
+                                    <RadzenText Text="Permitir Registro Público de Usuarios" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Si está deshabilitado, sólo podrán acceder nuevos usuarios invitados por un administrador o miembro."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.AllowPublicRegistration" />
@@ -49,25 +68,355 @@
                     </RadzenCard>
                 </RadzenTabsItem>
 
+                @* 2. Seguridad & Acceso *@
                 <RadzenTabsItem Text="Seguridad" Icon="security">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenFormField Text="Expiración de Sesión / JWT (Minutos)" Component="jwtExpiry">
+                            <RadzenText Text="Políticas de Autenticación y Credenciales" TextStyle="@TextStyle.H6" />
+
+                            <RadzenFormField Text="Duración del Token de Sesión JWT (Minutos)" Component="jwtExpiry">
                                 <RadzenNumeric @bind-Value="_model.JwtAccessTokenMinutes" Name="jwtExpiry" Min="5" Max="43200" Style="width:100%" />
                             </RadzenFormField>
-                            <RadzenText Text="Tiempo tras el cual un token de acceso expira requiriendo un nuevo inicio de sesión (por defecto 1440 min = 24h)."
+                            <RadzenText Text="Tiempo tras el cual la sesión expira (por defecto 1440 min = 24 horas, rango permitido: 5 a 43200 min)."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+
+                            <RadzenFormField Text="Longitud Mínima de Contraseña" Component="pwdMinLen">
+                                <RadzenNumeric @bind-Value="_model.PasswordMinLength" Name="pwdMinLen" Min="6" Max="32" Style="width:100%" />
+                            </RadzenFormField>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Exigir al menos un Dígito en la Contraseña" TextStyle="@TextStyle.Subtitle2" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.PasswordRequireDigit" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Exigir Caracteres Especiales / No Alfanuméricos" TextStyle="@TextStyle.Subtitle2" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.PasswordRequireNonAlphanumeric" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Exigir 2FA (TOTP) Obligatorio para Administradores" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Obliga a los administradores a enrolar autenticación de doble factor para operar."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.RequireTwoFactorForAdmins" />
+                            </RadzenStack>
+
+                            <RadzenFormField Text="Límite de Intentos Fallidos de Inicio de Sesión" Component="maxFailed">
+                                <RadzenNumeric @bind-Value="_model.MaxFailedLoginAttempts" Name="maxFailed" Min="0" Max="50" Style="width:100%" />
+                            </RadzenFormField>
+                            <RadzenText Text="Número de intentos incorrectos antes de bloquear temporalmente (0 = sin límite)."
                                         TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                <RadzenTabsItem Text="Infraestructura y Diagnóstico" Icon="storage">
+                @* 3. Almacenamiento & Adjuntos *@
+                <RadzenTabsItem Text="Almacenamiento" Icon="folder">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Cuotas y Restricciones de Archivos Adjuntos" TextStyle="@TextStyle.H6" />
+
+                            <RadzenFormField Text="Tamaño Máximo por Archivo (MB)" Component="maxAttach">
+                                <RadzenNumeric @bind-Value="_model.MaxAttachmentSizeMb" Name="maxAttach" Min="1" Max="500" Style="width:100%" />
+                            </RadzenFormField>
+
+                            <RadzenFormField Text="Extensiones de Archivo Permitidas (separadas por coma o '*' para todas)" Component="exts">
+                                <RadzenTextBox @bind-Value="_model.AllowedAttachmentExtensions" Name="exts" Style="width:100%" />
+                            </RadzenFormField>
+                            <RadzenText Text="Ejemplo: png, jpg, jpeg, gif, pdf, txt, docx, xlsx, zip"
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+
+                            <RadzenStack Gap="0.25rem" Class="rz-pt-2">
+                                <RadzenText Text="Ruta Base de Almacenamiento:" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="@_settings.StorageRoot" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 4. Inteligencia Artificial *@
+                <RadzenTabsItem Text="Inteligencia Artificial" Icon="smart_toy">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Asistente de Inteligencia Artificial" TextStyle="@TextStyle.H6" />
+                                    <RadzenText Text="Permite generar tarjetas, resúmenes automáticos y sugerencias mediante LLMs locales o remotos."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.AiEnabled" />
+                            </RadzenStack>
+
+                            @if (_model.AiEnabled)
+                            {
+                                <RadzenFormField Text="Proveedor de Protocolo" Component="aiProvider">
+                                    <RadzenTextBox @bind-Value="_model.AiProvider" Name="aiProvider" Style="width:100%" ReadOnly="true" />
+                                </RadzenFormField>
+
+                                <RadzenFormField Text="Endpoint de Inferencia (URL)" Component="aiEndpoint">
+                                    <RadzenTextBox @bind-Value="_model.AiEndpoint" Name="aiEndpoint" Style="width:100%" Placeholder="http://localhost:11434/" />
+                                </RadzenFormField>
+                                <RadzenText Text="Compatible con Ollama, vLLM, LocalAI o API OpenAI (ej. http://localhost:11434/ o https://api.openai.com/v1/)."
+                                            TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+
+                                <RadzenFormField Text="Nombre del Modelo" Component="aiModel">
+                                    <RadzenTextBox @bind-Value="_model.AiModel" Name="aiModel" Style="width:100%" Placeholder="llama3.2" />
+                                </RadzenFormField>
+
+                                <RadzenFormField Text="API Key (Opcional para Ollama local)" Component="aiApiKey">
+                                    <RadzenTextBox @bind-Value="_model.AiApiKey" Name="aiApiKey" Style="width:100%"
+                                                   Placeholder="@(_settings.AiApiKeyMasked.Length > 0 ? _settings.AiApiKeyMasked : "Introduce clave...")" />
+                                </RadzenFormField>
+
+                                <RadzenFormField Text="Timeout de Solicitud (Segundos)" Component="aiTimeout">
+                                    <RadzenNumeric @bind-Value="_model.AiTimeoutSeconds" Name="aiTimeout" Min="5" Max="300" Style="width:100%" />
+                                </RadzenFormField>
+
+                                <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.Start">
+                                    <RadzenButton Text="Probar Conexión con IA"
+                                                  Icon="network_check"
+                                                  ButtonStyle="@ButtonStyle.Info"
+                                                  Size="@ButtonSize.Small"
+                                                  IsBusy="@_testingAi"
+                                                  BusyText="Probando..."
+                                                  Click="@TestAiConnectionAsync" />
+                                </RadzenStack>
+                            }
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 5. Servidor de Correo SMTP *@
+                <RadzenTabsItem Text="Correo Saliente (SMTP)" Icon="mail">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Notificaciones por Correo Electrónico" TextStyle="@TextStyle.H6" />
+                                    <RadzenText Text="Envía correos para invitaciones a tableros, recordatorios y alertas del sistema."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.EmailNotificationsEnabled" />
+                            </RadzenStack>
+
+                            @if (_model.EmailNotificationsEnabled)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="8">
+                                        <RadzenFormField Text="Servidor SMTP (Host)" Component="smtpHost" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.SmtpHost" Name="smtpHost" Style="width:100%" Placeholder="smtp.example.com" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="4">
+                                        <RadzenFormField Text="Puerto" Component="smtpPort" Style="width:100%">
+                                            <RadzenNumeric @bind-Value="_model.SmtpPort" Name="smtpPort" Min="1" Max="65535" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Usuario SMTP" Component="smtpUser" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.SmtpUsername" Name="smtpUser" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Contraseña SMTP" Component="smtpPass" Style="width:100%">
+                                            <RadzenPassword @bind-Value="_model.SmtpPassword" Name="smtpPass" Style="width:100%"
+                                                            Placeholder="@(_settings.SmtpPasswordMasked.Length > 0 ? _settings.SmtpPasswordMasked : "Introduce contraseña...")" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+
+                                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                    <RadzenText Text="Habilitar Cifrado TLS / SSL" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenSwitch @bind-Value="_model.SmtpEnableSsl" />
+                                </RadzenStack>
+
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Correo del Remitente" Component="senderEmail" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.SenderEmail" Name="senderEmail" Style="width:100%" Placeholder="noreply@cardscape.local" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Nombre del Remitente" Component="senderName" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.SenderName" Name="senderName" Style="width:100%" Placeholder="Cardscape" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+
+                                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.75rem">
+                                    <RadzenTextBox @bind-Value="_testEmailTarget" Placeholder="correo@destino.com" Style="max-width: 18rem;" />
+                                    <RadzenButton Text="Enviar Correo de Prueba"
+                                                  Icon="send"
+                                                  ButtonStyle="@ButtonStyle.Info"
+                                                  Size="@ButtonSize.Small"
+                                                  IsBusy="@_testingEmail"
+                                                  BusyText="Enviando..."
+                                                  Click="@TestEmailConnectionAsync" />
+                                </RadzenStack>
+                            }
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 6. Integraciones & Webhooks *@
+                <RadzenTabsItem Text="Integraciones" Icon="webhook">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Webhooks Salientes y Servicios Conectados" TextStyle="@TextStyle.H6" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Despacho de Webhooks Salientes" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Habilita la entrega asíncrona de eventos a endpoints externos HTTP."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.WebhooksEnabled" />
+                            </RadzenStack>
+
+                            @if (_model.WebhooksEnabled)
+                            {
+                                <RadzenFormField Text="Reintentos Máximos de Entrega" Component="whRetries">
+                                    <RadzenNumeric @bind-Value="_model.MaxWebhookRetries" Name="whRetries" Min="0" Max="10" Style="width:100%" />
+                                </RadzenFormField>
+
+                                <RadzenFormField Text="Timeout de Entrega de Webhook (Segundos)" Component="whTimeout">
+                                    <RadzenNumeric @bind-Value="_model.WebhookTimeoutSeconds" Name="whTimeout" Min="1" Max="60" Style="width:100%" />
+                                </RadzenFormField>
+                            }
+
+                            <RadzenStack Gap="1rem" Class="rz-pt-2">
+                                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                    <RadzenText Text="Integración con Slack" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenSwitch @bind-Value="_model.SlackIntegrationEnabled" />
+                                </RadzenStack>
+
+                                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                    <RadzenText Text="Integración con GitHub" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenSwitch @bind-Value="_model.GitHubIntegrationEnabled" />
+                                </RadzenStack>
+
+                                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                    <RadzenText Text="Integración con Google Calendar" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenSwitch @bind-Value="_model.GoogleCalendarIntegrationEnabled" />
+                                </RadzenStack>
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 7. Rendimiento & Rate Limiting *@
+                <RadzenTabsItem Text="Rendimiento" Icon="speed">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Límites de Tráfico y Control de Concurrencia" TextStyle="@TextStyle.H6" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Limitación de Tasa (Rate Limiting)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Protege la API frente a peticiones abusivas o clientes descontrolados."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.RateLimitingEnabled" />
+                            </RadzenStack>
+
+                            <RadzenFormField Text="Peticiones por Hora por Token de API" Component="reqPerHour">
+                                <RadzenNumeric @bind-Value="_model.DefaultRequestsPerHour" Name="reqPerHour" Min="10" Max="100000" Style="width:100%" />
+                            </RadzenFormField>
+
+                            <RadzenFormField Text="Backend de Almacenamiento de Cuotas" Component="rlBackend">
+                                <RadzenDropDown @bind-Value="_model.RateLimiterBackend" Data="@_rateLimiterBackends" Name="rlBackend" Style="width:100%" />
+                            </RadzenFormField>
+                            <RadzenText Text="InMemory para despliegue de una sola instancia; Redis para clústeres multi-instancia balanceados."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 8. Retención & GDPR *@
+                <RadzenTabsItem Text="Retención y GDPR" Icon="cleaning_services">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Ciclo de Vida de Datos y Tareas de Limpieza (Housekeeping)" TextStyle="@TextStyle.H6" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Limpieza Automática Periódica" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Depuración periódica en segundo plano de tokens revocados, auditorías antiguas y cuentas eliminadas."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.RetentionSweeperEnabled" />
+                            </RadzenStack>
+
+                            <RadzenFormField Text="Intervalo de Limpieza (Horas)" Component="sweepInterval">
+                                <RadzenNumeric @bind-Value="_model.SweepIntervalHours" Name="sweepInterval" Min="1" Max="168" Style="width:100%" />
+                            </RadzenFormField>
+
+                            <RadzenFormField Text="Período de Gracia para Eliminación de Usuarios (Días)" Component="gracePeriod">
+                                <RadzenNumeric @bind-Value="_model.UserGracePeriodDays" Name="gracePeriod" Min="1" Max="365" Style="width:100%" />
+                            </RadzenFormField>
+
+                            <RadzenFormField Text="Retención de Historial de Actividades (Días)" Component="activityRet">
+                                <RadzenNumeric @bind-Value="_model.ActivityRetentionDays" Name="activityRet" Min="7" Max="3650" Style="width:100%" />
+                            </RadzenFormField>
+
+                            <RadzenFormField Text="Retención de Registros de Auditoría (Días)" Component="auditRet">
+                                <RadzenNumeric @bind-Value="_model.AuditRetentionDays" Name="auditRet" Min="30" Max="3650" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 9. Funciones Experimentales *@
+                <RadzenTabsItem Text="Experimentales" Icon="science">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Gating de Funcionalidades en Desarrollo" TextStyle="@TextStyle.H6" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Residencia Regional de Datos (Data Residency)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Muestra controles de región geográfica en espacios de trabajo."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.DataResidencyEnabled" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Generador de Datos de Prueba (Seeder)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Habilita endpoints y panel /admin/seeder para generar datos ficticios de prueba."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.SeederEnabled" />
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 10. Diagnóstico & Monitoreo *@
+                <RadzenTabsItem Text="Diagnóstico" Icon="monitor_heart">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1rem">
+                            <RadzenText Text="Telemetría e Infraestructura en Vivo" TextStyle="@TextStyle.H6" />
+
                             <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
                                 <RadzenText Text="Motor de Base de Datos Activo:" TextStyle="@TextStyle.Subtitle2" />
                                 <RadzenBadge BadgeStyle="@(_settings.DatabaseProvider.Contains("Postgre", StringComparison.OrdinalIgnoreCase) ? BadgeStyle.Success : BadgeStyle.Info)"
                                              Text="@_settings.DatabaseProvider" Size="@ButtonSize.Medium" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                                <RadzenText Text="Estado de Conexión a Base de Datos:" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenBadge BadgeStyle="@BadgeStyle.Success" Text="@_settings.DatabaseHealth" Size="@ButtonSize.Medium" />
                             </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
@@ -76,13 +425,28 @@
                             </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
-                                <RadzenText Text="Ruta de Almacenamiento Persistente:" TextStyle="@TextStyle.Subtitle2" />
-                                <RadzenText Text="@_settings.StorageRoot" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                                <RadzenText Text="Versión de Cardscape:" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="@_settings.AppVersion" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
                             </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
-                                <RadzenText Text="Versión de Cardscape:" TextStyle="@TextStyle.Subtitle2" />
-                                <RadzenText Text="@_settings.AppVersion" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                                <RadzenText Text="Tiempo Activo del Servidor (Uptime):" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="@_settings.Uptime" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                                <RadzenText Text="Memoria en Uso del Proceso:" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="@($"{_settings.MemoryUsageMb} MB")" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                                <RadzenText Text="Espacio Libre en Disco de Almacenamiento:" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="@($"{_settings.FreeDiskSpaceMb} MB disponibles")" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                                <RadzenText Text="Ruta del Volumen de Datos Persistente:" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="@_settings.StorageRoot" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
                             </RadzenStack>
                         </RadzenStack>
                     </RadzenCard>
@@ -97,10 +461,22 @@
             </RadzenAlert>
         }
 
-        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.End" Gap="1rem" Class="rz-mt-3">
+        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center" Class="rz-mt-3">
+            <RadzenStack Orientation="@Orientation.Horizontal" Gap="0.5rem">
+                <RadzenButton Text="Restablecer Valores de Fábrica"
+                              Icon="restart_alt"
+                              ButtonStyle="@ButtonStyle.Light"
+                              Click="@ConfirmResetAsync" />
+                <RadzenButton Text="Exportar JSON"
+                              Icon="file_download"
+                              ButtonStyle="@ButtonStyle.Light"
+                              Click="@ExportJsonAsync" />
+            </RadzenStack>
+
             <RadzenButton Text="Guardar Cambios"
                           Icon="save"
                           ButtonStyle="@ButtonStyle.Primary"
+                          Size="@ButtonSize.Large"
                           IsBusy="@_saving"
                           BusyText="Guardando..."
                           Click="@SaveSettingsAsync" />
@@ -109,18 +485,83 @@
 </RadzenStack>
 
 @code {
+    private sealed class LanguageItem
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private readonly List<LanguageItem> _languages = new()
+    {
+        new LanguageItem { Code = "es", Name = "Español" },
+        new LanguageItem { Code = "en", Name = "English" }
+    };
+
+    private readonly List<string> _themes = new() { "default", "dark", "material", "humanistic" };
+    private readonly List<string> _rateLimiterBackends = new() { "InMemory", "Redis" };
+
     private sealed class SettingsFormModel
     {
-        public string InstanceTitle { get; set; } = string.Empty;
-        public bool AllowPublicRegistration { get; set; } = true;
+        public string InstanceTitle { get; set; } = "Cardscape";
+        public string SupportEmail { get; set; } = "support@cardscape.local";
         public string DefaultLanguage { get; set; } = "es";
+        public string DefaultTheme { get; set; } = "default";
+        public bool AllowPublicRegistration { get; set; } = true;
+
         public int JwtAccessTokenMinutes { get; set; } = 1440;
+        public int PasswordMinLength { get; set; } = 8;
+        public bool PasswordRequireDigit { get; set; } = true;
+        public bool PasswordRequireNonAlphanumeric { get; set; } = false;
+        public bool RequireTwoFactorForAdmins { get; set; } = false;
+        public int MaxFailedLoginAttempts { get; set; } = 5;
+
+        public int MaxAttachmentSizeMb { get; set; } = 25;
+        public string AllowedAttachmentExtensions { get; set; } = "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip";
+
+        public bool AiEnabled { get; set; } = false;
+        public string AiProvider { get; set; } = "OpenAiCompatible";
+        public string AiEndpoint { get; set; } = "http://localhost:11434/";
+        public string AiModel { get; set; } = "llama3.2";
+        public string? AiApiKey { get; set; }
+        public int AiTimeoutSeconds { get; set; } = 60;
+
+        public bool EmailNotificationsEnabled { get; set; } = false;
+        public string SmtpHost { get; set; } = "localhost";
+        public int SmtpPort { get; set; } = 587;
+        public string SmtpUsername { get; set; } = string.Empty;
+        public string? SmtpPassword { get; set; }
+        public bool SmtpEnableSsl { get; set; } = true;
+        public string SenderEmail { get; set; } = "noreply@cardscape.local";
+        public string SenderName { get; set; } = "Cardscape Notificaciones";
+
+        public bool WebhooksEnabled { get; set; } = true;
+        public int MaxWebhookRetries { get; set; } = 3;
+        public int WebhookTimeoutSeconds { get; set; } = 10;
+        public bool SlackIntegrationEnabled { get; set; } = false;
+        public bool GitHubIntegrationEnabled { get; set; } = false;
+        public bool GoogleCalendarIntegrationEnabled { get; set; } = false;
+
+        public bool RateLimitingEnabled { get; set; } = true;
+        public int DefaultRequestsPerHour { get; set; } = 1000;
+        public string RateLimiterBackend { get; set; } = "InMemory";
+
+        public bool RetentionSweeperEnabled { get; set; } = true;
+        public int SweepIntervalHours { get; set; } = 6;
+        public int UserGracePeriodDays { get; set; } = 30;
+        public int ActivityRetentionDays { get; set; } = 365;
+        public int AuditRetentionDays { get; set; } = 730;
+
+        public bool DataResidencyEnabled { get; set; } = false;
+        public bool SeederEnabled { get; set; } = false;
     }
 
     private SystemSettingsDto? _settings;
     private readonly SettingsFormModel _model = new();
     private bool _loading = true;
     private bool _saving;
+    private bool _testingAi;
+    private bool _testingEmail;
+    private string _testEmailTarget = "admin@cardscape.local";
     private string? _error;
 
     protected override async Task OnInitializedAsync()
@@ -137,11 +578,7 @@
             ApiResult<SystemSettingsDto> result = await SettingsApi.GetSettingsAsync();
             if (result.IsSuccess && result.Value is not null)
             {
-                _settings = result.Value;
-                _model.InstanceTitle = _settings.InstanceTitle;
-                _model.AllowPublicRegistration = _settings.AllowPublicRegistration;
-                _model.DefaultLanguage = _settings.DefaultLanguage;
-                _model.JwtAccessTokenMinutes = _settings.JwtAccessTokenMinutes;
+                ApplyDto(result.Value);
             }
             else
             {
@@ -158,6 +595,63 @@
         }
     }
 
+    private void ApplyDto(SystemSettingsDto dto)
+    {
+        _settings = dto;
+
+        _model.InstanceTitle = dto.InstanceTitle;
+        _model.SupportEmail = dto.SupportEmail;
+        _model.DefaultLanguage = dto.DefaultLanguage;
+        _model.DefaultTheme = dto.DefaultTheme;
+        _model.AllowPublicRegistration = dto.AllowPublicRegistration;
+
+        _model.JwtAccessTokenMinutes = dto.JwtAccessTokenMinutes;
+        _model.PasswordMinLength = dto.PasswordMinLength;
+        _model.PasswordRequireDigit = dto.PasswordRequireDigit;
+        _model.PasswordRequireNonAlphanumeric = dto.PasswordRequireNonAlphanumeric;
+        _model.RequireTwoFactorForAdmins = dto.RequireTwoFactorForAdmins;
+        _model.MaxFailedLoginAttempts = dto.MaxFailedLoginAttempts;
+
+        _model.MaxAttachmentSizeMb = dto.MaxAttachmentSizeMb;
+        _model.AllowedAttachmentExtensions = dto.AllowedAttachmentExtensions;
+
+        _model.AiEnabled = dto.AiEnabled;
+        _model.AiProvider = dto.AiProvider;
+        _model.AiEndpoint = dto.AiEndpoint;
+        _model.AiModel = dto.AiModel;
+        _model.AiApiKey = null;
+        _model.AiTimeoutSeconds = dto.AiTimeoutSeconds;
+
+        _model.EmailNotificationsEnabled = dto.EmailNotificationsEnabled;
+        _model.SmtpHost = dto.SmtpHost;
+        _model.SmtpPort = dto.SmtpPort;
+        _model.SmtpUsername = dto.SmtpUsername;
+        _model.SmtpPassword = null;
+        _model.SmtpEnableSsl = dto.SmtpEnableSsl;
+        _model.SenderEmail = dto.SenderEmail;
+        _model.SenderName = dto.SenderName;
+
+        _model.WebhooksEnabled = dto.WebhooksEnabled;
+        _model.MaxWebhookRetries = dto.MaxWebhookRetries;
+        _model.WebhookTimeoutSeconds = dto.WebhookTimeoutSeconds;
+        _model.SlackIntegrationEnabled = dto.SlackIntegrationEnabled;
+        _model.GitHubIntegrationEnabled = dto.GitHubIntegrationEnabled;
+        _model.GoogleCalendarIntegrationEnabled = dto.GoogleCalendarIntegrationEnabled;
+
+        _model.RateLimitingEnabled = dto.RateLimitingEnabled;
+        _model.DefaultRequestsPerHour = dto.DefaultRequestsPerHour;
+        _model.RateLimiterBackend = dto.RateLimiterBackend;
+
+        _model.RetentionSweeperEnabled = dto.RetentionSweeperEnabled;
+        _model.SweepIntervalHours = dto.SweepIntervalHours;
+        _model.UserGracePeriodDays = dto.UserGracePeriodDays;
+        _model.ActivityRetentionDays = dto.ActivityRetentionDays;
+        _model.AuditRetentionDays = dto.AuditRetentionDays;
+
+        _model.DataResidencyEnabled = dto.DataResidencyEnabled;
+        _model.SeederEnabled = dto.SeederEnabled;
+    }
+
     private async Task SaveSettingsAsync()
     {
         _saving = true;
@@ -165,26 +659,68 @@
         try
         {
             var req = new UpdateSystemSettingsRequestDto(
-                InstanceTitle: string.IsNullOrWhiteSpace(_model.InstanceTitle) ? "Cardscape" : _model.InstanceTitle.Trim(),
+                InstanceTitle: _model.InstanceTitle,
+                SupportEmail: _model.SupportEmail,
+                DefaultLanguage: _model.DefaultLanguage,
+                DefaultTheme: _model.DefaultTheme,
                 AllowPublicRegistration: _model.AllowPublicRegistration,
-                DefaultLanguage: string.IsNullOrWhiteSpace(_model.DefaultLanguage) ? "es" : _model.DefaultLanguage.Trim(),
-                JwtAccessTokenMinutes: _model.JwtAccessTokenMinutes <= 0 ? 1440 : _model.JwtAccessTokenMinutes
+
+                JwtAccessTokenMinutes: _model.JwtAccessTokenMinutes,
+                PasswordMinLength: _model.PasswordMinLength,
+                PasswordRequireDigit: _model.PasswordRequireDigit,
+                PasswordRequireNonAlphanumeric: _model.PasswordRequireNonAlphanumeric,
+                RequireTwoFactorForAdmins: _model.RequireTwoFactorForAdmins,
+                MaxFailedLoginAttempts: _model.MaxFailedLoginAttempts,
+
+                MaxAttachmentSizeMb: _model.MaxAttachmentSizeMb,
+                AllowedAttachmentExtensions: _model.AllowedAttachmentExtensions,
+
+                AiEnabled: _model.AiEnabled,
+                AiProvider: _model.AiProvider,
+                AiEndpoint: _model.AiEndpoint,
+                AiModel: _model.AiModel,
+                AiApiKey: _model.AiApiKey,
+                AiTimeoutSeconds: _model.AiTimeoutSeconds,
+
+                EmailNotificationsEnabled: _model.EmailNotificationsEnabled,
+                SmtpHost: _model.SmtpHost,
+                SmtpPort: _model.SmtpPort,
+                SmtpUsername: _model.SmtpUsername,
+                SmtpPassword: _model.SmtpPassword,
+                SmtpEnableSsl: _model.SmtpEnableSsl,
+                SenderEmail: _model.SenderEmail,
+                SenderName: _model.SenderName,
+
+                WebhooksEnabled: _model.WebhooksEnabled,
+                MaxWebhookRetries: _model.MaxWebhookRetries,
+                WebhookTimeoutSeconds: _model.WebhookTimeoutSeconds,
+                SlackIntegrationEnabled: _model.SlackIntegrationEnabled,
+                GitHubIntegrationEnabled: _model.GitHubIntegrationEnabled,
+                GoogleCalendarIntegrationEnabled: _model.GoogleCalendarIntegrationEnabled,
+
+                RateLimitingEnabled: _model.RateLimitingEnabled,
+                DefaultRequestsPerHour: _model.DefaultRequestsPerHour,
+                RateLimiterBackend: _model.RateLimiterBackend,
+
+                RetentionSweeperEnabled: _model.RetentionSweeperEnabled,
+                SweepIntervalHours: _model.SweepIntervalHours,
+                UserGracePeriodDays: _model.UserGracePeriodDays,
+                ActivityRetentionDays: _model.ActivityRetentionDays,
+                AuditRetentionDays: _model.AuditRetentionDays,
+
+                DataResidencyEnabled: _model.DataResidencyEnabled,
+                SeederEnabled: _model.SeederEnabled
             );
 
             ApiResult<SystemSettingsDto> result = await SettingsApi.UpdateSettingsAsync(req);
             if (result.IsSuccess && result.Value is not null)
             {
-                _settings = result.Value;
-                _model.InstanceTitle = _settings.InstanceTitle;
-                _model.AllowPublicRegistration = _settings.AllowPublicRegistration;
-                _model.DefaultLanguage = _settings.DefaultLanguage;
-                _model.JwtAccessTokenMinutes = _settings.JwtAccessTokenMinutes;
-
+                ApplyDto(result.Value);
                 Notify.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Success,
-                    Summary = "Configuración Actualizada",
-                    Detail = "Los cambios han sido guardados satisfactoriamente.",
+                    Summary = "Configuración Guardada",
+                    Detail = "Todos los parámetros del sistema han sido actualizados con éxito.",
                     Duration = 4000
                 });
             }
@@ -208,5 +744,129 @@
         {
             _saving = false;
         }
+    }
+
+    private async Task ConfirmResetAsync()
+    {
+        bool? confirmed = await Dialogs.Confirm(
+            "¿Estás seguro de que deseas restablecer todos los parámetros del sistema a los valores de fábrica?",
+            "Restablecer Configuración",
+            new ConfirmOptions { OkButtonText = "Sí, Restablecer", CancelButtonText = "Cancelar" });
+
+        if (confirmed == true)
+        {
+            try
+            {
+                ApiResult<SystemSettingsDto> result = await SettingsApi.ResetSettingsAsync();
+                if (result.IsSuccess && result.Value is not null)
+                {
+                    ApplyDto(result.Value);
+                    Notify.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "Valores de Fábrica Restaurados",
+                        Detail = "La configuración ha sido restablecida a sus parámetros predeterminados.",
+                        Duration = 4000
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Notify.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error al Restablecer",
+                    Detail = ex.Message,
+                    Duration = 5000
+                });
+            }
+        }
+    }
+
+    private async Task TestAiConnectionAsync()
+    {
+        _testingAi = true;
+        try
+        {
+            ApiResult<TestAiResponseDto> result = await SettingsApi.TestAiAsync();
+            if (result.IsSuccess && result.Value is not null)
+            {
+                Notify.Notify(new NotificationMessage
+                {
+                    Severity = result.Value.Success ? NotificationSeverity.Success : NotificationSeverity.Warning,
+                    Summary = result.Value.Success ? "Conexión IA Exitosa" : "Fallo de Conexión IA",
+                    Detail = result.Value.Message,
+                    Duration = 5000
+                });
+            }
+            else
+            {
+                Notify.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error al Probar IA",
+                    Detail = result.Error ?? "No se pudo comunicar con el servidor.",
+                    Duration = 5000
+                });
+            }
+        }
+        finally
+        {
+            _testingAi = false;
+        }
+    }
+
+    private async Task TestEmailConnectionAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_testEmailTarget))
+        {
+            Notify.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Correo Requerido",
+                Detail = "Por favor ingresa un correo de destino para la prueba.",
+                Duration = 3000
+            });
+            return;
+        }
+
+        _testingEmail = true;
+        try
+        {
+            ApiResult<TestEmailResponseDto> result = await SettingsApi.TestEmailAsync(new TestEmailRequestDto(_testEmailTarget.Trim()));
+            if (result.IsSuccess && result.Value is not null)
+            {
+                Notify.Notify(new NotificationMessage
+                {
+                    Severity = result.Value.Success ? NotificationSeverity.Success : NotificationSeverity.Warning,
+                    Summary = result.Value.Success ? "Prueba SMTP Correcta" : "Fallo SMTP",
+                    Detail = result.Value.Message,
+                    Duration = 5000
+                });
+            }
+            else
+            {
+                Notify.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error al Probar SMTP",
+                    Detail = result.Error ?? "No se pudo comunicar con el servidor.",
+                    Duration = 5000
+                });
+            }
+        }
+        finally
+        {
+            _testingEmail = false;
+        }
+    }
+
+    private async Task ExportJsonAsync()
+    {
+        if (_settings is null) return;
+        string json = JsonSerializer.Serialize(_settings, new JsonSerializerOptions { WriteIndented = true });
+        string bytesBase64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+        string url = $"data:application/json;base64,{bytesBase64}";
+        await JS.InvokeVoidAsync("open", url, "_blank");
     }
 }

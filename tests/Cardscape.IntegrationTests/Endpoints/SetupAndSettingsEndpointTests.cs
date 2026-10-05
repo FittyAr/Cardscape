@@ -7,6 +7,8 @@ using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.Setup.DTOs;
 using Cardscape.IntegrationTests.Fixtures;
 using Cardscape.Tests.Common.Fixtures;
+using FluentAssertions;
+using Xunit;
 
 namespace Cardscape.IntegrationTests.Endpoints;
 
@@ -69,12 +71,15 @@ public sealed class SetupAndSettingsEndpointTests
         string getJson = await getResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         SystemSettingsDto? current = JsonSerializer.Deserialize<SystemSettingsDto>(getJson, TestJson.Options);
         current.Should().NotBeNull();
+        current!.DatabaseHealth.Should().Be("Healthy");
 
         // Update settings
         var updateReq = new UpdateSystemSettingsRequest(
             InstanceTitle: "Cardscape IT Suite",
-            AllowPublicRegistration: true,
+            SupportEmail: "it@cardscape.local",
             DefaultLanguage: "es",
+            DefaultTheme: "dark",
+            AllowPublicRegistration: true,
             JwtAccessTokenMinutes: 90);
 
         HttpResponseMessage putResponse = await adminClient.PutAsJsonAsync("api/admin/settings", updateReq, TestContext.Current.CancellationToken);
@@ -85,8 +90,29 @@ public sealed class SetupAndSettingsEndpointTests
 
         updated.Should().NotBeNull();
         updated!.InstanceTitle.Should().Be("Cardscape IT Suite");
+        updated.SupportEmail.Should().Be("it@cardscape.local");
         updated.DefaultLanguage.Should().Be("es");
         updated.JwtAccessTokenMinutes.Should().Be(90);
+
+        // Test AI endpoint
+        HttpResponseMessage aiResponse = await adminClient.PostAsync("api/admin/settings/test-ai", null, TestContext.Current.CancellationToken);
+        aiResponse.IsSuccessStatusCode.Should().BeTrue();
+
+        // Test Email endpoint
+        HttpResponseMessage emailResponse = await adminClient.PostAsJsonAsync(
+            "api/admin/settings/test-email",
+            new TestEmailRequest("test@cardscape.local"),
+            TestContext.Current.CancellationToken);
+        emailResponse.IsSuccessStatusCode.Should().BeTrue();
+
+        // Reset settings
+        HttpResponseMessage resetResponse = await adminClient.PostAsync("api/admin/settings/reset", null, TestContext.Current.CancellationToken);
+        resetResponse.IsSuccessStatusCode.Should().BeTrue();
+
+        string resetJson = await resetResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        SystemSettingsDto? reset = JsonSerializer.Deserialize<SystemSettingsDto>(resetJson, TestJson.Options);
+        reset.Should().NotBeNull();
+        reset!.InstanceTitle.Should().Be("Cardscape");
     }
 
     private async Task<HttpClient> CreateAdminClientAsync()
