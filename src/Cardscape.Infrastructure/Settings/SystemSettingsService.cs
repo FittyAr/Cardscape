@@ -78,6 +78,22 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 ? current.SmtpPassword
                 : request.SmtpPassword;
 
+            string resolvedRedisConn = (request.RedisConnectionString is null || request.RedisConnectionString == "******")
+                ? current.RedisConnectionString
+                : request.RedisConnectionString.Trim();
+
+            string resolvedGoogleSecret = (request.GoogleClientSecret is null || request.GoogleClientSecret == "******")
+                ? current.GoogleClientSecret
+                : request.GoogleClientSecret.Trim();
+
+            string resolvedGitHubSecret = (request.GitHubClientSecret is null || request.GitHubClientSecret == "******")
+                ? current.GitHubClientSecret
+                : request.GitHubClientSecret.Trim();
+
+            string resolvedMicrosoftSecret = (request.MicrosoftClientSecret is null || request.MicrosoftClientSecret == "******")
+                ? current.MicrosoftClientSecret
+                : request.MicrosoftClientSecret.Trim();
+
             var updated = new PersistedSettingsModel
             {
                 // 1. General & Brand
@@ -98,61 +114,78 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 PasswordRequireDigit = request.PasswordRequireDigit,
                 PasswordRequireNonAlphanumeric = request.PasswordRequireNonAlphanumeric,
                 RequireTwoFactorForAdmins = request.RequireTwoFactorForAdmins,
-                MaxFailedLoginAttempts = Math.Clamp(request.MaxFailedLoginAttempts, 0, 50),
+                MaxFailedLoginAttempts = Math.Clamp(request.MaxFailedLoginAttempts, 3, 20),
                 LockoutDurationMinutes = Math.Clamp(request.LockoutDurationMinutes, 1, 1440),
                 SingleActiveSessionPerUser = request.SingleActiveSessionPerUser,
                 MaxApiTokensPerUser = Math.Clamp(request.MaxApiTokensPerUser, 1, 100),
                 ApiTokenExpirationDays = Math.Clamp(request.ApiTokenExpirationDays, 1, 365),
+                DefaultApiTokenExpiryDays = Math.Clamp(request.DefaultApiTokenExpiryDays, 1, 365),
+                MaxApiTokenExpiryDays = Math.Clamp(request.MaxApiTokenExpiryDays, 1, 1825),
+                CacheAdminClaim = request.CacheAdminClaim,
+                TotpIssuerName = string.IsNullOrWhiteSpace(request.TotpIssuerName) ? "Cardscape" : request.TotpIssuerName.Trim(),
+                TotpStepTolerance = Math.Clamp(request.TotpStepTolerance, 0, 3),
+                PasswordResetTokenLifetimeMinutes = Math.Clamp(request.PasswordResetTokenLifetimeMinutes, 5, 1440),
                 CorsAllowedOrigins = string.IsNullOrWhiteSpace(request.CorsAllowedOrigins) ? "*" : request.CorsAllowedOrigins.Trim(),
                 EnforceHttps = request.EnforceHttps,
                 EnableSecurityHeaders = request.EnableSecurityHeaders,
 
                 // 3. Enterprise SSO & Provisioning
                 SamlSsoEnabled = request.SamlSsoEnabled,
-                SamlEnforceForDomain = request.SamlEnforceForDomain.Trim(),
+                SamlEnforceForDomain = request.SamlEnforceForDomain?.Trim() ?? string.Empty,
                 ScimProvisioningEnabled = request.ScimProvisioningEnabled,
                 ScimTokenExpirationDays = Math.Clamp(request.ScimTokenExpirationDays, 1, 365),
                 OAuthAppsEnabled = request.OAuthAppsEnabled,
-                MaxOAuthAppsPerUser = Math.Clamp(request.MaxOAuthAppsPerUser, 0, 50),
+                MaxOAuthAppsPerUser = Math.Clamp(request.MaxOAuthAppsPerUser, 1, 50),
 
-                // 4. Workspaces & Boards
-                MaxWorkspacesPerUser = Math.Max(0, request.MaxWorkspacesPerUser),
-                MaxBoardsPerWorkspace = Math.Max(0, request.MaxBoardsPerWorkspace),
-                MaxMembersPerWorkspace = Math.Max(0, request.MaxMembersPerWorkspace),
-                DefaultWorkspaceRole = string.IsNullOrWhiteSpace(request.DefaultWorkspaceRole) ? "Member" : request.DefaultWorkspaceRole.Trim(),
+                // 4. External / Social OAuth
+                EnableGoogleAuth = request.EnableGoogleAuth,
+                GoogleClientId = request.GoogleClientId?.Trim() ?? string.Empty,
+                GoogleClientSecret = resolvedGoogleSecret,
+                EnableGitHubAuth = request.EnableGitHubAuth,
+                GitHubClientId = request.GitHubClientId?.Trim() ?? string.Empty,
+                GitHubClientSecret = resolvedGitHubSecret,
+                EnableMicrosoftAuth = request.EnableMicrosoftAuth,
+                MicrosoftClientId = request.MicrosoftClientId?.Trim() ?? string.Empty,
+                MicrosoftClientSecret = resolvedMicrosoftSecret,
+
+                // 5. Workspaces & Boards
+                MaxWorkspacesPerUser = Math.Clamp(request.MaxWorkspacesPerUser, 0, 1000),
+                MaxBoardsPerWorkspace = Math.Clamp(request.MaxBoardsPerWorkspace, 0, 1000),
+                MaxMembersPerWorkspace = Math.Clamp(request.MaxMembersPerWorkspace, 0, 1000),
+                DefaultWorkspaceRole = string.Equals(request.DefaultWorkspaceRole, "Viewer", StringComparison.OrdinalIgnoreCase) ? "Viewer" : "Member",
                 InvitationExpirationDays = Math.Clamp(request.InvitationExpirationDays, 1, 90),
                 AllowPublicBoards = request.AllowPublicBoards,
 
-                // 5. Cards, Lists & Productivity
-                DefaultWipLimit = Math.Max(0, request.DefaultWipLimit),
+                // 6. Cards, Lists & Productivity
+                DefaultWipLimit = Math.Clamp(request.DefaultWipLimit, 0, 100),
                 EnforceWipLimits = request.EnforceWipLimits,
                 AllowCardMirroring = request.AllowCardMirroring,
                 AllowCardSnoozing = request.AllowCardSnoozing,
                 AllowCardVoting = request.AllowCardVoting,
-                MaxVotesPerUserPerCard = Math.Clamp(request.MaxVotesPerUserPerCard, 1, 10),
+                MaxVotesPerUserPerCard = Math.Clamp(request.MaxVotesPerUserPerCard, 1, 100),
                 MaxChecklistsPerCard = Math.Clamp(request.MaxChecklistsPerCard, 1, 50),
-                AutoArchiveCompletedCardsDays = Math.Max(0, request.AutoArchiveCompletedCardsDays),
+                AutoArchiveCompletedCardsDays = Math.Clamp(request.AutoArchiveCompletedCardsDays, 0, 365),
                 CardRecurrenceEnabled = request.CardRecurrenceEnabled,
-                MaxRecurrenceIntervalDays = Math.Clamp(request.MaxRecurrenceIntervalDays, 1, 3650),
+                MaxRecurrenceIntervalDays = Math.Clamp(request.MaxRecurrenceIntervalDays, 1, 730),
 
-                // 6. Comments & Collaboration
+                // 7. Comments & Collaboration
                 AllowCommentEditing = request.AllowCommentEditing,
                 AllowCommentDeletion = request.AllowCommentDeletion,
                 MaxCommentLength = Math.Clamp(request.MaxCommentLength, 100, 50000),
                 AllowUserMentions = request.AllowUserMentions,
 
-                // 7. Labels & Custom Fields
-                MaxLabelsPerBoard = Math.Max(0, request.MaxLabelsPerBoard),
-                MaxLabelsPerCard = Math.Max(0, request.MaxLabelsPerCard),
+                // 8. Labels & Custom Fields
+                MaxLabelsPerBoard = Math.Clamp(request.MaxLabelsPerBoard, 5, 200),
+                MaxLabelsPerCard = Math.Clamp(request.MaxLabelsPerCard, 1, 50),
                 CustomFieldsEnabled = request.CustomFieldsEnabled,
-                MaxCustomFieldsPerBoard = Math.Max(0, request.MaxCustomFieldsPerBoard),
+                MaxCustomFieldsPerBoard = Math.Clamp(request.MaxCustomFieldsPerBoard, 1, 100),
 
-                // 8. Board Automation Rules
+                // 9. Board Automation Rules
                 BoardAutomationEnabled = request.BoardAutomationEnabled,
-                MaxAutomationRulesPerBoard = Math.Max(0, request.MaxAutomationRulesPerBoard),
+                MaxAutomationRulesPerBoard = Math.Clamp(request.MaxAutomationRulesPerBoard, 1, 100),
                 MaxAutomationActionsPerRule = Math.Clamp(request.MaxAutomationActionsPerRule, 1, 20),
 
-                // 9. Notifications & System Alerts
+                // 10. Notifications & System Alerts
                 InAppNotificationsEnabled = request.InAppNotificationsEnabled,
                 DueSoonThresholdHours = Math.Clamp(request.DueSoonThresholdHours, 1, 168),
                 NotifyOnCardAssignment = request.NotifyOnCardAssignment,
@@ -161,27 +194,39 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 NotifyOnOverdue = request.NotifyOnOverdue,
                 NotificationRetentionDays = Math.Clamp(request.NotificationRetentionDays, 1, 365),
 
-                // 10. Search & Indexing
+                // 11. Dashboards & Metric Cards
+                EnableDashboards = request.EnableDashboards,
+                MaxDashcardsPerBoard = Math.Clamp(request.MaxDashcardsPerBoard, 1, 50),
+                DashboardRefreshIntervalSeconds = Math.Clamp(request.DashboardRefreshIntervalSeconds, 10, 3600),
+
+                // 12. Import & Export
+                EnableBoardExport = request.EnableBoardExport,
+                EnableKanbanImport = request.EnableKanbanImport,
+                MaxImportFileSizeMb = Math.Clamp(request.MaxImportFileSizeMb, 1, 500),
+
+                // 13. Search & Indexing
                 SearchMinQueryLength = Math.Clamp(request.SearchMinQueryLength, 1, 10),
-                SearchMaxPageSize = Math.Clamp(request.SearchMaxPageSize, 10, 200),
+                SearchMaxPageSize = Math.Clamp(request.SearchMaxPageSize, 5, 200),
                 SearchFuzzyMatching = request.SearchFuzzyMatching,
 
-                // 11. Realtime & Presence
+                // 14. Realtime & Presence
                 RealtimeBroadcastingEnabled = request.RealtimeBroadcastingEnabled,
                 RealtimePresenceEnabled = request.RealtimePresenceEnabled,
 
-                // 12. Card Aging
+                // 15. Card Aging
                 CardAgingEnabled = request.CardAgingEnabled,
                 CardAgingInactiveDays = Math.Clamp(request.CardAgingInactiveDays, 1, 365),
-                CardAgingMode = string.IsNullOrWhiteSpace(request.CardAgingMode) ? "Regular" : request.CardAgingMode.Trim(),
+                CardAgingMode = string.Equals(request.CardAgingMode, "Pirate", StringComparison.OrdinalIgnoreCase) ? "Pirate" : "Regular",
 
-                // 13. Storage & Attachments
-                MaxAttachmentSizeMb = Math.Clamp(request.MaxAttachmentSizeMb, 1, 500),
-                AllowedAttachmentExtensions = string.IsNullOrWhiteSpace(request.AllowedAttachmentExtensions) ? "*" : request.AllowedAttachmentExtensions.Trim(),
+                // 16. Storage & Attachments
+                MaxAttachmentSizeMb = Math.Clamp(request.MaxAttachmentSizeMb, 1, 200),
+                AllowedAttachmentExtensions = string.IsNullOrWhiteSpace(request.AllowedAttachmentExtensions)
+                    ? "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip"
+                    : request.AllowedAttachmentExtensions.Trim(),
                 AllowCoverImages = request.AllowCoverImages,
-                MaxCoverImageSizeMb = Math.Clamp(request.MaxCoverImageSizeMb, 1, 50),
+                MaxCoverImageSizeMb = Math.Clamp(request.MaxCoverImageSizeMb, 1, 25),
 
-                // 14. Artificial Intelligence
+                // 17. Artificial Intelligence
                 AiEnabled = request.AiEnabled,
                 AiProvider = string.IsNullOrWhiteSpace(request.AiProvider) ? "OpenAiCompatible" : request.AiProvider.Trim(),
                 AiEndpoint = string.IsNullOrWhiteSpace(request.AiEndpoint) ? "http://localhost:11434/" : request.AiEndpoint.Trim(),
@@ -190,59 +235,90 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 AiTimeoutSeconds = Math.Clamp(request.AiTimeoutSeconds, 5, 300),
                 AiMaxTokens = Math.Clamp(request.AiMaxTokens, 128, 32768),
 
-                // 15. Outbound Email (SMTP)
+                // 18. Outbound Email (SMTP)
                 EmailNotificationsEnabled = request.EmailNotificationsEnabled,
                 SmtpHost = string.IsNullOrWhiteSpace(request.SmtpHost) ? "localhost" : request.SmtpHost.Trim(),
                 SmtpPort = Math.Clamp(request.SmtpPort, 1, 65535),
-                SmtpUsername = request.SmtpUsername.Trim(),
+                SmtpUsername = request.SmtpUsername?.Trim() ?? string.Empty,
                 SmtpPassword = resolvedSmtpPassword,
                 SmtpEnableSsl = request.SmtpEnableSsl,
                 SenderEmail = string.IsNullOrWhiteSpace(request.SenderEmail) ? "noreply@cardscape.local" : request.SenderEmail.Trim(),
-                SenderName = string.IsNullOrWhiteSpace(request.SenderName) ? "Cardscape" : request.SenderName.Trim(),
+                SenderName = string.IsNullOrWhiteSpace(request.SenderName) ? "Cardscape Notificaciones" : request.SenderName.Trim(),
 
-                // 16. Inbound Email (Email-to-Board)
+                // 19. Inbound Email (Email-to-Board)
                 InboundEmailEnabled = request.InboundEmailEnabled,
                 InboundEmailDomain = string.IsNullOrWhiteSpace(request.InboundEmailDomain) ? "inbound.cardscape.local" : request.InboundEmailDomain.Trim(),
                 InboundDefaultList = string.IsNullOrWhiteSpace(request.InboundDefaultList) ? "Inbox" : request.InboundDefaultList.Trim(),
                 InboundAttachSenderEmail = request.InboundAttachSenderEmail,
 
-                // 17. Integrations (Slack, GitHub, Calendar, MCP)
+                // 20. Integrations (Slack, GitHub, Calendar, MCP)
                 SlackIntegrationEnabled = request.SlackIntegrationEnabled,
                 GitHubIntegrationEnabled = request.GitHubIntegrationEnabled,
                 GoogleCalendarIntegrationEnabled = request.GoogleCalendarIntegrationEnabled,
                 McpServerEnabled = request.McpServerEnabled,
                 CalendarIcsFeedsEnabled = request.CalendarIcsFeedsEnabled,
+                CalendarFeedTokenLifetimeDays = Math.Clamp(request.CalendarFeedTokenLifetimeDays, 7, 730),
 
-                // 18. Webhooks
+                // 21. Model Context Protocol (MCP Server)
+                McpServerName = string.IsNullOrWhiteSpace(request.McpServerName) ? "Cardscape-MCP" : request.McpServerName.Trim(),
+                McpEnableWriteTools = request.McpEnableWriteTools,
+                McpMaxBatchSize = Math.Clamp(request.McpMaxBatchSize, 5, 200),
+
+                // 22. Webhooks
                 WebhooksEnabled = request.WebhooksEnabled,
                 MaxWebhookRetries = Math.Clamp(request.MaxWebhookRetries, 0, 10),
                 WebhookTimeoutSeconds = Math.Clamp(request.WebhookTimeoutSeconds, 1, 60),
                 WebhookPayloadSignatureEnabled = request.WebhookPayloadSignatureEnabled,
 
-                // 19. Rate Limiting & Performance
+                // 23. API Idempotency
+                EnableIdempotency = request.EnableIdempotency,
+                IdempotencyReservationWindowMinutes = Math.Clamp(request.IdempotencyReservationWindowMinutes, 1, 60),
+                IdempotencyRetentionWindowHours = Math.Clamp(request.IdempotencyRetentionWindowHours, 1, 168),
+
+                // 24. Rate Limiting & Performance
                 RateLimitingEnabled = request.RateLimitingEnabled,
-                DefaultRequestsPerHour = Math.Max(10, request.DefaultRequestsPerHour),
+                DefaultRequestsPerHour = Math.Clamp(request.DefaultRequestsPerHour, 10, 1000000),
                 RateLimiterBackend = string.Equals(request.RateLimiterBackend, "Redis", StringComparison.OrdinalIgnoreCase) ? "Redis" : "InMemory",
                 BackgroundJobPollIntervalSeconds = Math.Clamp(request.BackgroundJobPollIntervalSeconds, 1, 60),
                 BackgroundJobBatchSize = Math.Clamp(request.BackgroundJobBatchSize, 1, 100),
 
-                // 20. Data Retention & GDPR
+                // 25. Infrastructure & Redis
+                RedisConnectionString = resolvedRedisConn,
+                RedisDatabase = Math.Clamp(request.RedisDatabase, 0, 15),
+                PendingTotpStoreBackend = string.Equals(request.PendingTotpStoreBackend, "Redis", StringComparison.OrdinalIgnoreCase) ? "Redis" : "InMemory",
+                PendingTotpStoreKeyPrefix = string.IsNullOrWhiteSpace(request.PendingTotpStoreKeyPrefix) ? "cardscape:totp-pending:" : request.PendingTotpStoreKeyPrefix.Trim(),
+                RateLimiterKeyPrefix = string.IsNullOrWhiteSpace(request.RateLimiterKeyPrefix) ? "cardscape:rl:" : request.RateLimiterKeyPrefix.Trim(),
+
+                // 26. Activities & Audit Logging
+                EnableActivityLogging = request.EnableActivityLogging,
+                ActivityPageSize = Math.Clamp(request.ActivityPageSize, 5, 100),
+                AuditLogDetailedIp = request.AuditLogDetailedIp,
+
+                // 27. System Logging (Serilog)
+                LogRetainedFileCountLimit = Math.Clamp(request.LogRetainedFileCountLimit, 1, 365),
+                LogFileSizeLimitMb = Math.Clamp(request.LogFileSizeLimitMb, 5, 1024),
+
+                // 28. Data Retention, Residency & GDPR
                 RetentionSweeperEnabled = request.RetentionSweeperEnabled,
                 SweepIntervalHours = Math.Clamp(request.SweepIntervalHours, 1, 168),
-                UserGracePeriodDays = Math.Clamp(request.UserGracePeriodDays, 1, 365),
-                ActivityRetentionDays = Math.Clamp(request.ActivityRetentionDays, 7, 3650),
-                AuditRetentionDays = Math.Clamp(request.AuditRetentionDays, 30, 3650),
+                UserGracePeriodDays = Math.Clamp(request.UserGracePeriodDays, 0, 365),
+                ActivityRetentionDays = Math.Clamp(request.ActivityRetentionDays, 1, 3650),
+                AuditRetentionDays = Math.Clamp(request.AuditRetentionDays, 1, 3650),
                 AutoPurgeOrphanAttachments = request.AutoPurgeOrphanAttachments,
-
-                // 21. Experimental & Dev
                 DataResidencyEnabled = request.DataResidencyEnabled,
-                SeederEnabled = request.SeederEnabled
+                DeploymentRegion = string.IsNullOrWhiteSpace(request.DeploymentRegion) ? "Unspecified" : request.DeploymentRegion.Trim(),
+                EnforceDataResidency = request.EnforceDataResidency,
+
+                // 29. Seeder & Dev
+                SeederEnabled = request.SeederEnabled,
+                AllowSeederExecution = request.AllowSeederExecution,
+                SeederWipeBeforeSeed = request.SeederWipeBeforeSeed
             };
 
             await SaveToFileAsync(updated, ct);
             _cached = updated;
-            InfrastructureSettingsLogMessages.SettingsUpdated(_logger, updatedBy ?? "system", updated.InstanceTitle);
 
+            InfrastructureSettingsLogMessages.SettingsUpdated(_logger, updatedBy ?? "system", updated.InstanceTitle);
             return MapToDto(updated);
         }
         finally
@@ -259,6 +335,7 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             var defaults = new PersistedSettingsModel();
             await SaveToFileAsync(defaults, ct);
             _cached = defaults;
+
             InfrastructureSettingsLogMessages.SettingsReset(_logger, resetBy ?? "system");
             return MapToDto(defaults);
         }
@@ -282,36 +359,31 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             return new TestAiResponse(false, "El asistente de IA no está habilitado en la configuración.");
         }
 
-        if (string.IsNullOrWhiteSpace(model.AiEndpoint) || !Uri.TryCreate(model.AiEndpoint, UriKind.Absolute, out Uri? uri))
+        if (string.IsNullOrWhiteSpace(model.AiEndpoint))
         {
-            return new TestAiResponse(false, "El endpoint de IA no es una URL válida.");
+            return new TestAiResponse(false, "El endpoint del servicio de IA no está configurado.");
         }
 
         try
         {
-            HttpClient client = _httpClientFactory.CreateClient();
-            client.Timeout = TimeSpan.FromSeconds(Math.Min(10, model.AiTimeoutSeconds));
+            HttpClient client = _httpClientFactory.CreateClient("AiServiceTest");
+            client.Timeout = TimeSpan.FromSeconds(Math.Min(model.AiTimeoutSeconds, 15));
 
+            var request = new HttpRequestMessage(HttpMethod.Get, model.AiEndpoint);
             if (!string.IsNullOrWhiteSpace(model.AiApiKey))
             {
-                client.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", model.AiApiKey);
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", model.AiApiKey);
             }
 
-            // Probe endpoint
-            HttpResponseMessage response = await client.GetAsync(uri, ct);
-            bool success = (int)response.StatusCode < 500; // 200-499 indicates endpoint responds
-
-            InfrastructureSettingsLogMessages.AiTestExecuted(_logger, success);
+            HttpResponseMessage response = await client.SendAsync(request, ct);
             return new TestAiResponse(
-                success,
-                success ? $"Conexión exitosa con el servicio de IA (HTTP {(int)response.StatusCode})." : $"El servicio respondió con error HTTP {(int)response.StatusCode}.",
+                true,
+                $"Conexión exitosa con el servicio IA (HTTP {(int)response.StatusCode}). Modelo activo: {model.AiModel}.",
                 model.AiModel);
         }
         catch (Exception ex)
         {
-            InfrastructureSettingsLogMessages.AiTestExecuted(_logger, false);
-            return new TestAiResponse(false, $"Error al conectar con {model.AiEndpoint}: {ex.Message}", model.AiModel);
+            return new TestAiResponse(false, $"Error al conectar con el endpoint de IA: {ex.Message}");
         }
     }
 
@@ -320,29 +392,31 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         PersistedSettingsModel model = await GetPersistedModelAsync(ct);
         if (!model.EmailNotificationsEnabled)
         {
-            return new TestEmailResponse(false, "Las notificaciones por correo están deshabilitadas en la configuración.");
+            return new TestEmailResponse(false, "El envío de correos no está habilitado en la configuración.");
         }
 
         if (string.IsNullOrWhiteSpace(model.SmtpHost))
         {
-            return new TestEmailResponse(false, "El servidor SMTP no está configurado.");
+            return new TestEmailResponse(false, "El host SMTP no está configurado.");
         }
 
         try
         {
             using var tcpClient = new TcpClient();
-            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(TimeSpan.FromSeconds(10));
 
-            await tcpClient.ConnectAsync(model.SmtpHost, model.SmtpPort, linked.Token);
+            await tcpClient.ConnectAsync(model.SmtpHost, model.SmtpPort, cts.Token);
 
-            InfrastructureSettingsLogMessages.EmailTestExecuted(_logger, targetEmail, true);
-            return new TestEmailResponse(true, $"Conexión exitosa con el servidor SMTP {model.SmtpHost}:{model.SmtpPort}. Mensaje de prueba listo para {targetEmail}.");
+            return new TestEmailResponse(
+                true,
+                $"Conexión TCP establecida correctamente con el servidor SMTP {model.SmtpHost}:{model.SmtpPort}. Simulación a '{targetEmail}' exitosa.");
         }
         catch (Exception ex)
         {
-            InfrastructureSettingsLogMessages.EmailTestExecuted(_logger, targetEmail, false);
-            return new TestEmailResponse(false, $"No se pudo establecer conexión con el servidor SMTP ({model.SmtpHost}:{model.SmtpPort}): {ex.Message}");
+            return new TestEmailResponse(
+                false,
+                $"Fallo de conexión con el servidor SMTP {model.SmtpHost}:{model.SmtpPort}: {ex.Message}");
         }
     }
 
@@ -461,6 +535,12 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             SingleActiveSessionPerUser: model.SingleActiveSessionPerUser,
             MaxApiTokensPerUser: model.MaxApiTokensPerUser,
             ApiTokenExpirationDays: model.ApiTokenExpirationDays,
+            DefaultApiTokenExpiryDays: model.DefaultApiTokenExpiryDays,
+            MaxApiTokenExpiryDays: model.MaxApiTokenExpiryDays,
+            CacheAdminClaim: model.CacheAdminClaim,
+            TotpIssuerName: model.TotpIssuerName,
+            TotpStepTolerance: model.TotpStepTolerance,
+            PasswordResetTokenLifetimeMinutes: model.PasswordResetTokenLifetimeMinutes,
             CorsAllowedOrigins: model.CorsAllowedOrigins,
             EnforceHttps: model.EnforceHttps,
             EnableSecurityHeaders: model.EnableSecurityHeaders,
@@ -473,7 +553,18 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             OAuthAppsEnabled: model.OAuthAppsEnabled,
             MaxOAuthAppsPerUser: model.MaxOAuthAppsPerUser,
 
-            // 4. Workspaces & Boards
+            // 4. External / Social OAuth
+            EnableGoogleAuth: model.EnableGoogleAuth,
+            GoogleClientId: model.GoogleClientId,
+            GoogleClientSecretMasked: string.IsNullOrWhiteSpace(model.GoogleClientSecret) ? "" : "******",
+            EnableGitHubAuth: model.EnableGitHubAuth,
+            GitHubClientId: model.GitHubClientId,
+            GitHubClientSecretMasked: string.IsNullOrWhiteSpace(model.GitHubClientSecret) ? "" : "******",
+            EnableMicrosoftAuth: model.EnableMicrosoftAuth,
+            MicrosoftClientId: model.MicrosoftClientId,
+            MicrosoftClientSecretMasked: string.IsNullOrWhiteSpace(model.MicrosoftClientSecret) ? "" : "******",
+
+            // 5. Workspaces & Boards
             MaxWorkspacesPerUser: model.MaxWorkspacesPerUser,
             MaxBoardsPerWorkspace: model.MaxBoardsPerWorkspace,
             MaxMembersPerWorkspace: model.MaxMembersPerWorkspace,
@@ -481,7 +572,7 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             InvitationExpirationDays: model.InvitationExpirationDays,
             AllowPublicBoards: model.AllowPublicBoards,
 
-            // 5. Cards, Lists & Productivity
+            // 6. Cards, Lists & Productivity
             DefaultWipLimit: model.DefaultWipLimit,
             EnforceWipLimits: model.EnforceWipLimits,
             AllowCardMirroring: model.AllowCardMirroring,
@@ -493,24 +584,24 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             CardRecurrenceEnabled: model.CardRecurrenceEnabled,
             MaxRecurrenceIntervalDays: model.MaxRecurrenceIntervalDays,
 
-            // 6. Comments & Collaboration
+            // 7. Comments & Collaboration
             AllowCommentEditing: model.AllowCommentEditing,
             AllowCommentDeletion: model.AllowCommentDeletion,
             MaxCommentLength: model.MaxCommentLength,
             AllowUserMentions: model.AllowUserMentions,
 
-            // 7. Labels & Custom Fields
+            // 8. Labels & Custom Fields
             MaxLabelsPerBoard: model.MaxLabelsPerBoard,
             MaxLabelsPerCard: model.MaxLabelsPerCard,
             CustomFieldsEnabled: model.CustomFieldsEnabled,
             MaxCustomFieldsPerBoard: model.MaxCustomFieldsPerBoard,
 
-            // 8. Board Automation Rules
+            // 9. Board Automation Rules
             BoardAutomationEnabled: model.BoardAutomationEnabled,
             MaxAutomationRulesPerBoard: model.MaxAutomationRulesPerBoard,
             MaxAutomationActionsPerRule: model.MaxAutomationActionsPerRule,
 
-            // 9. Notifications & System Alerts
+            // 10. Notifications & System Alerts
             InAppNotificationsEnabled: model.InAppNotificationsEnabled,
             DueSoonThresholdHours: model.DueSoonThresholdHours,
             NotifyOnCardAssignment: model.NotifyOnCardAssignment,
@@ -519,21 +610,31 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             NotifyOnOverdue: model.NotifyOnOverdue,
             NotificationRetentionDays: model.NotificationRetentionDays,
 
-            // 10. Search & Indexing
+            // 11. Dashboards & Metric Cards
+            EnableDashboards: model.EnableDashboards,
+            MaxDashcardsPerBoard: model.MaxDashcardsPerBoard,
+            DashboardRefreshIntervalSeconds: model.DashboardRefreshIntervalSeconds,
+
+            // 12. Import & Export
+            EnableBoardExport: model.EnableBoardExport,
+            EnableKanbanImport: model.EnableKanbanImport,
+            MaxImportFileSizeMb: model.MaxImportFileSizeMb,
+
+            // 13. Search & Indexing
             SearchMinQueryLength: model.SearchMinQueryLength,
             SearchMaxPageSize: model.SearchMaxPageSize,
             SearchFuzzyMatching: model.SearchFuzzyMatching,
 
-            // 11. Realtime & Presence
+            // 14. Realtime & Presence
             RealtimeBroadcastingEnabled: model.RealtimeBroadcastingEnabled,
             RealtimePresenceEnabled: model.RealtimePresenceEnabled,
 
-            // 12. Card Aging
+            // 15. Card Aging
             CardAgingEnabled: model.CardAgingEnabled,
             CardAgingInactiveDays: model.CardAgingInactiveDays,
             CardAgingMode: model.CardAgingMode,
 
-            // 13. Storage & Attachments
+            // 16. Storage & Attachments
             StorageProvider: "LocalFile",
             StorageRoot: storageRoot,
             MaxAttachmentSizeMb: model.MaxAttachmentSizeMb,
@@ -541,64 +642,95 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             AllowCoverImages: model.AllowCoverImages,
             MaxCoverImageSizeMb: model.MaxCoverImageSizeMb,
 
-            // 14. Artificial Intelligence
+            // 17. Artificial Intelligence
             AiEnabled: model.AiEnabled,
             AiProvider: model.AiProvider,
             AiEndpoint: model.AiEndpoint,
             AiModel: model.AiModel,
-            AiApiKeyMasked: string.IsNullOrEmpty(model.AiApiKey) ? string.Empty : "******",
+            AiApiKeyMasked: string.IsNullOrWhiteSpace(model.AiApiKey) ? "" : "******",
             AiTimeoutSeconds: model.AiTimeoutSeconds,
             AiMaxTokens: model.AiMaxTokens,
 
-            // 15. Outbound Email (SMTP)
+            // 18. Outbound Email (SMTP)
             EmailNotificationsEnabled: model.EmailNotificationsEnabled,
             SmtpHost: model.SmtpHost,
             SmtpPort: model.SmtpPort,
             SmtpUsername: model.SmtpUsername,
-            SmtpPasswordMasked: string.IsNullOrEmpty(model.SmtpPassword) ? string.Empty : "******",
+            SmtpPasswordMasked: string.IsNullOrWhiteSpace(model.SmtpPassword) ? "" : "******",
             SmtpEnableSsl: model.SmtpEnableSsl,
             SenderEmail: model.SenderEmail,
             SenderName: model.SenderName,
 
-            // 16. Inbound Email (Email-to-Board)
+            // 19. Inbound Email (Email-to-Board)
             InboundEmailEnabled: model.InboundEmailEnabled,
             InboundEmailDomain: model.InboundEmailDomain,
             InboundDefaultList: model.InboundDefaultList,
             InboundAttachSenderEmail: model.InboundAttachSenderEmail,
 
-            // 17. Integrations (Slack, GitHub, Calendar, MCP)
+            // 20. Integrations (Slack, GitHub, Calendar, MCP)
             SlackIntegrationEnabled: model.SlackIntegrationEnabled,
             GitHubIntegrationEnabled: model.GitHubIntegrationEnabled,
             GoogleCalendarIntegrationEnabled: model.GoogleCalendarIntegrationEnabled,
             McpServerEnabled: model.McpServerEnabled,
             CalendarIcsFeedsEnabled: model.CalendarIcsFeedsEnabled,
+            CalendarFeedTokenLifetimeDays: model.CalendarFeedTokenLifetimeDays,
 
-            // 18. Webhooks
+            // 21. Model Context Protocol (MCP Server)
+            McpServerName: model.McpServerName,
+            McpEnableWriteTools: model.McpEnableWriteTools,
+            McpMaxBatchSize: model.McpMaxBatchSize,
+
+            // 22. Webhooks
             WebhooksEnabled: model.WebhooksEnabled,
             MaxWebhookRetries: model.MaxWebhookRetries,
             WebhookTimeoutSeconds: model.WebhookTimeoutSeconds,
             WebhookPayloadSignatureEnabled: model.WebhookPayloadSignatureEnabled,
 
-            // 19. Rate Limiting & Performance
+            // 23. API Idempotency
+            EnableIdempotency: model.EnableIdempotency,
+            IdempotencyReservationWindowMinutes: model.IdempotencyReservationWindowMinutes,
+            IdempotencyRetentionWindowHours: model.IdempotencyRetentionWindowHours,
+
+            // 24. Rate Limiting & Performance
             RateLimitingEnabled: model.RateLimitingEnabled,
             DefaultRequestsPerHour: model.DefaultRequestsPerHour,
             RateLimiterBackend: model.RateLimiterBackend,
             BackgroundJobPollIntervalSeconds: model.BackgroundJobPollIntervalSeconds,
             BackgroundJobBatchSize: model.BackgroundJobBatchSize,
 
-            // 20. Data Retention & GDPR
+            // 25. Infrastructure & Redis
+            RedisConnectionStringMasked: string.IsNullOrWhiteSpace(model.RedisConnectionString) ? "" : "******",
+            RedisDatabase: model.RedisDatabase,
+            PendingTotpStoreBackend: model.PendingTotpStoreBackend,
+            PendingTotpStoreKeyPrefix: model.PendingTotpStoreKeyPrefix,
+            RateLimiterKeyPrefix: model.RateLimiterKeyPrefix,
+
+            // 26. Activities & Audit Logging
+            EnableActivityLogging: model.EnableActivityLogging,
+            ActivityPageSize: model.ActivityPageSize,
+            AuditLogDetailedIp: model.AuditLogDetailedIp,
+
+            // 27. System Logging (Serilog)
+            LogRetainedFileCountLimit: model.LogRetainedFileCountLimit,
+            LogFileSizeLimitMb: model.LogFileSizeLimitMb,
+
+            // 28. Data Retention, Residency & GDPR
             RetentionSweeperEnabled: model.RetentionSweeperEnabled,
             SweepIntervalHours: model.SweepIntervalHours,
             UserGracePeriodDays: model.UserGracePeriodDays,
             ActivityRetentionDays: model.ActivityRetentionDays,
             AuditRetentionDays: model.AuditRetentionDays,
             AutoPurgeOrphanAttachments: model.AutoPurgeOrphanAttachments,
-
-            // 21. Experimental & Dev
             DataResidencyEnabled: model.DataResidencyEnabled,
-            SeederEnabled: model.SeederEnabled,
+            DeploymentRegion: model.DeploymentRegion,
+            EnforceDataResidency: model.EnforceDataResidency,
 
-            // 22. Diagnostics
+            // 29. Seeder & Dev
+            SeederEnabled: model.SeederEnabled,
+            AllowSeederExecution: model.AllowSeederExecution,
+            SeederWipeBeforeSeed: model.SeederWipeBeforeSeed,
+
+            // 30. Diagnostics
             DatabaseProvider: dbProvider,
             DatabaseHealth: "Healthy",
             Environment: environment,
@@ -639,6 +771,12 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public bool SingleActiveSessionPerUser { get; set; }
         public int MaxApiTokensPerUser { get; set; } = 10;
         public int ApiTokenExpirationDays { get; set; } = 90;
+        public int DefaultApiTokenExpiryDays { get; set; } = 90;
+        public int MaxApiTokenExpiryDays { get; set; } = 365;
+        public bool CacheAdminClaim { get; set; } = true;
+        public string TotpIssuerName { get; set; } = "Cardscape";
+        public int TotpStepTolerance { get; set; } = 1;
+        public int PasswordResetTokenLifetimeMinutes { get; set; } = 60;
         public string CorsAllowedOrigins { get; set; } = "*";
         public bool EnforceHttps { get; set; } = true;
         public bool EnableSecurityHeaders { get; set; } = true;
@@ -651,7 +789,18 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public bool OAuthAppsEnabled { get; set; } = true;
         public int MaxOAuthAppsPerUser { get; set; } = 5;
 
-        // 4. Workspaces & Boards
+        // 4. External / Social OAuth
+        public bool EnableGoogleAuth { get; set; }
+        public string GoogleClientId { get; set; } = string.Empty;
+        public string GoogleClientSecret { get; set; } = string.Empty;
+        public bool EnableGitHubAuth { get; set; }
+        public string GitHubClientId { get; set; } = string.Empty;
+        public string GitHubClientSecret { get; set; } = string.Empty;
+        public bool EnableMicrosoftAuth { get; set; }
+        public string MicrosoftClientId { get; set; } = string.Empty;
+        public string MicrosoftClientSecret { get; set; } = string.Empty;
+
+        // 5. Workspaces & Boards
         public int MaxWorkspacesPerUser { get; set; }
         public int MaxBoardsPerWorkspace { get; set; }
         public int MaxMembersPerWorkspace { get; set; }
@@ -659,7 +808,7 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public int InvitationExpirationDays { get; set; } = 7;
         public bool AllowPublicBoards { get; set; } = true;
 
-        // 5. Cards, Lists & Productivity
+        // 6. Cards, Lists & Productivity
         public int DefaultWipLimit { get; set; }
         public bool EnforceWipLimits { get; set; }
         public bool AllowCardMirroring { get; set; } = true;
@@ -671,24 +820,24 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public bool CardRecurrenceEnabled { get; set; } = true;
         public int MaxRecurrenceIntervalDays { get; set; } = 365;
 
-        // 6. Comments & Collaboration
+        // 7. Comments & Collaboration
         public bool AllowCommentEditing { get; set; } = true;
         public bool AllowCommentDeletion { get; set; } = true;
         public int MaxCommentLength { get; set; } = 5000;
         public bool AllowUserMentions { get; set; } = true;
 
-        // 7. Labels & Custom Fields
+        // 8. Labels & Custom Fields
         public int MaxLabelsPerBoard { get; set; } = 50;
         public int MaxLabelsPerCard { get; set; } = 10;
         public bool CustomFieldsEnabled { get; set; } = true;
         public int MaxCustomFieldsPerBoard { get; set; } = 30;
 
-        // 8. Board Automation Rules
+        // 9. Board Automation Rules
         public bool BoardAutomationEnabled { get; set; } = true;
         public int MaxAutomationRulesPerBoard { get; set; } = 20;
         public int MaxAutomationActionsPerRule { get; set; } = 5;
 
-        // 9. Notifications & System Alerts
+        // 10. Notifications & System Alerts
         public bool InAppNotificationsEnabled { get; set; } = true;
         public int DueSoonThresholdHours { get; set; } = 24;
         public bool NotifyOnCardAssignment { get; set; } = true;
@@ -697,27 +846,37 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public bool NotifyOnOverdue { get; set; } = true;
         public int NotificationRetentionDays { get; set; } = 30;
 
-        // 10. Search & Indexing
+        // 11. Dashboards & Metric Cards
+        public bool EnableDashboards { get; set; } = true;
+        public int MaxDashcardsPerBoard { get; set; } = 10;
+        public int DashboardRefreshIntervalSeconds { get; set; } = 60;
+
+        // 12. Import & Export
+        public bool EnableBoardExport { get; set; } = true;
+        public bool EnableKanbanImport { get; set; } = true;
+        public int MaxImportFileSizeMb { get; set; } = 50;
+
+        // 13. Search & Indexing
         public int SearchMinQueryLength { get; set; } = 2;
         public int SearchMaxPageSize { get; set; } = 50;
         public bool SearchFuzzyMatching { get; set; } = true;
 
-        // 11. Realtime & Presence
+        // 14. Realtime & Presence
         public bool RealtimeBroadcastingEnabled { get; set; } = true;
         public bool RealtimePresenceEnabled { get; set; } = true;
 
-        // 12. Card Aging
+        // 15. Card Aging
         public bool CardAgingEnabled { get; set; } = true;
         public int CardAgingInactiveDays { get; set; } = 14;
         public string CardAgingMode { get; set; } = "Regular";
 
-        // 13. Storage & Attachments
+        // 16. Storage & Attachments
         public int MaxAttachmentSizeMb { get; set; } = 25;
         public string AllowedAttachmentExtensions { get; set; } = "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip";
         public bool AllowCoverImages { get; set; } = true;
         public int MaxCoverImageSizeMb { get; set; } = 5;
 
-        // 14. Artificial Intelligence
+        // 17. Artificial Intelligence
         public bool AiEnabled { get; set; }
         public string AiProvider { get; set; } = "OpenAiCompatible";
         public string AiEndpoint { get; set; } = "http://localhost:11434/";
@@ -726,7 +885,7 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public int AiTimeoutSeconds { get; set; } = 60;
         public int AiMaxTokens { get; set; } = 2048;
 
-        // 15. Outbound Email (SMTP)
+        // 18. Outbound Email (SMTP)
         public bool EmailNotificationsEnabled { get; set; }
         public string SmtpHost { get; set; } = "localhost";
         public int SmtpPort { get; set; } = 587;
@@ -736,42 +895,73 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public string SenderEmail { get; set; } = "noreply@cardscape.local";
         public string SenderName { get; set; } = "Cardscape Notificaciones";
 
-        // 16. Inbound Email (Email-to-Board)
+        // 19. Inbound Email (Email-to-Board)
         public bool InboundEmailEnabled { get; set; }
         public string InboundEmailDomain { get; set; } = "inbound.cardscape.local";
         public string InboundDefaultList { get; set; } = "Inbox";
         public bool InboundAttachSenderEmail { get; set; } = true;
 
-        // 17. Integrations (Slack, GitHub, Calendar, MCP)
+        // 20. Integrations (Slack, GitHub, Calendar, MCP)
         public bool SlackIntegrationEnabled { get; set; }
         public bool GitHubIntegrationEnabled { get; set; }
         public bool GoogleCalendarIntegrationEnabled { get; set; }
         public bool McpServerEnabled { get; set; } = true;
         public bool CalendarIcsFeedsEnabled { get; set; } = true;
+        public int CalendarFeedTokenLifetimeDays { get; set; } = 180;
 
-        // 18. Webhooks
+        // 21. Model Context Protocol (MCP Server)
+        public string McpServerName { get; set; } = "Cardscape-MCP";
+        public bool McpEnableWriteTools { get; set; } = true;
+        public int McpMaxBatchSize { get; set; } = 50;
+
+        // 22. Webhooks
         public bool WebhooksEnabled { get; set; } = true;
         public int MaxWebhookRetries { get; set; } = 3;
         public int WebhookTimeoutSeconds { get; set; } = 10;
         public bool WebhookPayloadSignatureEnabled { get; set; } = true;
 
-        // 19. Rate Limiting & Performance
+        // 23. API Idempotency
+        public bool EnableIdempotency { get; set; } = true;
+        public int IdempotencyReservationWindowMinutes { get; set; } = 15;
+        public int IdempotencyRetentionWindowHours { get; set; } = 24;
+
+        // 24. Rate Limiting & Performance
         public bool RateLimitingEnabled { get; set; } = true;
         public int DefaultRequestsPerHour { get; set; } = 1000;
         public string RateLimiterBackend { get; set; } = "InMemory";
         public int BackgroundJobPollIntervalSeconds { get; set; } = 2;
         public int BackgroundJobBatchSize { get; set; } = 10;
 
-        // 20. Data Retention & GDPR
+        // 25. Infrastructure & Redis
+        public string RedisConnectionString { get; set; } = string.Empty;
+        public int RedisDatabase { get; set; }
+        public string PendingTotpStoreBackend { get; set; } = "InMemory";
+        public string PendingTotpStoreKeyPrefix { get; set; } = "cardscape:totp-pending:";
+        public string RateLimiterKeyPrefix { get; set; } = "cardscape:rl:";
+
+        // 26. Activities & Audit Logging
+        public bool EnableActivityLogging { get; set; } = true;
+        public int ActivityPageSize { get; set; } = 25;
+        public bool AuditLogDetailedIp { get; set; } = true;
+
+        // 27. System Logging (Serilog)
+        public int LogRetainedFileCountLimit { get; set; } = 30;
+        public int LogFileSizeLimitMb { get; set; } = 100;
+
+        // 28. Data Retention, Residency & GDPR
         public bool RetentionSweeperEnabled { get; set; } = true;
         public int SweepIntervalHours { get; set; } = 6;
         public int UserGracePeriodDays { get; set; } = 30;
         public int ActivityRetentionDays { get; set; } = 365;
         public int AuditRetentionDays { get; set; } = 730;
         public bool AutoPurgeOrphanAttachments { get; set; } = true;
-
-        // 21. Experimental & Dev
         public bool DataResidencyEnabled { get; set; }
+        public string DeploymentRegion { get; set; } = "Unspecified";
+        public bool EnforceDataResidency { get; set; }
+
+        // 29. Seeder & Dev
         public bool SeederEnabled { get; set; }
+        public bool AllowSeederExecution { get; set; }
+        public bool SeederWipeBeforeSeed { get; set; }
     }
 }

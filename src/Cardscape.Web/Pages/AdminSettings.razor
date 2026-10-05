@@ -105,8 +105,8 @@
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Sonidos de Notificación e Interacción" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Reproduce retroalimentación sonora sutil en eventos de éxito o nuevas alertas."
+                                    <RadzenText Text="Alertas Sonoras de Notificación" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Reproduce un suave sonido de alerta al recibir notificaciones o asignaciones en vivo."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.EnableSoundNotifications" />
@@ -126,6 +126,15 @@
                             </RadzenFormField>
                             <RadzenText Text="Tiempo tras el cual el token expira (por defecto 1440 min = 24 horas; rango 5 a 43200 min)."
                                         TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Confiar en Claim JWT de Administrador (Alto Rendimiento)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Si está activo, verifica los permisos de administrador leyendo el token JWT sin consultar la base de datos en cada petición. Si está inactivo, consulta la BD en cada llamada para revocación instantánea."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.CacheAdminClaim" />
+                            </RadzenStack>
 
                             <RadzenFormField Text="Longitud Mínima de Contraseña" Component="pwdMinLen">
                                 <RadzenNumeric @bind-Value="_model.PasswordMinLength" Name="pwdMinLen" Min="6" Max="32" Style="width:100%" />
@@ -152,8 +161,25 @@
 
                             <RadzenRow Gap="1rem">
                                 <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Nombre del Emisor TOTP (App de Autenticación)" Component="totpIssuer" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.TotpIssuerName" Name="totpIssuer" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Tolerancia de Reloj TOTP (Pasos de 30s)" Component="totpSkew" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.TotpStepTolerance" Name="totpSkew" Min="0" Max="3" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenFormField Text="Validez de Enlaces de Restablecimiento de Contraseña (Minutos)" Component="pwdResetExp">
+                                <RadzenNumeric @bind-Value="_model.PasswordResetTokenLifetimeMinutes" Name="pwdResetExp" Min="5" Max="1440" Style="width:100%" />
+                            </RadzenFormField>
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
                                     <RadzenFormField Text="Límite de Intentos Fallidos de Inicio de Sesión" Component="maxFailed" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.MaxFailedLoginAttempts" Name="maxFailed" Min="0" Max="50" Style="width:100%" />
+                                        <RadzenNumeric @bind-Value="_model.MaxFailedLoginAttempts" Name="maxFailed" Min="3" Max="20" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                                 <RadzenColumn Size="6">
@@ -175,14 +201,19 @@
                             <RadzenText Text="Tokens Personales de API (PAT)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
 
                             <RadzenRow Gap="1rem">
-                                <RadzenColumn Size="6">
+                                <RadzenColumn Size="4">
                                     <RadzenFormField Text="Máx. Tokens API por Usuario" Component="maxTokens" Style="width:100%">
                                         <RadzenNumeric @bind-Value="_model.MaxApiTokensPerUser" Name="maxTokens" Min="1" Max="100" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
-                                <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Expiración Máxima de Tokens (Días)" Component="tokenExp" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.ApiTokenExpirationDays" Name="tokenExp" Min="1" Max="365" Style="width:100%" />
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Duración Predeterminada (Días)" Component="tokenDefExp" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.DefaultApiTokenExpiryDays" Name="tokenDefExp" Min="1" Max="365" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Expiración Máxima Permitida (Días)" Component="tokenMaxExp" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxApiTokenExpiryDays" Name="tokenMaxExp" Min="1" Max="1825" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                             </RadzenRow>
@@ -254,12 +285,12 @@
                                 </RadzenFormField>
                             }
 
-                            <RadzenText Text="Aplicaciones OAuth de Terceros" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+                            <RadzenText Text="Ecosistema de Aplicaciones OAuth 2.0" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Permitir Registro de Aplicaciones OAuth" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Habilita a los desarrolladores registrar aplicaciones con client_id y client_secret propios."
+                                    <RadzenText Text="Permitir Registro de Aplicaciones OAuth 2.0" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Habilita a los desarrolladores registrar aplicaciones clientes de terceros conectadas a la API."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.OAuthAppsEnabled" />
@@ -267,55 +298,142 @@
 
                             @if (_model.OAuthAppsEnabled)
                             {
-                                <RadzenFormField Text="Máximo de Apps OAuth por Usuario" Component="maxOauth">
-                                    <RadzenNumeric @bind-Value="_model.MaxOAuthAppsPerUser" Name="maxOauth" Min="0" Max="50" Style="width:100%" />
+                                <RadzenFormField Text="Máximo de Aplicaciones OAuth por Usuario" Component="maxOAuth">
+                                    <RadzenNumeric @bind-Value="_model.MaxOAuthAppsPerUser" Name="maxOAuth" Min="1" Max="50" Style="width:100%" />
                                 </RadzenFormField>
                             }
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* 3. Espacios & Tableros *@
+                @* 4. OAuth Social / Proveedores Externos *@
+                <RadzenTabsItem Text="OAuth Externo" Icon="badge">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Inicio de Sesión con Proveedores Externos (Google, GitHub, Microsoft)" TextStyle="@TextStyle.H6" />
+
+                            @* Google OAuth *@
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Autenticación con Google" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite iniciar sesión con cuentas Google Workspace y Gmail."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.EnableGoogleAuth" />
+                            </RadzenStack>
+
+                            @if (_model.EnableGoogleAuth)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Google Client ID" Component="googleClientId" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.GoogleClientId" Name="googleClientId" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Google Client Secret" Component="googleClientSecret" Style="width:100%">
+                                            <RadzenPassword @bind-Value="_model.GoogleClientSecret" Name="googleClientSecret" Placeholder="******" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
+
+                            @* GitHub OAuth *@
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-2">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Autenticación con GitHub" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite a los usuarios acceder con su perfil de GitHub."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.EnableGitHubAuth" />
+                            </RadzenStack>
+
+                            @if (_model.EnableGitHubAuth)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="GitHub Client ID" Component="gitHubClientId" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.GitHubClientId" Name="gitHubClientId" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="GitHub Client Secret" Component="gitHubClientSecret" Style="width:100%">
+                                            <RadzenPassword @bind-Value="_model.GitHubClientSecret" Name="gitHubClientSecret" Placeholder="******" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
+
+                            @* Microsoft OAuth *@
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-2">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Autenticación con Microsoft (Azure AD / Entra ID)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite acceder mediante cuentas profesionales o personales de Microsoft."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.EnableMicrosoftAuth" />
+                            </RadzenStack>
+
+                            @if (_model.EnableMicrosoftAuth)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Microsoft Client ID" Component="msClientId" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.MicrosoftClientId" Name="msClientId" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Microsoft Client Secret" Component="msClientSecret" Style="width:100%">
+                                            <RadzenPassword @bind-Value="_model.MicrosoftClientSecret" Name="msClientSecret" Placeholder="******" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 5. Espacios y Tableros *@
                 <RadzenTabsItem Text="Espacios y Tableros" Icon="groups">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Gobernanza de Espacios de Trabajo y Colaboración" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Límites de Creación y Jerarquías de Trabajo" TextStyle="@TextStyle.H6" />
 
                             <RadzenRow Gap="1rem">
                                 <RadzenColumn Size="4">
-                                    <RadzenFormField Text="Máx. Espacios por Usuario (0 = Ilimitado)" Component="maxWs" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.MaxWorkspacesPerUser" Name="maxWs" Min="0" Max="1000" Style="width:100%" />
+                                    <RadzenFormField Text="Espacios Máx. por Usuario (0 = Ilimitado)" Component="maxWorkspaces" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxWorkspacesPerUser" Name="maxWorkspaces" Min="0" Max="1000" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                                 <RadzenColumn Size="4">
-                                    <RadzenFormField Text="Máx. Tableros por Espacio (0 = Ilimitado)" Component="maxBds" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.MaxBoardsPerWorkspace" Name="maxBds" Min="0" Max="1000" Style="width:100%" />
+                                    <RadzenFormField Text="Tableros Máx. por Espacio (0 = Ilimitado)" Component="maxBoards" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxBoardsPerWorkspace" Name="maxBoards" Min="0" Max="1000" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                                 <RadzenColumn Size="4">
-                                    <RadzenFormField Text="Máx. Miembros por Espacio (0 = Ilimitado)" Component="maxMem" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.MaxMembersPerWorkspace" Name="maxMem" Min="0" Max="10000" Style="width:100%" />
+                                    <RadzenFormField Text="Miembros Máx. por Espacio (0 = Ilimitado)" Component="maxMembers" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxMembersPerWorkspace" Name="maxMembers" Min="0" Max="1000" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                             </RadzenRow>
 
                             <RadzenRow Gap="1rem">
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Rol Inicial para Invitados" Component="defRole" Style="width:100%">
-                                        <RadzenDropDown @bind-Value="_model.DefaultWorkspaceRole" Data="@_workspaceRoles" Name="defRole" Style="width:100%" />
+                                    <RadzenFormField Text="Rol Predeterminado de Nuevos Miembros" Component="defaultRole" Style="width:100%">
+                                        <RadzenDropDown @bind-Value="_model.DefaultWorkspaceRole" Data="@_workspaceRoles" Name="defaultRole" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Validez de Invitaciones (Días)" Component="invDays" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.InvitationExpirationDays" Name="invDays" Min="1" Max="90" Style="width:100%" />
+                                    <RadzenFormField Text="Validez de Enlaces de Invitación (Días)" Component="invExp" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.InvitationExpirationDays" Name="invExp" Min="1" Max="90" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                             </RadzenRow>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Permitir Tableros Públicos (Solo Lectura)" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Habilita la opción de compartir tableros de forma pública con visitantes no autenticados."
+                                    <RadzenText Text="Permitir Tableros con Visibilidad Pública" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite compartir tableros de sólo lectura con usuarios sin cuenta registrada."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.AllowPublicBoards" />
@@ -324,66 +442,80 @@
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* 4. Tarjetas & Productividad *@
+                @* 6. Tarjetas y Listas *@
                 <RadzenTabsItem Text="Tarjetas y Listas" Icon="view_kanban">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Reglas de Productividad, Límites WIP y Flujo Kanban" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Productividad, Límites de Flujo (WIP) y Recurrencia" TextStyle="@TextStyle.H6" />
 
                             <RadzenRow Gap="1rem">
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Límite WIP Predeterminado por Lista (0 = Sin Límite)" Component="wipLim" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.DefaultWipLimit" Name="wipLim" Min="0" Max="100" Style="width:100%" />
+                                    <RadzenFormField Text="Límite WIP Predeterminado por Lista (0 = Desactivado)" Component="defaultWip" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.DefaultWipLimit" Name="defaultWip" Min="0" Max="100" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Máx. Checklists por Tarjeta" Component="maxCheck" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.MaxChecklistsPerCard" Name="maxCheck" Min="1" Max="50" Style="width:100%" />
+                                    <RadzenFormField Text="Auto-archivar Tarjetas Completadas tras (Días, 0 = Nunca)" Component="autoArchive" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.AutoArchiveCompletedCardsDays" Name="autoArchive" Min="0" Max="365" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                             </RadzenRow>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Bloqueo Estricto de Límite WIP" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Si está activo, bloquea el movimiento de tarjetas si se excede el límite; si está inactivo, solo muestra advertencia visual."
+                                    <RadzenText Text="Cumplimiento Estricto de Límites WIP" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Bloquea el arrastre o creación de tarjetas en columnas que hayan alcanzado su capacidad máxima."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.EnforceWipLimits" />
                             </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenText Text="Permitir Espejo de Tarjetas entre Tableros (Card Mirroring)" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Permitir Espejado y Duplicación de Tarjetas (Card Mirroring)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite reflejar una misma tarjeta en múltiples tableros sincronizados."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.AllowCardMirroring" />
                             </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenText Text="Permitir Posponer Tarjetas (Card Snoozing)" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Posposición de Tarjetas (Card Snoozing)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Oculta temporalmente una tarjeta del tablero hasta una fecha y hora programada."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.AllowCardSnoozing" />
                             </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenText Text="Permitir Votación de Tarjetas (Card Voting)" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Permitir Sistema de Votación en Tarjetas" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Habilita que los miembros emitan votos de prioridad en las tarjetas."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.AllowCardVoting" />
                             </RadzenStack>
 
-                            @if (_model.AllowCardVoting)
-                            {
-                                <RadzenFormField Text="Votos Permitidos por Usuario por Tarjeta" Component="maxVotes">
-                                    <RadzenNumeric @bind-Value="_model.MaxVotesPerUserPerCard" Name="maxVotes" Min="1" Max="10" Style="width:100%" />
-                                </RadzenFormField>
-                            }
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Votos Máximos por Usuario por Tarjeta" Component="maxVotes" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxVotesPerUserPerCard" Name="maxVotes" Min="1" Max="100" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Listas de Verificación Máx. por Tarjeta" Component="maxChecklists" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxChecklistsPerCard" Name="maxChecklists" Min="1" Max="50" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
 
-                            <RadzenFormField Text="Auto-archivar Tarjetas Completadas tras N Días (0 = Desactivado)" Component="autoArch">
-                                <RadzenNumeric @bind-Value="_model.AutoArchiveCompletedCardsDays" Name="autoArch" Min="0" Max="365" Style="width:100%" />
-                            </RadzenFormField>
-
-                            <RadzenText Text="Recurrencia de Tarjetas" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+                            <RadzenText Text="Motor de Tarjetas Recurrentes" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Habilitar Tareas y Tarjetas Recurrentes" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Permite duplicar automáticamente tarjetas de forma periódica según un intervalo programado."
+                                    <RadzenText Text="Habilitar Creación Periódica de Tarjetas Recurrentes" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Genera tarjetas automáticamente con frecuencias programadas (diarias, semanales, mensuales)."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.CardRecurrenceEnabled" />
@@ -391,61 +523,103 @@
 
                             @if (_model.CardRecurrenceEnabled)
                             {
-                                <RadzenFormField Text="Intervalo Máximo de Recurrencia (Días)" Component="maxRecurr">
-                                    <RadzenNumeric @bind-Value="_model.MaxRecurrenceIntervalDays" Name="maxRecurr" Min="1" Max="3650" Style="width:100%" />
+                                <RadzenFormField Text="Intervalo Máximo de Recurrencia Permitido (Días)" Component="maxRecDays">
+                                    <RadzenNumeric @bind-Value="_model.MaxRecurrenceIntervalDays" Name="maxRecDays" Min="1" Max="730" Style="width:100%" />
                                 </RadzenFormField>
                             }
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* Colaboración: Comentarios y Menciones *@
+                @* 7. Paneles & Métricas (Dashboards) *@
+                <RadzenTabsItem Text="Métricas / Dashboards" Icon="dashboard">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Dashboards de Rendimiento y Dashcards de Métricas" TextStyle="@TextStyle.H6" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Widgets y Dashboards de Métricas por Tablero" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite añadir dashcards visuales de tarjetas vencidas, distribución por miembro, listas y etiquetas."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.EnableDashboards" />
+                            </RadzenStack>
+
+                            @if (_model.EnableDashboards)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Widgets Máximos (Dashcards) por Tablero" Component="maxDashcards" Style="width:100%">
+                                            <RadzenNumeric @bind-Value="_model.MaxDashcardsPerBoard" Name="maxDashcards" Min="1" Max="50" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Intervalo de Refresco / Caché de Agregaciones (Segundos)" Component="refreshDash" Style="width:100%">
+                                            <RadzenNumeric @bind-Value="_model.DashboardRefreshIntervalSeconds" Name="refreshDash" Min="10" Max="3600" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 8. Colaboración *@
                 <RadzenTabsItem Text="Colaboración" Icon="forum">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Comentarios, Conversaciones y Menciones en Tarjetas" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Comentarios, Menciones y Discusiones en Tarjetas" TextStyle="@TextStyle.H6" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenText Text="Permitir a los Usuarios Editar sus Comentarios" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Permitir Edición de Comentarios" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite a los autores modificar el contenido de sus comentarios ya publicados."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.AllowCommentEditing" />
                             </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenText Text="Permitir a los Usuarios Eliminar sus Comentarios" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Permitir Eliminación de Comentarios" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite a los usuarios borrar sus propios comentarios de la tarjeta."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.AllowCommentDeletion" />
                             </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Permitir Menciones de Usuario (@@usuario)" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Detecta menciones en descripciones y comentarios y dispara notificaciones inmediatas al usuario."
+                                    <RadzenText Text="Habilitar Menciones de Usuarios (@@usuario)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Envía notificaciones instantáneas dirigidas cuando un miembro es mencionado en un comentario o tarjeta."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.AllowUserMentions" />
                             </RadzenStack>
 
-                            <RadzenFormField Text="Longitud Máxima de Comentario (Caracteres)" Component="maxComment">
+                            <RadzenFormField Text="Longitud Máxima de Comentarios (Caracteres)" Component="maxComment">
                                 <RadzenNumeric @bind-Value="_model.MaxCommentLength" Name="maxComment" Min="100" Max="50000" Style="width:100%" />
                             </RadzenFormField>
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* Taxonomía: Etiquetas y Campos Personalizados *@
+                @* 9. Taxonomía *@
                 <RadzenTabsItem Text="Taxonomía" Icon="sell">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Etiquetas y Campos Personalizados (Custom Fields)" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Etiquetas, Categorías y Campos Personalizados" TextStyle="@TextStyle.H6" />
 
                             <RadzenRow Gap="1rem">
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Máx. Etiquetas por Tablero (0 = Ilimitado)" Component="maxLblBrd" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.MaxLabelsPerBoard" Name="maxLblBrd" Min="0" Max="500" Style="width:100%" />
+                                    <RadzenFormField Text="Etiquetas Máximas por Tablero" Component="maxLabelsBoard" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxLabelsPerBoard" Name="maxLabelsBoard" Min="5" Max="200" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Máx. Etiquetas por Tarjeta (0 = Ilimitado)" Component="maxLblCrd" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.MaxLabelsPerCard" Name="maxLblCrd" Min="0" Max="50" Style="width:100%" />
+                                    <RadzenFormField Text="Etiquetas Máximas por Tarjeta" Component="maxLabelsCard" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxLabelsPerCard" Name="maxLabelsCard" Min="1" Max="50" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                             </RadzenRow>
@@ -455,7 +629,7 @@
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
                                     <RadzenText Text="Habilitar Campos Personalizados en Tableros" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Permite a los administradores de tablero definir campos adicionales de texto, número, fecha o lista desplegable."
+                                    <RadzenText Text="Permite añadir metadatos personalizados (números, textos, fechas, menús desplegables) a las tarjetas."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.CustomFieldsEnabled" />
@@ -463,24 +637,24 @@
 
                             @if (_model.CustomFieldsEnabled)
                             {
-                                <RadzenFormField Text="Máx. Campos Personalizados por Tablero (0 = Ilimitado)" Component="maxCf">
-                                    <RadzenNumeric @bind-Value="_model.MaxCustomFieldsPerBoard" Name="maxCf" Min="0" Max="100" Style="width:100%" />
+                                <RadzenFormField Text="Campos Personalizados Máximos por Tablero" Component="maxCustomFields">
+                                    <RadzenNumeric @bind-Value="_model.MaxCustomFieldsPerBoard" Name="maxCustomFields" Min="1" Max="100" Style="width:100%" />
                                 </RadzenFormField>
                             }
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* Automatización de Tableros *@
+                @* 10. Automatización *@
                 <RadzenTabsItem Text="Automatización" Icon="smart_toy">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Reglas y Disparadores No-Code en Tableros" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Motor de Reglas y Disparadores Automáticos (Board Automation)" TextStyle="@TextStyle.H6" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Habilitar Motor de Automatizaciones en Tableros" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Permite crear reglas 'Cuando ocurra X, hacer Y' (mover tarjetas, asignar miembros, etc.)."
+                                    <RadzenText Text="Habilitar Motor de Automatización de Tableros" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Ejecuta acciones automáticas (asignar personas, mover listas, aplicar etiquetas) ante eventos definidos."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.BoardAutomationEnabled" />
@@ -490,12 +664,12 @@
                             {
                                 <RadzenRow Gap="1rem">
                                     <RadzenColumn Size="6">
-                                        <RadzenFormField Text="Máx. Reglas por Tablero (0 = Ilimitado)" Component="maxRules" Style="width:100%">
-                                            <RadzenNumeric @bind-Value="_model.MaxAutomationRulesPerBoard" Name="maxRules" Min="0" Max="100" Style="width:100%" />
+                                        <RadzenFormField Text="Reglas de Automatización Máximas por Tablero" Component="maxRules" Style="width:100%">
+                                            <RadzenNumeric @bind-Value="_model.MaxAutomationRulesPerBoard" Name="maxRules" Min="1" Max="100" Style="width:100%" />
                                         </RadzenFormField>
                                     </RadzenColumn>
                                     <RadzenColumn Size="6">
-                                        <RadzenFormField Text="Máx. Acciones por Regla" Component="maxActions" Style="width:100%">
+                                        <RadzenFormField Text="Acciones Máximas por Cada Regla" Component="maxActions" Style="width:100%">
                                             <RadzenNumeric @bind-Value="_model.MaxAutomationActionsPerRule" Name="maxActions" Min="1" Max="20" Style="width:100%" />
                                         </RadzenFormField>
                                     </RadzenColumn>
@@ -505,32 +679,43 @@
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* Notificaciones y Alertas del Sistema *@
+                @* 11. Notificaciones *@
                 <RadzenTabsItem Text="Notificaciones" Icon="notifications_active">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Notificaciones del Sistema y Alertas de Vencimiento" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Centro de Alertas y Eventos del Sistema" TextStyle="@TextStyle.H6" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Habilitar Centro de Notificaciones In-App" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Muestra la campana de notificaciones y la bandeja de alertas en tiempo real en la barra superior."
+                                    <RadzenText Text="Habilitar Notificaciones Internas en la Aplicación" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Muestra la campana de notificaciones con avisos de asignaciones y menciones en la interfaz."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.InAppNotificationsEnabled" />
                             </RadzenStack>
 
-                            <RadzenFormField Text="Umbral de Alerta para Tarjetas 'Por Vencer' (Horas de Anticipación)" Component="dueSoonHours">
-                                <RadzenNumeric @bind-Value="_model.DueSoonThresholdHours" Name="dueSoonHours" Min="1" Max="168" Style="width:100%" />
-                            </RadzenFormField>
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Umbral de Aviso de Vencimiento Próximo (Horas)" Component="dueSoonHours" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.DueSoonThresholdHours" Name="dueSoonHours" Min="1" Max="168" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Días de Retención de Historial de Notificaciones" Component="notifRetention" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.NotificationRetentionDays" Name="notifRetention" Min="1" Max="365" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenText Text="Disparadores de Notificación Individuales" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenText Text="Notificar Asignación a Tarjetas" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="Notificar al Asignar un Miembro a una Tarjeta" TextStyle="@TextStyle.Subtitle2" />
                                 <RadzenSwitch @bind-Value="_model.NotifyOnCardAssignment" />
                             </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenText Text="Notificar Mención en Tarjeta o Comentario" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="Notificar al Mencionar a un Usuario" TextStyle="@TextStyle.Subtitle2" />
                                 <RadzenSwitch @bind-Value="_model.NotifyOnCardMention" />
                             </RadzenStack>
 
@@ -540,40 +725,36 @@
                             </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenText Text="Notificar cuando una Tarjeta esté Vencida" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="Notificar cuando una Tarjeta haya Vencido" TextStyle="@TextStyle.Subtitle2" />
                                 <RadzenSwitch @bind-Value="_model.NotifyOnOverdue" />
                             </RadzenStack>
-
-                            <RadzenFormField Text="Días de Retención de Notificaciones Leídas" Component="notifRet">
-                                <RadzenNumeric @bind-Value="_model.NotificationRetentionDays" Name="notifRet" Min="1" Max="365" Style="width:100%" />
-                            </RadzenFormField>
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* Búsqueda e Indexación Global *@
+                @* 12. Búsqueda *@
                 <RadzenTabsItem Text="Búsqueda" Icon="search">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Búsqueda Global y Motor de Indexación" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Indexación Global y Coincidencias de Búsqueda" TextStyle="@TextStyle.H6" />
 
                             <RadzenRow Gap="1rem">
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Longitud Mínima de Término de Búsqueda" Component="minSearch">
-                                        <RadzenNumeric @bind-Value="_model.SearchMinQueryLength" Name="minSearch" Min="1" Max="10" Style="width:100%" />
+                                    <RadzenFormField Text="Longitud Mínima de Consulta de Búsqueda (Caracteres)" Component="searchMin" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.SearchMinQueryLength" Name="searchMin" Min="1" Max="10" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Resultados Máximos por Página de Búsqueda" Component="maxSearch">
-                                        <RadzenNumeric @bind-Value="_model.SearchMaxPageSize" Name="maxSearch" Min="10" Max="200" Style="width:100%" />
+                                    <RadzenFormField Text="Resultados Máximos por Página de Búsqueda" Component="searchPage" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.SearchMaxPageSize" Name="searchPage" Min="5" Max="200" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                             </RadzenRow>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Búsqueda Aproximada / Tolerancia a Errores (Fuzzy Matching)" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Permite encontrar tarjetas y tableros incluso si la palabra contiene errores tipográficos leves."
+                                    <RadzenText Text="Habilitar Búsqueda Aproximada / Difusa (Fuzzy Search)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite tolerar errores ortográficos y variaciones en los títulos y descripciones de tarjetas."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.SearchFuzzyMatching" />
@@ -582,16 +763,16 @@
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* Tiempo Real y Presencia *@
+                @* 13. Tiempo Real *@
                 <RadzenTabsItem Text="Tiempo Real" Icon="sync">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Sincronización en Tiempo Real vía WebSockets (SignalR)" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Sincronización Bidireccional y Presencia en Vivo" TextStyle="@TextStyle.H6" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Transmisión en Vivo de Movimientos y Cambios" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Envía actualizaciones instantáneas a todos los colaboradores conectados al tablero sin necesidad de recargar."
+                                    <RadzenText Text="Difusión de Eventos en Tiempo Real (SignalR Hubs)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Transmite cambios de tarjetas, listas y comentarios a los clientes conectados de manera inmediata sin recargar."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.RealtimeBroadcastingEnabled" />
@@ -599,8 +780,8 @@
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Indicadores de Presencia y Colaboradores Activos" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Muestra qué usuarios están viendo o editando el mismo tablero en tiempo real."
+                                    <RadzenText Text="Indicadores de Presencia de Usuarios Concurrentes" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Muestra qué compañeros de equipo están visualizando o editando el mismo tablero simultáneamente."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.RealtimePresenceEnabled" />
@@ -609,16 +790,16 @@
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* 5. Envejecimiento de Tarjetas *@
+                @* 14. Envejecimiento *@
                 <RadzenTabsItem Text="Envejecimiento" Icon="hourglass_bottom">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Envejecimiento Visual de Tarjetas Inactivas (Card Aging)" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Degradación Visual de Tarjetas Inactivas (Card Aging)" TextStyle="@TextStyle.H6" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Activar Efecto de Envejecimiento" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Cambia progresivamente la apariencia de las tarjetas que no han tenido actividad reciente."
+                                    <RadzenText Text="Activar Envejecimiento de Tarjetas Inactivas" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Aplica un efecto visual a las tarjetas que no han tenido actividad reciente para destacar el trabajo estancado."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.CardAgingEnabled" />
@@ -643,184 +824,219 @@
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* 6. Almacenamiento & Adjuntos *@
+                @* 15. Almacenamiento *@
                 <RadzenTabsItem Text="Almacenamiento" Icon="folder">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Archivos Adjuntos, Cuotas y Portadas" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Cuotas de Adjuntos y Archivos del Sistema" TextStyle="@TextStyle.H6" />
 
-                            <RadzenFormField Text="Tamaño Máximo por Archivo Adjunto (MB)" Component="maxAttach">
-                                <RadzenNumeric @bind-Value="_model.MaxAttachmentSizeMb" Name="maxAttach" Min="1" Max="500" Style="width:100%" />
-                            </RadzenFormField>
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Tamaño Máximo por Archivo Adjunto (MB)" Component="maxAttach" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxAttachmentSizeMb" Name="maxAttach" Min="1" Max="200" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Tamaño Máx. Imagen de Portada (MB)" Component="maxCover" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxCoverImageSizeMb" Name="maxCover" Min="1" Max="25" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
 
-                            <RadzenFormField Text="Extensiones de Archivo Permitidas (separadas por coma o '*' para todas)" Component="exts">
-                                <RadzenTextBox @bind-Value="_model.AllowedAttachmentExtensions" Name="exts" Style="width:100%" />
+                            <RadzenFormField Text="Extensiones de Archivo Permitidas (separadas por coma)" Component="allowedExts">
+                                <RadzenTextBox @bind-Value="_model.AllowedAttachmentExtensions" Name="allowedExts" Style="width:100%" />
                             </RadzenFormField>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenText Text="Permitir Imágenes de Portada en Tarjetas" TextStyle="@TextStyle.Subtitle2" />
                                 <RadzenSwitch @bind-Value="_model.AllowCoverImages" />
                             </RadzenStack>
-
-                            @if (_model.AllowCoverImages)
-                            {
-                                <RadzenFormField Text="Tamaño Máximo para Imagen de Portada (MB)" Component="maxCover">
-                                    <RadzenNumeric @bind-Value="_model.MaxCoverImageSizeMb" Name="maxCover" Min="1" Max="50" Style="width:100%" />
-                                </RadzenFormField>
-                            }
-
-                            <RadzenStack Gap="0.25rem" Class="rz-pt-2">
-                                <RadzenText Text="Ruta Base de Almacenamiento Persistente:" TextStyle="@TextStyle.Subtitle2" />
-                                <RadzenText Text="@_settings.StorageRoot" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
-                            </RadzenStack>
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* 7. Inteligencia Artificial *@
-                <RadzenTabsItem Text="Inteligencia Artificial" Icon="smart_toy">
+                @* 16. Inteligencia Artificial *@
+                <RadzenTabsItem Text="Inteligencia Artificial" Icon="psychology">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Asistente de IA (Ollama / OpenAI / vLLM)" TextStyle="@TextStyle.H6" />
+
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Habilitar Asistente de Inteligencia Artificial" TextStyle="@TextStyle.H6" />
-                                    <RadzenText Text="Generación de tarjetas, resúmenes automáticos y sugerencias mediante LLMs locales o remotos."
+                                    <RadzenText Text="Habilitar Asistente de Inteligencia Artificial" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite sugerencias inteligentes, resúmenes de tarjetas y generación automática de tareas."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.AiEnabled" />
                             </RadzenStack>
 
-                            @if (_model.AiEnabled)
-                            {
-                                <RadzenFormField Text="Proveedor de Protocolo" Component="aiProvider">
-                                    <RadzenTextBox @bind-Value="_model.AiProvider" Name="aiProvider" Style="width:100%" ReadOnly="true" />
-                                </RadzenFormField>
+                            <RadzenFormField Text="Tipo de Proveedor" Component="aiProvider">
+                                <RadzenTextBox @bind-Value="_model.AiProvider" Name="aiProvider" Style="width:100%" />
+                            </RadzenFormField>
 
-                                <RadzenFormField Text="Endpoint de Inferencia (URL)" Component="aiEndpoint">
-                                    <RadzenTextBox @bind-Value="_model.AiEndpoint" Name="aiEndpoint" Style="width:100%" Placeholder="http://localhost:11434/" />
-                                </RadzenFormField>
+                            <RadzenFormField Text="URL del Endpoint de IA" Component="aiEndpoint">
+                                <RadzenTextBox @bind-Value="_model.AiEndpoint" Name="aiEndpoint" Style="width:100%" />
+                            </RadzenFormField>
 
-                                <RadzenRow Gap="1rem">
-                                    <RadzenColumn Size="6">
-                                        <RadzenFormField Text="Nombre del Modelo" Component="aiModel" Style="width:100%">
-                                            <RadzenTextBox @bind-Value="_model.AiModel" Name="aiModel" Style="width:100%" Placeholder="llama3.2" />
-                                        </RadzenFormField>
-                                    </RadzenColumn>
-                                    <RadzenColumn Size="6">
-                                        <RadzenFormField Text="Máximo de Tokens de Respuesta" Component="aiMaxTokens" Style="width:100%">
-                                            <RadzenNumeric @bind-Value="_model.AiMaxTokens" Name="aiMaxTokens" Min="128" Max="32768" Style="width:100%" />
-                                        </RadzenFormField>
-                                    </RadzenColumn>
-                                </RadzenRow>
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Nombre del Modelo (ej. llama3.2, mistral)" Component="aiModel" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.AiModel" Name="aiModel" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Clave de API (dejar en blanco o '******' para mantener)" Component="aiKey" Style="width:100%">
+                                        <RadzenPassword @bind-Value="_model.AiApiKey" Name="aiKey" Placeholder="******" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
 
-                                <RadzenFormField Text="API Key (Opcional para Ollama local)" Component="aiApiKey">
-                                    <RadzenTextBox @bind-Value="_model.AiApiKey" Name="aiApiKey" Style="width:100%"
-                                                   Placeholder="@(_settings.AiApiKeyMasked.Length > 0 ? _settings.AiApiKeyMasked : "Introduce clave...")" />
-                                </RadzenFormField>
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Timeout de Petición (Segundos)" Component="aiTimeout" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.AiTimeoutSeconds" Name="aiTimeout" Min="5" Max="300" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Máximo de Tokens Generados" Component="aiTokens" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.AiMaxTokens" Name="aiTokens" Min="128" Max="32768" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
 
-                                <RadzenFormField Text="Timeout de Solicitud (Segundos)" Component="aiTimeout">
-                                    <RadzenNumeric @bind-Value="_model.AiTimeoutSeconds" Name="aiTimeout" Min="5" Max="300" Style="width:100%" />
-                                </RadzenFormField>
+                            <RadzenButton Text="Probar Conexión con Servidor IA"
+                                          Icon="network_check"
+                                          ButtonStyle="@ButtonStyle.Info"
+                                          Size="@ButtonSize.Small"
+                                          IsBusy="@_testingAi"
+                                          BusyText="Probando..."
+                                          Click="@TestAiConnectionAsync"
+                                          Style="width: fit-content;" />
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
 
-                                <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.Start">
-                                    <RadzenButton Text="Probar Conexión con IA"
-                                                  Icon="network_check"
-                                                  ButtonStyle="@ButtonStyle.Info"
-                                                  Size="@ButtonSize.Small"
-                                                  IsBusy="@_testingAi"
-                                                  BusyText="Probando..."
-                                                  Click="@TestAiConnectionAsync" />
+                @* 17. Protocolo MCP *@
+                <RadzenTabsItem Text="Protocolo MCP" Icon="terminal">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Servidor Model Context Protocol (MCP) para Agentes Autónomos" TextStyle="@TextStyle.H6" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Servidor MCP" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Expone las capacidades de Cardscape mediante herramientas estandarizadas MCP para agentes y asistentes externos."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.McpServerEnabled" />
+                            </RadzenStack>
+
+                            @if (_model.McpServerEnabled)
+                            {
+                                <RadzenFormField Text="Nombre del Servidor MCP" Component="mcpName">
+                                    <RadzenTextBox @bind-Value="_model.McpServerName" Name="mcpName" Style="width:100%" />
+                                </RadzenFormField>
+
+                                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                    <RadzenStack Gap="0.25rem">
+                                        <RadzenText Text="Habilitar Herramientas de Escritura y Mutación" TextStyle="@TextStyle.Subtitle2" />
+                                        <RadzenText Text="Permite a los agentes autónomos crear, mover y editar tarjetas. Si se deshabilita, opera en modo estricto de sólo lectura."
+                                                    TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                    </RadzenStack>
+                                    <RadzenSwitch @bind-Value="_model.McpEnableWriteTools" />
+                                </RadzenStack>
+
+                                <RadzenFormField Text="Tamaño Máximo de Lote por Consulta MCP" Component="mcpBatch">
+                                    <RadzenNumeric @bind-Value="_model.McpMaxBatchSize" Name="mcpBatch" Min="5" Max="200" Style="width:100%" />
+                                </RadzenFormField>
                             }
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* 8. Correo Saliente (SMTP) *@
+                @* 18. Correo Saliente *@
                 <RadzenTabsItem Text="Correo Saliente" Icon="mail">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Servidor SMTP de Notificaciones Salientes" TextStyle="@TextStyle.H6" />
+
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Habilitar Notificaciones por Correo Electrónico" TextStyle="@TextStyle.H6" />
-                                    <RadzenText Text="Envía correos para invitaciones, asignaciones y eventos de tableros."
+                                    <RadzenText Text="Habilitar Envío de Correos Notificatorios (SMTP)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Envía emails de invitaciones, vencimientos y resúmenes de actividad."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.EmailNotificationsEnabled" />
                             </RadzenStack>
 
-                            @if (_model.EmailNotificationsEnabled)
-                            {
-                                <RadzenRow Gap="1rem">
-                                    <RadzenColumn Size="8">
-                                        <RadzenFormField Text="Servidor SMTP (Host)" Component="smtpHost" Style="width:100%">
-                                            <RadzenTextBox @bind-Value="_model.SmtpHost" Name="smtpHost" Style="width:100%" Placeholder="smtp.example.com" />
-                                        </RadzenFormField>
-                                    </RadzenColumn>
-                                    <RadzenColumn Size="4">
-                                        <RadzenFormField Text="Puerto" Component="smtpPort" Style="width:100%">
-                                            <RadzenNumeric @bind-Value="_model.SmtpPort" Name="smtpPort" Min="1" Max="65535" Style="width:100%" />
-                                        </RadzenFormField>
-                                    </RadzenColumn>
-                                </RadzenRow>
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="8">
+                                    <RadzenFormField Text="Host SMTP" Component="smtpHost" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.SmtpHost" Name="smtpHost" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Puerto" Component="smtpPort" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.SmtpPort" Name="smtpPort" Min="1" Max="65535" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
 
-                                <RadzenRow Gap="1rem">
-                                    <RadzenColumn Size="6">
-                                        <RadzenFormField Text="Usuario SMTP" Component="smtpUser" Style="width:100%">
-                                            <RadzenTextBox @bind-Value="_model.SmtpUsername" Name="smtpUser" Style="width:100%" />
-                                        </RadzenFormField>
-                                    </RadzenColumn>
-                                    <RadzenColumn Size="6">
-                                        <RadzenFormField Text="Contraseña SMTP" Component="smtpPass" Style="width:100%">
-                                            <RadzenPassword @bind-Value="_model.SmtpPassword" Name="smtpPass" Style="width:100%"
-                                                            Placeholder="@(_settings.SmtpPasswordMasked.Length > 0 ? _settings.SmtpPasswordMasked : "Introduce contraseña...")" />
-                                        </RadzenFormField>
-                                    </RadzenColumn>
-                                </RadzenRow>
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Usuario SMTP" Component="smtpUser" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.SmtpUsername" Name="smtpUser" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Contraseña SMTP (dejar en blanco o '******' para mantener)" Component="smtpPass" Style="width:100%">
+                                        <RadzenPassword @bind-Value="_model.SmtpPassword" Name="smtpPass" Placeholder="******" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
 
-                                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                    <RadzenText Text="Habilitar Cifrado TLS / SSL" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenSwitch @bind-Value="_model.SmtpEnableSsl" />
-                                </RadzenStack>
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenText Text="Habilitar Cifrado SSL / TLS" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenSwitch @bind-Value="_model.SmtpEnableSsl" />
+                            </RadzenStack>
 
-                                <RadzenRow Gap="1rem">
-                                    <RadzenColumn Size="6">
-                                        <RadzenFormField Text="Correo del Remitente" Component="senderEmail" Style="width:100%">
-                                            <RadzenTextBox @bind-Value="_model.SenderEmail" Name="senderEmail" Style="width:100%" Placeholder="noreply@cardscape.local" />
-                                        </RadzenFormField>
-                                    </RadzenColumn>
-                                    <RadzenColumn Size="6">
-                                        <RadzenFormField Text="Nombre del Remitente" Component="senderName" Style="width:100%">
-                                            <RadzenTextBox @bind-Value="_model.SenderName" Name="senderName" Style="width:100%" Placeholder="Cardscape" />
-                                        </RadzenFormField>
-                                    </RadzenColumn>
-                                </RadzenRow>
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Correo del Remitente" Component="senderEmail" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.SenderEmail" Name="senderEmail" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Nombre del Remitente" Component="senderName" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.SenderName" Name="senderName" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
 
-                                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.75rem">
-                                    <RadzenTextBox @bind-Value="_testEmailTarget" Placeholder="correo@destino.com" Style="max-width: 18rem;" />
-                                    <RadzenButton Text="Enviar Correo de Prueba"
-                                                  Icon="send"
-                                                  ButtonStyle="@ButtonStyle.Info"
-                                                  Size="@ButtonSize.Small"
-                                                  IsBusy="@_testingEmail"
-                                                  BusyText="Enviando..."
-                                                  Click="@TestEmailConnectionAsync" />
-                                </RadzenStack>
-                            }
+                            <RadzenStack Orientation="@Orientation.Horizontal" Gap="0.5rem" AlignItems="@AlignItems.Center" Class="rz-pt-2">
+                                <RadzenTextBox @bind-Value="_testEmailTarget" Placeholder="correo@destino.com" Style="width: 250px;" />
+                                <RadzenButton Text="Enviar Correo de Prueba"
+                                              Icon="send"
+                                              ButtonStyle="@ButtonStyle.Info"
+                                              Size="@ButtonSize.Small"
+                                              IsBusy="@_testingEmail"
+                                              BusyText="Enviando..."
+                                              Click="@TestEmailConnectionAsync" />
+                            </RadzenStack>
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* 9. Correo Entrante (Inbound) *@
+                @* 19. Correo Entrante *@
                 <RadzenTabsItem Text="Correo Entrante" Icon="mark_email_read">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Recepción de Correo para Creación de Tarjetas (Email-to-Board)" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Creación de Tarjetas vía Correo Entrante (Email-to-Board)" TextStyle="@TextStyle.H6" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Habilitar Creación de Tarjetas por Correo" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Permite asignar direcciones de email únicas a listas para que los correos entrantes se conviertan en tarjetas."
+                                    <RadzenText Text="Habilitar Creación de Tarjetas por Email" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite a los usuarios enviar correos a direcciones de tablero únicas para crear tarjetas automáticamente."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.InboundEmailEnabled" />
@@ -828,16 +1044,16 @@
 
                             @if (_model.InboundEmailEnabled)
                             {
-                                <RadzenFormField Text="Dominio Receptor Inbound" Component="inboundDomain">
-                                    <RadzenTextBox @bind-Value="_model.InboundEmailDomain" Name="inboundDomain" Style="width:100%" Placeholder="inbound.cardscape.local" />
+                                <RadzenFormField Text="Dominio de Correo Entrante" Component="inboundDomain">
+                                    <RadzenTextBox @bind-Value="_model.InboundEmailDomain" Name="inboundDomain" Style="width:100%" />
                                 </RadzenFormField>
 
-                                <RadzenFormField Text="Nombre de Lista Receptora por Defecto" Component="inboundList">
-                                    <RadzenTextBox @bind-Value="_model.InboundDefaultList" Name="inboundList" Style="width:100%" Placeholder="Inbox" />
+                                <RadzenFormField Text="Lista Destino Predeterminada" Component="inboundList">
+                                    <RadzenTextBox @bind-Value="_model.InboundDefaultList" Name="inboundList" Style="width:100%" />
                                 </RadzenFormField>
 
                                 <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                    <RadzenText Text="Adjuntar el Archivo .eml Completo a la Tarjeta" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Adjuntar el Correo Original (.eml) como Archivo" TextStyle="@TextStyle.Subtitle2" />
                                     <RadzenSwitch @bind-Value="_model.InboundAttachSenderEmail" />
                                 </RadzenStack>
                             }
@@ -845,16 +1061,16 @@
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* 10. Integraciones Externas *@
+                @* 20. Integraciones *@
                 <RadzenTabsItem Text="Integraciones" Icon="hub">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Conexiones con Ecosistemas Externos y Agentes" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Conectores de Terceros y Servicios Externos" TextStyle="@TextStyle.H6" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
                                     <RadzenText Text="Integración con Slack" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Notificaciones y sincronización de mensajes hacia canales de Slack."
+                                    <RadzenText Text="Notifica movimientos de tarjetas y comentarios en canales vinculados de Slack."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.SlackIntegrationEnabled" />
@@ -863,7 +1079,7 @@
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
                                     <RadzenText Text="Integración con GitHub" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Vinculación de Pull Requests, commits e issues con tarjetas."
+                                    <RadzenText Text="Vincula repositorios, sincroniza issues y cierra tarjetas al fusionar Pull Requests."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.GitHubIntegrationEnabled" />
@@ -872,7 +1088,7 @@
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
                                     <RadzenText Text="Integración con Google Calendar" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Sincronización bidireccional de fechas de vencimiento con eventos de calendario."
+                                    <RadzenText Text="Sincroniza fechas límite de tarjetas con calendarios personales y de equipo."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.GoogleCalendarIntegrationEnabled" />
@@ -880,87 +1096,113 @@
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Servidor MCP (Model Context Protocol)" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Permite a agentes de IA externos consultar tableros y tarjetas mediante el estándar MCP."
-                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
-                                </RadzenStack>
-                                <RadzenSwitch @bind-Value="_model.McpServerEnabled" />
-                            </RadzenStack>
-
-                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenStack Gap="0.25rem">
                                     <RadzenText Text="Feeds de Suscripción iCalendar (.ics)" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Generación de URLs seguras para suscribirse a vencimientos desde Outlook, Apple Calendar o Thunderbird."
+                                    <RadzenText Text="Permite a los miembros sincronizar sus tarjetas con Apple Calendar, Outlook o Google Calendar mediante feeds privados."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.CalendarIcsFeedsEnabled" />
                             </RadzenStack>
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenTabsItem>
 
-                @* 11. Webhooks *@
-                <RadzenTabsItem Text="Webhooks" Icon="webhook">
-                    <RadzenCard Class="rz-p-4">
-                        <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Despacho de Eventos en Tiempo Real" TextStyle="@TextStyle.H6" />
-
-                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Despacho de Webhooks Salientes" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Entrega de payloads JSON a endpoints externos cuando ocurren cambios en tableros y tarjetas."
-                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
-                                </RadzenStack>
-                                <RadzenSwitch @bind-Value="_model.WebhooksEnabled" />
-                            </RadzenStack>
-
-                            @if (_model.WebhooksEnabled)
+                            @if (_model.CalendarIcsFeedsEnabled)
                             {
-                                <RadzenRow Gap="1rem">
-                                    <RadzenColumn Size="6">
-                                        <RadzenFormField Text="Reintentos Máximos ante Error HTTP" Component="whRetries" Style="width:100%">
-                                            <RadzenNumeric @bind-Value="_model.MaxWebhookRetries" Name="whRetries" Min="0" Max="10" Style="width:100%" />
-                                        </RadzenFormField>
-                                    </RadzenColumn>
-                                    <RadzenColumn Size="6">
-                                        <RadzenFormField Text="Timeout de Entrega (Segundos)" Component="whTimeout" Style="width:100%">
-                                            <RadzenNumeric @bind-Value="_model.WebhookTimeoutSeconds" Name="whTimeout" Min="1" Max="60" Style="width:100%" />
-                                        </RadzenFormField>
-                                    </RadzenColumn>
-                                </RadzenRow>
-
-                                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                    <RadzenStack Gap="0.25rem">
-                                        <RadzenText Text="Firma Criptográfica HMAC-SHA256 en Encabezados" TextStyle="@TextStyle.Subtitle2" />
-                                        <RadzenText Text="Agrega el encabezado X-Cardscape-Signature para verificación de autenticidad en el receptor."
-                                                    TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
-                                    </RadzenStack>
-                                    <RadzenSwitch @bind-Value="_model.WebhookPayloadSignatureEnabled" />
-                                </RadzenStack>
+                                <RadzenFormField Text="Validez de Tokens de Feed iCal (Días)" Component="calTokenExp">
+                                    <RadzenNumeric @bind-Value="_model.CalendarFeedTokenLifetimeDays" Name="calTokenExp" Min="7" Max="730" Style="width:100%" />
+                                </RadzenFormField>
                             }
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* 12. Rendimiento & Rate Limiting *@
-                <RadzenTabsItem Text="Rendimiento" Icon="speed">
+                @* 21. Webhooks *@
+                <RadzenTabsItem Text="Webhooks" Icon="webhook">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Límites de Tráfico y Tareas en Segundo Plano" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Despacho de Eventos HTTP Salientes" TextStyle="@TextStyle.H6" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenText Text="Limitación de Tasa (Rate Limiting)" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Despacho de Webhooks Salientes" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Envía notificaciones JSON a endpoints externos cuando ocurren cambios en los tableros."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.WebhooksEnabled" />
+                            </RadzenStack>
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Reintentos Máximos de Entrega Fallida" Component="maxRetries" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxWebhookRetries" Name="maxRetries" Min="0" Max="10" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Timeout de Despacho (Segundos)" Component="webhookTimeout" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.WebhookTimeoutSeconds" Name="webhookTimeout" Min="1" Max="60" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Firma Criptográfica de Payloads (HMAC-SHA256)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Incluye la cabecera X-Cardscape-Signature para verificación de autenticidad en el receptor."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.WebhookPayloadSignatureEnabled" />
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 22. Importación y Exportación *@
+                <RadzenTabsItem Text="Importar / Exportar" Icon="archive">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Migraciones y Respaldo de Tableros" TextStyle="@TextStyle.H6" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Permitir Exportación Completa de Tableros (ZIP)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite a los administradores y propietarios exportar archivos ZIP con los datos JSON y todos los adjuntos."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.EnableBoardExport" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Permitir Importación de Archivos Kanban / Trello" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Habilita la carga e importación directa de archivos boards.json procedentes de otras herramientas."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.EnableKanbanImport" />
+                            </RadzenStack>
+
+                            <RadzenFormField Text="Tamaño Máximo de Archivo de Importación (MB)" Component="maxImportSize">
+                                <RadzenNumeric @bind-Value="_model.MaxImportFileSizeMb" Name="maxImportSize" Min="1" Max="500" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 23. Rendimiento e Idempotencia *@
+                <RadzenTabsItem Text="Rendimiento / API" Icon="speed">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Control de Tasa (Rate Limiting) y Procesamiento de Tareas" TextStyle="@TextStyle.H6" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenText Text="Habilitar Rate Limiting por Token de API" TextStyle="@TextStyle.Subtitle2" />
                                 <RadzenSwitch @bind-Value="_model.RateLimitingEnabled" />
                             </RadzenStack>
 
                             <RadzenRow Gap="1rem">
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Peticiones por Hora por Token de API" Component="reqPerHour" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.DefaultRequestsPerHour" Name="reqPerHour" Min="10" Max="100000" Style="width:100%" />
+                                    <RadzenFormField Text="Peticiones por Hora por Defecto" Component="reqPerHour" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.DefaultRequestsPerHour" Name="reqPerHour" Min="10" Max="1000000" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Backend de Cuotas" Component="rlBackend" Style="width:100%">
+                                    <RadzenFormField Text="Backend de Rate Limiting" Component="rlBackend" Style="width:100%">
                                         <RadzenDropDown @bind-Value="_model.RateLimiterBackend" Data="@_rateLimiterBackends" Name="rlBackend" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
@@ -968,13 +1210,80 @@
 
                             <RadzenRow Gap="1rem">
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Sondeo de Background Jobs (Segundos)" Component="bjPoll" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.BackgroundJobPollIntervalSeconds" Name="bjPoll" Min="1" Max="60" Style="width:100%" />
+                                    <RadzenFormField Text="Intervalo de Sondeo de Background Jobs (Segundos)" Component="pollInterval" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.BackgroundJobPollIntervalSeconds" Name="pollInterval" Min="1" Max="60" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Tamaño de Lote de Background Jobs" Component="bjBatch" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.BackgroundJobBatchSize" Name="bjBatch" Min="1" Max="100" Style="width:100%" />
+                                    <RadzenFormField Text="Tamaño de Lote de Procesamiento de Jobs" Component="batchSize" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.BackgroundJobBatchSize" Name="batchSize" Min="1" Max="100" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenText Text="Protección de Idempotencia de API" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Activar Middleware de Idempotencia (Idempotency-Key)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Evita la duplicación accidental de operaciones de escritura garantizando procesamiento at-most-once."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.EnableIdempotency" />
+                            </RadzenStack>
+
+                            @if (_model.EnableIdempotency)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Ventana de Reserva en Ejecución (Minutos)" Component="idemReserve" Style="width:100%">
+                                            <RadzenNumeric @bind-Value="_model.IdempotencyReservationWindowMinutes" Name="idemReserve" Min="1" Max="60" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Retención de Respuesta Cacheada (Horas)" Component="idemRetain" Style="width:100%">
+                                            <RadzenNumeric @bind-Value="_model.IdempotencyRetentionWindowHours" Name="idemRetain" Min="1" Max="168" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 24. Infraestructura & Redis *@
+                <RadzenTabsItem Text="Infraestructura / Redis" Icon="memory">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Caché Distribuida y Almacenamiento en Clúster (Redis)" TextStyle="@TextStyle.H6" />
+
+                            <RadzenFormField Text="Cadena de Conexión Redis (dejar en blanco o '******' para mantener)" Component="redisConn">
+                                <RadzenPassword @bind-Value="_model.RedisConnectionString" Name="redisConn" Placeholder="******" Style="width:100%" />
+                            </RadzenFormField>
+                            <RadzenText Text="Ejemplo: redis-prod-01:6379,abortConnect=false" TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Índice de Base de Datos Redis" Component="redisDb" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.RedisDatabase" Name="redisDb" Min="0" Max="15" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Backend de Desafíos 2FA Temporales" Component="totpBackend" Style="width:100%">
+                                        <RadzenDropDown @bind-Value="_model.PendingTotpStoreBackend" Data="@_totpBackends" Name="totpBackend" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Prefijo de Claves Redis para 2FA" Component="totpPrefix" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.PendingTotpStoreKeyPrefix" Name="totpPrefix" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Prefijo de Claves Redis para Rate Limiter" Component="rlPrefix" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.RateLimiterKeyPrefix" Name="rlPrefix" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                             </RadzenRow>
@@ -982,70 +1291,146 @@
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* 13. Retención & GDPR *@
+                @* 25. Auditoría y Logs *@
+                <RadzenTabsItem Text="Auditoría y Logs" Icon="history_edu">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Trazabilidad, Historial de Actividades y Archivos de Log" TextStyle="@TextStyle.H6" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Registro de Actividades en Entidades" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Almacena cronológicamente los eventos de creación, movimiento y edición en tarjetas y tableros."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.EnableActivityLogging" />
+                            </RadzenStack>
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Eventos por Página en Feed de Actividades" Component="actPageSize" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.ActivityPageSize" Name="actPageSize" Min="5" Max="100" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                        <RadzenStack Gap="0.25rem">
+                                            <RadzenText Text="Capturar IP y Agente en Auditoría" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenText Text="Registra la IP remota del cliente para cumplimiento normativo."
+                                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                        </RadzenStack>
+                                        <RadzenSwitch @bind-Value="_model.AuditLogDetailedIp" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenText Text="Rotación de Archivos de Log (Serilog)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Límite de Archivos Diarios Retenidos (Días)" Component="logRetain" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.LogRetainedFileCountLimit" Name="logRetain" Min="1" Max="365" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Tamaño Máximo por Archivo de Log (MB)" Component="logSize" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.LogFileSizeLimitMb" Name="logSize" Min="5" Max="1024" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                @* 26. Retención y GDPR *@
                 <RadzenTabsItem Text="Retención y GDPR" Icon="cleaning_services">
                     <RadzenCard Class="rz-p-4">
                         <RadzenStack Gap="1.25rem">
-                            <RadzenText Text="Mantenimiento y Ciclo de Vida de Datos (Housekeeping)" TextStyle="@TextStyle.H6" />
+                            <RadzenText Text="Políticas de Limpieza Automática, GDPR y Soberanía de Datos" TextStyle="@TextStyle.H6" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenText Text="Limpieza Automática Periódica" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="Habilitar Tareas Automáticas de Limpieza (Sweeper)" TextStyle="@TextStyle.Subtitle2" />
                                 <RadzenSwitch @bind-Value="_model.RetentionSweeperEnabled" />
                             </RadzenStack>
 
                             <RadzenRow Gap="1rem">
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Intervalo de Limpieza (Horas)" Component="sweepInterval" Style="width:100%">
+                                    <RadzenFormField Text="Frecuencia de Barrido (Horas)" Component="sweepInterval" Style="width:100%">
                                         <RadzenNumeric @bind-Value="_model.SweepIntervalHours" Name="sweepInterval" Min="1" Max="168" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Período de Gracia para Borrado de Usuarios (Días)" Component="gracePeriod" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.UserGracePeriodDays" Name="gracePeriod" Min="1" Max="365" Style="width:100%" />
+                                    <RadzenFormField Text="Período de Gracia para Cuentas Eliminadas (Días)" Component="gracePeriod" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.UserGracePeriodDays" Name="gracePeriod" Min="0" Max="365" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                             </RadzenRow>
 
                             <RadzenRow Gap="1rem">
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Retención de Actividades (Días)" Component="actDays" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.ActivityRetentionDays" Name="actDays" Min="7" Max="3650" Style="width:100%" />
+                                    <RadzenFormField Text="Retención de Historial de Actividades (Días)" Component="actRet" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.ActivityRetentionDays" Name="actRet" Min="1" Max="3650" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                                 <RadzenColumn Size="6">
-                                    <RadzenFormField Text="Retención de Registros de Auditoría (Días)" Component="audDays" Style="width:100%">
-                                        <RadzenNumeric @bind-Value="_model.AuditRetentionDays" Name="audDays" Min="30" Max="3650" Style="width:100%" />
+                                    <RadzenFormField Text="Retención de Registros de Auditoría (Días)" Component="auditRet" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.AuditRetentionDays" Name="auditRet" Min="1" Max="3650" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                             </RadzenRow>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenText Text="Purgar Automáticamente Archivos Huérfanos sin Tarjeta Asociada" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenSwitch @bind-Value="_model.AutoPurgeOrphanAttachments" />
+                            </RadzenStack>
+
+                            <RadzenText Text="Residencia y Soberanía Geográfica de Datos" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Región Geográfica de Despliegue" Component="deployRegion" Style="width:100%">
+                                        <RadzenDropDown @bind-Value="_model.DeploymentRegion" Data="@_regions" Name="deployRegion" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                        <RadzenStack Gap="0.25rem">
+                                            <RadzenText Text="Cumplimiento Estricto Cross-Region" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenText Text="Rechaza escrituras que crucen límites de región según GDPR."
+                                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                        </RadzenStack>
+                                        <RadzenSwitch @bind-Value="_model.EnforceDataResidency" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
-                                    <RadzenText Text="Purgar Archivos Adjuntos Huérfanos" TextStyle="@TextStyle.Subtitle2" />
-                                    <RadzenText Text="Elimina automáticamente del disco aquellos archivos cuyos registros de tarjeta fueron eliminados."
+                                    <RadzenText Text="Habilitar Selector de Región en Interfaz Web (Workspaces)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Muestra el selector de región y los badges de soberanía al crear espacios de trabajo."
                                                 TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                                 </RadzenStack>
-                                <RadzenSwitch @bind-Value="_model.AutoPurgeOrphanAttachments" />
+                                <RadzenSwitch @bind-Value="_model.DataResidencyEnabled" />
                             </RadzenStack>
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
 
-                @* 14. Diagnóstico & Telemetría en Vivo *@
+                @* 27. Diagnóstico y Sistema *@
                 <RadzenTabsItem Text="Diagnóstico" Icon="monitor_heart">
                     <RadzenCard Class="rz-p-4">
-                        <RadzenStack Gap="1rem">
-                            <RadzenText Text="Telemetría e Infraestructura en Vivo" TextStyle="@TextStyle.H6" />
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenText Text="Telemetría y Estado de la Infraestructura en Vivo" TextStyle="@TextStyle.H6" />
 
                             <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
                                 <RadzenText Text="Motor de Base de Datos Activo:" TextStyle="@TextStyle.Subtitle2" />
-                                <RadzenBadge BadgeStyle="@(_settings.DatabaseProvider.Contains("Postgre", StringComparison.OrdinalIgnoreCase) ? BadgeStyle.Success : BadgeStyle.Info)"
-                                             Text="@_settings.DatabaseProvider" Size="@ButtonSize.Medium" />
+                                <RadzenBadge BadgeStyle="@BadgeStyle.Primary" Text="@_settings.DatabaseProvider" Size="@ButtonSize.Medium" />
                             </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
                                 <RadzenText Text="Estado de Conexión a Base de Datos:" TextStyle="@TextStyle.Subtitle2" />
-                                <RadzenBadge BadgeStyle="@BadgeStyle.Success" Text="@_settings.DatabaseHealth" Size="@ButtonSize.Medium" />
+                                <RadzenBadge BadgeStyle="@(_settings.DatabaseHealth == "Healthy" ? BadgeStyle.Success : BadgeStyle.Danger)"
+                                             Text="@_settings.DatabaseHealth" Size="@ButtonSize.Medium" />
                             </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
@@ -1081,6 +1466,26 @@
                             <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
                                 <RadzenText Text="Ruta del Volumen de Almacenamiento Persistente:" TextStyle="@TextStyle.Subtitle2" />
                                 <RadzenText Text="@_settings.StorageRoot" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                            </RadzenStack>
+
+                            <RadzenText Text="Entorno de Desarrollo y Seeder" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Permitir Ejecución del Seeder de Datos (/admin/seeder)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Habilita la siembra de datos de prueba para demostración y evaluación."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.AllowSeederExecution" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Limpiar Base de Datos antes de Sembrar (WipeBeforeSeed)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="ADVERTENCIA: Destructivo. Elimina los registros anteriores antes de ejecutar el seeder."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.SeederWipeBeforeSeed" />
                             </RadzenStack>
                         </RadzenStack>
                     </RadzenCard>
@@ -1135,6 +1540,8 @@
     private readonly List<string> _workspaceRoles = new() { "Member", "Guest", "Admin" };
     private readonly List<string> _agingModes = new() { "Regular", "Pirate", "Fade" };
     private readonly List<string> _rateLimiterBackends = new() { "InMemory", "Redis" };
+    private readonly List<string> _totpBackends = new() { "InMemory", "Redis" };
+    private readonly List<string> _regions = new() { "Unspecified", "Europe", "NorthAmerica", "AsiaPacific", "SouthAmerica" };
 
     private sealed class SettingsFormModel
     {
@@ -1161,6 +1568,12 @@
         public bool SingleActiveSessionPerUser { get; set; }
         public int MaxApiTokensPerUser { get; set; } = 10;
         public int ApiTokenExpirationDays { get; set; } = 90;
+        public int DefaultApiTokenExpiryDays { get; set; } = 90;
+        public int MaxApiTokenExpiryDays { get; set; } = 365;
+        public bool CacheAdminClaim { get; set; } = true;
+        public string TotpIssuerName { get; set; } = "Cardscape";
+        public int TotpStepTolerance { get; set; } = 1;
+        public int PasswordResetTokenLifetimeMinutes { get; set; } = 60;
         public string CorsAllowedOrigins { get; set; } = "*";
         public bool EnforceHttps { get; set; } = true;
         public bool EnableSecurityHeaders { get; set; } = true;
@@ -1173,7 +1586,18 @@
         public bool OAuthAppsEnabled { get; set; } = true;
         public int MaxOAuthAppsPerUser { get; set; } = 5;
 
-        // 4. Workspaces & Boards
+        // 4. External / Social OAuth
+        public bool EnableGoogleAuth { get; set; }
+        public string GoogleClientId { get; set; } = string.Empty;
+        public string? GoogleClientSecret { get; set; }
+        public bool EnableGitHubAuth { get; set; }
+        public string GitHubClientId { get; set; } = string.Empty;
+        public string? GitHubClientSecret { get; set; }
+        public bool EnableMicrosoftAuth { get; set; }
+        public string MicrosoftClientId { get; set; } = string.Empty;
+        public string? MicrosoftClientSecret { get; set; }
+
+        // 5. Workspaces & Boards
         public int MaxWorkspacesPerUser { get; set; }
         public int MaxBoardsPerWorkspace { get; set; }
         public int MaxMembersPerWorkspace { get; set; }
@@ -1181,7 +1605,7 @@
         public int InvitationExpirationDays { get; set; } = 7;
         public bool AllowPublicBoards { get; set; } = true;
 
-        // 5. Cards, Lists & Productivity
+        // 6. Cards, Lists & Productivity
         public int DefaultWipLimit { get; set; }
         public bool EnforceWipLimits { get; set; }
         public bool AllowCardMirroring { get; set; } = true;
@@ -1193,24 +1617,24 @@
         public bool CardRecurrenceEnabled { get; set; } = true;
         public int MaxRecurrenceIntervalDays { get; set; } = 365;
 
-        // 6. Comments & Collaboration
+        // 7. Comments & Collaboration
         public bool AllowCommentEditing { get; set; } = true;
         public bool AllowCommentDeletion { get; set; } = true;
         public int MaxCommentLength { get; set; } = 5000;
         public bool AllowUserMentions { get; set; } = true;
 
-        // 7. Labels & Custom Fields
+        // 8. Labels & Custom Fields
         public int MaxLabelsPerBoard { get; set; } = 50;
         public int MaxLabelsPerCard { get; set; } = 10;
         public bool CustomFieldsEnabled { get; set; } = true;
         public int MaxCustomFieldsPerBoard { get; set; } = 30;
 
-        // 8. Board Automation Rules
+        // 9. Board Automation Rules
         public bool BoardAutomationEnabled { get; set; } = true;
         public int MaxAutomationRulesPerBoard { get; set; } = 20;
         public int MaxAutomationActionsPerRule { get; set; } = 5;
 
-        // 9. Notifications & System Alerts
+        // 10. Notifications & System Alerts
         public bool InAppNotificationsEnabled { get; set; } = true;
         public int DueSoonThresholdHours { get; set; } = 24;
         public bool NotifyOnCardAssignment { get; set; } = true;
@@ -1219,27 +1643,37 @@
         public bool NotifyOnOverdue { get; set; } = true;
         public int NotificationRetentionDays { get; set; } = 30;
 
-        // 10. Search & Indexing
+        // 11. Dashboards & Metric Cards
+        public bool EnableDashboards { get; set; } = true;
+        public int MaxDashcardsPerBoard { get; set; } = 10;
+        public int DashboardRefreshIntervalSeconds { get; set; } = 60;
+
+        // 12. Import & Export
+        public bool EnableBoardExport { get; set; } = true;
+        public bool EnableKanbanImport { get; set; } = true;
+        public int MaxImportFileSizeMb { get; set; } = 50;
+
+        // 13. Search & Indexing
         public int SearchMinQueryLength { get; set; } = 2;
         public int SearchMaxPageSize { get; set; } = 50;
         public bool SearchFuzzyMatching { get; set; } = true;
 
-        // 11. Realtime & Presence
+        // 14. Realtime & Presence
         public bool RealtimeBroadcastingEnabled { get; set; } = true;
         public bool RealtimePresenceEnabled { get; set; } = true;
 
-        // 12. Card Aging
+        // 15. Card Aging
         public bool CardAgingEnabled { get; set; } = true;
         public int CardAgingInactiveDays { get; set; } = 14;
         public string CardAgingMode { get; set; } = "Regular";
 
-        // 13. Storage & Attachments
+        // 16. Storage & Attachments
         public int MaxAttachmentSizeMb { get; set; } = 25;
         public string AllowedAttachmentExtensions { get; set; } = "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip";
         public bool AllowCoverImages { get; set; } = true;
         public int MaxCoverImageSizeMb { get; set; } = 5;
 
-        // 14. Artificial Intelligence
+        // 17. Artificial Intelligence
         public bool AiEnabled { get; set; }
         public string AiProvider { get; set; } = "OpenAiCompatible";
         public string AiEndpoint { get; set; } = "http://localhost:11434/";
@@ -1248,7 +1682,7 @@
         public int AiTimeoutSeconds { get; set; } = 60;
         public int AiMaxTokens { get; set; } = 2048;
 
-        // 15. Outbound Email (SMTP)
+        // 18. Outbound Email (SMTP)
         public bool EmailNotificationsEnabled { get; set; }
         public string SmtpHost { get; set; } = "localhost";
         public int SmtpPort { get; set; } = 587;
@@ -1258,43 +1692,74 @@
         public string SenderEmail { get; set; } = "noreply@cardscape.local";
         public string SenderName { get; set; } = "Cardscape Notificaciones";
 
-        // 16. Inbound Email (Email-to-Board)
+        // 19. Inbound Email (Email-to-Board)
         public bool InboundEmailEnabled { get; set; }
         public string InboundEmailDomain { get; set; } = "inbound.cardscape.local";
         public string InboundDefaultList { get; set; } = "Inbox";
         public bool InboundAttachSenderEmail { get; set; } = true;
 
-        // 17. Integrations (Slack, GitHub, Calendar, MCP)
+        // 20. Integrations (Slack, GitHub, Calendar, MCP)
         public bool SlackIntegrationEnabled { get; set; }
         public bool GitHubIntegrationEnabled { get; set; }
         public bool GoogleCalendarIntegrationEnabled { get; set; }
         public bool McpServerEnabled { get; set; } = true;
         public bool CalendarIcsFeedsEnabled { get; set; } = true;
+        public int CalendarFeedTokenLifetimeDays { get; set; } = 180;
 
-        // 18. Webhooks
+        // 21. Model Context Protocol (MCP Server)
+        public string McpServerName { get; set; } = "Cardscape-MCP";
+        public bool McpEnableWriteTools { get; set; } = true;
+        public int McpMaxBatchSize { get; set; } = 50;
+
+        // 22. Webhooks
         public bool WebhooksEnabled { get; set; } = true;
         public int MaxWebhookRetries { get; set; } = 3;
         public int WebhookTimeoutSeconds { get; set; } = 10;
         public bool WebhookPayloadSignatureEnabled { get; set; } = true;
 
-        // 19. Rate Limiting & Performance
+        // 23. API Idempotency
+        public bool EnableIdempotency { get; set; } = true;
+        public int IdempotencyReservationWindowMinutes { get; set; } = 15;
+        public int IdempotencyRetentionWindowHours { get; set; } = 24;
+
+        // 24. Rate Limiting & Performance
         public bool RateLimitingEnabled { get; set; } = true;
         public int DefaultRequestsPerHour { get; set; } = 1000;
         public string RateLimiterBackend { get; set; } = "InMemory";
         public int BackgroundJobPollIntervalSeconds { get; set; } = 2;
         public int BackgroundJobBatchSize { get; set; } = 10;
 
-        // 20. Data Retention & GDPR
+        // 25. Infrastructure & Redis
+        public string? RedisConnectionString { get; set; }
+        public int RedisDatabase { get; set; }
+        public string PendingTotpStoreBackend { get; set; } = "InMemory";
+        public string PendingTotpStoreKeyPrefix { get; set; } = "cardscape:totp-pending:";
+        public string RateLimiterKeyPrefix { get; set; } = "cardscape:rl:";
+
+        // 26. Activities & Audit Logging
+        public bool EnableActivityLogging { get; set; } = true;
+        public int ActivityPageSize { get; set; } = 25;
+        public bool AuditLogDetailedIp { get; set; } = true;
+
+        // 27. System Logging (Serilog)
+        public int LogRetainedFileCountLimit { get; set; } = 30;
+        public int LogFileSizeLimitMb { get; set; } = 100;
+
+        // 28. Data Retention, Residency & GDPR
         public bool RetentionSweeperEnabled { get; set; } = true;
         public int SweepIntervalHours { get; set; } = 6;
         public int UserGracePeriodDays { get; set; } = 30;
         public int ActivityRetentionDays { get; set; } = 365;
         public int AuditRetentionDays { get; set; } = 730;
         public bool AutoPurgeOrphanAttachments { get; set; } = true;
-
-        // 21. Experimental & Dev
         public bool DataResidencyEnabled { get; set; }
+        public string DeploymentRegion { get; set; } = "Unspecified";
+        public bool EnforceDataResidency { get; set; }
+
+        // 29. Seeder & Dev
         public bool SeederEnabled { get; set; }
+        public bool AllowSeederExecution { get; set; }
+        public bool SeederWipeBeforeSeed { get; set; }
     }
 
     private SystemSettingsDto? _settings;
@@ -1364,6 +1829,12 @@
         _model.SingleActiveSessionPerUser = dto.SingleActiveSessionPerUser;
         _model.MaxApiTokensPerUser = dto.MaxApiTokensPerUser;
         _model.ApiTokenExpirationDays = dto.ApiTokenExpirationDays;
+        _model.DefaultApiTokenExpiryDays = dto.DefaultApiTokenExpiryDays;
+        _model.MaxApiTokenExpiryDays = dto.MaxApiTokenExpiryDays;
+        _model.CacheAdminClaim = dto.CacheAdminClaim;
+        _model.TotpIssuerName = dto.TotpIssuerName;
+        _model.TotpStepTolerance = dto.TotpStepTolerance;
+        _model.PasswordResetTokenLifetimeMinutes = dto.PasswordResetTokenLifetimeMinutes;
         _model.CorsAllowedOrigins = dto.CorsAllowedOrigins;
         _model.EnforceHttps = dto.EnforceHttps;
         _model.EnableSecurityHeaders = dto.EnableSecurityHeaders;
@@ -1376,7 +1847,18 @@
         _model.OAuthAppsEnabled = dto.OAuthAppsEnabled;
         _model.MaxOAuthAppsPerUser = dto.MaxOAuthAppsPerUser;
 
-        // 4. Workspaces & Boards
+        // 4. External / Social OAuth
+        _model.EnableGoogleAuth = dto.EnableGoogleAuth;
+        _model.GoogleClientId = dto.GoogleClientId;
+        _model.GoogleClientSecret = null;
+        _model.EnableGitHubAuth = dto.EnableGitHubAuth;
+        _model.GitHubClientId = dto.GitHubClientId;
+        _model.GitHubClientSecret = null;
+        _model.EnableMicrosoftAuth = dto.EnableMicrosoftAuth;
+        _model.MicrosoftClientId = dto.MicrosoftClientId;
+        _model.MicrosoftClientSecret = null;
+
+        // 5. Workspaces & Boards
         _model.MaxWorkspacesPerUser = dto.MaxWorkspacesPerUser;
         _model.MaxBoardsPerWorkspace = dto.MaxBoardsPerWorkspace;
         _model.MaxMembersPerWorkspace = dto.MaxMembersPerWorkspace;
@@ -1384,7 +1866,7 @@
         _model.InvitationExpirationDays = dto.InvitationExpirationDays;
         _model.AllowPublicBoards = dto.AllowPublicBoards;
 
-        // 5. Cards, Lists & Productivity
+        // 6. Cards, Lists & Productivity
         _model.DefaultWipLimit = dto.DefaultWipLimit;
         _model.EnforceWipLimits = dto.EnforceWipLimits;
         _model.AllowCardMirroring = dto.AllowCardMirroring;
@@ -1396,24 +1878,24 @@
         _model.CardRecurrenceEnabled = dto.CardRecurrenceEnabled;
         _model.MaxRecurrenceIntervalDays = dto.MaxRecurrenceIntervalDays;
 
-        // 6. Comments & Collaboration
+        // 7. Comments & Collaboration
         _model.AllowCommentEditing = dto.AllowCommentEditing;
         _model.AllowCommentDeletion = dto.AllowCommentDeletion;
         _model.MaxCommentLength = dto.MaxCommentLength;
         _model.AllowUserMentions = dto.AllowUserMentions;
 
-        // 7. Labels & Custom Fields
+        // 8. Labels & Custom Fields
         _model.MaxLabelsPerBoard = dto.MaxLabelsPerBoard;
         _model.MaxLabelsPerCard = dto.MaxLabelsPerCard;
         _model.CustomFieldsEnabled = dto.CustomFieldsEnabled;
         _model.MaxCustomFieldsPerBoard = dto.MaxCustomFieldsPerBoard;
 
-        // 8. Board Automation Rules
+        // 9. Board Automation Rules
         _model.BoardAutomationEnabled = dto.BoardAutomationEnabled;
         _model.MaxAutomationRulesPerBoard = dto.MaxAutomationRulesPerBoard;
         _model.MaxAutomationActionsPerRule = dto.MaxAutomationActionsPerRule;
 
-        // 9. Notifications & System Alerts
+        // 10. Notifications & System Alerts
         _model.InAppNotificationsEnabled = dto.InAppNotificationsEnabled;
         _model.DueSoonThresholdHours = dto.DueSoonThresholdHours;
         _model.NotifyOnCardAssignment = dto.NotifyOnCardAssignment;
@@ -1422,27 +1904,37 @@
         _model.NotifyOnOverdue = dto.NotifyOnOverdue;
         _model.NotificationRetentionDays = dto.NotificationRetentionDays;
 
-        // 10. Search & Indexing
+        // 11. Dashboards & Metric Cards
+        _model.EnableDashboards = dto.EnableDashboards;
+        _model.MaxDashcardsPerBoard = dto.MaxDashcardsPerBoard;
+        _model.DashboardRefreshIntervalSeconds = dto.DashboardRefreshIntervalSeconds;
+
+        // 12. Import & Export
+        _model.EnableBoardExport = dto.EnableBoardExport;
+        _model.EnableKanbanImport = dto.EnableKanbanImport;
+        _model.MaxImportFileSizeMb = dto.MaxImportFileSizeMb;
+
+        // 13. Search & Indexing
         _model.SearchMinQueryLength = dto.SearchMinQueryLength;
         _model.SearchMaxPageSize = dto.SearchMaxPageSize;
         _model.SearchFuzzyMatching = dto.SearchFuzzyMatching;
 
-        // 11. Realtime & Presence
+        // 14. Realtime & Presence
         _model.RealtimeBroadcastingEnabled = dto.RealtimeBroadcastingEnabled;
         _model.RealtimePresenceEnabled = dto.RealtimePresenceEnabled;
 
-        // 12. Card Aging
+        // 15. Card Aging
         _model.CardAgingEnabled = dto.CardAgingEnabled;
         _model.CardAgingInactiveDays = dto.CardAgingInactiveDays;
         _model.CardAgingMode = dto.CardAgingMode;
 
-        // 13. Storage & Attachments
+        // 16. Storage & Attachments
         _model.MaxAttachmentSizeMb = dto.MaxAttachmentSizeMb;
         _model.AllowedAttachmentExtensions = dto.AllowedAttachmentExtensions;
         _model.AllowCoverImages = dto.AllowCoverImages;
         _model.MaxCoverImageSizeMb = dto.MaxCoverImageSizeMb;
 
-        // 14. Artificial Intelligence
+        // 17. Artificial Intelligence
         _model.AiEnabled = dto.AiEnabled;
         _model.AiProvider = dto.AiProvider;
         _model.AiEndpoint = dto.AiEndpoint;
@@ -1451,7 +1943,7 @@
         _model.AiTimeoutSeconds = dto.AiTimeoutSeconds;
         _model.AiMaxTokens = dto.AiMaxTokens;
 
-        // 15. Outbound Email (SMTP)
+        // 18. Outbound Email (SMTP)
         _model.EmailNotificationsEnabled = dto.EmailNotificationsEnabled;
         _model.SmtpHost = dto.SmtpHost;
         _model.SmtpPort = dto.SmtpPort;
@@ -1461,43 +1953,74 @@
         _model.SenderEmail = dto.SenderEmail;
         _model.SenderName = dto.SenderName;
 
-        // 16. Inbound Email (Email-to-Board)
+        // 19. Inbound Email (Email-to-Board)
         _model.InboundEmailEnabled = dto.InboundEmailEnabled;
         _model.InboundEmailDomain = dto.InboundEmailDomain;
         _model.InboundDefaultList = dto.InboundDefaultList;
         _model.InboundAttachSenderEmail = dto.InboundAttachSenderEmail;
 
-        // 17. Integrations (Slack, GitHub, Calendar, MCP)
+        // 20. Integrations (Slack, GitHub, Calendar, MCP)
         _model.SlackIntegrationEnabled = dto.SlackIntegrationEnabled;
         _model.GitHubIntegrationEnabled = dto.GitHubIntegrationEnabled;
         _model.GoogleCalendarIntegrationEnabled = dto.GoogleCalendarIntegrationEnabled;
         _model.McpServerEnabled = dto.McpServerEnabled;
         _model.CalendarIcsFeedsEnabled = dto.CalendarIcsFeedsEnabled;
+        _model.CalendarFeedTokenLifetimeDays = dto.CalendarFeedTokenLifetimeDays;
 
-        // 18. Webhooks
+        // 21. Model Context Protocol (MCP Server)
+        _model.McpServerName = dto.McpServerName;
+        _model.McpEnableWriteTools = dto.McpEnableWriteTools;
+        _model.McpMaxBatchSize = dto.McpMaxBatchSize;
+
+        // 22. Webhooks
         _model.WebhooksEnabled = dto.WebhooksEnabled;
         _model.MaxWebhookRetries = dto.MaxWebhookRetries;
         _model.WebhookTimeoutSeconds = dto.WebhookTimeoutSeconds;
         _model.WebhookPayloadSignatureEnabled = dto.WebhookPayloadSignatureEnabled;
 
-        // 19. Rate Limiting & Performance
+        // 23. API Idempotency
+        _model.EnableIdempotency = dto.EnableIdempotency;
+        _model.IdempotencyReservationWindowMinutes = dto.IdempotencyReservationWindowMinutes;
+        _model.IdempotencyRetentionWindowHours = dto.IdempotencyRetentionWindowHours;
+
+        // 24. Rate Limiting & Performance
         _model.RateLimitingEnabled = dto.RateLimitingEnabled;
         _model.DefaultRequestsPerHour = dto.DefaultRequestsPerHour;
         _model.RateLimiterBackend = dto.RateLimiterBackend;
         _model.BackgroundJobPollIntervalSeconds = dto.BackgroundJobPollIntervalSeconds;
         _model.BackgroundJobBatchSize = dto.BackgroundJobBatchSize;
 
-        // 20. Data Retention & GDPR
+        // 25. Infrastructure & Redis
+        _model.RedisConnectionString = null;
+        _model.RedisDatabase = dto.RedisDatabase;
+        _model.PendingTotpStoreBackend = dto.PendingTotpStoreBackend;
+        _model.PendingTotpStoreKeyPrefix = dto.PendingTotpStoreKeyPrefix;
+        _model.RateLimiterKeyPrefix = dto.RateLimiterKeyPrefix;
+
+        // 26. Activities & Audit Logging
+        _model.EnableActivityLogging = dto.EnableActivityLogging;
+        _model.ActivityPageSize = dto.ActivityPageSize;
+        _model.AuditLogDetailedIp = dto.AuditLogDetailedIp;
+
+        // 27. System Logging (Serilog)
+        _model.LogRetainedFileCountLimit = dto.LogRetainedFileCountLimit;
+        _model.LogFileSizeLimitMb = dto.LogFileSizeLimitMb;
+
+        // 28. Data Retention, Residency & GDPR
         _model.RetentionSweeperEnabled = dto.RetentionSweeperEnabled;
         _model.SweepIntervalHours = dto.SweepIntervalHours;
         _model.UserGracePeriodDays = dto.UserGracePeriodDays;
         _model.ActivityRetentionDays = dto.ActivityRetentionDays;
         _model.AuditRetentionDays = dto.AuditRetentionDays;
         _model.AutoPurgeOrphanAttachments = dto.AutoPurgeOrphanAttachments;
-
-        // 21. Experimental & Dev
         _model.DataResidencyEnabled = dto.DataResidencyEnabled;
+        _model.DeploymentRegion = dto.DeploymentRegion;
+        _model.EnforceDataResidency = dto.EnforceDataResidency;
+
+        // 29. Seeder & Dev
         _model.SeederEnabled = dto.SeederEnabled;
+        _model.AllowSeederExecution = dto.AllowSeederExecution;
+        _model.SeederWipeBeforeSeed = dto.SeederWipeBeforeSeed;
     }
 
     private async Task SaveSettingsAsync()
@@ -1530,6 +2053,12 @@
                 SingleActiveSessionPerUser: _model.SingleActiveSessionPerUser,
                 MaxApiTokensPerUser: _model.MaxApiTokensPerUser,
                 ApiTokenExpirationDays: _model.ApiTokenExpirationDays,
+                DefaultApiTokenExpiryDays: _model.DefaultApiTokenExpiryDays,
+                MaxApiTokenExpiryDays: _model.MaxApiTokenExpiryDays,
+                CacheAdminClaim: _model.CacheAdminClaim,
+                TotpIssuerName: _model.TotpIssuerName,
+                TotpStepTolerance: _model.TotpStepTolerance,
+                PasswordResetTokenLifetimeMinutes: _model.PasswordResetTokenLifetimeMinutes,
                 CorsAllowedOrigins: _model.CorsAllowedOrigins,
                 EnforceHttps: _model.EnforceHttps,
                 EnableSecurityHeaders: _model.EnableSecurityHeaders,
@@ -1542,7 +2071,18 @@
                 OAuthAppsEnabled: _model.OAuthAppsEnabled,
                 MaxOAuthAppsPerUser: _model.MaxOAuthAppsPerUser,
 
-                // 4. Workspaces & Boards
+                // 4. External / Social OAuth
+                EnableGoogleAuth: _model.EnableGoogleAuth,
+                GoogleClientId: _model.GoogleClientId,
+                GoogleClientSecret: _model.GoogleClientSecret,
+                EnableGitHubAuth: _model.EnableGitHubAuth,
+                GitHubClientId: _model.GitHubClientId,
+                GitHubClientSecret: _model.GitHubClientSecret,
+                EnableMicrosoftAuth: _model.EnableMicrosoftAuth,
+                MicrosoftClientId: _model.MicrosoftClientId,
+                MicrosoftClientSecret: _model.MicrosoftClientSecret,
+
+                // 5. Workspaces & Boards
                 MaxWorkspacesPerUser: _model.MaxWorkspacesPerUser,
                 MaxBoardsPerWorkspace: _model.MaxBoardsPerWorkspace,
                 MaxMembersPerWorkspace: _model.MaxMembersPerWorkspace,
@@ -1550,7 +2090,7 @@
                 InvitationExpirationDays: _model.InvitationExpirationDays,
                 AllowPublicBoards: _model.AllowPublicBoards,
 
-                // 5. Cards, Lists & Productivity
+                // 6. Cards, Lists & Productivity
                 DefaultWipLimit: _model.DefaultWipLimit,
                 EnforceWipLimits: _model.EnforceWipLimits,
                 AllowCardMirroring: _model.AllowCardMirroring,
@@ -1562,24 +2102,24 @@
                 CardRecurrenceEnabled: _model.CardRecurrenceEnabled,
                 MaxRecurrenceIntervalDays: _model.MaxRecurrenceIntervalDays,
 
-                // 6. Comments & Collaboration
+                // 7. Comments & Collaboration
                 AllowCommentEditing: _model.AllowCommentEditing,
                 AllowCommentDeletion: _model.AllowCommentDeletion,
                 MaxCommentLength: _model.MaxCommentLength,
                 AllowUserMentions: _model.AllowUserMentions,
 
-                // 7. Labels & Custom Fields
+                // 8. Labels & Custom Fields
                 MaxLabelsPerBoard: _model.MaxLabelsPerBoard,
                 MaxLabelsPerCard: _model.MaxLabelsPerCard,
                 CustomFieldsEnabled: _model.CustomFieldsEnabled,
                 MaxCustomFieldsPerBoard: _model.MaxCustomFieldsPerBoard,
 
-                // 8. Board Automation Rules
+                // 9. Board Automation Rules
                 BoardAutomationEnabled: _model.BoardAutomationEnabled,
                 MaxAutomationRulesPerBoard: _model.MaxAutomationRulesPerBoard,
                 MaxAutomationActionsPerRule: _model.MaxAutomationActionsPerRule,
 
-                // 9. Notifications & System Alerts
+                // 10. Notifications & System Alerts
                 InAppNotificationsEnabled: _model.InAppNotificationsEnabled,
                 DueSoonThresholdHours: _model.DueSoonThresholdHours,
                 NotifyOnCardAssignment: _model.NotifyOnCardAssignment,
@@ -1588,27 +2128,37 @@
                 NotifyOnOverdue: _model.NotifyOnOverdue,
                 NotificationRetentionDays: _model.NotificationRetentionDays,
 
-                // 10. Search & Indexing
+                // 11. Dashboards & Metric Cards
+                EnableDashboards: _model.EnableDashboards,
+                MaxDashcardsPerBoard: _model.MaxDashcardsPerBoard,
+                DashboardRefreshIntervalSeconds: _model.DashboardRefreshIntervalSeconds,
+
+                // 12. Import & Export
+                EnableBoardExport: _model.EnableBoardExport,
+                EnableKanbanImport: _model.EnableKanbanImport,
+                MaxImportFileSizeMb: _model.MaxImportFileSizeMb,
+
+                // 13. Search & Indexing
                 SearchMinQueryLength: _model.SearchMinQueryLength,
                 SearchMaxPageSize: _model.SearchMaxPageSize,
                 SearchFuzzyMatching: _model.SearchFuzzyMatching,
 
-                // 11. Realtime & Presence
+                // 14. Realtime & Presence
                 RealtimeBroadcastingEnabled: _model.RealtimeBroadcastingEnabled,
                 RealtimePresenceEnabled: _model.RealtimePresenceEnabled,
 
-                // 12. Card Aging
+                // 15. Card Aging
                 CardAgingEnabled: _model.CardAgingEnabled,
                 CardAgingInactiveDays: _model.CardAgingInactiveDays,
                 CardAgingMode: _model.CardAgingMode,
 
-                // 13. Storage & Attachments
+                // 16. Storage & Attachments
                 MaxAttachmentSizeMb: _model.MaxAttachmentSizeMb,
                 AllowedAttachmentExtensions: _model.AllowedAttachmentExtensions,
                 AllowCoverImages: _model.AllowCoverImages,
                 MaxCoverImageSizeMb: _model.MaxCoverImageSizeMb,
 
-                // 14. Artificial Intelligence
+                // 17. Artificial Intelligence
                 AiEnabled: _model.AiEnabled,
                 AiProvider: _model.AiProvider,
                 AiEndpoint: _model.AiEndpoint,
@@ -1617,7 +2167,7 @@
                 AiTimeoutSeconds: _model.AiTimeoutSeconds,
                 AiMaxTokens: _model.AiMaxTokens,
 
-                // 15. Outbound Email (SMTP)
+                // 18. Outbound Email (SMTP)
                 EmailNotificationsEnabled: _model.EmailNotificationsEnabled,
                 SmtpHost: _model.SmtpHost,
                 SmtpPort: _model.SmtpPort,
@@ -1627,43 +2177,74 @@
                 SenderEmail: _model.SenderEmail,
                 SenderName: _model.SenderName,
 
-                // 16. Inbound Email (Email-to-Board)
+                // 19. Inbound Email (Email-to-Board)
                 InboundEmailEnabled: _model.InboundEmailEnabled,
                 InboundEmailDomain: _model.InboundEmailDomain,
                 InboundDefaultList: _model.InboundDefaultList,
                 InboundAttachSenderEmail: _model.InboundAttachSenderEmail,
 
-                // 17. Integrations (Slack, GitHub, Calendar, MCP)
+                // 20. Integrations (Slack, GitHub, Calendar, MCP)
                 SlackIntegrationEnabled: _model.SlackIntegrationEnabled,
                 GitHubIntegrationEnabled: _model.GitHubIntegrationEnabled,
                 GoogleCalendarIntegrationEnabled: _model.GoogleCalendarIntegrationEnabled,
                 McpServerEnabled: _model.McpServerEnabled,
                 CalendarIcsFeedsEnabled: _model.CalendarIcsFeedsEnabled,
+                CalendarFeedTokenLifetimeDays: _model.CalendarFeedTokenLifetimeDays,
 
-                // 18. Webhooks
+                // 21. Model Context Protocol (MCP Server)
+                McpServerName: _model.McpServerName,
+                McpEnableWriteTools: _model.McpEnableWriteTools,
+                McpMaxBatchSize: _model.McpMaxBatchSize,
+
+                // 22. Webhooks
                 WebhooksEnabled: _model.WebhooksEnabled,
                 MaxWebhookRetries: _model.MaxWebhookRetries,
                 WebhookTimeoutSeconds: _model.WebhookTimeoutSeconds,
                 WebhookPayloadSignatureEnabled: _model.WebhookPayloadSignatureEnabled,
 
-                // 19. Rate Limiting & Performance
+                // 23. API Idempotency
+                EnableIdempotency: _model.EnableIdempotency,
+                IdempotencyReservationWindowMinutes: _model.IdempotencyReservationWindowMinutes,
+                IdempotencyRetentionWindowHours: _model.IdempotencyRetentionWindowHours,
+
+                // 24. Rate Limiting & Performance
                 RateLimitingEnabled: _model.RateLimitingEnabled,
                 DefaultRequestsPerHour: _model.DefaultRequestsPerHour,
                 RateLimiterBackend: _model.RateLimiterBackend,
                 BackgroundJobPollIntervalSeconds: _model.BackgroundJobPollIntervalSeconds,
                 BackgroundJobBatchSize: _model.BackgroundJobBatchSize,
 
-                // 20. Data Retention & GDPR
+                // 25. Infrastructure & Redis
+                RedisConnectionString: _model.RedisConnectionString,
+                RedisDatabase: _model.RedisDatabase,
+                PendingTotpStoreBackend: _model.PendingTotpStoreBackend,
+                PendingTotpStoreKeyPrefix: _model.PendingTotpStoreKeyPrefix,
+                RateLimiterKeyPrefix: _model.RateLimiterKeyPrefix,
+
+                // 26. Activities & Audit Logging
+                EnableActivityLogging: _model.EnableActivityLogging,
+                ActivityPageSize: _model.ActivityPageSize,
+                AuditLogDetailedIp: _model.AuditLogDetailedIp,
+
+                // 27. System Logging (Serilog)
+                LogRetainedFileCountLimit: _model.LogRetainedFileCountLimit,
+                LogFileSizeLimitMb: _model.LogFileSizeLimitMb,
+
+                // 28. Data Retention, Residency & GDPR
                 RetentionSweeperEnabled: _model.RetentionSweeperEnabled,
                 SweepIntervalHours: _model.SweepIntervalHours,
                 UserGracePeriodDays: _model.UserGracePeriodDays,
                 ActivityRetentionDays: _model.ActivityRetentionDays,
                 AuditRetentionDays: _model.AuditRetentionDays,
                 AutoPurgeOrphanAttachments: _model.AutoPurgeOrphanAttachments,
-
-                // 21. Experimental & Dev
                 DataResidencyEnabled: _model.DataResidencyEnabled,
-                SeederEnabled: _model.SeederEnabled
+                DeploymentRegion: _model.DeploymentRegion,
+                EnforceDataResidency: _model.EnforceDataResidency,
+
+                // 29. Seeder & Dev
+                SeederEnabled: _model.SeederEnabled,
+                AllowSeederExecution: _model.AllowSeederExecution,
+                SeederWipeBeforeSeed: _model.SeederWipeBeforeSeed
             );
 
             ApiResult<SystemSettingsDto> result = await SettingsApi.UpdateSettingsAsync(req);

@@ -77,6 +77,16 @@ public sealed class SystemSettingsServiceTests : IDisposable
         settings.DueSoonThresholdHours.Should().Be(24);
         settings.SearchFuzzyMatching.Should().BeTrue();
         settings.RealtimeBroadcastingEnabled.Should().BeTrue();
+        settings.CacheAdminClaim.Should().BeTrue();
+        settings.TotpIssuerName.Should().Be("Cardscape");
+        settings.EnableIdempotency.Should().BeTrue();
+        settings.EnableDashboards.Should().BeTrue();
+        settings.EnableBoardExport.Should().BeTrue();
+        settings.McpServerName.Should().Be("Cardscape-MCP");
+        settings.RedisDatabase.Should().Be(0);
+        settings.DeploymentRegion.Should().Be("Unspecified");
+        settings.EnableActivityLogging.Should().BeTrue();
+        settings.LogRetainedFileCountLimit.Should().Be(30);
     }
 
     [Fact]
@@ -133,7 +143,15 @@ public sealed class SystemSettingsServiceTests : IDisposable
             MaxWorkspacesPerUser: 25,
             SamlSsoEnabled: true,
             CustomFieldsEnabled: false,
-            DueSoonThresholdHours: 48);
+            DueSoonThresholdHours: 48,
+            RedisConnectionString: "redis-cache:6379",
+            EnableGoogleAuth: true,
+            GoogleClientId: "google-client-id",
+            GoogleClientSecret: "google-secret-val",
+            DeploymentRegion: "Europe",
+            EnableIdempotency: false,
+            MaxDashcardsPerBoard: 15,
+            McpServerName: "MyCustomMCP");
 
         SystemSettingsDto updated = await service.UpdateSettingsAsync(updateReq, "admin@test.com", TestContext.Current.CancellationToken);
 
@@ -156,6 +174,14 @@ public sealed class SystemSettingsServiceTests : IDisposable
         updated.SamlSsoEnabled.Should().BeTrue();
         updated.CustomFieldsEnabled.Should().BeFalse();
         updated.DueSoonThresholdHours.Should().Be(48);
+        updated.RedisConnectionStringMasked.Should().Be("******");
+        updated.EnableGoogleAuth.Should().BeTrue();
+        updated.GoogleClientId.Should().Be("google-client-id");
+        updated.GoogleClientSecretMasked.Should().Be("******");
+        updated.DeploymentRegion.Should().Be("Europe");
+        updated.EnableIdempotency.Should().BeFalse();
+        updated.MaxDashcardsPerBoard.Should().Be(15);
+        updated.McpServerName.Should().Be("MyCustomMCP");
 
         bool isAllowed = await service.IsPublicRegistrationAllowedAsync(TestContext.Current.CancellationToken);
         isAllowed.Should().BeFalse();
@@ -198,7 +224,7 @@ public sealed class SystemSettingsServiceTests : IDisposable
         TestEmailResponse res = await service.TestEmailAsync("test@domain.com", TestContext.Current.CancellationToken);
 
         res.Success.Should().BeFalse();
-        res.Message.Should().Contain("deshabilitadas");
+        res.Message.Should().Contain("no está habilitado");
     }
 
     public void Dispose()
