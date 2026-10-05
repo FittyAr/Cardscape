@@ -1,0 +1,510 @@
+@namespace Cardscape.Web.Components.AdminSettings
+@inject AdminSettingsApiClient SettingsApi
+@inject NotificationService Notify
+
+<RadzenTabs RenderMode="TabRenderMode.Client">
+    <Tabs>
+        @* 5.1 Correo Electrónico *@
+        <RadzenTabsItem Text="Correo Electrónico" Icon="mail">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    <RadzenText Text="Servidor de Correo Saliente (SMTP)" TextStyle="@TextStyle.H6" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Envío de Notificaciones por Correo" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.EmailNotificationsEnabled" />
+                    </RadzenStack>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="8">
+                            <RadzenFormField Text="Servidor SMTP (Host)" Component="smtpHost" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.SmtpHost" Name="smtpHost" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Puerto SMTP" Component="smtpPort" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.SmtpPort" Name="smtpPort" Min="1" Max="65535" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Usuario SMTP" Component="smtpUser" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.SmtpUsername" Name="smtpUser" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Contraseña SMTP (dejar en blanco o '******' para mantener)" Component="smtpPass" Style="width:100%">
+                                <RadzenPassword @bind-Value="Model.SmtpPassword" Name="smtpPass" Placeholder="******" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Cifrado SSL / TLS" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.SmtpEnableSsl" />
+                    </RadzenStack>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Correo del Remitente" Component="senderEmail" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.SenderEmail" Name="senderEmail" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Nombre del Remitente" Component="senderName" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.SenderName" Name="senderName" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Tasa Máx. de Correos por Minuto" Component="emailRateLimit" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.EmailRateLimitPerMinute" Name="emailRateLimit" Min="5" Max="600" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Tamaño de Lote de Envío de Correo" Component="emailBatch" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.EmailBatchSize" Name="emailBatch" Min="1" Max="100" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Incluir Enlace de Cancelación de Suscripción en Correos" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Inserta un enlace para desuscribirse de notificaciones en el pie de los correos automáticos."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.EmailIncludeUnsubscribeLink" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" Gap="0.5rem" AlignItems="@AlignItems.Center" Class="rz-pt-2">
+                        <RadzenTextBox @bind-Value="_testEmailTarget" Placeholder="correo@destino.com" Style="width: 250px;" />
+                        <RadzenButton Text="Enviar Correo de Prueba"
+                                      Icon="send"
+                                      ButtonStyle="@ButtonStyle.Info"
+                                      Size="@ButtonSize.Small"
+                                      IsBusy="@_testingEmail"
+                                      BusyText="Enviando..."
+                                      Click="@TestEmailConnectionAsync" />
+                    </RadzenStack>
+
+                    <RadzenText Text="Creación de Tarjetas vía Correo Entrante (Email-to-Board)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Habilitar Creación de Tarjetas por Email" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Permite a los usuarios enviar correos a direcciones de tablero únicas para crear tarjetas automáticamente."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.InboundEmailEnabled" />
+                    </RadzenStack>
+
+                    @if (Model.InboundEmailEnabled)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Dominio de Correo Entrante" Component="inDomain" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.InboundEmailDomain" Name="inDomain" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Nombre de Lista por Defecto para Tarjetas Entrantes" Component="inList" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.InboundDefaultList" Name="inList" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                            <RadzenText Text="Adjuntar el Archivo .eml Completo en la Tarjeta Creada" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenSwitch @bind-Value="Model.InboundAttachSenderEmail" />
+                        </RadzenStack>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+
+        @* 5.2 Integraciones Externas *@
+        <RadzenTabsItem Text="Integraciones Externas" Icon="extension">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    <RadzenText Text="Integraciones con Plataformas Externas y Webhooks de Terceros" TextStyle="@TextStyle.H6" />
+
+                    @* Slack *@
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Integración con Slack" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.SlackIntegrationEnabled" />
+                    </RadzenStack>
+                    @if (Model.SlackIntegrationEnabled)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Slack Client ID" Component="slackId" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.SlackClientId" Name="slackId" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Slack Client Secret (dejar en blanco o '******' para mantener)" Component="slackSecret" Style="width:100%">
+                                    <RadzenPassword @bind-Value="Model.SlackClientSecret" Name="slackSecret" Placeholder="******" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Slack Signing Secret" Component="slackSign" Style="width:100%">
+                                    <RadzenPassword @bind-Value="Model.SlackSigningSecret" Name="slackSign" Placeholder="******" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Slack Bot Token (xoxb-...)" Component="slackBot" Style="width:100%">
+                                    <RadzenPassword @bind-Value="Model.SlackBotToken" Name="slackBot" Placeholder="******" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    }
+
+                    @* GitHub *@
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Sincronización con GitHub" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.GitHubIntegrationEnabled" />
+                    </RadzenStack>
+                    @if (Model.GitHubIntegrationEnabled)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="8">
+                                <RadzenFormField Text="GitHub Personal Access Token (dejar en blanco o '******' para mantener)" Component="ghToken" Style="width:100%">
+                                    <RadzenPassword @bind-Value="Model.GitHubToken" Name="ghToken" Placeholder="******" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="4">
+                                <RadzenFormField Text="Sincronización (Minutos)" Component="ghSync" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.GitHubSyncIntervalMinutes" Name="ghSync" Min="1" Max="1440" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                            <RadzenText Text="Cerrar Automáticamente Tarjetas al Fusionar Pull Request" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenSwitch @bind-Value="Model.GitHubAutoCloseCardsOnPrMerge" />
+                        </RadzenStack>
+                    }
+
+                    @* Google Calendar *@
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Integración con Google Calendar" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.GoogleCalendarIntegrationEnabled" />
+                    </RadzenStack>
+                    @if (Model.GoogleCalendarIntegrationEnabled)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Google Calendar Client ID" Component="gcalId" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.GoogleCalendarClientId" Name="gcalId" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Google Calendar Client Secret (dejar en blanco o '******' para mantener)" Component="gcalSecret" Style="width:100%">
+                                    <RadzenPassword @bind-Value="Model.GoogleCalendarClientSecret" Name="gcalSecret" Placeholder="******" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        <RadzenFormField Text="Intervalo de Sincronización Google Calendar (Minutos)" Component="gcalSync">
+                            <RadzenNumeric @bind-Value="Model.GoogleCalendarSyncIntervalMinutes" Name="gcalSync" Min="5" Max="1440" Style="width:100%" />
+                        </RadzenFormField>
+                    }
+
+                    @* Almacenamiento en la Nube de Terceros *@
+                    <RadzenText Text="Proveedores de Nube y Colaboración de Archivos" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Integración con Google Drive" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.GoogleDriveIntegrationEnabled" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Integración con Microsoft OneDrive" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.OneDriveIntegrationEnabled" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Integración con Dropbox" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.DropboxIntegrationEnabled" />
+                    </RadzenStack>
+
+                    <RadzenText Text="Webhooks de Notificaciones a Canales Corporativos" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Webhooks para Microsoft Teams" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.MicrosoftTeamsIntegrationEnabled" />
+                    </RadzenStack>
+                    @if (Model.MicrosoftTeamsIntegrationEnabled)
+                    {
+                        <RadzenFormField Text="Webhook URL de Teams (dejar en blanco o '******' para mantener)" Component="teamsUrl">
+                            <RadzenPassword @bind-Value="Model.MicrosoftTeamsWebhookUrl" Name="teamsUrl" Placeholder="******" Style="width:100%" />
+                        </RadzenFormField>
+                    }
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Webhooks para Discord" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.DiscordIntegrationEnabled" />
+                    </RadzenStack>
+                    @if (Model.DiscordIntegrationEnabled)
+                    {
+                        <RadzenFormField Text="Webhook URL de Discord (dejar en blanco o '******' para mantener)" Component="discordUrl">
+                            <RadzenPassword @bind-Value="Model.DiscordWebhookUrl" Name="discordUrl" Placeholder="******" Style="width:100%" />
+                        </RadzenFormField>
+                    }
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Integración con GitLab" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.GitLabIntegrationEnabled" />
+                    </RadzenStack>
+                    @if (Model.GitLabIntegrationEnabled)
+                    {
+                        <RadzenFormField Text="Endpoint de Instancia GitLab (ej. https://gitlab.com o self-hosted)" Component="gitlabEp">
+                            <RadzenTextBox @bind-Value="Model.GitLabEndpoint" Name="gitlabEp" Style="width:100%" />
+                        </RadzenFormField>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+
+        @* 5.3 IA y Servidor MCP *@
+        <RadzenTabsItem Text="IA y Servidor MCP" Icon="psychology">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    <RadzenText Text="Asistente de IA (Ollama / OpenAI / vLLM)" TextStyle="@TextStyle.H6" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Habilitar Asistente de Inteligencia Artificial" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Permite sugerencias inteligentes, resúmenes de tarjetas y generación automática de tareas."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.AiEnabled" />
+                    </RadzenStack>
+
+                    @if (Model.AiEnabled)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Proveedor de IA" Component="aiProv" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.AiProvider" Name="aiProv" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Modelo de IA" Component="aiModel" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.AiModel" Name="aiModel" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+
+                        <RadzenFormField Text="Endpoint de la API de IA (ej. http://localhost:11434/ o https://api.openai.com/v1)" Component="aiEndpoint">
+                            <RadzenTextBox @bind-Value="Model.AiEndpoint" Name="aiEndpoint" Style="width:100%" />
+                        </RadzenFormField>
+
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="API Key de IA (dejar en blanco o '******' para mantener)" Component="aiKey" Style="width:100%">
+                                    <RadzenPassword @bind-Value="Model.AiApiKey" Name="aiKey" Placeholder="******" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Temperatura de Inferencia (0 a 100)" Component="aiTemp" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.AiTemperature" Name="aiTemp" Min="0" Max="100" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Tokens Máximos por Generación" Component="aiTokens" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.AiMaxTokens" Name="aiTokens" Min="256" Max="8192" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Timeout de Petición (Segundos)" Component="aiTimeout" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.AiTimeoutSeconds" Name="aiTimeout" Min="5" Max="300" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                            <RadzenText Text="Generación Inteligente de Descripciones de Tarjetas" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenSwitch @bind-Value="Model.AiEnableCardDescriptionGen" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                            <RadzenText Text="Resumen Automático de Hilos de Comentarios" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenSwitch @bind-Value="Model.AiEnableCommentSummary" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                            <RadzenText Text="Generación Automática de Tareas y Checklists" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenSwitch @bind-Value="Model.AiEnableAutoChecklists" />
+                        </RadzenStack>
+
+                        <RadzenButton Text="Probar Conexión con IA"
+                                      Icon="network_check"
+                                      ButtonStyle="@ButtonStyle.Info"
+                                      Size="@ButtonSize.Small"
+                                      IsBusy="@_testingAi"
+                                      BusyText="Probando..."
+                                      Click="@TestAiConnectionAsync" />
+                    }
+
+                    <RadzenText Text="Servidor Model Context Protocol (MCP Server)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Habilitar Servidor MCP Integrado" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Permite conectar clientes de IA (Claude Desktop, Cursor, Antigravity) vía protocolo MCP."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.McpServerEnabled" />
+                    </RadzenStack>
+
+                    @if (Model.McpServerEnabled)
+                    {
+                        <RadzenFormField Text="Nombre del Servidor MCP Anunciado" Component="mcpName">
+                            <RadzenTextBox @bind-Value="Model.McpServerName" Name="mcpName" Style="width:100%" />
+                        </RadzenFormField>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                            <RadzenStack Gap="0.25rem">
+                                <RadzenText Text="Permitir Herramientas de Escritura MCP" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="Habilita que los agentes de IA creen y editen tarjetas, listas y comentarios en nombre de usuarios autenticados."
+                                            TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                            </RadzenStack>
+                            <RadzenSwitch @bind-Value="Model.McpEnableWriteTools" />
+                        </RadzenStack>
+
+                        <RadzenFormField Text="Tamaño Máximo de Lote para Operaciones Masivas MCP" Component="mcpBatch">
+                            <RadzenNumeric @bind-Value="Model.McpMaxBatchSize" Name="mcpBatch" Min="1" Max="200" Style="width:100%" />
+                        </RadzenFormField>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+
+        @* 5.4 Importación de Datos *@
+        <RadzenTabsItem Text="Importación de Datos" Icon="upload_file">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    <RadzenText Text="Herramientas de Migración e Importación" TextStyle="@TextStyle.H6" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Permitir Exportación de Tableros Completos (JSON / CSV)" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Permite a los administradores de tablero descargar una copia completa de sus datos."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.EnableBoardExport" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Permitir Importación de Archivos Kanban / Trello" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Habilita la carga e importación directa de archivos boards.json procedentes de otras herramientas."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.EnableKanbanImport" />
+                    </RadzenStack>
+
+                    <RadzenFormField Text="Tamaño Máximo de Archivo de Importación (MB)" Component="maxImportSize">
+                        <RadzenNumeric @bind-Value="Model.MaxImportFileSizeMb" Name="maxImportSize" Min="1" Max="500" Style="width:100%" />
+                    </RadzenFormField>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
+
+@code {
+    [Parameter, EditorRequired]
+    public SettingsFormModel Model { get; set; } = default!;
+
+    private bool _testingEmail;
+    private bool _testingAi;
+    private string _testEmailTarget = "admin@cardscape.local";
+
+    private async Task TestEmailConnectionAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_testEmailTarget))
+        {
+            Notify.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Correo Requerido",
+                Detail = "Por favor ingresa un correo de destino para la prueba.",
+                Duration = 3000
+            });
+            return;
+        }
+
+        _testingEmail = true;
+        try
+        {
+            ApiResult<TestEmailResponseDto> result = await SettingsApi.TestEmailAsync(new TestEmailRequestDto(_testEmailTarget.Trim()));
+            if (result.IsSuccess && result.Value is not null)
+            {
+                Notify.Notify(new NotificationMessage
+                {
+                    Severity = result.Value.Success ? NotificationSeverity.Success : NotificationSeverity.Warning,
+                    Summary = result.Value.Success ? "Prueba SMTP Correcta" : "Fallo SMTP",
+                    Detail = result.Value.Message,
+                    Duration = 5000
+                });
+            }
+            else
+            {
+                Notify.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error al Probar SMTP",
+                    Detail = result.Error ?? "No se pudo comunicar con el servidor.",
+                    Duration = 5000
+                });
+            }
+        }
+        finally
+        {
+            _testingEmail = false;
+        }
+    }
+
+    private async Task TestAiConnectionAsync()
+    {
+        _testingAi = true;
+        try
+        {
+            ApiResult<TestAiResponseDto> result = await SettingsApi.TestAiAsync();
+            if (result.IsSuccess && result.Value is not null)
+            {
+                Notify.Notify(new NotificationMessage
+                {
+                    Severity = result.Value.Success ? NotificationSeverity.Success : NotificationSeverity.Warning,
+                    Summary = result.Value.Success ? "Conexión IA Exitosa" : "Fallo de Conexión IA",
+                    Detail = result.Value.Message,
+                    Duration = 5000
+                });
+            }
+            else
+            {
+                Notify.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error al Probar IA",
+                    Detail = result.Error ?? "No se pudo comunicar con el servidor.",
+                    Duration = 5000
+                });
+            }
+        }
+        finally
+        {
+            _testingAi = false;
+        }
+    }
+}

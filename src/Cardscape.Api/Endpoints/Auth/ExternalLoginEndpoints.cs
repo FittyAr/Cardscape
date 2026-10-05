@@ -58,6 +58,7 @@ public static class ExternalLoginEndpoints
         group.MapGet("/{provider}/start", async Task<IResult> (
             string provider,
             IAuthenticationSchemeProvider schemes,
+            Cardscape.Application.Abstractions.Settings.ISystemSettingsService settingsService,
             string? returnUrl,
             CancellationToken ct) =>
         {
@@ -65,6 +66,20 @@ public static class ExternalLoginEndpoints
             if (!ExternalProviderExtensions.TryParse(provider, out var parsed))
             {
                 return DomainErrorResults.ToProblem(ExternalLoginErrors.UnknownProvider);
+            }
+
+            var settings = await settingsService.GetSettingsAsync(ct);
+            bool isAllowed = parsed switch
+            {
+                ExternalProvider.Google => settings.EnableGoogleAuth,
+                ExternalProvider.Microsoft => settings.EnableMicrosoftAuth,
+                ExternalProvider.Apple => settings.EnableAppleAuth,
+                ExternalProvider.Saml => settings.SamlSsoEnabled,
+                _ => false
+            };
+            if (!isAllowed)
+            {
+                return DomainErrorResults.ToProblem(ExternalLoginErrors.ProviderUnavailable);
             }
 
             string scheme = parsed.WireName();

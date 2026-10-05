@@ -100,4 +100,30 @@ public sealed class AuthEndpointTests
         HttpResponseMessage response = await client.GetAsync("health/live", TestContext.Current.CancellationToken);
         response.IsSuccessStatusCode.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task Get_Public_Auth_Config_Is_Public_And_Returns_Providers_State()
+    {
+        HttpClient client = _factory.CreateApiClient();
+        HttpResponseMessage response = await client.GetAsync("api/auth/config", TestContext.Current.CancellationToken);
+        response.IsSuccessStatusCode.Should().BeTrue();
+        string json = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        using JsonDocument doc = JsonDocument.Parse(json);
+        doc.RootElement.TryGetProperty("google", out _).Should().BeTrue();
+        doc.RootElement.TryGetProperty("gitHub", out _).Should().BeTrue();
+        doc.RootElement.TryGetProperty("microsoft", out _).Should().BeTrue();
+        doc.RootElement.TryGetProperty("apple", out _).Should().BeTrue();
+        doc.RootElement.TryGetProperty("allowPublicRegistration", out _).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task External_Login_Start_When_Disabled_Returns_NotFound()
+    {
+        HttpClient client = _factory.CreateApiClient();
+        // By default Google auth is disabled in test settings, returning NotFound for unavailable provider
+        HttpResponseMessage response = await client.GetAsync("api/auth/external/google/start", TestContext.Current.CancellationToken);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        string json = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        json.Should().Contain("auth.external.provider_unavailable");
+    }
 }

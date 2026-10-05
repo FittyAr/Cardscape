@@ -1,0 +1,397 @@
+@namespace Cardscape.Web.Components.AdminSettings
+
+<RadzenTabs RenderMode="TabRenderMode.Client">
+    <Tabs>
+        @* 2.1 Autenticación y Credenciales *@
+        <RadzenTabsItem Text="Autenticación y Credenciales" Icon="password">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    <RadzenText Text="Políticas de Autenticación, Tokens JWT y Bloqueo" TextStyle="@TextStyle.H6" />
+
+                    <RadzenFormField Text="Duración del Token de Sesión JWT (Minutos)" Component="jwtExpiry">
+                        <RadzenNumeric @bind-Value="Model.JwtAccessTokenMinutes" Name="jwtExpiry" Min="5" Max="43200" Style="width:100%" />
+                    </RadzenFormField>
+                    <RadzenText Text="Tiempo tras el cual el token expira (por defecto 1440 min = 24 horas; rango 5 a 43200 min)."
+                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Expiración Refresh Token (Días)" Component="jwtRefresh" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.JwtRefreshTokenDays" Name="jwtRefresh" Min="1" Max="90" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Emisor JWT (Issuer)" Component="jwtIssuer" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.JwtIssuer" Name="jwtIssuer" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Audiencia JWT (Audience)" Component="jwtAudience" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.JwtAudience" Name="jwtAudience" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Confiar en Claim JWT de Administrador (Alto Rendimiento)" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Si está activo, verifica los permisos de administrador leyendo el token JWT sin consultar la base de datos en cada petición."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.CacheAdminClaim" />
+                    </RadzenStack>
+
+                    <RadzenFormField Text="Longitud Mínima de Contraseña" Component="pwdMinLen">
+                        <RadzenNumeric @bind-Value="Model.PasswordMinLength" Name="pwdMinLen" Min="6" Max="32" Style="width:100%" />
+                    </RadzenFormField>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Exigir al menos un Dígito Numérico en Contraseñas" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.PasswordRequireDigit" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Exigir Caracteres Especiales / No Alfanuméricos" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.PasswordRequireNonAlphanumeric" />
+                    </RadzenStack>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Caducidad de Contraseñas (Días, 0 = Sin caducidad)" Component="pwdExpiry" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.PasswordExpiryDays" Name="pwdExpiry" Min="0" Max="365" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Historial de Contraseñas Recordadas (0 = Desactivado)" Component="pwdHistory" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.PasswordHistoryCount" Name="pwdHistory" Min="0" Max="24" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenText Text="Autenticación de Dos Factores (TOTP / 2FA)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Exigir 2FA (TOTP) Obligatorio para Administradores" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Fuerza a todos los administradores a habilitar autenticación de dos factores para acceder a funciones administrativas."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.RequireTwoFactorForAdmins" />
+                    </RadzenStack>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Nombre del Emisor TOTP (App de Autenticación)" Component="totpIssuer" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.TotpIssuerName" Name="totpIssuer" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Tolerancia de Reloj TOTP (Pasos de 30s)" Component="totpSkew" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.TotpStepTolerance" Name="totpSkew" Min="0" Max="3" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Dígitos TOTP (6 u 8)" Component="totpDigits" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.TotpCodeLength" Name="totpDigits" Min="6" Max="8" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Cantidad Códigos Recuperación" Component="totpRecCount" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.TotpRecoveryCodesCount" Name="totpRecCount" Min="4" Max="30" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Longitud Código Recuperación" Component="totpRecLen" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.TotpRecoveryCodeLength" Name="totpRecLen" Min="8" Max="20" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenText Text="Bloqueo y Seguridad contra Fuerza Bruta" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenFormField Text="Validez de Enlaces de Restablecimiento de Contraseña (Minutos)" Component="pwdResetExp">
+                        <RadzenNumeric @bind-Value="Model.PasswordResetTokenLifetimeMinutes" Name="pwdResetExp" Min="5" Max="1440" Style="width:100%" />
+                    </RadzenFormField>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Límite de Intentos Fallidos de Inicio de Sesión" Component="maxFailed" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.MaxFailedLoginAttempts" Name="maxFailed" Min="3" Max="20" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Duración del Bloqueo Temporal (Minutos)" Component="lockDuration" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.LockoutDurationMinutes" Name="lockDuration" Min="1" Max="1440" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+
+        @* 2.2 SSO y Proveedores Externos *@
+        <RadzenTabsItem Text="SSO y Proveedores Externos" Icon="vpn_lock">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    <RadzenText Text="Single Sign-On Empresarial (SAML 2.0 y SCIM 2.0)" TextStyle="@TextStyle.H6" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Habilitar SAML 2.0 Single Sign-On" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Permite iniciar sesión contra IdPs como Okta, Entra ID / Azure AD, PingIdentity o OneLogin."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.SamlSsoEnabled" />
+                    </RadzenStack>
+
+                    @if (Model.SamlSsoEnabled)
+                    {
+                        <RadzenFormField Text="Forzar SAML para el Dominio de Correo (ej. miempresa.com)" Component="samlDomain">
+                            <RadzenTextBox @bind-Value="Model.SamlEnforceForDomain" Name="samlDomain" Style="width:100%" />
+                        </RadzenFormField>
+                    }
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Habilitar Aprovisionamiento Automático SCIM 2.0" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Permite a los administradores sincronizar usuarios y grupos automáticamente desde su IdP corporativo."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.ScimProvisioningEnabled" />
+                    </RadzenStack>
+
+                    @if (Model.ScimProvisioningEnabled)
+                    {
+                        <RadzenFormField Text="Expiración de Tokens SCIM (Días)" Component="scimExp">
+                            <RadzenNumeric @bind-Value="Model.ScimTokenExpirationDays" Name="scimExp" Min="30" Max="365" Style="width:100%" />
+                        </RadzenFormField>
+                    }
+
+                    <RadzenText Text="Proveedores de Identidad OAuth 2.0 / OpenID Connect" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    @* Google *@
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Inicio de Sesión con Google" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.EnableGoogleAuth" />
+                    </RadzenStack>
+                    @if (Model.EnableGoogleAuth)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Google Client ID" Component="gClientId" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.GoogleClientId" Name="gClientId" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Google Client Secret (dejar en blanco o '******' para mantener)" Component="gSecret" Style="width:100%">
+                                    <RadzenPassword @bind-Value="Model.GoogleClientSecret" Name="gSecret" Placeholder="******" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    }
+
+                    @* GitHub *@
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Inicio de Sesión con GitHub" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.EnableGitHubAuth" />
+                    </RadzenStack>
+                    @if (Model.EnableGitHubAuth)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="GitHub Client ID" Component="ghClientId" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.GitHubClientId" Name="ghClientId" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="GitHub Client Secret (dejar en blanco o '******' para mantener)" Component="ghSecret" Style="width:100%">
+                                    <RadzenPassword @bind-Value="Model.GitHubClientSecret" Name="ghSecret" Placeholder="******" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    }
+
+                    @* Microsoft *@
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Inicio de Sesión con Microsoft" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.EnableMicrosoftAuth" />
+                    </RadzenStack>
+                    @if (Model.EnableMicrosoftAuth)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Microsoft Client ID" Component="msClientId" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.MicrosoftClientId" Name="msClientId" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Microsoft Client Secret (dejar en blanco o '******' para mantener)" Component="msSecret" Style="width:100%">
+                                    <RadzenPassword @bind-Value="Model.MicrosoftClientSecret" Name="msSecret" Placeholder="******" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    }
+
+                    @* Apple *@
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Inicio de Sesión con Apple (Sign in with Apple)" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.EnableAppleAuth" />
+                    </RadzenStack>
+                    @if (Model.EnableAppleAuth)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Apple Services ID (Client ID)" Component="appleClientId" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.AppleClientId" Name="appleClientId" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Apple Team ID (10 caracteres)" Component="appleTeamId" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.AppleTeamId" Name="appleTeamId" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Apple Key ID" Component="appleKeyId" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.AppleKeyId" Name="appleKeyId" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Apple Private Key PEM (.p8, dejar en blanco o '******' para mantener)" Component="appleKeyPem" Style="width:100%">
+                                    <RadzenPassword @bind-Value="Model.ApplePrivateKeyPem" Name="appleKeyPem" Placeholder="******" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+
+        @* 2.3 Sesiones y Cabeceras Web *@
+        <RadzenTabsItem Text="Sesiones y Cabeceras Web" Icon="lock">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    <RadzenText Text="Políticas de Sesión Concurrente y Timeout" TextStyle="@TextStyle.H6" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Permitir Solo una Sesión Activa por Usuario (Single Active Session)" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.SingleActiveSessionPerUser" />
+                    </RadzenStack>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Sesiones Concurrentes Máximas por Usuario" Component="maxSessions" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.MaxConcurrentSessionsPerUser" Name="maxSessions" Min="1" Max="20" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Timeout de Sesión Inactiva (Minutos, 0 = Sin expiración por inactividad)" Component="idleTimeout" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.IdleSessionTimeoutMinutes" Name="idleTimeout" Min="0" Max="1440" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenText Text="Tokens Personales de API (PAT)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Tokens API Máximos por Usuario" Component="maxTokens" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.MaxApiTokensPerUser" Name="maxTokens" Min="1" Max="50" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Validez por Defecto (Días)" Component="defTokenExp" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.DefaultApiTokenExpiryDays" Name="defTokenExp" Min="1" Max="365" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Validez Máxima Permitida (Días)" Component="maxTokenExp" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.MaxApiTokenExpiryDays" Name="maxTokenExp" Min="1" Max="730" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenText Text="Cabeceras HTTP de Seguridad Avanzada y CORS" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenFormField Text="Orígenes Permitidos CORS (separados por coma, o '*' para todos)" Component="cors">
+                        <RadzenTextBox @bind-Value="Model.CorsAllowedOrigins" Name="cors" Style="width:100%" />
+                    </RadzenFormField>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Forzar Redirección HTTPS en toda la plataforma" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.EnforceHttps" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Cabeceras Seguras HTTP (HSTS, CSP, X-Frame-Options, X-Content-Type)" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.EnableSecurityHeaders" />
+                    </RadzenStack>
+
+                    @if (Model.EnableSecurityHeaders)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="4">
+                                <RadzenFormField Text="HSTS Max-Age (Segundos)" Component="hstsAge" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.HstsMaxAgeSeconds" Name="hstsAge" Min="0" Max="63072000" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="4">
+                                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                    <RadzenText Text="HSTS Incluir Subdominios" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenSwitch @bind-Value="Model.HstsIncludeSubdomains" />
+                                </RadzenStack>
+                            </RadzenColumn>
+                            <RadzenColumn Size="4">
+                                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                    <RadzenText Text="HSTS Preload" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenSwitch @bind-Value="Model.HstsPreload" />
+                                </RadzenStack>
+                            </RadzenColumn>
+                        </RadzenRow>
+
+                        <RadzenFormField Text="Política de Seguridad de Contenido (Content-Security-Policy)" Component="csp">
+                            <RadzenTextArea @bind-Value="Model.ContentSecurityPolicy" Name="csp" Rows="3" Style="width:100%" />
+                        </RadzenFormField>
+
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="X-Frame-Options (Protección contra Clickjacking)" Component="xframe" Style="width:100%">
+                                    <RadzenDropDown @bind-Value="Model.XFrameOptions" Data="@AdminSettingsOptions.XFrameOptions" Name="xframe" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Referrer-Policy" Component="refPol" Style="width:100%">
+                                    <RadzenDropDown @bind-Value="Model.ReferrerPolicy" Data="@AdminSettingsOptions.ReferrerPolicies" Name="refPol" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    }
+
+                    <RadzenText Text="Protección Criptográfica de Claves (ASP.NET Core Data Protection)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Ciclo de Vida de Claves Criptográficas (Días)" Component="dpLife" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.DataProtectionKeyLifetimeDays" Name="dpLife" Min="7" Max="365" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Directorio Persistente de Claves (vacío = default)" Component="dpDir" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.DataProtectionKeyDirectory" Name="dpDir" Placeholder="/var/cardscape/keys" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
+
+@code {
+    [Parameter, EditorRequired]
+    public SettingsFormModel Model { get; set; } = default!;
+}

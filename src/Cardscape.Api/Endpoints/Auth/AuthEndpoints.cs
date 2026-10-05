@@ -21,6 +21,29 @@ public static class AuthEndpoints
     {
         var group = app.MapGroup("/api/auth").WithTags("Auth");
 
+        group.MapGet("/config", async (
+            Cardscape.Application.Abstractions.Settings.ISystemSettingsService settingsService,
+            CancellationToken ct) =>
+        {
+            var settings = await settingsService.GetSettingsAsync(ct);
+            return Results.Ok(new PublicAuthConfigResponse(
+                Google: settings.EnableGoogleAuth,
+                Microsoft: settings.EnableMicrosoftAuth,
+                Apple: settings.EnableAppleAuth,
+                GitHub: settings.EnableGitHubAuth,
+                Saml: settings.SamlSsoEnabled,
+                AllowPublicRegistration: settings.AllowPublicRegistration,
+                InstanceTitle: settings.InstanceTitle,
+                CustomLogoUrl: settings.CustomLogoUrl,
+                MaintenanceModeEnabled: settings.MaintenanceModeEnabled,
+                MaintenanceModeMessage: settings.MaintenanceModeMessage,
+                SystemAnnouncementEnabled: settings.SystemAnnouncementEnabled,
+                SystemAnnouncementType: settings.SystemAnnouncementType,
+                SystemAnnouncementMessage: settings.SystemAnnouncementMessage));
+        })
+        .AllowAnonymous()
+        .Produces<PublicAuthConfigResponse>();
+
         group.MapPost("/register", async (
             RegisterRequest request,
             IMessageBus bus,

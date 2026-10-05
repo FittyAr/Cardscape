@@ -1,0 +1,644 @@
+@namespace Cardscape.Web.Components.AdminSettings
+
+<RadzenTabs RenderMode="TabRenderMode.Client">
+    <Tabs>
+        @* 6.1 Base de Datos y Arranque *@
+        <RadzenTabsItem Text="Base de Datos y Arranque" Icon="storage">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    <RadzenText Text="Resiliencia de Base de Datos y Arranque del Sistema" TextStyle="@TextStyle.H6" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Timeout de Comandos SQL (Segundos)" Component="dbTimeout" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.DatabaseCommandTimeoutSeconds" Name="dbTimeout" Min="5" Max="600" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Reintentos Máximos de Conexión" Component="dbRetries" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.DatabaseMaxRetryCount" Name="dbRetries" Min="0" Max="10" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Espera Máxima Reintento (Segundos)" Component="dbRetryDelay" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.DatabaseMaxRetryDelaySeconds" Name="dbRetryDelay" Min="1" Max="60" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Ejecutar Migraciones EF Core al Iniciar la API" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Aplica automáticamente las migraciones pendientes del motor de BD configurado al arrancar."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="Model.RunMigrationsOnStartup" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Swagger / OpenAPI en Producción" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite acceder a la documentación interactiva OpenAPI fuera de entornos de desarrollo."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="Model.EnableSwaggerInProduction" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Errores Detallados de Base de Datos" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Habilita descripciones detalladas de excepciones en consultas EF Core (solo depuración)."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="Model.DatabaseEnableDetailedErrors" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Logueo de Datos Sensibles de Parámetros SQL" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Incluye valores de parámetros en logs de SQL (precaución: expone PII en logs)."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="Model.DatabaseEnableSensitiveDataLogging" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+
+        @* 6.2 Rendimiento, Caché y API *@
+        <RadzenTabsItem Text="Rendimiento y Caché" Icon="speed">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    <RadzenText Text="Control de Tasa (Rate Limiting) y Procesamiento de Tareas" TextStyle="@TextStyle.H6" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Rate Limiting por Token de API" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.RateLimitingEnabled" />
+                    </RadzenStack>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Peticiones por Hora por Defecto" Component="reqPerHour" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.DefaultRequestsPerHour" Name="reqPerHour" Min="10" Max="1000000" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Backend de Rate Limiting" Component="rlBackend" Style="width:100%">
+                                <RadzenDropDown @bind-Value="Model.RateLimiterBackend" Data="@AdminSettingsOptions.RateLimiterBackends" Name="rlBackend" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Intervalo de Sondeo de Background Jobs (Segundos)" Component="pollInterval" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.BackgroundJobPollIntervalSeconds" Name="pollInterval" Min="1" Max="60" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Tamaño de Lote de Procesamiento de Jobs" Component="batchSize" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.BackgroundJobBatchSize" Name="batchSize" Min="1" Max="100" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenText Text="Caché Distribuida y Almacenamiento en Clúster (Redis)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenFormField Text="Cadena de Conexión Redis (dejar en blanco o '******' para mantener)" Component="redisConn">
+                        <RadzenPassword @bind-Value="Model.RedisConnectionString" Name="redisConn" Placeholder="******" Style="width:100%" />
+                    </RadzenFormField>
+                    <RadzenText Text="Ejemplo: redis-prod-01:6379,abortConnect=false" TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Índice de Base de Datos Redis" Component="redisDb" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.RedisDatabase" Name="redisDb" Min="0" Max="15" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Backend de Desafíos 2FA Temporales" Component="totpBackend" Style="width:100%">
+                                <RadzenDropDown @bind-Value="Model.PendingTotpStoreBackend" Data="@AdminSettingsOptions.TotpBackends" Name="totpBackend" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Prefijo de Claves Redis para 2FA" Component="totpPrefix" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.PendingTotpStoreKeyPrefix" Name="totpPrefix" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Prefijo de Claves Redis para Rate Limiter" Component="rlPrefix" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.RateLimiterKeyPrefix" Name="rlPrefix" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenText Text="Protección de Idempotencia de API" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Activar Middleware de Idempotencia (Idempotency-Key)" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Evita la duplicación accidental de operaciones de escritura garantizando procesamiento at-most-once."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.EnableIdempotency" />
+                    </RadzenStack>
+
+                    @if (Model.EnableIdempotency)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Ventana de Reserva en Ejecución (Minutos)" Component="idemReserve" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.IdempotencyReservationWindowMinutes" Name="idemReserve" Min="1" Max="60" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Retención de Respuesta Cacheada (Horas)" Component="idemRetain" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.IdempotencyRetentionWindowHours" Name="idemRetain" Min="1" Max="168" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    }
+
+                    <RadzenText Text="Paginación y Límites de Consulta" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Tamaño de Página Predeterminado" Component="defPage" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.DefaultPageSize" Name="defPage" Min="10" Max="200" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Tamaño Máximo de Página" Component="maxPage" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.MaxPageSize" Name="maxPage" Min="20" Max="1000" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenFormField Text="Paginación Actividades / Feed" Component="feedPage" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.ActivityFeedPageSize" Name="feedPage" Min="10" Max="200" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenText Text="Optimización HTTP y Middleware de Red" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Compresión de Respuestas HTTP (Brotli / Gzip)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Reduce el tamaño de las cargas útiles JSON y activos estáticos transferidos."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="Model.ResponseCompressionEnabled" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Nivel de Compresión HTTP" Component="compLevel" Style="width:100%">
+                                <RadzenDropDown @bind-Value="Model.ResponseCompressionLevel" Data="@AdminSettingsOptions.CompressionLevels" Name="compLevel" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Caché Archivos Estáticos (Segundos Max-Age)" Component="staticMaxAge" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.StaticFilesMaxAgeSeconds" Name="staticMaxAge" Min="0" Max="31536000" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Tamaño Máximo del Cuerpo de Petición HTTP (MB)" Component="maxReqBody" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.MaxRequestBodySizeMb" Name="maxReqBody" Min="1" Max="500" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Habilitar Cabeceras Reenviadas (X-Forwarded-For / Proxies Inversos)" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Indispensable al alojar Cardscape detrás de Nginx, Cloudflare, Traefik o Envoy para obtener IPs reales."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.ForwardedHeadersEnabled" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+
+        @* 6.3 Almacenamiento y Archivos *@
+        <RadzenTabsItem Text="Almacenamiento y Archivos" Icon="cloud_upload">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    <RadzenText Text="Cuotas de Adjuntos y Archivos del Sistema" TextStyle="@TextStyle.H6" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Tamaño Máximo por Archivo Adjunto (MB)" Component="maxAttach" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.MaxAttachmentSizeMb" Name="maxAttach" Min="1" Max="200" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Tamaño Máx. Imagen de Portada (MB)" Component="maxCover" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.MaxCoverImageSizeMb" Name="maxCover" Min="1" Max="25" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Extensiones de Adjuntos Permitidas (separadas por coma)" Component="allowedExts" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.AllowedAttachmentExtensions" Name="allowedExts" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Extensiones de Avatares Permitidas" Component="allowedAvExts" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.AllowedAvatarExtensions" Name="allowedAvExts" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Tamaño Máx. Avatar de Usuario (MB)" Component="maxAvatar" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.MaxAvatarSizeMb" Name="maxAvatar" Min="1" Max="20" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                <RadzenText Text="Permitir Imágenes de Portada en Tarjetas" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenSwitch @bind-Value="Model.AllowCoverImages" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenText Text="Almacenamiento de Objetos en la Nube (S3 / MinIO)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Nombre del Bucket S3" Component="s3Bucket" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.S3BucketName" Name="s3Bucket" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Región S3" Component="s3Region" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.S3Region" Name="s3Region" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenFormField Text="URL del Endpoint S3 (vacío para AWS oficial, o URL para MinIO/Wasabi)" Component="s3Endpoint">
+                        <RadzenTextBox @bind-Value="Model.S3EndpointUrl" Name="s3Endpoint" Placeholder="http://minio:9000" Style="width:100%" />
+                    </RadzenFormField>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="S3 Access Key" Component="s3AccessKey" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.S3AccessKey" Name="s3AccessKey" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="S3 Secret Key (dejar en blanco o '******' para mantener)" Component="s3Secret" Style="width:100%">
+                                <RadzenPassword @bind-Value="Model.S3SecretKey" Name="s3Secret" Placeholder="******" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Forzar Estilo de Ruta S3 (Path-Style URLs)" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Requerido para MinIO, Ceph y emuladores locales de S3."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.S3ForcePathStyle" />
+                    </RadzenStack>
+
+                    <RadzenText Text="Seguridad de Archivos y Protección Antivirus" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Bloquear Subida de Archivos Ejecutables (.exe, .dll, .sh, .bat)" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Rechaza automáticamente la subida de ejecutables y scripts peligrosos."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.BlockExecutableAttachments" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Escanear Adjuntos con Antivirus en Tiempo Real" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Inspecciona cada fichero subido contra malware antes de persistirlo en el almacenamiento."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.ScanAttachmentsForMalware" />
+                    </RadzenStack>
+
+                    @if (Model.ScanAttachmentsForMalware)
+                    {
+                        <RadzenFormField Text="Endpoint Daemon ClamAV (ej. tcp://clamav:3310)" Component="clamav">
+                            <RadzenTextBox @bind-Value="Model.ClamAvDaemonEndpoint" Name="clamav" Style="width:100%" />
+                        </RadzenFormField>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+
+        @* 6.4 Telemetría, Auditoría y Mantenimiento *@
+        <RadzenTabsItem Text="Telemetría, Auditoría y Diagnóstico" Icon="monitor_heart">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    @if (Settings is not null)
+                    {
+                        <RadzenText Text="Telemetría y Estado de la Infraestructura en Vivo" TextStyle="@TextStyle.H6" />
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                            <RadzenText Text="Motor de Base de Datos Activo:" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenBadge BadgeStyle="@BadgeStyle.Primary" Text="@Settings.DatabaseProvider" Size="@ButtonSize.Medium" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                            <RadzenText Text="Estado de Conexión a Base de Datos:" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenBadge BadgeStyle="@(Settings.DatabaseHealth == "Healthy" ? BadgeStyle.Success : BadgeStyle.Danger)"
+                                         Text="@Settings.DatabaseHealth" Size="@ButtonSize.Medium" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                            <RadzenText Text="Entorno de Ejecución (ASPNETCORE_ENVIRONMENT):" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="@Settings.Environment" Size="@ButtonSize.Medium" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                            <RadzenText Text="Versión de Cardscape:" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="@Settings.AppVersion" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                            <RadzenText Text="Tiempo Activo del Servidor (Uptime):" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="@Settings.Uptime" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                            <RadzenText Text="Memoria en Uso del Proceso:" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="@($"{Settings.MemoryUsageMb} MB")" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                            <RadzenText Text="Hilos Activos del Proceso:" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="@Settings.ActiveThreads.ToString()" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                            <RadzenText Text="Espacio Libre en Disco del Volumen:" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="@($"{Settings.FreeDiskSpaceMb} MB disponibles")" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                            <RadzenText Text="Ruta del Volumen de Almacenamiento Persistente:" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="@Settings.StorageRoot" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                    }
+
+                    <RadzenText Text="Observabilidad y Telemetría APM (OpenTelemetry)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Trazas Distribuidas (Tracing)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Exporta trazas distribuidas vía OTLP." TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="Model.OtelTracingEnabled" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Métricas de Rendimiento (Metrics)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Exporta métricas de API y runtime vía OTLP." TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="Model.OtelMetricsEnabled" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    @if (Model.OtelTracingEnabled || Model.OtelMetricsEnabled)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="URL del Colector OTLP (ej. http://otel-collector:4317)" Component="otelUrl" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.OtelEndpointUrl" Name="otelUrl" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Nombre del Servicio OTLP" Component="otelName" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.OtelServiceName" Name="otelName" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        <RadzenFormField Text="Tasa de Muestreo de Trazas (0 a 100 %)" Component="otelSample">
+                            <RadzenNumeric @bind-Value="Model.OtelTraceSampleRate" Name="otelSample" Min="1" Max="100" Style="width:100%" />
+                        </RadzenFormField>
+                    }
+
+                    <RadzenText Text="Procesador Transaccional Outbox (Background Worker)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Activar Procesador Outbox de Eventos" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Despacha eventos de dominio y mensajes asíncronos guardados en la tabla Outbox."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.OutboxProcessorEnabled" />
+                    </RadzenStack>
+
+                    @if (Model.OutboxProcessorEnabled)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Tamaño del Lote Outbox" Component="outBatch" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.OutboxBatchSize" Name="outBatch" Min="1" Max="500" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Intervalo de Sondeo (Segundos)" Component="outPoll" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.OutboxPollIntervalSeconds" Name="outPoll" Min="1" Max="60" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Intentos Máximos de Entrega" Component="outAttempts" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.OutboxMaxAttempts" Name="outAttempts" Min="1" Max="20" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Retención de Mensajes Procesados (Días)" Component="outRet" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.OutboxMessageRetentionDays" Name="outRet" Min="1" Max="90" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    }
+
+                    <RadzenText Text="Auditoría, Historial y Archivos de Log" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Habilitar Registro de Actividades en Entidades" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Almacena cronológicamente los eventos de creación, movimiento y edición en tarjetas y tableros."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.EnableActivityLogging" />
+                    </RadzenStack>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Eventos por Página en Feed de Actividades" Component="actPageSize" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.ActivityPageSize" Name="actPageSize" Min="5" Max="100" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                <RadzenText Text="Registrar IP Completa en Auditoría" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenSwitch @bind-Value="Model.AuditLogDetailedIp" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Retención de Archivos de Log Diarios (Cantidad)" Component="logCount" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.LogRetainedFileCountLimit" Name="logCount" Min="1" Max="365" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Tamaño Máximo por Archivo de Log (MB)" Component="logSize" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.LogFileSizeLimitMb" Name="logSize" Min="5" Max="1024" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenText Text="Limpieza Automática y Políticas de Papelera (Sweeper)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Tareas Automáticas de Limpieza (Sweeper)" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.RetentionSweeperEnabled" />
+                    </RadzenStack>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Frecuencia de Barrido (Horas)" Component="sweepInterval" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.SweepIntervalHours" Name="sweepInterval" Min="1" Max="168" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Período de Gracia para Cuentas Eliminadas (Días)" Component="gracePeriod" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.UserGracePeriodDays" Name="gracePeriod" Min="0" Max="365" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Retención de Historial de Actividades (Días)" Component="actRet" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.ActivityRetentionDays" Name="actRet" Min="1" Max="3650" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Retención de Registros de Auditoría (Días)" Component="auditRet" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.AuditRetentionDays" Name="auditRet" Min="1" Max="3650" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Purgar Automáticamente Archivos Huérfanos sin Tarjeta Asociada" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.AutoPurgeOrphanAttachments" />
+                    </RadzenStack>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Retención de Tarjetas en Papelera (Días)" Component="softDeleteRet" Style="width:100%">
+                                <RadzenNumeric @bind-Value="Model.SoftDeleteRetentionDays" Name="softDeleteRet" Min="1" Max="365" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Exigir Rol Administrador para Borrado Permanente" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Solo los administradores pueden vaciar papelera o eliminar definitivamente." TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="Model.PermanentDeleteRequiresAdmin" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenText Text="Copias de Seguridad Automatizadas (Backups)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Habilitar Respaldos Automáticos del Sistema" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Genera copias de seguridad de la base de datos y archivos de configuración periódicamente."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.AutoBackupEnabled" />
+                    </RadzenStack>
+
+                    @if (Model.AutoBackupEnabled)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Intervalo entre Respaldos (Horas)" Component="backupInterval" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.BackupIntervalHours" Name="backupInterval" Min="1" Max="168" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Retención de Respaldos (Días)" Component="backupRet" Style="width:100%">
+                                    <RadzenNumeric @bind-Value="Model.BackupRetentionDays" Name="backupRet" Min="1" Max="365" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    }
+
+                    <RadzenText Text="Entorno de Desarrollo y Seeder" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Permitir Ejecución del Seeder de Datos (/admin/seeder)" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Habilita la siembra de datos de prueba para demostración y evaluación."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.AllowSeederExecution" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Limpiar Base de Datos antes de Sembrar (WipeBeforeSeed)" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="ADVERTENCIA: Destructivo. Elimina los registros anteriores antes de ejecutar el seeder."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.SeederWipeBeforeSeed" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
+
+@code {
+    [Parameter, EditorRequired]
+    public SettingsFormModel Model { get; set; } = default!;
+
+    [Parameter]
+    public SystemSettingsDto? Settings { get; set; }
+}

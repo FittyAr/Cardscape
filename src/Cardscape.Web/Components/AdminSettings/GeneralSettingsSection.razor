@@ -1,0 +1,215 @@
+@namespace Cardscape.Web.Components.AdminSettings
+
+<RadzenTabs RenderMode="TabRenderMode.Client">
+    <Tabs>
+        @* 1.1 Marca y Aspecto *@
+        <RadzenTabsItem Text="Marca y Aspecto" Icon="branding_watermark">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    <RadzenText Text="Identidad Visual, Tema y Mensajes del Sistema" TextStyle="@TextStyle.H6" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Título de la Instancia" Component="title" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.InstanceTitle" Name="title" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Correo de Soporte Técnico" Component="supportEmail" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.SupportEmail" Name="supportEmail" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Idioma Predeterminado" Component="lang" Style="width:100%">
+                                <RadzenDropDown @bind-Value="Model.DefaultLanguage"
+                                                Data="@AdminSettingsOptions.Languages"
+                                                TextProperty="Name"
+                                                ValueProperty="Code"
+                                                Name="lang"
+                                                Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Tema Visual Global" Component="theme" Style="width:100%">
+                                <RadzenDropDown @bind-Value="Model.DefaultTheme"
+                                                Data="@AdminSettingsOptions.Themes"
+                                                Name="theme"
+                                                Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenFormField Text="Mensaje de Bienvenida" Component="welcome">
+                        <RadzenTextBox @bind-Value="Model.WelcomeMessage" Name="welcome" Style="width:100%" />
+                    </RadzenFormField>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="URL del Logotipo Personalizado (SVG / PNG)" Component="logoUrl" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.CustomLogoUrl" Name="logoUrl" Placeholder="https://cdn.empresa.com/logo.svg" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="URL del Favicon Personalizado (.ico / .png)" Component="favUrl" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.CustomFaviconUrl" Name="favUrl" Placeholder="https://cdn.empresa.com/favicon.ico" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Ocultar 'Desarrollado con Cardscape' en el pie de página" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Ideal para despliegues con personalización corporativa (white-labeling)." TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.HidePoweredByCardscape" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Permitir Registro Público de Nuevos Usuarios" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.AllowPublicRegistration" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Habilitar Atajos de Teclado Globales" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.EnableKeyboardShortcuts" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Activar Modo Denso/Compacto por Defecto" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.EnableDenseModeByDefault" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Mostrar Imágenes de Portada en Tarjetas por Defecto" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.ShowCardCoverImagesByDefault" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenText Text="Activar Notificaciones Sonoras en el Navegador" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenSwitch @bind-Value="Model.EnableSoundNotifications" />
+                    </RadzenStack>
+
+                    <RadzenText Text="Operaciones de Emergencia y Mensajería Global" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Activar Modo Mantenimiento" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Restringe el acceso general a la plataforma dejando el servicio operativo exclusivamente para administradores."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.MaintenanceModeEnabled" />
+                    </RadzenStack>
+
+                    @if (Model.MaintenanceModeEnabled)
+                    {
+                        <RadzenFormField Text="Mensaje Mostrado a Usuarios Durante Mantenimiento" Component="maintMsg">
+                            <RadzenTextBox @bind-Value="Model.MaintenanceModeMessage" Name="maintMsg" Style="width:100%" />
+                        </RadzenFormField>
+                    }
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Habilitar Anuncio Global del Sistema" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Despliega una barra de notificación permanente en la parte superior para todos los usuarios conectados."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.SystemAnnouncementEnabled" />
+                    </RadzenStack>
+
+                    @if (Model.SystemAnnouncementEnabled)
+                    {
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="4">
+                                <RadzenFormField Text="Tipo / Severidad de Anuncio" Component="annType" Style="width:100%">
+                                    <RadzenDropDown @bind-Value="Model.SystemAnnouncementType" Data="@AdminSettingsOptions.AnnouncementTypes" Name="annType" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="8">
+                                <RadzenFormField Text="Texto del Anuncio" Component="annMsg" Style="width:100%">
+                                    <RadzenTextBox @bind-Value="Model.SystemAnnouncementMessage" Name="annMsg" Style="width:100%" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+
+        @* 1.2 Privacidad y Cumplimiento *@
+        <RadzenTabsItem Text="Privacidad y GDPR" Icon="policy">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1.25rem">
+                    <RadzenText Text="Avisos Legales, Privacidad y Cookies (Cumplimiento GDPR)" TextStyle="@TextStyle.H6" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="URL de Política de Privacidad Personalizada" Component="privUrl" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.CustomPrivacyPolicyUrl" Name="privUrl" Placeholder="https://empresa.com/privacidad" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="URL de Términos del Servicio Personalizados" Component="tosUrl" Style="width:100%">
+                                <RadzenTextBox @bind-Value="Model.CustomTermsOfServiceUrl" Name="tosUrl" Placeholder="https://empresa.com/terminos" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Mostrar Banner de Consentimiento de Cookies" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Presenta una notificación flotante de aceptación de cookies para cumplimiento normativo de la UE."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.DisplayCookieBanner" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Exigir Aceptación de Aviso Legal al Iniciar Sesión" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Solicita explícitamente confirmación de términos a los usuarios antes de acceder al entorno."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.RequireLegalNoticeAcceptance" />
+                    </RadzenStack>
+
+                    <RadzenText Text="Residencia y Soberanía Geográfica de Datos" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6">
+                            <RadzenFormField Text="Región Geográfica de Despliegue" Component="deployRegion" Style="width:100%">
+                                <RadzenDropDown @bind-Value="Model.DeploymentRegion" Data="@AdminSettingsOptions.Regions" Name="deployRegion" Style="width:100%" />
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Cumplimiento Estricto Cross-Region" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Rechaza escrituras que crucen límites de región según GDPR."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="Model.EnforceDataResidency" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText Text="Habilitar Selector de Región en Interfaz Web (Workspaces)" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenText Text="Muestra el selector de región y los badges de soberanía al crear espacios de trabajo."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                        <RadzenSwitch @bind-Value="Model.DataResidencyEnabled" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
+
+@code {
+    [Parameter, EditorRequired]
+    public SettingsFormModel Model { get; set; } = default!;
+}
