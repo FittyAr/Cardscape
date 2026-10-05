@@ -64,6 +64,19 @@ public sealed class SystemSettingsServiceTests : IDisposable
         settings.MaxWorkspacesPerUser.Should().Be(0);
         settings.MaxBoardsPerWorkspace.Should().Be(0);
         settings.McpServerEnabled.Should().BeTrue();
+        settings.EnableKeyboardShortcuts.Should().BeTrue();
+        settings.EnforceHttps.Should().BeTrue();
+        settings.SamlSsoEnabled.Should().BeFalse();
+        settings.ScimProvisioningEnabled.Should().BeFalse();
+        settings.OAuthAppsEnabled.Should().BeTrue();
+        settings.CardRecurrenceEnabled.Should().BeTrue();
+        settings.AllowCommentEditing.Should().BeTrue();
+        settings.CustomFieldsEnabled.Should().BeTrue();
+        settings.BoardAutomationEnabled.Should().BeTrue();
+        settings.InAppNotificationsEnabled.Should().BeTrue();
+        settings.DueSoonThresholdHours.Should().Be(24);
+        settings.SearchFuzzyMatching.Should().BeTrue();
+        settings.RealtimeBroadcastingEnabled.Should().BeTrue();
     }
 
     [Fact]
@@ -117,7 +130,10 @@ public sealed class SystemSettingsServiceTests : IDisposable
             SeederEnabled: false,
             CardAgingEnabled: true,
             CardAgingInactiveDays: 5,
-            MaxWorkspacesPerUser: 25);
+            MaxWorkspacesPerUser: 25,
+            SamlSsoEnabled: true,
+            CustomFieldsEnabled: false,
+            DueSoonThresholdHours: 48);
 
         SystemSettingsDto updated = await service.UpdateSettingsAsync(updateReq, "admin@test.com", TestContext.Current.CancellationToken);
 
@@ -137,6 +153,9 @@ public sealed class SystemSettingsServiceTests : IDisposable
         updated.CardAgingEnabled.Should().BeTrue();
         updated.CardAgingInactiveDays.Should().Be(5);
         updated.MaxWorkspacesPerUser.Should().Be(25);
+        updated.SamlSsoEnabled.Should().BeTrue();
+        updated.CustomFieldsEnabled.Should().BeFalse();
+        updated.DueSoonThresholdHours.Should().Be(48);
 
         bool isAllowed = await service.IsPublicRegistrationAllowedAsync(TestContext.Current.CancellationToken);
         isAllowed.Should().BeFalse();

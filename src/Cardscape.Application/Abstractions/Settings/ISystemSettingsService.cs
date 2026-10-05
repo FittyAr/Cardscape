@@ -8,6 +8,10 @@ public sealed record SystemSettingsDto(
     string DefaultTheme = "default",
     bool AllowPublicRegistration = true,
     string WelcomeMessage = "Bienvenido a Cardscape",
+    bool EnableKeyboardShortcuts = true,
+    bool EnableDenseModeByDefault = false,
+    bool ShowCardCoverImagesByDefault = true,
+    bool EnableSoundNotifications = true,
 
     // 2. Security & Policy
     int JwtAccessTokenMinutes = 1440,
@@ -18,8 +22,21 @@ public sealed record SystemSettingsDto(
     int MaxFailedLoginAttempts = 5,
     int LockoutDurationMinutes = 15,
     bool SingleActiveSessionPerUser = false,
+    int MaxApiTokensPerUser = 10,
+    int ApiTokenExpirationDays = 90,
+    string CorsAllowedOrigins = "*",
+    bool EnforceHttps = true,
+    bool EnableSecurityHeaders = true,
 
-    // 3. Workspaces & Boards
+    // 3. Enterprise SSO & Provisioning
+    bool SamlSsoEnabled = false,
+    string SamlEnforceForDomain = "",
+    bool ScimProvisioningEnabled = false,
+    int ScimTokenExpirationDays = 180,
+    bool OAuthAppsEnabled = true,
+    int MaxOAuthAppsPerUser = 5,
+
+    // 4. Workspaces & Boards
     int MaxWorkspacesPerUser = 0,
     int MaxBoardsPerWorkspace = 0,
     int MaxMembersPerWorkspace = 0,
@@ -27,7 +44,7 @@ public sealed record SystemSettingsDto(
     int InvitationExpirationDays = 7,
     bool AllowPublicBoards = true,
 
-    // 4. Cards, Lists & Productivity
+    // 5. Cards, Lists & Productivity
     int DefaultWipLimit = 0,
     bool EnforceWipLimits = false,
     bool AllowCardMirroring = true,
@@ -36,13 +53,50 @@ public sealed record SystemSettingsDto(
     int MaxVotesPerUserPerCard = 1,
     int MaxChecklistsPerCard = 10,
     int AutoArchiveCompletedCardsDays = 0,
+    bool CardRecurrenceEnabled = true,
+    int MaxRecurrenceIntervalDays = 365,
 
-    // 5. Card Aging
+    // 6. Comments & Collaboration
+    bool AllowCommentEditing = true,
+    bool AllowCommentDeletion = true,
+    int MaxCommentLength = 5000,
+    bool AllowUserMentions = true,
+
+    // 7. Labels & Custom Fields
+    int MaxLabelsPerBoard = 50,
+    int MaxLabelsPerCard = 10,
+    bool CustomFieldsEnabled = true,
+    int MaxCustomFieldsPerBoard = 30,
+
+    // 8. Board Automation Rules
+    bool BoardAutomationEnabled = true,
+    int MaxAutomationRulesPerBoard = 20,
+    int MaxAutomationActionsPerRule = 5,
+
+    // 9. Notifications & System Alerts
+    bool InAppNotificationsEnabled = true,
+    int DueSoonThresholdHours = 24,
+    bool NotifyOnCardAssignment = true,
+    bool NotifyOnCardMention = true,
+    bool NotifyOnDueSoon = true,
+    bool NotifyOnOverdue = true,
+    int NotificationRetentionDays = 30,
+
+    // 10. Search & Indexing
+    int SearchMinQueryLength = 2,
+    int SearchMaxPageSize = 50,
+    bool SearchFuzzyMatching = true,
+
+    // 11. Realtime & Presence
+    bool RealtimeBroadcastingEnabled = true,
+    bool RealtimePresenceEnabled = true,
+
+    // 12. Card Aging
     bool CardAgingEnabled = true,
     int CardAgingInactiveDays = 14,
     string CardAgingMode = "Regular",
 
-    // 6. Storage & Attachments
+    // 13. Storage & Attachments
     string StorageProvider = "LocalFile",
     string StorageRoot = "Storage",
     int MaxAttachmentSizeMb = 25,
@@ -50,7 +104,7 @@ public sealed record SystemSettingsDto(
     bool AllowCoverImages = true,
     int MaxCoverImageSizeMb = 5,
 
-    // 7. Artificial Intelligence
+    // 14. Artificial Intelligence
     bool AiEnabled = false,
     string AiProvider = "OpenAiCompatible",
     string AiEndpoint = "http://localhost:11434/",
@@ -59,7 +113,7 @@ public sealed record SystemSettingsDto(
     int AiTimeoutSeconds = 60,
     int AiMaxTokens = 2048,
 
-    // 8. Outbound Email (SMTP)
+    // 15. Outbound Email (SMTP)
     bool EmailNotificationsEnabled = false,
     string SmtpHost = "localhost",
     int SmtpPort = 587,
@@ -69,33 +123,33 @@ public sealed record SystemSettingsDto(
     string SenderEmail = "noreply@cardscape.local",
     string SenderName = "Cardscape Notificaciones",
 
-    // 9. Inbound Email (Email-to-Board)
+    // 16. Inbound Email (Email-to-Board)
     bool InboundEmailEnabled = false,
     string InboundEmailDomain = "inbound.cardscape.local",
     string InboundDefaultList = "Inbox",
     bool InboundAttachSenderEmail = true,
 
-    // 10. Integrations (Slack, GitHub, Calendar, MCP)
+    // 17. Integrations (Slack, GitHub, Calendar, MCP)
     bool SlackIntegrationEnabled = false,
     bool GitHubIntegrationEnabled = false,
     bool GoogleCalendarIntegrationEnabled = false,
     bool McpServerEnabled = true,
     bool CalendarIcsFeedsEnabled = true,
 
-    // 11. Webhooks
+    // 18. Webhooks
     bool WebhooksEnabled = true,
     int MaxWebhookRetries = 3,
     int WebhookTimeoutSeconds = 10,
     bool WebhookPayloadSignatureEnabled = true,
 
-    // 12. Rate Limiting & Performance
+    // 19. Rate Limiting & Performance
     bool RateLimitingEnabled = true,
     int DefaultRequestsPerHour = 1000,
     string RateLimiterBackend = "InMemory",
     int BackgroundJobPollIntervalSeconds = 2,
     int BackgroundJobBatchSize = 10,
 
-    // 13. Data Retention & GDPR
+    // 20. Data Retention & GDPR
     bool RetentionSweeperEnabled = true,
     int SweepIntervalHours = 6,
     int UserGracePeriodDays = 30,
@@ -103,11 +157,11 @@ public sealed record SystemSettingsDto(
     int AuditRetentionDays = 730,
     bool AutoPurgeOrphanAttachments = true,
 
-    // 14. Experimental & Dev
+    // 21. Experimental & Dev
     bool DataResidencyEnabled = false,
     bool SeederEnabled = false,
 
-    // 15. Live Diagnostics (Read-Only)
+    // 22. Live Diagnostics (Read-Only)
     string DatabaseProvider = "Sqlite",
     string DatabaseHealth = "Healthy",
     string Environment = "Development",
@@ -125,6 +179,10 @@ public sealed record UpdateSystemSettingsRequest(
     string DefaultTheme = "default",
     bool AllowPublicRegistration = true,
     string WelcomeMessage = "Bienvenido a Cardscape",
+    bool EnableKeyboardShortcuts = true,
+    bool EnableDenseModeByDefault = false,
+    bool ShowCardCoverImagesByDefault = true,
+    bool EnableSoundNotifications = true,
 
     // 2. Security & Policy
     int JwtAccessTokenMinutes = 1440,
@@ -135,8 +193,21 @@ public sealed record UpdateSystemSettingsRequest(
     int MaxFailedLoginAttempts = 5,
     int LockoutDurationMinutes = 15,
     bool SingleActiveSessionPerUser = false,
+    int MaxApiTokensPerUser = 10,
+    int ApiTokenExpirationDays = 90,
+    string CorsAllowedOrigins = "*",
+    bool EnforceHttps = true,
+    bool EnableSecurityHeaders = true,
 
-    // 3. Workspaces & Boards
+    // 3. Enterprise SSO & Provisioning
+    bool SamlSsoEnabled = false,
+    string SamlEnforceForDomain = "",
+    bool ScimProvisioningEnabled = false,
+    int ScimTokenExpirationDays = 180,
+    bool OAuthAppsEnabled = true,
+    int MaxOAuthAppsPerUser = 5,
+
+    // 4. Workspaces & Boards
     int MaxWorkspacesPerUser = 0,
     int MaxBoardsPerWorkspace = 0,
     int MaxMembersPerWorkspace = 0,
@@ -144,7 +215,7 @@ public sealed record UpdateSystemSettingsRequest(
     int InvitationExpirationDays = 7,
     bool AllowPublicBoards = true,
 
-    // 4. Cards, Lists & Productivity
+    // 5. Cards, Lists & Productivity
     int DefaultWipLimit = 0,
     bool EnforceWipLimits = false,
     bool AllowCardMirroring = true,
@@ -153,19 +224,56 @@ public sealed record UpdateSystemSettingsRequest(
     int MaxVotesPerUserPerCard = 1,
     int MaxChecklistsPerCard = 10,
     int AutoArchiveCompletedCardsDays = 0,
+    bool CardRecurrenceEnabled = true,
+    int MaxRecurrenceIntervalDays = 365,
 
-    // 5. Card Aging
+    // 6. Comments & Collaboration
+    bool AllowCommentEditing = true,
+    bool AllowCommentDeletion = true,
+    int MaxCommentLength = 5000,
+    bool AllowUserMentions = true,
+
+    // 7. Labels & Custom Fields
+    int MaxLabelsPerBoard = 50,
+    int MaxLabelsPerCard = 10,
+    bool CustomFieldsEnabled = true,
+    int MaxCustomFieldsPerBoard = 30,
+
+    // 8. Board Automation Rules
+    bool BoardAutomationEnabled = true,
+    int MaxAutomationRulesPerBoard = 20,
+    int MaxAutomationActionsPerRule = 5,
+
+    // 9. Notifications & System Alerts
+    bool InAppNotificationsEnabled = true,
+    int DueSoonThresholdHours = 24,
+    bool NotifyOnCardAssignment = true,
+    bool NotifyOnCardMention = true,
+    bool NotifyOnDueSoon = true,
+    bool NotifyOnOverdue = true,
+    int NotificationRetentionDays = 30,
+
+    // 10. Search & Indexing
+    int SearchMinQueryLength = 2,
+    int SearchMaxPageSize = 50,
+    bool SearchFuzzyMatching = true,
+
+    // 11. Realtime & Presence
+    bool RealtimeBroadcastingEnabled = true,
+    bool RealtimePresenceEnabled = true,
+
+    // 12. Card Aging
     bool CardAgingEnabled = true,
     int CardAgingInactiveDays = 14,
     string CardAgingMode = "Regular",
 
-    // 6. Storage & Attachments
+    // 13. Storage & Attachments
     int MaxAttachmentSizeMb = 25,
     string AllowedAttachmentExtensions = "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip",
     bool AllowCoverImages = true,
     int MaxCoverImageSizeMb = 5,
 
-    // 7. Artificial Intelligence
+    // 14. Artificial Intelligence
     bool AiEnabled = false,
     string AiProvider = "OpenAiCompatible",
     string AiEndpoint = "http://localhost:11434/",
@@ -174,7 +282,7 @@ public sealed record UpdateSystemSettingsRequest(
     int AiTimeoutSeconds = 60,
     int AiMaxTokens = 2048,
 
-    // 8. Outbound Email (SMTP)
+    // 15. Outbound Email (SMTP)
     bool EmailNotificationsEnabled = false,
     string SmtpHost = "localhost",
     int SmtpPort = 587,
@@ -184,33 +292,33 @@ public sealed record UpdateSystemSettingsRequest(
     string SenderEmail = "noreply@cardscape.local",
     string SenderName = "Cardscape Notificaciones",
 
-    // 9. Inbound Email (Email-to-Board)
+    // 16. Inbound Email (Email-to-Board)
     bool InboundEmailEnabled = false,
     string InboundEmailDomain = "inbound.cardscape.local",
     string InboundDefaultList = "Inbox",
     bool InboundAttachSenderEmail = true,
 
-    // 10. Integrations (Slack, GitHub, Calendar, MCP)
+    // 17. Integrations (Slack, GitHub, Calendar, MCP)
     bool SlackIntegrationEnabled = false,
     bool GitHubIntegrationEnabled = false,
     bool GoogleCalendarIntegrationEnabled = false,
     bool McpServerEnabled = true,
     bool CalendarIcsFeedsEnabled = true,
 
-    // 11. Webhooks
+    // 18. Webhooks
     bool WebhooksEnabled = true,
     int MaxWebhookRetries = 3,
     int WebhookTimeoutSeconds = 10,
     bool WebhookPayloadSignatureEnabled = true,
 
-    // 12. Rate Limiting & Performance
+    // 19. Rate Limiting & Performance
     bool RateLimitingEnabled = true,
     int DefaultRequestsPerHour = 1000,
     string RateLimiterBackend = "InMemory",
     int BackgroundJobPollIntervalSeconds = 2,
     int BackgroundJobBatchSize = 10,
 
-    // 13. Data Retention & GDPR
+    // 20. Data Retention & GDPR
     bool RetentionSweeperEnabled = true,
     int SweepIntervalHours = 6,
     int UserGracePeriodDays = 30,
@@ -218,7 +326,7 @@ public sealed record UpdateSystemSettingsRequest(
     int AuditRetentionDays = 730,
     bool AutoPurgeOrphanAttachments = true,
 
-    // 14. Experimental & Dev
+    // 21. Experimental & Dev
     bool DataResidencyEnabled = false,
     bool SeederEnabled = false);
 
