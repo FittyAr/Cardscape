@@ -191,6 +191,24 @@
                             <RadzenText Text="Tiempo tras el cual el token expira (por defecto 1440 min = 24 horas; rango 5 a 43200 min)."
                                         TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
 
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Expiración Refresh Token (Días)" Component="jwtRefresh" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.JwtRefreshTokenDays" Name="jwtRefresh" Min="1" Max="90" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Emisor JWT (Issuer)" Component="jwtIssuer" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.JwtIssuer" Name="jwtIssuer" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Audiencia JWT (Audience)" Component="jwtAudience" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.JwtAudience" Name="jwtAudience" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
                                     <RadzenText Text="Confiar en Claim JWT de Administrador (Alto Rendimiento)" TextStyle="@TextStyle.Subtitle2" />
@@ -245,6 +263,24 @@
                                 <RadzenColumn Size="6">
                                     <RadzenFormField Text="Tolerancia de Reloj TOTP (Pasos de 30s)" Component="totpSkew" Style="width:100%">
                                         <RadzenNumeric @bind-Value="_model.TotpStepTolerance" Name="totpSkew" Min="0" Max="3" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Dígitos TOTP (6 u 8)" Component="totpDigits" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.TotpCodeLength" Name="totpDigits" Min="6" Max="8" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Cantidad Códigos Recuperación" Component="totpRecCount" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.TotpRecoveryCodesCount" Name="totpRecCount" Min="4" Max="30" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Longitud Código Recuperación" Component="totpRecLen" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.TotpRecoveryCodeLength" Name="totpRecLen" Min="8" Max="20" Style="width:100%" />
                                     </RadzenFormField>
                                 </RadzenColumn>
                             </RadzenRow>
@@ -644,6 +680,39 @@
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.AllowCustomUserTemplates" />
                             </RadzenStack>
+
+                            <RadzenText Text="Límites de Longitud de Nombres y Descripciones" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Longitud Máx. Nombre de Espacio" Component="maxWsName" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxWorkspaceNameLength" Name="maxWsName" Min="10" Max="255" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Longitud Máx. Nombre de Tablero" Component="maxBoardName" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxBoardNameLength" Name="maxBoardName" Min="10" Max="255" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Longitud Máx. Nombre de Lista" Component="maxListName" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxListNameLength" Name="maxListName" Min="10" Max="255" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Longitud Máx. Nombre Visible Usuario" Component="maxDispName" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxDisplayNameLength" Name="maxDispName" Min="10" Max="150" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Longitud Máx. Descripción Tablero" Component="maxBoardDesc" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxBoardDescriptionLength" Name="maxBoardDesc" Min="100" Max="10000" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
@@ -807,6 +876,34 @@
                                     </RadzenColumn>
                                 </RadzenRow>
                             }
+
+                            <RadzenText Text="Límites y Tamaños de Contenido de Tarjetas" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Longitud Máx. Título de Tarjeta" Component="maxCardTitle" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxCardTitleLength" Name="maxCardTitle" Min="20" Max="1000" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Longitud Máx. Elemento Checklist" Component="maxCheckItem" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxChecklistItemLength" Name="maxCheckItem" Min="20" Max="2000" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Longitud Máx. Descripción de Tarjeta" Component="maxCardDesc" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxCardDescriptionLength" Name="maxCardDesc" Min="500" Max="65536" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Adjuntos Máximos por Tarjeta" Component="maxCardAttach" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxAttachmentsPerCard" Name="maxCardAttach" Min="1" Max="200" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
@@ -1162,14 +1259,32 @@
                                 </RadzenColumn>
                             </RadzenRow>
 
-                            <RadzenFormField Text="Extensiones de Archivo Permitidas (separadas por coma)" Component="allowedExts">
-                                <RadzenTextBox @bind-Value="_model.AllowedAttachmentExtensions" Name="allowedExts" Style="width:100%" />
-                            </RadzenFormField>
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Extensiones de Adjuntos Permitidas (separadas por coma)" Component="allowedExts" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.AllowedAttachmentExtensions" Name="allowedExts" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Extensiones de Avatares Permitidas" Component="allowedAvExts" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.AllowedAvatarExtensions" Name="allowedAvExts" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
 
-                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                                <RadzenText Text="Permitir Imágenes de Portada en Tarjetas" TextStyle="@TextStyle.Subtitle2" />
-                                <RadzenSwitch @bind-Value="_model.AllowCoverImages" />
-                            </RadzenStack>
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Tamaño Máx. Avatar de Usuario (MB)" Component="maxAvatar" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxAvatarSizeMb" Name="maxAvatar" Min="1" Max="20" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                        <RadzenText Text="Permitir Imágenes de Portada en Tarjetas" TextStyle="@TextStyle.Subtitle2" />
+                                        <RadzenSwitch @bind-Value="_model.AllowCoverImages" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                            </RadzenRow>
 
                             <RadzenText Text="Almacenamiento de Objetos en la Nube (S3 / MinIO)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
 
@@ -1432,6 +1547,28 @@
                                     </RadzenFormField>
                                 </RadzenColumn>
                             </RadzenRow>
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Tasa Máx. de Correos por Minuto" Component="emailRateLimit" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.EmailRateLimitPerMinute" Name="emailRateLimit" Min="5" Max="600" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Tamaño de Lote de Envío de Correo" Component="emailBatch" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.EmailBatchSize" Name="emailBatch" Min="1" Max="100" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Incluir Enlace de Cancelación de Suscripción en Correos" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Inserta un enlace para desuscribirse de notificaciones en el pie de los correos automáticos."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.EmailIncludeUnsubscribeLink" />
+                            </RadzenStack>
 
                             <RadzenStack Orientation="@Orientation.Horizontal" Gap="0.5rem" AlignItems="@AlignItems.Center" Class="rz-pt-2">
                                 <RadzenTextBox @bind-Value="_testEmailTarget" Placeholder="correo@destino.com" Style="width: 250px;" />
@@ -1815,6 +1952,68 @@
                                     </RadzenColumn>
                                 </RadzenRow>
                             }
+
+                            <RadzenText Text="Paginación y Límites de Consulta" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Tamaño de Página Predeterminado" Component="defPage" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.DefaultPageSize" Name="defPage" Min="10" Max="200" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Tamaño Máximo de Página" Component="maxPage" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxPageSize" Name="maxPage" Min="20" Max="1000" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Paginación Actividades / Feed" Component="feedPage" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.ActivityFeedPageSize" Name="feedPage" Min="10" Max="200" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenText Text="Optimización HTTP y Middleware de Red" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                        <RadzenStack Gap="0.25rem">
+                                            <RadzenText Text="Habilitar Compresión de Respuestas HTTP (Brotli / Gzip)" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenText Text="Reduce el tamaño de las cargas útiles JSON y activos estáticos transferidos."
+                                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                        </RadzenStack>
+                                        <RadzenSwitch @bind-Value="_model.ResponseCompressionEnabled" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Nivel de Compresión HTTP" Component="compLevel" Style="width:100%">
+                                        <RadzenDropDown @bind-Value="_model.ResponseCompressionLevel" Data="@_compressionLevels" Name="compLevel" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Caché Archivos Estáticos (Segundos Max-Age)" Component="staticMaxAge" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.StaticFilesMaxAgeSeconds" Name="staticMaxAge" Min="0" Max="31536000" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Tamaño Máximo del Cuerpo de Petición HTTP (MB)" Component="maxReqBody" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.MaxRequestBodySizeMb" Name="maxReqBody" Min="1" Max="500" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Cabeceras Reenviadas (X-Forwarded-For / Proxies Inversos)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Indispensable al alojar Cardscape detrás de Nginx, Cloudflare, Traefik o Envoy para obtener IPs reales."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.ForwardedHeadersEnabled" />
+                            </RadzenStack>
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
@@ -1936,6 +2135,72 @@
                                     <RadzenNumeric @bind-Value="_model.OtelTraceSampleRate" Name="otelSample" Min="1" Max="100" Style="width:100%" />
                                 </RadzenFormField>
                             }
+
+                            <RadzenText Text="Resiliencia de Base de Datos y Arranque del Sistema" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Timeout de Comandos SQL (Segundos)" Component="dbTimeout" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.DatabaseCommandTimeoutSeconds" Name="dbTimeout" Min="5" Max="600" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Reintentos Máximos de Conexión" Component="dbRetries" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.DatabaseMaxRetryCount" Name="dbRetries" Min="0" Max="10" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenFormField Text="Espera Máxima Reintento (Segundos)" Component="dbRetryDelay" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.DatabaseMaxRetryDelaySeconds" Name="dbRetryDelay" Min="1" Max="60" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                        <RadzenStack Gap="0.25rem">
+                                            <RadzenText Text="Ejecutar Migraciones EF Core al Iniciar la API" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenText Text="Aplica automáticamente las migraciones pendientes del motor de BD configurado al arrancar."
+                                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                        </RadzenStack>
+                                        <RadzenSwitch @bind-Value="_model.RunMigrationsOnStartup" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                        <RadzenStack Gap="0.25rem">
+                                            <RadzenText Text="Habilitar Swagger / OpenAPI en Producción" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenText Text="Permite acceder a la documentación interactiva OpenAPI fuera de entornos de desarrollo."
+                                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                        </RadzenStack>
+                                        <RadzenSwitch @bind-Value="_model.EnableSwaggerInProduction" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                        <RadzenStack Gap="0.25rem">
+                                            <RadzenText Text="Errores Detallados de Base de Datos" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenText Text="Habilita descripciones detalladas de excepciones en consultas EF Core (solo depuración)."
+                                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                        </RadzenStack>
+                                        <RadzenSwitch @bind-Value="_model.DatabaseEnableDetailedErrors" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                        <RadzenStack Gap="0.25rem">
+                                            <RadzenText Text="Logueo de Datos Sensibles de Parámetros SQL" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenText Text="Incluye valores de parámetros en logs de SQL (precaución: expone PII en logs)."
+                                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                        </RadzenStack>
+                                        <RadzenSwitch @bind-Value="_model.DatabaseEnableSensitiveDataLogging" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                            </RadzenRow>
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
@@ -2270,6 +2535,7 @@
     private readonly List<string> _announcementTypes = new() { "Info", "Warning", "Critical" };
     private readonly List<string> _xframeOptions = new() { "DENY", "SAMEORIGIN" };
     private readonly List<string> _referrerPolicies = new() { "no-referrer", "strict-origin-when-cross-origin", "origin" };
+    private readonly List<string> _compressionLevels = new() { "Optimal", "Fastest", "SmallestSize" };
 
     private sealed class SettingsFormModel
     {
@@ -2309,6 +2575,12 @@
         public bool CacheAdminClaim { get; set; } = true;
         public string TotpIssuerName { get; set; } = "Cardscape";
         public int TotpStepTolerance { get; set; } = 1;
+        public int TotpCodeLength { get; set; } = 6;
+        public int TotpRecoveryCodesCount { get; set; } = 10;
+        public int TotpRecoveryCodeLength { get; set; } = 10;
+        public int JwtRefreshTokenDays { get; set; } = 7;
+        public string JwtIssuer { get; set; } = "Cardscape";
+        public string JwtAudience { get; set; } = "CardscapeClient";
         public int PasswordResetTokenLifetimeMinutes { get; set; } = 60;
         public string CorsAllowedOrigins { get; set; } = "*";
         public bool EnforceHttps { get; set; } = true;
@@ -2359,6 +2631,11 @@
         public bool AllowPublicBoards { get; set; } = true;
         public bool EnablePublicBoardTemplates { get; set; } = true;
         public bool AllowCustomUserTemplates { get; set; } = true;
+        public int MaxWorkspaceNameLength { get; set; } = 100;
+        public int MaxBoardNameLength { get; set; } = 100;
+        public int MaxBoardDescriptionLength { get; set; } = 2000;
+        public int MaxListNameLength { get; set; } = 100;
+        public int MaxDisplayNameLength { get; set; } = 80;
 
         // 6. Cards, Lists & Productivity
         public int DefaultWipLimit { get; set; }
@@ -2369,6 +2646,10 @@
         public bool AllowCardVoting { get; set; } = true;
         public int MaxVotesPerUserPerCard { get; set; } = 1;
         public int MaxChecklistsPerCard { get; set; } = 10;
+        public int MaxCardTitleLength { get; set; } = 500;
+        public int MaxCardDescriptionLength { get; set; } = 16000;
+        public int MaxChecklistItemLength { get; set; } = 500;
+        public int MaxAttachmentsPerCard { get; set; } = 50;
         public int AutoArchiveCompletedCardsDays { get; set; }
         public bool CardRecurrenceEnabled { get; set; } = true;
         public int MaxRecurrenceIntervalDays { get; set; } = 365;
@@ -2443,6 +2724,8 @@
         public string AllowedAttachmentExtensions { get; set; } = "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip";
         public bool AllowCoverImages { get; set; } = true;
         public int MaxCoverImageSizeMb { get; set; } = 5;
+        public string AllowedAvatarExtensions { get; set; } = "png,jpg,jpeg,webp";
+        public int MaxAvatarSizeMb { get; set; } = 2;
         public string S3BucketName { get; set; } = string.Empty;
         public string S3EndpointUrl { get; set; } = string.Empty;
         public string S3Region { get; set; } = "us-east-1";
@@ -2475,6 +2758,9 @@
         public bool SmtpEnableSsl { get; set; } = true;
         public string SenderEmail { get; set; } = "noreply@cardscape.local";
         public string SenderName { get; set; } = "Cardscape Notificaciones";
+        public int EmailRateLimitPerMinute { get; set; } = 60;
+        public int EmailBatchSize { get; set; } = 20;
+        public bool EmailIncludeUnsubscribeLink { get; set; }
 
         // 19. Inbound Email (Email-to-Board)
         public bool InboundEmailEnabled { get; set; }
@@ -2531,6 +2817,9 @@
         public string RateLimiterBackend { get; set; } = "InMemory";
         public int BackgroundJobPollIntervalSeconds { get; set; } = 2;
         public int BackgroundJobBatchSize { get; set; } = 10;
+        public int DefaultPageSize { get; set; } = 50;
+        public int MaxPageSize { get; set; } = 200;
+        public int ActivityFeedPageSize { get; set; } = 50;
 
         // 25. Infrastructure & Redis
         public string? RedisConnectionString { get; set; }
@@ -2548,6 +2837,18 @@
         public int OutboxPollIntervalSeconds { get; set; } = 5;
         public int OutboxMaxAttempts { get; set; } = 5;
         public int OutboxMessageRetentionDays { get; set; } = 14;
+        public bool ResponseCompressionEnabled { get; set; } = true;
+        public string ResponseCompressionLevel { get; set; } = "Optimal";
+        public int StaticFilesMaxAgeSeconds { get; set; } = 86400;
+        public bool ForwardedHeadersEnabled { get; set; } = true;
+        public int MaxRequestBodySizeMb { get; set; } = 30;
+        public int DatabaseCommandTimeoutSeconds { get; set; } = 30;
+        public int DatabaseMaxRetryCount { get; set; } = 3;
+        public int DatabaseMaxRetryDelaySeconds { get; set; } = 5;
+        public bool DatabaseEnableDetailedErrors { get; set; }
+        public bool DatabaseEnableSensitiveDataLogging { get; set; }
+        public bool RunMigrationsOnStartup { get; set; } = true;
+        public bool EnableSwaggerInProduction { get; set; }
 
         // 26. Activities & Audit Logging
         public bool EnableActivityLogging { get; set; } = true;
@@ -2666,6 +2967,12 @@
         _model.CacheAdminClaim = dto.CacheAdminClaim;
         _model.TotpIssuerName = dto.TotpIssuerName;
         _model.TotpStepTolerance = dto.TotpStepTolerance;
+        _model.TotpCodeLength = dto.TotpCodeLength;
+        _model.TotpRecoveryCodesCount = dto.TotpRecoveryCodesCount;
+        _model.TotpRecoveryCodeLength = dto.TotpRecoveryCodeLength;
+        _model.JwtRefreshTokenDays = dto.JwtRefreshTokenDays;
+        _model.JwtIssuer = dto.JwtIssuer;
+        _model.JwtAudience = dto.JwtAudience;
         _model.PasswordResetTokenLifetimeMinutes = dto.PasswordResetTokenLifetimeMinutes;
         _model.IdleSessionTimeoutMinutes = dto.IdleSessionTimeoutMinutes;
         _model.MaxConcurrentSessionsPerUser = dto.MaxConcurrentSessionsPerUser;
@@ -2716,6 +3023,11 @@
         _model.AllowPublicBoards = dto.AllowPublicBoards;
         _model.EnablePublicBoardTemplates = dto.EnablePublicBoardTemplates;
         _model.AllowCustomUserTemplates = dto.AllowCustomUserTemplates;
+        _model.MaxWorkspaceNameLength = dto.MaxWorkspaceNameLength;
+        _model.MaxBoardNameLength = dto.MaxBoardNameLength;
+        _model.MaxBoardDescriptionLength = dto.MaxBoardDescriptionLength;
+        _model.MaxListNameLength = dto.MaxListNameLength;
+        _model.MaxDisplayNameLength = dto.MaxDisplayNameLength;
 
         // 6. Cards, Lists & Productivity
         _model.DefaultWipLimit = dto.DefaultWipLimit;
@@ -2726,6 +3038,10 @@
         _model.AllowCardVoting = dto.AllowCardVoting;
         _model.MaxVotesPerUserPerCard = dto.MaxVotesPerUserPerCard;
         _model.MaxChecklistsPerCard = dto.MaxChecklistsPerCard;
+        _model.MaxCardTitleLength = dto.MaxCardTitleLength;
+        _model.MaxCardDescriptionLength = dto.MaxCardDescriptionLength;
+        _model.MaxChecklistItemLength = dto.MaxChecklistItemLength;
+        _model.MaxAttachmentsPerCard = dto.MaxAttachmentsPerCard;
         _model.AutoArchiveCompletedCardsDays = dto.AutoArchiveCompletedCardsDays;
         _model.CardRecurrenceEnabled = dto.CardRecurrenceEnabled;
         _model.MaxRecurrenceIntervalDays = dto.MaxRecurrenceIntervalDays;
@@ -2800,6 +3116,8 @@
         _model.AllowedAttachmentExtensions = dto.AllowedAttachmentExtensions;
         _model.AllowCoverImages = dto.AllowCoverImages;
         _model.MaxCoverImageSizeMb = dto.MaxCoverImageSizeMb;
+        _model.AllowedAvatarExtensions = dto.AllowedAvatarExtensions;
+        _model.MaxAvatarSizeMb = dto.MaxAvatarSizeMb;
         _model.S3BucketName = dto.S3BucketName;
         _model.S3EndpointUrl = dto.S3EndpointUrl;
         _model.S3Region = dto.S3Region;
@@ -2832,6 +3150,9 @@
         _model.SmtpEnableSsl = dto.SmtpEnableSsl;
         _model.SenderEmail = dto.SenderEmail;
         _model.SenderName = dto.SenderName;
+        _model.EmailRateLimitPerMinute = dto.EmailRateLimitPerMinute;
+        _model.EmailBatchSize = dto.EmailBatchSize;
+        _model.EmailIncludeUnsubscribeLink = dto.EmailIncludeUnsubscribeLink;
 
         // 19. Inbound Email (Email-to-Board)
         _model.InboundEmailEnabled = dto.InboundEmailEnabled;
@@ -2888,6 +3209,9 @@
         _model.RateLimiterBackend = dto.RateLimiterBackend;
         _model.BackgroundJobPollIntervalSeconds = dto.BackgroundJobPollIntervalSeconds;
         _model.BackgroundJobBatchSize = dto.BackgroundJobBatchSize;
+        _model.DefaultPageSize = dto.DefaultPageSize;
+        _model.MaxPageSize = dto.MaxPageSize;
+        _model.ActivityFeedPageSize = dto.ActivityFeedPageSize;
 
         // 25. Infrastructure & Redis
         _model.RedisConnectionString = null;
@@ -2905,6 +3229,18 @@
         _model.OutboxPollIntervalSeconds = dto.OutboxPollIntervalSeconds;
         _model.OutboxMaxAttempts = dto.OutboxMaxAttempts;
         _model.OutboxMessageRetentionDays = dto.OutboxMessageRetentionDays;
+        _model.ResponseCompressionEnabled = dto.ResponseCompressionEnabled;
+        _model.ResponseCompressionLevel = dto.ResponseCompressionLevel;
+        _model.StaticFilesMaxAgeSeconds = dto.StaticFilesMaxAgeSeconds;
+        _model.ForwardedHeadersEnabled = dto.ForwardedHeadersEnabled;
+        _model.MaxRequestBodySizeMb = dto.MaxRequestBodySizeMb;
+        _model.DatabaseCommandTimeoutSeconds = dto.DatabaseCommandTimeoutSeconds;
+        _model.DatabaseMaxRetryCount = dto.DatabaseMaxRetryCount;
+        _model.DatabaseMaxRetryDelaySeconds = dto.DatabaseMaxRetryDelaySeconds;
+        _model.DatabaseEnableDetailedErrors = dto.DatabaseEnableDetailedErrors;
+        _model.DatabaseEnableSensitiveDataLogging = dto.DatabaseEnableSensitiveDataLogging;
+        _model.RunMigrationsOnStartup = dto.RunMigrationsOnStartup;
+        _model.EnableSwaggerInProduction = dto.EnableSwaggerInProduction;
 
         // 26. Activities & Audit Logging
         _model.EnableActivityLogging = dto.EnableActivityLogging;
@@ -2986,6 +3322,12 @@
                 CacheAdminClaim: _model.CacheAdminClaim,
                 TotpIssuerName: _model.TotpIssuerName,
                 TotpStepTolerance: _model.TotpStepTolerance,
+                TotpCodeLength: _model.TotpCodeLength,
+                TotpRecoveryCodesCount: _model.TotpRecoveryCodesCount,
+                TotpRecoveryCodeLength: _model.TotpRecoveryCodeLength,
+                JwtRefreshTokenDays: _model.JwtRefreshTokenDays,
+                JwtIssuer: _model.JwtIssuer,
+                JwtAudience: _model.JwtAudience,
                 PasswordResetTokenLifetimeMinutes: _model.PasswordResetTokenLifetimeMinutes,
                 IdleSessionTimeoutMinutes: _model.IdleSessionTimeoutMinutes,
                 MaxConcurrentSessionsPerUser: _model.MaxConcurrentSessionsPerUser,
@@ -3036,6 +3378,11 @@
                 AllowPublicBoards: _model.AllowPublicBoards,
                 EnablePublicBoardTemplates: _model.EnablePublicBoardTemplates,
                 AllowCustomUserTemplates: _model.AllowCustomUserTemplates,
+                MaxWorkspaceNameLength: _model.MaxWorkspaceNameLength,
+                MaxBoardNameLength: _model.MaxBoardNameLength,
+                MaxBoardDescriptionLength: _model.MaxBoardDescriptionLength,
+                MaxListNameLength: _model.MaxListNameLength,
+                MaxDisplayNameLength: _model.MaxDisplayNameLength,
 
                 // 6. Cards, Lists & Productivity
                 DefaultWipLimit: _model.DefaultWipLimit,
@@ -3046,6 +3393,10 @@
                 AllowCardVoting: _model.AllowCardVoting,
                 MaxVotesPerUserPerCard: _model.MaxVotesPerUserPerCard,
                 MaxChecklistsPerCard: _model.MaxChecklistsPerCard,
+                MaxCardTitleLength: _model.MaxCardTitleLength,
+                MaxCardDescriptionLength: _model.MaxCardDescriptionLength,
+                MaxChecklistItemLength: _model.MaxChecklistItemLength,
+                MaxAttachmentsPerCard: _model.MaxAttachmentsPerCard,
                 AutoArchiveCompletedCardsDays: _model.AutoArchiveCompletedCardsDays,
                 CardRecurrenceEnabled: _model.CardRecurrenceEnabled,
                 MaxRecurrenceIntervalDays: _model.MaxRecurrenceIntervalDays,
@@ -3120,6 +3471,8 @@
                 AllowedAttachmentExtensions: _model.AllowedAttachmentExtensions,
                 AllowCoverImages: _model.AllowCoverImages,
                 MaxCoverImageSizeMb: _model.MaxCoverImageSizeMb,
+                AllowedAvatarExtensions: _model.AllowedAvatarExtensions,
+                MaxAvatarSizeMb: _model.MaxAvatarSizeMb,
                 S3BucketName: _model.S3BucketName,
                 S3EndpointUrl: _model.S3EndpointUrl,
                 S3Region: _model.S3Region,
@@ -3152,6 +3505,9 @@
                 SmtpEnableSsl: _model.SmtpEnableSsl,
                 SenderEmail: _model.SenderEmail,
                 SenderName: _model.SenderName,
+                EmailRateLimitPerMinute: _model.EmailRateLimitPerMinute,
+                EmailBatchSize: _model.EmailBatchSize,
+                EmailIncludeUnsubscribeLink: _model.EmailIncludeUnsubscribeLink,
 
                 // 20. Inbound Email (Email-to-Board)
                 InboundEmailEnabled: _model.InboundEmailEnabled,
@@ -3208,6 +3564,9 @@
                 RateLimiterBackend: _model.RateLimiterBackend,
                 BackgroundJobPollIntervalSeconds: _model.BackgroundJobPollIntervalSeconds,
                 BackgroundJobBatchSize: _model.BackgroundJobBatchSize,
+                DefaultPageSize: _model.DefaultPageSize,
+                MaxPageSize: _model.MaxPageSize,
+                ActivityFeedPageSize: _model.ActivityFeedPageSize,
 
                 // 26. Infrastructure, Redis & Observability
                 RedisConnectionString: _model.RedisConnectionString,
@@ -3225,6 +3584,18 @@
                 OutboxPollIntervalSeconds: _model.OutboxPollIntervalSeconds,
                 OutboxMaxAttempts: _model.OutboxMaxAttempts,
                 OutboxMessageRetentionDays: _model.OutboxMessageRetentionDays,
+                ResponseCompressionEnabled: _model.ResponseCompressionEnabled,
+                ResponseCompressionLevel: _model.ResponseCompressionLevel,
+                StaticFilesMaxAgeSeconds: _model.StaticFilesMaxAgeSeconds,
+                ForwardedHeadersEnabled: _model.ForwardedHeadersEnabled,
+                MaxRequestBodySizeMb: _model.MaxRequestBodySizeMb,
+                DatabaseCommandTimeoutSeconds: _model.DatabaseCommandTimeoutSeconds,
+                DatabaseMaxRetryCount: _model.DatabaseMaxRetryCount,
+                DatabaseMaxRetryDelaySeconds: _model.DatabaseMaxRetryDelaySeconds,
+                DatabaseEnableDetailedErrors: _model.DatabaseEnableDetailedErrors,
+                DatabaseEnableSensitiveDataLogging: _model.DatabaseEnableSensitiveDataLogging,
+                RunMigrationsOnStartup: _model.RunMigrationsOnStartup,
+                EnableSwaggerInProduction: _model.EnableSwaggerInProduction,
 
                 // 27. Activities & Audit Logging
                 EnableActivityLogging: _model.EnableActivityLogging,

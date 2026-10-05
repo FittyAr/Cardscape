@@ -179,6 +179,41 @@ public sealed class SystemSettingsServiceTests : IDisposable
         settings.OutboxMessageRetentionDays.Should().Be(14);
         settings.SoftDeleteRetentionDays.Should().Be(30);
         settings.PermanentDeleteRequiresAdmin.Should().BeTrue();
+        settings.TotpCodeLength.Should().Be(6);
+        settings.TotpRecoveryCodesCount.Should().Be(10);
+        settings.TotpRecoveryCodeLength.Should().Be(10);
+        settings.JwtRefreshTokenDays.Should().Be(7);
+        settings.JwtIssuer.Should().Be("Cardscape");
+        settings.JwtAudience.Should().Be("CardscapeClient");
+        settings.MaxWorkspaceNameLength.Should().Be(100);
+        settings.MaxBoardNameLength.Should().Be(100);
+        settings.MaxBoardDescriptionLength.Should().Be(2000);
+        settings.MaxListNameLength.Should().Be(100);
+        settings.MaxDisplayNameLength.Should().Be(80);
+        settings.MaxCardTitleLength.Should().Be(500);
+        settings.MaxCardDescriptionLength.Should().Be(16000);
+        settings.MaxChecklistItemLength.Should().Be(500);
+        settings.MaxAttachmentsPerCard.Should().Be(50);
+        settings.AllowedAvatarExtensions.Should().Be("png,jpg,jpeg,webp");
+        settings.MaxAvatarSizeMb.Should().Be(2);
+        settings.EmailRateLimitPerMinute.Should().Be(60);
+        settings.EmailBatchSize.Should().Be(20);
+        settings.EmailIncludeUnsubscribeLink.Should().BeFalse();
+        settings.DefaultPageSize.Should().Be(50);
+        settings.MaxPageSize.Should().Be(200);
+        settings.ActivityFeedPageSize.Should().Be(50);
+        settings.ResponseCompressionEnabled.Should().BeTrue();
+        settings.ResponseCompressionLevel.Should().Be("Optimal");
+        settings.StaticFilesMaxAgeSeconds.Should().Be(86400);
+        settings.ForwardedHeadersEnabled.Should().BeTrue();
+        settings.MaxRequestBodySizeMb.Should().Be(30);
+        settings.DatabaseCommandTimeoutSeconds.Should().Be(30);
+        settings.DatabaseMaxRetryCount.Should().Be(3);
+        settings.DatabaseMaxRetryDelaySeconds.Should().Be(5);
+        settings.DatabaseEnableDetailedErrors.Should().BeFalse();
+        settings.DatabaseEnableSensitiveDataLogging.Should().BeFalse();
+        settings.RunMigrationsOnStartup.Should().BeTrue();
+        settings.EnableSwaggerInProduction.Should().BeFalse();
     }
 
     [Fact]
@@ -310,7 +345,42 @@ public sealed class SystemSettingsServiceTests : IDisposable
             OutboxMaxAttempts: 10,
             OutboxMessageRetentionDays: 30,
             SoftDeleteRetentionDays: 60,
-            PermanentDeleteRequiresAdmin: true);
+            PermanentDeleteRequiresAdmin: true,
+            TotpCodeLength: 8,
+            TotpRecoveryCodesCount: 15,
+            TotpRecoveryCodeLength: 12,
+            JwtRefreshTokenDays: 14,
+            JwtIssuer: "CustomIssuer",
+            JwtAudience: "CustomAudience",
+            MaxWorkspaceNameLength: 120,
+            MaxBoardNameLength: 150,
+            MaxBoardDescriptionLength: 3000,
+            MaxListNameLength: 110,
+            MaxDisplayNameLength: 90,
+            MaxCardTitleLength: 600,
+            MaxCardDescriptionLength: 20000,
+            MaxChecklistItemLength: 600,
+            MaxAttachmentsPerCard: 75,
+            AllowedAvatarExtensions: "png,jpg,webp",
+            MaxAvatarSizeMb: 5,
+            EmailRateLimitPerMinute: 120,
+            EmailBatchSize: 40,
+            EmailIncludeUnsubscribeLink: true,
+            DefaultPageSize: 25,
+            MaxPageSize: 100,
+            ActivityFeedPageSize: 30,
+            ResponseCompressionEnabled: false,
+            ResponseCompressionLevel: "Fastest",
+            StaticFilesMaxAgeSeconds: 3600,
+            ForwardedHeadersEnabled: false,
+            MaxRequestBodySizeMb: 50,
+            DatabaseCommandTimeoutSeconds: 45,
+            DatabaseMaxRetryCount: 5,
+            DatabaseMaxRetryDelaySeconds: 10,
+            DatabaseEnableDetailedErrors: true,
+            DatabaseEnableSensitiveDataLogging: true,
+            RunMigrationsOnStartup: false,
+            EnableSwaggerInProduction: true);
 
         SystemSettingsDto updated = await service.UpdateSettingsAsync(updateReq, "admin@test.com", TestContext.Current.CancellationToken);
 
@@ -411,6 +481,41 @@ public sealed class SystemSettingsServiceTests : IDisposable
         updated.OutboxMessageRetentionDays.Should().Be(30);
         updated.SoftDeleteRetentionDays.Should().Be(60);
         updated.PermanentDeleteRequiresAdmin.Should().BeTrue();
+        updated.TotpCodeLength.Should().Be(8);
+        updated.TotpRecoveryCodesCount.Should().Be(15);
+        updated.TotpRecoveryCodeLength.Should().Be(12);
+        updated.JwtRefreshTokenDays.Should().Be(14);
+        updated.JwtIssuer.Should().Be("CustomIssuer");
+        updated.JwtAudience.Should().Be("CustomAudience");
+        updated.MaxWorkspaceNameLength.Should().Be(120);
+        updated.MaxBoardNameLength.Should().Be(150);
+        updated.MaxBoardDescriptionLength.Should().Be(3000);
+        updated.MaxListNameLength.Should().Be(110);
+        updated.MaxDisplayNameLength.Should().Be(90);
+        updated.MaxCardTitleLength.Should().Be(600);
+        updated.MaxCardDescriptionLength.Should().Be(20000);
+        updated.MaxChecklistItemLength.Should().Be(600);
+        updated.MaxAttachmentsPerCard.Should().Be(75);
+        updated.AllowedAvatarExtensions.Should().Be("png,jpg,webp");
+        updated.MaxAvatarSizeMb.Should().Be(5);
+        updated.EmailRateLimitPerMinute.Should().Be(120);
+        updated.EmailBatchSize.Should().Be(40);
+        updated.EmailIncludeUnsubscribeLink.Should().BeTrue();
+        updated.DefaultPageSize.Should().Be(25);
+        updated.MaxPageSize.Should().Be(100);
+        updated.ActivityFeedPageSize.Should().Be(30);
+        updated.ResponseCompressionEnabled.Should().BeFalse();
+        updated.ResponseCompressionLevel.Should().Be("Fastest");
+        updated.StaticFilesMaxAgeSeconds.Should().Be(3600);
+        updated.ForwardedHeadersEnabled.Should().BeFalse();
+        updated.MaxRequestBodySizeMb.Should().Be(50);
+        updated.DatabaseCommandTimeoutSeconds.Should().Be(45);
+        updated.DatabaseMaxRetryCount.Should().Be(5);
+        updated.DatabaseMaxRetryDelaySeconds.Should().Be(10);
+        updated.DatabaseEnableDetailedErrors.Should().BeTrue();
+        updated.DatabaseEnableSensitiveDataLogging.Should().BeTrue();
+        updated.RunMigrationsOnStartup.Should().BeFalse();
+        updated.EnableSwaggerInProduction.Should().BeTrue();
 
         bool isAllowed = await service.IsPublicRegistrationAllowedAsync(TestContext.Current.CancellationToken);
         isAllowed.Should().BeFalse();

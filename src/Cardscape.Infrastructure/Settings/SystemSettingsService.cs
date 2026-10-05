@@ -172,6 +172,12 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 CacheAdminClaim = request.CacheAdminClaim,
                 TotpIssuerName = string.IsNullOrWhiteSpace(request.TotpIssuerName) ? "Cardscape" : request.TotpIssuerName.Trim(),
                 TotpStepTolerance = Math.Clamp(request.TotpStepTolerance, 0, 3),
+                TotpCodeLength = Math.Clamp(request.TotpCodeLength, 6, 8),
+                TotpRecoveryCodesCount = Math.Clamp(request.TotpRecoveryCodesCount, 4, 30),
+                TotpRecoveryCodeLength = Math.Clamp(request.TotpRecoveryCodeLength, 8, 20),
+                JwtRefreshTokenDays = Math.Clamp(request.JwtRefreshTokenDays, 1, 90),
+                JwtIssuer = string.IsNullOrWhiteSpace(request.JwtIssuer) ? "Cardscape" : request.JwtIssuer.Trim(),
+                JwtAudience = string.IsNullOrWhiteSpace(request.JwtAudience) ? "CardscapeClient" : request.JwtAudience.Trim(),
                 PasswordResetTokenLifetimeMinutes = Math.Clamp(request.PasswordResetTokenLifetimeMinutes, 5, 1440),
                 IdleSessionTimeoutMinutes = Math.Clamp(request.IdleSessionTimeoutMinutes, 0, 1440),
                 MaxConcurrentSessionsPerUser = Math.Clamp(request.MaxConcurrentSessionsPerUser, 1, 50),
@@ -222,6 +228,11 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 AllowPublicBoards = request.AllowPublicBoards,
                 EnablePublicBoardTemplates = request.EnablePublicBoardTemplates,
                 AllowCustomUserTemplates = request.AllowCustomUserTemplates,
+                MaxWorkspaceNameLength = Math.Clamp(request.MaxWorkspaceNameLength, 10, 255),
+                MaxBoardNameLength = Math.Clamp(request.MaxBoardNameLength, 10, 255),
+                MaxBoardDescriptionLength = Math.Clamp(request.MaxBoardDescriptionLength, 100, 10000),
+                MaxListNameLength = Math.Clamp(request.MaxListNameLength, 10, 255),
+                MaxDisplayNameLength = Math.Clamp(request.MaxDisplayNameLength, 10, 150),
 
                 // 6. Cards, Lists & Productivity
                 DefaultWipLimit = Math.Clamp(request.DefaultWipLimit, 0, 100),
@@ -232,6 +243,10 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 AllowCardVoting = request.AllowCardVoting,
                 MaxVotesPerUserPerCard = Math.Clamp(request.MaxVotesPerUserPerCard, 1, 100),
                 MaxChecklistsPerCard = Math.Clamp(request.MaxChecklistsPerCard, 1, 50),
+                MaxCardTitleLength = Math.Clamp(request.MaxCardTitleLength, 20, 1000),
+                MaxCardDescriptionLength = Math.Clamp(request.MaxCardDescriptionLength, 500, 65536),
+                MaxChecklistItemLength = Math.Clamp(request.MaxChecklistItemLength, 20, 2000),
+                MaxAttachmentsPerCard = Math.Clamp(request.MaxAttachmentsPerCard, 1, 200),
                 AutoArchiveCompletedCardsDays = Math.Clamp(request.AutoArchiveCompletedCardsDays, 0, 365),
                 CardRecurrenceEnabled = request.CardRecurrenceEnabled,
                 MaxRecurrenceIntervalDays = Math.Clamp(request.MaxRecurrenceIntervalDays, 1, 730),
@@ -308,6 +323,10 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                     : request.AllowedAttachmentExtensions.Trim(),
                 AllowCoverImages = request.AllowCoverImages,
                 MaxCoverImageSizeMb = Math.Clamp(request.MaxCoverImageSizeMb, 1, 25),
+                AllowedAvatarExtensions = string.IsNullOrWhiteSpace(request.AllowedAvatarExtensions)
+                    ? "png,jpg,jpeg,webp"
+                    : request.AllowedAvatarExtensions.Trim(),
+                MaxAvatarSizeMb = Math.Clamp(request.MaxAvatarSizeMb, 1, 20),
                 S3BucketName = request.S3BucketName?.Trim() ?? string.Empty,
                 S3EndpointUrl = request.S3EndpointUrl?.Trim() ?? string.Empty,
                 S3Region = string.IsNullOrWhiteSpace(request.S3Region) ? "us-east-1" : request.S3Region.Trim(),
@@ -340,6 +359,9 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 SmtpEnableSsl = request.SmtpEnableSsl,
                 SenderEmail = string.IsNullOrWhiteSpace(request.SenderEmail) ? "noreply@cardscape.local" : request.SenderEmail.Trim(),
                 SenderName = string.IsNullOrWhiteSpace(request.SenderName) ? "Cardscape Notificaciones" : request.SenderName.Trim(),
+                EmailRateLimitPerMinute = Math.Clamp(request.EmailRateLimitPerMinute, 5, 600),
+                EmailBatchSize = Math.Clamp(request.EmailBatchSize, 1, 100),
+                EmailIncludeUnsubscribeLink = request.EmailIncludeUnsubscribeLink,
 
                 // 20. Inbound Email (Email-to-Board)
                 InboundEmailEnabled = request.InboundEmailEnabled,
@@ -396,6 +418,9 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 RateLimiterBackend = string.Equals(request.RateLimiterBackend, "Redis", StringComparison.OrdinalIgnoreCase) ? "Redis" : "InMemory",
                 BackgroundJobPollIntervalSeconds = Math.Clamp(request.BackgroundJobPollIntervalSeconds, 1, 60),
                 BackgroundJobBatchSize = Math.Clamp(request.BackgroundJobBatchSize, 1, 100),
+                DefaultPageSize = Math.Clamp(request.DefaultPageSize, 10, 200),
+                MaxPageSize = Math.Clamp(request.MaxPageSize, 20, 1000),
+                ActivityFeedPageSize = Math.Clamp(request.ActivityFeedPageSize, 10, 200),
 
                 // 26. Infrastructure, Redis & Observability
                 RedisConnectionString = resolvedRedisConn,
@@ -413,6 +438,18 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 OutboxPollIntervalSeconds = Math.Clamp(request.OutboxPollIntervalSeconds, 1, 60),
                 OutboxMaxAttempts = Math.Clamp(request.OutboxMaxAttempts, 1, 10),
                 OutboxMessageRetentionDays = Math.Clamp(request.OutboxMessageRetentionDays, 1, 90),
+                ResponseCompressionEnabled = request.ResponseCompressionEnabled,
+                ResponseCompressionLevel = string.IsNullOrWhiteSpace(request.ResponseCompressionLevel) ? "Optimal" : request.ResponseCompressionLevel.Trim(),
+                StaticFilesMaxAgeSeconds = Math.Clamp(request.StaticFilesMaxAgeSeconds, 0, 31536000),
+                ForwardedHeadersEnabled = request.ForwardedHeadersEnabled,
+                MaxRequestBodySizeMb = Math.Clamp(request.MaxRequestBodySizeMb, 1, 500),
+                DatabaseCommandTimeoutSeconds = Math.Clamp(request.DatabaseCommandTimeoutSeconds, 5, 600),
+                DatabaseMaxRetryCount = Math.Clamp(request.DatabaseMaxRetryCount, 0, 10),
+                DatabaseMaxRetryDelaySeconds = Math.Clamp(request.DatabaseMaxRetryDelaySeconds, 1, 60),
+                DatabaseEnableDetailedErrors = request.DatabaseEnableDetailedErrors,
+                DatabaseEnableSensitiveDataLogging = request.DatabaseEnableSensitiveDataLogging,
+                RunMigrationsOnStartup = request.RunMigrationsOnStartup,
+                EnableSwaggerInProduction = request.EnableSwaggerInProduction,
 
                 // 27. Activities & Audit Logging
                 EnableActivityLogging = request.EnableActivityLogging,
@@ -686,6 +723,12 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             CacheAdminClaim: model.CacheAdminClaim,
             TotpIssuerName: model.TotpIssuerName,
             TotpStepTolerance: model.TotpStepTolerance,
+            TotpCodeLength: model.TotpCodeLength,
+            TotpRecoveryCodesCount: model.TotpRecoveryCodesCount,
+            TotpRecoveryCodeLength: model.TotpRecoveryCodeLength,
+            JwtRefreshTokenDays: model.JwtRefreshTokenDays,
+            JwtIssuer: model.JwtIssuer,
+            JwtAudience: model.JwtAudience,
             PasswordResetTokenLifetimeMinutes: model.PasswordResetTokenLifetimeMinutes,
             IdleSessionTimeoutMinutes: model.IdleSessionTimeoutMinutes,
             MaxConcurrentSessionsPerUser: model.MaxConcurrentSessionsPerUser,
@@ -736,6 +779,11 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             AllowPublicBoards: model.AllowPublicBoards,
             EnablePublicBoardTemplates: model.EnablePublicBoardTemplates,
             AllowCustomUserTemplates: model.AllowCustomUserTemplates,
+            MaxWorkspaceNameLength: model.MaxWorkspaceNameLength,
+            MaxBoardNameLength: model.MaxBoardNameLength,
+            MaxBoardDescriptionLength: model.MaxBoardDescriptionLength,
+            MaxListNameLength: model.MaxListNameLength,
+            MaxDisplayNameLength: model.MaxDisplayNameLength,
 
             // 6. Cards, Lists & Productivity
             DefaultWipLimit: model.DefaultWipLimit,
@@ -746,6 +794,10 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             AllowCardVoting: model.AllowCardVoting,
             MaxVotesPerUserPerCard: model.MaxVotesPerUserPerCard,
             MaxChecklistsPerCard: model.MaxChecklistsPerCard,
+            MaxCardTitleLength: model.MaxCardTitleLength,
+            MaxCardDescriptionLength: model.MaxCardDescriptionLength,
+            MaxChecklistItemLength: model.MaxChecklistItemLength,
+            MaxAttachmentsPerCard: model.MaxAttachmentsPerCard,
             AutoArchiveCompletedCardsDays: model.AutoArchiveCompletedCardsDays,
             CardRecurrenceEnabled: model.CardRecurrenceEnabled,
             MaxRecurrenceIntervalDays: model.MaxRecurrenceIntervalDays,
@@ -822,6 +874,8 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             AllowedAttachmentExtensions: model.AllowedAttachmentExtensions,
             AllowCoverImages: model.AllowCoverImages,
             MaxCoverImageSizeMb: model.MaxCoverImageSizeMb,
+            AllowedAvatarExtensions: model.AllowedAvatarExtensions,
+            MaxAvatarSizeMb: model.MaxAvatarSizeMb,
             S3BucketName: model.S3BucketName,
             S3EndpointUrl: model.S3EndpointUrl,
             S3Region: model.S3Region,
@@ -854,6 +908,9 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             SmtpEnableSsl: model.SmtpEnableSsl,
             SenderEmail: model.SenderEmail,
             SenderName: model.SenderName,
+            EmailRateLimitPerMinute: model.EmailRateLimitPerMinute,
+            EmailBatchSize: model.EmailBatchSize,
+            EmailIncludeUnsubscribeLink: model.EmailIncludeUnsubscribeLink,
 
             // 20. Inbound Email (Email-to-Board)
             InboundEmailEnabled: model.InboundEmailEnabled,
@@ -910,6 +967,9 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             RateLimiterBackend: model.RateLimiterBackend,
             BackgroundJobPollIntervalSeconds: model.BackgroundJobPollIntervalSeconds,
             BackgroundJobBatchSize: model.BackgroundJobBatchSize,
+            DefaultPageSize: model.DefaultPageSize,
+            MaxPageSize: model.MaxPageSize,
+            ActivityFeedPageSize: model.ActivityFeedPageSize,
 
             // 26. Infrastructure, Redis & Observability
             RedisConnectionStringMasked: string.IsNullOrWhiteSpace(model.RedisConnectionString) ? "" : "******",
@@ -927,6 +987,18 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             OutboxPollIntervalSeconds: model.OutboxPollIntervalSeconds,
             OutboxMaxAttempts: model.OutboxMaxAttempts,
             OutboxMessageRetentionDays: model.OutboxMessageRetentionDays,
+            ResponseCompressionEnabled: model.ResponseCompressionEnabled,
+            ResponseCompressionLevel: model.ResponseCompressionLevel,
+            StaticFilesMaxAgeSeconds: model.StaticFilesMaxAgeSeconds,
+            ForwardedHeadersEnabled: model.ForwardedHeadersEnabled,
+            MaxRequestBodySizeMb: model.MaxRequestBodySizeMb,
+            DatabaseCommandTimeoutSeconds: model.DatabaseCommandTimeoutSeconds,
+            DatabaseMaxRetryCount: model.DatabaseMaxRetryCount,
+            DatabaseMaxRetryDelaySeconds: model.DatabaseMaxRetryDelaySeconds,
+            DatabaseEnableDetailedErrors: model.DatabaseEnableDetailedErrors,
+            DatabaseEnableSensitiveDataLogging: model.DatabaseEnableSensitiveDataLogging,
+            RunMigrationsOnStartup: model.RunMigrationsOnStartup,
+            EnableSwaggerInProduction: model.EnableSwaggerInProduction,
 
             // 27. Activities & Audit Logging
             EnableActivityLogging: model.EnableActivityLogging,
@@ -1020,6 +1092,12 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public bool CacheAdminClaim { get; set; } = true;
         public string TotpIssuerName { get; set; } = "Cardscape";
         public int TotpStepTolerance { get; set; } = 1;
+        public int TotpCodeLength { get; set; } = 6;
+        public int TotpRecoveryCodesCount { get; set; } = 10;
+        public int TotpRecoveryCodeLength { get; set; } = 10;
+        public int JwtRefreshTokenDays { get; set; } = 7;
+        public string JwtIssuer { get; set; } = "Cardscape";
+        public string JwtAudience { get; set; } = "CardscapeClient";
         public int PasswordResetTokenLifetimeMinutes { get; set; } = 60;
         public int IdleSessionTimeoutMinutes { get; set; }
         public int MaxConcurrentSessionsPerUser { get; set; } = 5;
@@ -1070,6 +1148,11 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public bool AllowPublicBoards { get; set; } = true;
         public bool EnablePublicBoardTemplates { get; set; } = true;
         public bool AllowCustomUserTemplates { get; set; } = true;
+        public int MaxWorkspaceNameLength { get; set; } = 100;
+        public int MaxBoardNameLength { get; set; } = 100;
+        public int MaxBoardDescriptionLength { get; set; } = 2000;
+        public int MaxListNameLength { get; set; } = 100;
+        public int MaxDisplayNameLength { get; set; } = 80;
 
         // 6. Cards, Lists & Productivity
         public int DefaultWipLimit { get; set; }
@@ -1080,6 +1163,10 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public bool AllowCardVoting { get; set; } = true;
         public int MaxVotesPerUserPerCard { get; set; } = 1;
         public int MaxChecklistsPerCard { get; set; } = 10;
+        public int MaxCardTitleLength { get; set; } = 500;
+        public int MaxCardDescriptionLength { get; set; } = 16000;
+        public int MaxChecklistItemLength { get; set; } = 500;
+        public int MaxAttachmentsPerCard { get; set; } = 50;
         public int AutoArchiveCompletedCardsDays { get; set; }
         public bool CardRecurrenceEnabled { get; set; } = true;
         public int MaxRecurrenceIntervalDays { get; set; } = 365;
@@ -1154,6 +1241,8 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public string AllowedAttachmentExtensions { get; set; } = "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip";
         public bool AllowCoverImages { get; set; } = true;
         public int MaxCoverImageSizeMb { get; set; } = 5;
+        public string AllowedAvatarExtensions { get; set; } = "png,jpg,jpeg,webp";
+        public int MaxAvatarSizeMb { get; set; } = 2;
         public string S3BucketName { get; set; } = string.Empty;
         public string S3EndpointUrl { get; set; } = string.Empty;
         public string S3Region { get; set; } = "us-east-1";
@@ -1186,6 +1275,9 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public bool SmtpEnableSsl { get; set; } = true;
         public string SenderEmail { get; set; } = "noreply@cardscape.local";
         public string SenderName { get; set; } = "Cardscape Notificaciones";
+        public int EmailRateLimitPerMinute { get; set; } = 60;
+        public int EmailBatchSize { get; set; } = 20;
+        public bool EmailIncludeUnsubscribeLink { get; set; }
 
         // 20. Inbound Email (Email-to-Board)
         public bool InboundEmailEnabled { get; set; }
@@ -1242,6 +1334,9 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public string RateLimiterBackend { get; set; } = "InMemory";
         public int BackgroundJobPollIntervalSeconds { get; set; } = 2;
         public int BackgroundJobBatchSize { get; set; } = 10;
+        public int DefaultPageSize { get; set; } = 50;
+        public int MaxPageSize { get; set; } = 200;
+        public int ActivityFeedPageSize { get; set; } = 50;
 
         // 26. Infrastructure, Redis & Observability
         public string RedisConnectionString { get; set; } = string.Empty;
@@ -1259,6 +1354,18 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public int OutboxPollIntervalSeconds { get; set; } = 5;
         public int OutboxMaxAttempts { get; set; } = 5;
         public int OutboxMessageRetentionDays { get; set; } = 14;
+        public bool ResponseCompressionEnabled { get; set; } = true;
+        public string ResponseCompressionLevel { get; set; } = "Optimal";
+        public int StaticFilesMaxAgeSeconds { get; set; } = 86400;
+        public bool ForwardedHeadersEnabled { get; set; } = true;
+        public int MaxRequestBodySizeMb { get; set; } = 30;
+        public int DatabaseCommandTimeoutSeconds { get; set; } = 30;
+        public int DatabaseMaxRetryCount { get; set; } = 3;
+        public int DatabaseMaxRetryDelaySeconds { get; set; } = 5;
+        public bool DatabaseEnableDetailedErrors { get; set; }
+        public bool DatabaseEnableSensitiveDataLogging { get; set; }
+        public bool RunMigrationsOnStartup { get; set; } = true;
+        public bool EnableSwaggerInProduction { get; set; }
 
         // 27. Activities & Audit Logging
         public bool EnableActivityLogging { get; set; } = true;
