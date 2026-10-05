@@ -1,4 +1,4 @@
-﻿@page "/login"
+@page "/login"
 @layout EmptyLayout
 @inherits Cardscape.Web.Shared.CultureReactiveComponentBase
 @using System.Web
@@ -10,6 +10,7 @@
 @inject AuthService Auth
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthState
+@inject Cardscape.Web.Services.Api.SetupApiClient SetupApi
 @inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@L["AuthSignIn"] @L["PageTitleSuffix"]</PageTitle>
@@ -127,6 +128,20 @@
 
     protected override async Task OnInitializedAsync()
     {
+        try
+        {
+            var status = await SetupApi.GetStatusAsync();
+            if (status.IsSuccess && status.Value is not null && !status.Value.IsInitialized)
+            {
+                Nav.NavigateTo("/setup", forceLoad: true);
+                return;
+            }
+        }
+        catch
+        {
+            // Ignore error and proceed to login
+        }
+
         AuthenticationState state = await AuthState.GetAuthenticationStateAsync();
         if (state.User.Identity?.IsAuthenticated == true)
         {

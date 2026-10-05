@@ -40,6 +40,10 @@
                             <LanguageSwitcher />
                             <RadzenProfileMenu Click="@ProfileMenuClickAsync">
                                 <ChildContent>
+                                    @if (context.User.FindFirst("is_admin")?.Value == "true")
+                                    {
+                                        <RadzenProfileMenuItem Path="admin/settings" Icon="settings" Text="Configuración del Sistema" />
+                                    }
                                     <RadzenProfileMenuItem Path="account/api-tokens" Icon="key" Text="@L["NavApiTokens"]" />
                                     <RadzenProfileMenuItem Path="settings/two-factor" Icon="security" Text="@L["SettingsTwoFactor"]" />
                                     <RadzenProfileMenuItem Path="settings/appearance" Icon="palette" Text="@L["SettingsAppearance"]" />
@@ -72,6 +76,10 @@
                     <RadzenPanelMenuItem Text="@L["NavCalendar"]" Path="calendar" Icon="event" />
                     <RadzenPanelMenuItem Text="@L["NavPlanner"]" Path="planner" Icon="view_timeline" />
                     <RadzenPanelMenuItem Text="@L["NavInvitations"]" Path="invitations" Icon="mail" />
+                    @if (context.User.FindFirst("is_admin")?.Value == "true")
+                    {
+                        <RadzenPanelMenuItem Text="Configuración del Sistema" Path="admin/settings" Icon="settings" />
+                    }
                 </RadzenPanelMenu>
                 <RadzenStack AlignItems="AlignItems.Center" Gap="0" Class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding);">
                     <RadzenText Text="Cardscape v1.0.0" TextStyle="TextStyle.Caption" Class="rz-color-text-disabled" TagName="TagName.P" TextAlign="TextAlign.Center" />

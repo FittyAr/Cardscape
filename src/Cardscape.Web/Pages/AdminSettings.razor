@@ -1,0 +1,212 @@
+@page "/admin/settings"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
+@inherits Cardscape.Web.Shared.CultureReactiveComponentBase
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@using Microsoft.Extensions.Localization
+@inject AdminSettingsApiClient SettingsApi
+@inject NotificationService Notify
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>Configuración del Sistema @L["PageTitleSuffix"]</PageTitle>
+
+<RadzenStack Gap="1.5rem" Class="rz-mx-auto" Style="max-width: 60rem;">
+    <PageHeader Title="Configuración del Sistema"
+                Subtitle="Administra parámetros de la instancia, políticas de registro y revisa la infraestructura." />
+
+    @if (_loading)
+    {
+        <RadzenCard>
+            <RadzenStack AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.Center" Class="rz-p-4">
+                <RadzenProgressBarCircular ShowValue="false" Mode="@ProgressBarMode.Indeterminate" Size="@ProgressBarCircularSize.Medium" />
+                <RadzenText Text="Cargando configuración..." TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary rz-mt-2" />
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else if (_settings is not null)
+    {
+        <RadzenTabs RenderMode="@TabRenderMode.Client">
+            <Tabs>
+                <RadzenTabsItem Text="General y Registro" Icon="tune">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenFormField Text="Título de la Instancia" Component="title">
+                                <RadzenTextBox @bind-Value="_model.InstanceTitle" Name="title" Style="width:100%" />
+                            </RadzenFormField>
+                            <RadzenText Text="Nombre visible en la barra de navegación y comunicaciones del sistema."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-2">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Permitir Registro Público" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Si está deshabilitado, los usuarios sólo podrán ingresar si son invitados por un administrador o miembro."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.AllowPublicRegistration" />
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                <RadzenTabsItem Text="Seguridad" Icon="security">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1.25rem">
+                            <RadzenFormField Text="Expiración de Sesión / JWT (Minutos)" Component="jwtExpiry">
+                                <RadzenNumeric @bind-Value="_model.JwtAccessTokenMinutes" Name="jwtExpiry" Min="5" Max="43200" Style="width:100%" />
+                            </RadzenFormField>
+                            <RadzenText Text="Tiempo tras el cual un token de acceso expira requiriendo un nuevo inicio de sesión (por defecto 1440 min = 24h)."
+                                        TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                <RadzenTabsItem Text="Infraestructura y Diagnóstico" Icon="storage">
+                    <RadzenCard Class="rz-p-4">
+                        <RadzenStack Gap="1rem">
+                            <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                                <RadzenText Text="Motor de Base de Datos Activo:" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenBadge BadgeStyle="@(_settings.DatabaseProvider.Contains("Postgre", StringComparison.OrdinalIgnoreCase) ? BadgeStyle.Success : BadgeStyle.Info)"
+                                             Text="@_settings.DatabaseProvider" Size="@ButtonSize.Medium" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                                <RadzenText Text="Entorno de Ejecución (ASPNETCORE_ENVIRONMENT):" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="@_settings.Environment" Size="@ButtonSize.Medium" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                                <RadzenText Text="Ruta de Almacenamiento Persistente:" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="@_settings.StorageRoot" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                                <RadzenText Text="Versión de Cardscape:" TextStyle="@TextStyle.Subtitle2" />
+                                <RadzenText Text="@_settings.AppVersion" TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+            </Tabs>
+        </RadzenTabs>
+
+        @if (_error is not null)
+        {
+            <RadzenAlert AlertStyle="@AlertStyle.Danger" AllowClose="false" ShowIcon="true">
+                @_error
+            </RadzenAlert>
+        }
+
+        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.End" Gap="1rem" Class="rz-mt-3">
+            <RadzenButton Text="Guardar Cambios"
+                          Icon="save"
+                          ButtonStyle="@ButtonStyle.Primary"
+                          IsBusy="@_saving"
+                          BusyText="Guardando..."
+                          Click="@SaveSettingsAsync" />
+        </RadzenStack>
+    }
+</RadzenStack>
+
+@code {
+    private sealed class SettingsFormModel
+    {
+        public string InstanceTitle { get; set; } = string.Empty;
+        public bool AllowPublicRegistration { get; set; } = true;
+        public string DefaultLanguage { get; set; } = "es";
+        public int JwtAccessTokenMinutes { get; set; } = 1440;
+    }
+
+    private SystemSettingsDto? _settings;
+    private readonly SettingsFormModel _model = new();
+    private bool _loading = true;
+    private bool _saving;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSettingsAsync();
+    }
+
+    private async Task LoadSettingsAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            ApiResult<SystemSettingsDto> result = await SettingsApi.GetSettingsAsync();
+            if (result.IsSuccess && result.Value is not null)
+            {
+                _settings = result.Value;
+                _model.InstanceTitle = _settings.InstanceTitle;
+                _model.AllowPublicRegistration = _settings.AllowPublicRegistration;
+                _model.DefaultLanguage = _settings.DefaultLanguage;
+                _model.JwtAccessTokenMinutes = _settings.JwtAccessTokenMinutes;
+            }
+            else
+            {
+                _error = result.Error ?? "No se pudo cargar la configuración del sistema.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveSettingsAsync()
+    {
+        _saving = true;
+        _error = null;
+        try
+        {
+            var req = new UpdateSystemSettingsRequestDto(
+                InstanceTitle: string.IsNullOrWhiteSpace(_model.InstanceTitle) ? "Cardscape" : _model.InstanceTitle.Trim(),
+                AllowPublicRegistration: _model.AllowPublicRegistration,
+                DefaultLanguage: string.IsNullOrWhiteSpace(_model.DefaultLanguage) ? "es" : _model.DefaultLanguage.Trim(),
+                JwtAccessTokenMinutes: _model.JwtAccessTokenMinutes <= 0 ? 1440 : _model.JwtAccessTokenMinutes
+            );
+
+            ApiResult<SystemSettingsDto> result = await SettingsApi.UpdateSettingsAsync(req);
+            if (result.IsSuccess && result.Value is not null)
+            {
+                _settings = result.Value;
+                _model.InstanceTitle = _settings.InstanceTitle;
+                _model.AllowPublicRegistration = _settings.AllowPublicRegistration;
+                _model.DefaultLanguage = _settings.DefaultLanguage;
+                _model.JwtAccessTokenMinutes = _settings.JwtAccessTokenMinutes;
+
+                Notify.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Configuración Actualizada",
+                    Detail = "Los cambios han sido guardados satisfactoriamente.",
+                    Duration = 4000
+                });
+            }
+            else
+            {
+                _error = result.Error ?? "Error al actualizar la configuración.";
+                Notify.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error al Guardar",
+                    Detail = _error,
+                    Duration = 5000
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

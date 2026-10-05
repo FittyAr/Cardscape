@@ -163,6 +163,12 @@ public sealed class AuthService(
         }
     }
 
+    public async Task SetSessionAsync(string accessToken, UserSummaryDto user)
+    {
+        await tokens.SetAsync(accessToken, user);
+        stateProvider.Notify();
+    }
+
     /// <summary>Public so integration tests can pin the three error
     /// shapes the API ships — see
     /// <c>tests/Cardscape.IntegrationTests/Services/ErrorEnvelopeExtractionTests.cs</c>.

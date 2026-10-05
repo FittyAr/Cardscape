@@ -220,6 +220,9 @@ builder.Services.AddScoped<ISearchApiClient, SearchApiClient>();
 // delete endpoints.
 builder.Services.AddScoped<IAttachmentsApiClient, AttachmentsApiClient>();
 
+builder.Services.AddScoped<SetupApiClient>();
+builder.Services.AddScoped<AdminSettingsApiClient>();
+
 // ── Real-time (SignalR client) ──────────────────────────────
 builder.Services.AddScoped<BoardHubClient>();
 
