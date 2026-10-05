@@ -80,29 +80,63 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
 
             var updated = new PersistedSettingsModel
             {
+                // 1. General & Brand
                 InstanceTitle = string.IsNullOrWhiteSpace(request.InstanceTitle) ? "Cardscape" : request.InstanceTitle.Trim(),
                 SupportEmail = string.IsNullOrWhiteSpace(request.SupportEmail) ? "support@cardscape.local" : request.SupportEmail.Trim(),
                 DefaultLanguage = string.Equals(request.DefaultLanguage, "es", StringComparison.OrdinalIgnoreCase) ? "es" : "en",
                 DefaultTheme = string.IsNullOrWhiteSpace(request.DefaultTheme) ? "default" : request.DefaultTheme.Trim(),
                 AllowPublicRegistration = request.AllowPublicRegistration,
+                WelcomeMessage = string.IsNullOrWhiteSpace(request.WelcomeMessage) ? "Bienvenido a Cardscape" : request.WelcomeMessage.Trim(),
 
+                // 2. Security & Policy
                 JwtAccessTokenMinutes = Math.Clamp(request.JwtAccessTokenMinutes, 5, 43200),
                 PasswordMinLength = Math.Clamp(request.PasswordMinLength, 6, 32),
                 PasswordRequireDigit = request.PasswordRequireDigit,
                 PasswordRequireNonAlphanumeric = request.PasswordRequireNonAlphanumeric,
                 RequireTwoFactorForAdmins = request.RequireTwoFactorForAdmins,
                 MaxFailedLoginAttempts = Math.Clamp(request.MaxFailedLoginAttempts, 0, 50),
+                LockoutDurationMinutes = Math.Clamp(request.LockoutDurationMinutes, 1, 1440),
+                SingleActiveSessionPerUser = request.SingleActiveSessionPerUser,
 
+                // 3. Workspaces & Boards
+                MaxWorkspacesPerUser = Math.Max(0, request.MaxWorkspacesPerUser),
+                MaxBoardsPerWorkspace = Math.Max(0, request.MaxBoardsPerWorkspace),
+                MaxMembersPerWorkspace = Math.Max(0, request.MaxMembersPerWorkspace),
+                DefaultWorkspaceRole = string.IsNullOrWhiteSpace(request.DefaultWorkspaceRole) ? "Member" : request.DefaultWorkspaceRole.Trim(),
+                InvitationExpirationDays = Math.Clamp(request.InvitationExpirationDays, 1, 90),
+                AllowPublicBoards = request.AllowPublicBoards,
+
+                // 4. Cards, Lists & Productivity
+                DefaultWipLimit = Math.Max(0, request.DefaultWipLimit),
+                EnforceWipLimits = request.EnforceWipLimits,
+                AllowCardMirroring = request.AllowCardMirroring,
+                AllowCardSnoozing = request.AllowCardSnoozing,
+                AllowCardVoting = request.AllowCardVoting,
+                MaxVotesPerUserPerCard = Math.Clamp(request.MaxVotesPerUserPerCard, 1, 10),
+                MaxChecklistsPerCard = Math.Clamp(request.MaxChecklistsPerCard, 1, 50),
+                AutoArchiveCompletedCardsDays = Math.Max(0, request.AutoArchiveCompletedCardsDays),
+
+                // 5. Card Aging
+                CardAgingEnabled = request.CardAgingEnabled,
+                CardAgingInactiveDays = Math.Clamp(request.CardAgingInactiveDays, 1, 365),
+                CardAgingMode = string.IsNullOrWhiteSpace(request.CardAgingMode) ? "Regular" : request.CardAgingMode.Trim(),
+
+                // 6. Storage & Attachments
                 MaxAttachmentSizeMb = Math.Clamp(request.MaxAttachmentSizeMb, 1, 500),
                 AllowedAttachmentExtensions = string.IsNullOrWhiteSpace(request.AllowedAttachmentExtensions) ? "*" : request.AllowedAttachmentExtensions.Trim(),
+                AllowCoverImages = request.AllowCoverImages,
+                MaxCoverImageSizeMb = Math.Clamp(request.MaxCoverImageSizeMb, 1, 50),
 
+                // 7. Artificial Intelligence
                 AiEnabled = request.AiEnabled,
                 AiProvider = string.IsNullOrWhiteSpace(request.AiProvider) ? "OpenAiCompatible" : request.AiProvider.Trim(),
                 AiEndpoint = string.IsNullOrWhiteSpace(request.AiEndpoint) ? "http://localhost:11434/" : request.AiEndpoint.Trim(),
                 AiModel = string.IsNullOrWhiteSpace(request.AiModel) ? "llama3.2" : request.AiModel.Trim(),
                 AiApiKey = resolvedAiApiKey,
                 AiTimeoutSeconds = Math.Clamp(request.AiTimeoutSeconds, 5, 300),
+                AiMaxTokens = Math.Clamp(request.AiMaxTokens, 128, 32768),
 
+                // 8. Outbound Email (SMTP)
                 EmailNotificationsEnabled = request.EmailNotificationsEnabled,
                 SmtpHost = string.IsNullOrWhiteSpace(request.SmtpHost) ? "localhost" : request.SmtpHost.Trim(),
                 SmtpPort = Math.Clamp(request.SmtpPort, 1, 65535),
@@ -112,23 +146,41 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 SenderEmail = string.IsNullOrWhiteSpace(request.SenderEmail) ? "noreply@cardscape.local" : request.SenderEmail.Trim(),
                 SenderName = string.IsNullOrWhiteSpace(request.SenderName) ? "Cardscape" : request.SenderName.Trim(),
 
-                WebhooksEnabled = request.WebhooksEnabled,
-                MaxWebhookRetries = Math.Clamp(request.MaxWebhookRetries, 0, 10),
-                WebhookTimeoutSeconds = Math.Clamp(request.WebhookTimeoutSeconds, 1, 60),
+                // 9. Inbound Email (Email-to-Board)
+                InboundEmailEnabled = request.InboundEmailEnabled,
+                InboundEmailDomain = string.IsNullOrWhiteSpace(request.InboundEmailDomain) ? "inbound.cardscape.local" : request.InboundEmailDomain.Trim(),
+                InboundDefaultList = string.IsNullOrWhiteSpace(request.InboundDefaultList) ? "Inbox" : request.InboundDefaultList.Trim(),
+                InboundAttachSenderEmail = request.InboundAttachSenderEmail,
+
+                // 10. Integrations (Slack, GitHub, Calendar, MCP)
                 SlackIntegrationEnabled = request.SlackIntegrationEnabled,
                 GitHubIntegrationEnabled = request.GitHubIntegrationEnabled,
                 GoogleCalendarIntegrationEnabled = request.GoogleCalendarIntegrationEnabled,
+                McpServerEnabled = request.McpServerEnabled,
+                CalendarIcsFeedsEnabled = request.CalendarIcsFeedsEnabled,
 
+                // 11. Webhooks
+                WebhooksEnabled = request.WebhooksEnabled,
+                MaxWebhookRetries = Math.Clamp(request.MaxWebhookRetries, 0, 10),
+                WebhookTimeoutSeconds = Math.Clamp(request.WebhookTimeoutSeconds, 1, 60),
+                WebhookPayloadSignatureEnabled = request.WebhookPayloadSignatureEnabled,
+
+                // 12. Rate Limiting & Performance
                 RateLimitingEnabled = request.RateLimitingEnabled,
                 DefaultRequestsPerHour = Math.Max(10, request.DefaultRequestsPerHour),
                 RateLimiterBackend = string.Equals(request.RateLimiterBackend, "Redis", StringComparison.OrdinalIgnoreCase) ? "Redis" : "InMemory",
+                BackgroundJobPollIntervalSeconds = Math.Clamp(request.BackgroundJobPollIntervalSeconds, 1, 60),
+                BackgroundJobBatchSize = Math.Clamp(request.BackgroundJobBatchSize, 1, 100),
 
+                // 13. Data Retention & GDPR
                 RetentionSweeperEnabled = request.RetentionSweeperEnabled,
                 SweepIntervalHours = Math.Clamp(request.SweepIntervalHours, 1, 168),
                 UserGracePeriodDays = Math.Clamp(request.UserGracePeriodDays, 1, 365),
                 ActivityRetentionDays = Math.Clamp(request.ActivityRetentionDays, 7, 3650),
                 AuditRetentionDays = Math.Clamp(request.AuditRetentionDays, 30, 3650),
+                AutoPurgeOrphanAttachments = request.AutoPurgeOrphanAttachments,
 
+                // 14. Experimental & Dev
                 DataResidencyEnabled = request.DataResidencyEnabled,
                 SeederEnabled = request.SeederEnabled
             };
@@ -302,16 +354,19 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         string appVersion = "1.2.0";
 
         string uptimeStr = "0m";
+        int activeThreads = 0;
         try
         {
-            TimeSpan uptime = DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime();
+            Process currentProcess = Process.GetCurrentProcess();
+            TimeSpan uptime = DateTime.UtcNow - currentProcess.StartTime.ToUniversalTime();
             uptimeStr = uptime.Days > 0
                 ? $"{uptime.Days}d {uptime.Hours}h {uptime.Minutes}m"
                 : $"{uptime.Hours}h {uptime.Minutes}m";
+            activeThreads = currentProcess.Threads.Count;
         }
         catch
         {
-            // Process start time fallback
+            // Process inspection fallback
         }
 
         long memoryMb = GC.GetTotalMemory(false) / (1024 * 1024);
@@ -329,31 +384,65 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         }
 
         return new SystemSettingsDto(
+            // 1. General & Brand
             InstanceTitle: model.InstanceTitle,
             SupportEmail: model.SupportEmail,
             DefaultLanguage: model.DefaultLanguage,
             DefaultTheme: model.DefaultTheme,
             AllowPublicRegistration: model.AllowPublicRegistration,
+            WelcomeMessage: model.WelcomeMessage,
 
+            // 2. Security & Policy
             JwtAccessTokenMinutes: model.JwtAccessTokenMinutes,
             PasswordMinLength: model.PasswordMinLength,
             PasswordRequireDigit: model.PasswordRequireDigit,
             PasswordRequireNonAlphanumeric: model.PasswordRequireNonAlphanumeric,
             RequireTwoFactorForAdmins: model.RequireTwoFactorForAdmins,
             MaxFailedLoginAttempts: model.MaxFailedLoginAttempts,
+            LockoutDurationMinutes: model.LockoutDurationMinutes,
+            SingleActiveSessionPerUser: model.SingleActiveSessionPerUser,
 
+            // 3. Workspaces & Boards
+            MaxWorkspacesPerUser: model.MaxWorkspacesPerUser,
+            MaxBoardsPerWorkspace: model.MaxBoardsPerWorkspace,
+            MaxMembersPerWorkspace: model.MaxMembersPerWorkspace,
+            DefaultWorkspaceRole: model.DefaultWorkspaceRole,
+            InvitationExpirationDays: model.InvitationExpirationDays,
+            AllowPublicBoards: model.AllowPublicBoards,
+
+            // 4. Cards, Lists & Productivity
+            DefaultWipLimit: model.DefaultWipLimit,
+            EnforceWipLimits: model.EnforceWipLimits,
+            AllowCardMirroring: model.AllowCardMirroring,
+            AllowCardSnoozing: model.AllowCardSnoozing,
+            AllowCardVoting: model.AllowCardVoting,
+            MaxVotesPerUserPerCard: model.MaxVotesPerUserPerCard,
+            MaxChecklistsPerCard: model.MaxChecklistsPerCard,
+            AutoArchiveCompletedCardsDays: model.AutoArchiveCompletedCardsDays,
+
+            // 5. Card Aging
+            CardAgingEnabled: model.CardAgingEnabled,
+            CardAgingInactiveDays: model.CardAgingInactiveDays,
+            CardAgingMode: model.CardAgingMode,
+
+            // 6. Storage & Attachments
             StorageProvider: "LocalFile",
             StorageRoot: storageRoot,
             MaxAttachmentSizeMb: model.MaxAttachmentSizeMb,
             AllowedAttachmentExtensions: model.AllowedAttachmentExtensions,
+            AllowCoverImages: model.AllowCoverImages,
+            MaxCoverImageSizeMb: model.MaxCoverImageSizeMb,
 
+            // 7. Artificial Intelligence
             AiEnabled: model.AiEnabled,
             AiProvider: model.AiProvider,
             AiEndpoint: model.AiEndpoint,
             AiModel: model.AiModel,
             AiApiKeyMasked: string.IsNullOrEmpty(model.AiApiKey) ? string.Empty : "******",
             AiTimeoutSeconds: model.AiTimeoutSeconds,
+            AiMaxTokens: model.AiMaxTokens,
 
+            // 8. Outbound Email (SMTP)
             EmailNotificationsEnabled: model.EmailNotificationsEnabled,
             SmtpHost: model.SmtpHost,
             SmtpPort: model.SmtpPort,
@@ -363,33 +452,53 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             SenderEmail: model.SenderEmail,
             SenderName: model.SenderName,
 
-            WebhooksEnabled: model.WebhooksEnabled,
-            MaxWebhookRetries: model.MaxWebhookRetries,
-            WebhookTimeoutSeconds: model.WebhookTimeoutSeconds,
+            // 9. Inbound Email (Email-to-Board)
+            InboundEmailEnabled: model.InboundEmailEnabled,
+            InboundEmailDomain: model.InboundEmailDomain,
+            InboundDefaultList: model.InboundDefaultList,
+            InboundAttachSenderEmail: model.InboundAttachSenderEmail,
+
+            // 10. Integrations (Slack, GitHub, Calendar, MCP)
             SlackIntegrationEnabled: model.SlackIntegrationEnabled,
             GitHubIntegrationEnabled: model.GitHubIntegrationEnabled,
             GoogleCalendarIntegrationEnabled: model.GoogleCalendarIntegrationEnabled,
+            McpServerEnabled: model.McpServerEnabled,
+            CalendarIcsFeedsEnabled: model.CalendarIcsFeedsEnabled,
 
+            // 11. Webhooks
+            WebhooksEnabled: model.WebhooksEnabled,
+            MaxWebhookRetries: model.MaxWebhookRetries,
+            WebhookTimeoutSeconds: model.WebhookTimeoutSeconds,
+            WebhookPayloadSignatureEnabled: model.WebhookPayloadSignatureEnabled,
+
+            // 12. Rate Limiting & Performance
             RateLimitingEnabled: model.RateLimitingEnabled,
             DefaultRequestsPerHour: model.DefaultRequestsPerHour,
             RateLimiterBackend: model.RateLimiterBackend,
+            BackgroundJobPollIntervalSeconds: model.BackgroundJobPollIntervalSeconds,
+            BackgroundJobBatchSize: model.BackgroundJobBatchSize,
 
+            // 13. Data Retention & GDPR
             RetentionSweeperEnabled: model.RetentionSweeperEnabled,
             SweepIntervalHours: model.SweepIntervalHours,
             UserGracePeriodDays: model.UserGracePeriodDays,
             ActivityRetentionDays: model.ActivityRetentionDays,
             AuditRetentionDays: model.AuditRetentionDays,
+            AutoPurgeOrphanAttachments: model.AutoPurgeOrphanAttachments,
 
+            // 14. Experimental & Dev
             DataResidencyEnabled: model.DataResidencyEnabled,
             SeederEnabled: model.SeederEnabled,
 
+            // 15. Diagnostics
             DatabaseProvider: dbProvider,
             DatabaseHealth: "Healthy",
             Environment: environment,
             AppVersion: appVersion,
             Uptime: uptimeStr,
             MemoryUsageMb: memoryMb,
-            FreeDiskSpaceMb: freeDiskMb);
+            FreeDiskSpaceMb: freeDiskMb,
+            ActiveThreads: activeThreads);
     }
 
     public void Dispose()
@@ -399,29 +508,63 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
 
     private sealed class PersistedSettingsModel
     {
+        // 1. General & Brand
         public string InstanceTitle { get; set; } = "Cardscape";
         public string SupportEmail { get; set; } = "support@cardscape.local";
         public string DefaultLanguage { get; set; } = "es";
         public string DefaultTheme { get; set; } = "default";
         public bool AllowPublicRegistration { get; set; } = true;
+        public string WelcomeMessage { get; set; } = "Bienvenido a Cardscape";
 
+        // 2. Security & Policy
         public int JwtAccessTokenMinutes { get; set; } = 1440;
         public int PasswordMinLength { get; set; } = 8;
         public bool PasswordRequireDigit { get; set; } = true;
         public bool PasswordRequireNonAlphanumeric { get; set; }
         public bool RequireTwoFactorForAdmins { get; set; }
         public int MaxFailedLoginAttempts { get; set; } = 5;
+        public int LockoutDurationMinutes { get; set; } = 15;
+        public bool SingleActiveSessionPerUser { get; set; }
 
+        // 3. Workspaces & Boards
+        public int MaxWorkspacesPerUser { get; set; }
+        public int MaxBoardsPerWorkspace { get; set; }
+        public int MaxMembersPerWorkspace { get; set; }
+        public string DefaultWorkspaceRole { get; set; } = "Member";
+        public int InvitationExpirationDays { get; set; } = 7;
+        public bool AllowPublicBoards { get; set; } = true;
+
+        // 4. Cards, Lists & Productivity
+        public int DefaultWipLimit { get; set; }
+        public bool EnforceWipLimits { get; set; }
+        public bool AllowCardMirroring { get; set; } = true;
+        public bool AllowCardSnoozing { get; set; } = true;
+        public bool AllowCardVoting { get; set; } = true;
+        public int MaxVotesPerUserPerCard { get; set; } = 1;
+        public int MaxChecklistsPerCard { get; set; } = 10;
+        public int AutoArchiveCompletedCardsDays { get; set; }
+
+        // 5. Card Aging
+        public bool CardAgingEnabled { get; set; } = true;
+        public int CardAgingInactiveDays { get; set; } = 14;
+        public string CardAgingMode { get; set; } = "Regular";
+
+        // 6. Storage & Attachments
         public int MaxAttachmentSizeMb { get; set; } = 25;
         public string AllowedAttachmentExtensions { get; set; } = "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip";
+        public bool AllowCoverImages { get; set; } = true;
+        public int MaxCoverImageSizeMb { get; set; } = 5;
 
+        // 7. Artificial Intelligence
         public bool AiEnabled { get; set; }
         public string AiProvider { get; set; } = "OpenAiCompatible";
         public string AiEndpoint { get; set; } = "http://localhost:11434/";
         public string AiModel { get; set; } = "llama3.2";
         public string AiApiKey { get; set; } = string.Empty;
         public int AiTimeoutSeconds { get; set; } = 60;
+        public int AiMaxTokens { get; set; } = 2048;
 
+        // 8. Outbound Email (SMTP)
         public bool EmailNotificationsEnabled { get; set; }
         public string SmtpHost { get; set; } = "localhost";
         public int SmtpPort { get; set; } = 587;
@@ -431,23 +574,41 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public string SenderEmail { get; set; } = "noreply@cardscape.local";
         public string SenderName { get; set; } = "Cardscape Notificaciones";
 
-        public bool WebhooksEnabled { get; set; } = true;
-        public int MaxWebhookRetries { get; set; } = 3;
-        public int WebhookTimeoutSeconds { get; set; } = 10;
+        // 9. Inbound Email (Email-to-Board)
+        public bool InboundEmailEnabled { get; set; }
+        public string InboundEmailDomain { get; set; } = "inbound.cardscape.local";
+        public string InboundDefaultList { get; set; } = "Inbox";
+        public bool InboundAttachSenderEmail { get; set; } = true;
+
+        // 10. Integrations (Slack, GitHub, Calendar, MCP)
         public bool SlackIntegrationEnabled { get; set; }
         public bool GitHubIntegrationEnabled { get; set; }
         public bool GoogleCalendarIntegrationEnabled { get; set; }
+        public bool McpServerEnabled { get; set; } = true;
+        public bool CalendarIcsFeedsEnabled { get; set; } = true;
 
+        // 11. Webhooks
+        public bool WebhooksEnabled { get; set; } = true;
+        public int MaxWebhookRetries { get; set; } = 3;
+        public int WebhookTimeoutSeconds { get; set; } = 10;
+        public bool WebhookPayloadSignatureEnabled { get; set; } = true;
+
+        // 12. Rate Limiting & Performance
         public bool RateLimitingEnabled { get; set; } = true;
         public int DefaultRequestsPerHour { get; set; } = 1000;
         public string RateLimiterBackend { get; set; } = "InMemory";
+        public int BackgroundJobPollIntervalSeconds { get; set; } = 2;
+        public int BackgroundJobBatchSize { get; set; } = 10;
 
+        // 13. Data Retention & GDPR
         public bool RetentionSweeperEnabled { get; set; } = true;
         public int SweepIntervalHours { get; set; } = 6;
         public int UserGracePeriodDays { get; set; } = 30;
         public int ActivityRetentionDays { get; set; } = 365;
         public int AuditRetentionDays { get; set; } = 730;
+        public bool AutoPurgeOrphanAttachments { get; set; } = true;
 
+        // 14. Experimental & Dev
         public bool DataResidencyEnabled { get; set; }
         public bool SeederEnabled { get; set; }
     }

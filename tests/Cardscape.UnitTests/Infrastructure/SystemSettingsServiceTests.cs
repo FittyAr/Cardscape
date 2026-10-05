@@ -57,6 +57,13 @@ public sealed class SystemSettingsServiceTests : IDisposable
         settings.RateLimitingEnabled.Should().BeTrue();
         settings.RetentionSweeperEnabled.Should().BeTrue();
         settings.DatabaseHealth.Should().Be("Healthy");
+        settings.ActiveThreads.Should().BeGreaterThan(0);
+        settings.CardAgingEnabled.Should().BeTrue();
+        settings.CardAgingInactiveDays.Should().Be(14);
+        settings.InboundEmailEnabled.Should().BeFalse();
+        settings.MaxWorkspacesPerUser.Should().Be(0);
+        settings.MaxBoardsPerWorkspace.Should().Be(0);
+        settings.McpServerEnabled.Should().BeTrue();
     }
 
     [Fact]
@@ -107,7 +114,10 @@ public sealed class SystemSettingsServiceTests : IDisposable
             ActivityRetentionDays: 180,
             AuditRetentionDays: 365,
             DataResidencyEnabled: true,
-            SeederEnabled: false);
+            SeederEnabled: false,
+            CardAgingEnabled: true,
+            CardAgingInactiveDays: 5,
+            MaxWorkspacesPerUser: 25);
 
         SystemSettingsDto updated = await service.UpdateSettingsAsync(updateReq, "admin@test.com", TestContext.Current.CancellationToken);
 
@@ -124,6 +134,9 @@ public sealed class SystemSettingsServiceTests : IDisposable
         updated.SmtpPasswordMasked.Should().Be("******");
         updated.RateLimiterBackend.Should().Be("Redis");
         updated.DataResidencyEnabled.Should().BeTrue();
+        updated.CardAgingEnabled.Should().BeTrue();
+        updated.CardAgingInactiveDays.Should().Be(5);
+        updated.MaxWorkspacesPerUser.Should().Be(25);
 
         bool isAllowed = await service.IsPublicRegistrationAllowedAsync(TestContext.Current.CancellationToken);
         isAllowed.Should().BeFalse();
