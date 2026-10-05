@@ -6,11 +6,11 @@
 #
 # Dev (hot reload, slow first load):
 #     docker compose -f docker-compose.dev.yml up -d
-#     -> http://localhost:8080
+#     -> http://localhost:7420
 #
 # Prod (pre-compiled WASM, fast first load):
 #     docker compose -f docker-compose.prod.yml up -d
-#     -> http://localhost:8081
+#     -> http://localhost:7421
 #
 # Both compose files use the same `cardscape/api:0.1.0-mvp`
 # image. The only thing that changes is the env override on the
@@ -99,11 +99,12 @@ services:
       Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:?Set CARDS_CAPE_JWT_KEY in your .env file (openssl rand -base64 48)}
       Jwt__Issuer: Cardscape
       Jwt__Audience: Cardscape
-      Cors__AllowedOrigins__0: http://localhost:8080
-      Cors__AllowedOrigins__1: http://127.0.0.1:8080
+      Cors__AllowedOrigins__0: http://localhost:7421
+      Cors__AllowedOrigins__1: http://127.0.0.1:7421
+      Cors__AllowedOrigins__2: https://cardscape.home.fitty.ar
       Cardscape__Database__RunMigrationsOnStartup: "true"
     ports:
-      - "8081:8080"
+      - "${CARDSCAPE_PROD_PORT:-7421}:8080"
     volumes:
       - cardscape.prod.data:/app/Data
       - cardscape.prod.uploads:/app/Storage

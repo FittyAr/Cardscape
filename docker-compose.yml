@@ -6,7 +6,7 @@
 #
 # Bring the whole thing up with:
 #     docker compose up -d
-# Then open http://localhost:8080 in your browser.
+# Then open http://localhost:7420 in your browser.
 
 services:
   postgres:
@@ -53,11 +53,12 @@ services:
       Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:?Set CARDS_CAPE_JWT_KEY in your .env file (openssl rand -base64 48)}
       Jwt__Issuer: Cardscape
       Jwt__Audience: Cardscape
-      Cors__AllowedOrigins__0: http://localhost:8080
-      Cors__AllowedOrigins__1: http://127.0.0.1:8080
+      Cors__AllowedOrigins__0: http://localhost:7420
+      Cors__AllowedOrigins__1: http://127.0.0.1:7420
+      Cors__AllowedOrigins__2: https://cardscape.home.fitty.ar
       Cardscape__Database__RunMigrationsOnStartup: "true"
     ports:
-      - "8080:8080"
+      - "${CARDSCAPE_PORT:-7420}:8080"
     volumes:
       - cardscape.data:/app/Data
       - cardscape.uploads:/app/Storage

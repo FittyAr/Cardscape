@@ -2,7 +2,7 @@
 #
 #     docker compose -f docker-compose.dev.yml up -d
 #
-# Then open http://localhost:8080.
+# Then open http://localhost:7420.
 
 services:
   postgres:
@@ -47,13 +47,14 @@ services:
       Jwt__SigningKey: ${CARDS_CAPE_JWT_KEY:-dev-only-insecure-signing-key-please-override-in-production-32+chars}
       Jwt__Issuer: Cardscape
       Jwt__Audience: Cardscape
-      Cors__AllowedOrigins__0: http://localhost:8080
-      Cors__AllowedOrigins__1: http://127.0.0.1:8080
+      Cors__AllowedOrigins__0: http://localhost:7420
+      Cors__AllowedOrigins__1: http://127.0.0.1:7420
+      Cors__AllowedOrigins__2: https://cardscape.home.fitty.ar
       Cardscape__Database__RunMigrationsOnStartup: "true"
       Cardscape__Seeder__Enabled: "false"
       Cardscape__Seeder__WipeBeforeSeed: "false"
     ports:
-      - "8080:8080"
+      - "${CARDSCAPE_PORT:-7420}:8080"
     volumes:
       - cardscape.data:/app/Data
       - cardscape.uploads:/app/Storage
