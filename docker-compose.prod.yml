@@ -54,6 +54,22 @@
 name: cardscape-prod
 
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: cardscape.postgres.prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cardscape
+      POSTGRES_USER: cardscape
+      POSTGRES_PASSWORD: ${CARDS_CAPE_DB_PASSWORD:-cardscape}
+    volumes:
+      - cardscape.prod.postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cardscape -d cardscape"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   cardscape.api:
     build:
       context: .
@@ -67,16 +83,14 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
-      # The whole point of this compose: flip Development to
-      # Production so the .NET runtime ships pre-compiled .wasm
-      # to the browser instead of JIT'ing on first load. See
-      # BETA-SW-009 in test-results/beta/round-2/sw-caching.md
-      # for the full race-condition writeup.
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      Database__Provider: Sqlite
-      ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
+      Database__Provider: PostgreSQL
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=cardscape;Username=cardscape;Password=${CARDS_CAPE_DB_PASSWORD:-cardscape}
       Storage__LocalRoot: /app/Storage
       Cardscape__DataProtection__KeyDirectory: /app/DataProtectionKeys
       # Production must fail closed when no signing key is supplied.
@@ -87,15 +101,7 @@ services:
       Jwt__Audience: Cardscape
       Cors__AllowedOrigins__0: http://localhost:8080
       Cors__AllowedOrigins__1: http://127.0.0.1:8080
-      # The migration runner defaults to off in Production. The
-      # self-hostable docker-compose.yml flips this on; we
-      # mirror that here so a fresh prod stack works out of
-      # the box.
       Cardscape__Database__RunMigrationsOnStartup: "true"
-    # Different port from the dev stack (8080). With both
-    # compose files running, dev is on :8080 and prod is
-    # on :8081 — open both in different tabs to A/B the
-    # loading behaviour.
     ports:
       - "8081:8080"
     volumes:
@@ -103,7 +109,6 @@ services:
       - cardscape.prod.uploads:/app/Storage
       - cardscape.prod.keys:/app/DataProtectionKeys
     healthcheck:
-      # Same healthcheck as the dev compose — see BETA-8-ENV-#1.
       test: ["CMD-SHELL", "curl --silent --fail --max-time 4 http://localhost:8080/health/ready || exit 1"]
       interval: 30s
       timeout: 5s
@@ -114,3 +119,5 @@ volumes:
   cardscape.prod.data:
   cardscape.prod.uploads:
   cardscape.prod.keys:
+  cardscape.prod.postgres_data:
+

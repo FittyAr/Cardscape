@@ -1,19 +1,30 @@
 # Cardscape self-hostable stack.
-# - `cardscape.api` — the REST + Blazor-served API. Self-contained: SQLite
-#   for the schema + local volume for uploads. `docker compose up` is the
-#   only command the operator needs to get a working install.
-# - `cardscape.data` + `cardscape.uploads` — named volumes so the SQLite
-#   file and uploaded storage survive container restarts.
-#
-# PostgreSQL and MySQL use provider-specific EF Core migration assemblies.
-# Configure the provider and connection string together when deploying an
-# external engine. The default self-hosted stack below remains SQLite.
+# - `postgres` — PostgreSQL 17 database service on internal Docker network.
+# - `cardscape.api` — the REST + Blazor-served API. Connected to PostgreSQL.
+# - `cardscape.postgres_data` + `cardscape.uploads` — named volumes so the
+#   database and uploaded storage survive container restarts.
 #
 # Bring the whole thing up with:
 #     docker compose up -d
 # Then open http://localhost:8080 in your browser.
 
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: cardscape.postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cardscape
+      POSTGRES_USER: cardscape
+      POSTGRES_PASSWORD: ${CARDS_CAPE_DB_PASSWORD:-cardscape}
+    volumes:
+      - cardscape.postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cardscape -d cardscape"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   cardscape.api:
     build:
       context: .
@@ -27,11 +38,14 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      Database__Provider: Sqlite
-      ConnectionStrings__Default: Data Source=/app/Data/cardscape.db
+      Database__Provider: PostgreSQL
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=cardscape;Username=cardscape;Password=${CARDS_CAPE_DB_PASSWORD:-cardscape}
       Storage__LocalRoot: /app/Storage
       Cardscape__DataProtection__KeyDirectory: /app/DataProtectionKeys
       # IMPORTANT: override the dev default in production. Generate with
@@ -41,14 +55,6 @@ services:
       Jwt__Audience: Cardscape
       Cors__AllowedOrigins__0: http://localhost:8080
       Cors__AllowedOrigins__1: http://127.0.0.1:8080
-      # The migration runner defaults to `app.Environment.IsDevelopment()` —
-      # i.e. off in Production. The Cardscape self-hostable workflow ships
-      # `docker compose up` as the documented entry point, and a fresh
-      # database without the schema is a 500-loop from the
-      # BackgroundJobDispatcher. Flip the default to true here so the
-      # self-hostable workflow actually works. Operators that prefer to
-      # run migrations as a separate step (e.g. via `dotnet ef database
-      # update` in a CI job) can still set this to false.
       Cardscape__Database__RunMigrationsOnStartup: "true"
     ports:
       - "8080:8080"
@@ -57,13 +63,6 @@ services:
       - cardscape.uploads:/app/Storage
       - cardscape.keys:/app/DataProtectionKeys
     healthcheck:
-      # BETA-8-ENV-#1 — see test-results/r8/r8-report.md.
-      # The previous `dotnet Cardscape.Api.dll --health` command spawned
-      # a SECOND Kestrel instance on :8080 (address-in-use, exit 134),
-      # which made the container report unhealthy forever even though
-      # the primary API answers 200 while its process is live.
-      # with curl instead; curl is installed in the Dockerfile runtime
-      # stage specifically for this.
       test: ["CMD-SHELL", "curl --silent --fail --max-time 4 http://localhost:8080/health/ready || exit 1"]
       interval: 30s
       timeout: 5s
@@ -74,3 +73,5 @@ volumes:
   cardscape.data:
   cardscape.uploads:
   cardscape.keys:
+  cardscape.postgres_data:
+
