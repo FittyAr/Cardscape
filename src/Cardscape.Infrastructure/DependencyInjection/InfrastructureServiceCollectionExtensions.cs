@@ -7,6 +7,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Application.Abstractions.Storage;
 using Cardscape.Application.Realtime;
 using Cardscape.Application.Webhooks;
@@ -242,6 +243,7 @@ public static partial class InfrastructureServiceCollectionExtensions
         // delivery stays Pending forever (status=0, attemptCount=0).
         services.AddSingleton<IBackgroundJobHandler, WebhookDeliveryHandler>();
         services.AddScoped<IUserDataExportService, UserDataExportService>();
+        services.AddSingleton<ISystemSettingsService, Cardscape.Infrastructure.Settings.SystemSettingsService>();
 
         // GDPR retention sweeper (Art. 5(1)(e), Art. 17).
         // The sweeper is a periodic background service

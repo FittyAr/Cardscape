@@ -21,14 +21,25 @@ public static class AuthEndpoints
     {
         var group = app.MapGroup("/api/auth").WithTags("Auth");
 
-        group.MapPost("/register", async (RegisterRequest request, IMessageBus bus, CancellationToken ct) =>
+        group.MapPost("/register", async (
+            RegisterRequest request,
+            IMessageBus bus,
+            Cardscape.Application.Abstractions.Settings.ISystemSettingsService settingsService,
+            CancellationToken ct) =>
         {
+            if (!await settingsService.IsPublicRegistrationAllowedAsync(ct))
+            {
+                return DomainErrorResults.ToProblem(
+                    DomainError.Forbidden("Auth.RegistrationClosed", "Public registration is currently disabled by the administrator."));
+            }
+
             var result = await bus.InvokeAsync<Result<AuthResponse>>(new RegisterUserCommand(
                 request.Email, request.DisplayName, request.Password), ct);
             return result.IsSuccess
                 ? Results.Created("/api/auth/me", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
         }).Produces<AuthResponse>(StatusCodes.Status201Created);
+
 
         group.MapPost("/login", async (LoginRequest request, IMessageBus bus, CancellationToken ct) =>
         {
