@@ -107,4 +107,8 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
         }
         return workspace.Members.ToList();
     }
+
+    public async Task<bool> AnyAsync(CancellationToken ct = default) =>
+        await Db.Set<User>().AnyAsync(ct);
 }
+

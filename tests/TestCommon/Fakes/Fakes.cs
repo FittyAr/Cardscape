@@ -178,7 +178,11 @@ public sealed class InMemoryUserRepository : InMemoryRepositoryBase<User, UserId
         IReadOnlyList<WorkspaceMember> empty = [];
         return Task.FromResult(empty);
     }
+
+    public Task<bool> AnyAsync(CancellationToken ct = default) =>
+        Task.FromResult(Store.Count > 0);
 }
+
 
 /// <summary>In-memory <see cref="IWorkspaceRepository"/>.</summary>
 public sealed class InMemoryWorkspaceRepository : InMemoryRepositoryBase<Workspace, WorkspaceId>, IWorkspaceRepository

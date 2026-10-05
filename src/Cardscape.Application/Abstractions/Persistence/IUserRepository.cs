@@ -31,8 +31,12 @@ public interface IUserRepository : IRepository<User, UserId>
         int take,
         CancellationToken ct = default);
 
+    /// <summary>Returns true if any user exists in the system.</summary>
+    Task<bool> AnyAsync(CancellationToken ct = default);
+
     /// <summary>Returns the workspace-member rows for a workspace.
     /// The caller joins with <see cref="User"/> to build a SCIM
     /// <c>List Users</c> response.</summary>
     Task<IReadOnlyList<WorkspaceMember>> ListWorkspaceMembersAsync(WorkspaceId workspaceId, CancellationToken ct = default);
 }
+

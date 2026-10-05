@@ -26,6 +26,7 @@ using Cardscape.Api.Endpoints.Scim;
 using Cardscape.Api.Endpoints.Search;
 using Cardscape.Api.Endpoints.Security;
 using Cardscape.Api.Endpoints.Seeder;
+using Cardscape.Api.Endpoints.Setup;
 using Cardscape.Api.Endpoints.UserPreferences;
 using Cardscape.Api.Endpoints.Users;
 using Cardscape.Api.Endpoints.Voting;
@@ -108,6 +109,8 @@ internal static class ApiEndpointMappingExtensions
         app.MapSamlEndpoints();
         app.MapOAuthAppEndpoints();
         app.MapOAuthFlowEndpoints();
+        app.MapSetupEndpoints();
+        app.MapAdminSettingsEndpoints();
         app.MapAiEndpoints();
         app.MapMcpSubscriptionsAdminEndpoints();
         app.MapUserDsrAdminEndpoints();
