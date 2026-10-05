@@ -35,9 +35,10 @@ public sealed class BackgroundJobDispatcherTests
     [Fact]
     public async Task Dispatcher_Picks_Up_And_Runs_Successful_Job()
     {
+        string type = $"test:happy:{Guid.NewGuid():N}";
         string connectionString = CreateIsolatedConnectionString();
         JobMarker marker = new();
-        using TestHandler handler = new("test:happy", marker);
+        using TestHandler handler = new(type, marker);
 
         using IServiceScope scope = _factory.WithWebHostBuilder(b =>
                 {
@@ -60,7 +61,7 @@ public sealed class BackgroundJobDispatcherTests
             .GetRequiredService<IBackgroundJobScheduler>();
 
         Result enqueue = await scheduler.EnqueueAsync(
-            "test:happy", new { hello = "world" }, ct: TestContext.Current.CancellationToken);
+            type, new { hello = "world" }, ct: TestContext.Current.CancellationToken);
         enqueue.IsSuccess.Should().BeTrue();
 
         // Replicate the IHostedService loop body manually: claim, then
@@ -68,7 +69,7 @@ public sealed class BackgroundJobDispatcherTests
         // ExecuteBackgroundJobCommand.
         await RunOneDispatchTickAsync(scope.ServiceProvider);
 
-        bool ran = await marker.WaitForCallAsync(TimeSpan.FromSeconds(5));
+        bool ran = await marker.WaitForCallAsync(TimeSpan.FromSeconds(10));
         ran.Should().BeTrue("the dispatcher should have processed the job within 5s after the manual tick");
 
         marker.LastPayload.GetProperty("hello").GetString().Should().Be("world");

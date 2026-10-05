@@ -15,6 +15,11 @@ public sealed record SystemSettingsDto(
     string CustomLogoUrl = "",
     string CustomFaviconUrl = "",
     bool HidePoweredByCardscape = false,
+    bool MaintenanceModeEnabled = false,
+    string MaintenanceModeMessage = "El sistema se encuentra en mantenimiento programado.",
+    bool SystemAnnouncementEnabled = false,
+    string SystemAnnouncementMessage = "",
+    string SystemAnnouncementType = "Info",
 
     // 2. Security & Policy
     int JwtAccessTokenMinutes = 1440,
@@ -40,6 +45,14 @@ public sealed record SystemSettingsDto(
     string CorsAllowedOrigins = "*",
     bool EnforceHttps = true,
     bool EnableSecurityHeaders = true,
+    int HstsMaxAgeSeconds = 31536000,
+    bool HstsIncludeSubdomains = true,
+    bool HstsPreload = false,
+    string ContentSecurityPolicy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' wss: https:;",
+    string XFrameOptions = "DENY",
+    string ReferrerPolicy = "no-referrer",
+    int DataProtectionKeyLifetimeDays = 90,
+    string DataProtectionKeyDirectory = "",
 
     // 3. Enterprise SSO & Provisioning
     bool SamlSsoEnabled = false,
@@ -59,6 +72,11 @@ public sealed record SystemSettingsDto(
     bool EnableMicrosoftAuth = false,
     string MicrosoftClientId = "",
     string MicrosoftClientSecretMasked = "",
+    bool EnableAppleAuth = false,
+    string AppleClientId = "",
+    string AppleTeamId = "",
+    string AppleKeyId = "",
+    string ApplePrivateKeyPemMasked = "",
 
     // 5. Workspaces & Boards
     int MaxWorkspacesPerUser = 0,
@@ -155,6 +173,15 @@ public sealed record SystemSettingsDto(
     string AllowedAttachmentExtensions = "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip",
     bool AllowCoverImages = true,
     int MaxCoverImageSizeMb = 5,
+    string S3BucketName = "",
+    string S3EndpointUrl = "",
+    string S3Region = "us-east-1",
+    string S3AccessKey = "",
+    string S3SecretKeyMasked = "",
+    bool S3ForcePathStyle = true,
+    bool BlockExecutableAttachments = true,
+    bool ScanAttachmentsForMalware = false,
+    string ClamAvDaemonEndpoint = "",
 
     // 18. Artificial Intelligence
     bool AiEnabled = false,
@@ -187,8 +214,18 @@ public sealed record SystemSettingsDto(
 
     // 21. Integrations (Slack, GitHub, Calendar, MCP, Cloud)
     bool SlackIntegrationEnabled = false,
+    string SlackClientId = "",
+    string SlackClientSecretMasked = "",
+    string SlackSigningSecretMasked = "",
+    string SlackBotTokenMasked = "",
     bool GitHubIntegrationEnabled = false,
+    string GitHubTokenMasked = "",
+    int GitHubSyncIntervalMinutes = 15,
+    bool GitHubAutoCloseCardsOnPrMerge = true,
     bool GoogleCalendarIntegrationEnabled = false,
+    string GoogleCalendarClientId = "",
+    string GoogleCalendarClientSecretMasked = "",
+    int GoogleCalendarSyncIntervalMinutes = 15,
     bool McpServerEnabled = true,
     bool CalendarIcsFeedsEnabled = true,
     int CalendarFeedTokenLifetimeDays = 180,
@@ -225,12 +262,22 @@ public sealed record SystemSettingsDto(
     int BackgroundJobPollIntervalSeconds = 2,
     int BackgroundJobBatchSize = 10,
 
-    // 26. Infrastructure & Redis
+    // 26. Infrastructure, Redis & Observability
     string RedisConnectionStringMasked = "",
     int RedisDatabase = 0,
     string PendingTotpStoreBackend = "InMemory",
     string PendingTotpStoreKeyPrefix = "cardscape:totp-pending:",
     string RateLimiterKeyPrefix = "cardscape:rl:",
+    bool OtelTracingEnabled = false,
+    bool OtelMetricsEnabled = false,
+    string OtelEndpointUrl = "",
+    string OtelServiceName = "Cardscape.Api",
+    int OtelTraceSampleRate = 100,
+    bool OutboxProcessorEnabled = true,
+    int OutboxBatchSize = 50,
+    int OutboxPollIntervalSeconds = 5,
+    int OutboxMaxAttempts = 5,
+    int OutboxMessageRetentionDays = 14,
 
     // 27. Activities & Audit Logging
     bool EnableActivityLogging = true,
@@ -251,6 +298,8 @@ public sealed record SystemSettingsDto(
     bool DataResidencyEnabled = false,
     string DeploymentRegion = "Unspecified",
     bool EnforceDataResidency = false,
+    int SoftDeleteRetentionDays = 30,
+    bool PermanentDeleteRequiresAdmin = true,
 
     // 30. Legal Notices, Privacy & Compliance
     string CustomPrivacyPolicyUrl = "",
@@ -293,6 +342,11 @@ public sealed record UpdateSystemSettingsRequest(
     string CustomLogoUrl = "",
     string CustomFaviconUrl = "",
     bool HidePoweredByCardscape = false,
+    bool MaintenanceModeEnabled = false,
+    string MaintenanceModeMessage = "El sistema se encuentra en mantenimiento programado.",
+    bool SystemAnnouncementEnabled = false,
+    string SystemAnnouncementMessage = "",
+    string SystemAnnouncementType = "Info",
 
     // 2. Security & Policy
     int JwtAccessTokenMinutes = 1440,
@@ -318,6 +372,14 @@ public sealed record UpdateSystemSettingsRequest(
     string CorsAllowedOrigins = "*",
     bool EnforceHttps = true,
     bool EnableSecurityHeaders = true,
+    int HstsMaxAgeSeconds = 31536000,
+    bool HstsIncludeSubdomains = true,
+    bool HstsPreload = false,
+    string ContentSecurityPolicy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' wss: https:;",
+    string XFrameOptions = "DENY",
+    string ReferrerPolicy = "no-referrer",
+    int DataProtectionKeyLifetimeDays = 90,
+    string DataProtectionKeyDirectory = "",
 
     // 3. Enterprise SSO & Provisioning
     bool SamlSsoEnabled = false,
@@ -337,6 +399,11 @@ public sealed record UpdateSystemSettingsRequest(
     bool EnableMicrosoftAuth = false,
     string MicrosoftClientId = "",
     string? MicrosoftClientSecret = null,
+    bool EnableAppleAuth = false,
+    string AppleClientId = "",
+    string AppleTeamId = "",
+    string AppleKeyId = "",
+    string? ApplePrivateKeyPem = null,
 
     // 5. Workspaces & Boards
     int MaxWorkspacesPerUser = 0,
@@ -431,6 +498,15 @@ public sealed record UpdateSystemSettingsRequest(
     string AllowedAttachmentExtensions = "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip",
     bool AllowCoverImages = true,
     int MaxCoverImageSizeMb = 5,
+    string S3BucketName = "",
+    string S3EndpointUrl = "",
+    string S3Region = "us-east-1",
+    string S3AccessKey = "",
+    string? S3SecretKey = null,
+    bool S3ForcePathStyle = true,
+    bool BlockExecutableAttachments = true,
+    bool ScanAttachmentsForMalware = false,
+    string ClamAvDaemonEndpoint = "",
 
     // 18. Artificial Intelligence
     bool AiEnabled = false,
@@ -463,8 +539,18 @@ public sealed record UpdateSystemSettingsRequest(
 
     // 21. Integrations (Slack, GitHub, Calendar, MCP, Cloud)
     bool SlackIntegrationEnabled = false,
+    string SlackClientId = "",
+    string? SlackClientSecret = null,
+    string? SlackSigningSecret = null,
+    string? SlackBotToken = null,
     bool GitHubIntegrationEnabled = false,
+    string? GitHubToken = null,
+    int GitHubSyncIntervalMinutes = 15,
+    bool GitHubAutoCloseCardsOnPrMerge = true,
     bool GoogleCalendarIntegrationEnabled = false,
+    string GoogleCalendarClientId = "",
+    string? GoogleCalendarClientSecret = null,
+    int GoogleCalendarSyncIntervalMinutes = 15,
     bool McpServerEnabled = true,
     bool CalendarIcsFeedsEnabled = true,
     int CalendarFeedTokenLifetimeDays = 180,
@@ -501,12 +587,22 @@ public sealed record UpdateSystemSettingsRequest(
     int BackgroundJobPollIntervalSeconds = 2,
     int BackgroundJobBatchSize = 10,
 
-    // 26. Infrastructure & Redis
+    // 26. Infrastructure, Redis & Observability
     string? RedisConnectionString = null,
     int RedisDatabase = 0,
     string PendingTotpStoreBackend = "InMemory",
     string PendingTotpStoreKeyPrefix = "cardscape:totp-pending:",
     string RateLimiterKeyPrefix = "cardscape:rl:",
+    bool OtelTracingEnabled = false,
+    bool OtelMetricsEnabled = false,
+    string OtelEndpointUrl = "",
+    string OtelServiceName = "Cardscape.Api",
+    int OtelTraceSampleRate = 100,
+    bool OutboxProcessorEnabled = true,
+    int OutboxBatchSize = 50,
+    int OutboxPollIntervalSeconds = 5,
+    int OutboxMaxAttempts = 5,
+    int OutboxMessageRetentionDays = 14,
 
     // 27. Activities & Audit Logging
     bool EnableActivityLogging = true,
@@ -527,6 +623,8 @@ public sealed record UpdateSystemSettingsRequest(
     bool DataResidencyEnabled = false,
     string DeploymentRegion = "Unspecified",
     bool EnforceDataResidency = false,
+    int SoftDeleteRetentionDays = 30,
+    bool PermanentDeleteRequiresAdmin = true,
 
     // 30. Legal Notices, Privacy & Compliance
     string CustomPrivacyPolicyUrl = "",

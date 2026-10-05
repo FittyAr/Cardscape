@@ -94,6 +94,10 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 ? current.MicrosoftClientSecret
                 : request.MicrosoftClientSecret.Trim();
 
+            string resolvedApplePrivateKey = (request.ApplePrivateKeyPem is null || request.ApplePrivateKeyPem == "******")
+                ? current.ApplePrivateKeyPem
+                : request.ApplePrivateKeyPem.Trim();
+
             string resolvedVapidSecret = (request.VapidPrivateKey is null || request.VapidPrivateKey == "******")
                 ? current.VapidPrivateKey
                 : request.VapidPrivateKey.Trim();
@@ -105,6 +109,30 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             string resolvedDiscordUrl = (request.DiscordWebhookUrl is null || request.DiscordWebhookUrl == "******")
                 ? current.DiscordWebhookUrl
                 : request.DiscordWebhookUrl.Trim();
+
+            string resolvedS3SecretKey = (request.S3SecretKey is null || request.S3SecretKey == "******")
+                ? current.S3SecretKey
+                : request.S3SecretKey.Trim();
+
+            string resolvedGitHubToken = (request.GitHubToken is null || request.GitHubToken == "******")
+                ? current.GitHubToken
+                : request.GitHubToken.Trim();
+
+            string resolvedGoogleCalendarSecret = (request.GoogleCalendarClientSecret is null || request.GoogleCalendarClientSecret == "******")
+                ? current.GoogleCalendarClientSecret
+                : request.GoogleCalendarClientSecret.Trim();
+
+            string resolvedSlackClientSecret = (request.SlackClientSecret is null || request.SlackClientSecret == "******")
+                ? current.SlackClientSecret
+                : request.SlackClientSecret.Trim();
+
+            string resolvedSlackSigningSecret = (request.SlackSigningSecret is null || request.SlackSigningSecret == "******")
+                ? current.SlackSigningSecret
+                : request.SlackSigningSecret.Trim();
+
+            string resolvedSlackBotToken = (request.SlackBotToken is null || request.SlackBotToken == "******")
+                ? current.SlackBotToken
+                : request.SlackBotToken.Trim();
 
             var updated = new PersistedSettingsModel
             {
@@ -122,6 +150,11 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 CustomLogoUrl = request.CustomLogoUrl?.Trim() ?? string.Empty,
                 CustomFaviconUrl = request.CustomFaviconUrl?.Trim() ?? string.Empty,
                 HidePoweredByCardscape = request.HidePoweredByCardscape,
+                MaintenanceModeEnabled = request.MaintenanceModeEnabled,
+                MaintenanceModeMessage = string.IsNullOrWhiteSpace(request.MaintenanceModeMessage) ? "El sistema se encuentra en mantenimiento programado." : request.MaintenanceModeMessage.Trim(),
+                SystemAnnouncementEnabled = request.SystemAnnouncementEnabled,
+                SystemAnnouncementMessage = request.SystemAnnouncementMessage?.Trim() ?? string.Empty,
+                SystemAnnouncementType = string.IsNullOrWhiteSpace(request.SystemAnnouncementType) ? "Info" : request.SystemAnnouncementType.Trim(),
 
                 // 2. Security & Policy
                 JwtAccessTokenMinutes = Math.Clamp(request.JwtAccessTokenMinutes, 5, 43200),
@@ -147,6 +180,14 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 CorsAllowedOrigins = string.IsNullOrWhiteSpace(request.CorsAllowedOrigins) ? "*" : request.CorsAllowedOrigins.Trim(),
                 EnforceHttps = request.EnforceHttps,
                 EnableSecurityHeaders = request.EnableSecurityHeaders,
+                HstsMaxAgeSeconds = Math.Clamp(request.HstsMaxAgeSeconds, 0, 63072000),
+                HstsIncludeSubdomains = request.HstsIncludeSubdomains,
+                HstsPreload = request.HstsPreload,
+                ContentSecurityPolicy = request.ContentSecurityPolicy?.Trim() ?? string.Empty,
+                XFrameOptions = string.IsNullOrWhiteSpace(request.XFrameOptions) ? "DENY" : request.XFrameOptions.Trim(),
+                ReferrerPolicy = string.IsNullOrWhiteSpace(request.ReferrerPolicy) ? "no-referrer" : request.ReferrerPolicy.Trim(),
+                DataProtectionKeyLifetimeDays = Math.Clamp(request.DataProtectionKeyLifetimeDays, 14, 365),
+                DataProtectionKeyDirectory = request.DataProtectionKeyDirectory?.Trim() ?? string.Empty,
 
                 // 3. Enterprise SSO & Provisioning
                 SamlSsoEnabled = request.SamlSsoEnabled,
@@ -166,6 +207,11 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 EnableMicrosoftAuth = request.EnableMicrosoftAuth,
                 MicrosoftClientId = request.MicrosoftClientId?.Trim() ?? string.Empty,
                 MicrosoftClientSecret = resolvedMicrosoftSecret,
+                EnableAppleAuth = request.EnableAppleAuth,
+                AppleClientId = request.AppleClientId?.Trim() ?? string.Empty,
+                AppleTeamId = request.AppleTeamId?.Trim() ?? string.Empty,
+                AppleKeyId = request.AppleKeyId?.Trim() ?? string.Empty,
+                ApplePrivateKeyPem = resolvedApplePrivateKey,
 
                 // 5. Workspaces & Boards
                 MaxWorkspacesPerUser = Math.Clamp(request.MaxWorkspacesPerUser, 0, 1000),
@@ -262,6 +308,15 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                     : request.AllowedAttachmentExtensions.Trim(),
                 AllowCoverImages = request.AllowCoverImages,
                 MaxCoverImageSizeMb = Math.Clamp(request.MaxCoverImageSizeMb, 1, 25),
+                S3BucketName = request.S3BucketName?.Trim() ?? string.Empty,
+                S3EndpointUrl = request.S3EndpointUrl?.Trim() ?? string.Empty,
+                S3Region = string.IsNullOrWhiteSpace(request.S3Region) ? "us-east-1" : request.S3Region.Trim(),
+                S3AccessKey = request.S3AccessKey?.Trim() ?? string.Empty,
+                S3SecretKey = resolvedS3SecretKey,
+                S3ForcePathStyle = request.S3ForcePathStyle,
+                BlockExecutableAttachments = request.BlockExecutableAttachments,
+                ScanAttachmentsForMalware = request.ScanAttachmentsForMalware,
+                ClamAvDaemonEndpoint = request.ClamAvDaemonEndpoint?.Trim() ?? string.Empty,
 
                 // 18. Artificial Intelligence
                 AiEnabled = request.AiEnabled,
@@ -294,8 +349,18 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
 
                 // 21. Integrations (Slack, GitHub, Calendar, MCP, Cloud)
                 SlackIntegrationEnabled = request.SlackIntegrationEnabled,
+                SlackClientId = request.SlackClientId?.Trim() ?? string.Empty,
+                SlackClientSecret = resolvedSlackClientSecret,
+                SlackSigningSecret = resolvedSlackSigningSecret,
+                SlackBotToken = resolvedSlackBotToken,
                 GitHubIntegrationEnabled = request.GitHubIntegrationEnabled,
+                GitHubToken = resolvedGitHubToken,
+                GitHubSyncIntervalMinutes = Math.Clamp(request.GitHubSyncIntervalMinutes, 1, 1440),
+                GitHubAutoCloseCardsOnPrMerge = request.GitHubAutoCloseCardsOnPrMerge,
                 GoogleCalendarIntegrationEnabled = request.GoogleCalendarIntegrationEnabled,
+                GoogleCalendarClientId = request.GoogleCalendarClientId?.Trim() ?? string.Empty,
+                GoogleCalendarClientSecret = resolvedGoogleCalendarSecret,
+                GoogleCalendarSyncIntervalMinutes = Math.Clamp(request.GoogleCalendarSyncIntervalMinutes, 1, 1440),
                 McpServerEnabled = request.McpServerEnabled,
                 CalendarIcsFeedsEnabled = request.CalendarIcsFeedsEnabled,
                 CalendarFeedTokenLifetimeDays = Math.Clamp(request.CalendarFeedTokenLifetimeDays, 7, 730),
@@ -332,12 +397,22 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 BackgroundJobPollIntervalSeconds = Math.Clamp(request.BackgroundJobPollIntervalSeconds, 1, 60),
                 BackgroundJobBatchSize = Math.Clamp(request.BackgroundJobBatchSize, 1, 100),
 
-                // 26. Infrastructure & Redis
+                // 26. Infrastructure, Redis & Observability
                 RedisConnectionString = resolvedRedisConn,
                 RedisDatabase = Math.Clamp(request.RedisDatabase, 0, 15),
                 PendingTotpStoreBackend = string.Equals(request.PendingTotpStoreBackend, "Redis", StringComparison.OrdinalIgnoreCase) ? "Redis" : "InMemory",
                 PendingTotpStoreKeyPrefix = string.IsNullOrWhiteSpace(request.PendingTotpStoreKeyPrefix) ? "cardscape:totp-pending:" : request.PendingTotpStoreKeyPrefix.Trim(),
                 RateLimiterKeyPrefix = string.IsNullOrWhiteSpace(request.RateLimiterKeyPrefix) ? "cardscape:rl:" : request.RateLimiterKeyPrefix.Trim(),
+                OtelTracingEnabled = request.OtelTracingEnabled,
+                OtelMetricsEnabled = request.OtelMetricsEnabled,
+                OtelEndpointUrl = request.OtelEndpointUrl?.Trim() ?? string.Empty,
+                OtelServiceName = string.IsNullOrWhiteSpace(request.OtelServiceName) ? "Cardscape.Api" : request.OtelServiceName.Trim(),
+                OtelTraceSampleRate = Math.Clamp(request.OtelTraceSampleRate, 0, 100),
+                OutboxProcessorEnabled = request.OutboxProcessorEnabled,
+                OutboxBatchSize = Math.Clamp(request.OutboxBatchSize, 1, 500),
+                OutboxPollIntervalSeconds = Math.Clamp(request.OutboxPollIntervalSeconds, 1, 60),
+                OutboxMaxAttempts = Math.Clamp(request.OutboxMaxAttempts, 1, 10),
+                OutboxMessageRetentionDays = Math.Clamp(request.OutboxMessageRetentionDays, 1, 90),
 
                 // 27. Activities & Audit Logging
                 EnableActivityLogging = request.EnableActivityLogging,
@@ -358,6 +433,8 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 DataResidencyEnabled = request.DataResidencyEnabled,
                 DeploymentRegion = string.IsNullOrWhiteSpace(request.DeploymentRegion) ? "Unspecified" : request.DeploymentRegion.Trim(),
                 EnforceDataResidency = request.EnforceDataResidency,
+                SoftDeleteRetentionDays = Math.Clamp(request.SoftDeleteRetentionDays, 1, 365),
+                PermanentDeleteRequiresAdmin = request.PermanentDeleteRequiresAdmin,
 
                 // 30. Legal Notices, Privacy & Compliance
                 CustomPrivacyPolicyUrl = request.CustomPrivacyPolicyUrl?.Trim() ?? string.Empty,
@@ -587,6 +664,11 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             CustomLogoUrl: model.CustomLogoUrl,
             CustomFaviconUrl: model.CustomFaviconUrl,
             HidePoweredByCardscape: model.HidePoweredByCardscape,
+            MaintenanceModeEnabled: model.MaintenanceModeEnabled,
+            MaintenanceModeMessage: model.MaintenanceModeMessage,
+            SystemAnnouncementEnabled: model.SystemAnnouncementEnabled,
+            SystemAnnouncementMessage: model.SystemAnnouncementMessage,
+            SystemAnnouncementType: model.SystemAnnouncementType,
 
             // 2. Security & Policy
             JwtAccessTokenMinutes: model.JwtAccessTokenMinutes,
@@ -612,6 +694,14 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             CorsAllowedOrigins: model.CorsAllowedOrigins,
             EnforceHttps: model.EnforceHttps,
             EnableSecurityHeaders: model.EnableSecurityHeaders,
+            HstsMaxAgeSeconds: model.HstsMaxAgeSeconds,
+            HstsIncludeSubdomains: model.HstsIncludeSubdomains,
+            HstsPreload: model.HstsPreload,
+            ContentSecurityPolicy: model.ContentSecurityPolicy,
+            XFrameOptions: model.XFrameOptions,
+            ReferrerPolicy: model.ReferrerPolicy,
+            DataProtectionKeyLifetimeDays: model.DataProtectionKeyLifetimeDays,
+            DataProtectionKeyDirectory: model.DataProtectionKeyDirectory,
 
             // 3. Enterprise SSO & Provisioning
             SamlSsoEnabled: model.SamlSsoEnabled,
@@ -631,6 +721,11 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             EnableMicrosoftAuth: model.EnableMicrosoftAuth,
             MicrosoftClientId: model.MicrosoftClientId,
             MicrosoftClientSecretMasked: string.IsNullOrWhiteSpace(model.MicrosoftClientSecret) ? "" : "******",
+            EnableAppleAuth: model.EnableAppleAuth,
+            AppleClientId: model.AppleClientId,
+            AppleTeamId: model.AppleTeamId,
+            AppleKeyId: model.AppleKeyId,
+            ApplePrivateKeyPemMasked: string.IsNullOrWhiteSpace(model.ApplePrivateKeyPem) ? "" : "******",
 
             // 5. Workspaces & Boards
             MaxWorkspacesPerUser: model.MaxWorkspacesPerUser,
@@ -727,6 +822,15 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             AllowedAttachmentExtensions: model.AllowedAttachmentExtensions,
             AllowCoverImages: model.AllowCoverImages,
             MaxCoverImageSizeMb: model.MaxCoverImageSizeMb,
+            S3BucketName: model.S3BucketName,
+            S3EndpointUrl: model.S3EndpointUrl,
+            S3Region: model.S3Region,
+            S3AccessKey: model.S3AccessKey,
+            S3SecretKeyMasked: string.IsNullOrWhiteSpace(model.S3SecretKey) ? "" : "******",
+            S3ForcePathStyle: model.S3ForcePathStyle,
+            BlockExecutableAttachments: model.BlockExecutableAttachments,
+            ScanAttachmentsForMalware: model.ScanAttachmentsForMalware,
+            ClamAvDaemonEndpoint: model.ClamAvDaemonEndpoint,
 
             // 18. Artificial Intelligence
             AiEnabled: model.AiEnabled,
@@ -759,8 +863,18 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
 
             // 21. Integrations (Slack, GitHub, Calendar, MCP, Cloud)
             SlackIntegrationEnabled: model.SlackIntegrationEnabled,
+            SlackClientId: model.SlackClientId,
+            SlackClientSecretMasked: string.IsNullOrWhiteSpace(model.SlackClientSecret) ? "" : "******",
+            SlackSigningSecretMasked: string.IsNullOrWhiteSpace(model.SlackSigningSecret) ? "" : "******",
+            SlackBotTokenMasked: string.IsNullOrWhiteSpace(model.SlackBotToken) ? "" : "******",
             GitHubIntegrationEnabled: model.GitHubIntegrationEnabled,
+            GitHubTokenMasked: string.IsNullOrWhiteSpace(model.GitHubToken) ? "" : "******",
+            GitHubSyncIntervalMinutes: model.GitHubSyncIntervalMinutes,
+            GitHubAutoCloseCardsOnPrMerge: model.GitHubAutoCloseCardsOnPrMerge,
             GoogleCalendarIntegrationEnabled: model.GoogleCalendarIntegrationEnabled,
+            GoogleCalendarClientId: model.GoogleCalendarClientId,
+            GoogleCalendarClientSecretMasked: string.IsNullOrWhiteSpace(model.GoogleCalendarClientSecret) ? "" : "******",
+            GoogleCalendarSyncIntervalMinutes: model.GoogleCalendarSyncIntervalMinutes,
             McpServerEnabled: model.McpServerEnabled,
             CalendarIcsFeedsEnabled: model.CalendarIcsFeedsEnabled,
             CalendarFeedTokenLifetimeDays: model.CalendarFeedTokenLifetimeDays,
@@ -797,12 +911,22 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             BackgroundJobPollIntervalSeconds: model.BackgroundJobPollIntervalSeconds,
             BackgroundJobBatchSize: model.BackgroundJobBatchSize,
 
-            // 26. Infrastructure & Redis
+            // 26. Infrastructure, Redis & Observability
             RedisConnectionStringMasked: string.IsNullOrWhiteSpace(model.RedisConnectionString) ? "" : "******",
             RedisDatabase: model.RedisDatabase,
             PendingTotpStoreBackend: model.PendingTotpStoreBackend,
             PendingTotpStoreKeyPrefix: model.PendingTotpStoreKeyPrefix,
             RateLimiterKeyPrefix: model.RateLimiterKeyPrefix,
+            OtelTracingEnabled: model.OtelTracingEnabled,
+            OtelMetricsEnabled: model.OtelMetricsEnabled,
+            OtelEndpointUrl: model.OtelEndpointUrl,
+            OtelServiceName: model.OtelServiceName,
+            OtelTraceSampleRate: model.OtelTraceSampleRate,
+            OutboxProcessorEnabled: model.OutboxProcessorEnabled,
+            OutboxBatchSize: model.OutboxBatchSize,
+            OutboxPollIntervalSeconds: model.OutboxPollIntervalSeconds,
+            OutboxMaxAttempts: model.OutboxMaxAttempts,
+            OutboxMessageRetentionDays: model.OutboxMessageRetentionDays,
 
             // 27. Activities & Audit Logging
             EnableActivityLogging: model.EnableActivityLogging,
@@ -823,6 +947,8 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
             DataResidencyEnabled: model.DataResidencyEnabled,
             DeploymentRegion: model.DeploymentRegion,
             EnforceDataResidency: model.EnforceDataResidency,
+            SoftDeleteRetentionDays: model.SoftDeleteRetentionDays,
+            PermanentDeleteRequiresAdmin: model.PermanentDeleteRequiresAdmin,
 
             // 30. Legal Notices, Privacy & Compliance
             CustomPrivacyPolicyUrl: model.CustomPrivacyPolicyUrl,
@@ -872,6 +998,11 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public string CustomLogoUrl { get; set; } = string.Empty;
         public string CustomFaviconUrl { get; set; } = string.Empty;
         public bool HidePoweredByCardscape { get; set; }
+        public bool MaintenanceModeEnabled { get; set; }
+        public string MaintenanceModeMessage { get; set; } = "El sistema se encuentra en mantenimiento programado.";
+        public bool SystemAnnouncementEnabled { get; set; }
+        public string SystemAnnouncementMessage { get; set; } = string.Empty;
+        public string SystemAnnouncementType { get; set; } = "Info";
 
         // 2. Security & Policy
         public int JwtAccessTokenMinutes { get; set; } = 1440;
@@ -897,6 +1028,14 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public string CorsAllowedOrigins { get; set; } = "*";
         public bool EnforceHttps { get; set; } = true;
         public bool EnableSecurityHeaders { get; set; } = true;
+        public int HstsMaxAgeSeconds { get; set; } = 31536000;
+        public bool HstsIncludeSubdomains { get; set; } = true;
+        public bool HstsPreload { get; set; }
+        public string ContentSecurityPolicy { get; set; } = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' wss: https:;";
+        public string XFrameOptions { get; set; } = "DENY";
+        public string ReferrerPolicy { get; set; } = "no-referrer";
+        public int DataProtectionKeyLifetimeDays { get; set; } = 90;
+        public string DataProtectionKeyDirectory { get; set; } = string.Empty;
 
         // 3. Enterprise SSO & Provisioning
         public bool SamlSsoEnabled { get; set; }
@@ -916,6 +1055,11 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public bool EnableMicrosoftAuth { get; set; }
         public string MicrosoftClientId { get; set; } = string.Empty;
         public string MicrosoftClientSecret { get; set; } = string.Empty;
+        public bool EnableAppleAuth { get; set; }
+        public string AppleClientId { get; set; } = string.Empty;
+        public string AppleTeamId { get; set; } = string.Empty;
+        public string AppleKeyId { get; set; } = string.Empty;
+        public string ApplePrivateKeyPem { get; set; } = string.Empty;
 
         // 5. Workspaces & Boards
         public int MaxWorkspacesPerUser { get; set; }
@@ -1010,6 +1154,15 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public string AllowedAttachmentExtensions { get; set; } = "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip";
         public bool AllowCoverImages { get; set; } = true;
         public int MaxCoverImageSizeMb { get; set; } = 5;
+        public string S3BucketName { get; set; } = string.Empty;
+        public string S3EndpointUrl { get; set; } = string.Empty;
+        public string S3Region { get; set; } = "us-east-1";
+        public string S3AccessKey { get; set; } = string.Empty;
+        public string S3SecretKey { get; set; } = string.Empty;
+        public bool S3ForcePathStyle { get; set; } = true;
+        public bool BlockExecutableAttachments { get; set; } = true;
+        public bool ScanAttachmentsForMalware { get; set; }
+        public string ClamAvDaemonEndpoint { get; set; } = string.Empty;
 
         // 18. Artificial Intelligence
         public bool AiEnabled { get; set; }
@@ -1042,8 +1195,18 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
 
         // 21. Integrations (Slack, GitHub, Calendar, MCP, Cloud)
         public bool SlackIntegrationEnabled { get; set; }
+        public string SlackClientId { get; set; } = string.Empty;
+        public string SlackClientSecret { get; set; } = string.Empty;
+        public string SlackSigningSecret { get; set; } = string.Empty;
+        public string SlackBotToken { get; set; } = string.Empty;
         public bool GitHubIntegrationEnabled { get; set; }
+        public string GitHubToken { get; set; } = string.Empty;
+        public int GitHubSyncIntervalMinutes { get; set; } = 15;
+        public bool GitHubAutoCloseCardsOnPrMerge { get; set; } = true;
         public bool GoogleCalendarIntegrationEnabled { get; set; }
+        public string GoogleCalendarClientId { get; set; } = string.Empty;
+        public string GoogleCalendarClientSecret { get; set; } = string.Empty;
+        public int GoogleCalendarSyncIntervalMinutes { get; set; } = 15;
         public bool McpServerEnabled { get; set; } = true;
         public bool CalendarIcsFeedsEnabled { get; set; } = true;
         public int CalendarFeedTokenLifetimeDays { get; set; } = 180;
@@ -1080,12 +1243,22 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public int BackgroundJobPollIntervalSeconds { get; set; } = 2;
         public int BackgroundJobBatchSize { get; set; } = 10;
 
-        // 26. Infrastructure & Redis
+        // 26. Infrastructure, Redis & Observability
         public string RedisConnectionString { get; set; } = string.Empty;
         public int RedisDatabase { get; set; }
         public string PendingTotpStoreBackend { get; set; } = "InMemory";
         public string PendingTotpStoreKeyPrefix { get; set; } = "cardscape:totp-pending:";
         public string RateLimiterKeyPrefix { get; set; } = "cardscape:rl:";
+        public bool OtelTracingEnabled { get; set; }
+        public bool OtelMetricsEnabled { get; set; }
+        public string OtelEndpointUrl { get; set; } = string.Empty;
+        public string OtelServiceName { get; set; } = "Cardscape.Api";
+        public int OtelTraceSampleRate { get; set; } = 100;
+        public bool OutboxProcessorEnabled { get; set; } = true;
+        public int OutboxBatchSize { get; set; } = 50;
+        public int OutboxPollIntervalSeconds { get; set; } = 5;
+        public int OutboxMaxAttempts { get; set; } = 5;
+        public int OutboxMessageRetentionDays { get; set; } = 14;
 
         // 27. Activities & Audit Logging
         public bool EnableActivityLogging { get; set; } = true;
@@ -1106,6 +1279,8 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         public bool DataResidencyEnabled { get; set; }
         public string DeploymentRegion { get; set; } = "Unspecified";
         public bool EnforceDataResidency { get; set; }
+        public int SoftDeleteRetentionDays { get; set; } = 30;
+        public bool PermanentDeleteRequiresAdmin { get; set; } = true;
 
         // 30. Legal Notices, Privacy & Compliance
         public string CustomPrivacyPolicyUrl { get; set; } = string.Empty;

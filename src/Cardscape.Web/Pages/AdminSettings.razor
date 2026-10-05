@@ -132,6 +132,49 @@
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.HidePoweredByCardscape" />
                             </RadzenStack>
+
+                            <RadzenText Text="Modo Mantenimiento y Anuncios Globales" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Activar Modo Mantenimiento" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Bloquea el acceso a usuarios no administradores y muestra un mensaje de mantenimiento global."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.MaintenanceModeEnabled" />
+                            </RadzenStack>
+
+                            @if (_model.MaintenanceModeEnabled)
+                            {
+                                <RadzenFormField Text="Mensaje del Modo Mantenimiento" Component="maintMsg">
+                                    <RadzenTextBox @bind-Value="_model.MaintenanceModeMessage" Name="maintMsg" Style="width:100%" />
+                                </RadzenFormField>
+                            }
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-2">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Activar Banner de Anuncio Global del Sistema" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Muestra una barra de alerta destacada en la parte superior para todos los usuarios."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.SystemAnnouncementEnabled" />
+                            </RadzenStack>
+
+                            @if (_model.SystemAnnouncementEnabled)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="4">
+                                        <RadzenFormField Text="Tipo de Anuncio" Component="annType" Style="width:100%">
+                                            <RadzenDropDown @bind-Value="_model.SystemAnnouncementType" Data="@_announcementTypes" Name="annType" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="8">
+                                        <RadzenFormField Text="Mensaje del Anuncio Global" Component="annMsg" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.SystemAnnouncementMessage" Name="annMsg" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
@@ -280,6 +323,29 @@
                                 <RadzenSwitch @bind-Value="_model.EnforceHttps" />
                             </RadzenStack>
 
+                            @if (_model.EnforceHttps)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="4">
+                                        <RadzenFormField Text="HSTS Duración Máx. (Segundos)" Component="hstsMaxAge" Style="width:100%">
+                                            <RadzenNumeric @bind-Value="_model.HstsMaxAgeSeconds" Name="hstsMaxAge" Min="60" Max="63072000" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="4">
+                                        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                            <RadzenText Text="HSTS Subdominios" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenSwitch @bind-Value="_model.HstsIncludeSubdomains" />
+                                        </RadzenStack>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="4">
+                                        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                            <RadzenText Text="HSTS Preload" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenSwitch @bind-Value="_model.HstsPreload" />
+                                        </RadzenStack>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
+
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
                                     <RadzenText Text="Activar Encabezados de Protección (CSP, X-Frame, X-Content-Type)" TextStyle="@TextStyle.Subtitle2" />
@@ -288,6 +354,41 @@
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.EnableSecurityHeaders" />
                             </RadzenStack>
+
+                            @if (_model.EnableSecurityHeaders)
+                            {
+                                <RadzenFormField Text="Content Security Policy (CSP)" Component="cspHeader">
+                                    <RadzenTextBox @bind-Value="_model.ContentSecurityPolicy" Name="cspHeader" Style="width:100%" />
+                                </RadzenFormField>
+
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="X-Frame-Options (Clickjacking)" Component="xframe" Style="width:100%">
+                                            <RadzenDropDown @bind-Value="_model.XFrameOptions" Data="@_xframeOptions" Name="xframe" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Referrer-Policy" Component="refPolicy" Style="width:100%">
+                                            <RadzenDropDown @bind-Value="_model.ReferrerPolicy" Data="@_referrerPolicies" Name="refPolicy" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
+
+                            <RadzenText Text="Cifrado del Sistema y Data Protection" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Vida Útil de Claves DataProtection (Días)" Component="dpLifetime" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.DataProtectionKeyLifetimeDays" Name="dpLifetime" Min="7" Max="365" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Directorio de Persistencia de Claves (opcional)" Component="dpDir" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.DataProtectionKeyDirectory" Name="dpDir" Placeholder="Ruta absoluta o relativa" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
@@ -432,6 +533,44 @@
                                     <RadzenColumn Size="6">
                                         <RadzenFormField Text="Microsoft Client Secret" Component="msClientSecret" Style="width:100%">
                                             <RadzenPassword @bind-Value="_model.MicrosoftClientSecret" Name="msClientSecret" Placeholder="******" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
+
+                            @* Apple Sign In *@
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-2">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Habilitar Autenticación con Apple (Sign in with Apple)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Permite iniciar sesión con Apple ID en web y dispositivos Apple."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.EnableAppleAuth" />
+                            </RadzenStack>
+
+                            @if (_model.EnableAppleAuth)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Apple Services ID (Client ID)" Component="appleClientId" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.AppleClientId" Name="appleClientId" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Apple Team ID" Component="appleTeamId" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.AppleTeamId" Name="appleTeamId" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Apple Key ID" Component="appleKeyId" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.AppleKeyId" Name="appleKeyId" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Clave Privada Apple (.p8 / PEM) (dejar en blanco o '******' para mantener)" Component="appleKeyPem" Style="width:100%">
+                                            <RadzenPassword @bind-Value="_model.ApplePrivateKeyPem" Name="appleKeyPem" Placeholder="******" Style="width:100%" />
                                         </RadzenFormField>
                                     </RadzenColumn>
                                 </RadzenRow>
@@ -1031,6 +1170,74 @@
                                 <RadzenText Text="Permitir Imágenes de Portada en Tarjetas" TextStyle="@TextStyle.Subtitle2" />
                                 <RadzenSwitch @bind-Value="_model.AllowCoverImages" />
                             </RadzenStack>
+
+                            <RadzenText Text="Almacenamiento de Objetos en la Nube (S3 / MinIO)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Nombre del Bucket S3" Component="s3Bucket" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.S3BucketName" Name="s3Bucket" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Región S3" Component="s3Region" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.S3Region" Name="s3Region" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenFormField Text="URL del Endpoint S3 (vacío para AWS oficial, o URL para MinIO/Wasabi)" Component="s3Endpoint">
+                                <RadzenTextBox @bind-Value="_model.S3EndpointUrl" Name="s3Endpoint" Placeholder="http://minio:9000" Style="width:100%" />
+                            </RadzenFormField>
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="S3 Access Key" Component="s3AccessKey" Style="width:100%">
+                                        <RadzenTextBox @bind-Value="_model.S3AccessKey" Name="s3AccessKey" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="S3 Secret Key (dejar en blanco o '******' para mantener)" Component="s3Secret" Style="width:100%">
+                                        <RadzenPassword @bind-Value="_model.S3SecretKey" Name="s3Secret" Placeholder="******" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Forzar Estilo de Ruta S3 (Path-Style URLs)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Requerido para MinIO, Ceph y emuladores locales de S3."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.S3ForcePathStyle" />
+                            </RadzenStack>
+
+                            <RadzenText Text="Seguridad de Archivos y Protección Antivirus" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Bloquear Subida de Archivos Ejecutables (.exe, .dll, .sh, .bat)" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Rechaza automáticamente la subida de ejecutables y scripts peligrosos."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.BlockExecutableAttachments" />
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Escanear Adjuntos con Antivirus en Tiempo Real" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Inspecciona cada fichero subido contra malware antes de persistirlo en el almacenamiento."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.ScanAttachmentsForMalware" />
+                            </RadzenStack>
+
+                            @if (_model.ScanAttachmentsForMalware)
+                            {
+                                <RadzenFormField Text="Endpoint Daemon ClamAV (ej. tcp://clamav:3310)" Component="clamav">
+                                    <RadzenTextBox @bind-Value="_model.ClamAvDaemonEndpoint" Name="clamav" Style="width:100%" />
+                                </RadzenFormField>
+                            }
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
@@ -1289,6 +1496,34 @@
                                 <RadzenSwitch @bind-Value="_model.SlackIntegrationEnabled" />
                             </RadzenStack>
 
+                            @if (_model.SlackIntegrationEnabled)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Slack App Client ID" Component="slackClientId" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.SlackClientId" Name="slackClientId" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Slack Client Secret (dejar en blanco o '******' para mantener)" Component="slackSecret" Style="width:100%">
+                                            <RadzenPassword @bind-Value="_model.SlackClientSecret" Name="slackSecret" Placeholder="******" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Slack Signing Secret (dejar en blanco o '******' para mantener)" Component="slackSign" Style="width:100%">
+                                            <RadzenPassword @bind-Value="_model.SlackSigningSecret" Name="slackSign" Placeholder="******" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Slack Bot User OAuth Token (dejar en blanco o '******' para mantener)" Component="slackBot" Style="width:100%">
+                                            <RadzenPassword @bind-Value="_model.SlackBotToken" Name="slackBot" Placeholder="******" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
+
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
                                     <RadzenText Text="Integración con GitHub" TextStyle="@TextStyle.Subtitle2" />
@@ -1298,6 +1533,26 @@
                                 <RadzenSwitch @bind-Value="_model.GitHubIntegrationEnabled" />
                             </RadzenStack>
 
+                            @if (_model.GitHubIntegrationEnabled)
+                            {
+                                <RadzenFormField Text="Token de Acceso Personal GitHub (PAT) (dejar en blanco o '******' para mantener)" Component="ghToken">
+                                    <RadzenPassword @bind-Value="_model.GitHubToken" Name="ghToken" Placeholder="******" Style="width:100%" />
+                                </RadzenFormField>
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Intervalo de Sincronización GitHub (Minutos)" Component="ghSync" Style="width:100%">
+                                            <RadzenNumeric @bind-Value="_model.GitHubSyncIntervalMinutes" Name="ghSync" Min="1" Max="1440" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                            <RadzenText Text="Auto-cerrar Tarjetas al fusionar PR" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenSwitch @bind-Value="_model.GitHubAutoCloseCardsOnPrMerge" />
+                                        </RadzenStack>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
+
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
                                     <RadzenText Text="Integración con Google Calendar" TextStyle="@TextStyle.Subtitle2" />
@@ -1306,6 +1561,25 @@
                                 </RadzenStack>
                                 <RadzenSwitch @bind-Value="_model.GoogleCalendarIntegrationEnabled" />
                             </RadzenStack>
+
+                            @if (_model.GoogleCalendarIntegrationEnabled)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Google Calendar Client ID" Component="gcalClientId" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.GoogleCalendarClientId" Name="gcalClientId" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Google Calendar Client Secret (dejar en blanco o '******' para mantener)" Component="gcalSecret" Style="width:100%">
+                                            <RadzenPassword @bind-Value="_model.GoogleCalendarClientSecret" Name="gcalSecret" Placeholder="******" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                                <RadzenFormField Text="Intervalo de Sincronización Calendar (Minutos)" Component="gcalSync">
+                                    <RadzenNumeric @bind-Value="_model.GoogleCalendarSyncIntervalMinutes" Name="gcalSync" Min="1" Max="1440" Style="width:100%" />
+                                </RadzenFormField>
+                            }
 
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
                                 <RadzenStack Gap="0.25rem">
@@ -1581,6 +1855,87 @@
                                     </RadzenFormField>
                                 </RadzenColumn>
                             </RadzenRow>
+
+                            <RadzenText Text="Procesador Transaccional Outbox (Background Worker)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText Text="Activar Procesador Outbox de Eventos" TextStyle="@TextStyle.Subtitle2" />
+                                    <RadzenText Text="Despacha eventos de dominio y mensajes asíncronos guardados en la tabla Outbox."
+                                                TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                </RadzenStack>
+                                <RadzenSwitch @bind-Value="_model.OutboxProcessorEnabled" />
+                            </RadzenStack>
+
+                            @if (_model.OutboxProcessorEnabled)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Tamaño del Lote Outbox" Component="outBatch" Style="width:100%">
+                                            <RadzenNumeric @bind-Value="_model.OutboxBatchSize" Name="outBatch" Min="1" Max="500" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Intervalo de Sondeo (Segundos)" Component="outPoll" Style="width:100%">
+                                            <RadzenNumeric @bind-Value="_model.OutboxPollIntervalSeconds" Name="outPoll" Min="1" Max="60" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Intentos Máximos de Entrega" Component="outAttempts" Style="width:100%">
+                                            <RadzenNumeric @bind-Value="_model.OutboxMaxAttempts" Name="outAttempts" Min="1" Max="20" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Retención de Mensajes Procesados (Días)" Component="outRet" Style="width:100%">
+                                            <RadzenNumeric @bind-Value="_model.OutboxMessageRetentionDays" Name="outRet" Min="1" Max="90" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
+
+                            <RadzenText Text="Observabilidad y Telemetría APM (OpenTelemetry)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                        <RadzenStack Gap="0.25rem">
+                                            <RadzenText Text="Trazas Distribuidas (Tracing)" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenText Text="Exporta trazas distribuidas vía OTLP." TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                        </RadzenStack>
+                                        <RadzenSwitch @bind-Value="_model.OtelTracingEnabled" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                        <RadzenStack Gap="0.25rem">
+                                            <RadzenText Text="Métricas de Rendimiento (Metrics)" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenText Text="Exporta métricas de API y runtime vía OTLP." TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                        </RadzenStack>
+                                        <RadzenSwitch @bind-Value="_model.OtelMetricsEnabled" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                            @if (_model.OtelTracingEnabled || _model.OtelMetricsEnabled)
+                            {
+                                <RadzenRow Gap="1rem">
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="URL del Colector OTLP (ej. http://otel-collector:4317)" Component="otelUrl" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.OtelEndpointUrl" Name="otelUrl" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenFormField Text="Nombre del Servicio OTLP" Component="otelName" Style="width:100%">
+                                            <RadzenTextBox @bind-Value="_model.OtelServiceName" Name="otelName" Style="width:100%" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                                <RadzenFormField Text="Tasa de Muestreo de Trazas (0 a 100 %)" Component="otelSample">
+                                    <RadzenNumeric @bind-Value="_model.OtelTraceSampleRate" Name="otelSample" Min="1" Max="100" Style="width:100%" />
+                                </RadzenFormField>
+                            }
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenTabsItem>
@@ -1677,6 +2032,25 @@
                                 <RadzenText Text="Purgar Automáticamente Archivos Huérfanos sin Tarjeta Asociada" TextStyle="@TextStyle.Subtitle2" />
                                 <RadzenSwitch @bind-Value="_model.AutoPurgeOrphanAttachments" />
                             </RadzenStack>
+
+                            <RadzenText Text="Políticas de Papelera y Eliminación Definitiva (Soft Delete)" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
+
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6">
+                                    <RadzenFormField Text="Retención de Tarjetas en Papelera (Días)" Component="softDeleteRet" Style="width:100%">
+                                        <RadzenNumeric @bind-Value="_model.SoftDeleteRetentionDays" Name="softDeleteRet" Min="1" Max="365" Style="width:100%" />
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-pt-3">
+                                        <RadzenStack Gap="0.25rem">
+                                            <RadzenText Text="Exigir Rol Administrador para Borrado Permanente" TextStyle="@TextStyle.Subtitle2" />
+                                            <RadzenText Text="Solo los administradores pueden vaciar papelera o eliminar definitivamente." TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                                        </RadzenStack>
+                                        <RadzenSwitch @bind-Value="_model.PermanentDeleteRequiresAdmin" />
+                                    </RadzenStack>
+                                </RadzenColumn>
+                            </RadzenRow>
 
                             <RadzenText Text="Residencia y Soberanía Geográfica de Datos" TextStyle="@TextStyle.Subtitle1" Class="rz-mt-3" />
 
@@ -1893,6 +2267,9 @@
     private readonly List<string> _rateLimiterBackends = new() { "InMemory", "Redis" };
     private readonly List<string> _totpBackends = new() { "InMemory", "Redis" };
     private readonly List<string> _regions = new() { "Unspecified", "Europe", "NorthAmerica", "AsiaPacific", "SouthAmerica" };
+    private readonly List<string> _announcementTypes = new() { "Info", "Warning", "Critical" };
+    private readonly List<string> _xframeOptions = new() { "DENY", "SAMEORIGIN" };
+    private readonly List<string> _referrerPolicies = new() { "no-referrer", "strict-origin-when-cross-origin", "origin" };
 
     private sealed class SettingsFormModel
     {
@@ -1910,6 +2287,11 @@
         public string? CustomLogoUrl { get; set; }
         public string? CustomFaviconUrl { get; set; }
         public bool HidePoweredByCardscape { get; set; }
+        public bool MaintenanceModeEnabled { get; set; }
+        public string MaintenanceModeMessage { get; set; } = "El sistema se encuentra en mantenimiento programado.";
+        public bool SystemAnnouncementEnabled { get; set; }
+        public string SystemAnnouncementMessage { get; set; } = string.Empty;
+        public string SystemAnnouncementType { get; set; } = "Info";
 
         // 2. Security & Policy
         public int JwtAccessTokenMinutes { get; set; } = 1440;
@@ -1935,6 +2317,14 @@
         public int MaxConcurrentSessionsPerUser { get; set; } = 5;
         public int PasswordExpiryDays { get; set; }
         public int PasswordHistoryCount { get; set; }
+        public int HstsMaxAgeSeconds { get; set; } = 31536000;
+        public bool HstsIncludeSubdomains { get; set; } = true;
+        public bool HstsPreload { get; set; }
+        public string ContentSecurityPolicy { get; set; } = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' wss: https:;";
+        public string XFrameOptions { get; set; } = "DENY";
+        public string ReferrerPolicy { get; set; } = "no-referrer";
+        public int DataProtectionKeyLifetimeDays { get; set; } = 90;
+        public string DataProtectionKeyDirectory { get; set; } = string.Empty;
 
         // 3. Enterprise SSO & Provisioning
         public bool SamlSsoEnabled { get; set; }
@@ -1954,6 +2344,11 @@
         public bool EnableMicrosoftAuth { get; set; }
         public string MicrosoftClientId { get; set; } = string.Empty;
         public string? MicrosoftClientSecret { get; set; }
+        public bool EnableAppleAuth { get; set; }
+        public string AppleClientId { get; set; } = string.Empty;
+        public string AppleTeamId { get; set; } = string.Empty;
+        public string AppleKeyId { get; set; } = string.Empty;
+        public string? ApplePrivateKeyPem { get; set; }
 
         // 5. Workspaces & Boards
         public int MaxWorkspacesPerUser { get; set; }
@@ -2048,6 +2443,15 @@
         public string AllowedAttachmentExtensions { get; set; } = "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip";
         public bool AllowCoverImages { get; set; } = true;
         public int MaxCoverImageSizeMb { get; set; } = 5;
+        public string S3BucketName { get; set; } = string.Empty;
+        public string S3EndpointUrl { get; set; } = string.Empty;
+        public string S3Region { get; set; } = "us-east-1";
+        public string S3AccessKey { get; set; } = string.Empty;
+        public string? S3SecretKey { get; set; }
+        public bool S3ForcePathStyle { get; set; } = true;
+        public bool BlockExecutableAttachments { get; set; } = true;
+        public bool ScanAttachmentsForMalware { get; set; }
+        public string ClamAvDaemonEndpoint { get; set; } = string.Empty;
 
         // 17. Artificial Intelligence
         public bool AiEnabled { get; set; }
@@ -2080,8 +2484,18 @@
 
         // 20. Integrations (Slack, GitHub, Calendar, MCP, Cloud)
         public bool SlackIntegrationEnabled { get; set; }
+        public string SlackClientId { get; set; } = string.Empty;
+        public string? SlackClientSecret { get; set; }
+        public string? SlackSigningSecret { get; set; }
+        public string? SlackBotToken { get; set; }
         public bool GitHubIntegrationEnabled { get; set; }
+        public string? GitHubToken { get; set; }
+        public int GitHubSyncIntervalMinutes { get; set; } = 15;
+        public bool GitHubAutoCloseCardsOnPrMerge { get; set; } = true;
         public bool GoogleCalendarIntegrationEnabled { get; set; }
+        public string GoogleCalendarClientId { get; set; } = string.Empty;
+        public string? GoogleCalendarClientSecret { get; set; }
+        public int GoogleCalendarSyncIntervalMinutes { get; set; } = 15;
         public bool McpServerEnabled { get; set; } = true;
         public bool CalendarIcsFeedsEnabled { get; set; } = true;
         public int CalendarFeedTokenLifetimeDays { get; set; } = 180;
@@ -2124,6 +2538,16 @@
         public string PendingTotpStoreBackend { get; set; } = "InMemory";
         public string PendingTotpStoreKeyPrefix { get; set; } = "cardscape:totp-pending:";
         public string RateLimiterKeyPrefix { get; set; } = "cardscape:rl:";
+        public bool OtelTracingEnabled { get; set; }
+        public bool OtelMetricsEnabled { get; set; }
+        public string OtelEndpointUrl { get; set; } = string.Empty;
+        public string OtelServiceName { get; set; } = "Cardscape.Api";
+        public int OtelTraceSampleRate { get; set; } = 100;
+        public bool OutboxProcessorEnabled { get; set; } = true;
+        public int OutboxBatchSize { get; set; } = 50;
+        public int OutboxPollIntervalSeconds { get; set; } = 5;
+        public int OutboxMaxAttempts { get; set; } = 5;
+        public int OutboxMessageRetentionDays { get; set; } = 14;
 
         // 26. Activities & Audit Logging
         public bool EnableActivityLogging { get; set; } = true;
@@ -2144,6 +2568,8 @@
         public bool DataResidencyEnabled { get; set; }
         public string DeploymentRegion { get; set; } = "Unspecified";
         public bool EnforceDataResidency { get; set; }
+        public int SoftDeleteRetentionDays { get; set; } = 30;
+        public bool PermanentDeleteRequiresAdmin { get; set; } = true;
         public string? CustomPrivacyPolicyUrl { get; set; }
         public string? CustomTermsOfServiceUrl { get; set; }
         public bool DisplayCookieBanner { get; set; }
@@ -2218,6 +2644,11 @@
         _model.CustomLogoUrl = dto.CustomLogoUrl;
         _model.CustomFaviconUrl = dto.CustomFaviconUrl;
         _model.HidePoweredByCardscape = dto.HidePoweredByCardscape;
+        _model.MaintenanceModeEnabled = dto.MaintenanceModeEnabled;
+        _model.MaintenanceModeMessage = dto.MaintenanceModeMessage;
+        _model.SystemAnnouncementEnabled = dto.SystemAnnouncementEnabled;
+        _model.SystemAnnouncementMessage = dto.SystemAnnouncementMessage;
+        _model.SystemAnnouncementType = dto.SystemAnnouncementType;
 
         // 2. Security & Policy
         _model.JwtAccessTokenMinutes = dto.JwtAccessTokenMinutes;
@@ -2243,6 +2674,14 @@
         _model.CorsAllowedOrigins = dto.CorsAllowedOrigins;
         _model.EnforceHttps = dto.EnforceHttps;
         _model.EnableSecurityHeaders = dto.EnableSecurityHeaders;
+        _model.HstsMaxAgeSeconds = dto.HstsMaxAgeSeconds;
+        _model.HstsIncludeSubdomains = dto.HstsIncludeSubdomains;
+        _model.HstsPreload = dto.HstsPreload;
+        _model.ContentSecurityPolicy = dto.ContentSecurityPolicy;
+        _model.XFrameOptions = dto.XFrameOptions;
+        _model.ReferrerPolicy = dto.ReferrerPolicy;
+        _model.DataProtectionKeyLifetimeDays = dto.DataProtectionKeyLifetimeDays;
+        _model.DataProtectionKeyDirectory = dto.DataProtectionKeyDirectory;
 
         // 3. Enterprise SSO & Provisioning
         _model.SamlSsoEnabled = dto.SamlSsoEnabled;
@@ -2262,6 +2701,11 @@
         _model.EnableMicrosoftAuth = dto.EnableMicrosoftAuth;
         _model.MicrosoftClientId = dto.MicrosoftClientId;
         _model.MicrosoftClientSecret = null;
+        _model.EnableAppleAuth = dto.EnableAppleAuth;
+        _model.AppleClientId = dto.AppleClientId;
+        _model.AppleTeamId = dto.AppleTeamId;
+        _model.AppleKeyId = dto.AppleKeyId;
+        _model.ApplePrivateKeyPem = null;
 
         // 5. Workspaces & Boards
         _model.MaxWorkspacesPerUser = dto.MaxWorkspacesPerUser;
@@ -2356,6 +2800,15 @@
         _model.AllowedAttachmentExtensions = dto.AllowedAttachmentExtensions;
         _model.AllowCoverImages = dto.AllowCoverImages;
         _model.MaxCoverImageSizeMb = dto.MaxCoverImageSizeMb;
+        _model.S3BucketName = dto.S3BucketName;
+        _model.S3EndpointUrl = dto.S3EndpointUrl;
+        _model.S3Region = dto.S3Region;
+        _model.S3AccessKey = dto.S3AccessKey;
+        _model.S3SecretKey = null;
+        _model.S3ForcePathStyle = dto.S3ForcePathStyle;
+        _model.BlockExecutableAttachments = dto.BlockExecutableAttachments;
+        _model.ScanAttachmentsForMalware = dto.ScanAttachmentsForMalware;
+        _model.ClamAvDaemonEndpoint = dto.ClamAvDaemonEndpoint;
 
         // 17. Artificial Intelligence
         _model.AiEnabled = dto.AiEnabled;
@@ -2388,8 +2841,18 @@
 
         // 20. Integrations (Slack, GitHub, Calendar, MCP, Cloud)
         _model.SlackIntegrationEnabled = dto.SlackIntegrationEnabled;
+        _model.SlackClientId = dto.SlackClientId;
+        _model.SlackClientSecret = null;
+        _model.SlackSigningSecret = null;
+        _model.SlackBotToken = null;
         _model.GitHubIntegrationEnabled = dto.GitHubIntegrationEnabled;
+        _model.GitHubToken = null;
+        _model.GitHubSyncIntervalMinutes = dto.GitHubSyncIntervalMinutes;
+        _model.GitHubAutoCloseCardsOnPrMerge = dto.GitHubAutoCloseCardsOnPrMerge;
         _model.GoogleCalendarIntegrationEnabled = dto.GoogleCalendarIntegrationEnabled;
+        _model.GoogleCalendarClientId = dto.GoogleCalendarClientId;
+        _model.GoogleCalendarClientSecret = null;
+        _model.GoogleCalendarSyncIntervalMinutes = dto.GoogleCalendarSyncIntervalMinutes;
         _model.McpServerEnabled = dto.McpServerEnabled;
         _model.CalendarIcsFeedsEnabled = dto.CalendarIcsFeedsEnabled;
         _model.CalendarFeedTokenLifetimeDays = dto.CalendarFeedTokenLifetimeDays;
@@ -2432,6 +2895,16 @@
         _model.PendingTotpStoreBackend = dto.PendingTotpStoreBackend;
         _model.PendingTotpStoreKeyPrefix = dto.PendingTotpStoreKeyPrefix;
         _model.RateLimiterKeyPrefix = dto.RateLimiterKeyPrefix;
+        _model.OtelTracingEnabled = dto.OtelTracingEnabled;
+        _model.OtelMetricsEnabled = dto.OtelMetricsEnabled;
+        _model.OtelEndpointUrl = dto.OtelEndpointUrl;
+        _model.OtelServiceName = dto.OtelServiceName;
+        _model.OtelTraceSampleRate = dto.OtelTraceSampleRate;
+        _model.OutboxProcessorEnabled = dto.OutboxProcessorEnabled;
+        _model.OutboxBatchSize = dto.OutboxBatchSize;
+        _model.OutboxPollIntervalSeconds = dto.OutboxPollIntervalSeconds;
+        _model.OutboxMaxAttempts = dto.OutboxMaxAttempts;
+        _model.OutboxMessageRetentionDays = dto.OutboxMessageRetentionDays;
 
         // 26. Activities & Audit Logging
         _model.EnableActivityLogging = dto.EnableActivityLogging;
@@ -2452,6 +2925,8 @@
         _model.DataResidencyEnabled = dto.DataResidencyEnabled;
         _model.DeploymentRegion = dto.DeploymentRegion;
         _model.EnforceDataResidency = dto.EnforceDataResidency;
+        _model.SoftDeleteRetentionDays = dto.SoftDeleteRetentionDays;
+        _model.PermanentDeleteRequiresAdmin = dto.PermanentDeleteRequiresAdmin;
         _model.CustomPrivacyPolicyUrl = dto.CustomPrivacyPolicyUrl;
         _model.CustomTermsOfServiceUrl = dto.CustomTermsOfServiceUrl;
         _model.DisplayCookieBanner = dto.DisplayCookieBanner;
@@ -2489,6 +2964,11 @@
                 CustomLogoUrl: _model.CustomLogoUrl ?? string.Empty,
                 CustomFaviconUrl: _model.CustomFaviconUrl ?? string.Empty,
                 HidePoweredByCardscape: _model.HidePoweredByCardscape,
+                MaintenanceModeEnabled: _model.MaintenanceModeEnabled,
+                MaintenanceModeMessage: _model.MaintenanceModeMessage,
+                SystemAnnouncementEnabled: _model.SystemAnnouncementEnabled,
+                SystemAnnouncementMessage: _model.SystemAnnouncementMessage,
+                SystemAnnouncementType: _model.SystemAnnouncementType,
 
                 // 2. Security & Policy
                 JwtAccessTokenMinutes: _model.JwtAccessTokenMinutes,
@@ -2514,6 +2994,14 @@
                 CorsAllowedOrigins: _model.CorsAllowedOrigins,
                 EnforceHttps: _model.EnforceHttps,
                 EnableSecurityHeaders: _model.EnableSecurityHeaders,
+                HstsMaxAgeSeconds: _model.HstsMaxAgeSeconds,
+                HstsIncludeSubdomains: _model.HstsIncludeSubdomains,
+                HstsPreload: _model.HstsPreload,
+                ContentSecurityPolicy: _model.ContentSecurityPolicy,
+                XFrameOptions: _model.XFrameOptions,
+                ReferrerPolicy: _model.ReferrerPolicy,
+                DataProtectionKeyLifetimeDays: _model.DataProtectionKeyLifetimeDays,
+                DataProtectionKeyDirectory: _model.DataProtectionKeyDirectory,
 
                 // 3. Enterprise SSO & Provisioning
                 SamlSsoEnabled: _model.SamlSsoEnabled,
@@ -2533,6 +3021,11 @@
                 EnableMicrosoftAuth: _model.EnableMicrosoftAuth,
                 MicrosoftClientId: _model.MicrosoftClientId,
                 MicrosoftClientSecret: _model.MicrosoftClientSecret,
+                EnableAppleAuth: _model.EnableAppleAuth,
+                AppleClientId: _model.AppleClientId,
+                AppleTeamId: _model.AppleTeamId,
+                AppleKeyId: _model.AppleKeyId,
+                ApplePrivateKeyPem: _model.ApplePrivateKeyPem,
 
                 // 5. Workspaces & Boards
                 MaxWorkspacesPerUser: _model.MaxWorkspacesPerUser,
@@ -2572,20 +3065,20 @@
                 MaxCommentLength: _model.MaxCommentLength,
                 AllowUserMentions: _model.AllowUserMentions,
 
-                // 8. Labels & Custom Fields
+                // 9. Labels & Custom Fields
                 MaxLabelsPerBoard: _model.MaxLabelsPerBoard,
                 MaxLabelsPerCard: _model.MaxLabelsPerCard,
                 CustomFieldsEnabled: _model.CustomFieldsEnabled,
                 MaxCustomFieldsPerBoard: _model.MaxCustomFieldsPerBoard,
 
-                // 9. Board Automation Rules
+                // 10. Board Automation Rules
                 BoardAutomationEnabled: _model.BoardAutomationEnabled,
                 MaxAutomationRulesPerBoard: _model.MaxAutomationRulesPerBoard,
                 MaxAutomationActionsPerRule: _model.MaxAutomationActionsPerRule,
                 AutomationMonthlyRunQuotaPerUser: _model.AutomationMonthlyRunQuotaPerUser,
                 AutomationTimeoutSeconds: _model.AutomationTimeoutSeconds,
 
-                // 10. Notifications & System Alerts
+                // 11. Notifications & System Alerts
                 InAppNotificationsEnabled: _model.InAppNotificationsEnabled,
                 DueSoonThresholdHours: _model.DueSoonThresholdHours,
                 NotifyOnCardAssignment: _model.NotifyOnCardAssignment,
@@ -2598,37 +3091,46 @@
                 VapidPublicKey: _model.VapidPublicKey,
                 VapidPrivateKey: _model.VapidPrivateKey,
 
-                // 11. Dashboards & Metric Cards
+                // 12. Dashboards & Metric Cards
                 EnableDashboards: _model.EnableDashboards,
                 MaxDashcardsPerBoard: _model.MaxDashcardsPerBoard,
                 DashboardRefreshIntervalSeconds: _model.DashboardRefreshIntervalSeconds,
 
-                // 12. Import & Export
+                // 13. Import & Export
                 EnableBoardExport: _model.EnableBoardExport,
                 EnableKanbanImport: _model.EnableKanbanImport,
                 MaxImportFileSizeMb: _model.MaxImportFileSizeMb,
 
-                // 13. Search & Indexing
+                // 14. Search & Indexing
                 SearchMinQueryLength: _model.SearchMinQueryLength,
                 SearchMaxPageSize: _model.SearchMaxPageSize,
                 SearchFuzzyMatching: _model.SearchFuzzyMatching,
 
-                // 14. Realtime & Presence
+                // 15. Realtime & Presence
                 RealtimeBroadcastingEnabled: _model.RealtimeBroadcastingEnabled,
                 RealtimePresenceEnabled: _model.RealtimePresenceEnabled,
 
-                // 15. Card Aging
+                // 16. Card Aging
                 CardAgingEnabled: _model.CardAgingEnabled,
                 CardAgingInactiveDays: _model.CardAgingInactiveDays,
                 CardAgingMode: _model.CardAgingMode,
 
-                // 16. Storage & Attachments
+                // 17. Storage & Attachments
                 MaxAttachmentSizeMb: _model.MaxAttachmentSizeMb,
                 AllowedAttachmentExtensions: _model.AllowedAttachmentExtensions,
                 AllowCoverImages: _model.AllowCoverImages,
                 MaxCoverImageSizeMb: _model.MaxCoverImageSizeMb,
+                S3BucketName: _model.S3BucketName,
+                S3EndpointUrl: _model.S3EndpointUrl,
+                S3Region: _model.S3Region,
+                S3AccessKey: _model.S3AccessKey,
+                S3SecretKey: _model.S3SecretKey,
+                S3ForcePathStyle: _model.S3ForcePathStyle,
+                BlockExecutableAttachments: _model.BlockExecutableAttachments,
+                ScanAttachmentsForMalware: _model.ScanAttachmentsForMalware,
+                ClamAvDaemonEndpoint: _model.ClamAvDaemonEndpoint,
 
-                // 17. Artificial Intelligence
+                // 18. Artificial Intelligence
                 AiEnabled: _model.AiEnabled,
                 AiProvider: _model.AiProvider,
                 AiEndpoint: _model.AiEndpoint,
@@ -2641,7 +3143,7 @@
                 AiEnableAutoChecklists: _model.AiEnableAutoChecklists,
                 AiTemperature: _model.AiTemperature,
 
-                // 18. Outbound Email (SMTP)
+                // 19. Outbound Email (SMTP)
                 EmailNotificationsEnabled: _model.EmailNotificationsEnabled,
                 SmtpHost: _model.SmtpHost,
                 SmtpPort: _model.SmtpPort,
@@ -2651,16 +3153,26 @@
                 SenderEmail: _model.SenderEmail,
                 SenderName: _model.SenderName,
 
-                // 19. Inbound Email (Email-to-Board)
+                // 20. Inbound Email (Email-to-Board)
                 InboundEmailEnabled: _model.InboundEmailEnabled,
                 InboundEmailDomain: _model.InboundEmailDomain,
                 InboundDefaultList: _model.InboundDefaultList,
                 InboundAttachSenderEmail: _model.InboundAttachSenderEmail,
 
-                // 20. Integrations (Slack, GitHub, Calendar, MCP, Cloud)
+                // 21. Integrations (Slack, GitHub, Calendar, MCP, Cloud)
                 SlackIntegrationEnabled: _model.SlackIntegrationEnabled,
+                SlackClientId: _model.SlackClientId,
+                SlackClientSecret: _model.SlackClientSecret,
+                SlackSigningSecret: _model.SlackSigningSecret,
+                SlackBotToken: _model.SlackBotToken,
                 GitHubIntegrationEnabled: _model.GitHubIntegrationEnabled,
+                GitHubToken: _model.GitHubToken,
+                GitHubSyncIntervalMinutes: _model.GitHubSyncIntervalMinutes,
+                GitHubAutoCloseCardsOnPrMerge: _model.GitHubAutoCloseCardsOnPrMerge,
                 GoogleCalendarIntegrationEnabled: _model.GoogleCalendarIntegrationEnabled,
+                GoogleCalendarClientId: _model.GoogleCalendarClientId,
+                GoogleCalendarClientSecret: _model.GoogleCalendarClientSecret,
+                GoogleCalendarSyncIntervalMinutes: _model.GoogleCalendarSyncIntervalMinutes,
                 McpServerEnabled: _model.McpServerEnabled,
                 CalendarIcsFeedsEnabled: _model.CalendarIcsFeedsEnabled,
                 CalendarFeedTokenLifetimeDays: _model.CalendarFeedTokenLifetimeDays,
@@ -2674,46 +3186,56 @@
                 GitLabIntegrationEnabled: _model.GitLabIntegrationEnabled,
                 GitLabEndpoint: _model.GitLabEndpoint,
 
-                // 21. Model Context Protocol (MCP Server)
+                // 22. Model Context Protocol (MCP Server)
                 McpServerName: _model.McpServerName,
                 McpEnableWriteTools: _model.McpEnableWriteTools,
                 McpMaxBatchSize: _model.McpMaxBatchSize,
 
-                // 22. Webhooks
+                // 23. Webhooks
                 WebhooksEnabled: _model.WebhooksEnabled,
                 MaxWebhookRetries: _model.MaxWebhookRetries,
                 WebhookTimeoutSeconds: _model.WebhookTimeoutSeconds,
                 WebhookPayloadSignatureEnabled: _model.WebhookPayloadSignatureEnabled,
 
-                // 23. API Idempotency
+                // 24. API Idempotency
                 EnableIdempotency: _model.EnableIdempotency,
                 IdempotencyReservationWindowMinutes: _model.IdempotencyReservationWindowMinutes,
                 IdempotencyRetentionWindowHours: _model.IdempotencyRetentionWindowHours,
 
-                // 24. Rate Limiting & Performance
+                // 25. Rate Limiting & Performance
                 RateLimitingEnabled: _model.RateLimitingEnabled,
                 DefaultRequestsPerHour: _model.DefaultRequestsPerHour,
                 RateLimiterBackend: _model.RateLimiterBackend,
                 BackgroundJobPollIntervalSeconds: _model.BackgroundJobPollIntervalSeconds,
                 BackgroundJobBatchSize: _model.BackgroundJobBatchSize,
 
-                // 25. Infrastructure & Redis
+                // 26. Infrastructure, Redis & Observability
                 RedisConnectionString: _model.RedisConnectionString,
                 RedisDatabase: _model.RedisDatabase,
                 PendingTotpStoreBackend: _model.PendingTotpStoreBackend,
                 PendingTotpStoreKeyPrefix: _model.PendingTotpStoreKeyPrefix,
                 RateLimiterKeyPrefix: _model.RateLimiterKeyPrefix,
+                OtelTracingEnabled: _model.OtelTracingEnabled,
+                OtelMetricsEnabled: _model.OtelMetricsEnabled,
+                OtelEndpointUrl: _model.OtelEndpointUrl,
+                OtelServiceName: _model.OtelServiceName,
+                OtelTraceSampleRate: _model.OtelTraceSampleRate,
+                OutboxProcessorEnabled: _model.OutboxProcessorEnabled,
+                OutboxBatchSize: _model.OutboxBatchSize,
+                OutboxPollIntervalSeconds: _model.OutboxPollIntervalSeconds,
+                OutboxMaxAttempts: _model.OutboxMaxAttempts,
+                OutboxMessageRetentionDays: _model.OutboxMessageRetentionDays,
 
-                // 26. Activities & Audit Logging
+                // 27. Activities & Audit Logging
                 EnableActivityLogging: _model.EnableActivityLogging,
                 ActivityPageSize: _model.ActivityPageSize,
                 AuditLogDetailedIp: _model.AuditLogDetailedIp,
 
-                // 27. System Logging (Serilog)
+                // 28. System Logging (Serilog)
                 LogRetainedFileCountLimit: _model.LogRetainedFileCountLimit,
                 LogFileSizeLimitMb: _model.LogFileSizeLimitMb,
 
-                // 28. Data Retention, Residency & GDPR
+                // 29. Data Retention, Residency & GDPR
                 RetentionSweeperEnabled: _model.RetentionSweeperEnabled,
                 SweepIntervalHours: _model.SweepIntervalHours,
                 UserGracePeriodDays: _model.UserGracePeriodDays,
@@ -2723,17 +3245,19 @@
                 DataResidencyEnabled: _model.DataResidencyEnabled,
                 DeploymentRegion: _model.DeploymentRegion,
                 EnforceDataResidency: _model.EnforceDataResidency,
+                SoftDeleteRetentionDays: _model.SoftDeleteRetentionDays,
+                PermanentDeleteRequiresAdmin: _model.PermanentDeleteRequiresAdmin,
                 CustomPrivacyPolicyUrl: _model.CustomPrivacyPolicyUrl ?? string.Empty,
                 CustomTermsOfServiceUrl: _model.CustomTermsOfServiceUrl ?? string.Empty,
                 DisplayCookieBanner: _model.DisplayCookieBanner,
                 RequireLegalNoticeAcceptance: _model.RequireLegalNoticeAcceptance,
 
-                // 29. Automated Backups
+                // 30. Automated Backups
                 AutoBackupEnabled: _model.AutoBackupEnabled,
                 BackupIntervalHours: _model.BackupIntervalHours,
                 BackupRetentionDays: _model.BackupRetentionDays,
 
-                // 30. Seeder & Dev
+                // 31. Seeder & Dev
                 SeederEnabled: _model.SeederEnabled,
                 AllowSeederExecution: _model.AllowSeederExecution,
                 SeederWipeBeforeSeed: _model.SeederWipeBeforeSeed

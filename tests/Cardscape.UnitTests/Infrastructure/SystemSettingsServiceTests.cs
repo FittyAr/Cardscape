@@ -130,6 +130,55 @@ public sealed class SystemSettingsServiceTests : IDisposable
         settings.AutoBackupEnabled.Should().BeFalse();
         settings.BackupIntervalHours.Should().Be(24);
         settings.BackupRetentionDays.Should().Be(30);
+        settings.MaintenanceModeEnabled.Should().BeFalse();
+        settings.MaintenanceModeMessage.Should().Be("El sistema se encuentra en mantenimiento programado.");
+        settings.SystemAnnouncementEnabled.Should().BeFalse();
+        settings.SystemAnnouncementMessage.Should().BeEmpty();
+        settings.SystemAnnouncementType.Should().Be("Info");
+        settings.HstsMaxAgeSeconds.Should().Be(31536000);
+        settings.HstsIncludeSubdomains.Should().BeTrue();
+        settings.HstsPreload.Should().BeFalse();
+        settings.ContentSecurityPolicy.Should().Contain("default-src");
+        settings.XFrameOptions.Should().Be("DENY");
+        settings.ReferrerPolicy.Should().Be("no-referrer");
+        settings.DataProtectionKeyLifetimeDays.Should().Be(90);
+        settings.DataProtectionKeyDirectory.Should().BeEmpty();
+        settings.EnableAppleAuth.Should().BeFalse();
+        settings.AppleClientId.Should().BeEmpty();
+        settings.AppleTeamId.Should().BeEmpty();
+        settings.AppleKeyId.Should().BeEmpty();
+        settings.ApplePrivateKeyPemMasked.Should().BeEmpty();
+        settings.S3BucketName.Should().BeEmpty();
+        settings.S3EndpointUrl.Should().BeEmpty();
+        settings.S3Region.Should().Be("us-east-1");
+        settings.S3AccessKey.Should().BeEmpty();
+        settings.S3SecretKeyMasked.Should().BeEmpty();
+        settings.S3ForcePathStyle.Should().BeTrue();
+        settings.BlockExecutableAttachments.Should().BeTrue();
+        settings.ScanAttachmentsForMalware.Should().BeFalse();
+        settings.ClamAvDaemonEndpoint.Should().BeEmpty();
+        settings.SlackClientId.Should().BeEmpty();
+        settings.SlackClientSecretMasked.Should().BeEmpty();
+        settings.SlackSigningSecretMasked.Should().BeEmpty();
+        settings.SlackBotTokenMasked.Should().BeEmpty();
+        settings.GitHubTokenMasked.Should().BeEmpty();
+        settings.GitHubSyncIntervalMinutes.Should().Be(15);
+        settings.GitHubAutoCloseCardsOnPrMerge.Should().BeTrue();
+        settings.GoogleCalendarClientId.Should().BeEmpty();
+        settings.GoogleCalendarClientSecretMasked.Should().BeEmpty();
+        settings.GoogleCalendarSyncIntervalMinutes.Should().Be(15);
+        settings.OtelTracingEnabled.Should().BeFalse();
+        settings.OtelMetricsEnabled.Should().BeFalse();
+        settings.OtelEndpointUrl.Should().BeEmpty();
+        settings.OtelServiceName.Should().Be("Cardscape.Api");
+        settings.OtelTraceSampleRate.Should().Be(100);
+        settings.OutboxProcessorEnabled.Should().BeTrue();
+        settings.OutboxBatchSize.Should().Be(50);
+        settings.OutboxPollIntervalSeconds.Should().Be(5);
+        settings.OutboxMaxAttempts.Should().Be(5);
+        settings.OutboxMessageRetentionDays.Should().Be(14);
+        settings.SoftDeleteRetentionDays.Should().Be(30);
+        settings.PermanentDeleteRequiresAdmin.Should().BeTrue();
     }
 
     [Fact]
@@ -169,8 +218,18 @@ public sealed class SystemSettingsServiceTests : IDisposable
             MaxWebhookRetries: 5,
             WebhookTimeoutSeconds: 15,
             SlackIntegrationEnabled: true,
+            SlackClientId: "slack-id-123",
+            SlackClientSecret: "slack-secret-xyz",
+            SlackSigningSecret: "slack-sign-sec",
+            SlackBotToken: "xoxb-test-token",
             GitHubIntegrationEnabled: true,
+            GitHubToken: "ghp_my_secret_token",
+            GitHubSyncIntervalMinutes: 30,
+            GitHubAutoCloseCardsOnPrMerge: true,
             GoogleCalendarIntegrationEnabled: true,
+            GoogleCalendarClientId: "gcal-client-id-val",
+            GoogleCalendarClientSecret: "gcal-secret-val",
+            GoogleCalendarSyncIntervalMinutes: 20,
             RateLimitingEnabled: true,
             DefaultRequestsPerHour: 5000,
             RateLimiterBackend: "Redis",
@@ -212,7 +271,46 @@ public sealed class SystemSettingsServiceTests : IDisposable
             GitLabEndpoint: "https://gitlab.myorg.internal",
             DisplayCookieBanner: true,
             AutoBackupEnabled: true,
-            BackupIntervalHours: 12);
+            BackupIntervalHours: 12,
+            MaintenanceModeEnabled: true,
+            MaintenanceModeMessage: "Mantenimiento urgente",
+            SystemAnnouncementEnabled: true,
+            SystemAnnouncementMessage: "Aviso a todos los usuarios",
+            SystemAnnouncementType: "Warning",
+            HstsMaxAgeSeconds: 63072000,
+            HstsIncludeSubdomains: true,
+            HstsPreload: true,
+            ContentSecurityPolicy: "default-src 'self';",
+            XFrameOptions: "SAMEORIGIN",
+            ReferrerPolicy: "strict-origin-when-cross-origin",
+            DataProtectionKeyLifetimeDays: 180,
+            DataProtectionKeyDirectory: "/keys/dir",
+            EnableAppleAuth: true,
+            AppleClientId: "com.apple.test",
+            AppleTeamId: "TEAMXYZ",
+            AppleKeyId: "KEYXYZ",
+            ApplePrivateKeyPem: "-----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg...\n-----END PRIVATE KEY-----",
+            S3BucketName: "my-bucket",
+            S3EndpointUrl: "http://minio:9000",
+            S3Region: "us-west-2",
+            S3AccessKey: "S3ACCESS",
+            S3SecretKey: "S3SECRET",
+            S3ForcePathStyle: true,
+            BlockExecutableAttachments: true,
+            ScanAttachmentsForMalware: true,
+            ClamAvDaemonEndpoint: "tcp://clamav:3310",
+            OtelTracingEnabled: true,
+            OtelMetricsEnabled: true,
+            OtelEndpointUrl: "http://otel:4317",
+            OtelServiceName: "Cardscape.Custom",
+            OtelTraceSampleRate: 50,
+            OutboxProcessorEnabled: true,
+            OutboxBatchSize: 100,
+            OutboxPollIntervalSeconds: 2,
+            OutboxMaxAttempts: 10,
+            OutboxMessageRetentionDays: 30,
+            SoftDeleteRetentionDays: 60,
+            PermanentDeleteRequiresAdmin: true);
 
         SystemSettingsDto updated = await service.UpdateSettingsAsync(updateReq, "admin@test.com", TestContext.Current.CancellationToken);
 
@@ -261,6 +359,58 @@ public sealed class SystemSettingsServiceTests : IDisposable
         updated.DisplayCookieBanner.Should().BeTrue();
         updated.AutoBackupEnabled.Should().BeTrue();
         updated.BackupIntervalHours.Should().Be(12);
+        updated.MaintenanceModeEnabled.Should().BeTrue();
+        updated.MaintenanceModeMessage.Should().Be("Mantenimiento urgente");
+        updated.SystemAnnouncementEnabled.Should().BeTrue();
+        updated.SystemAnnouncementMessage.Should().Be("Aviso a todos los usuarios");
+        updated.SystemAnnouncementType.Should().Be("Warning");
+        updated.HstsMaxAgeSeconds.Should().Be(63072000);
+        updated.HstsIncludeSubdomains.Should().BeTrue();
+        updated.HstsPreload.Should().BeTrue();
+        updated.ContentSecurityPolicy.Should().Be("default-src 'self';");
+        updated.XFrameOptions.Should().Be("SAMEORIGIN");
+        updated.ReferrerPolicy.Should().Be("strict-origin-when-cross-origin");
+        updated.DataProtectionKeyLifetimeDays.Should().Be(180);
+        updated.DataProtectionKeyDirectory.Should().Be("/keys/dir");
+        updated.EnableAppleAuth.Should().BeTrue();
+        updated.AppleClientId.Should().Be("com.apple.test");
+        updated.AppleTeamId.Should().Be("TEAMXYZ");
+        updated.AppleKeyId.Should().Be("KEYXYZ");
+        updated.ApplePrivateKeyPemMasked.Should().Be("******");
+        updated.S3BucketName.Should().Be("my-bucket");
+        updated.S3EndpointUrl.Should().Be("http://minio:9000");
+        updated.S3Region.Should().Be("us-west-2");
+        updated.S3AccessKey.Should().Be("S3ACCESS");
+        updated.S3SecretKeyMasked.Should().Be("******");
+        updated.S3ForcePathStyle.Should().BeTrue();
+        updated.BlockExecutableAttachments.Should().BeTrue();
+        updated.ScanAttachmentsForMalware.Should().BeTrue();
+        updated.ClamAvDaemonEndpoint.Should().Be("tcp://clamav:3310");
+        updated.SlackIntegrationEnabled.Should().BeTrue();
+        updated.SlackClientId.Should().Be("slack-id-123");
+        updated.SlackClientSecretMasked.Should().Be("******");
+        updated.SlackSigningSecretMasked.Should().Be("******");
+        updated.SlackBotTokenMasked.Should().Be("******");
+        updated.GitHubIntegrationEnabled.Should().BeTrue();
+        updated.GitHubTokenMasked.Should().Be("******");
+        updated.GitHubSyncIntervalMinutes.Should().Be(30);
+        updated.GitHubAutoCloseCardsOnPrMerge.Should().BeTrue();
+        updated.GoogleCalendarIntegrationEnabled.Should().BeTrue();
+        updated.GoogleCalendarClientId.Should().Be("gcal-client-id-val");
+        updated.GoogleCalendarClientSecretMasked.Should().Be("******");
+        updated.GoogleCalendarSyncIntervalMinutes.Should().Be(20);
+        updated.OtelTracingEnabled.Should().BeTrue();
+        updated.OtelMetricsEnabled.Should().BeTrue();
+        updated.OtelEndpointUrl.Should().Be("http://otel:4317");
+        updated.OtelServiceName.Should().Be("Cardscape.Custom");
+        updated.OtelTraceSampleRate.Should().Be(50);
+        updated.OutboxProcessorEnabled.Should().BeTrue();
+        updated.OutboxBatchSize.Should().Be(100);
+        updated.OutboxPollIntervalSeconds.Should().Be(2);
+        updated.OutboxMaxAttempts.Should().Be(10);
+        updated.OutboxMessageRetentionDays.Should().Be(30);
+        updated.SoftDeleteRetentionDays.Should().Be(60);
+        updated.PermanentDeleteRequiresAdmin.Should().BeTrue();
 
         bool isAllowed = await service.IsPublicRegistrationAllowedAsync(TestContext.Current.CancellationToken);
         isAllowed.Should().BeFalse();
