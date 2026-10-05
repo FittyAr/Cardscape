@@ -1,7 +1,7 @@
 namespace Cardscape.Application.Abstractions.Settings;
 
 public sealed record SystemSettingsDto(
-    // 1. General & Brand
+    // 1. General, Brand & Whitelabel
     string InstanceTitle = "Cardscape",
     string SupportEmail = "support@cardscape.local",
     string DefaultLanguage = "es",
@@ -12,6 +12,9 @@ public sealed record SystemSettingsDto(
     bool EnableDenseModeByDefault = false,
     bool ShowCardCoverImagesByDefault = true,
     bool EnableSoundNotifications = true,
+    string CustomLogoUrl = "",
+    string CustomFaviconUrl = "",
+    bool HidePoweredByCardscape = false,
 
     // 2. Security & Policy
     int JwtAccessTokenMinutes = 1440,
@@ -30,6 +33,10 @@ public sealed record SystemSettingsDto(
     string TotpIssuerName = "Cardscape",
     int TotpStepTolerance = 1,
     int PasswordResetTokenLifetimeMinutes = 60,
+    int IdleSessionTimeoutMinutes = 0,
+    int MaxConcurrentSessionsPerUser = 5,
+    int PasswordExpiryDays = 0,
+    int PasswordHistoryCount = 0,
     string CorsAllowedOrigins = "*",
     bool EnforceHttps = true,
     bool EnableSecurityHeaders = true,
@@ -60,10 +67,13 @@ public sealed record SystemSettingsDto(
     string DefaultWorkspaceRole = "Member",
     int InvitationExpirationDays = 7,
     bool AllowPublicBoards = true,
+    bool EnablePublicBoardTemplates = true,
+    bool AllowCustomUserTemplates = true,
 
     // 6. Cards, Lists & Productivity
     int DefaultWipLimit = 0,
     bool EnforceWipLimits = false,
+    bool HighlightOverLimitLists = true,
     bool AllowCardMirroring = true,
     bool AllowCardSnoozing = true,
     bool AllowCardVoting = true,
@@ -72,25 +82,36 @@ public sealed record SystemSettingsDto(
     int AutoArchiveCompletedCardsDays = 0,
     bool CardRecurrenceEnabled = true,
     int MaxRecurrenceIntervalDays = 365,
+    bool EnableTimelineView = true,
+    bool EnableCalendarView = true,
+    bool EnableTableView = true,
+    string DefaultBoardView = "Kanban",
 
-    // 7. Comments & Collaboration
+    // 7. Time Tracking & Estimates
+    bool EnableTimeTracking = false,
+    bool EnforceTimeTrackingEstimates = false,
+    string TimeTrackingUnit = "Hours",
+
+    // 8. Comments & Collaboration
     bool AllowCommentEditing = true,
     bool AllowCommentDeletion = true,
     int MaxCommentLength = 5000,
     bool AllowUserMentions = true,
 
-    // 8. Labels & Custom Fields
+    // 9. Labels & Custom Fields
     int MaxLabelsPerBoard = 50,
     int MaxLabelsPerCard = 10,
     bool CustomFieldsEnabled = true,
     int MaxCustomFieldsPerBoard = 30,
 
-    // 9. Board Automation Rules
+    // 10. Board Automation Rules
     bool BoardAutomationEnabled = true,
     int MaxAutomationRulesPerBoard = 20,
     int MaxAutomationActionsPerRule = 5,
+    int AutomationMonthlyRunQuotaPerUser = 250,
+    int AutomationTimeoutSeconds = 15,
 
-    // 10. Notifications & System Alerts
+    // 11. Notifications & System Alerts
     bool InAppNotificationsEnabled = true,
     int DueSoonThresholdHours = 24,
     bool NotifyOnCardAssignment = true,
@@ -98,32 +119,36 @@ public sealed record SystemSettingsDto(
     bool NotifyOnDueSoon = true,
     bool NotifyOnOverdue = true,
     int NotificationRetentionDays = 30,
+    bool EnableWebPushNotifications = false,
+    string VapidSubject = "mailto:admin@cardscape.local",
+    string VapidPublicKey = "",
+    string VapidPrivateKeyMasked = "",
 
-    // 11. Dashboards & Metric Cards
+    // 12. Dashboards & Metric Cards
     bool EnableDashboards = true,
     int MaxDashcardsPerBoard = 10,
     int DashboardRefreshIntervalSeconds = 60,
 
-    // 12. Import & Export
+    // 13. Import & Export
     bool EnableBoardExport = true,
     bool EnableKanbanImport = true,
     int MaxImportFileSizeMb = 50,
 
-    // 13. Search & Indexing
+    // 14. Search & Indexing
     int SearchMinQueryLength = 2,
     int SearchMaxPageSize = 50,
     bool SearchFuzzyMatching = true,
 
-    // 14. Realtime & Presence
+    // 15. Realtime & Presence
     bool RealtimeBroadcastingEnabled = true,
     bool RealtimePresenceEnabled = true,
 
-    // 15. Card Aging
+    // 16. Card Aging
     bool CardAgingEnabled = true,
     int CardAgingInactiveDays = 14,
     string CardAgingMode = "Regular",
 
-    // 16. Storage & Attachments
+    // 17. Storage & Attachments
     string StorageProvider = "LocalFile",
     string StorageRoot = "Storage",
     int MaxAttachmentSizeMb = 25,
@@ -131,7 +156,7 @@ public sealed record SystemSettingsDto(
     bool AllowCoverImages = true,
     int MaxCoverImageSizeMb = 5,
 
-    // 17. Artificial Intelligence
+    // 18. Artificial Intelligence
     bool AiEnabled = false,
     string AiProvider = "OpenAiCompatible",
     string AiEndpoint = "http://localhost:11434/",
@@ -139,8 +164,12 @@ public sealed record SystemSettingsDto(
     string AiApiKeyMasked = "",
     int AiTimeoutSeconds = 60,
     int AiMaxTokens = 2048,
+    bool AiEnableCardDescriptionGen = true,
+    bool AiEnableCommentSummary = true,
+    bool AiEnableAutoChecklists = true,
+    int AiTemperature = 70,
 
-    // 18. Outbound Email (SMTP)
+    // 19. Outbound Email (SMTP)
     bool EmailNotificationsEnabled = false,
     string SmtpHost = "localhost",
     int SmtpPort = 587,
@@ -150,60 +179,69 @@ public sealed record SystemSettingsDto(
     string SenderEmail = "noreply@cardscape.local",
     string SenderName = "Cardscape Notificaciones",
 
-    // 19. Inbound Email (Email-to-Board)
+    // 20. Inbound Email (Email-to-Board)
     bool InboundEmailEnabled = false,
     string InboundEmailDomain = "inbound.cardscape.local",
     string InboundDefaultList = "Inbox",
     bool InboundAttachSenderEmail = true,
 
-    // 20. Integrations (Slack, GitHub, Calendar, MCP)
+    // 21. Integrations (Slack, GitHub, Calendar, MCP, Cloud)
     bool SlackIntegrationEnabled = false,
     bool GitHubIntegrationEnabled = false,
     bool GoogleCalendarIntegrationEnabled = false,
     bool McpServerEnabled = true,
     bool CalendarIcsFeedsEnabled = true,
     int CalendarFeedTokenLifetimeDays = 180,
+    bool GoogleDriveIntegrationEnabled = false,
+    bool OneDriveIntegrationEnabled = false,
+    bool DropboxIntegrationEnabled = false,
+    bool MicrosoftTeamsIntegrationEnabled = false,
+    string MicrosoftTeamsWebhookUrlMasked = "",
+    bool DiscordIntegrationEnabled = false,
+    string DiscordWebhookUrlMasked = "",
+    bool GitLabIntegrationEnabled = false,
+    string GitLabEndpoint = "",
 
-    // 21. Model Context Protocol (MCP Server)
+    // 22. Model Context Protocol (MCP Server)
     string McpServerName = "Cardscape-MCP",
     bool McpEnableWriteTools = true,
     int McpMaxBatchSize = 50,
 
-    // 22. Webhooks
+    // 23. Webhooks
     bool WebhooksEnabled = true,
     int MaxWebhookRetries = 3,
     int WebhookTimeoutSeconds = 10,
     bool WebhookPayloadSignatureEnabled = true,
 
-    // 23. API Idempotency
+    // 24. API Idempotency
     bool EnableIdempotency = true,
     int IdempotencyReservationWindowMinutes = 15,
     int IdempotencyRetentionWindowHours = 24,
 
-    // 24. Rate Limiting & Performance
+    // 25. Rate Limiting & Performance
     bool RateLimitingEnabled = true,
     int DefaultRequestsPerHour = 1000,
     string RateLimiterBackend = "InMemory",
     int BackgroundJobPollIntervalSeconds = 2,
     int BackgroundJobBatchSize = 10,
 
-    // 25. Infrastructure & Redis
+    // 26. Infrastructure & Redis
     string RedisConnectionStringMasked = "",
     int RedisDatabase = 0,
     string PendingTotpStoreBackend = "InMemory",
     string PendingTotpStoreKeyPrefix = "cardscape:totp-pending:",
     string RateLimiterKeyPrefix = "cardscape:rl:",
 
-    // 26. Activities & Audit Logging
+    // 27. Activities & Audit Logging
     bool EnableActivityLogging = true,
     int ActivityPageSize = 25,
     bool AuditLogDetailedIp = true,
 
-    // 27. System Logging (Serilog)
+    // 28. System Logging (Serilog)
     int LogRetainedFileCountLimit = 30,
     int LogFileSizeLimitMb = 100,
 
-    // 28. Data Retention, Residency & GDPR
+    // 29. Data Retention, Residency & GDPR
     bool RetentionSweeperEnabled = true,
     int SweepIntervalHours = 6,
     int UserGracePeriodDays = 30,
@@ -214,12 +252,23 @@ public sealed record SystemSettingsDto(
     string DeploymentRegion = "Unspecified",
     bool EnforceDataResidency = false,
 
-    // 29. Seeder & Dev
+    // 30. Legal Notices, Privacy & Compliance
+    string CustomPrivacyPolicyUrl = "",
+    string CustomTermsOfServiceUrl = "",
+    bool DisplayCookieBanner = false,
+    bool RequireLegalNoticeAcceptance = false,
+
+    // 31. Automated Backups
+    bool AutoBackupEnabled = false,
+    int BackupIntervalHours = 24,
+    int BackupRetentionDays = 30,
+
+    // 32. Seeder & Dev
     bool SeederEnabled = false,
     bool AllowSeederExecution = false,
     bool SeederWipeBeforeSeed = false,
 
-    // 30. Live Diagnostics (Read-Only)
+    // 33. Live Diagnostics (Read-Only)
     string DatabaseProvider = "Sqlite",
     string DatabaseHealth = "Healthy",
     string Environment = "Development",
@@ -230,7 +279,7 @@ public sealed record SystemSettingsDto(
     int ActiveThreads = 0);
 
 public sealed record UpdateSystemSettingsRequest(
-    // 1. General & Brand
+    // 1. General, Brand & Whitelabel
     string InstanceTitle = "Cardscape",
     string SupportEmail = "support@cardscape.local",
     string DefaultLanguage = "es",
@@ -241,6 +290,9 @@ public sealed record UpdateSystemSettingsRequest(
     bool EnableDenseModeByDefault = false,
     bool ShowCardCoverImagesByDefault = true,
     bool EnableSoundNotifications = true,
+    string CustomLogoUrl = "",
+    string CustomFaviconUrl = "",
+    bool HidePoweredByCardscape = false,
 
     // 2. Security & Policy
     int JwtAccessTokenMinutes = 1440,
@@ -259,6 +311,10 @@ public sealed record UpdateSystemSettingsRequest(
     string TotpIssuerName = "Cardscape",
     int TotpStepTolerance = 1,
     int PasswordResetTokenLifetimeMinutes = 60,
+    int IdleSessionTimeoutMinutes = 0,
+    int MaxConcurrentSessionsPerUser = 5,
+    int PasswordExpiryDays = 0,
+    int PasswordHistoryCount = 0,
     string CorsAllowedOrigins = "*",
     bool EnforceHttps = true,
     bool EnableSecurityHeaders = true,
@@ -289,10 +345,13 @@ public sealed record UpdateSystemSettingsRequest(
     string DefaultWorkspaceRole = "Member",
     int InvitationExpirationDays = 7,
     bool AllowPublicBoards = true,
+    bool EnablePublicBoardTemplates = true,
+    bool AllowCustomUserTemplates = true,
 
     // 6. Cards, Lists & Productivity
     int DefaultWipLimit = 0,
     bool EnforceWipLimits = false,
+    bool HighlightOverLimitLists = true,
     bool AllowCardMirroring = true,
     bool AllowCardSnoozing = true,
     bool AllowCardVoting = true,
@@ -301,25 +360,36 @@ public sealed record UpdateSystemSettingsRequest(
     int AutoArchiveCompletedCardsDays = 0,
     bool CardRecurrenceEnabled = true,
     int MaxRecurrenceIntervalDays = 365,
+    bool EnableTimelineView = true,
+    bool EnableCalendarView = true,
+    bool EnableTableView = true,
+    string DefaultBoardView = "Kanban",
 
-    // 7. Comments & Collaboration
+    // 7. Time Tracking & Estimates
+    bool EnableTimeTracking = false,
+    bool EnforceTimeTrackingEstimates = false,
+    string TimeTrackingUnit = "Hours",
+
+    // 8. Comments & Collaboration
     bool AllowCommentEditing = true,
     bool AllowCommentDeletion = true,
     int MaxCommentLength = 5000,
     bool AllowUserMentions = true,
 
-    // 8. Labels & Custom Fields
+    // 9. Labels & Custom Fields
     int MaxLabelsPerBoard = 50,
     int MaxLabelsPerCard = 10,
     bool CustomFieldsEnabled = true,
     int MaxCustomFieldsPerBoard = 30,
 
-    // 9. Board Automation Rules
+    // 10. Board Automation Rules
     bool BoardAutomationEnabled = true,
     int MaxAutomationRulesPerBoard = 20,
     int MaxAutomationActionsPerRule = 5,
+    int AutomationMonthlyRunQuotaPerUser = 250,
+    int AutomationTimeoutSeconds = 15,
 
-    // 10. Notifications & System Alerts
+    // 11. Notifications & System Alerts
     bool InAppNotificationsEnabled = true,
     int DueSoonThresholdHours = 24,
     bool NotifyOnCardAssignment = true,
@@ -327,38 +397,42 @@ public sealed record UpdateSystemSettingsRequest(
     bool NotifyOnDueSoon = true,
     bool NotifyOnOverdue = true,
     int NotificationRetentionDays = 30,
+    bool EnableWebPushNotifications = false,
+    string VapidSubject = "mailto:admin@cardscape.local",
+    string VapidPublicKey = "",
+    string? VapidPrivateKey = null,
 
-    // 11. Dashboards & Metric Cards
+    // 12. Dashboards & Metric Cards
     bool EnableDashboards = true,
     int MaxDashcardsPerBoard = 10,
     int DashboardRefreshIntervalSeconds = 60,
 
-    // 12. Import & Export
+    // 13. Import & Export
     bool EnableBoardExport = true,
     bool EnableKanbanImport = true,
     int MaxImportFileSizeMb = 50,
 
-    // 13. Search & Indexing
+    // 14. Search & Indexing
     int SearchMinQueryLength = 2,
     int SearchMaxPageSize = 50,
     bool SearchFuzzyMatching = true,
 
-    // 14. Realtime & Presence
+    // 15. Realtime & Presence
     bool RealtimeBroadcastingEnabled = true,
     bool RealtimePresenceEnabled = true,
 
-    // 15. Card Aging
+    // 16. Card Aging
     bool CardAgingEnabled = true,
     int CardAgingInactiveDays = 14,
     string CardAgingMode = "Regular",
 
-    // 16. Storage & Attachments
+    // 17. Storage & Attachments
     int MaxAttachmentSizeMb = 25,
     string AllowedAttachmentExtensions = "png,jpg,jpeg,gif,pdf,txt,docx,xlsx,zip",
     bool AllowCoverImages = true,
     int MaxCoverImageSizeMb = 5,
 
-    // 17. Artificial Intelligence
+    // 18. Artificial Intelligence
     bool AiEnabled = false,
     string AiProvider = "OpenAiCompatible",
     string AiEndpoint = "http://localhost:11434/",
@@ -366,8 +440,12 @@ public sealed record UpdateSystemSettingsRequest(
     string? AiApiKey = null,
     int AiTimeoutSeconds = 60,
     int AiMaxTokens = 2048,
+    bool AiEnableCardDescriptionGen = true,
+    bool AiEnableCommentSummary = true,
+    bool AiEnableAutoChecklists = true,
+    int AiTemperature = 70,
 
-    // 18. Outbound Email (SMTP)
+    // 19. Outbound Email (SMTP)
     bool EmailNotificationsEnabled = false,
     string SmtpHost = "localhost",
     int SmtpPort = 587,
@@ -377,60 +455,69 @@ public sealed record UpdateSystemSettingsRequest(
     string SenderEmail = "noreply@cardscape.local",
     string SenderName = "Cardscape Notificaciones",
 
-    // 19. Inbound Email (Email-to-Board)
+    // 20. Inbound Email (Email-to-Board)
     bool InboundEmailEnabled = false,
     string InboundEmailDomain = "inbound.cardscape.local",
     string InboundDefaultList = "Inbox",
     bool InboundAttachSenderEmail = true,
 
-    // 20. Integrations (Slack, GitHub, Calendar, MCP)
+    // 21. Integrations (Slack, GitHub, Calendar, MCP, Cloud)
     bool SlackIntegrationEnabled = false,
     bool GitHubIntegrationEnabled = false,
     bool GoogleCalendarIntegrationEnabled = false,
     bool McpServerEnabled = true,
     bool CalendarIcsFeedsEnabled = true,
     int CalendarFeedTokenLifetimeDays = 180,
+    bool GoogleDriveIntegrationEnabled = false,
+    bool OneDriveIntegrationEnabled = false,
+    bool DropboxIntegrationEnabled = false,
+    bool MicrosoftTeamsIntegrationEnabled = false,
+    string? MicrosoftTeamsWebhookUrl = null,
+    bool DiscordIntegrationEnabled = false,
+    string? DiscordWebhookUrl = null,
+    bool GitLabIntegrationEnabled = false,
+    string GitLabEndpoint = "",
 
-    // 21. Model Context Protocol (MCP Server)
+    // 22. Model Context Protocol (MCP Server)
     string McpServerName = "Cardscape-MCP",
     bool McpEnableWriteTools = true,
     int McpMaxBatchSize = 50,
 
-    // 22. Webhooks
+    // 23. Webhooks
     bool WebhooksEnabled = true,
     int MaxWebhookRetries = 3,
     int WebhookTimeoutSeconds = 10,
     bool WebhookPayloadSignatureEnabled = true,
 
-    // 23. API Idempotency
+    // 24. API Idempotency
     bool EnableIdempotency = true,
     int IdempotencyReservationWindowMinutes = 15,
     int IdempotencyRetentionWindowHours = 24,
 
-    // 24. Rate Limiting & Performance
+    // 25. Rate Limiting & Performance
     bool RateLimitingEnabled = true,
     int DefaultRequestsPerHour = 1000,
     string RateLimiterBackend = "InMemory",
     int BackgroundJobPollIntervalSeconds = 2,
     int BackgroundJobBatchSize = 10,
 
-    // 25. Infrastructure & Redis
+    // 26. Infrastructure & Redis
     string? RedisConnectionString = null,
     int RedisDatabase = 0,
     string PendingTotpStoreBackend = "InMemory",
     string PendingTotpStoreKeyPrefix = "cardscape:totp-pending:",
     string RateLimiterKeyPrefix = "cardscape:rl:",
 
-    // 26. Activities & Audit Logging
+    // 27. Activities & Audit Logging
     bool EnableActivityLogging = true,
     int ActivityPageSize = 25,
     bool AuditLogDetailedIp = true,
 
-    // 27. System Logging (Serilog)
+    // 28. System Logging (Serilog)
     int LogRetainedFileCountLimit = 30,
     int LogFileSizeLimitMb = 100,
 
-    // 28. Data Retention, Residency & GDPR
+    // 29. Data Retention, Residency & GDPR
     bool RetentionSweeperEnabled = true,
     int SweepIntervalHours = 6,
     int UserGracePeriodDays = 30,
@@ -441,7 +528,18 @@ public sealed record UpdateSystemSettingsRequest(
     string DeploymentRegion = "Unspecified",
     bool EnforceDataResidency = false,
 
-    // 29. Seeder & Dev
+    // 30. Legal Notices, Privacy & Compliance
+    string CustomPrivacyPolicyUrl = "",
+    string CustomTermsOfServiceUrl = "",
+    bool DisplayCookieBanner = false,
+    bool RequireLegalNoticeAcceptance = false,
+
+    // 31. Automated Backups
+    bool AutoBackupEnabled = false,
+    int BackupIntervalHours = 24,
+    int BackupRetentionDays = 30,
+
+    // 32. Seeder & Dev
     bool SeederEnabled = false,
     bool AllowSeederExecution = false,
     bool SeederWipeBeforeSeed = false);

@@ -87,6 +87,49 @@ public sealed class SystemSettingsServiceTests : IDisposable
         settings.DeploymentRegion.Should().Be("Unspecified");
         settings.EnableActivityLogging.Should().BeTrue();
         settings.LogRetainedFileCountLimit.Should().Be(30);
+        settings.CustomLogoUrl.Should().BeEmpty();
+        settings.CustomFaviconUrl.Should().BeEmpty();
+        settings.HidePoweredByCardscape.Should().BeFalse();
+        settings.IdleSessionTimeoutMinutes.Should().Be(0);
+        settings.MaxConcurrentSessionsPerUser.Should().Be(5);
+        settings.PasswordExpiryDays.Should().Be(0);
+        settings.PasswordHistoryCount.Should().Be(0);
+        settings.EnablePublicBoardTemplates.Should().BeTrue();
+        settings.AllowCustomUserTemplates.Should().BeTrue();
+        settings.HighlightOverLimitLists.Should().BeTrue();
+        settings.EnableTimelineView.Should().BeTrue();
+        settings.EnableCalendarView.Should().BeTrue();
+        settings.EnableTableView.Should().BeTrue();
+        settings.DefaultBoardView.Should().Be("Kanban");
+        settings.EnableTimeTracking.Should().BeFalse();
+        settings.EnforceTimeTrackingEstimates.Should().BeFalse();
+        settings.TimeTrackingUnit.Should().Be("Hours");
+        settings.AutomationMonthlyRunQuotaPerUser.Should().Be(250);
+        settings.AutomationTimeoutSeconds.Should().Be(15);
+        settings.EnableWebPushNotifications.Should().BeFalse();
+        settings.VapidSubject.Should().Be("mailto:admin@cardscape.local");
+        settings.VapidPublicKey.Should().BeEmpty();
+        settings.VapidPrivateKeyMasked.Should().BeEmpty();
+        settings.AiEnableCardDescriptionGen.Should().BeTrue();
+        settings.AiEnableCommentSummary.Should().BeTrue();
+        settings.AiEnableAutoChecklists.Should().BeTrue();
+        settings.AiTemperature.Should().Be(70);
+        settings.GoogleDriveIntegrationEnabled.Should().BeFalse();
+        settings.OneDriveIntegrationEnabled.Should().BeFalse();
+        settings.DropboxIntegrationEnabled.Should().BeFalse();
+        settings.MicrosoftTeamsIntegrationEnabled.Should().BeFalse();
+        settings.MicrosoftTeamsWebhookUrlMasked.Should().BeEmpty();
+        settings.DiscordIntegrationEnabled.Should().BeFalse();
+        settings.DiscordWebhookUrlMasked.Should().BeEmpty();
+        settings.GitLabIntegrationEnabled.Should().BeFalse();
+        settings.GitLabEndpoint.Should().BeEmpty();
+        settings.CustomPrivacyPolicyUrl.Should().BeEmpty();
+        settings.CustomTermsOfServiceUrl.Should().BeEmpty();
+        settings.DisplayCookieBanner.Should().BeFalse();
+        settings.RequireLegalNoticeAcceptance.Should().BeFalse();
+        settings.AutoBackupEnabled.Should().BeFalse();
+        settings.BackupIntervalHours.Should().Be(24);
+        settings.BackupRetentionDays.Should().Be(30);
     }
 
     [Fact]
@@ -151,7 +194,25 @@ public sealed class SystemSettingsServiceTests : IDisposable
             DeploymentRegion: "Europe",
             EnableIdempotency: false,
             MaxDashcardsPerBoard: 15,
-            McpServerName: "MyCustomMCP");
+            McpServerName: "MyCustomMCP",
+            CustomLogoUrl: "/images/logo-custom.png",
+            HidePoweredByCardscape: true,
+            IdleSessionTimeoutMinutes: 30,
+            PasswordExpiryDays: 90,
+            DefaultBoardView: "Timeline",
+            EnableTimeTracking: true,
+            AutomationMonthlyRunQuotaPerUser: 5000,
+            EnableWebPushNotifications: true,
+            VapidPrivateKey: "vapid-secret-key",
+            MicrosoftTeamsIntegrationEnabled: true,
+            MicrosoftTeamsWebhookUrl: "https://teams.webhook.office.com/test",
+            DiscordIntegrationEnabled: true,
+            DiscordWebhookUrl: "https://discord.com/api/webhooks/test",
+            GitLabIntegrationEnabled: true,
+            GitLabEndpoint: "https://gitlab.myorg.internal",
+            DisplayCookieBanner: true,
+            AutoBackupEnabled: true,
+            BackupIntervalHours: 12);
 
         SystemSettingsDto updated = await service.UpdateSettingsAsync(updateReq, "admin@test.com", TestContext.Current.CancellationToken);
 
@@ -182,6 +243,24 @@ public sealed class SystemSettingsServiceTests : IDisposable
         updated.EnableIdempotency.Should().BeFalse();
         updated.MaxDashcardsPerBoard.Should().Be(15);
         updated.McpServerName.Should().Be("MyCustomMCP");
+        updated.CustomLogoUrl.Should().Be("/images/logo-custom.png");
+        updated.HidePoweredByCardscape.Should().BeTrue();
+        updated.IdleSessionTimeoutMinutes.Should().Be(30);
+        updated.PasswordExpiryDays.Should().Be(90);
+        updated.DefaultBoardView.Should().Be("Timeline");
+        updated.EnableTimeTracking.Should().BeTrue();
+        updated.AutomationMonthlyRunQuotaPerUser.Should().Be(5000);
+        updated.EnableWebPushNotifications.Should().BeTrue();
+        updated.VapidPrivateKeyMasked.Should().Be("******");
+        updated.MicrosoftTeamsIntegrationEnabled.Should().BeTrue();
+        updated.MicrosoftTeamsWebhookUrlMasked.Should().Be("******");
+        updated.DiscordIntegrationEnabled.Should().BeTrue();
+        updated.DiscordWebhookUrlMasked.Should().Be("******");
+        updated.GitLabIntegrationEnabled.Should().BeTrue();
+        updated.GitLabEndpoint.Should().Be("https://gitlab.myorg.internal");
+        updated.DisplayCookieBanner.Should().BeTrue();
+        updated.AutoBackupEnabled.Should().BeTrue();
+        updated.BackupIntervalHours.Should().Be(12);
 
         bool isAllowed = await service.IsPublicRegistrationAllowedAsync(TestContext.Current.CancellationToken);
         isAllowed.Should().BeFalse();
