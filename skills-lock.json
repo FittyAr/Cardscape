@@ -67,6 +67,12 @@
       "skillPath": "skills/interface-review/SKILL.md",
       "computedHash": "b8cf8830ae8b04fc0dcdfc85eb159dc6e3f3384f5b397a5cf8af644c38601bc1"
     },
+    "radzen-blazor": {
+      "source": "devixlabs/dotnetwebapp",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/radzen-blazor/SKILL.md",
+      "computedHash": "fae01048d1e7a9aed0722cefd54721c3ca9f402702ae64abd137a30aff040c99"
+    },
     "state-machine": {
       "source": "jakubkrehel/skills",
       "sourceType": "github",
