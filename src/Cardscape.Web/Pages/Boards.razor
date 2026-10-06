@@ -16,7 +16,7 @@
     <RadzenBreadCrumbItem Text="@(workspace?.Name ?? L["WorkspaceBadge"])" />
 </RadzenBreadCrumb>
 
-<RadzenCard Class="rz-mb-4" Variant="@Variant.Filled">
+<RadzenCard Class="rz-mb-3" Variant="@Variant.Filled">
     <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Wrap="@FlexWrap.Wrap" Gap="1rem">
         <RadzenStack Gap="0.25rem">
             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
@@ -32,16 +32,21 @@
                 </RadzenText>
             }
         </RadzenStack>
+        <RadzenButton Text="@L["BoardsNew"]" Icon="add" ButtonStyle="@ButtonStyle.Primary" Size="@ButtonSize.Medium"
+                      Click="@(() => showCreate = !showCreate)" />
+    </RadzenStack>
+</RadzenCard>
+
+<RadzenCard Class="rz-mb-4 rz-p-2" Variant="@Variant.Outlined">
+    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Wrap="@FlexWrap.Wrap" Gap="0.5rem">
         <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Wrap="@FlexWrap.Wrap" Gap="0.5rem">
-            <RadzenButton Text="@L["BoardsNew"]" Icon="add" ButtonStyle="@ButtonStyle.Primary"
-                          Click="@(() => showCreate = !showCreate)" />
-            <RadzenButton Text="@L["WorkspaceTabMembers"]" Icon="people" ButtonStyle="@ButtonStyle.Light"
+            <RadzenButton Text="@L["WorkspaceTabMembers"]" Icon="people" ButtonStyle="@ButtonStyle.Light" Size="@ButtonSize.Small"
                           Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/members"))" />
-            <RadzenButton Text="@L["WorkspaceTabIntegrations"]" Icon="hub" ButtonStyle="@ButtonStyle.Light"
+            <RadzenButton Text="@L["WorkspaceTabIntegrations"]" Icon="hub" ButtonStyle="@ButtonStyle.Light" Size="@ButtonSize.Small"
                           Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/integrations"))" />
-            <RadzenButton Text="@L["WorkspaceTabImport"]" Icon="upload_file" ButtonStyle="@ButtonStyle.Light"
+            <RadzenButton Text="@L["WorkspaceTabImport"]" Icon="upload_file" ButtonStyle="@ButtonStyle.Light" Size="@ButtonSize.Small"
                           Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/import"))" />
-            <RadzenButton Text="@L["WorkspaceTabSecurity"]" Icon="security" ButtonStyle="@ButtonStyle.Light"
+            <RadzenButton Text="@L["WorkspaceTabSecurity"]" Icon="security" ButtonStyle="@ButtonStyle.Light" Size="@ButtonSize.Small"
                           Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/security"))" />
         </RadzenStack>
     </RadzenStack>
