@@ -66,6 +66,8 @@
   <data name="NavInbox" xml:space="preserve"><value>Bandeja</value></data>
   <data name="NavCalendar" xml:space="preserve"><value>Calendario</value></data>
   <data name="NavPlanner" xml:space="preserve"><value>Planificador</value></data>
+  <data name="NavCalendarDesc" xml:space="preserve"><value>Vista mensual de fechas de entrega</value></data>
+  <data name="NavPlannerDesc" xml:space="preserve"><value>Cronograma y vencimientos por lista</value></data>
   <data name="CalendarPreviousMonth" xml:space="preserve"><value>Mes anterior ({0})</value></data>
   <data name="CalendarCurrentMonth" xml:space="preserve"><value>Ir al mes actual</value></data>
   <data name="CalendarNextMonth" xml:space="preserve"><value>Mes siguiente ({0})</value></data>

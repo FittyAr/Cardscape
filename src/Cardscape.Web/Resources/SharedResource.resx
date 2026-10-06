@@ -66,6 +66,8 @@
   <data name="NavInbox" xml:space="preserve"><value>Inbox</value></data>
   <data name="NavCalendar" xml:space="preserve"><value>Calendar</value></data>
   <data name="NavPlanner" xml:space="preserve"><value>Planner</value></data>
+  <data name="NavCalendarDesc" xml:space="preserve"><value>Monthly view of card due dates</value></data>
+  <data name="NavPlannerDesc" xml:space="preserve"><value>Timeline and list-based schedule</value></data>
   <data name="CalendarPreviousMonth" xml:space="preserve"><value>Previous month ({0})</value></data>
   <data name="CalendarCurrentMonth" xml:space="preserve"><value>Jump to current month</value></data>
   <data name="CalendarNextMonth" xml:space="preserve"><value>Next month ({0})</value></data>
