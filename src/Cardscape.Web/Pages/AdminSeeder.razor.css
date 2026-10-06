@@ -1,30 +1,18 @@
-.seeder-panels {
-    flex-wrap: wrap;
-}
-
-.seeder-log-panel {
-    flex: 1 1 60%;
-    min-width: min(28rem, 100%);
-}
-
-.seeder-table-panel {
-    flex: 1 1 35%;
-    min-width: min(24rem, 100%);
-}
-
 .seeder-progress {
     margin-block: 0.25rem 0.75rem;
 }
 
 .seeder-log {
-    max-height: 28rem;
+    max-height: 38rem;
+    min-height: 20rem;
     overflow: auto;
-    padding: 0.75rem;
+    padding: 1rem;
     border-radius: var(--rz-border-radius);
     background: var(--rz-base-900);
     color: var(--rz-base-100);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
+    line-height: 1.4;
 }
 
 .seeder-log-entry {

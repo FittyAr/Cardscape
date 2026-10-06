@@ -60,73 +60,83 @@
     }
     else
     {
-        <div class="seeder-panels rz-display-flex rz-flex-row rz-gap-2">
-            <RadzenCard Class="seeder-log-panel">
-                <RadzenStack Gap="0.5rem">
-                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
-                        <RadzenText TextStyle="@TextStyle.H5" TagName="@TagName.H3">@L["SeederLog"]</RadzenText>
-                        <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="@($"{_entries.Count} lines")" />
-                    </RadzenStack>
-                    <RadzenText TextStyle="@TextStyle.Caption" class="rz-color-text-secondary">
-                        @StepLine
-                    </RadzenText>
-                    <RadzenProgressBar Value="@ProgressValue" Max="100" Class="seeder-progress" />
-                    <div class="seeder-log" role="log" aria-live="polite" aria-label="@L["SeederLog"]">
-                        @if (_entries.Count == 0)
-                        {
-                            <span class="rz-color-text-secondary">@L["SeederLogEmpty"]</span>
-                        }
-                        else
-                        {
-                            @foreach (var entry in _entries)
+        <RadzenTabs RenderMode="@TabRenderMode.Client" Class="rz-w-100">
+            <Tabs>
+                <RadzenTabsItem Text="@L["SeederLog"]" Icon="terminal">
+                    <RadzenCard Class="rz-p-4 rz-mt-2">
+                        <RadzenStack Gap="0.75rem">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Wrap="@FlexWrap.Wrap" Gap="0.5rem">
+                                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
+                                    <RadzenText TextStyle="@TextStyle.H5" TagName="@TagName.H3" Class="rz-m-0">@L["SeederLog"]</RadzenText>
+                                    <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="@($"{_entries.Count} lines")" />
+                                </RadzenStack>
+                                <RadzenText TextStyle="@TextStyle.Caption" class="rz-color-text-secondary">
+                                    @StepLine
+                                </RadzenText>
+                            </RadzenStack>
+                            <RadzenProgressBar Value="@ProgressValue" Max="100" Class="seeder-progress" />
+                            <div class="seeder-log" role="log" aria-live="polite" aria-label="@L["SeederLog"]">
+                                @if (_entries.Count == 0)
+                                {
+                                    <span class="rz-color-text-secondary">@L["SeederLogEmpty"]</span>
+                                }
+                                else
+                                {
+                                    @foreach (var entry in _entries)
+                                    {
+                                        <div class="seeder-log-entry">
+                                            <span class="seeder-log-time">@entry.At.ToLocalTime().ToString("HH:mm:ss")</span>
+                                            <span class="@LevelClass(entry.Level)">@entry.Level.ToUpperInvariant()</span>
+                                            <span class="seeder-log-step">@entry.Step</span>
+                                            <span class="seeder-log-message">@entry.Message</span>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+
+                <RadzenTabsItem Text="@L["SeederTableStatus"]" Icon="table_chart">
+                    <RadzenCard Class="rz-p-4 rz-mt-2">
+                        <RadzenStack Gap="0.75rem">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Wrap="@FlexWrap.Wrap" Gap="0.5rem">
+                                <RadzenText TextStyle="@TextStyle.H5" TagName="@TagName.H3" Class="rz-m-0">@L["SeederTableStatus"]</RadzenText>
+                                <RadzenText TextStyle="@TextStyle.Caption" class="rz-color-text-secondary">
+                                    @TableSummary
+                                </RadzenText>
+                            </RadzenStack>
+                            @if (_tables.Count == 0)
                             {
-                                <div class="seeder-log-entry">
-                                    <span class="seeder-log-time">@entry.At.ToLocalTime().ToString("HH:mm:ss")</span>
-                                    <span class="@LevelClass(entry.Level)">@entry.Level.ToUpperInvariant()</span>
-                                    <span class="seeder-log-step">@entry.Step</span>
-                                    <span class="seeder-log-message">@entry.Message</span>
+                                <RadzenText TextStyle="@TextStyle.Body2" class="rz-color-text-secondary">@L["SeederNoTables"]</RadzenText>
+                            }
+                            else
+                            {
+                                <div class="seeder-table-scroll">
+                                    <RadzenDataGrid Data="@_tables" TItem="SeederTableStatusDto"
+                                                    AllowSorting="false" AllowPaging="false"
+                                                    Density="@Density.Compact">
+                                        <Columns>
+                                            <RadzenDataGridColumn TItem="SeederTableStatusDto" Property="Aggregate" Title="@L["SeederTableAggregate"]" />
+                                            <RadzenDataGridColumn TItem="SeederTableStatusDto" Property="Key" Title="@L["SeederTableTable"]">
+                                                <Template Context="row">
+                                                    <code>@row.Key</code>
+                                                </Template>
+                                            </RadzenDataGridColumn>
+                                            <RadzenDataGridColumn TItem="SeederTableStatusDto" Property="Rows" Title="@L["SeederTableRows"]" Width="6rem">
+                                                <Template Context="row">
+                                                    <span class="seeder-row-count">@row.Rows</span>
+                                                </Template>
+                                            </RadzenDataGridColumn>
+                                        </Columns>
+                                    </RadzenDataGrid>
                                 </div>
                             }
-                        }
-                    </div>
-                </RadzenStack>
-            </RadzenCard>
-
-            <RadzenCard Class="seeder-table-panel">
-                <RadzenStack Gap="0.5rem">
-                    <RadzenText TextStyle="@TextStyle.H5" TagName="@TagName.H3">@L["SeederTableStatus"]</RadzenText>
-                    <RadzenText TextStyle="@TextStyle.Caption" class="rz-color-text-secondary">
-                        @TableSummary
-                    </RadzenText>
-                    @if (_tables.Count == 0)
-                    {
-                        <RadzenText TextStyle="@TextStyle.Body2" class="rz-color-text-secondary">@L["SeederNoTables"]</RadzenText>
-                    }
-                    else
-                    {
-                        <div class="seeder-table-scroll">
-                            <RadzenDataGrid Data="@_tables" TItem="SeederTableStatusDto"
-                                            AllowSorting="false" AllowPaging="false"
-                                            Density="@Density.Compact">
-                                <Columns>
-                                    <RadzenDataGridColumn TItem="SeederTableStatusDto" Property="Aggregate" Title="@L["SeederTableAggregate"]" />
-                                    <RadzenDataGridColumn TItem="SeederTableStatusDto" Property="Key" Title="@L["SeederTableTable"]">
-                                        <Template Context="row">
-                                            <code>@row.Key</code>
-                                        </Template>
-                                    </RadzenDataGridColumn>
-                                    <RadzenDataGridColumn TItem="SeederTableStatusDto" Property="Rows" Title="@L["SeederTableRows"]" Width="6rem">
-                                        <Template Context="row">
-                                            <span class="seeder-row-count">@row.Rows</span>
-                                        </Template>
-                                    </RadzenDataGridColumn>
-                                </Columns>
-                            </RadzenDataGrid>
-                        </div>
-                    }
-                </RadzenStack>
-            </RadzenCard>
-        </div>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenTabsItem>
+            </Tabs>
+        </RadzenTabs>
     }
 </RadzenStack>
 
