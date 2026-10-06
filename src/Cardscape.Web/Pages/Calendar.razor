@@ -13,22 +13,22 @@
 
 <PageHeader Title="@monthLabel" Subtitle="@L["CalendarSubtitle", monthLabel]">
     <Actions>
-        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonthAsync" Disabled="@loading"
+        <RadzenButton Text="◀" ButtonStyle="@ButtonStyle.Light" Click="@PrevMonthAsync" Disabled="@loading"
                       aria-label="@L["CalendarPreviousMonth", firstOfMonth.AddMonths(-1).ToString("Y")]" />
-        <RadzenButton Text="Today" ButtonStyle="ButtonStyle.Light" Click="@GoToCurrentMonthAsync" Disabled="@loading"
+        <RadzenButton Text="Today" ButtonStyle="@ButtonStyle.Light" Click="@GoToCurrentMonthAsync" Disabled="@loading"
                       aria-label="@L["CalendarCurrentMonth"]" />
-        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonthAsync" Disabled="@loading"
+        <RadzenButton Text="▶" ButtonStyle="@ButtonStyle.Light" Click="@NextMonthAsync" Disabled="@loading"
                       aria-label="@L["CalendarNextMonth", firstOfMonth.AddMonths(1).ToString("Y")]" />
     </Actions>
 </PageHeader>
 
 @if (loading)
 {
-    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    <RadzenProgressBarCircular ShowValue="false" Mode="@ProgressBarMode.Indeterminate" />
 }
 else if (error is not null)
 {
-    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@error</RadzenAlert>
+    <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false">@error</RadzenAlert>
 }
 else
 {
@@ -58,7 +58,7 @@ else
     // `Date` value, and the data array also refreshes.
     private DateTimeOffset firstOfMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
     private IReadOnlyList<CalendarEntryDto> entries = [];
-    private string monthLabel = string.Empty;
+    private string monthLabel = DateTime.UtcNow.ToString("MMMM yyyy");
     private bool loading;
     private string? error;
 
@@ -106,6 +106,11 @@ else
                 entries = [];
                 error = result.Error ?? L["CalendarLoadFailed"];
             }
+        }
+        catch (Exception ex)
+        {
+            entries = [];
+            error = ex.Message;
         }
         finally
         {

@@ -116,6 +116,19 @@ public sealed class HttpBackedStringLocalizer<TResource> : IStringLocalizer<TRes
         IReadOnlyDictionary<string, string> dict = _switcher.GetCurrentTranslations();
         if (dict.TryGetValue(name, out string? value))
         {
+            if (arguments is not null && arguments.Length > 0)
+            {
+                try
+                {
+                    string formatted = string.Format(CultureInfo.CurrentCulture, value, arguments);
+                    return new LocalizedString(name, formatted, resourceNotFound: false);
+                }
+                catch (FormatException)
+                {
+                    return new LocalizedString(name, value, resourceNotFound: false);
+                }
+            }
+
             return new LocalizedString(name, value, resourceNotFound: false);
         }
 

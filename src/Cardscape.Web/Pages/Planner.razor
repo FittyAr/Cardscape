@@ -13,12 +13,12 @@
 
 <PageHeader Title="@monthLabel" Subtitle="@L["PlannerSubtitle", monthLabel]">
     <Actions>
-        <RadzenButton Text="◀" ButtonStyle="ButtonStyle.Light" Click="@PrevMonthAsync" Disabled="@loading"
+        <RadzenButton Text="◀" ButtonStyle="@ButtonStyle.Light" Click="@PrevMonthAsync" Disabled="@loading"
                       aria-label="@L["CalendarPreviousMonth", firstOfMonth.AddMonths(-1).ToString("Y")]"
                       title="@L["CalendarPreviousMonth", firstOfMonth.AddMonths(-1).ToString("Y")]" />
-        <RadzenButton Text="Today" ButtonStyle="ButtonStyle.Light" Click="@GoToCurrentMonthAsync" Disabled="@loading"
+        <RadzenButton Text="Today" ButtonStyle="@ButtonStyle.Light" Click="@GoToCurrentMonthAsync" Disabled="@loading"
                       aria-label="@L["CalendarCurrentMonth"]" title="@L["CalendarCurrentMonth"]" />
-        <RadzenButton Text="▶" ButtonStyle="ButtonStyle.Light" Click="@NextMonthAsync" Disabled="@loading"
+        <RadzenButton Text="▶" ButtonStyle="@ButtonStyle.Light" Click="@NextMonthAsync" Disabled="@loading"
                       aria-label="@L["CalendarNextMonth", firstOfMonth.AddMonths(1).ToString("Y")]"
                       title="@L["CalendarNextMonth", firstOfMonth.AddMonths(1).ToString("Y")]" />
     </Actions>
@@ -26,32 +26,32 @@
 
 @if (loading)
 {
-    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    <RadzenProgressBarCircular ShowValue="false" Mode="@ProgressBarMode.Indeterminate" />
 }
 else if (error is not null)
 {
-    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@error</RadzenAlert>
+    <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false">@error</RadzenAlert>
 }
 else if (swimlanes.Count == 0)
 {
-    <RadzenText Text="@L["PlannerEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenText Text="@L["PlannerEmpty"]" TextStyle="@TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else
 {
     <RadzenStack Gap="1rem">
         @foreach (Swimlane lane in swimlanes)
         {
-            <RadzenCard Variant="Variant.Outlined">
+            <RadzenCard Variant="@Variant.Outlined">
                 <RadzenStack Gap="0.5rem">
                     <RadzenStack Gap="0.25rem">
-                        <RadzenText Text="@lane.Title" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                        <RadzenText Text="@lane.BoardName" TextStyle="TextStyle.Caption"
+                        <RadzenText Text="@lane.Title" TextStyle="@TextStyle.H6" TagName="@TagName.H3" />
+                        <RadzenText Text="@lane.BoardName" TextStyle="@TextStyle.Caption"
                                     class="rz-color-text-secondary" />
                     </RadzenStack>
                     <RadzenStack Gap="0.25rem">
                         @foreach (CalendarEntryDto entry in lane.Entries)
                         {
-                            <RadzenBadge BadgeStyle="BadgeStyle.Info"
+                            <RadzenBadge BadgeStyle="@BadgeStyle.Info"
                                          Text="@entry.Title"
                                          title="@($"{entry.Title} — {entry.DueDate.LocalDateTime:yyyy-MM-dd}")"
                                          IsClickable="true"
@@ -74,7 +74,7 @@ else
     private DateTimeOffset firstOfMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
     private IReadOnlyList<CalendarEntryDto> entries = [];
     private List<Swimlane> swimlanes = [];
-    private string monthLabel = string.Empty;
+    private string monthLabel = DateTime.UtcNow.ToString("MMMM yyyy");
     private bool loading;
     private string? error;
 
@@ -89,30 +89,32 @@ else
     {
         loading = true;
         error = null;
+        monthLabel = firstOfMonth.ToString("MMMM yyyy");
         DateTimeOffset from = firstOfMonth;
         DateTimeOffset to = firstOfMonth.AddMonths(1);
 
-        ApiResult<IReadOnlyList<CalendarEntryDto>> result;
         try
         {
-            result = await Cards.CalendarAsync(from, to, boardId: null);
+            ApiResult<IReadOnlyList<CalendarEntryDto>> result = await Cards.CalendarAsync(from, to, boardId: null);
+            if (result.IsSuccess && result.Value is not null)
+            {
+                entries = result.Value;
+            }
+            else
+            {
+                entries = [];
+                error = result.Error ?? L["CalendarLoadFailed"];
+            }
+        }
+        catch (Exception ex)
+        {
+            entries = [];
+            error = ex.Message;
         }
         finally
         {
             loading = false;
         }
-
-        if (result.IsSuccess && result.Value is not null)
-        {
-            entries = result.Value;
-        }
-        else
-        {
-            entries = [];
-            error = result.Error ?? L["CalendarLoadFailed"];
-        }
-
-        monthLabel = firstOfMonth.ToString("MMMM yyyy");
 
         swimlanes = entries
             .GroupBy(e => e.ListId)
