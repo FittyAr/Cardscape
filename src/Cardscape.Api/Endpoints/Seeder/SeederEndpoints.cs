@@ -1,5 +1,6 @@
 using Cardscape.Api.BackgroundJobs;
 using Cardscape.Api.Extensions;
+using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Seeder;
 using Cardscape.Seeder.Configuration;
 using Cardscape.Seeder.Reporting;
@@ -11,9 +12,9 @@ namespace Cardscape.Api.Endpoints.Seeder;
 
 /// <summary>
 /// REST surface for the seeder. Endpoints are feature-gated:
-/// when <c>Cardscape:Seeder:Enabled</c> is <c>false</c>, every
-/// route returns 404 and the admin UI is invisible. When
-/// the toggle is on, the surface is:
+/// when <c>Cardscape:Seeder:Enabled</c> is <c>false</c> and not enabled
+/// via system settings, every route returns 404 and the admin UI is disabled.
+/// When the toggle is on, the surface is:
 /// <list type="bullet">
 ///   <item><c>GET /api/admin/seeder/status</c> — current run
 ///   state (idle / running / done), the live log entries
@@ -39,20 +40,33 @@ public static class SeederEndpoints
             .WithTags("Seeder")
             .RequireAuthorization(AdminOnlyPolicy.Name);
 
-        group.MapGet("/status", (SeedReport report, SeedRunner runner, SeederOperationQueue queue) =>
+        group.MapGet("/status", async (
+            SeedReport report,
+            SeedRunner runner,
+            SeederOperationQueue queue,
+            ISystemSettingsService settingsService,
+            CancellationToken ct) =>
         {
+            bool isEnabled = await IsSeederEnabledAsync(runner, settingsService, ct);
             return Results.Ok(new SeederStatusResponse(
-                runner.IsEnabled,
+                isEnabled,
                 queue.IsBusy,
                 ToStatus(report)));
         }).Produces<SeederStatusResponse>(StatusCodes.Status200OK);
 
-        group.MapGet("/options", (Microsoft.Extensions.Options.IOptions<SeederOptions> options) =>
+        group.MapGet("/options", async (
+            Microsoft.Extensions.Options.IOptions<SeederOptions> options,
+            SeedRunner runner,
+            ISystemSettingsService settingsService,
+            CancellationToken ct) =>
         {
             SeederOptions snapshot = options.Value;
+            bool isEnabled = await IsSeederEnabledAsync(runner, settingsService, ct);
+            SystemSettingsDto settings = await settingsService.GetSettingsAsync(ct);
+            bool wipe = snapshot.WipeBeforeSeed || settings.SeederWipeBeforeSeed;
             return Results.Ok(new SeederOptionsResponse(
-                snapshot.Enabled,
-                snapshot.WipeBeforeSeed,
+                isEnabled,
+                wipe,
                 snapshot.FixedNow));
         }).Produces<SeederOptionsResponse>(StatusCodes.Status200OK);
 
@@ -63,18 +77,23 @@ public static class SeederEndpoints
         // counts. Keeping the endpoint non-blocking means
         // a long seed (3-6 s) does not freeze the admin
         // page.
-        group.MapPost("/run", (SeedRunner runner,
-                               SeederOperationQueue queue,
-                               SeedReport report,
-                               SeederRunRequest? request) =>
+        group.MapPost("/run", async (
+            SeedRunner runner,
+            SeederOperationQueue queue,
+            SeedReport report,
+            ISystemSettingsService settingsService,
+            SeederRunRequest? request,
+            CancellationToken ct) =>
         {
-            if (!runner.IsEnabled)
+            bool isEnabled = await IsSeederEnabledAsync(runner, settingsService, ct);
+            if (!isEnabled)
             {
                 return ApiProblemResults.NotFound(
                     "seeder.disabled",
                     "The Seeder feature is disabled.");
             }
-            bool wipe = request?.Wipe ?? runner.CurrentOptions.WipeBeforeSeed;
+            SystemSettingsDto settings = await settingsService.GetSettingsAsync(ct);
+            bool wipe = request?.Wipe ?? (settings.SeederWipeBeforeSeed || runner.CurrentOptions.WipeBeforeSeed);
             if (!queue.TryEnqueueRun(wipe))
             {
                 return ApiProblemResults.Conflict(
@@ -88,9 +107,14 @@ public static class SeederEndpoints
                 report.StartedAt));
         }).Produces<SeederRunAcceptedResponse>(StatusCodes.Status202Accepted);
 
-        group.MapPost("/wipe", (SeedRunner runner, SeederOperationQueue queue) =>
+        group.MapPost("/wipe", async (
+            SeedRunner runner,
+            SeederOperationQueue queue,
+            ISystemSettingsService settingsService,
+            CancellationToken ct) =>
         {
-            if (!runner.IsEnabled)
+            bool isEnabled = await IsSeederEnabledAsync(runner, settingsService, ct);
+            if (!isEnabled)
             {
                 return ApiProblemResults.NotFound(
                     "seeder.disabled",
@@ -110,6 +134,20 @@ public static class SeederEndpoints
         }).Produces<SeederWipeAcceptedResponse>(StatusCodes.Status202Accepted);
 
         return app;
+    }
+
+    private static async Task<bool> IsSeederEnabledAsync(
+        SeedRunner runner,
+        ISystemSettingsService settingsService,
+        CancellationToken ct)
+    {
+        if (runner.IsEnabled)
+        {
+            return true;
+        }
+
+        SystemSettingsDto settings = await settingsService.GetSettingsAsync(ct);
+        return settings.SeederEnabled || settings.AllowSeederExecution;
     }
 
     private static SeedReportResponse ToStatus(SeedReport report) => new(

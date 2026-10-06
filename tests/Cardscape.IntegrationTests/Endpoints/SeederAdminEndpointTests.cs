@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.IntegrationTests.Fixtures;
 using Cardscape.Tests.Common.Fixtures;
@@ -8,6 +9,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Cardscape.IntegrationTests.Endpoints;
 
@@ -83,12 +85,50 @@ public sealed class SeederAdminEndpointTests
         response.StatusCode.Should().Be(HttpStatusCode.Accepted, $"POST {route} is available to admins when enabled");
     }
 
+    [Fact]
+    public async Task SeederCommandEndpoint_WhenDisabledInConfigAndSettings_ReturnsNotFound()
+    {
+        using WebApplicationFactory<Program> disabledFactory = CreateDisabledFactory();
+        using HttpClient client = await CreateAdminClientAsync(disabledFactory);
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync(
+            "api/admin/seeder/run", new { wipe = false }, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task SeederCommandEndpoint_WhenEnabledViaSystemSettings_ReturnsAccepted()
+    {
+        using WebApplicationFactory<Program> disabledFactory = CreateDisabledFactory();
+        using HttpClient client = await CreateAdminClientAsync(disabledFactory);
+
+        var settingsService = disabledFactory.Services.GetRequiredService<ISystemSettingsService>();
+        await settingsService.UpdateSettingsAsync(
+            new UpdateSystemSettingsRequest(AllowSeederExecution: true),
+            "test-admin",
+            TestContext.Current.CancellationToken);
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync(
+            "api/admin/seeder/run", new { wipe = false }, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
+    }
+
     private WebApplicationFactory<Program> CreateEnabledFactory() =>
         _factory.WithWebHostBuilder(builder =>
             builder.ConfigureAppConfiguration((_, configuration) =>
                 configuration.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["Cardscape:Seeder:Enabled"] = "true"
+                })));
+
+    private WebApplicationFactory<Program> CreateDisabledFactory() =>
+        _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureAppConfiguration((_, configuration) =>
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Cardscape:Seeder:Enabled"] = "false"
                 })));
 
     private static async Task<(HttpClient Client, string Email)> CreateRegisteredClientAsync(

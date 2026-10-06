@@ -1,4 +1,4 @@
-﻿<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='utf-8'?>
 <root xmlns:ns1="urn:schemas-microsoft-com:xml-msdata" xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:schema id="root">
     <xs:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -681,4 +681,29 @@
   <data name="CardRefresh" xml:space="preserve"><value>Refresh card</value></data>
   <data name="CardUpdateChecklistItem" xml:space="preserve"><value>Update checklist item</value></data>
   <data name="CardAiChecklistTitle" xml:space="preserve"><value>AI suggestions</value></data>
+  <data name="NavSeeder" xml:space="preserve"><value>Database Seeder</value></data>
+  <data name="SeederTitle" xml:space="preserve"><value>Database Seeder</value></data>
+  <data name="SeederSubtitle" xml:space="preserve"><value>Seed and maintain demo/development dataset</value></data>
+  <data name="SeederRun" xml:space="preserve"><value>Run Seeder</value></data>
+  <data name="SeederForceReseed" xml:space="preserve"><value>Force Re-seed</value></data>
+  <data name="SeederWipe" xml:space="preserve"><value>Wipe Database</value></data>
+  <data name="SeederLog" xml:space="preserve"><value>Execution Log</value></data>
+  <data name="SeederTableStatus" xml:space="preserve"><value>Table Status</value></data>
+  <data name="SeederNoTables" xml:space="preserve"><value>No tables recorded yet.</value></data>
+  <data name="SeederTableAggregate" xml:space="preserve"><value>Aggregate</value></data>
+  <data name="SeederTableTable" xml:space="preserve"><value>Table</value></data>
+  <data name="SeederTableRows" xml:space="preserve"><value>Rows</value></data>
+  <data name="SeederLogEmpty" xml:space="preserve"><value>No log entries yet.</value></data>
+  <data name="SeederStatusRunning" xml:space="preserve"><value>Running</value></data>
+  <data name="SeederStatusSucceeded" xml:space="preserve"><value>Succeeded</value></data>
+  <data name="SeederStatusFailed" xml:space="preserve"><value>Failed</value></data>
+  <data name="SeederStatusIdle" xml:space="preserve"><value>Idle</value></data>
+  <data name="SeederStatusDisabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="SeederNoRun" xml:space="preserve"><value>No run in progress</value></data>
+  <data name="SeederWipeConfirm" xml:space="preserve"><value>Are you sure you want to wipe all seeded data? This is destructive.</value></data>
+  <data name="SeederWipeConfirmTitle" xml:space="preserve"><value>Confirm Wipe</value></data>
+  <data name="SeederAlreadyRunning" xml:space="preserve"><value>A Seeder operation is already running.</value></data>
+  <data name="SeederDisabled" xml:space="preserve"><value>The seeder is disabled in system configuration.</value></data>
+  <data name="SeederDisabledAlert" xml:space="preserve"><value>The database seeder is currently disabled. You can enable it in System Configuration.</value></data>
+  <data name="SeederGoToSettings" xml:space="preserve"><value>Go to System Configuration</value></data>
 </root>

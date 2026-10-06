@@ -18,7 +18,7 @@
         <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center"
                      JustifyContent="@JustifyContent.SpaceBetween" Gap="0.75rem" Wrap="@FlexWrap.Wrap">
             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
-                <RadzenBadge BadgeStyle="@BadgeStyle.Info" Text="@StatusBadge" />
+                <RadzenBadge BadgeStyle="@((_options?.Enabled == true || _status?.Enabled == true) ? BadgeStyle.Info : BadgeStyle.Danger)" Text="@StatusBadge" />
                 @if (_options?.WipeBeforeSeed == true)
                 {
                     <RadzenBadge BadgeStyle="@BadgeStyle.Warning" Text="wipe on seed" />
@@ -34,6 +34,18 @@
             </RadzenStack>
         </RadzenStack>
     </RadzenCard>
+
+    @if (_options is not null && !_options.Enabled)
+    {
+        <RadzenAlert AlertStyle="@AlertStyle.Warning" ShowIcon="true" AllowClose="false">
+            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Gap="1rem" Wrap="@FlexWrap.Wrap">
+                <RadzenText TextStyle="@TextStyle.Body2">
+                    @L["SeederDisabledAlert"]
+                </RadzenText>
+                <RadzenLink Path="admin/settings" Text="@L["SeederGoToSettings"]" />
+            </RadzenStack>
+        </RadzenAlert>
+    }
 
     @if (_error is not null)
     {
@@ -129,18 +141,20 @@
     private CancellationTokenSource? _pollCts;
     private Task? _pollTask;
 
-    private bool ActionsDisabled => _busy || _options is null;
+    private bool ActionsDisabled => _busy || _options is null || !_options.Enabled;
 
     private string StatusBadge => _status is null
         ? "—"
-        : _status.Running
-            ? L["SeederStatusRunning"]
-            : _status.Report.Status switch
-            {
-                "Succeeded" or "Wiped" => L["SeederStatusSucceeded"],
-                var s when s.StartsWith("Failed", StringComparison.Ordinal) => L["SeederStatusFailed"],
-                _ => L["SeederStatusIdle"]
-            };
+        : (!_options?.Enabled ?? true) && !_status.Enabled
+            ? L["SeederStatusDisabled"]
+            : _status.Running
+                ? L["SeederStatusRunning"]
+                : _status.Report.Status switch
+                {
+                    "Succeeded" or "Wiped" => L["SeederStatusSucceeded"],
+                    var s when s.StartsWith("Failed", StringComparison.Ordinal) => L["SeederStatusFailed"],
+                    _ => L["SeederStatusIdle"]
+                };
 
     private string StepLine
     {
@@ -306,14 +320,15 @@
         {
             return L["SeederAlreadyRunning"];
         }
-        if (raw.Contains("404", StringComparison.OrdinalIgnoreCase))
+        if (raw.Contains("404", StringComparison.OrdinalIgnoreCase) || raw.Contains("seeder.disabled", StringComparison.OrdinalIgnoreCase))
         {
             return L["SeederDisabled"];
         }
         return raw;
     }
 
-    private static bool ContainsDisabled(string error) => error.Contains("404", StringComparison.OrdinalIgnoreCase);
+    private static bool ContainsDisabled(string error) =>
+        error.Contains("404", StringComparison.OrdinalIgnoreCase) || error.Contains("seeder.disabled", StringComparison.OrdinalIgnoreCase);
 
     private static string LevelClass(string level) => level switch
     {

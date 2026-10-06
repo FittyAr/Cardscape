@@ -485,8 +485,8 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
                 BackupRetentionDays = Math.Clamp(request.BackupRetentionDays, 1, 365),
 
                 // 32. Seeder & Dev
-                SeederEnabled = request.SeederEnabled,
-                AllowSeederExecution = request.AllowSeederExecution,
+                SeederEnabled = request.SeederEnabled || request.AllowSeederExecution,
+                AllowSeederExecution = request.AllowSeederExecution || request.SeederEnabled,
                 SeederWipeBeforeSeed = request.SeederWipeBeforeSeed
             };
 

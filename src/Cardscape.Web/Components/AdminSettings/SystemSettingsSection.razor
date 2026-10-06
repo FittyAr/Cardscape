@@ -1,4 +1,5 @@
 @namespace Cardscape.Web.Components.AdminSettings
+@inject NavigationManager Nav
 
 <RadzenTabs RenderMode="TabRenderMode.Client">
     <Tabs>
@@ -629,6 +630,19 @@
                         </RadzenStack>
                         <RadzenSwitch @bind-Value="Model.SeederWipeBeforeSeed" />
                     </RadzenStack>
+
+                    @if (Model.AllowSeederExecution)
+                    {
+                        <RadzenAlert AlertStyle="@AlertStyle.Info" ShowIcon="true" Class="rz-mt-2" AllowClose="false">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Gap="1rem">
+                                <RadzenText TextStyle="@TextStyle.Body2">
+                                    El seeder está habilitado. Puede acceder a la consola de ejecución y monitoreo directamente.
+                                </RadzenText>
+                                <RadzenButton Text="Abrir Consola del Seeder" Icon="storage" ButtonStyle="@ButtonStyle.Primary"
+                                              Size="@ButtonSize.Small" Click="@(() => Nav.NavigateTo("admin/seeder"))" />
+                            </RadzenStack>
+                        </RadzenAlert>
+                    }
                 </RadzenStack>
             </RadzenCard>
         </RadzenTabsItem>

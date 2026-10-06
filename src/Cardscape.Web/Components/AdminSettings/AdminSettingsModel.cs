@@ -724,8 +724,8 @@ public sealed class SettingsFormModel
         BackupRetentionDays = dto.BackupRetentionDays;
 
         // 31. Seeder & Dev
-        SeederEnabled = dto.SeederEnabled;
-        AllowSeederExecution = dto.AllowSeederExecution;
+        SeederEnabled = dto.SeederEnabled || dto.AllowSeederExecution;
+        AllowSeederExecution = dto.AllowSeederExecution || dto.SeederEnabled;
         SeederWipeBeforeSeed = dto.SeederWipeBeforeSeed;
     }
 
@@ -1073,8 +1073,8 @@ public sealed class SettingsFormModel
         BackupRetentionDays: BackupRetentionDays,
 
         // 31. Seeder & Dev
-        SeederEnabled: SeederEnabled,
-        AllowSeederExecution: AllowSeederExecution,
+        SeederEnabled: SeederEnabled || AllowSeederExecution,
+        AllowSeederExecution: AllowSeederExecution || SeederEnabled,
         SeederWipeBeforeSeed: SeederWipeBeforeSeed
     );
 }
