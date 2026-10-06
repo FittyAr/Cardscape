@@ -2,13 +2,22 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using Cardscape.Web.Resources
 @using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
 @using Microsoft.Extensions.Localization
 @inject HttpClient Http
+@inject IWorkspacesApiClient WorkspacesApi
 @inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@L["ImportTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <RadzenBreadCrumb Class="rz-mb-2">
+        <RadzenBreadCrumbItem Path="/workspaces" Text="@L["NavWorkspaces"]" Icon="domain" />
+        <RadzenBreadCrumbItem Path="@($"/workspaces/{Id}")" Text="@(workspace?.Name ?? L["WorkspaceBadge"])" />
+        <RadzenBreadCrumbItem Text="@L["WorkspaceTabImport"]" Icon="upload_file" />
+    </RadzenBreadCrumb>
+
     <PageHeader Title="@L["ImportTitle"]" Subtitle="@L["ImportBlurb"]" />
 
     <RadzenCard>
@@ -118,12 +127,22 @@
 @code {
     [Parameter] public Guid Id { get; set; }
 
+    private WorkspaceDto? workspace;
     private readonly ImportForm form = new();
     private bool previewing;
     private bool applying;
     private string? error;
     private ImportResultDto? preview;
     private ImportResultDto? applied;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var result = await WorkspacesApi.GetAsync(Id);
+        if (result.IsSuccess)
+        {
+            workspace = result.Value;
+        }
+    }
     // Incremented on every file pick so a slow in-flight
     // preview can detect that the user moved on and bail out
     // without overwriting the current preview / error.

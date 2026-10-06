@@ -13,6 +13,12 @@
 <PageTitle>@L["WorkspaceSecurityTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 64rem;">
+    <RadzenBreadCrumb Class="rz-mb-2">
+        <RadzenBreadCrumbItem Path="/workspaces" Text="@L["NavWorkspaces"]" Icon="domain" />
+        <RadzenBreadCrumbItem Path="@($"/workspaces/{WorkspaceId}")" Text="@(workspace?.Name ?? L["WorkspaceBadge"])" />
+        <RadzenBreadCrumbItem Text="@L["WorkspaceSecurityTitle"]" Icon="security" />
+    </RadzenBreadCrumb>
+
     <PageHeader Title="@L["WorkspaceSecurityTitle"]"
                 Subtitle="@(workspace?.Name ?? string.Empty)" />
 

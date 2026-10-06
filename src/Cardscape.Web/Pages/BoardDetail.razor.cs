@@ -12,12 +12,14 @@ public partial class BoardDetail
     [Parameter] public Guid BoardId { get; set; }
 
     [Inject] private NavigationManager Nav { get; set; } = default!;
+    [Inject] private IWorkspacesApiClient WorkspacesApi { get; set; } = default!;
 
     private IReadOnlyList<KanbanColumn<CardSummaryDto>>? KanbanColumns => _lists?.Select(l =>
         new KanbanColumn<CardSummaryDto>(l.Id.ToString(), l.Name, _cardsByList.GetValueOrDefault(l.Id, []))
     ).ToList();
 
     private BoardDto? _board;
+    private WorkspaceDto? _workspace;
     private IReadOnlyList<BoardListDto>? _lists;
     private Dictionary<Guid, IReadOnlyList<CardSummaryDto>> _cardsByList = new();
     private bool _showAddList;
@@ -63,6 +65,14 @@ public partial class BoardDetail
     {
         ApiResult<BoardDto> boardResult = await BoardsApi.GetAsync(BoardId);
         _board = boardResult.IsSuccess ? boardResult.Value : null;
+        if (_board is not null)
+        {
+            ApiResult<WorkspaceDto> wsResult = await WorkspacesApi.GetAsync(_board.WorkspaceId);
+            if (wsResult.IsSuccess)
+            {
+                _workspace = wsResult.Value;
+            }
+        }
 
         await ReloadListsAndCardsAsync();
         await ReloadAgingModeAsync();

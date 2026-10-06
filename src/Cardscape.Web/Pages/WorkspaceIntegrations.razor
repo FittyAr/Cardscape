@@ -3,10 +3,17 @@
 @using Cardscape.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> L
+@inject IWorkspacesApiClient WorkspacesApi
 
 <PageTitle>@L["IntegrationsTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <RadzenBreadCrumb Class="rz-mb-2">
+        <RadzenBreadCrumbItem Path="/workspaces" Text="@L["NavWorkspaces"]" Icon="domain" />
+        <RadzenBreadCrumbItem Path="@($"/workspaces/{WorkspaceId}")" Text="@(workspace?.Name ?? L["WorkspaceBadge"])" />
+        <RadzenBreadCrumbItem Text="@L["IntegrationsTitle"]" Icon="hub" />
+    </RadzenBreadCrumb>
+
     <PageHeader Title="@L["IntegrationsTitle"]" Subtitle="@L["IntegrationsBlurb"]" />
 
     <RadzenRow Gap="1rem">
@@ -81,4 +88,15 @@
 @code {
     [Parameter] public Guid WorkspaceId { get; set; }
     [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private WorkspaceDto? workspace;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var result = await WorkspacesApi.GetAsync(WorkspaceId);
+        if (result.IsSuccess)
+        {
+            workspace = result.Value;
+        }
+    }
 }

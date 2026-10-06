@@ -326,7 +326,7 @@
   <data name="ScimRevoked" xml:space="preserve"><value>Revocado</value></data>
   <data name="ScimRevoke" xml:space="preserve"><value>Revocar</value></data>
   <data name="ScimNever" xml:space="preserve"><value>Nunca</value></data>
-  <data name="DashboardTitle" xml:space="preserve"><value>Tablero de control</value></data>
+  <data name="DashboardTitle" xml:space="preserve"><value>Panel de Métricas (Dashboard)</value></data>
   <data name="DashboardAddCard" xml:space="preserve"><value>Agregar dashcard</value></data>
   <data name="DashboardKind" xml:space="preserve"><value>Tipo</value></data>
   <data name="DashboardTitle_Label" xml:space="preserve"><value>Título</value></data>
@@ -705,4 +705,21 @@
   <data name="SeederDisabled" xml:space="preserve"><value>El seeder está deshabilitado en la configuración del sistema.</value></data>
   <data name="SeederDisabledAlert" xml:space="preserve"><value>El seeder de datos está deshabilitado en el sistema. Puede habilitarlo en la Configuración del Sistema.</value></data>
   <data name="SeederGoToSettings" xml:space="preserve"><value>Ir a Configuración del Sistema</value></data>
+  <data name="WorkspacesSubtitle" xml:space="preserve"><value>Espacios de trabajo de equipos u organizaciones que agrupan tus tableros y proyectos.</value></data>
+  <data name="BoardsSubtitle" xml:space="preserve"><value>Tableros Kanban y proyectos para gestionar flujos de trabajo con listas y tarjetas.</value></data>
+  <data name="HierarchyGuideTitle" xml:space="preserve"><value>Estructura de Cardscape: Cómo se organiza tu trabajo</value></data>
+  <data name="HierarchyWorkspacesDesc" xml:space="preserve"><value>Organizaciones y Equipos: Contenedor principal que agrupa los tableros del área.</value></data>
+  <data name="HierarchyBoardsDesc" xml:space="preserve"><value>Tableros Kanban / Proyectos: Flujos de trabajo visuales con columnas y tarjetas.</value></data>
+  <data name="HierarchyListsDesc" xml:space="preserve"><value>Listas y Fases: Columnas de estado de avance (ej. Por hacer, En curso, Listo).</value></data>
+  <data name="HierarchyCardsDesc" xml:space="preserve"><value>Tarjetas (Cards): Tareas o ítems individuales de trabajo.</value></data>
+  <data name="HierarchyDashboardDesc" xml:space="preserve"><value>Panel de Métricas (Dashboard): Cuadros de mandos y estadísticas del tablero.</value></data>
+  <data name="WorkspaceTabBoards" xml:space="preserve"><value>Tableros y Proyectos</value></data>
+  <data name="WorkspaceTabMembers" xml:space="preserve"><value>Miembros</value></data>
+  <data name="WorkspaceTabIntegrations" xml:space="preserve"><value>Integraciones</value></data>
+  <data name="WorkspaceTabImport" xml:space="preserve"><value>Importar Tablero</value></data>
+  <data name="WorkspaceTabSecurity" xml:space="preserve"><value>Seguridad</value></data>
+  <data name="BoardBadgeKanban" xml:space="preserve"><value>Tablero Kanban / Proyecto</value></data>
+  <data name="WorkspaceBadge" xml:space="preserve"><value>Espacio de trabajo</value></data>
+  <data name="BoardOpenKanban" xml:space="preserve"><value>Abrir Tablero Kanban</value></data>
+  <data name="BoardActionDashboard" xml:space="preserve"><value>Métricas / Dashboard</value></data>
 </root>

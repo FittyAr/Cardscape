@@ -12,6 +12,12 @@
 <PageTitle>@L["MembersTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <RadzenBreadCrumb Class="rz-mb-2">
+        <RadzenBreadCrumbItem Path="/workspaces" Text="@L["NavWorkspaces"]" Icon="domain" />
+        <RadzenBreadCrumbItem Path="@($"/workspaces/{WorkspaceId}")" Text="@(workspace?.Name ?? L["WorkspaceBadge"])" />
+        <RadzenBreadCrumbItem Text="@L["MembersTitle"]" Icon="people" />
+    </RadzenBreadCrumb>
+
     <PageHeader Title="@L["MembersTitle"]"
                 Subtitle="@(workspace?.Name ?? string.Empty)"
                 Actions="@(ShowInviteButton())" />

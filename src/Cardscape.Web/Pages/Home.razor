@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @using System.Security.Claims
 @using Cardscape.Web.Resources
 @using Microsoft.Extensions.Localization
@@ -9,35 +9,105 @@
 
 <AuthorizeView>
     <Authorized>
-        <RadzenStack Gap="1rem">
-            <RadzenRow AlignItems="AlignItems.Center">
+        <RadzenStack Gap="1.5rem">
+            <RadzenRow AlignItems="@AlignItems.Center">
                 <RadzenColumn Size="12">
-                    <RadzenText Text="@Greeting(context.User)" TextStyle="TextStyle.H3" TagName="TagName.H1" class="rz-m-0" />
-                    <RadzenText Text="@L["HomeLeadAuthorized"]" TextStyle="TextStyle.Body1" />
+                    <RadzenText Text="@Greeting(context.User)" TextStyle="@TextStyle.H3" TagName="@TagName.H1" Class="rz-m-0" />
+                    <RadzenText Text="@L["HomeLeadAuthorized"]" TextStyle="@TextStyle.Body1" class="rz-color-text-secondary" />
                 </RadzenColumn>
             </RadzenRow>
+
+            @* Visual Hierarchy Guide: clarifies Workspaces vs Boards vs Lists vs Dashboard *@
+            <RadzenCard Variant="@Variant.Filled" Class="rz-p-4 rz-background-color-info-lighter rz-border-radius-2">
+                <RadzenStack Gap="0.75rem">
+                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
+                        <RadzenIcon Icon="account_tree" Class="rz-color-info" Style="font-size: 1.5rem;" />
+                        <RadzenText Text="@L["HierarchyGuideTitle"]" TextStyle="@TextStyle.Subtitle1" TagName="@TagName.H2" Class="rz-m-0 rz-font-weight-bold" />
+                    </RadzenStack>
+                    <RadzenRow Gap="0.75rem">
+                        <RadzenColumn Size="12" SizeMD="3">
+                            <RadzenCard Variant="@Variant.Outlined" Class="rz-p-3 rz-h-100 rz-background-color-white">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
+                                        <RadzenIcon Icon="domain" Class="rz-color-primary" />
+                                        <RadzenText Text="1. Espacio" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
+                                    </RadzenStack>
+                                    <RadzenText Text="@L["HierarchyWorkspacesDesc"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
+                                </RadzenStack>
+                            </RadzenCard>
+                        </RadzenColumn>
+                        <RadzenColumn Size="12" SizeMD="3">
+                            <RadzenCard Variant="@Variant.Outlined" Class="rz-p-3 rz-h-100 rz-background-color-white">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
+                                        <RadzenIcon Icon="view_kanban" Class="rz-color-info" />
+                                        <RadzenText Text="2. Tablero / Proyecto" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
+                                    </RadzenStack>
+                                    <RadzenText Text="@L["HierarchyBoardsDesc"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
+                                </RadzenStack>
+                            </RadzenCard>
+                        </RadzenColumn>
+                        <RadzenColumn Size="12" SizeMD="3">
+                            <RadzenCard Variant="@Variant.Outlined" Class="rz-p-3 rz-h-100 rz-background-color-white">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
+                                        <RadzenIcon Icon="view_column" Class="rz-color-warning" />
+                                        <RadzenText Text="3. Listas y Fases" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
+                                    </RadzenStack>
+                                    <RadzenText Text="@L["HierarchyListsDesc"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
+                                </RadzenStack>
+                            </RadzenCard>
+                        </RadzenColumn>
+                        <RadzenColumn Size="12" SizeMD="3">
+                            <RadzenCard Variant="@Variant.Outlined" Class="rz-p-3 rz-h-100 rz-background-color-white">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
+                                        <RadzenIcon Icon="insights" Class="rz-color-success" />
+                                        <RadzenText Text="4. Métricas / Dashboard" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
+                                    </RadzenStack>
+                                    <RadzenText Text="@L["HierarchyDashboardDesc"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
+                                </RadzenStack>
+                            </RadzenCard>
+                        </RadzenColumn>
+                    </RadzenRow>
+                </RadzenStack>
+            </RadzenCard>
+
+            @* Workspaces Section *@
             <RadzenRow>
                 <RadzenColumn Size="12">
-                    <RadzenCard Variant="Variant.Outlined">
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Start">
-                            <RadzenIcon Icon="grid_view" Class="rz-background-color-primary-light rz-color-on-primary-light rz-border-radius-2 cs-tile-icon" />
-                            <RadzenStack Gap="0">
-                                <RadzenText Text="@L["HomeWorkspacesHeading"]" TextStyle="TextStyle.Subtitle1" TagName="TagName.H4" />
-                                <RadzenText Text="@L["HomeWorkspacesBlurb"]" />
+                    <RadzenCard Variant="@Variant.Outlined" Class="rz-p-4" Style="cursor: pointer;"
+                                @onclick="@(() => Nav.NavigateTo("workspaces"))">
+                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                            <RadzenStack Orientation="@Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center">
+                                <RadzenIcon Icon="domain" Class="rz-background-color-primary-light rz-color-on-primary-light rz-border-radius-2 cs-tile-icon" />
+                                <RadzenStack Gap="0">
+                                    <RadzenText Text="@L["HomeWorkspacesHeading"]" TextStyle="@TextStyle.Subtitle1" TagName="@TagName.H4" Class="rz-m-0" />
+                                    <RadzenText Text="@L["HomeWorkspacesBlurb"]" TextStyle="@TextStyle.Body2" class="rz-color-text-secondary" />
+                                </RadzenStack>
                             </RadzenStack>
+                            <RadzenButton Text="@L["HomeOpenWorkspaces"]" Icon="open_in_new" ButtonStyle="@ButtonStyle.Primary"
+                                          Click="@(() => Nav.NavigateTo("workspaces"))" />
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenColumn>
             </RadzenRow>
+
+            @* Starred Boards Section *@
             <RadzenRow>
                 <RadzenColumn Size="12">
-                    <RadzenCard Variant="Variant.Outlined">
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Start">
-                            <RadzenIcon Icon="star" Class="rz-background-color-warning-light rz-color-on-warning-light rz-border-radius-2 cs-tile-icon" />
-                            <RadzenStack Gap="0">
-                                <RadzenText Text="@L["HomeStarredHeading"]" TextStyle="TextStyle.Subtitle1" TagName="TagName.H4" />
-                                <RadzenText Text="@L["HomeStarredBlurb"]" />
+                    <RadzenCard Variant="@Variant.Outlined" Class="rz-p-4" Style="cursor: pointer;"
+                                @onclick="@(() => Nav.NavigateTo("workspaces"))">
+                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center">
+                            <RadzenStack Orientation="@Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center">
+                                <RadzenIcon Icon="star" Class="rz-background-color-warning-light rz-color-on-warning-light rz-border-radius-2 cs-tile-icon" />
+                                <RadzenStack Gap="0">
+                                    <RadzenText Text="@L["HomeStarredHeading"]" TextStyle="@TextStyle.Subtitle1" TagName="@TagName.H4" Class="rz-m-0" />
+                                    <RadzenText Text="@L["HomeStarredBlurb"]" TextStyle="@TextStyle.Body2" class="rz-color-text-secondary" />
+                                </RadzenStack>
                             </RadzenStack>
+                            <RadzenButton Text="@L["HomeSeeStarred"]" Icon="star" ButtonStyle="@ButtonStyle.Light"
+                                          Click="@(() => Nav.NavigateTo("workspaces"))" />
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenColumn>
@@ -46,32 +116,32 @@
     </Authorized>
     <NotAuthorized>
         <RadzenStack Gap="2rem">
-            <RadzenRow AlignItems="AlignItems.Center" Gap="2rem">
+            <RadzenRow AlignItems="@AlignItems.Center" Gap="2rem">
                 <RadzenColumn Size="12" SizeMD="6">
                     <RadzenStack Gap="1rem">
-                        <RadzenText Text="@L["HomeLandingEyebrow"]" TextStyle="TextStyle.Overline" Class="cs-eyebrow" />
-                        <RadzenText Text="@L["AppName"]" TextStyle="TextStyle.H1" TagName="TagName.H1" />
-                        <RadzenText Text="@L["AppTagline"]" TextStyle="TextStyle.Body1" />
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.75rem" Class="rz-mt-4">
-                            <RadzenButton Text="@L["AuthSignIn"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" Click="@(() => Nav.NavigateTo("login"))" />
-                            <RadzenButton Text="@L["AuthCreateAccount"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Large" Click="@(() => Nav.NavigateTo("register"))" />
+                        <RadzenText Text="@L["HomeLandingEyebrow"]" TextStyle="@TextStyle.Overline" Class="cs-eyebrow" />
+                        <RadzenText Text="@L["AppName"]" TextStyle="@TextStyle.H1" TagName="@TagName.H1" />
+                        <RadzenText Text="@L["AppTagline"]" TextStyle="@TextStyle.Body1" />
+                        <RadzenStack Orientation="@Orientation.Horizontal" Gap="0.75rem" Class="rz-mt-4">
+                            <RadzenButton Text="@L["AuthSignIn"]" ButtonStyle="@ButtonStyle.Primary" Size="@ButtonSize.Large" Click="@(() => Nav.NavigateTo("login"))" />
+                            <RadzenButton Text="@L["AuthCreateAccount"]" ButtonStyle="@ButtonStyle.Light" Size="@ButtonSize.Large" Click="@(() => Nav.NavigateTo("register"))" />
                         </RadzenStack>
                     </RadzenStack>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="6">
-                    <RadzenCard Variant="Variant.Filled" Class="rz-p-6 cs-hero-board">
+                    <RadzenCard Variant="@Variant.Filled" Class="rz-p-6 cs-hero-board">
                         <RadzenStack Gap="1rem">
                             <RadzenRow Gap="0.5rem">
                                 <RadzenColumn Size="4">
                                     <RadzenStack Gap="0.5rem">
-                                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="1" />
+                                        <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="1" />
                                         <RadzenCard Class="cs-hero-card-tall" />
                                         <RadzenCard Class="cs-hero-card-short" />
                                     </RadzenStack>
                                 </RadzenColumn>
                                 <RadzenColumn Size="4">
                                     <RadzenStack Gap="0.5rem">
-                                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="2" />
+                                        <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="2" />
                                         <RadzenCard Class="rz-background-color-primary-light cs-hero-card-tall" />
                                         <RadzenCard Class="cs-hero-card-short" />
                                         <RadzenCard Class="cs-hero-card-short" />
@@ -79,7 +149,7 @@
                                 </RadzenColumn>
                                 <RadzenColumn Size="4">
                                     <RadzenStack Gap="0.5rem">
-                                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="3" />
+                                        <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="3" />
                                         <RadzenCard Class="cs-hero-card-short" />
                                         <RadzenCard Class="cs-hero-card-tall" />
                                     </RadzenStack>
@@ -94,7 +164,7 @@
                     <RadzenCard>
                         <RadzenStack Gap="0.5rem">
                             <RadzenIcon Icon="view_kanban" Class="cs-feature-icon" />
-                            <RadzenText Text="@L["HomePointBoardsTitle"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                            <RadzenText Text="@L["HomePointBoardsTitle"]" TextStyle="@TextStyle.H5" TagName="@TagName.H3" />
                             <RadzenText Text="@L["HomePointBoardsBody"]" />
                         </RadzenStack>
                     </RadzenCard>
@@ -103,7 +173,7 @@
                     <RadzenCard>
                         <RadzenStack Gap="0.5rem">
                             <RadzenIcon Icon="lock" Class="cs-feature-icon" />
-                            <RadzenText Text="@L["HomePointSelfHostTitle"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                            <RadzenText Text="@L["HomePointSelfHostTitle"]" TextStyle="@TextStyle.H5" TagName="@TagName.H3" />
                             <RadzenText Text="@L["HomePointSelfHostBody"]" />
                         </RadzenStack>
                     </RadzenCard>
@@ -112,7 +182,7 @@
                     <RadzenCard>
                         <RadzenStack Gap="0.5rem">
                             <RadzenIcon Icon="android" Class="cs-feature-icon" />
-                            <RadzenText Text="@L["HomePointMcpTitle"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                            <RadzenText Text="@L["HomePointMcpTitle"]" TextStyle="@TextStyle.H5" TagName="@TagName.H3" />
                             <RadzenText Text="@L["HomePointMcpBody"]" />
                         </RadzenStack>
                     </RadzenCard>

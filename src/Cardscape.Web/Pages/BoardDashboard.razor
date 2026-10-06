@@ -1,23 +1,41 @@
 @page "/boards/{BoardId:guid}/dashboard"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using Cardscape.Web.Resources
+@using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
 @using Microsoft.Extensions.Localization
 @inject IDashboardsApiClient DashboardsApi
+@inject IBoardsApiClient BoardsApi
+@inject IWorkspacesApiClient WorkspacesApi
+@inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
 
-<PageTitle>@L["DashboardTitle"] @L["PageTitleSuffix"]</PageTitle>
+<PageTitle>@L["DashboardTitle"] — @(board?.Name ?? L["BoardBadgeKanban"]) @L["PageTitleSuffix"]</PageTitle>
 
-<PageHeader Title="@L["DashboardTitle"]">
+<RadzenBreadCrumb Class="rz-mb-3">
+    <RadzenBreadCrumbItem Path="/workspaces" Text="@L["NavWorkspaces"]" Icon="domain" />
+    @if (board is not null)
+    {
+        <RadzenBreadCrumbItem Path="@($"/workspaces/{board.WorkspaceId}")" Text="@(workspace?.Name ?? L["WorkspaceBadge"])" />
+        <RadzenBreadCrumbItem Path="@($"/boards/{BoardId}")" Text="@board.Name" Icon="view_kanban" />
+    }
+    <RadzenBreadCrumbItem Text="@L["DashboardTitle"]" Icon="insights" />
+</RadzenBreadCrumb>
+
+<PageHeader Title="@L["DashboardTitle"]"
+            Subtitle="@(board is not null ? $"{board.Name} — {L["HierarchyDashboardDesc"]}" : L["HierarchyDashboardDesc"])">
     <Actions>
-        <RadzenButton Text="@L["DashboardAddCard"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
+        <RadzenButton Text="@L["BoardOpenKanban"]" Icon="view_kanban" ButtonStyle="@ButtonStyle.Light"
+                      Click="@(() => Nav.NavigateTo($"boards/{BoardId}"))" />
+        <RadzenButton Text="@L["DashboardAddCard"]" Icon="add" ButtonStyle="@ButtonStyle.Primary"
                       Click="@(() => showCreate = !showCreate)" />
     </Actions>
 </PageHeader>
 
 @if (showCreate)
 {
-    <RadzenCard>
+    <RadzenCard Class="rz-mb-4">
         <RadzenStack Gap="0.5rem">
             <LabeledField Text="@L["DashboardKind"]" Component="d-kind">
                 <RadzenDropDown @bind-Value="createModel.Kind" Data="@availableKinds"
@@ -29,12 +47,12 @@
             <LabeledField Text="@L["DashboardConfig"]" Component="d-cfg">
                 <RadzenTextArea @bind-Value="createModel.ConfigurationJson" Name="d-cfg" Style="width:100%; height:6rem" />
             </LabeledField>
-            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
+            <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.End"
                          Gap="0.5rem" Class="rz-mt-3">
-                <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light"
+                <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="@ButtonStyle.Light"
                               Click="@(() => { showCreate = false; error = null; })" />
-                <RadzenButton Text="@L["ActionCreate"]" ButtonType="ButtonType.Submit"
-                              ButtonStyle="ButtonStyle.Primary" IsBusy="@busy"
+                <RadzenButton Text="@L["ActionCreate"]" ButtonType="@ButtonType.Submit"
+                              ButtonStyle="@ButtonStyle.Primary" IsBusy="@busy"
                               Click="@CreateDashcardAsync" />
             </RadzenStack>
         </RadzenStack>
@@ -43,15 +61,15 @@
 
 @if (loading)
 {
-    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    <RadzenProgressBarCircular ShowValue="false" Mode="@ProgressBarMode.Indeterminate" />
 }
 else if (loadError is not null)
 {
-    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@loadError</RadzenAlert>
+    <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false">@loadError</RadzenAlert>
 }
 else if (dashcards is { Count: 0 })
 {
-    <RadzenText Text="@L["DashboardEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenText Text="@L["DashboardEmpty"]" TextStyle="@TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else if (dashcards is not null)
 {
@@ -59,15 +77,15 @@ else if (dashcards is not null)
         @foreach (DashcardDto d in dashcards)
         {
             <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
-                <RadzenCard Variant="Variant.Outlined">
+                <RadzenCard Variant="@Variant.Outlined">
                     <RadzenStack Gap="0.5rem">
-                        <RadzenText Text="@d.Title" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                        <RadzenText Text="@KindLabel(d.Kind)" TextStyle="TextStyle.Caption"
+                        <RadzenText Text="@d.Title" TextStyle="@TextStyle.H6" TagName="@TagName.H3" />
+                        <RadzenText Text="@KindLabel(d.Kind)" TextStyle="@TextStyle.Caption"
                                     class="rz-color-text-secondary" />
-                        <RadzenText Text="@d.ConfigurationJson" TextStyle="TextStyle.Body2"
+                        <RadzenText Text="@d.ConfigurationJson" TextStyle="@TextStyle.Body2"
                                     class="rz-color-text-secondary" />
-                        <RadzenButton Text="@L["ActionDelete"]" ButtonStyle="ButtonStyle.Danger"
-                                      Size="ButtonSize.Small" Click="@(() => DeleteAsync(d.Id))" />
+                        <RadzenButton Text="@L["ActionDelete"]" ButtonStyle="@ButtonStyle.Danger"
+                                      Size="@ButtonSize.Small" Click="@(() => DeleteAsync(d.Id))" />
                     </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
@@ -77,12 +95,14 @@ else if (dashcards is not null)
 
 @if (error is not null)
 {
-    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@error</RadzenAlert>
+    <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false">@error</RadzenAlert>
 }
 
 @code {
     [Parameter] public Guid BoardId { get; set; }
 
+    private BoardDto? board;
+    private WorkspaceDto? workspace;
     private IReadOnlyList<DashcardDto>? dashcards;
     private bool showCreate;
     private bool busy;
@@ -102,12 +122,28 @@ else if (dashcards is not null)
         new KindOption(DashcardKind.DueThisWeek, "DueThisWeek")
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         loading = true;
         try
         {
-            var result = await DashboardsApi.ListAsync(BoardId);
+            var boardTask = BoardsApi.GetAsync(BoardId);
+            var dashTask = DashboardsApi.ListAsync(BoardId);
+
+            await Task.WhenAll(boardTask, dashTask);
+
+            var boardRes = await boardTask;
+            if (boardRes.IsSuccess && boardRes.Value is not null)
+            {
+                board = boardRes.Value;
+                var wsRes = await WorkspacesApi.GetAsync(board.WorkspaceId);
+                if (wsRes.IsSuccess)
+                {
+                    workspace = wsRes.Value;
+                }
+            }
+
+            var result = await dashTask;
             if (result.IsSuccess && result.Value is not null)
             {
                 dashcards = result.Value;

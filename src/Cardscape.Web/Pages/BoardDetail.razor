@@ -22,23 +22,32 @@
 }
 else
 {
+    <RadzenBreadCrumb Class="rz-mb-3">
+        <RadzenBreadCrumbItem Path="/workspaces" Text="@L["NavWorkspaces"]" Icon="domain" />
+        <RadzenBreadCrumbItem Path="@($"/workspaces/{_board.WorkspaceId}")" Text="@(_workspace?.Name ?? L["WorkspaceBadge"])" />
+        <RadzenBreadCrumbItem Text="@_board.Name" Icon="view_kanban" />
+    </RadzenBreadCrumb>
+
     <PageHeader Title="@_board.Name" Subtitle="@_board.Description">
         <Actions>
+            <RadzenBadge BadgeStyle="@BadgeStyle.Info" Text="@L["BoardBadgeKanban"]" />
             <RadzenBadge BadgeStyle="@(_hubConnected ? BadgeStyle.Success : BadgeStyle.Light)"
                          Text="@(_hubConnected ? L["BoardLive"] : L["BoardOffline"])"
                          title="@(_hubConnected ? L["BoardLiveHint"] : L["BoardOfflineHint"])" />
             <RadzenButton Text="@(_board.IsStarred ? L["BoardsStarred"] : L["BoardStar"] )"
-                          ButtonStyle="ButtonStyle.Secondary"
+                          ButtonStyle="@ButtonStyle.Secondary"
                           Click="@ToggleStarAsync" />
-            <RadzenButton Text="@L["BoardAddList"]" Icon="add" ButtonStyle="ButtonStyle.Light"
+            <RadzenButton Text="@L["BoardAddList"]" Icon="add" ButtonStyle="@ButtonStyle.Light"
                           Click="@ToggleAddList" />
-            <RadzenButton Text="@L["CustomFieldsTitle"]" Icon="list" ButtonStyle="ButtonStyle.Light"
+            <RadzenButton Text="@L["BoardActionDashboard"]" Icon="insights" ButtonStyle="@ButtonStyle.Light"
+                          Click="@(() => Nav.NavigateTo($"boards/{BoardId}/dashboard"))" />
+            <RadzenButton Text="@L["CustomFieldsTitle"]" Icon="list" ButtonStyle="@ButtonStyle.Light"
                           Click="@(() => Nav.NavigateTo($"boards/{BoardId}/custom-fields"))" />
-            <RadzenButton Text="@L["ExtensionsTitle"]" Icon="extension" ButtonStyle="ButtonStyle.Light"
+            <RadzenButton Text="@L["ExtensionsTitle"]" Icon="extension" ButtonStyle="@ButtonStyle.Light"
                           Click="@(() => Nav.NavigateTo($"boards/{BoardId}/extensions"))" />
-            <RadzenButton Text="@L["ActivityTitle"]" Icon="history" ButtonStyle="ButtonStyle.Light"
+            <RadzenButton Text="@L["ActivityTitle"]" Icon="history" ButtonStyle="@ButtonStyle.Light"
                           Click="@(() => Nav.NavigateTo($"boards/{BoardId}/activity"))" />
-            <RadzenButton Text="@L["BoardSettings"]" Icon="settings" ButtonStyle="ButtonStyle.Light"
+            <RadzenButton Text="@L["BoardSettings"]" Icon="settings" ButtonStyle="@ButtonStyle.Light"
                           Click="@(() => _showSettings = !_showSettings)" />
         </Actions>
     </PageHeader>

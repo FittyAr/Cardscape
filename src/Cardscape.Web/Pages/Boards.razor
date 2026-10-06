@@ -6,20 +6,50 @@
 @using Cardscape.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject IBoardsApiClient BoardsApi
+@inject IWorkspacesApiClient WorkspacesApi
 @inject IStringLocalizer<SharedResource> L
 
-<PageTitle>@L["BoardsTitle"] @L["PageTitleSuffix"]</PageTitle>
+<PageTitle>@(workspace?.Name ?? L["BoardsTitle"]) @L["PageTitleSuffix"]</PageTitle>
 
-<PageHeader Title="@L["BoardsTitle"]">
-    <Actions>
-        <RadzenButton Text="@L["BoardsNew"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
-                      Click="@(() => showCreate = !showCreate)" />
-    </Actions>
-</PageHeader>
+<RadzenBreadCrumb Class="rz-mb-3">
+    <RadzenBreadCrumbItem Path="/workspaces" Text="@L["NavWorkspaces"]" Icon="domain" />
+    <RadzenBreadCrumbItem Text="@(workspace?.Name ?? L["WorkspaceBadge"])" />
+</RadzenBreadCrumb>
+
+<RadzenCard Class="rz-mb-4" Variant="@Variant.Filled">
+    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Wrap="@FlexWrap.Wrap" Gap="1rem">
+        <RadzenStack Gap="0.25rem">
+            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
+                <RadzenIcon Icon="domain" Class="rz-color-primary" Style="font-size: 1.75rem;" />
+                <RadzenText Text="@(workspace?.Name ?? L["WorkspaceBadge"])" TextStyle="@TextStyle.H4" TagName="@TagName.H1" Class="rz-m-0" />
+                <RadzenBadge Text="@L["WorkspaceBadge"]" BadgeStyle="@BadgeStyle.Primary" />
+            </RadzenStack>
+            <RadzenText Text="@L["BoardsSubtitle"]" TextStyle="@TextStyle.Body2" class="rz-color-text-secondary" />
+            @if (workspace is not null)
+            {
+                <RadzenText TextStyle="@TextStyle.Caption" class="rz-color-text-secondary">
+                    @L["HomeWorkspaceMembers", workspace.MemberCount]
+                </RadzenText>
+            }
+        </RadzenStack>
+        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Wrap="@FlexWrap.Wrap" Gap="0.5rem">
+            <RadzenButton Text="@L["BoardsNew"]" Icon="add" ButtonStyle="@ButtonStyle.Primary"
+                          Click="@(() => showCreate = !showCreate)" />
+            <RadzenButton Text="@L["WorkspaceTabMembers"]" Icon="people" ButtonStyle="@ButtonStyle.Light"
+                          Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/members"))" />
+            <RadzenButton Text="@L["WorkspaceTabIntegrations"]" Icon="hub" ButtonStyle="@ButtonStyle.Light"
+                          Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/integrations"))" />
+            <RadzenButton Text="@L["WorkspaceTabImport"]" Icon="upload_file" ButtonStyle="@ButtonStyle.Light"
+                          Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/import"))" />
+            <RadzenButton Text="@L["WorkspaceTabSecurity"]" Icon="security" ButtonStyle="@ButtonStyle.Light"
+                          Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/security"))" />
+        </RadzenStack>
+    </RadzenStack>
+</RadzenCard>
 
 @if (showCreate)
 {
-    <RadzenCard>
+    <RadzenCard Class="rz-mb-4">
         <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateBoardAsync">
             <LabeledField Text="@L["WorkspacesName"]" Component="b-name">
                 <RadzenTextBox @bind-Value="createModel.Name" Name="b-name" Style="width:100%" />
@@ -36,9 +66,9 @@
                                 TextProperty="Label" ValueProperty="Value" />
             </LabeledField>
 
-            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-mt-3">
-                <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => { showCreate = false; error = null; })" />
-                <RadzenButton Text="@L["ActionCreate"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+            <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.End" Gap="0.5rem" class="rz-mt-3">
+                <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="@ButtonStyle.Light" Click="@(() => { showCreate = false; error = null; })" />
+                <RadzenButton Text="@L["ActionCreate"]" ButtonType="@ButtonType.Submit" ButtonStyle="@ButtonStyle.Primary"
                               IsBusy="@busy" />
             </RadzenStack>
         </RadzenTemplateForm>
@@ -47,16 +77,16 @@
 
 @if (error is not null)
 {
-    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" Class="rz-mb-3">@error</RadzenAlert>
+    <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false" Class="rz-mb-3">@error</RadzenAlert>
 }
 
 @if (boards is null)
 {
-    <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenText Text="@L["ActionLoading"]" TextStyle="@TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else if (boards.Count == 0)
 {
-    <RadzenText Text="@L["BoardsEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <RadzenText Text="@L["BoardsEmpty"]" TextStyle="@TextStyle.Body2" class="rz-color-text-secondary" />
 }
 else
 {
@@ -64,25 +94,35 @@ else
         @foreach (BoardSummaryDto b in boards)
         {
             <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
-                <RadzenCard>
-                    <RadzenText Text="@b.Name" TextStyle="TextStyle.H5" TagName="TagName.H3" />
-                    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
-                        @L["BoardsCreatedAt", b.CreatedAt.LocalDateTime.ToString("d")]
-                    </RadzenText>
-                    @if (b.IsStarred)
-                    {
-                        <div class="rz-mt-2">
-                            <RadzenBadge Text="@L["BoardsStarred"]" BadgeStyle="BadgeStyle.Success" />
-                        </div>
-                    }
-                    @if (b.IsArchived)
-                    {
-                        <div class="rz-mt-2">
-                            <RadzenBadge Text="@L["ActionArchived"]" BadgeStyle="BadgeStyle.Warning" />
-                        </div>
-                    }
-                    <RadzenButton Text="@L["BoardsOpen"]" Icon="open_in_new" ButtonStyle="ButtonStyle.Light"
-                                  Class="rz-mt-3" Click="@(() => Nav.NavigateTo($"boards/{b.Id}"))" />
+                <RadzenCard Class="rz-p-3 rz-h-100" Variant="@Variant.Outlined">
+                    <RadzenStack Gap="0.5rem" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-h-100">
+                        <RadzenStack Gap="0.5rem">
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+                                <RadzenBadge Text="@L["BoardBadgeKanban"]" BadgeStyle="@BadgeStyle.Info" />
+                                @if (b.IsStarred)
+                                {
+                                    <RadzenBadge Text="@L["BoardsStarred"]" BadgeStyle="@BadgeStyle.Success" />
+                                }
+                                @if (b.IsArchived)
+                                {
+                                    <RadzenBadge Text="@L["ActionArchived"]" BadgeStyle="@BadgeStyle.Warning" />
+                                }
+                            </RadzenStack>
+                            <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
+                                <RadzenIcon Icon="view_kanban" Class="rz-color-primary" Style="font-size: 1.5rem;" />
+                                <RadzenText Text="@b.Name" TextStyle="@TextStyle.H5" TagName="@TagName.H3" Class="rz-m-0" />
+                            </RadzenStack>
+                            <RadzenText TextStyle="@TextStyle.Caption" class="rz-color-text-secondary">
+                                @L["BoardsCreatedAt", b.CreatedAt.LocalDateTime.ToString("d")]
+                            </RadzenText>
+                        </RadzenStack>
+                        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem" Class="rz-mt-3">
+                            <RadzenButton Text="@L["BoardsOpen"]" Icon="view_kanban" ButtonStyle="@ButtonStyle.Primary"
+                                          Size="@ButtonSize.Medium" Click="@(() => Nav.NavigateTo($"boards/{b.Id}"))" />
+                            <RadzenButton Text="@L["BoardActionDashboard"]" Icon="insights" ButtonStyle="@ButtonStyle.Light"
+                                          Size="@ButtonSize.Medium" Click="@(() => Nav.NavigateTo($"boards/{b.Id}/dashboard"))" />
+                        </RadzenStack>
+                    </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
         }
@@ -94,6 +134,7 @@ else
 
     [Inject] private NavigationManager Nav { get; set; } = default!;
 
+    private WorkspaceDto? workspace;
     private IReadOnlyList<BoardSummaryDto>? boards;
     private bool showCreate;
     private bool busy;
@@ -108,7 +149,18 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        ApiResult<IReadOnlyList<BoardSummaryDto>> result = await BoardsApi.ListForWorkspaceAsync(WorkspaceId);
+        var wsTask = WorkspacesApi.GetAsync(WorkspaceId);
+        var boardsTask = BoardsApi.ListForWorkspaceAsync(WorkspaceId);
+
+        await Task.WhenAll(wsTask, boardsTask);
+
+        var wsResult = await wsTask;
+        if (wsResult.IsSuccess)
+        {
+            workspace = wsResult.Value;
+        }
+
+        var result = await boardsTask;
         if (result.IsSuccess)
         {
             boards = result.Value;
