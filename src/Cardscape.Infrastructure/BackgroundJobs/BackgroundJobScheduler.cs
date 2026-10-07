@@ -18,13 +18,13 @@ public sealed class BackgroundJobScheduler(
     IBackgroundJobStore store,
     IClock clock) : IBackgroundJobScheduler
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerOptions.Web;
 
     public async Task<Result> EnqueueAsync(
         string type,
         object payload,
         DateTimeOffset? scheduledFor = null,
-        int maxAttempts = 5,
+        int maxAttempts = BackgroundJob.DefaultMaxAttempts,
         CancellationToken ct = default)
     {
         DateTimeOffset now = clock.UtcNow;

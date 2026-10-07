@@ -10,14 +10,14 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
 {
     public async Task<User?> FindByEmailAsync(string email, CancellationToken ct = default)
     {
-        var normalized = (email ?? string.Empty).Trim().ToLowerInvariant();
+        var normalized = EmailAddress.Normalize(email);
         if (normalized.Length == 0)
         {
             return null;
         }
 
         EmailAddress typedEmail = EmailAddress.Create(normalized).Value;
-        return await Db.Set<User>().FirstOrDefaultAsync(user => user.Email == typedEmail, ct);
+        return await Set.FirstOrDefaultAsync(user => user.Email == typedEmail, ct);
     }
 
     public async Task<IReadOnlyList<User>> ListByIdsAsync(
@@ -35,7 +35,7 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
         // projection (comments, activities, etc.) needs the
         // display name for every distinct author.
         HashSet<UserId> wanted = [.. ids];
-        return await Db.Set<User>()
+        return await Set
             .Where(u => wanted.Contains(u.Id))
             .ToListAsync(ct);
     }
@@ -52,7 +52,7 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
                 ct);
 
         return isMember
-            ? await Db.Set<User>().FirstOrDefaultAsync(user => user.Id == userId, ct)
+            ? await Set.FirstOrDefaultAsync(user => user.Id == userId, ct)
             : null;
     }
 
@@ -71,7 +71,7 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
         HashSet<UserId> typedMemberIds = memberIds
             .Select(memberId => new UserId(memberId))
             .ToHashSet();
-        IQueryable<User> query = Db.Set<User>()
+        IQueryable<User> query = Set
             .Where(user => typedMemberIds.Contains(user.Id));
         if (!string.IsNullOrWhiteSpace(normalizedEmail))
         {
@@ -105,6 +105,6 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
     }
 
     public async Task<bool> AnyAsync(CancellationToken ct = default) =>
-        await Db.Set<User>().AnyAsync(ct);
+        await Set.AnyAsync(ct);
 }
 

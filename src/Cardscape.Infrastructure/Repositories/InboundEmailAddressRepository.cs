@@ -14,17 +14,10 @@ public sealed class InboundEmailAddressRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<InboundEmailAddress>> ListForWorkspaceAsync(
         WorkspaceId workspaceId, CancellationToken ct = default)
     {
-        IQueryable<InboundEmailAddress> query = Db.Set<InboundEmailAddress>()
+        IQueryable<InboundEmailAddress> query = Set
             .AsNoTracking()
             .Where(address => address.WorkspaceId == workspaceId && !address.IsDeleted);
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderBy(address => address.CreatedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, address => address.CreatedAt, ct: ct);
     }
 
     public async Task<InboundEmailAddress?> FindByEmailAsync(
@@ -36,7 +29,7 @@ public sealed class InboundEmailAddressRepository(CardscapeDbContext db)
         }
 
         var needle = email.Trim().ToLowerInvariant();
-        return await Db.Set<InboundEmailAddress>()
+        return await Set
             .FirstOrDefaultAsync(address =>
                 !address.IsDeleted
                 && address.Active

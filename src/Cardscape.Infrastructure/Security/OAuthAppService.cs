@@ -297,14 +297,10 @@ public sealed class OAuthAppService(
             return Result.Failure<OAuthAccessTokenValidation>(OAuthAppErrors.UnknownAccessToken);
         }
 
-        if (token.RevokedAt is not null)
+        Result usable = token.EnsureUsable(clock.UtcNow);
+        if (usable.IsFailure)
         {
-            return Result.Failure<OAuthAccessTokenValidation>(OAuthAppErrors.AccessTokenRevoked);
-        }
-
-        if (clock.UtcNow >= token.ExpiresAt)
-        {
-            return Result.Failure<OAuthAccessTokenValidation>(OAuthAppErrors.AccessTokenExpired);
+            return Result.Failure<OAuthAccessTokenValidation>(usable.Error);
         }
 
         return Result.Success(new OAuthAccessTokenValidation(

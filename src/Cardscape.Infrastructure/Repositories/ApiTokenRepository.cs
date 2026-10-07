@@ -18,7 +18,7 @@ public sealed class ApiTokenRepository(CardscapeDbContext db)
             return null;
         }
 
-        return await Db.Set<ApiToken>()
+        return await Set
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.HashedSecret == hashedSecret, ct);
     }
@@ -28,7 +28,7 @@ public sealed class ApiTokenRepository(CardscapeDbContext db)
         DateTimeOffset at,
         CancellationToken ct = default)
     {
-        await Db.Set<ApiToken>()
+        await Set
             .Where(token => token.Id == id && token.RevokedAt == null)
             .ExecuteUpdateAsync(setters => setters
                 .SetProperty(token => token.LastUsedAt, at)
@@ -39,16 +39,9 @@ public sealed class ApiTokenRepository(CardscapeDbContext db)
 
     public async Task<IReadOnlyList<ApiToken>> ListForUserAsync(Guid userId, CancellationToken ct = default)
     {
-        IQueryable<ApiToken> query = Db.Set<ApiToken>()
+        IQueryable<ApiToken> query = Set
             .AsNoTracking()
             .Where(token => token.UserId == new UserId(userId));
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderByDescending(token => token.CreatedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => b.CreatedAt.CompareTo(a.CreatedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, token => token.CreatedAt, descending: true, ct: ct);
     }
 }

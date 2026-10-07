@@ -60,7 +60,7 @@ public sealed class BoardList : AggregateRoot<BoardListId>
             return Result.Failure(ListErrors.Archived);
         }
 
-        if (newName.Value == Name.Value)
+        if (newName == Name)
         {
             return Result.Success();
         }

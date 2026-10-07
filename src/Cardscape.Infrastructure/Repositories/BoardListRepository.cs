@@ -13,7 +13,7 @@ public sealed class BoardListRepository(CardscapeDbContext db) : RepositoryBase<
 {
     public async Task<IReadOnlyList<BoardList>> ListForBoardAsync(BoardId boardId, bool includeArchived, CancellationToken ct = default)
     {
-        IQueryable<BoardList> query = Db.Set<BoardList>()
+        IQueryable<BoardList> query = Set
             .AsNoTracking()
             .Where(l => l.BoardId == boardId);
         if (!includeArchived)
@@ -26,7 +26,7 @@ public sealed class BoardListRepository(CardscapeDbContext db) : RepositoryBase<
 
     public async Task<Position> GetNextPositionAsync(BoardId boardId, CancellationToken ct = default)
     {
-        Position maximum = await Db.Set<BoardList>()
+        Position maximum = await Set
             .AsNoTracking()
             .Where(list => list.BoardId == boardId)
             .OrderByDescending(list => list.Position)
@@ -38,7 +38,7 @@ public sealed class BoardListRepository(CardscapeDbContext db) : RepositoryBase<
 
     public async Task<BoardId?> GetBoardIdAsync(BoardListId listId, CancellationToken ct = default)
     {
-        return await Db.Set<BoardList>()
+        return await Set
             .AsNoTracking()
             .Where(list => list.Id == listId)
             .Select(list => list.BoardId)
@@ -47,7 +47,7 @@ public sealed class BoardListRepository(CardscapeDbContext db) : RepositoryBase<
 
     public async Task<IReadOnlyDictionary<Guid, Guid>> ListBoardIdsByListIdAsync(CancellationToken ct = default)
     {
-        var rows = await Db.Set<BoardList>()
+        var rows = await Set
             .AsNoTracking()
             .Select(l => new { l.Id, l.BoardId })
             .ToListAsync(ct);
@@ -56,7 +56,7 @@ public sealed class BoardListRepository(CardscapeDbContext db) : RepositoryBase<
 
     public async Task<IReadOnlyDictionary<Guid, string>> ListNamesByIdAsync(CancellationToken ct = default)
     {
-        var rows = await Db.Set<BoardList>()
+        var rows = await Set
             .AsNoTracking()
             .Select(l => new { l.Id, l.Name })
             .ToListAsync(ct);

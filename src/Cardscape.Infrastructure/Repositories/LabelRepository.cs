@@ -12,7 +12,7 @@ public sealed class LabelRepository(CardscapeDbContext db) : RepositoryBase<Labe
 {
     public async Task<IReadOnlyList<Label>> ListForBoardAsync(BoardId boardId, CancellationToken ct = default)
     {
-        return await Db.Set<Label>()
+        return await Set
             .AsNoTracking()
             .Where(label => label.BoardId == boardId && !label.IsDeleted)
             .OrderBy(label => label.Name)

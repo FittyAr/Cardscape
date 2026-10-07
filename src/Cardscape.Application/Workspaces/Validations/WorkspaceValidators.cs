@@ -1,4 +1,5 @@
 using Cardscape.Application.Workspaces.Commands;
+using Cardscape.Domain.Workspaces;
 using FluentValidation;
 
 namespace Cardscape.Application.Workspaces.Validations;
@@ -7,7 +8,7 @@ public sealed class CreateWorkspaceCommandValidator : AbstractValidator<CreateWo
 {
     public CreateWorkspaceCommandValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(WorkspaceName.MaxLength);
     }
 }
 
@@ -16,6 +17,6 @@ public sealed class RenameWorkspaceCommandValidator : AbstractValidator<RenameWo
     public RenameWorkspaceCommandValidator()
     {
         RuleFor(x => x.WorkspaceId).NotEmpty();
-        RuleFor(x => x.NewName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.NewName).NotEmpty().MaximumLength(WorkspaceName.MaxLength);
     }
 }

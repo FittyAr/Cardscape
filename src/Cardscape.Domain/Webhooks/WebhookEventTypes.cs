@@ -1,3 +1,5 @@
+using Cardscape.Domain.Common;
+
 namespace Cardscape.Domain.Webhooks;
 
 /// <summary>
@@ -22,9 +24,10 @@ public static class WebhookEventTypes
         CommentAdded
     ];
 
+    /// <summary>Validation and matching rules for this catalog.</summary>
+    public static readonly EventCatalog Catalog = new("webhooks", "webhook", All);
+
     /// <summary>True if <paramref name="eventType"/> is one of the
     /// v1-recognised event identifiers.</summary>
-    public static bool IsKnown(string eventType) =>
-        !string.IsNullOrWhiteSpace(eventType)
-        && All.Any(e => string.Equals(e, eventType, StringComparison.OrdinalIgnoreCase));
+    public static bool IsKnown(string eventType) => Catalog.IsKnown(eventType);
 }

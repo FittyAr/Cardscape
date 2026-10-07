@@ -23,7 +23,7 @@ public sealed class HttpGitHubService : IGitHubService
     private const string GitHubApiBase = "https://api.github.com";
     private const int MaxResponseBytes = 1024 * 1024;
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerOptions.Web;
 
     private readonly HttpClient _http;
     private readonly string? _token;

@@ -78,7 +78,7 @@ public sealed class Board : AggregateRoot<BoardId>
             return Result.Failure(BoardErrors.Archived);
         }
 
-        if (newName.Value == Name.Value)
+        if (newName == Name)
         {
             return Result.Success();
         }
@@ -96,7 +96,7 @@ public sealed class Board : AggregateRoot<BoardId>
             return Result.Failure(BoardErrors.Archived);
         }
 
-        if (newDescription.Value == Description.Value)
+        if (newDescription == Description)
         {
             return Result.Success();
         }

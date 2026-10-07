@@ -34,7 +34,7 @@ public static class DisableSamlConnectionCommandHandler
                 $"Workspace {command.WorkspaceId} was not found."));
         }
 
-        if (workspace.OwnerId != currentUser.Id.Value)
+        if (!workspace.IsOwnedBy(currentUser.Id.Value))
         {
             return Result.Failure(DomainError.Forbidden(
                 "saml.not_owner", "Only the workspace owner can disable SAML."));

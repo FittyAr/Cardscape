@@ -19,13 +19,13 @@ public sealed class OAuthAuthorizationCodeRepository(CardscapeDbContext db)
             return null;
         }
 
-        return await Db.Set<OAuthAuthorizationCode>()
+        return await Set
             .FirstOrDefaultAsync(c => c.CodeHash == codeHash, ct);
     }
 
     public async Task<int> PurgeExpiredAsync(DateTimeOffset cutoff, CancellationToken ct = default)
     {
-        return await Db.Set<OAuthAuthorizationCode>()
+        return await Set
             .Where(c => c.ExpiresAt < cutoff)
             .ExecuteDeleteAsync(ct);
     }

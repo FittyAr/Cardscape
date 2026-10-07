@@ -62,8 +62,4 @@ public sealed class CardAgingSettings : Entity<CardId>
         UpdatedAt = at;
         return Result.Success();
     }
-
-    public bool IsStale(DateTimeOffset lastActivity, DateTimeOffset now) =>
-        Mode == CardAgingMode.ByActivity
-        && (now - lastActivity).TotalDays >= StaleAfterDays;
 }

@@ -17,23 +17,16 @@ public sealed class OAuthAppRepository(CardscapeDbContext db)
             return null;
         }
 
-        return await Db.Set<OAuthApp>()
+        return await Set
             .FirstOrDefaultAsync(a => a.ClientId == clientId, ct);
     }
 
     public async Task<IReadOnlyList<OAuthApp>> ListForOwnerAsync(
         Guid ownerId, CancellationToken ct = default)
     {
-        IQueryable<OAuthApp> query = Db.Set<OAuthApp>()
+        IQueryable<OAuthApp> query = Set
             .AsNoTracking()
             .Where(app => app.OwnerId == ownerId);
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderByDescending(app => app.CreatedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => b.CreatedAt.CompareTo(a.CreatedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, app => app.CreatedAt, descending: true, ct: ct);
     }
 }

@@ -25,9 +25,6 @@ public readonly record struct Position
     /// <summary>Position that places an item after the given previous position.</summary>
     public static Position After(Position previous) => new(previous.Value + 1.0d);
 
-    /// <summary>Position that places an item before the given next position.</summary>
-    public static Position Before(Position next) => new(next.Value / 2.0d);
-
     /// <summary>Position that sits between two existing positions.</summary>
     public static Position Between(Position previous, Position next) =>
         new((previous.Value + next.Value) / 2.0d);

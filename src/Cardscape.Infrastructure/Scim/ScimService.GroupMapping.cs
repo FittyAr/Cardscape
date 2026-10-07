@@ -46,7 +46,7 @@ public sealed partial class ScimService
 
         List<Guid> toRemove = workspace.Members
             .Where(member => !desiredIds.Contains(member.UserId)
-                && member.UserId != workspace.OwnerId)
+                && !workspace.IsOwnedBy(member.UserId))
             .Select(member => member.UserId)
             .ToList();
         foreach (Guid userId in toRemove)

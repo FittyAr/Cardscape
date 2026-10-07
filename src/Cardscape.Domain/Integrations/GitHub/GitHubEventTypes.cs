@@ -1,4 +1,5 @@
 using Cardscape.Domain.Cards;
+using Cardscape.Domain.Common;
 
 namespace Cardscape.Domain.Integrations.GitHub;
 
@@ -22,7 +23,10 @@ public static class GitHubEventTypes
         CommentAdded
     ];
 
-    public static bool IsKnown(string eventType) =>
-        !string.IsNullOrWhiteSpace(eventType)
-        && All.Any(e => string.Equals(e, eventType, StringComparison.OrdinalIgnoreCase));
+    /// <summary>Validation and matching rules for this catalog.</summary>
+    public static readonly EventCatalog Catalog = new("github", "GitHub", All);
+
+    /// <summary>True if <paramref name="eventType"/> is one of the
+    /// v1-recognised event identifiers.</summary>
+    public static bool IsKnown(string eventType) => Catalog.IsKnown(eventType);
 }

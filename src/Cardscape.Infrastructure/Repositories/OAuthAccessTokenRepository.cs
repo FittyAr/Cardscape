@@ -20,29 +20,22 @@ public sealed class OAuthAccessTokenRepository(CardscapeDbContext db)
             return null;
         }
 
-        return await Db.Set<OAuthAccessToken>()
+        return await Set
             .FirstOrDefaultAsync(t => t.TokenHash == tokenHash, ct);
     }
 
     public async Task<IReadOnlyList<OAuthAccessToken>> ListForUserAsync(
         Guid userId, CancellationToken ct = default)
     {
-        IQueryable<OAuthAccessToken> query = Db.Set<OAuthAccessToken>()
+        IQueryable<OAuthAccessToken> query = Set
             .AsNoTracking()
             .Where(token => token.UserId == new UserId(userId));
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderByDescending(token => token.CreatedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => b.CreatedAt.CompareTo(a.CreatedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, token => token.CreatedAt, descending: true, ct: ct);
     }
 
     public async Task<int> PurgeExpiredAsync(DateTimeOffset cutoff, CancellationToken ct = default)
     {
-        IQueryable<OAuthAccessToken> revoked = Db.Set<OAuthAccessToken>()
+        IQueryable<OAuthAccessToken> revoked = Set
             .Where(token => token.RevokedAt != null);
         if (!Db.Database.IsSqlite())
         {
@@ -56,6 +49,6 @@ public sealed class OAuthAccessTokenRepository(CardscapeDbContext db)
         }
         return expiredIds.Count == 0
             ? 0
-            : await Db.Set<OAuthAccessToken>().Where(token => expiredIds.Contains(token.Id)).ExecuteDeleteAsync(ct);
+            : await Set.Where(token => expiredIds.Contains(token.Id)).ExecuteDeleteAsync(ct);
     }
 }

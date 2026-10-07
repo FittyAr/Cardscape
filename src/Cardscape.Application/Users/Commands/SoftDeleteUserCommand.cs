@@ -49,7 +49,7 @@ public static class SoftDeleteUserCommandHandler
         IReadOnlyList<Workspace> userWorkspaces = await workspaces.ListForUserAsync(user.Id.Value, cancellation);
         foreach (Workspace ws in userWorkspaces)
         {
-            if (ws.OwnerId == user.Id.Value)
+            if (ws.IsOwnedBy(user.Id.Value))
             {
                 // The user owns this workspace; skip — a
                 // soft-deleted owner is a separate flow

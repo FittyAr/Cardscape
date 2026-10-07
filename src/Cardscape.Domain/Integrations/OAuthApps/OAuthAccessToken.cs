@@ -1,4 +1,5 @@
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Integrations.OAuthApps.Errors;
 using Cardscape.Domain.Members;
 
 namespace Cardscape.Domain.Integrations.OAuthApps;
@@ -55,6 +56,19 @@ public sealed class OAuthAccessToken : AggregateRoot<OAuthAccessTokenId>
         ExpiresAt = newExpiresAt;
         RefreshedAt = at;
         UpdatedAt = at;
+    }
+
+    /// <summary>Succeeds while the token is neither revoked nor expired at <paramref name="now"/>.</summary>
+    public Result EnsureUsable(DateTimeOffset now)
+    {
+        if (RevokedAt is not null)
+        {
+            return Result.Failure(OAuthAppErrors.AccessTokenRevoked);
+        }
+
+        return now >= ExpiresAt
+            ? Result.Failure(OAuthAppErrors.AccessTokenExpired)
+            : Result.Success();
     }
 
     public void Revoke(DateTimeOffset at)

@@ -89,9 +89,6 @@ public static class RegisterUserCommandHandler
 
         return Result.Success(new AuthResponse(
             access,
-            new UserSummary(
-                userResult.Value.Id.Value,
-                userResult.Value.Email.Value,
-                userResult.Value.DisplayName.Value)));
+            UserSummary.From(userResult.Value)));
     }
 }

@@ -34,10 +34,9 @@ namespace Cardscape.Api.Endpoints.Auth;
 /// <c>AppleClientSecretGenerator</c> (ES256-signed JWT
 /// regenerated per request) — the OIDC handler is only
 /// registered when the full <c>Authentication:Apple:*</c>
-/// configuration block is present; otherwise the
-/// <see cref="ExternalProviderExtensions.IsKnown"/>
-/// check on the <c>apple</c> provider keeps the start
-/// endpoint hidden when the provider is not configured.
+/// configuration block is present; otherwise the start endpoint's
+/// sign-in availability check keeps it hidden when the provider is
+/// not configured.
 /// </summary>
 public static class ExternalLoginEndpoints
 {
@@ -52,7 +51,7 @@ public static class ExternalLoginEndpoints
             CancellationToken ct) =>
         {
             ct.ThrowIfCancellationRequested();
-            if (!ExternalProviderExtensions.TryParse(provider, out var parsed))
+            if (!ExternalProvider.TryParse(provider, out var parsed))
             {
                 return DomainErrorResults.ToProblem(ExternalLoginErrors.UnknownProvider);
             }
@@ -85,7 +84,7 @@ public static class ExternalLoginEndpoints
             IConfiguration configuration,
             CancellationToken ct) =>
         {
-            if (!ExternalProviderExtensions.TryParse(provider, out var parsed))
+            if (!ExternalProvider.TryParse(provider, out var parsed))
             {
                 return DomainErrorResults.ToProblem(ExternalLoginErrors.UnknownProvider);
             }

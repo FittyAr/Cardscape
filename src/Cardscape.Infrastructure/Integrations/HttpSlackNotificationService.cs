@@ -26,7 +26,7 @@ public sealed class HttpSlackNotificationService(HttpClient http, ISecretProtect
     private const string ChatPostMessagePath = "chat.postMessage";
     private const int MaxResponseBytes = 1024 * 1024;
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerOptions.Web;
 
     private readonly HttpClient _http = http;
 

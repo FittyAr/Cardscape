@@ -47,7 +47,7 @@ public static class AnonymiseUserCommandHandler
         IReadOnlyList<Workspace> userWorkspaces = await workspaces.ListForUserAsync(user.Id.Value, cancellation);
         foreach (Workspace ws in userWorkspaces)
         {
-            if (ws.OwnerId == user.Id.Value)
+            if (ws.IsOwnedBy(user.Id.Value))
             {
                 continue;
             }

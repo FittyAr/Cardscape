@@ -52,7 +52,7 @@ internal sealed class DomainEventsInterceptor(
                 }
 
                 var idProp = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
-                var rvProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "RowVersion");
+                var rvProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == nameof(Entity<Guid>.RowVersion));
                 if (idProp?.CurrentValue is Guid id && id != Guid.Empty
                     && rvProp?.CurrentValue is uint rv && rv == 0
                     && entry.Entity is Entity<Guid>)
@@ -85,7 +85,7 @@ internal sealed class DomainEventsInterceptor(
                 }
 
                 var rvProp = entry.Properties.FirstOrDefault(
-                    p => p.Metadata.Name == "RowVersion");
+                    p => p.Metadata.Name == nameof(Entity<Guid>.RowVersion));
                 if (rvProp is null)
                 {
                     continue;

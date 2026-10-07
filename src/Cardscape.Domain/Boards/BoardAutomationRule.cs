@@ -86,6 +86,9 @@ public sealed class BoardAutomationRule : AggregateRoot<BoardAutomationRuleId>
         CreatedAt = at;
     }
 
+    /// <summary>Longest accepted rule name (checked before trimming).</summary>
+    public const int NameMaxLength = 120;
+
     public static Result<BoardAutomationRule> Create(
         BoardId boardId,
         string name,
@@ -96,16 +99,9 @@ public sealed class BoardAutomationRule : AggregateRoot<BoardAutomationRuleId>
         int position,
         DateTimeOffset at)
     {
-        if (string.IsNullOrWhiteSpace(name))
+        if (ValidateName(name) is { } nameError)
         {
-            return Result.Failure<BoardAutomationRule>(DomainError.Validation(
-                "automation.name_required", "Rule name is required."));
-        }
-
-        if (name.Length > 120)
-        {
-            return Result.Failure<BoardAutomationRule>(DomainError.Validation(
-                "automation.name_too_long", "Rule name must be 120 characters or fewer."));
+            return Result.Failure<BoardAutomationRule>(nameError);
         }
 
         // BETA-7-#8 — see test-results/BETA-TEST-REPORT.md.
@@ -157,16 +153,9 @@ public sealed class BoardAutomationRule : AggregateRoot<BoardAutomationRuleId>
 
     public Result Rename(string newName, DateTimeOffset at)
     {
-        if (string.IsNullOrWhiteSpace(newName))
+        if (ValidateName(newName) is { } nameError)
         {
-            return Result.Failure(DomainError.Validation(
-                "automation.name_required", "Rule name is required."));
-        }
-
-        if (newName.Length > 120)
-        {
-            return Result.Failure(DomainError.Validation(
-                "automation.name_too_long", "Rule name must be 120 characters or fewer."));
+            return Result.Failure(nameError);
         }
 
         Name = newName.Trim();
@@ -176,4 +165,17 @@ public sealed class BoardAutomationRule : AggregateRoot<BoardAutomationRuleId>
 
     public void Enable(DateTimeOffset at) { IsEnabled = true; StampChanged(by: null, at: at); }
     public void Disable(DateTimeOffset at) { IsEnabled = false; StampChanged(by: null, at: at); }
+
+    private static DomainError? ValidateName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return DomainError.Validation("automation.name_required", "Rule name is required.");
+        }
+
+        return name.Length > NameMaxLength
+            ? DomainError.Validation(
+                "automation.name_too_long", $"Rule name must be {NameMaxLength} characters or fewer.")
+            : null;
+    }
 }

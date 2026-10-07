@@ -18,18 +18,7 @@ public sealed class CardSnoozeRepository(
 
     public async Task<IReadOnlyList<CardSnooze>> ListActiveAsync(DateTimeOffset now, CancellationToken ct = default)
     {
-        if (!context.Database.IsSqlite())
-        {
-            return await context.CardSnoozes
-                .Where(snooze => snooze.Until > now)
-                .ToListAsync(ct);
-        }
-
-        // SQLite cannot translate DateTimeOffset range comparisons.
-        return await context.CardSnoozes
-            .AsAsyncEnumerable()
-            .Where(snooze => snooze.Until > now)
-            .ToListAsync(ct);
+        return await context.CardSnoozes.ToListWhereAsync(context, snooze => snooze.Until > now, ct);
     }
 
     public async Task<IReadOnlyList<CardSnooze>> ListForBoardAsync(
@@ -43,15 +32,7 @@ public sealed class CardSnoozeRepository(
             where list.BoardId == typedBoardId
             select snooze;
 
-        if (!context.Database.IsSqlite())
-        {
-            return await candidates.Where(snooze => snooze.Until > now).ToListAsync(ct);
-        }
-
-        return await candidates
-            .AsAsyncEnumerable()
-            .Where(snooze => snooze.Until > now)
-            .ToListAsync(ct);
+        return await candidates.ToListWhereAsync(context, snooze => snooze.Until > now, ct);
     }
 
     public async Task AddAsync(CardSnooze snooze, CancellationToken ct = default) =>

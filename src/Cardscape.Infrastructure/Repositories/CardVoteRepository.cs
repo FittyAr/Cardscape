@@ -13,30 +13,23 @@ public sealed class CardVoteRepository(CardscapeDbContext db)
 {
     public async Task<int> CountForCardAsync(CardId cardId, CancellationToken ct = default)
     {
-        return await Db.Set<CardVote>().CountAsync(vote => vote.CardId == cardId, ct);
+        return await Set.CountAsync(vote => vote.CardId == cardId, ct);
     }
 
     public async Task<bool> HasVotedAsync(
         CardId cardId, Guid userId, CancellationToken ct = default)
     {
-        return await Db.Set<CardVote>()
+        return await Set
             .AnyAsync(vote => vote.CardId == cardId && vote.UserId == userId, ct);
     }
 
     public async Task<IReadOnlyList<CardVote>> ListForCardAsync(
         CardId cardId, CancellationToken ct = default)
     {
-        IQueryable<CardVote> votes = Db.Set<CardVote>()
+        IQueryable<CardVote> votes = Set
             .AsNoTracking()
             .Where(vote => vote.CardId == cardId);
-        if (!Db.Database.IsSqlite())
-        {
-            return await votes.OrderBy(vote => vote.VotedAt).ToListAsync(ct);
-        }
-
-        var rows = await votes.ToListAsync(ct);
-        rows.Sort((a, b) => a.VotedAt.CompareTo(b.VotedAt));
-        return rows;
+        return await votes.ToListOrderedAsync(Db, vote => vote.VotedAt, ct: ct);
     }
 
     // BETA-3-#2 — see test-results/BETA-TEST-REPORT.md.
@@ -68,12 +61,12 @@ public sealed class CardVoteRepository(CardscapeDbContext db)
 
         await using var tx = await Db.Database.BeginTransactionAsync(ct);
 
-        CardVote? existing = await Db.Set<CardVote>()
+        CardVote? existing = await Set
             .FirstOrDefaultAsync(vote => vote.CardId == cardId && vote.UserId == userId, ct);
 
         if (existing is not null)
         {
-            Db.Set<CardVote>().Remove(existing);
+            Set.Remove(existing);
         }
         else
         {
@@ -83,7 +76,7 @@ public sealed class CardVoteRepository(CardscapeDbContext db)
                 throw new InvalidOperationException(
                     $"ToggleAsync: factory failed with {create.Error.Code} — {create.Error.Message}");
             }
-            await Db.Set<CardVote>().AddAsync(create.Value, ct);
+            await Set.AddAsync(create.Value, ct);
         }
 
         await Db.SaveChangesAsync(ct);

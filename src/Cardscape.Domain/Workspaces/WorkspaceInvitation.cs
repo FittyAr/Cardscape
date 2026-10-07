@@ -1,4 +1,5 @@
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces.Events;
 
 namespace Cardscape.Domain.Workspaces;
@@ -109,7 +110,7 @@ public sealed class WorkspaceInvitation : AggregateRoot<WorkspaceInvitationId>
         var invitation = new WorkspaceInvitation(
             id: WorkspaceInvitationId.New(),
             workspaceId: workspaceId,
-            email: email.Trim().ToLowerInvariant(),
+            email: EmailAddress.Normalize(email),
             role: role,
             invitedBy: invitedBy,
             tokenHash: tokenHash,
@@ -127,10 +128,11 @@ public sealed class WorkspaceInvitation : AggregateRoot<WorkspaceInvitationId>
         AcceptedAt is null && RevokedAt is null && ExpiresAt > now;
 
     /// <summary>
-    /// Redeem the invitation. Idempotent: redeeming a
-    /// non-active invitation returns a <c>NotActive</c> error.
+    /// Succeeds when the invitation can still be redeemed at
+    /// <paramref name="at"/>; otherwise explains why not (already
+    /// accepted, revoked, or expired — checked in that order).
     /// </summary>
-    public Result Accept(Guid userId, DateTimeOffset at)
+    public Result EnsureRedeemable(DateTimeOffset at)
     {
         if (AcceptedAt is not null)
         {
@@ -146,11 +148,21 @@ public sealed class WorkspaceInvitation : AggregateRoot<WorkspaceInvitationId>
                 "Invitation has been revoked."));
         }
 
-        if (ExpiresAt <= at)
+        return ExpiresAt <= at
+            ? Result.Failure(DomainError.Forbidden("workspaces.invitation.expired", "Invitation has expired."))
+            : Result.Success();
+    }
+
+    /// <summary>
+    /// Redeem the invitation. Idempotent: redeeming a
+    /// non-active invitation returns a <c>NotActive</c> error.
+    /// </summary>
+    public Result Accept(Guid userId, DateTimeOffset at)
+    {
+        Result redeemable = EnsureRedeemable(at);
+        if (redeemable.IsFailure)
         {
-            return Result.Failure(DomainError.Forbidden(
-                "workspaces.invitation.expired",
-                "Invitation has expired."));
+            return redeemable;
         }
 
         AcceptedAt = at;

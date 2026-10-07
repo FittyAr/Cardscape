@@ -26,67 +26,30 @@ public enum ExternalProvider
 /// </summary>
 public static class ExternalProviderExtensions
 {
-    public static string WireName(this ExternalProvider provider) => provider switch
+    extension(ExternalProvider provider)
     {
-        ExternalProvider.Google => "google",
-        ExternalProvider.Microsoft => "microsoft",
-        ExternalProvider.Apple => "apple",
-        ExternalProvider.Saml => "saml",
-        _ => throw new ArgumentOutOfRangeException(nameof(provider), provider, "Unknown external provider.")
-    };
-
-    public static bool TryParse(string? raw, out ExternalProvider provider)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
+        public string WireName() => provider switch
         {
-            provider = default;
-            return false;
-        }
+            ExternalProvider.Google => "google",
+            ExternalProvider.Microsoft => "microsoft",
+            ExternalProvider.Apple => "apple",
+            ExternalProvider.Saml => "saml",
+            _ => throw new ArgumentOutOfRangeException(nameof(provider), provider, "Unknown external provider.")
+        };
 
-        switch (raw.Trim().ToLowerInvariant())
+        /// <summary>Parses the wire name (case-insensitive, surrounding whitespace ignored).</summary>
+        public static bool TryParse(string? raw, out ExternalProvider parsed)
         {
-            case "google": provider = ExternalProvider.Google; return true;
-            case "microsoft": provider = ExternalProvider.Microsoft; return true;
-            case "apple": provider = ExternalProvider.Apple; return true;
-            case "saml": provider = ExternalProvider.Saml; return true;
-            default: provider = default; return false;
+            ExternalProvider? match = raw?.Trim().ToLowerInvariant() switch
+            {
+                "google" => ExternalProvider.Google,
+                "microsoft" => ExternalProvider.Microsoft,
+                "apple" => ExternalProvider.Apple,
+                "saml" => ExternalProvider.Saml,
+                _ => null,
+            };
+            parsed = match.GetValueOrDefault();
+            return match.HasValue;
         }
     }
-
-    /// <summary>
-    /// Returns <c>true</c> when this provider is known to the
-    /// API surface (a valid value of the
-    /// <see cref="ExternalProvider"/> enum that the
-    /// external-login start endpoint accepts in the URL).
-    ///
-    /// <para>
-    /// <b>NOTE:</b> this check used to be the only gate in
-    /// the start endpoint, and it hard-coded <c>true</c> for
-    /// Google / Microsoft / Apple. That meant an
-    /// operator who had not supplied the
-    /// <c>Authentication:Google:*</c> keys still got a
-    /// 200-then-500 from <c>Results.Challenge</c> when the
-    /// challenge couldn't find a registered "google"
-    /// scheme — see BETA-2-#8 in
-    /// test-results/BETA-TEST-REPORT.md.
-    /// </para>
-    ///
-    /// <para>
-    /// The check that actually matters for the
-    /// challenge-to-scheme wiring now lives next to the
-    /// endpoint (see <c>ExternalLoginEndpoints.cs</c>):
-    /// the start endpoint reads
-    /// <c>Microsoft.Extensions.Configuration.IConfiguration</c>
-    /// directly and verifies the matching
-    /// <c>Authentication:{Provider}:*</c> keys are
-    /// populated before it calls <c>Results.Challenge</c>.
-    /// </para>
-    /// </summary>
-    public static bool IsKnown(this ExternalProvider provider) => provider switch
-    {
-        ExternalProvider.Google => true,
-        ExternalProvider.Microsoft => true,
-        ExternalProvider.Apple => true,
-        _ => false
-    };
 }

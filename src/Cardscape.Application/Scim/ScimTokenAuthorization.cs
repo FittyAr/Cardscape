@@ -26,7 +26,7 @@ internal static class ScimTokenAuthorization
                 "scim.workspace_not_found", $"Workspace {workspaceId.Value} was not found."));
         }
 
-        return workspace.OwnerId == currentUser.Id.Value
+        return workspace.IsOwnedBy(currentUser.Id.Value)
             ? Result.Success()
             : Result.Failure(DomainError.Forbidden(
                 "scim.owner_required", "Only the workspace owner can manage SCIM tokens."));

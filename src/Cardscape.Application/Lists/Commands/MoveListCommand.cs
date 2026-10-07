@@ -86,13 +86,6 @@ public static class MoveListCommandHandler
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new BoardListDto(
-            list.Id.Value,
-            list.BoardId.Value,
-            list.Name.Value,
-            list.Position.Value,
-            list.IsArchived,
-            list.CreatedAt,
-            0));
+        return Result.Success(BoardListDto.FromEntity(list));
     }
 }

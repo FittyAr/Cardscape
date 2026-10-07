@@ -58,7 +58,7 @@ public static class IssueWorkspaceInvitationCommandHandler
 
         // Only the workspace owner can issue invitations. A broader
         // role system lands in v0.5.
-        if (workspace.OwnerId != currentUser.Id.Value)
+        if (!workspace.IsOwnedBy(currentUser.Id.Value))
         {
             return Result.Failure<WorkspaceInvitationIssuanceDto>(DomainError.Forbidden(
                 "workspaces.not_owner", "Only the workspace owner can issue invitations."));

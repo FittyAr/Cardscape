@@ -209,6 +209,9 @@ dotnet_diagnostic.IDE0051.severity = warning
 dotnet_diagnostic.IDE0052.severity = warning
 dotnet_diagnostic.IDE0035.severity = warning
 dotnet_diagnostic.IDE0059.severity = warning
+# CA1708 misreports C# 14 extension blocks: two `extension(...)` blocks in
+# one static class are flagged as names differing only by case.
+dotnet_diagnostic.CA1708.severity = none
 
 # Generated EF Core migrations are history: never restyle them.
 [src/**/Migrations/*.cs]

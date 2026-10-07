@@ -40,14 +40,7 @@ public sealed class ScimTokenRepository(CardscapeDbContext db) : IScimTokenRepos
         IQueryable<ScimToken> query = db.ScimTokens
             .AsNoTracking()
             .Where(token => token.WorkspaceId == workspaceId);
-        if (!db.Database.IsSqlite())
-        {
-            return await query.OrderByDescending(token => token.CreatedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => b.CreatedAt.CompareTo(a.CreatedAt));
-        return rows;
+        return await query.ToListOrderedAsync(db, token => token.CreatedAt, descending: true, ct: ct);
     }
 
     public async Task AddAsync(ScimToken token, CancellationToken ct = default)

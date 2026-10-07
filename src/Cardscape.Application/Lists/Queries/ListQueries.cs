@@ -32,14 +32,7 @@ public static class GetListQueryHandler
         }
 
         var list = guard.Value.List;
-        return Result.Success(new BoardListDto(
-            list.Id.Value,
-            list.BoardId.Value,
-            list.Name.Value,
-            list.Position.Value,
-            list.IsArchived,
-            list.CreatedAt,
-            0));
+        return Result.Success(BoardListDto.FromEntity(list));
     }
 }
 
@@ -74,14 +67,7 @@ public static class ListListsForBoardQueryHandler
             cancellationToken);
 
         var rows = items
-            .Select(l => new BoardListDto(
-                l.Id.Value,
-                l.BoardId.Value,
-                l.Name.Value,
-                l.Position.Value,
-                l.IsArchived,
-                l.CreatedAt,
-                0))
+            .Select(l => BoardListDto.FromEntity(l))
             .ToList();
 
         return Result.Success<IReadOnlyList<BoardListDto>>(rows);

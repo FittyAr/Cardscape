@@ -28,7 +28,7 @@ public sealed partial class ScimService(
     private const string ScimListResponseSchema = "urn:ietf:params:scim:api:messages:2.0:ListResponse";
     private const string ScimGroupIdPrefix = "workspace-";
 
-    [GeneratedRegex("^\\s*members\\s*\\[\\s*value\\s+eq\\s+\"(?<id>[0-9a-f-]+)\"\\s*\\]\\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, 1000)]
+    [GeneratedRegex("""^\s*members\s*\[\s*value\s+eq\s+"(?<id>[0-9a-f-]+)"\s*\]\s*$""", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, 1000)]
     private static partial Regex MemberRemovalPath();
 
     private readonly IRepository<User, UserId> _users = users;
@@ -57,14 +57,7 @@ public sealed partial class ScimService(
                 [ScimListResponseSchema], 1, 0, normalizedStartIndex, []);
         }
 
-        IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(workspace, ct);
-        ScimGroup group = new(
-            BuildGroupId(workspace.Id.Value),
-            [ScimGroupSchema],
-            workspace.Name.Value,
-            members);
-
-        IReadOnlyList<ScimGroup> page = [group];
+        IReadOnlyList<ScimGroup> page = [await ToScimGroupAsync(workspace, ct)];
 
         return new ScimListResponse<ScimGroup>(
             [ScimListResponseSchema],
@@ -124,55 +117,33 @@ public sealed partial class ScimService(
 
         await unitOfWork.SaveChangesAsync(ct);
 
-        IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(newWorkspace, ct);
-        return Result.Success(new ScimGroup(
-            BuildGroupId(newWorkspace.Id.Value),
-            [ScimGroupSchema],
-            newWorkspace.Name.Value,
-            members));
+        return Result.Success(await ToScimGroupAsync(newWorkspace, ct));
     }
 
     public async Task<Result<ScimGroup>> GetGroupAsync(
         Guid workspaceId, string groupId, CancellationToken ct = default)
     {
-        if (!TryParseGroupId(groupId, out Guid groupGuid)
-            || groupGuid != workspaceId)
+        Result<Workspace> found = await FindScopedGroupAsync(workspaceId, groupId, ct);
+        if (found.IsFailure)
         {
-            return Result.Failure<ScimGroup>(DomainError.NotFound(
-                "scim.group_not_found", $"Group {groupId} was not found."));
+            return Result.Failure<ScimGroup>(found.Error);
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
-        if (workspace is null)
-        {
-            return Result.Failure<ScimGroup>(DomainError.NotFound(
-                "scim.group_not_found", $"Group {groupId} was not found."));
-        }
+        Workspace workspace = found.Value;
 
-        IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(workspace, ct);
-        return Result.Success(new ScimGroup(
-            BuildGroupId(workspace.Id.Value),
-            [ScimGroupSchema],
-            workspace.Name.Value,
-            members));
+        return Result.Success(await ToScimGroupAsync(workspace, ct));
     }
 
     public async Task<Result<ScimGroup>> UpdateGroupAsync(
         Guid workspaceId, string groupId, ScimGroup group, CancellationToken ct = default)
     {
-        if (!TryParseGroupId(groupId, out Guid groupGuid)
-            || groupGuid != workspaceId)
+        Result<Workspace> found = await FindScopedGroupAsync(workspaceId, groupId, ct);
+        if (found.IsFailure)
         {
-            return Result.Failure<ScimGroup>(DomainError.NotFound(
-                "scim.group_not_found", $"Group {groupId} was not found."));
+            return Result.Failure<ScimGroup>(found.Error);
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
-        if (workspace is null)
-        {
-            return Result.Failure<ScimGroup>(DomainError.NotFound(
-                "scim.group_not_found", $"Group {groupId} was not found."));
-        }
+        Workspace workspace = found.Value;
 
         var nameResult = WorkspaceName.Create(group.DisplayName);
         if (nameResult.IsFailure)
@@ -190,30 +161,19 @@ public sealed partial class ScimService(
 
         await unitOfWork.SaveChangesAsync(ct);
 
-        IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(workspace, ct);
-        return Result.Success(new ScimGroup(
-            BuildGroupId(workspace.Id.Value),
-            [ScimGroupSchema],
-            workspace.Name.Value,
-            members));
+        return Result.Success(await ToScimGroupAsync(workspace, ct));
     }
 
     public async Task<Result<ScimGroup>> PatchGroupAsync(
         Guid workspaceId, string groupId, ScimPatchRequest patch, CancellationToken ct = default)
     {
-        if (!TryParseGroupId(groupId, out Guid groupGuid)
-            || groupGuid != workspaceId)
+        Result<Workspace> found = await FindScopedGroupAsync(workspaceId, groupId, ct);
+        if (found.IsFailure)
         {
-            return Result.Failure<ScimGroup>(DomainError.NotFound(
-                "scim.group_not_found", $"Group {groupId} was not found."));
+            return Result.Failure<ScimGroup>(found.Error);
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
-        if (workspace is null)
-        {
-            return Result.Failure<ScimGroup>(DomainError.NotFound(
-                "scim.group_not_found", $"Group {groupId} was not found."));
-        }
+        Workspace workspace = found.Value;
 
         Result<IReadOnlyList<ScimPatchOperation>> normalized = NormalizeGroupPatch(patch, workspace.OwnerId);
         if (normalized.IsFailure)
@@ -284,30 +244,19 @@ public sealed partial class ScimService(
 
         await unitOfWork.SaveChangesAsync(ct);
 
-        IReadOnlyList<ScimGroupMember> members = await BuildMembersAsync(workspace, ct);
-        return Result.Success(new ScimGroup(
-            BuildGroupId(workspace.Id.Value),
-            [ScimGroupSchema],
-            workspace.Name.Value,
-            members));
+        return Result.Success(await ToScimGroupAsync(workspace, ct));
     }
 
     public async Task<Result> DeleteGroupAsync(
         Guid workspaceId, string groupId, CancellationToken ct = default)
     {
-        if (!TryParseGroupId(groupId, out Guid groupGuid)
-            || groupGuid != workspaceId)
+        Result<Workspace> found = await FindScopedGroupAsync(workspaceId, groupId, ct);
+        if (found.IsFailure)
         {
-            return Result.Failure(DomainError.NotFound(
-                "scim.group_not_found", $"Group {groupId} was not found."));
+            return Result.Failure(found.Error);
         }
 
-        var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
-        if (workspace is null)
-        {
-            return Result.Failure(DomainError.NotFound(
-                "scim.group_not_found", $"Group {groupId} was not found."));
-        }
+        Workspace workspace = found.Value;
 
         // Off-boarding via SCIM is a soft delete (archive),
         // not a hard delete — the audit trail matters and a
@@ -317,4 +266,23 @@ public sealed partial class ScimService(
         await unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
+
+    /// <summary>
+    /// The SCIM token scopes the IdP to one workspace, so a group id only
+    /// resolves when it names that same workspace.
+    /// </summary>
+    private async Task<Result<Workspace>> FindScopedGroupAsync(
+        Guid workspaceId, string groupId, CancellationToken ct)
+    {
+        Workspace? workspace = TryParseGroupId(groupId, out Guid groupGuid) && groupGuid == workspaceId
+            ? await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct)
+            : null;
+        return workspace is null
+            ? Result.Failure<Workspace>(DomainError.NotFound(
+                "scim.group_not_found", $"Group {groupId} was not found."))
+            : Result.Success(workspace);
+    }
+
+    private async Task<ScimGroup> ToScimGroupAsync(Workspace workspace, CancellationToken ct) =>
+        new(BuildGroupId(workspace.Id.Value), [ScimGroupSchema], workspace.Name.Value, await BuildMembersAsync(workspace, ct));
 }

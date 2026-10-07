@@ -125,9 +125,6 @@ public static class InitializeSystemCommandHandler
 
         return Result.Success(new AuthResponse(
             access,
-            new UserSummary(
-                adminUser.Id.Value,
-                adminUser.Email.Value,
-                adminUser.DisplayName.Value)));
+            UserSummary.From(adminUser)));
     }
 }

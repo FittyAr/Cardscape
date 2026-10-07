@@ -52,10 +52,7 @@ public static partial class InfrastructureServiceCollectionExtensions
         services.AddHttpClient<IAiService, OpenAiCompatibleAiService>(client =>
         {
             client.Timeout = TimeSpan.FromMinutes(5);
-        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-            AllowAutoRedirect = false
-        });
+        }).WithoutAutoRedirect();
 
         string storageRoot = configuration["Storage:LocalRoot"]
             ?? Path.Combine(AppContext.BaseDirectory, "storage");
@@ -67,18 +64,12 @@ public static partial class InfrastructureServiceCollectionExtensions
         services.AddHttpClient("google-oauth", client =>
         {
             client.Timeout = TimeSpan.FromSeconds(10);
-        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-            AllowAutoRedirect = false
-        });
+        }).WithoutAutoRedirect();
         services.AddHttpClient(nameof(IGoogleCalendarSyncService), client =>
         {
             client.BaseAddress = new Uri("https://www.googleapis.com/calendar/v3/");
             client.Timeout = TimeSpan.FromSeconds(15);
-        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-            AllowAutoRedirect = false
-        });
+        }).WithoutAutoRedirect();
 
         services.AddScoped<IScimTokenRepository, ScimTokenRepository>();
         services.AddScoped<IScimService, ScimService>();
@@ -91,10 +82,7 @@ public static partial class InfrastructureServiceCollectionExtensions
         {
             client.BaseAddress = new Uri("https://slack.com/api/");
             client.Timeout = TimeSpan.FromSeconds(30);
-        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-            AllowAutoRedirect = false
-        });
+        }).WithoutAutoRedirect();
 
         services.AddScoped<IGitHubRepoLinkRepository, GitHubRepoLinkRepository>();
         services.AddScoped<IGitHubPullRequestLinkRepository, GitHubPullRequestLinkRepository>();
@@ -102,10 +90,7 @@ public static partial class InfrastructureServiceCollectionExtensions
         {
             client.BaseAddress = new Uri("https://api.github.com");
             client.Timeout = TimeSpan.FromSeconds(30);
-        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-            AllowAutoRedirect = false
-        });
+        }).WithoutAutoRedirect();
 
         services.AddScoped<IInboundEmailAddressRepository, InboundEmailAddressRepository>();
         services.AddScoped<IInboundEmailService, DefaultInboundEmailService>();

@@ -32,7 +32,7 @@ public static class DeleteWorkspaceCommandHandler
             return Result.Failure(NotFound);
         }
 
-        if (workspace.OwnerId != currentUser.Id.Value)
+        if (!workspace.IsOwnedBy(currentUser.Id.Value))
         {
             return Result.Failure(InsufficientPermissions);
         }

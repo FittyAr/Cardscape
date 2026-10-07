@@ -14,17 +14,10 @@ public sealed class WebhookEndpointRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<WebhookEndpoint>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {
-        IQueryable<WebhookEndpoint> query = Db.Set<WebhookEndpoint>()
+        IQueryable<WebhookEndpoint> query = Set
             .AsNoTracking()
             .Where(endpoint => endpoint.BoardId == boardId && !endpoint.IsDeleted);
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderBy(endpoint => endpoint.CreatedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, endpoint => endpoint.CreatedAt, ct: ct);
     }
 
     public async Task<IReadOnlyList<WebhookEndpoint>> ListActiveForEventAsync(
@@ -39,7 +32,7 @@ public sealed class WebhookEndpointRepository(CardscapeDbContext db)
 
         // Preserve exact comma-delimited token semantics after EF Core has
         // restricted the candidate set to the owning board and active rows.
-        var candidates = await Db.Set<WebhookEndpoint>()
+        var candidates = await Set
             .AsNoTracking()
             .Where(endpoint => endpoint.BoardId == boardId
                 && endpoint.Active

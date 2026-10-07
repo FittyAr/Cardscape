@@ -159,64 +159,6 @@ public sealed class WebhookEndpoint : AggregateRoot<WebhookEndpointId>
     private static Result ValidateNotInternalHost(Uri parsed) =>
         WebhookUrlValidator.ValidateNotInternalHost(parsed);
 
-    /// <summary>Replaces the subscribed event list. The list is
-    /// canonicalised (lowercase, deduped, sorted) before storing.</summary>
-    public Result ChangeEvents(IEnumerable<string> newEvents)
-    {
-        if (newEvents is null)
-        {
-            return Result.Failure(DomainError.Validation(
-                "webhooks.events_required", "At least one event type is required."));
-        }
-
-        HashSet<string> normalised = new(StringComparer.OrdinalIgnoreCase);
-        foreach (string e in newEvents)
-        {
-            if (string.IsNullOrWhiteSpace(e))
-            {
-                continue;
-            }
-
-            string trimmed = e.Trim().ToLowerInvariant();
-            if (!WebhookEventTypes.IsKnown(trimmed))
-            {
-                return Result.Failure(DomainError.Validation(
-                    "webhooks.event_unknown",
-                    $"Unknown webhook event type '{e}'. Allowed: "
-                    + string.Join(", ", WebhookEventTypes.All)));
-            }
-
-            normalised.Add(trimmed);
-        }
-
-        if (normalised.Count == 0)
-        {
-            return Result.Failure(DomainError.Validation(
-                "webhooks.events_required", "At least one event type is required."));
-        }
-
-        Events = string.Join(",", normalised.OrderBy(s => s, StringComparer.Ordinal));
-        return Result.Success();
-    }
-
-    /// <summary>Replaces the protected shared secret.</summary>
-    public Result RotateProtectedSecret(string protectedSecret)
-    {
-        if (string.IsNullOrWhiteSpace(protectedSecret) || protectedSecret.Length > 2048)
-        {
-            return Result.Failure(DomainError.Validation(
-                "webhooks.secret_protected_invalid", "Protected webhook secret is invalid."));
-        }
-
-        if (string.Equals(protectedSecret, ProtectedSecret, StringComparison.Ordinal))
-        {
-            return Result.Success();
-        }
-
-        ProtectedSecret = protectedSecret;
-        return Result.Success();
-    }
-
     /// <summary>Enables the endpoint. Idempotent.</summary>
     public void Activate(DateTimeOffset at)
     {
@@ -242,15 +184,5 @@ public sealed class WebhookEndpoint : AggregateRoot<WebhookEndpointId>
     }
 
     /// <summary>True if the endpoint subscribes to the given event.</summary>
-    public bool SubscribesTo(string eventType)
-    {
-        if (string.IsNullOrWhiteSpace(eventType) || string.IsNullOrEmpty(Events))
-        {
-            return false;
-        }
-
-        return Events
-            .Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Any(e => string.Equals(e, eventType, StringComparison.OrdinalIgnoreCase));
-    }
+    public bool SubscribesTo(string eventType) => EventCatalog.Includes(Events, eventType);
 }

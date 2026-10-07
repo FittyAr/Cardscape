@@ -14,14 +14,13 @@ namespace Cardscape.Infrastructure.Search;
 /// Searches the relational source of truth so results survive restarts and
 /// remain consistent across application instances.
 /// </summary>
-public sealed class DatabaseSearchService(CardscapeDbContext db) : ISearchService
+public sealed partial class DatabaseSearchService(CardscapeDbContext db) : ISearchService
 {
     private const int DefaultPageSize = 20;
     private const int MaxPageSize = 100;
 
-    private static readonly Regex Tokenizer = new(
-        "[a-z0-9áéíóúñü]+",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+    [GeneratedRegex("[a-z0-9áéíóúñü]+", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
+    private static partial Regex Tokenizer();
 
     public async Task<SearchPage> SearchAsync(
         string query,
@@ -150,7 +149,7 @@ public sealed class DatabaseSearchService(CardscapeDbContext db) : ISearchServic
     }
 
     private static HashSet<string> Tokenize(string text) =>
-        new(Tokenizer.Matches(StripDiacritics(text)).Select(match => match.Value), StringComparer.OrdinalIgnoreCase);
+        new(Tokenizer().Matches(StripDiacritics(text)).Select(match => match.Value), StringComparer.OrdinalIgnoreCase);
 
     private static string Truncate(string text, int max) =>
         text.Length <= max ? text : text[..max] + "…";

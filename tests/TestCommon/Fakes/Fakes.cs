@@ -883,17 +883,11 @@ public sealed class FakeTotpService(
 
         string submittedHash = Convert.ToHexString(
             SHA256.HashData(Encoding.UTF8.GetBytes(code.Trim()))).ToLowerInvariant();
-        var lines = credential.RecoveryCodesHash
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .ToList();
-        int matchIndex = lines.FindIndex(l => string.Equals(l, submittedHash, StringComparison.Ordinal));
-        if (matchIndex < 0)
+        if (!credential.TryConsumeRecoveryCode(submittedHash, clock.UtcNow))
         {
             return Result.Failure(TotpErrors.InvalidRecoveryCode);
         }
 
-        lines[matchIndex] = $"used:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-        credential.RecordRecoveryCodeUsed(string.Join('\n', lines), clock.UtcNow);
         await unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
@@ -934,9 +928,7 @@ public sealed class FakeTotpService(
             return new TotpStatus(false, true, null, 0);
         }
 
-        int remaining = credential.RecoveryCodesHash
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Count(l => !l.StartsWith("used:", StringComparison.Ordinal));
+        int remaining = credential.RemainingRecoveryCodes;
         return new TotpStatus(true, false, credential.ConfirmedAt, remaining);
     }
 }

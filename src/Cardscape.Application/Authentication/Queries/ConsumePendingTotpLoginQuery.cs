@@ -57,6 +57,6 @@ public static class ConsumePendingTotpLoginQueryHandler
         var access = tokens.IssueAccessToken(user, ["user"]);
         return Result.Success(new AuthResponse(
             AccessToken: access,
-            User: new UserSummary(user.Id.Value, user.Email.Value, user.DisplayName.Value)));
+            User: UserSummary.From(user)));
     }
 }

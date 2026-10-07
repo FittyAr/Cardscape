@@ -1,3 +1,5 @@
+using Cardscape.Domain.Members;
+
 namespace Cardscape.Application.Authentication.DTOs;
 
 /// <summary>Payload for registering a new user.</summary>
@@ -22,4 +24,7 @@ public sealed record AuthResponse(
     string? PendingTotpToken = null);
 
 /// <summary>Compact user projection returned alongside auth responses.</summary>
-public sealed record UserSummary(Guid Id, string Email, string DisplayName);
+public sealed record UserSummary(Guid Id, string Email, string DisplayName)
+{
+    public static UserSummary From(User user) => new(user.Id.Value, user.Email.Value, user.DisplayName.Value);
+}

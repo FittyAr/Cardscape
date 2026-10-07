@@ -107,17 +107,11 @@ public sealed class GoogleCalendarConnection : AggregateRoot<GoogleCalendarConne
         UpdatedAt = at;
     }
 
-    public string? FindEventId(Guid cardId)
-    {
-        Dictionary<Guid, string>? mappings = JsonSerializer.Deserialize<Dictionary<Guid, string>>(
-            EventMappingsJson);
-        return mappings?.GetValueOrDefault(cardId);
-    }
+    public string? FindEventId(Guid cardId) => ReadEventMappings().GetValueOrDefault(cardId);
 
     public void SetEventId(Guid cardId, string eventId, DateTimeOffset at)
     {
-        Dictionary<Guid, string> mappings = JsonSerializer.Deserialize<Dictionary<Guid, string>>(
-            EventMappingsJson) ?? [];
+        Dictionary<Guid, string> mappings = ReadEventMappings();
         mappings[cardId] = eventId;
         EventMappingsJson = JsonSerializer.Serialize(mappings);
         UpdatedAt = at;
@@ -125,8 +119,7 @@ public sealed class GoogleCalendarConnection : AggregateRoot<GoogleCalendarConne
 
     public void RemoveEventId(Guid cardId, DateTimeOffset at)
     {
-        Dictionary<Guid, string> mappings = JsonSerializer.Deserialize<Dictionary<Guid, string>>(
-            EventMappingsJson) ?? [];
+        Dictionary<Guid, string> mappings = ReadEventMappings();
         if (mappings.Remove(cardId))
         {
             EventMappingsJson = JsonSerializer.Serialize(mappings);
@@ -144,4 +137,7 @@ public sealed class GoogleCalendarConnection : AggregateRoot<GoogleCalendarConne
         UpdatedAt = at;
         AddDomainEvent(new GoogleCalendarConnectionRevoked(Id, UserId, at));
     }
+
+    private Dictionary<Guid, string> ReadEventMappings() =>
+        JsonSerializer.Deserialize<Dictionary<Guid, string>>(EventMappingsJson) ?? [];
 }

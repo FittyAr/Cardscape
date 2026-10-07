@@ -15,6 +15,7 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Comments;
+using Cardscape.Domain.Common;
 using Cardscape.Domain.Idempotency;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
@@ -44,7 +45,7 @@ public static partial class InfrastructureServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var provider = configuration["Database:Provider"] ?? "Sqlite";
+        DatabaseProvider provider = DatabaseProvider.Parse(configuration["Database:Provider"]);
         var connectionString = configuration.GetConnectionString("Default")
             ?? throw new InvalidOperationException(
                 "ConnectionStrings:Default is required.");
@@ -55,31 +56,7 @@ public static partial class InfrastructureServiceCollectionExtensions
             // Enforce alignment explicitly: provider defaults differ (ADR 0013).
             options.ConfigureWarnings(w => w.Throw(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
-            switch (provider.ToLowerInvariant())
-            {
-                case "sqlite":
-                    options.UseSqlite(connectionString, b => b.MigrationsAssembly("Cardscape.Infrastructure"));
-                    break;
-                case "postgresql":
-                case "postgres":
-                case "npgsql":
-                    options.UseNpgsql(connectionString,
-                        postgres => postgres.MigrationsAssembly("Cardscape.Migrations.PostgreSql"));
-                    break;
-                case "mysql":
-                    options.UseMySQL(connectionString,
-                        mySql => mySql.MigrationsAssembly("Cardscape.Migrations.MySql"));
-                    break;
-                case "mariadb":
-                    // MariaDB is a distinct engine/provider, not an Oracle MySQL alias (ADR 0013).
-                    options.UseMySql(connectionString, new MariaDbServerVersion(new Version(11, 4, 0)),
-                        mariaDb => mariaDb.MigrationsAssembly("Cardscape.Migrations.MariaDb"));
-                    break;
-                default:
-                    throw new InvalidOperationException(
-                        $"Unsupported database provider: {provider}. " +
-                        "Use Sqlite, PostgreSQL, MySql, or MariaDB.");
-            }
+            options.UseCardscapeDatabase(provider, connectionString);
         });
 
         services.AddScoped<DomainEventsInterceptor>();
@@ -118,64 +95,35 @@ public static partial class InfrastructureServiceCollectionExtensions
             IDomainEventBroadcaster,
             Cardscape.Application.Automation.AutomationEventBroadcaster>();
 
-        services.AddScoped<IRepository<User, UserId>, UserRepository>();
-        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddRepository<UserRepository, User, UserId, IUserRepository>();
 
-        services.AddScoped<WorkspaceRepository>();
-        services.AddScoped<IRepository<Workspace, WorkspaceId>, WorkspaceRepository>(sp => sp.GetRequiredService<WorkspaceRepository>());
-        services.AddScoped<IWorkspaceRepository, WorkspaceRepository>(sp => sp.GetRequiredService<WorkspaceRepository>());
+        services.AddRepository<WorkspaceRepository, Workspace, WorkspaceId, IWorkspaceRepository>();
 
-        services.AddScoped<BoardRepository>();
-        services.AddScoped<IRepository<Board, BoardId>, BoardRepository>(sp => sp.GetRequiredService<BoardRepository>());
-        services.AddScoped<IBoardRepository, BoardRepository>(sp => sp.GetRequiredService<BoardRepository>());
+        services.AddRepository<BoardRepository, Board, BoardId, IBoardRepository>();
 
-        services.AddScoped<BoardListRepository>();
-        services.AddScoped<IRepository<BoardList, BoardListId>, BoardListRepository>(sp => sp.GetRequiredService<BoardListRepository>());
-        services.AddScoped<IBoardListRepository, BoardListRepository>(sp => sp.GetRequiredService<BoardListRepository>());
+        services.AddRepository<BoardListRepository, BoardList, BoardListId, IBoardListRepository>();
 
-        services.AddScoped<CardRepository>();
-        services.AddScoped<IRepository<Card, CardId>, CardRepository>(sp => sp.GetRequiredService<CardRepository>());
-        services.AddScoped<ICardRepository, CardRepository>(sp => sp.GetRequiredService<CardRepository>());
+        services.AddRepository<CardRepository, Card, CardId, ICardRepository>();
 
-        services.AddScoped<LabelRepository>();
-        services.AddScoped<IRepository<Label, LabelId>, LabelRepository>(sp => sp.GetRequiredService<LabelRepository>());
-        services.AddScoped<ILabelRepository, LabelRepository>(sp => sp.GetRequiredService<LabelRepository>());
+        services.AddRepository<LabelRepository, Label, LabelId, ILabelRepository>();
 
-        services.AddScoped<CommentRepository>();
-        services.AddScoped<IRepository<Comment, CommentId>, CommentRepository>(sp => sp.GetRequiredService<CommentRepository>());
-        services.AddScoped<ICommentRepository, CommentRepository>(sp => sp.GetRequiredService<CommentRepository>());
+        services.AddRepository<CommentRepository, Comment, CommentId, ICommentRepository>();
 
-        services.AddScoped<NotificationRepository>();
-        services.AddScoped<IRepository<Notification, NotificationId>, NotificationRepository>(sp => sp.GetRequiredService<NotificationRepository>());
-        services.AddScoped<INotificationRepository, NotificationRepository>(sp => sp.GetRequiredService<NotificationRepository>());
+        services.AddRepository<NotificationRepository, Notification, NotificationId, INotificationRepository>();
 
-        services.AddScoped<ActivityRepository>();
-        services.AddScoped<IRepository<Activity, ActivityId>, ActivityRepository>(sp => sp.GetRequiredService<ActivityRepository>());
-        services.AddScoped<IActivityRepository, ActivityRepository>(sp => sp.GetRequiredService<ActivityRepository>());
+        services.AddRepository<ActivityRepository, Activity, ActivityId, IActivityRepository>();
 
-        services.AddScoped<ApiTokenRepository>();
-        services.AddScoped<IRepository<ApiToken, ApiTokenId>, ApiTokenRepository>(sp => sp.GetRequiredService<ApiTokenRepository>());
-        services.AddScoped<IApiTokenRepository, ApiTokenRepository>(sp => sp.GetRequiredService<ApiTokenRepository>());
+        services.AddRepository<ApiTokenRepository, ApiToken, ApiTokenId, IApiTokenRepository>();
 
-        services.AddScoped<UserPreferencesRepository>();
-        services.AddScoped<IRepository<Cardscape.Domain.UserPreferences.UserPreferences, UserId>, UserPreferencesRepository>(sp => sp.GetRequiredService<UserPreferencesRepository>());
-        services.AddScoped<IUserPreferencesRepository, UserPreferencesRepository>(sp => sp.GetRequiredService<UserPreferencesRepository>());
+        services.AddRepository<UserPreferencesRepository, Cardscape.Domain.UserPreferences.UserPreferences, UserId, IUserPreferencesRepository>();
 
-        services.AddScoped<WorkspaceInvitationRepository>();
-        services.AddScoped<IRepository<WorkspaceInvitation, WorkspaceInvitationId>, WorkspaceInvitationRepository>(sp => sp.GetRequiredService<WorkspaceInvitationRepository>());
-        services.AddScoped<IWorkspaceInvitationRepository, WorkspaceInvitationRepository>(sp => sp.GetRequiredService<WorkspaceInvitationRepository>());
+        services.AddRepository<WorkspaceInvitationRepository, WorkspaceInvitation, WorkspaceInvitationId, IWorkspaceInvitationRepository>();
 
-        services.AddScoped<AutomationRuleRepository>();
-        services.AddScoped<IRepository<BoardAutomationRule, BoardAutomationRuleId>, AutomationRuleRepository>(sp => sp.GetRequiredService<AutomationRuleRepository>());
-        services.AddScoped<IAutomationRuleRepository, AutomationRuleRepository>(sp => sp.GetRequiredService<AutomationRuleRepository>());
+        services.AddRepository<AutomationRuleRepository, BoardAutomationRule, BoardAutomationRuleId, IAutomationRuleRepository>();
 
-        services.AddScoped<BoardExtensionRepository>();
-        services.AddScoped<IRepository<BoardExtension, BoardExtensionId>, BoardExtensionRepository>(sp => sp.GetRequiredService<BoardExtensionRepository>());
-        services.AddScoped<IBoardExtensionRepository, BoardExtensionRepository>(sp => sp.GetRequiredService<BoardExtensionRepository>());
+        services.AddRepository<BoardExtensionRepository, BoardExtension, BoardExtensionId, IBoardExtensionRepository>();
 
-        services.AddScoped<BackgroundJobRepository>();
-        services.AddScoped<IRepository<BackgroundJob, BackgroundJobId>, BackgroundJobRepository>(sp => sp.GetRequiredService<BackgroundJobRepository>());
-        services.AddScoped<IBackgroundJobStore, BackgroundJobRepository>(sp => sp.GetRequiredService<BackgroundJobRepository>());
+        services.AddRepository<BackgroundJobRepository, BackgroundJob, BackgroundJobId, IBackgroundJobStore>();
 
         // BETA-4-#1 — see test-results/BETA-TEST-REPORT.md.
         //
@@ -192,13 +140,9 @@ public static partial class InfrastructureServiceCollectionExtensions
         // BoardUpdated domain event. The same fix applies to
         // WebhookDeliveryRepository — both repositories sit
         // behind the broadcaster and both were unregistered.
-        services.AddScoped<WebhookEndpointRepository>();
-        services.AddScoped<IRepository<WebhookEndpoint, WebhookEndpointId>, WebhookEndpointRepository>(sp => sp.GetRequiredService<WebhookEndpointRepository>());
-        services.AddScoped<IWebhookEndpointRepository, WebhookEndpointRepository>(sp => sp.GetRequiredService<WebhookEndpointRepository>());
+        services.AddRepository<WebhookEndpointRepository, WebhookEndpoint, WebhookEndpointId, IWebhookEndpointRepository>();
 
-        services.AddScoped<WebhookDeliveryRepository>();
-        services.AddScoped<IRepository<WebhookDelivery, WebhookDeliveryId>, WebhookDeliveryRepository>(sp => sp.GetRequiredService<WebhookDeliveryRepository>());
-        services.AddScoped<IWebhookDeliveryRepository, WebhookDeliveryRepository>(sp => sp.GetRequiredService<WebhookDeliveryRepository>());
+        services.AddRepository<WebhookDeliveryRepository, WebhookDelivery, WebhookDeliveryId, IWebhookDeliveryRepository>();
 
         services.AddScoped<IBackgroundJobScheduler, BackgroundJobScheduler>();
         services.AddSingleton<IBackgroundJobHandlerRegistry, BackgroundJobHandlerRegistry>();
@@ -208,10 +152,7 @@ public static partial class InfrastructureServiceCollectionExtensions
             client.Timeout = WebhookDeliveryHandler.RequestTimeout;
             client.DefaultRequestHeaders.UserAgent.Add(
                 new System.Net.Http.Headers.ProductInfoHeaderValue("Cardscape-Webhooks", "1.0"));
-        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-            AllowAutoRedirect = false
-        });
+        }).WithoutAutoRedirect();
         // BETA-A7-009 — see test-results/beta/reports/A7-advanced.md.
         // The webhook delivery handler is responsible for POSTing the
         // queued payload to the user's endpoint with the HMAC-SHA256
@@ -258,58 +199,36 @@ public static partial class InfrastructureServiceCollectionExtensions
             .ValidateOnStart();
         services.AddHostedService<Cardscape.Infrastructure.Hosting.RevocationSweeper>();
 
-        services.AddScoped<CustomFieldDefinitionRepository>();
-        services.AddScoped<IRepository<CustomFieldDefinition, CustomFieldDefinitionId>, CustomFieldDefinitionRepository>(sp => sp.GetRequiredService<CustomFieldDefinitionRepository>());
-        services.AddScoped<ICustomFieldDefinitionRepository, CustomFieldDefinitionRepository>(sp => sp.GetRequiredService<CustomFieldDefinitionRepository>());
+        services.AddRepository<CustomFieldDefinitionRepository, CustomFieldDefinition, CustomFieldDefinitionId, ICustomFieldDefinitionRepository>();
 
-        services.AddScoped<CustomFieldValueRepository>();
-        services.AddScoped<IRepository<CustomFieldValue, CustomFieldValueId>, CustomFieldValueRepository>(sp => sp.GetRequiredService<CustomFieldValueRepository>());
-        services.AddScoped<ICustomFieldValueRepository, CustomFieldValueRepository>(sp => sp.GetRequiredService<CustomFieldValueRepository>());
+        services.AddRepository<CustomFieldValueRepository, CustomFieldValue, CustomFieldValueId, ICustomFieldValueRepository>();
 
-        services.AddScoped<CardVoteRepository>();
-        services.AddScoped<IRepository<CardVote, CardVoteId>, CardVoteRepository>(sp => sp.GetRequiredService<CardVoteRepository>());
-        services.AddScoped<ICardVoteRepository, CardVoteRepository>(sp => sp.GetRequiredService<CardVoteRepository>());
+        services.AddRepository<CardVoteRepository, CardVote, CardVoteId, ICardVoteRepository>();
 
-        services.AddScoped<ChecklistRepository>();
-        services.AddScoped<IRepository<Checklist, ChecklistId>, ChecklistRepository>(sp => sp.GetRequiredService<ChecklistRepository>());
-        services.AddScoped<IChecklistRepository, ChecklistRepository>(sp => sp.GetRequiredService<ChecklistRepository>());
+        services.AddRepository<ChecklistRepository, Checklist, ChecklistId, IChecklistRepository>();
 
-        services.AddScoped<ChecklistItemRepository>();
-        services.AddScoped<IRepository<ChecklistItem, ChecklistItemId>, ChecklistItemRepository>(sp => sp.GetRequiredService<ChecklistItemRepository>());
-        services.AddScoped<IChecklistItemRepository, ChecklistItemRepository>(sp => sp.GetRequiredService<ChecklistItemRepository>());
+        services.AddRepository<ChecklistItemRepository, ChecklistItem, ChecklistItemId, IChecklistItemRepository>();
 
         // BUG-A5-002 — the attachments table was defined only on
         // the domain side before this pass; the repository and
         // DbSet mapping are added in the same commit so the new
         // direct-upload endpoints can persist their metadata.
-        services.AddScoped<AttachmentRepository>();
-        services.AddScoped<IRepository<Attachment, AttachmentId>, AttachmentRepository>(sp => sp.GetRequiredService<AttachmentRepository>());
-        services.AddScoped<IAttachmentRepository, AttachmentRepository>(sp => sp.GetRequiredService<AttachmentRepository>());
+        services.AddRepository<AttachmentRepository, Attachment, AttachmentId, IAttachmentRepository>();
 
-        services.AddScoped<CardRecurrenceRepository>();
-        services.AddScoped<IRepository<CardRecurrence, CardRecurrenceId>, CardRecurrenceRepository>(sp => sp.GetRequiredService<CardRecurrenceRepository>());
-        services.AddScoped<ICardRecurrenceRepository, CardRecurrenceRepository>(sp => sp.GetRequiredService<CardRecurrenceRepository>());
+        services.AddRepository<CardRecurrenceRepository, CardRecurrence, CardRecurrenceId, ICardRecurrenceRepository>();
 
         services.AddScoped<ICardAgingSettingsRepository, CardAgingSettingsRepository>();
         services.AddScoped<ICardSnoozeRepository, CardSnoozeRepository>();
         services.AddScoped<ICardMirrorRepository, CardMirrorRepository>();
 
-        services.AddScoped<IdempotencyKeyRepository>();
-        services.AddScoped<IRepository<IdempotencyKey, IdempotencyKeyId>, IdempotencyKeyRepository>(sp => sp.GetRequiredService<IdempotencyKeyRepository>());
-        services.AddScoped<IIdempotencyKeyStore, IdempotencyKeyRepository>(sp => sp.GetRequiredService<IdempotencyKeyRepository>());
+        services.AddRepository<IdempotencyKeyRepository, IdempotencyKey, IdempotencyKeyId, IIdempotencyKeyStore>();
 
-        services.AddScoped<ExternalLoginRepository>();
-        services.AddScoped<IRepository<ExternalLogin, ExternalLoginId>, ExternalLoginRepository>(sp => sp.GetRequiredService<ExternalLoginRepository>());
-        services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>(sp => sp.GetRequiredService<ExternalLoginRepository>());
+        services.AddRepository<ExternalLoginRepository, ExternalLogin, ExternalLoginId, IExternalLoginRepository>();
         services.AddScoped<IExternalLoginService, ExternalLoginService>();
 
-        services.AddScoped<TotpCredentialRepository>();
-        services.AddScoped<IRepository<TotpCredential, TotpCredentialId>, TotpCredentialRepository>(sp => sp.GetRequiredService<TotpCredentialRepository>());
-        services.AddScoped<ITotpCredentialRepository, TotpCredentialRepository>(sp => sp.GetRequiredService<TotpCredentialRepository>());
+        services.AddRepository<TotpCredentialRepository, TotpCredential, TotpCredentialId, ITotpCredentialRepository>();
 
-        services.AddScoped<PasswordResetRepository>();
-        services.AddScoped<IRepository<PasswordReset, PasswordResetId>, PasswordResetRepository>(sp => sp.GetRequiredService<PasswordResetRepository>());
-        services.AddScoped<IPasswordResetRepository, PasswordResetRepository>(sp => sp.GetRequiredService<PasswordResetRepository>());
+        services.AddRepository<PasswordResetRepository, PasswordReset, PasswordResetId, IPasswordResetRepository>();
         services.AddScoped<ITotpService, TotpService>();
 
         AddSecurityInfrastructure(services, configuration);
@@ -317,5 +236,27 @@ public static partial class InfrastructureServiceCollectionExtensions
         AddFeatureInfrastructure(services, configuration);
 
         return services;
+    }
+
+    extension(IServiceCollection services)
+    {
+        /// <summary>
+        /// Registers <typeparamref name="TRepository"/> once per scope and
+        /// forwards both the generic <see cref="IRepository{TAggregate, TId}"/>
+        /// and the aggregate-specific <typeparamref name="TContract"/> to that
+        /// same instance, so a handler that asks for either shares one change
+        /// tracker view.
+        /// </summary>
+        private IServiceCollection AddRepository<TRepository, TAggregate, TId, TContract>()
+            where TRepository : class, IRepository<TAggregate, TId>, TContract
+            where TAggregate : Entity<TId>
+            where TId : notnull
+            where TContract : class
+        {
+            services.AddScoped<TRepository>();
+            services.AddScoped<IRepository<TAggregate, TId>>(sp => sp.GetRequiredService<TRepository>());
+            services.AddScoped<TContract>(sp => sp.GetRequiredService<TRepository>());
+            return services;
+        }
     }
 }

@@ -50,7 +50,7 @@ public static class LoginUserQueryHandler
         IPendingTotpLoginStore pendingLogins,
         CancellationToken cancellationToken)
     {
-        var email = query.Email?.Trim().ToLowerInvariant() ?? string.Empty;
+        var email = EmailAddress.Normalize(query.Email);
 
         var user = await users.FindByEmailAsync(email, cancellationToken);
 
@@ -104,13 +104,13 @@ public static class LoginUserQueryHandler
         var access = tokens.IssueAccessToken(user, ["user"]);
         return new AuthResponse(
             AccessToken: access,
-            User: new UserSummary(user.Id.Value, user.Email.Value, user.DisplayName.Value));
+            User: UserSummary.From(user));
     }
 
     private static AuthResponse BuildChallenge(User user, string pendingToken) =>
         new(
             AccessToken: null,
-            User: new UserSummary(user.Id.Value, user.Email.Value, user.DisplayName.Value),
+            User: UserSummary.From(user),
             RequiresTotp: true,
             PendingTotpToken: pendingToken);
 }

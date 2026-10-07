@@ -48,7 +48,7 @@ public sealed class RedisRateLimiter(
     /// Returns a 3-element array: {allowed (0/1), remaining
     /// tokens (float), retry-after (seconds, 0 when allowed)}.
     /// </summary>
-    private static readonly LuaScript RefillAndConsumeScript = LuaScript.Prepare(@"
+    private static readonly LuaScript RefillAndConsumeScript = LuaScript.Prepare("""
 local key = KEYS[1]
 local now = tonumber(@now)
 local argBurst = tonumber(@burst)
@@ -108,7 +108,7 @@ else
   redis.call('HSET', key, 'tokens', tostring(tokens), 'lastRefill', tostring(now), 'configuredBurst', tostring(configuredBurst), 'configuredRate', tostring(configuredRate))
   return {0, tostring(tokens), retryAfter}
 end
-");
+""");
 
     public RateLimitDecision TryAcquire(Guid tokenId, DateTimeOffset at)
     {

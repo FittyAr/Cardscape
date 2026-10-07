@@ -11,39 +11,13 @@ public sealed class DesignTimeCardscapeDbContextFactory : IDesignTimeDbContextFa
 {
     public CardscapeDbContext CreateDbContext(string[] args)
     {
-        var provider = Environment.GetEnvironmentVariable("Database__Provider") ?? "Sqlite";
-        var configuredConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Default");
+        DatabaseProvider provider = DatabaseProvider.Parse(Environment.GetEnvironmentVariable("Database__Provider"));
+        string connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Default")
+            ?? provider.DesignTimeConnectionString;
 
         var builder = new DbContextOptionsBuilder<CardscapeDbContext>();
         builder.ConfigureWarnings(w => w.Throw(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-
-        switch (provider.ToLowerInvariant())
-        {
-            case "sqlite":
-                builder.UseSqlite(configuredConnectionString ?? "Data Source=Data/cardscape.db",
-                    b => b.MigrationsAssembly("Cardscape.Infrastructure"));
-                break;
-            case "postgresql":
-            case "postgres":
-            case "npgsql":
-                builder.UseNpgsql(configuredConnectionString
-                    ?? "Host=localhost;Database=cardscape;Username=cardscape;Password=cardscape",
-                    b => b.MigrationsAssembly("Cardscape.Migrations.PostgreSql"));
-                break;
-            case "mysql":
-                builder.UseMySQL(configuredConnectionString
-                    ?? "server=localhost;database=cardscape;user=cardscape;password=cardscape",
-                    b => b.MigrationsAssembly("Cardscape.Migrations.MySql"));
-                break;
-            case "mariadb":
-                builder.UseMySql(configuredConnectionString
-                    ?? "server=localhost;database=cardscape;user=cardscape;password=cardscape",
-                    new MariaDbServerVersion(new Version(11, 4, 0)),
-                    b => b.MigrationsAssembly("Cardscape.Migrations.MariaDb"));
-                break;
-            default:
-                throw new InvalidOperationException($"Unsupported database provider: {provider}");
-        }
+        builder.UseCardscapeDatabase(provider, connectionString);
 
         return new CardscapeDbContext(builder.Options);
     }

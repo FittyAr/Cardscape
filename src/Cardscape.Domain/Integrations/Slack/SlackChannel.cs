@@ -86,120 +86,22 @@ public sealed class SlackChannel : AggregateRoot<SlackChannelId>
                 "Slack channel name must be 200 characters or fewer."));
         }
 
-        if (events is null)
+        Result<string> subscription = SlackEventTypes.Catalog.ToSubscription(events);
+        if (subscription.IsFailure)
         {
-            return Result.Failure<SlackChannel>(DomainError.Validation(
-                "slack.events_required", "At least one event type is required."));
-        }
-
-        HashSet<string> normalised = new(StringComparer.OrdinalIgnoreCase);
-        foreach (string e in events)
-        {
-            if (string.IsNullOrWhiteSpace(e))
-            {
-                continue;
-            }
-
-            string trimmed = e.Trim().ToLowerInvariant();
-            if (!SlackEventTypes.IsKnown(trimmed))
-            {
-                return Result.Failure<SlackChannel>(DomainError.Validation(
-                    "slack.event_unknown",
-                    $"Unknown Slack event type '{e}'. Allowed: "
-                    + string.Join(", ", SlackEventTypes.All)));
-            }
-
-            normalised.Add(trimmed);
-        }
-
-        if (normalised.Count == 0)
-        {
-            return Result.Failure<SlackChannel>(DomainError.Validation(
-                "slack.events_required", "At least one event type is required."));
+            return Result.Failure<SlackChannel>(subscription.Error);
         }
 
         return Result.Success(new SlackChannel(
             id, slackWorkspaceId, boardId,
             channelId.Trim(), channelName.Trim().TrimStart('#'),
-            string.Join(",", normalised.OrderBy(s => s, StringComparer.Ordinal)),
+            subscription.Value,
             at));
-    }
-
-    /// <summary>Replaces the subscribed event list. The list is
-    /// canonicalised (lowercase, deduped, sorted) before storing.</summary>
-    public Result ChangeEvents(IEnumerable<string> newEvents)
-    {
-        if (newEvents is null)
-        {
-            return Result.Failure(DomainError.Validation(
-                "slack.events_required", "At least one event type is required."));
-        }
-
-        HashSet<string> normalised = new(StringComparer.OrdinalIgnoreCase);
-        foreach (string e in newEvents)
-        {
-            if (string.IsNullOrWhiteSpace(e))
-            {
-                continue;
-            }
-
-            string trimmed = e.Trim().ToLowerInvariant();
-            if (!SlackEventTypes.IsKnown(trimmed))
-            {
-                return Result.Failure(DomainError.Validation(
-                    "slack.event_unknown",
-                    $"Unknown Slack event type '{e}'. Allowed: "
-                    + string.Join(", ", SlackEventTypes.All)));
-            }
-
-            normalised.Add(trimmed);
-        }
-
-        if (normalised.Count == 0)
-        {
-            return Result.Failure(DomainError.Validation(
-                "slack.events_required", "At least one event type is required."));
-        }
-
-        Events = string.Join(",", normalised.OrderBy(s => s, StringComparer.Ordinal));
-        return Result.Success();
-    }
-
-    /// <summary>Renames the channel. The id stays the same; the
-    /// display name is updated in the local store only (the caller
-    /// is responsible for renaming the channel in Slack itself).</summary>
-    public Result Rename(string newName)
-    {
-        if (string.IsNullOrWhiteSpace(newName))
-        {
-            return Result.Failure(DomainError.Validation(
-                "slack.channel_name_required", "Slack channel name is required."));
-        }
-
-        if (newName.Length > 200)
-        {
-            return Result.Failure(DomainError.Validation(
-                "slack.channel_name_too_long",
-                "Slack channel name must be 200 characters or fewer."));
-        }
-
-        string trimmed = newName.Trim().TrimStart('#');
-        if (trimmed == ChannelName)
-        {
-            return Result.Success();
-        }
-
-        ChannelName = trimmed;
-        return Result.Success();
     }
 
     /// <summary>True if this mapping subscribes to the given event.</summary>
     public bool SubscribesTo(string eventType) =>
-        !string.IsNullOrWhiteSpace(eventType)
-        && !string.IsNullOrEmpty(Events)
-        && Events
-            .Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Any(e => string.Equals(e, eventType, StringComparison.OrdinalIgnoreCase));
+        EventCatalog.Includes(Events, eventType);
 
     /// <summary>Disables the mapping without deleting it. Idempotent.</summary>
     public void Deactivate(DateTimeOffset at)

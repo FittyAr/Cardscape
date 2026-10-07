@@ -1,3 +1,4 @@
+using Cardscape.Domain.Boards;
 using FluentValidation;
 
 namespace Cardscape.Application.Automation.Validations;
@@ -20,7 +21,7 @@ public sealed class CreateBoardAutomationRuleCommandValidator
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MaximumLength(120);
+            .MaximumLength(BoardAutomationRule.NameMaxLength);
 
         RuleFor(x => x.Trigger)
             .Must(Enum.IsDefined)

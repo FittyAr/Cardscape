@@ -61,9 +61,6 @@ public static class ResolveExternalLoginCommandHandler
         var access = tokens.IssueAccessToken(user, ["user"]);
         return Result.Success(new AuthResponse(
             access,
-            new UserSummary(
-                user.Id.Value,
-                user.Email.Value,
-                user.DisplayName.Value)));
+            UserSummary.From(user)));
     }
 }

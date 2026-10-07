@@ -48,7 +48,7 @@ public sealed class Comment : AggregateRoot<CommentId>
             return Result.Failure(Errors.CommentErrors.Forbidden);
         }
 
-        if (newBody.Value == Body.Value)
+        if (newBody == Body)
         {
             return Result.Success();
         }

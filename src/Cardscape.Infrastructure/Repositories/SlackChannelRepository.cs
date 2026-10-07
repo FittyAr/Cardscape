@@ -14,17 +14,10 @@ public sealed class SlackChannelRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<SlackChannel>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {
-        IQueryable<SlackChannel> query = Db.Set<SlackChannel>()
+        IQueryable<SlackChannel> query = Set
             .AsNoTracking()
             .Where(channel => channel.BoardId == boardId && !channel.IsDeleted);
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderBy(channel => channel.CreatedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, channel => channel.CreatedAt, ct: ct);
     }
 
     public async Task<IReadOnlyList<SlackChannel>> ListActiveSubscribersAsync(
@@ -38,7 +31,7 @@ public sealed class SlackChannelRepository(CardscapeDbContext db)
         // Events is a comma-delimited exact-token contract. EF string
         // matching would admit partial tokens, so only this final predicate
         // remains in memory after the indexed board/active filter runs in SQL.
-        var candidates = await Db.Set<SlackChannel>()
+        var candidates = await Set
             .AsNoTracking()
             .Where(channel => channel.BoardId == boardId && !channel.IsDeleted && channel.Active)
             .ToListAsync(ct);

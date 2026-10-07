@@ -6,6 +6,7 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Webhooks;
+using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Webhooks;
 using Cardscape.Infrastructure.Logging;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +34,6 @@ public sealed class WebhookDeliveryHandler(
 
     public string Type => WebhookJobTypes.DeliverWebhook;
 
-    private static readonly JsonSerializerOptions LogJsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task HandleAsync(Guid jobId, JsonElement payload, CancellationToken ct)
     {
@@ -162,7 +162,7 @@ public sealed class WebhookDeliveryHandler(
             // The BackgroundJob has its own Attempts counter; we
             // share the same 5-attempt cap so a delivery's audit
             // trail matches the underlying job's lifecycle.
-            bool willDeadLetter = delivery.AttemptCount + 1 >= BackgroundJobMaxAttempts;
+            bool willDeadLetter = delivery.AttemptCount + 1 >= BackgroundJob.DefaultMaxAttempts;
             string failureKind = ex.GetType().Name;
             string persistedFailure = $"Delivery failed ({failureKind}).";
             if (willDeadLetter)
@@ -181,11 +181,6 @@ public sealed class WebhookDeliveryHandler(
         }
     }
 
-    /// <summary>Mirror of <c>BackgroundJob.MaxAttempts</c> default.
-    /// Kept in sync by convention; the BackgroundJob dispatcher
-    /// is the source of truth for the actual retry budget.</summary>
-    private const int BackgroundJobMaxAttempts = 5;
-
     /// <summary>HMAC-SHA256 of <paramref name="body"/> keyed by
     /// <paramref name="cleartextSecret"/>. Returned in the
     /// <c>X-Cardscape-Signature: sha256=&lt;hex&gt;</c> header
@@ -195,7 +190,7 @@ public sealed class WebhookDeliveryHandler(
         byte[] keyBytes = Encoding.UTF8.GetBytes(cleartextSecret);
         Span<byte> signature = stackalloc byte[32];
         HMACSHA256.HashData(keyBytes, body, signature);
-        return "sha256=" + Convert.ToHexString(signature).ToLowerInvariant();
+        return "sha256=" + Convert.ToHexStringLower(signature);
     }
 
     private static Guid ReadGuid(JsonElement payload, string name)

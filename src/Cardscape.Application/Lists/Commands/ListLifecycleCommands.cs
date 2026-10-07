@@ -39,14 +39,7 @@ public static class ArchiveListCommandHandler
         list.Archive(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new BoardListDto(
-            list.Id.Value,
-            list.BoardId.Value,
-            list.Name.Value,
-            list.Position.Value,
-            list.IsArchived,
-            list.CreatedAt,
-            0));
+        return Result.Success(BoardListDto.FromEntity(list));
     }
 }
 
@@ -81,13 +74,6 @@ public static class RestoreListCommandHandler
         list.Restore(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new BoardListDto(
-            list.Id.Value,
-            list.BoardId.Value,
-            list.Name.Value,
-            list.Position.Value,
-            list.IsArchived,
-            list.CreatedAt,
-            0));
+        return Result.Success(BoardListDto.FromEntity(list));
     }
 }
