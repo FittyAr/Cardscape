@@ -2,7 +2,6 @@ using Cardscape.Domain.Boards.Errors;
 using Cardscape.Domain.Boards.Events;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
-using static Cardscape.Domain.Boards.Errors.BoardErrors;
 
 namespace Cardscape.Domain.Boards;
 

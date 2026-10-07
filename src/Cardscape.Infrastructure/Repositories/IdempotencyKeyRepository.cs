@@ -54,7 +54,7 @@ public sealed class IdempotencyKeyRepository(CardscapeDbContext db)
     {
         ArgumentNullException.ThrowIfNull(responseJson);
         if (responseStatusCode is < 100 or > 599
-            || responseStatusCode == IdempotencyKey.ReservationStatusCode)
+            or IdempotencyKey.ReservationStatusCode)
         {
             throw new ArgumentOutOfRangeException(nameof(responseStatusCode));
         }
@@ -74,5 +74,4 @@ public sealed class IdempotencyKeyRepository(CardscapeDbContext db)
 
     public async Task ReleaseAsync(IdempotencyKeyId id, CancellationToken ct = default) =>
         _ = await Set.Where(record => record.Id == id).ExecuteDeleteAsync(ct);
-
 }

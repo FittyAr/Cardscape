@@ -17,15 +17,12 @@ namespace Cardscape.SecurityTests;
 /// tampering, and password storage.
 /// </summary>
 [Collection(SecurityApi.Name)]
-public sealed class AuthenticationSecurityTests
+public sealed class AuthenticationSecurityTests(SecurityTestsWebApplicationFactory factory)
 {
-    private readonly SecurityTestsWebApplicationFactory _factory;
-    public AuthenticationSecurityTests(SecurityTestsWebApplicationFactory factory) => _factory = factory;
-
     [Fact]
     public async Task Register_With_Weak_Password_Is_Rejected()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         var body = new
         {
             email = $"weak-{Guid.NewGuid():N}@cardscape.local",
@@ -44,7 +41,7 @@ public sealed class AuthenticationSecurityTests
     [Fact]
     public async Task Register_With_Empty_Password_Is_Rejected()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         var body = new
         {
             email = $"empty-{Guid.NewGuid():N}@cardscape.local",
@@ -61,7 +58,7 @@ public sealed class AuthenticationSecurityTests
     [Fact]
     public async Task Login_With_Tampered_Token_Is_Rejected()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         AuthResponse auth = await RegisterAsync(client,
             $"token-{Guid.NewGuid():N}@cardscape.local");
         string legit = auth.AccessToken ?? string.Empty;
@@ -76,7 +73,7 @@ public sealed class AuthenticationSecurityTests
     [Fact]
     public async Task Login_With_Expired_Token_Is_Rejected()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         string fakeExpiredToken = BuildFakeJwt(
             sub: Guid.NewGuid().ToString(),
             exp: DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeSeconds());
@@ -90,7 +87,7 @@ public sealed class AuthenticationSecurityTests
     [Fact]
     public async Task Bearer_Without_Scheme_Is_Rejected()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         AuthResponse auth = await RegisterAsync(client,
             $"scheme-{Guid.NewGuid():N}@cardscape.local");
         using var req = new HttpRequestMessage(HttpMethod.Get, "api/boards/");

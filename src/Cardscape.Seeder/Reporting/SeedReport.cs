@@ -17,10 +17,6 @@ public sealed class SeedReport
 
     private long _startedAtTicks;
     private long _finishedAtTicks;
-    private string _status = "Idle";
-    private int _currentStep;
-    private int _totalSteps;
-    private string? _currentStepName;
 
     public IReadOnlyCollection<SeedLogEntry> Entries => _entries.ToArray();
 
@@ -34,10 +30,10 @@ public sealed class SeedReport
             })
             .ToList();
 
-    public string Status => _status;
-    public int CurrentStep => _currentStep;
-    public int TotalSteps => _totalSteps;
-    public string? CurrentStepName => _currentStepName;
+    public string Status { get; private set; } = "Idle";
+    public int CurrentStep { get; private set; }
+    public int TotalSteps { get; private set; }
+    public string? CurrentStepName { get; private set; }
 
     public DateTimeOffset? StartedAt =>
         Interlocked.Read(ref _startedAtTicks) == 0
@@ -61,32 +57,32 @@ public sealed class SeedReport
         _tableMeta.Clear();
         Interlocked.Exchange(ref _startedAtTicks, 0);
         Interlocked.Exchange(ref _finishedAtTicks, 0);
-        _status = "Idle";
-        _currentStep = 0;
-        _totalSteps = 0;
-        _currentStepName = null;
+        Status = "Idle";
+        CurrentStep = 0;
+        TotalSteps = 0;
+        CurrentStepName = null;
     }
 
     public void MarkStarted(int totalSteps)
     {
         Interlocked.Exchange(ref _startedAtTicks, DateTimeOffset.UtcNow.UtcTicks);
         Interlocked.Exchange(ref _finishedAtTicks, 0);
-        _status = "Running";
-        _totalSteps = totalSteps;
-        _currentStep = 0;
-        _currentStepName = null;
+        Status = "Running";
+        TotalSteps = totalSteps;
+        CurrentStep = 0;
+        CurrentStepName = null;
     }
 
     public void MarkFinished(string status)
     {
         Interlocked.Exchange(ref _finishedAtTicks, DateTimeOffset.UtcNow.UtcTicks);
-        _status = status;
+        Status = status;
     }
 
     public void SetCurrentStep(int step, string name)
     {
-        _currentStep = step;
-        _currentStepName = name;
+        CurrentStep = step;
+        CurrentStepName = name;
     }
 
     public void Log(SeedLogEntry entry) => _entries.Enqueue(entry);

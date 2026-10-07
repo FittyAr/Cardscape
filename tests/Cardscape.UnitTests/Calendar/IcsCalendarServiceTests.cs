@@ -4,7 +4,6 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
-using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Calendar;
 using Cardscape.Tests.Common.Fakes;
 using Moq;

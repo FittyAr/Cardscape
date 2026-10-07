@@ -1,7 +1,6 @@
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Comments.Events;
 using Cardscape.Domain.Common;
-using static Cardscape.Domain.Comments.Errors.CommentErrors;
 
 namespace Cardscape.Domain.Comments;
 

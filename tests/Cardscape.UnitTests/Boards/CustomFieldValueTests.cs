@@ -1,10 +1,9 @@
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
-using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Boards;
 
-public class CustomFieldValueTests
+public sealed class CustomFieldValueTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);
 

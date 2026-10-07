@@ -1,5 +1,3 @@
-using Cardscape.Application.Automation;
-using Cardscape.Domain.Boards;
 using FluentValidation;
 
 namespace Cardscape.Application.Automation.Validations;

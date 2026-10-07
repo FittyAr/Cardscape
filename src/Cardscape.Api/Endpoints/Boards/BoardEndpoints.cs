@@ -3,10 +3,7 @@ using Cardscape.Application.Boards.DTOs;
 using Cardscape.Application.Boards.Queries;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Boards;
@@ -222,5 +219,4 @@ public static class BoardEndpoints
     public sealed record VisibilityRequest(BoardVisibility Visibility);
     public sealed record ColorRequest(string? Color);
     public sealed record AddBoardMemberBody(Guid UserId, BoardMemberRole Role);
-
 }

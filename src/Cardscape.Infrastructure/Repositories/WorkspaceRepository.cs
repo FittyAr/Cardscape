@@ -3,8 +3,6 @@ using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-
-
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class WorkspaceRepository(CardscapeDbContext db) : RepositoryBase<Workspace, WorkspaceId>(db), IWorkspaceRepository
@@ -28,7 +26,7 @@ public sealed class WorkspaceRepository(CardscapeDbContext db) : RepositoryBase<
             return [];
         }
 
-        HashSet<WorkspaceId> wanted = new(ids);
+        HashSet<WorkspaceId> wanted = [.. ids];
         return await Db.Set<Workspace>()
             .AsNoTracking()
             .Where(workspace => wanted.Contains(workspace.Id))

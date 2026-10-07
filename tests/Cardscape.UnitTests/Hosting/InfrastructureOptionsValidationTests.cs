@@ -5,7 +5,6 @@ using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Hosting;
 using Cardscape.Infrastructure.Security;
 using Cardscape.Tests.Common.Fakes;
-using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

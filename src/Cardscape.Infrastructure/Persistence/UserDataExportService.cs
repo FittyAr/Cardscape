@@ -186,7 +186,7 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
             AuthoredCards: cards,
             AuthoredComments: comments,
             ActivityFeedEntries: activities,
-            AuditLogEntries: Array.Empty<UserExportAuditDto>(),
+            AuditLogEntries: [],
             ApiTokens: apiTokens,
             OAuthApps: oauthApps,
             Integrations: integrations,

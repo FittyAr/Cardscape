@@ -16,7 +16,7 @@ namespace Cardscape.IntegrationTests.Endpoints;
 /// <see cref="CardscapeWebApplicationFactory.DeploymentRegion"/>
 /// override doesn't leak across test classes.
 /// </summary>
-public class RegionEndpointTests : IClassFixture<CardscapeWebApplicationFactory>
+public sealed class RegionEndpointTests : IClassFixture<CardscapeWebApplicationFactory>
 {
     private readonly CardscapeWebApplicationFactory _factory;
 

@@ -2,9 +2,6 @@ using Cardscape.Application.Comments.Commands;
 using Cardscape.Application.Comments.DTOs;
 using Cardscape.Application.Comments.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Comments;
@@ -46,5 +43,4 @@ public static class CommentEndpoints
 
     public sealed record AddCommentBody(string Body);
     public sealed record EditCommentBody(string NewBody);
-
 }

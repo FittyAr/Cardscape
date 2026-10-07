@@ -1,9 +1,8 @@
-using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
 
 namespace Cardscape.UnitTests.Domain.ValueObjects;
 
-public class LabelNameTests
+public sealed class LabelNameTests
 {
     [Theory]
     [InlineData("urgent")]

@@ -9,7 +9,7 @@ using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Application.Handlers;
 
-public class CopyCardAndListCommandHandlerTests
+public sealed class CopyCardAndListCommandHandlerTests
 {
     private sealed record Scenario(
         HandlersTestContext Ctx,

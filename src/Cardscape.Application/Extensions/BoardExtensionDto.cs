@@ -1,9 +1,4 @@
-using Cardscape.Application.Abstractions;
-using Cardscape.Application.Abstractions.Persistence;
-using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Boards;
-using Cardscape.Domain.Common;
-using Wolverine;
 
 namespace Cardscape.Application.Extensions;
 
@@ -21,5 +16,4 @@ public sealed record BoardExtensionDto(
         e.ConfigJson,
         e.IsEnabled);
 }
-
 

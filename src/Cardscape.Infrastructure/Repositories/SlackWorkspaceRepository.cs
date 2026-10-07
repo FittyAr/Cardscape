@@ -4,8 +4,6 @@ using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-
-
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class SlackWorkspaceRepository(CardscapeDbContext db)
@@ -20,7 +18,7 @@ public sealed class SlackWorkspaceRepository(CardscapeDbContext db)
             return [];
         }
 
-        HashSet<SlackWorkspaceId> wanted = new(ids);
+        HashSet<SlackWorkspaceId> wanted = [.. ids];
         return await Db.Set<SlackWorkspace>()
             .Where(workspace => wanted.Contains(workspace.Id) && !workspace.IsDeleted)
             .ToListAsync(ct);

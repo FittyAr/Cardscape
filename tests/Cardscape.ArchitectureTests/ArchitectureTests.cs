@@ -1,8 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using FluentAssertions;
 using NetArchTest.Rules;
-using Xunit;
 using TestResult = NetArchTest.Rules.TestResult;
 
 namespace Cardscape.ArchitectureTests;
@@ -138,7 +136,6 @@ public sealed class ArchitectureTests
             .Which.DeclaringType.Should().Be(typeof(Cardscape.Application.Cards.CardscapeExtensions));
     }
 
-    private const string Domain = "Cardscape.Domain";
     private const string Application = "Cardscape.Application";
     private const string Infrastructure = "Cardscape.Infrastructure";
     private const string Api = "Cardscape.Api";

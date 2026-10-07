@@ -3,7 +3,6 @@ using Cardscape.Application.Activities.Queries;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
-using Cardscape.Domain.Common;
 using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Activities;
@@ -15,7 +14,7 @@ namespace Cardscape.UnitTests.Activities;
 /// can run them in milliseconds and they don't depend on the
 /// web host.
 /// </summary>
-public class ActivityTests
+public sealed class ActivityTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);
     private static readonly BoardId TestBoard = BoardId.New();

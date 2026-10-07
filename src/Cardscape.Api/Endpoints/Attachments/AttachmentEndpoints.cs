@@ -1,9 +1,5 @@
 using Cardscape.Application.Attachments;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Attachments;
@@ -100,5 +96,4 @@ public static class AttachmentEndpoints
 
         return app;
     }
-
 }

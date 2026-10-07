@@ -7,7 +7,7 @@ using Cardscape.Domain.Lists;
 
 namespace Cardscape.UnitTests.Domain.Aggregates;
 
-public class CardTests
+public sealed class CardTests
 {
     private static readonly DateTimeOffset At = DateTimeOffset.UtcNow;
 

@@ -3,9 +3,6 @@ using Cardscape.Application.Cards.Commands;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Cards.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 // The single mirror command provisions both the new Card row and
 // its CardMirror pointer. REST and MCP share this exact contract.
@@ -241,5 +238,4 @@ public static class CardEndpoints
     public sealed record SnoozeResult(DateTimeOffset Until);
     public sealed record CoverBody(string? Color);
     public sealed record CopyBody(Guid TargetListId, string? Title, double? Position);
-
 }

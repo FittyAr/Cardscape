@@ -19,15 +19,12 @@ namespace Cardscape.SecurityTests;
 /// segment.
 /// </summary>
 [Collection(SecurityApi.Name)]
-public sealed class AuthorizationSecurityTests
+public sealed class AuthorizationSecurityTests(SecurityTestsWebApplicationFactory factory)
 {
-    private readonly SecurityTestsWebApplicationFactory _factory;
-    public AuthorizationSecurityTests(SecurityTestsWebApplicationFactory factory) => _factory = factory;
-
     [Fact]
     public async Task Admin_Endpoint_Without_Auth_Returns_401()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         HttpResponseMessage resp = await client.GetAsync(
             "api/admin/users/00000000-0000-0000-0000-000000000000/export",
             TestContext.Current.CancellationToken);
@@ -55,7 +52,7 @@ public sealed class AuthorizationSecurityTests
         // non-admin would have been 403.
         HttpClient admin1 = await CreateAdminClientAsync();
         AuthResponse auth2 = await RegisterUserAsync(
-            _factory.CreateApiClient(),
+            factory.CreateApiClient(),
             $"admin2-{Guid.NewGuid():N}@cardscape.local");
         HttpResponseMessage resp = await admin1.GetAsync(
             $"api/admin/users/{auth2.User.Id}/export",
@@ -76,7 +73,7 @@ public sealed class AuthorizationSecurityTests
     [Fact]
     public async Task Board_Detail_With_Fake_Id_Returns_404_Not_500()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         HttpResponseMessage resp = await client.GetAsync(
             "api/boards/00000000-0000-0000-0000-000000000000",
             TestContext.Current.CancellationToken);
@@ -86,7 +83,7 @@ public sealed class AuthorizationSecurityTests
 
     private async Task<HttpClient> CreateAuthenticatedClientAsync()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         AuthResponse auth = await RegisterUserAsync(client,
             $"sec-{Guid.NewGuid():N}@cardscape.local");
         client.DefaultRequestHeaders.Authorization =
@@ -103,14 +100,14 @@ public sealed class AuthorizationSecurityTests
             displayName = "Security (admin)",
             password = "Goodpass123!"
         };
-        using HttpClient registrationClient = _factory.CreateApiClient();
+        using HttpClient registrationClient = factory.CreateApiClient();
         HttpResponseMessage r = await registrationClient.PostAsJsonAsync(
             "api/auth/register", register, TestContext.Current.CancellationToken);
         r.IsSuccessStatusCode.Should().BeTrue();
-        await _factory.Services.PromoteUserToAdminAsync(
+        await factory.Services.PromoteUserToAdminAsync(
             email, TestContext.Current.CancellationToken);
 
-        HttpClient adminClient = _factory.CreateApiClient();
+        HttpClient adminClient = factory.CreateApiClient();
         HttpResponseMessage reLogin = await adminClient.PostAsJsonAsync(
             "api/auth/login", new { email, password = register.password },
             TestContext.Current.CancellationToken);

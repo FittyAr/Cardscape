@@ -6,10 +6,7 @@ using Cardscape.Application.Integrations.InboundEmail.Commands;
 using Cardscape.Application.Integrations.InboundEmail.DTOs;
 using Cardscape.Application.Integrations.InboundEmail.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Integrations;
@@ -311,5 +308,4 @@ public static class IntegrationsEndpoints
         Guid WorkspaceId, string EmailAddress, Guid TargetListId, string Label);
     public sealed record InboundEmailResult(Guid CardId);
     public sealed record InboundEmailPendingResult(string Status);
-
 }

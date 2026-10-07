@@ -2,11 +2,10 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Boards.Errors;
 using Cardscape.Domain.Boards.Events;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Workspaces;
 
 namespace Cardscape.UnitTests.Domain.Aggregates;
 
-public class BoardTests
+public sealed class BoardTests
 {
     private static readonly DateTimeOffset At = DateTimeOffset.UtcNow;
 

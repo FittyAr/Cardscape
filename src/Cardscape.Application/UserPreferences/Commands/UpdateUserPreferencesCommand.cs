@@ -40,15 +40,15 @@ public static class UpdateUserPreferencesCommandHandler
     /// this list must be updated in lockstep — the
     /// <c>UserPreferencesValidator</c> tests will fail loudly
     /// if the divergence is wider than one entry.</summary>
-    public static readonly IReadOnlyCollection<string> ValidThemeNames = new[]
-    {
+    public static readonly IReadOnlyCollection<string> ValidThemeNames =
+    [
         "default", "dark",
         "humanistic", "humanistic-dark",
         "material", "material-dark",
         "software", "software-dark",
         "standard", "standard-dark",
         "cardscape-classic", "cardscape-classic-dark",
-    };
+    ];
 
     public static async Task<Result<UserPreferencesDto>> HandleAsync(
         UpdateUserPreferencesCommand command,

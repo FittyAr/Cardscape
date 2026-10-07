@@ -159,24 +159,6 @@ public sealed class WebhookEndpoint : AggregateRoot<WebhookEndpointId>
     private static Result ValidateNotInternalHost(Uri parsed) =>
         WebhookUrlValidator.ValidateNotInternalHost(parsed);
 
-    private static bool IsPrivateIPv4(System.Net.IPAddress ip) =>
-        WebhookUrlValidator.IsPrivateIPv4(ip);
-
-    private static bool IsLinkLocalIPv4(System.Net.IPAddress ip) =>
-        WebhookUrlValidator.IsLinkLocalIPv4(ip);
-
-    private static bool IsMulticastIPv4(System.Net.IPAddress ip) =>
-        WebhookUrlValidator.IsMulticastIPv4(ip);
-
-    private static bool IsPrivateIPv6(System.Net.IPAddress ip) =>
-        WebhookUrlValidator.IsPrivateIPv6(ip);
-
-    private static bool IsLinkLocalIPv6(System.Net.IPAddress ip) =>
-        WebhookUrlValidator.IsLinkLocalIPv6(ip);
-
-    private static bool IsMulticastIPv6(System.Net.IPAddress ip) =>
-        WebhookUrlValidator.IsMulticastIPv6(ip);
-
     /// <summary>Replaces the subscribed event list. The list is
     /// canonicalised (lowercase, deduped, sorted) before storing.</summary>
     public Result ChangeEvents(IEnumerable<string> newEvents)

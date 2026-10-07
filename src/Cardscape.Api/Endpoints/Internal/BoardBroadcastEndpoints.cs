@@ -5,9 +5,6 @@ using System.Text.Json;
 using Cardscape.Api.Hubs;
 using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Realtime;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cardscape.Api.Endpoints.Internal;

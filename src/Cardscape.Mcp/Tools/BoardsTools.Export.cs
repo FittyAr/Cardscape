@@ -1,9 +1,7 @@
-using Cardscape.Application.Abstractions.Calendar;
 using Cardscape.Application.Calendar;
 using Cardscape.Domain.Common;
 using Cardscape.Mcp.Observability;
 using ModelContextProtocol.Server;
-using Wolverine;
 
 namespace Cardscape.Mcp.Tools;
 

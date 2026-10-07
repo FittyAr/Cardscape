@@ -50,8 +50,8 @@ public static class ThemeCatalog
     ///     validation of the theme name; see also
     ///     <c>Cardscape.Application.UserPreferences.ValidThemeNames</c>).
     /// </summary>
-    public static IReadOnlyList<ThemeEntry> All { get; } = new[]
-    {
+    public static IReadOnlyList<ThemeEntry> All { get; } =
+    [
         // Radzen free themes — the names are the cookie values
         // that AddRadzenCookieThemeService recognizes out of
         // the box. The cookie service maps each name to the
@@ -72,7 +72,7 @@ public static class ThemeCatalog
         // resolves via CardscapeThemes.Classic / .ClassicDark.
         new ThemeEntry(CardscapeThemes.ClassicName,      "Cardscape (Light)",     IsCustom: true),
         new ThemeEntry(CardscapeThemes.ClassicDarkName,  "Cardscape (Dark)",      IsCustom: true),
-    };
+    ];
 
     /// <summary>
     /// True if <paramref name="name"/> is one of the 12 known

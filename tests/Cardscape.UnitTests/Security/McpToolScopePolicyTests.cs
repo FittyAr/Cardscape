@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Cardscape.Mcp.Authorization;
-using FluentAssertions;
 
 namespace Cardscape.UnitTests.Security;
 

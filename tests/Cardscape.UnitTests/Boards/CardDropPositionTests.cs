@@ -2,7 +2,7 @@ using Cardscape.Web.Shared;
 
 namespace Cardscape.UnitTests.Boards;
 
-public class CardDropPositionTests
+public sealed class CardDropPositionTests
 {
     private static readonly Guid ListA = Guid.NewGuid();
     private static readonly Guid ListB = Guid.NewGuid();

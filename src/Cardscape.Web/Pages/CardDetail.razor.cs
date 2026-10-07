@@ -1,20 +1,14 @@
 using System.Globalization;
-using System.Text.Json;
-using Cardscape.Web.Resources;
 using Cardscape.Web.Services;
 using Cardscape.Web.Services.Api;
 using Cardscape.Web.Shared;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.Extensions.Localization;
-using Microsoft.JSInterop;
 using Radzen;
-using Radzen.Blazor;
 
 namespace Cardscape.Web.Pages;
 
-public partial class CardDetail
+public sealed partial class CardDetail
 {
     [Parameter] public Guid CardId { get; set; }
 
@@ -96,8 +90,8 @@ public partial class CardDetail
     // the due date render in the header (Trello-style) instead.
     private IReadOnlyList<MetadataListItem> CardMetaItems => _card is null
         ? Array.Empty<MetadataListItem>()
-        : new MetadataListItem[]
-        {
+        :
+        [
             MetadataListItem.Text(L["CardCreated"], _card.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)),
             // BUG-A5-003 — see test-results/beta/reports/A5-card-extras.md.
             // The header now surfaces comment / attachment /
@@ -107,7 +101,7 @@ public partial class CardDetail
             MetadataListItem.Text(L["CardComments"], _card.CommentCount.ToString(CultureInfo.CurrentCulture)),
             MetadataListItem.Text(L["CardAttachments"], _card.AttachmentCount.ToString(CultureInfo.CurrentCulture)),
             MetadataListItem.Text(L["CardChecklists"], _card.ChecklistCount.ToString(CultureInfo.CurrentCulture))
-        };
+        ];
 
     private IReadOnlyList<MetadataListItem> CustomFieldItems => _fieldValues is null
         ? Array.Empty<MetadataListItem>()

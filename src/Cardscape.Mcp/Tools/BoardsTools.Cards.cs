@@ -1,5 +1,3 @@
-using Cardscape.Application.Abstractions.Realtime;
-using Cardscape.Application.Calendar;
 using Cardscape.Application.Cards.Commands;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Cards.Queries;
@@ -8,7 +6,6 @@ using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Mcp.Observability;
 using ModelContextProtocol.Server;
-using Wolverine;
 
 namespace Cardscape.Mcp.Tools;
 

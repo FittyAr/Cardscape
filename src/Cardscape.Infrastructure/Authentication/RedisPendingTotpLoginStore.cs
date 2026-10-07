@@ -1,4 +1,3 @@
-using System.Globalization;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Domain.Members;
 using Cardscape.Infrastructure.Logging;
@@ -26,26 +25,16 @@ namespace Cardscape.Infrastructure.Authentication;
 /// conservative choice — refusing a TOTP submission is safer
 /// than letting an attacker ride a duplicate consumption).
 /// </summary>
-public sealed class RedisPendingTotpLoginStore : IPendingTotpLoginStore
+public sealed class RedisPendingTotpLoginStore(
+    IConnectionMultiplexer redis,
+    Infrastructure.Configuration.RedisOptions redisOptions,
+    Infrastructure.Configuration.PendingTotpStoreOptions storeOptions,
+    ILogger<RedisPendingTotpLoginStore> logger) : IPendingTotpLoginStore
 {
     private static readonly TimeSpan TokenLifetime = TimeSpan.FromMinutes(5);
 
-    private readonly IConnectionMultiplexer _redis;
-    private readonly string _keyPrefix;
-    private readonly int _database;
-    private readonly ILogger<RedisPendingTotpLoginStore> _logger;
-
-    public RedisPendingTotpLoginStore(
-        IConnectionMultiplexer redis,
-        Infrastructure.Configuration.RedisOptions redisOptions,
-        Infrastructure.Configuration.PendingTotpStoreOptions storeOptions,
-        ILogger<RedisPendingTotpLoginStore> logger)
-    {
-        _redis = redis;
-        _keyPrefix = storeOptions.KeyPrefix;
-        _database = redisOptions.Database;
-        _logger = logger;
-    }
+    private readonly string _keyPrefix = storeOptions.KeyPrefix;
+    private readonly int _database = redisOptions.Database;
 
     public string Mint(UserId userId)
     {
@@ -58,7 +47,7 @@ public sealed class RedisPendingTotpLoginStore : IPendingTotpLoginStore
         byte[] bytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
         string token = Convert.ToBase64String(bytes);
 
-        IDatabase db = _redis.GetDatabase(_database);
+        IDatabase db = redis.GetDatabase(_database);
         string key = _keyPrefix + token;
         // SET with TTL in a single command. We use the string
         // form of the GUID because it's the smallest stable
@@ -77,7 +66,7 @@ public sealed class RedisPendingTotpLoginStore : IPendingTotpLoginStore
 
         try
         {
-            IDatabase db = _redis.GetDatabase(_database);
+            IDatabase db = redis.GetDatabase(_database);
             string key = _keyPrefix + token;
 
             // GETDEL is atomic and available since Redis 6.2.
@@ -93,7 +82,7 @@ public sealed class RedisPendingTotpLoginStore : IPendingTotpLoginStore
             string text = raw.ToString();
             if (!Guid.TryParse(text, out Guid userIdGuid))
             {
-                _logger.PendingTotpTokenValueInvalid();
+                logger.PendingTotpTokenValueInvalid();
                 return null;
             }
 
@@ -105,7 +94,7 @@ public sealed class RedisPendingTotpLoginStore : IPendingTotpLoginStore
             // access. Return null and let the caller surface
             // a generic "invalid TOTP" error to the client;
             // the operator sees the warning in the logs.
-            _logger.PendingTotpConsumeFailed(ex);
+            logger.PendingTotpConsumeFailed(ex);
             return null;
         }
     }

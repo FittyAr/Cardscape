@@ -122,26 +122,18 @@ public sealed class BoardEventBroadcasterTests
 
     private sealed record UnsupportedEvent(DateTimeOffset OccurredAt) : IDomainEvent;
 
-    private sealed class RealtimeTestContext : IDisposable
+    private sealed class RealtimeTestContext(
+        Mock<ICardRepository> cards,
+        Mock<IBoardListRepository> lists,
+        Mock<IBoardNotifier> notifier,
+        Mock<IBoardClient> client) : IDisposable
     {
         private ServiceProvider? _services;
 
-        public RealtimeTestContext(
-            Mock<ICardRepository> cards,
-            Mock<IBoardListRepository> lists,
-            Mock<IBoardNotifier> notifier,
-            Mock<IBoardClient> client)
-        {
-            Cards = cards;
-            Lists = lists;
-            Notifier = notifier;
-            Client = client;
-        }
-
-        public Mock<ICardRepository> Cards { get; }
-        public Mock<IBoardListRepository> Lists { get; }
-        public Mock<IBoardNotifier> Notifier { get; }
-        public Mock<IBoardClient> Client { get; }
+        public Mock<ICardRepository> Cards { get; } = cards;
+        public Mock<IBoardListRepository> Lists { get; } = lists;
+        public Mock<IBoardNotifier> Notifier { get; } = notifier;
+        public Mock<IBoardClient> Client { get; } = client;
         public BoardEventBroadcaster Broadcaster { get; private set; } = null!;
         public Guid? PublishedBoardId { get; set; }
         public CardEventPayload? PublishedPayload { get; set; }

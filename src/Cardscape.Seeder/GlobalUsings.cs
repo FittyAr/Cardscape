@@ -2,7 +2,6 @@
 // and entity type the domain ships. Importing each namespace
 // once in this file keeps the per-step files focused on the
 // seeding logic instead of drowning in `using` blocks.
-global using Cardscape.Domain;
 global using Cardscape.Domain.Activities;
 global using Cardscape.Domain.Attachments;
 global using Cardscape.Domain.Authentication.ExternalLogins;

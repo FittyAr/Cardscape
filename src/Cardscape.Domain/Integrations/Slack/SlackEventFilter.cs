@@ -15,13 +15,13 @@ public static class SlackEventTypes
     public const string CommentAdded = "comment.added";
 
     /// <summary>The full list, frozen, in the order the UI presents them.</summary>
-    public static readonly IReadOnlyList<string> All = new[]
-    {
+    public static readonly IReadOnlyList<string> All =
+    [
         CardCreated,
         CardMoved,
         CardCompleted,
         CommentAdded
-    };
+    ];
 
     /// <summary>True if <paramref name="eventType"/> is one of the
     /// v1-recognised event identifiers.</summary>

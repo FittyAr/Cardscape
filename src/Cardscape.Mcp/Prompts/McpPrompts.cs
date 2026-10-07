@@ -1,16 +1,12 @@
 using System.Globalization;
 using System.Text;
-using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Cards.Queries;
 using Cardscape.Application.Lists.DTOs;
 using Cardscape.Application.Lists.Queries;
 using Cardscape.Application.Notifications.DTOs;
 using Cardscape.Application.Notifications.Queries;
-using Cardscape.Domain.Boards;
-using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Lists;
 using ModelContextProtocol.Server;
 using Wolverine;
 

@@ -11,7 +11,7 @@ using Cardscape.Web.Theming;
 
 namespace Cardscape.UnitTests.Theming;
 
-public class SystemAppearanceWatcherTests
+public sealed class SystemAppearanceWatcherTests
 {
     [Theory]
     [InlineData("humanistic", false, "humanistic")]

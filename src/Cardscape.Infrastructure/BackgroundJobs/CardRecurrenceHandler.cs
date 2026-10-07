@@ -6,7 +6,6 @@ using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Recurrence;
 using Cardscape.Infrastructure.Logging;
-using Cardscape.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

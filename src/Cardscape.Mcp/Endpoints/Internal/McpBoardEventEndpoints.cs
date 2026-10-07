@@ -1,7 +1,4 @@
 using Cardscape.Mcp.Realtime;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 
 namespace Cardscape.Mcp.Endpoints.Internal;
 

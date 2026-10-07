@@ -4,7 +4,7 @@ using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Application.Handlers;
 
-public class ChangeBoardColorCommandHandlerTests
+public sealed class ChangeBoardColorCommandHandlerTests
 {
     [Fact]
     public async Task Handle_WithPaletteName_SetsHexColorOnBoardAndDto()

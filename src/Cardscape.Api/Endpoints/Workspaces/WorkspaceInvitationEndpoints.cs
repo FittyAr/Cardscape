@@ -4,9 +4,6 @@ using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Application.Workspaces.Queries;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Workspaces;
@@ -102,5 +99,4 @@ public static class WorkspaceInvitationEndpoints
         TimeSpan? Lifetime = null);
 
     public sealed record AcceptWorkspaceInvitationBody(string Token);
-
 }

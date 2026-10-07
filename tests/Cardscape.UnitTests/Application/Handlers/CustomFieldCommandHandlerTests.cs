@@ -1,18 +1,15 @@
-using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.CustomFields;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
-using Cardscape.Domain.Workspaces;
 using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Application.Handlers;
 
-public class CustomFieldCommandHandlerTests
+public sealed class CustomFieldCommandHandlerTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);
 
@@ -127,7 +124,7 @@ public class CustomFieldCommandHandlerTests
 
         CustomFieldDefinition field = CustomFieldDefinition.Create(
             board.Id, "Severity", CustomFieldKind.Dropdown,
-            new[] { "Low", "High" }, 0, Now).Value;
+            ["Low", "High"], 0, Now).Value;
         await state.Definitions.AddAsync(field, TestContext.Current.CancellationToken);
         await state.UnitOfWork.SaveChangesAsync(TestContext.Current.CancellationToken);
 
@@ -249,44 +246,29 @@ public class CustomFieldCommandHandlerTests
         return new SutState(defs, values, boards, lists, cards, uow, user, clock, board, card, otherBoard);
     }
 
-    private sealed class SutState
+    private sealed class SutState(
+        InMemoryCustomFieldDefinitionRepository definitions,
+        InMemoryCustomFieldValueRepository values,
+        IBoardRepository boards,
+        IBoardListRepository lists,
+        ICardRepository cards,
+        IUnitOfWork unitOfWork,
+        FakeCurrentUser currentUser,
+        FakeClock clock,
+        Board? board,
+        Card? card,
+        Board? otherBoard)
     {
-        public SutState(
-            InMemoryCustomFieldDefinitionRepository definitions,
-            InMemoryCustomFieldValueRepository values,
-            IBoardRepository boards,
-            IBoardListRepository lists,
-            ICardRepository cards,
-            IUnitOfWork unitOfWork,
-            FakeCurrentUser currentUser,
-            FakeClock clock,
-            Board? board,
-            Card? card,
-            Board? otherBoard)
-        {
-            Definitions = definitions;
-            Values = values;
-            Boards = boards;
-            Lists = lists;
-            Cards = cards;
-            UnitOfWork = unitOfWork;
-            CurrentUser = currentUser;
-            Clock = clock;
-            Board = board;
-            Card = card;
-            OtherBoard = otherBoard;
-        }
-
-        public InMemoryCustomFieldDefinitionRepository Definitions { get; }
-        public InMemoryCustomFieldValueRepository Values { get; }
-        public IBoardRepository Boards { get; }
-        public IBoardListRepository Lists { get; }
-        public ICardRepository Cards { get; }
-        public IUnitOfWork UnitOfWork { get; }
-        public FakeCurrentUser CurrentUser { get; }
-        public FakeClock Clock { get; }
-        public Board? Board { get; }
-        public Card? Card { get; }
-        public Board? OtherBoard { get; }
+        public InMemoryCustomFieldDefinitionRepository Definitions { get; } = definitions;
+        public InMemoryCustomFieldValueRepository Values { get; } = values;
+        public IBoardRepository Boards { get; } = boards;
+        public IBoardListRepository Lists { get; } = lists;
+        public ICardRepository Cards { get; } = cards;
+        public IUnitOfWork UnitOfWork { get; } = unitOfWork;
+        public FakeCurrentUser CurrentUser { get; } = currentUser;
+        public FakeClock Clock { get; } = clock;
+        public Board? Board { get; } = board;
+        public Card? Card { get; } = card;
+        public Board? OtherBoard { get; } = otherBoard;
     }
 }

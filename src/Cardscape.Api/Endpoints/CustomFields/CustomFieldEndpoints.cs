@@ -1,9 +1,6 @@
 using Cardscape.Application.CustomFields;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.CustomFields;
@@ -104,5 +101,4 @@ public static class CustomFieldEndpoints
     public sealed record RenameFieldBody(string NewName);
 
     public sealed record SetValueBody(string? ValueJson);
-
 }

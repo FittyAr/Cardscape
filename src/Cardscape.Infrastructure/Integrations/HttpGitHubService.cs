@@ -161,7 +161,7 @@ public sealed class HttpGitHubService : IGitHubService
                         State: i.State,
                         Url: i.HtmlUrl,
                         Labels: i.Labels?.Select(l => l.Name ?? string.Empty).ToList()
-                                 ?? new List<string>(),
+                                 ?? [],
                         CreatedAt: i.CreatedAt))
                 .ToList());
         }
@@ -211,7 +211,7 @@ public sealed class HttpGitHubService : IGitHubService
                 State: created.State,
                 Url: created.HtmlUrl,
                 Labels: created.Labels?.Select(l => l.Name ?? string.Empty).ToList()
-                         ?? new List<string>(),
+                         ?? [],
                 CreatedAt: created.CreatedAt));
         }
         catch (HttpRequestException)

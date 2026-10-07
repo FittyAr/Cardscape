@@ -2,7 +2,6 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Authentication.DTOs;
-using Cardscape.Application.Authentication.Validations;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using FluentValidation;

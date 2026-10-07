@@ -14,15 +14,9 @@ namespace Cardscape.Infrastructure.Logging;
 /// still use the default <c>Serilog.Sinks.Console</c>
 /// sink that targets STDOUT.
 /// </summary>
-public sealed class StderrConsoleSink : ILogEventSink
+public sealed class StderrConsoleSink(ITextFormatter formatter) : ILogEventSink
 {
-    private readonly ITextFormatter _formatter;
-    private readonly object _gate = new();
-
-    public StderrConsoleSink(ITextFormatter formatter)
-    {
-        _formatter = formatter;
-    }
+    private readonly Lock _gate = new();
 
     public void Emit(LogEvent logEvent)
     {
@@ -30,7 +24,7 @@ public sealed class StderrConsoleSink : ILogEventSink
         {
             try
             {
-                _formatter.Format(logEvent, Console.Error);
+                formatter.Format(logEvent, Console.Error);
                 Console.Error.WriteLine();
             }
             catch (Exception)

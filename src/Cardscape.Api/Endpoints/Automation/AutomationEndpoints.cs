@@ -1,9 +1,6 @@
 using Cardscape.Application.Automation;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Automation;
@@ -77,5 +74,4 @@ public static class AutomationEndpoints
         AutomationAction Action,
         string? ActionArgument,
         int Position = 0);
-
 }

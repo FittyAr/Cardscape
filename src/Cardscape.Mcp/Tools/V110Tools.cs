@@ -8,7 +8,6 @@ using Cardscape.Application.OAuth.Commands;
 using Cardscape.Application.OAuth.Queries;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Import;
-using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Server;
 using Wolverine;
 
@@ -153,8 +152,8 @@ public sealed class V110Tools
         await bus.InvokeAsync<Result<OAuthAppRegistrationDto>>(
             new RegisterOAuthAppCommand(
                 name,
-                (IReadOnlyCollection<string>)(allowedScopes ?? Array.Empty<string>()),
-                (IReadOnlyCollection<string>)(redirectUris ?? Array.Empty<string>())),
+                (IReadOnlyCollection<string>)(allowedScopes ?? []),
+                (IReadOnlyCollection<string>)(redirectUris ?? [])),
             ct);
 
     [McpServerTool(Name = "oauth_apps_revoke")]

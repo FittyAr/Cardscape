@@ -1,9 +1,6 @@
 using Cardscape.Application.Extensions;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Extensions;
@@ -125,5 +122,4 @@ public static class BoardExtensionEndpoints
     private static IResult InvalidKind(string kind) => ApiProblemResults.BadRequest(
         "extensions.kind_invalid",
         $"Unknown extension kind '{kind}'. Valid values: {string.Join(", ", Enum.GetValues<ExtensionKind>().Select(ToRouteValue))}.");
-
 }

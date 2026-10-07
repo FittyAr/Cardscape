@@ -1,10 +1,7 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Cards;
-using Cardscape.Domain.Lists;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-
-
 
 namespace Cardscape.Infrastructure.Repositories;
 

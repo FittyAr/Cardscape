@@ -8,7 +8,6 @@ using Cardscape.Application.Realtime;
 using Cardscape.Domain.Common;
 using Cardscape.Mcp.Observability;
 using ModelContextProtocol.Server;
-using Wolverine;
 
 namespace Cardscape.Mcp.Tools;
 

@@ -1,4 +1,3 @@
-using Cardscape.Application.Abstractions;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Cardscape.Infrastructure.Hosting;
@@ -32,7 +31,7 @@ namespace Cardscape.UnitTests.Hosting;
 /// client-evaluate the predicate and silently swallow the
 /// very bug this test is here to catch.</para>
 /// </summary>
-public class RetentionSweeperTests
+public sealed class RetentionSweeperTests
 {
     private static readonly DateTimeOffset Now =
         new(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);

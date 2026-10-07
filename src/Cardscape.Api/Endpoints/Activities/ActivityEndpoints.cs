@@ -1,8 +1,5 @@
 using Cardscape.Application.Activities.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Activities;
@@ -45,5 +42,4 @@ public static class ActivityEndpoints
 
         return app;
     }
-
 }

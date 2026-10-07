@@ -3,7 +3,6 @@ using Cardscape.Domain.Cards.Events;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
-using static Cardscape.Domain.Cards.Errors.CardErrors;
 
 namespace Cardscape.Domain.Cards;
 

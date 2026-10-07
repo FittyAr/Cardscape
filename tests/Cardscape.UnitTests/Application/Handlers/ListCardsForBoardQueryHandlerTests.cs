@@ -11,7 +11,7 @@ using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Application.Handlers;
 
-public class ListCardsForBoardQueryHandlerTests
+public sealed class ListCardsForBoardQueryHandlerTests
 {
     [Fact]
     public async Task Handle_ProjectsLabelsMembersChecklistProgressAndCommentCount()
@@ -82,7 +82,7 @@ public class ListCardsForBoardQueryHandlerTests
         public Task<IReadOnlyDictionary<Guid, int>> CountForCardsAsync(
             IReadOnlyCollection<Guid> cardIds, CancellationToken ct = default) =>
             Task.FromResult<IReadOnlyDictionary<Guid, int>>(
-                cardIds.Contains(cardId) ? new Dictionary<Guid, int> { [cardId] = count } : new Dictionary<Guid, int>());
+                cardIds.Contains(cardId) ? new Dictionary<Guid, int> { [cardId] = count } : []);
 
         public Task<IReadOnlyList<Attachment>> ListForCardAsync(Guid id, CancellationToken ct = default) =>
             Task.FromResult<IReadOnlyList<Attachment>>([]);

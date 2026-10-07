@@ -35,7 +35,7 @@ public sealed class CardAgingSettings : Entity<CardId>
     public static Result<CardAgingSettings> Create(
         CardId cardId, CardAgingMode mode, int staleAfterDays, DateTimeOffset at)
     {
-        if (staleAfterDays < 1 || staleAfterDays > 365)
+        if (staleAfterDays is < 1 or > 365)
         {
             return Result.Failure<CardAgingSettings>(DomainError.Validation(
                 "card_aging.stale_after_days_out_of_range",
@@ -51,7 +51,7 @@ public sealed class CardAgingSettings : Entity<CardId>
 
     public Result Update(CardAgingMode mode, int staleAfterDays, DateTimeOffset at)
     {
-        if (staleAfterDays < 1 || staleAfterDays > 365)
+        if (staleAfterDays is < 1 or > 365)
         {
             return Result.Failure(DomainError.Validation(
                 "card_aging.stale_after_days_out_of_range",

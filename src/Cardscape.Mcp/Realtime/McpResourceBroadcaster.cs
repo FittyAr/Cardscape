@@ -31,7 +31,9 @@ namespace Cardscape.Mcp.Realtime;
 /// <c>/admin/mcp-subscriptions</c> page can render a
 /// human-readable feed of the MCP real-time surface.
 /// </summary>
-public sealed class McpResourceBroadcaster : IAsyncDisposable
+public sealed class McpResourceBroadcaster(
+    ILogger<McpResourceBroadcaster> logger,
+    IServiceScopeFactory scopeFactory) : IAsyncDisposable
 {
     /// <summary>
     /// Cap on the in-memory event log. The broadcaster
@@ -42,19 +44,9 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
     /// </summary>
     public const int MaxEventLogSize = 1000;
 
-    private readonly ILogger<McpResourceBroadcaster> _logger;
     private readonly ConcurrentDictionary<string, List<ResourceSubscription>> _subscribers = new();
     private readonly ConcurrentQueue<SubscriptionEvent> _eventLog = new();
     private readonly System.Threading.Lock _gate = new();
-    private readonly IServiceScopeFactory _scopeFactory;
-
-    public McpResourceBroadcaster(
-        ILogger<McpResourceBroadcaster> logger,
-        IServiceScopeFactory scopeFactory)
-    {
-        _logger = logger;
-        _scopeFactory = scopeFactory;
-    }
 
     /// <summary>
     /// Registers an MCP client (by its <see cref="McpServer"/>
@@ -154,7 +146,7 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
         var payload = new ResourceUpdatedNotificationParams { Uri = uri };
         int sent = 0;
         List<string> deadSessions = [];
-        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
         IBoardRepository boards = scope.ServiceProvider.GetRequiredService<IBoardRepository>();
         Dictionary<Guid, bool> accessByUser = [];
         foreach (ResourceSubscription subscription in targets)
@@ -192,7 +184,7 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
                 // of the fan-out. A closed transport will throw
                 // on SendNotificationAsync; we drop this
                 // subscriber and keep going.
-                _logger.ResourceNotificationFailed(ex, uri);
+                logger.ResourceNotificationFailed(ex, uri);
                 deadSessions.Add(GetSessionId(server));
                 Unsubscribe(uri, server);
             }
@@ -206,7 +198,7 @@ public sealed class McpResourceBroadcaster : IAsyncDisposable
             Detail: $"broadcast sent to {sent}/{targets.Count} subscribers" +
                 (deadSessions.Count > 0 ? $" ({deadSessions.Count} dropped: {string.Join(",", deadSessions)})" : string.Empty)));
 
-        _logger.ResourceNotificationSent(uri, sent, targets.Count);
+        logger.ResourceNotificationSent(uri, sent, targets.Count);
     }
 
     /// <summary>

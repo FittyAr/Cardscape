@@ -4,7 +4,7 @@ using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Application.Handlers;
 
-public class CreateCardCommandHandlerTests
+public sealed class CreateCardCommandHandlerTests
 {
     [Fact]
     public async Task Handle_AsAuthenticatedUser_CreatesAndPersistsCard()

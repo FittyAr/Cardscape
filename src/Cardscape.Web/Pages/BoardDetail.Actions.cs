@@ -1,13 +1,10 @@
 using Cardscape.Web.Services;
-using Cardscape.Web.Services.Api;
 using Cardscape.Web.Shared;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Radzen;
 
 namespace Cardscape.Web.Pages;
 
-public partial class BoardDetail
+public sealed partial class BoardDetail
 {
     private async Task ToggleSnoozedAsync()
     {
@@ -97,7 +94,7 @@ public partial class BoardDetail
             ApiResult<BoardListDto> result = await ListsApi.CreateAsync(BoardId, _addListModel.Name);
             if (result.IsSuccess)
             {
-                _lists = [.. (_lists ?? Array.Empty<BoardListDto>()), result.Value!];
+                _lists = [.. (_lists ?? []), result.Value!];
                 _addListModel.Name = string.Empty;
                 _showAddList = false;
             }

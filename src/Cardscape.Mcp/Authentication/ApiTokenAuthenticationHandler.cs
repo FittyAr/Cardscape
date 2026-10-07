@@ -3,7 +3,6 @@ using System.Text.Encodings.Web;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Mcp.Logging;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Cardscape.Mcp.Authentication;
@@ -20,22 +19,16 @@ namespace Cardscape.Mcp.Authentication;
 /// <c>"token_id"</c>), and one <c>"scope"</c> claim per granted
 /// scope.
 /// </summary>
-public sealed class ApiTokenAuthenticationHandler
-    : AuthenticationHandler<ApiTokenAuthenticationOptions>
+public sealed class ApiTokenAuthenticationHandler(
+    IOptionsMonitor<ApiTokenAuthenticationOptions> options,
+    ILoggerFactory logger,
+    UrlEncoder encoder,
+    IApiTokenService tokens)
+        : AuthenticationHandler<ApiTokenAuthenticationOptions>(options, logger, encoder)
 {
     public const string SchemeName = "ApiToken";
 
-    public ApiTokenAuthenticationHandler(
-        IOptionsMonitor<ApiTokenAuthenticationOptions> options,
-        ILoggerFactory logger,
-        UrlEncoder encoder,
-        IApiTokenService tokens)
-        : base(options, logger, encoder)
-    {
-        Tokens = tokens;
-    }
-
-    public IApiTokenService Tokens { get; }
+    public IApiTokenService Tokens { get; } = tokens;
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {

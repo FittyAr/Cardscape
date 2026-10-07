@@ -1,4 +1,3 @@
-using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Automation;
 using Cardscape.Domain.Boards;

@@ -5,7 +5,6 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Integrations;
 using Cardscape.Application.Abstractions.Persistence;
-using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Common;
 using Microsoft.Extensions.Configuration;
 
@@ -138,5 +137,4 @@ public sealed class HttpGoogleCalendarSyncService(
         DomainError.External(
             $"google_calendar.{(int)response.StatusCode}",
             $"Google Calendar {verb} failed with HTTP {(int)response.StatusCode}.");
-
 }

@@ -1,5 +1,4 @@
 using Cardscape.Domain.Integrations.GoogleCalendar;
-using Cardscape.Domain.Workspaces;
 
 namespace Cardscape.UnitTests.Domain.Integrations;
 

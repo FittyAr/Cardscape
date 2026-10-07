@@ -1,9 +1,6 @@
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Search;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Search;
@@ -55,5 +52,4 @@ public static class SearchEndpoints
 
         return app;
     }
-
 }

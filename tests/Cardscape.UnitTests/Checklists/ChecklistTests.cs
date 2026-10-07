@@ -1,17 +1,12 @@
-using Cardscape.Application.Abstractions;
-using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Checklists;
-using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Common;
 using Cardscape.Tests.Common.Fakes;
-using FluentAssertions;
-using Xunit;
 
 namespace Cardscape.UnitTests.Checklists;
 
-public class ChecklistTests
+public sealed class ChecklistTests
 {
     [Fact]
     public void Create_With_Empty_Creator_Fails()

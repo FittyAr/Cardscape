@@ -1,7 +1,6 @@
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists.Events;
 using Cardscape.Domain.Common;
-using static Cardscape.Domain.Checklists.Errors.ChecklistErrors;
 
 namespace Cardscape.Domain.Checklists;
 

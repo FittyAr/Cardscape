@@ -2,7 +2,7 @@ using Cardscape.Domain.BackgroundJobs;
 
 namespace Cardscape.UnitTests.BackgroundJobs;
 
-public class BackgroundJobTests
+public sealed class BackgroundJobTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);
 

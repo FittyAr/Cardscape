@@ -5,9 +5,6 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Contracts.Settings;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 
 namespace Cardscape.Api.Endpoints.Admin;
 

@@ -1,7 +1,5 @@
 using System.Text;
 using Cardscape.Api.Authentication;
-using Cardscape.Application.Abstractions.Authentication;
-using Cardscape.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Cardscape.Api.Extensions;

@@ -1,6 +1,5 @@
 using Cardscape.Web.Logging;
 using Cardscape.Web.Shared;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Cardscape.Web.Services;
@@ -11,25 +10,14 @@ namespace Cardscape.Web.Services;
 /// <c>board:{boardId}</c> group, and the server pushes
 /// <c>IBoardClient</c> events back.
 /// </summary>
-public sealed class BoardHubClient : IAsyncDisposable
+public sealed class BoardHubClient(
+    TokenStore tokens,
+    IConfiguration config,
+    IHttpClientFactory httpClientFactory,
+    ILogger<BoardHubClient> logger) : IAsyncDisposable
 {
-    private readonly TokenStore _tokens;
-    private readonly IConfiguration _config;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ILogger<BoardHubClient> _logger;
+    private readonly IConfiguration _config = config;
     private HubConnection? _connection;
-
-    public BoardHubClient(
-        TokenStore tokens,
-        IConfiguration config,
-        IHttpClientFactory httpClientFactory,
-        ILogger<BoardHubClient> logger)
-    {
-        _tokens = tokens;
-        _config = config;
-        _httpClientFactory = httpClientFactory;
-        _logger = logger;
-    }
 
     public event Func<CardEventPayload, Task>? CardCreated;
     public event Func<CardEventPayload, Task>? CardUpdated;
@@ -74,7 +62,7 @@ public sealed class BoardHubClient : IAsyncDisposable
         // HostEnvironment.BaseAddress when ApiBaseUrl is empty)
         // so the hub URL is always absolute and points at the
         // same origin as the API calls.
-        IHttpClientFactory httpFactory = _httpClientFactory;
+        IHttpClientFactory httpFactory = httpClientFactory;
         HttpClient http = httpFactory.CreateClient("Cardscape.Api");
         string apiBase = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
         if (string.IsNullOrEmpty(apiBase))
@@ -86,7 +74,7 @@ public sealed class BoardHubClient : IAsyncDisposable
         }
         string hubUrl = $"{apiBase}/hubs/board";
 
-        string? accessToken = await _tokens.GetAccessTokenAsync();
+        string? accessToken = await tokens.GetAccessTokenAsync();
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             throw new InvalidOperationException(
@@ -105,17 +93,17 @@ public sealed class BoardHubClient : IAsyncDisposable
 
         _connection.Closed += error =>
         {
-            _logger.BoardHubConnectionClosed(error);
+            logger.BoardHubConnectionClosed(error);
             return Task.CompletedTask;
         };
         _connection.Reconnected += connectionId =>
         {
-            _logger.BoardHubReconnected(connectionId);
+            logger.BoardHubReconnected(connectionId);
             return Task.CompletedTask;
         };
         _connection.Reconnecting += error =>
         {
-            _logger.BoardHubReconnecting(error);
+            logger.BoardHubReconnecting(error);
             return Task.CompletedTask;
         };
 

@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace Cardscape.Mcp.Logging;
 
 internal static partial class McpLogMessages

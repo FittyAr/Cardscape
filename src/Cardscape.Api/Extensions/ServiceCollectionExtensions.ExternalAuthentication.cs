@@ -3,8 +3,6 @@ using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 
 namespace Cardscape.Api.Extensions;
 

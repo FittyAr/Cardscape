@@ -4,7 +4,7 @@ using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Application.Handlers;
 
-public class StarBoardCommandHandlerTests
+public sealed class StarBoardCommandHandlerTests
 {
     [Fact]
     public async Task Handle_OnExistingBoard_StarsAndPersists()

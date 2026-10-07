@@ -14,19 +14,10 @@ namespace Cardscape.Application.Realtime;
 /// domain-event outbox invokes this broadcaster directly because Domain events
 /// deliberately do not depend on Wolverine message contracts.
 /// </summary>
-public sealed partial class BoardEventBroadcaster : IDomainEventBroadcaster
+public sealed partial class BoardEventBroadcaster(
+    IServiceScopeFactory scopeFactory,
+    ILogger<BoardEventBroadcaster> logger) : IDomainEventBroadcaster
 {
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<BoardEventBroadcaster> _logger;
-
-    public BoardEventBroadcaster(
-        IServiceScopeFactory scopeFactory,
-        ILogger<BoardEventBroadcaster> logger)
-    {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
-    }
-
     public Task BroadcastAsync(IDomainEvent domainEvent, CancellationToken ct = default) =>
         domainEvent switch
         {

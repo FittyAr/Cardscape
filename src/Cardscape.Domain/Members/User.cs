@@ -1,7 +1,5 @@
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Members.Errors;
 using Cardscape.Domain.Members.Events;
-using static Cardscape.Domain.Members.Errors.UserErrors;
 
 namespace Cardscape.Domain.Members;
 

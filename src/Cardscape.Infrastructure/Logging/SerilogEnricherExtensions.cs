@@ -1,5 +1,4 @@
 using Serilog;
-using Serilog.Configuration;
 using Serilog.Enrichers.Span;
 
 namespace Cardscape.Infrastructure.Logging;

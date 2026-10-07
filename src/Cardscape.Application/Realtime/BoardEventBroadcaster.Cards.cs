@@ -13,11 +13,11 @@ public sealed partial class BoardEventBroadcaster
 {
     private async Task HandleCardCreatedAsync(CardCreated @event, CancellationToken ct)
     {
-        if (_logger.IsEnabled(LogLevel.Debug))
+        if (logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.CardCreatedBroadcast(@event.CardId);
+            logger.CardCreatedBroadcast(@event.CardId);
         }
-        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
         IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
         IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
         BoardList? list = await lists.GetByIdAsync(@event.ListId, ct);
@@ -40,7 +40,7 @@ public sealed partial class BoardEventBroadcaster
 
     private async Task HandleCardRenamedAsync(CardRenamed @event, CancellationToken ct)
     {
-        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
         ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
         IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
         IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
@@ -70,7 +70,7 @@ public sealed partial class BoardEventBroadcaster
 
     private async Task HandleCardMovedAsync(CardMoved @event, CancellationToken ct)
     {
-        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
         ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
         IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
         IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();
@@ -105,7 +105,7 @@ public sealed partial class BoardEventBroadcaster
         Func<IBoardClient, Func<CardEventPayload, Task>> select,
         CancellationToken ct)
     {
-        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
         ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
         IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
         IBoardNotifier notifier = scope.ServiceProvider.GetRequiredService<IBoardNotifier>();

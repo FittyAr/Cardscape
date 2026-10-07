@@ -1,9 +1,7 @@
-using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Integrations;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Integrations.GitHub.DTOs;
-using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Integrations.GitHub;

@@ -23,7 +23,7 @@ public sealed record WorkspaceName : IValueObject
 
         var trimmed = input.Trim();
 
-        if (trimmed.Length < MinLength || trimmed.Length > MaxLength)
+        if (trimmed.Length is < MinLength or > MaxLength)
         {
             return Result.Failure<WorkspaceName>(DomainError.Validation(
                 "workspaces.name.length",

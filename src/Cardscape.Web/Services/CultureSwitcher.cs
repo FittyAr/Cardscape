@@ -1,9 +1,6 @@
 using System.Globalization;
-using System.Net.Http.Json;
 using System.Text.Json;
-using System.Xml.Linq;
 using Cardscape.Web.Logging;
-using Cardscape.Web.Resources;
 using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 
@@ -56,29 +53,22 @@ namespace Cardscape.Web.Services;
 /// (this class implements both) and re-register the DI mappings.
 /// </para>
 /// </summary>
-public sealed class HttpBackedStringLocalizer<TResource> : IStringLocalizer<TResource>, IStringLocalizer
+/// <remarks>
+/// BETA-9-UI-#1 — see test-results/r9/r9-report.md. The fallback is the
+/// framework's concrete <see cref="StringLocalizer{TResourceSource}"/>
+/// (the resource manager-backed localizer that reads the embedded
+/// SharedResource.resx). Depending on <c>IStringLocalizer&lt;TResource&gt;</c>
+/// instead created a circular DI dependency: every
+/// <c>IStringLocalizer&lt;SharedResource&gt;</c> is mapped to this wrapper,
+/// so resolving the parameter re-resolved the same wrapper and DI threw at
+/// start-up. Program.cs registers the concrete type so the wrapper can
+/// take it without looping.
+/// </remarks>
+public sealed class HttpBackedStringLocalizer<TResource>(StringLocalizer<TResource> fallback, CultureSwitcher switcher)
+    : IStringLocalizer<TResource>, IStringLocalizer
 {
-    private readonly StringLocalizer<TResource> _fallback;
-    private readonly CultureSwitcher _switcher;
-
-    public HttpBackedStringLocalizer(StringLocalizer<TResource> fallback, CultureSwitcher switcher)
-    {
-        // BETA-9-UI-#1 — see test-results/r9/r9-report.md.
-        // The fallback is the framework's StringLocalizer<TResource>
-        // (the standard resource manager-backed localizer that reads
-        // the embedded SharedResource.resx). The previous
-        // IStringLocalizer<TResource> parameter created a circular
-        // DI dependency: every IStringLocalizer<SharedResource> was
-        // mapped to this wrapper, so resolving the constructor
-        // parameter would re-resolve the same wrapper indefinitely.
-        // DI throws at start-up and the Blazor app shows the
-        // unhandled-error overlay on every page. We depend on the
-        // concrete type instead; Program.cs registers it under the
-        // concrete name so the wrapper can take it as a dependency
-        // without looping.
-        _fallback = fallback;
-        _switcher = switcher;
-    }
+    private readonly StringLocalizer<TResource> _fallback = fallback;
+    private readonly CultureSwitcher _switcher = switcher;
 
     // The two interfaces share `this[string]` / `this[string, params object[]]`
     // / `GetAllStrings(bool)`. Implementing the public surface against the
@@ -175,48 +165,33 @@ public sealed class HttpBackedStringLocalizer<TResource> : IStringLocalizer<TRes
 /// for the full rationale.
 /// </para>
 /// </summary>
-public sealed class CultureSwitcher
+public sealed class CultureSwitcher(
+    IHttpClientFactory httpClientFactory,
+    InstanceSettingsState instance,
+    IJSRuntime js,
+    ILogger<CultureSwitcher> logger)
 {
     private const string StorageKey = "Cardscape.Culture";
     private const string DefaultCulture = "en";
 
-    private readonly HttpClient _http;
-    private readonly InstanceSettingsState _instance;
-    private readonly IJSRuntime _js;
-    private readonly ILogger<CultureSwitcher> _logger;
+    // The default HttpClient in Blazor WASM has no base address, so a
+    // relative URL like `Resources/SharedResource.en.resx` throws
+    // `net_http_client_invalid_requesturi`. The named client registered in
+    // Program.cs has its BaseAddress set to the document base.
+    private readonly HttpClient _http = httpClientFactory.CreateClient("Cardscape.Resources");
+    private readonly InstanceSettingsState _instance = instance;
     private readonly Dictionary<string, IReadOnlyDictionary<string, string>> _translationsByCulture = new(StringComparer.OrdinalIgnoreCase);
-    private string _currentCulture = DefaultCulture;
     private bool _initialized;
-
-    public CultureSwitcher(
-        IHttpClientFactory httpClientFactory,
-        InstanceSettingsState instance,
-        IJSRuntime js,
-        ILogger<CultureSwitcher> logger)
-    {
-        _instance = instance;
-        // The default HttpClient in Blazor WASM has no base address,
-        // so a relative URL like `Resources/SharedResource.en.resx`
-        // throws `net_http_client_invalid_requesturi` and the page
-        // surfaces the unhandled-error UI for every navigation.
-        // Inject the named `Cardscape.Resources` client registered
-        // in Program.cs: its `BaseAddress` is set to the document
-        // base, which makes the relative URL resolve correctly and
-        // avoids the spurious error.
-        _http = httpClientFactory.CreateClient("Cardscape.Resources");
-        _js = js;
-        _logger = logger;
-    }
 
     public event Func<Task>? Changed;
 
-    public string CurrentCulture => _currentCulture;
+    public string CurrentCulture { get; private set; } = DefaultCulture;
 
-    public IReadOnlyCollection<string> AvailableCultures { get; } = new[] { "en", "es" };
+    public IReadOnlyCollection<string> AvailableCultures { get; } = ["en", "es"];
 
     public IReadOnlyDictionary<string, string> GetCurrentTranslations()
     {
-        return _translationsByCulture.TryGetValue(_currentCulture, out IReadOnlyDictionary<string, string>? dict)
+        return _translationsByCulture.TryGetValue(CurrentCulture, out IReadOnlyDictionary<string, string>? dict)
             ? dict
             : EmptyTranslations;
     }
@@ -241,7 +216,7 @@ public sealed class CultureSwitcher
                 : DefaultCulture;
         try
         {
-            string? fromStorage = await _js.InvokeAsync<string?>("localStorage.getItem", StorageKey);
+            string? fromStorage = await js.InvokeAsync<string?>("localStorage.getItem", StorageKey);
             if (!string.IsNullOrWhiteSpace(fromStorage) && AvailableCultures.Contains(fromStorage, StringComparer.OrdinalIgnoreCase))
             {
                 saved = fromStorage;
@@ -252,7 +227,7 @@ public sealed class CultureSwitcher
             // Pre-render or JS not available yet. Fall back
             // to the default; the layout will call
             // SetCultureAsync on the first user interaction.
-            _logger.SavedCultureReadFailed(ex, DefaultCulture);
+            logger.SavedCultureReadFailed(ex, DefaultCulture);
         }
 
         await SetCultureAsync(saved, persist: false);
@@ -263,7 +238,7 @@ public sealed class CultureSwitcher
         culture = (culture ?? DefaultCulture).ToLowerInvariant();
         if (!AvailableCultures.Contains(culture, StringComparer.OrdinalIgnoreCase))
         {
-            _logger.UnknownCultureDefaulted(culture, DefaultCulture);
+            logger.UnknownCultureDefaulted(culture, DefaultCulture);
             culture = DefaultCulture;
         }
 
@@ -273,16 +248,16 @@ public sealed class CultureSwitcher
             {
                 IReadOnlyDictionary<string, string> translations = await LoadTranslationsAsync(culture);
                 _translationsByCulture[culture] = translations;
-                _logger.TranslationsLoaded(translations.Count, culture);
+                logger.TranslationsLoaded(translations.Count, culture);
             }
             catch (Exception ex)
             {
-                _logger.TranslationsLoadFailed(ex, culture);
+                logger.TranslationsLoadFailed(ex, culture);
                 _translationsByCulture[culture] = EmptyTranslations;
             }
         }
 
-        _currentCulture = culture;
+        CurrentCulture = culture;
 
         // Keep .NET's culture in step with the picker: the resx
         // fallback in HttpBackedStringLocalizer resolves through
@@ -298,11 +273,11 @@ public sealed class CultureSwitcher
         {
             try
             {
-                await _js.InvokeVoidAsync("localStorage.setItem", StorageKey, culture);
+                await js.InvokeVoidAsync("localStorage.setItem", StorageKey, culture);
             }
             catch (Exception ex)
             {
-                _logger.CulturePersistenceFailed(ex);
+                logger.CulturePersistenceFailed(ex);
             }
         }
 

@@ -1,9 +1,5 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
-using Cardscape.Application.Authentication.DTOs;
 using Cardscape.SecurityTests.Fixtures;
 using FluentAssertions;
 using Xunit;
@@ -24,15 +20,12 @@ namespace Cardscape.SecurityTests;
 /// it ships.
 /// </summary>
 [Collection(SecurityApi.Name)]
-public sealed class MassAssignmentSecurityTests
+public sealed class MassAssignmentSecurityTests(SecurityTestsWebApplicationFactory factory)
 {
-    private readonly SecurityTestsWebApplicationFactory _factory;
-    public MassAssignmentSecurityTests(SecurityTestsWebApplicationFactory factory) => _factory = factory;
-
     [Fact]
     public async Task Register_With_AdminFlag_In_Body_Is_Ignored()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
 
         string smuggleEmail = $"smuggle-{Guid.NewGuid():N}@cardscape.local";
         var smuggle = new
@@ -58,7 +51,7 @@ public sealed class MassAssignmentSecurityTests
     [Fact]
     public async Task Register_With_Nested_AdminField_In_Body_Is_Ignored()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         var smuggle = new
         {
             user = new
@@ -79,7 +72,7 @@ public sealed class MassAssignmentSecurityTests
     [Fact]
     public async Task Login_With_PasswordOverride_Field_Is_Ignored()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         var email = $"login-{Guid.NewGuid():N}@cardscape.local";
         await client.PostAsJsonAsync("api/auth/register",
             new { email, displayName = "Login", password = "Password123!" },

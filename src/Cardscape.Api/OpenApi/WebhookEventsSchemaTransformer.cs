@@ -20,12 +20,12 @@ namespace Cardscape.Api.OpenApi;
 internal sealed class WebhookEventsSchemaTransformer : IOpenApiDocumentTransformer
 {
     private static readonly string[] Events =
-    {
+    [
         "card.created",
         "card.moved",
         "card.completed",
         "comment.added"
-    };
+    ];
 
     public Task TransformAsync(
         OpenApiDocument document,
@@ -36,17 +36,7 @@ internal sealed class WebhookEventsSchemaTransformer : IOpenApiDocumentTransform
         logger?.WebhookEventsSchemaTransformerRunning();
 
         document.Components ??= new OpenApiComponents();
-        if (document.Components.Schemas is null)
-        {
-            document.Components.Schemas = new Dictionary<string, IOpenApiSchema>(StringComparer.Ordinal);
-        }
-        else if (document.Components.Schemas is not IDictionary<string, IOpenApiSchema>)
-        {
-            // Rebuild so the index-set below is allowed; the
-            // framework exposes a read-only view in some versions.
-            document.Components.Schemas = new Dictionary<string, IOpenApiSchema>(
-                document.Components.Schemas, StringComparer.Ordinal);
-        }
+        document.Components.Schemas ??= new Dictionary<string, IOpenApiSchema>(StringComparer.Ordinal);
 
         // The framework prunes schemas that are not referenced by
         // any operation. So we don't just register WebhookEvent;
@@ -85,7 +75,8 @@ internal sealed class WebhookEventsSchemaTransformer : IOpenApiDocumentTransform
         {
             return;
         }
-        if (schema.Properties is null || !schema.Properties.TryGetValue("events", out IOpenApiSchema? eventsField))
+
+        if (schema.Properties is null || !schema.Properties.TryGetValue("events", out _))
         {
             return;
         }

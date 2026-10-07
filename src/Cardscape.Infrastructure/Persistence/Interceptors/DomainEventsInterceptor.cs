@@ -1,6 +1,5 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Realtime;
-using Cardscape.Application.Realtime;
 using Cardscape.Domain.Common;
 using Cardscape.Infrastructure.Logging;
 using Cardscape.Infrastructure.Persistence.Outbox;

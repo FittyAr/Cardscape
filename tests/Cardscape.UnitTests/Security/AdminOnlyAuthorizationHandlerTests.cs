@@ -28,7 +28,7 @@ namespace Cardscape.UnitTests.Security;
 /// expiry. These tests pin the contract so a future refactor
 /// cannot silently flip a default.
 /// </summary>
-public class AdminOnlyAuthorizationHandlerTests
+public sealed class AdminOnlyAuthorizationHandlerTests
 {
     private const string IsAdminClaim = "is_admin";
 
@@ -41,7 +41,7 @@ public class AdminOnlyAuthorizationHandlerTests
         var handler = BuildHandler(users, cacheEnabled: true);
 
         AuthorizationHandlerContext context = BuildContext(
-            userId, claimValue: "true", otherClaims: new Dictionary<string, string>());
+            userId, claimValue: "true", otherClaims: []);
 
         await handler.HandleAsync(context);
 
@@ -63,7 +63,7 @@ public class AdminOnlyAuthorizationHandlerTests
         var handler = BuildHandler(users, cacheEnabled: true);
 
         AuthorizationHandlerContext context = BuildContext(
-            userId, claimValue: "false", otherClaims: new Dictionary<string, string>());
+            userId, claimValue: "false", otherClaims: []);
 
         await handler.HandleAsync(context);
 
@@ -82,7 +82,7 @@ public class AdminOnlyAuthorizationHandlerTests
         var handler = BuildHandler(users, cacheEnabled: true);
 
         AuthorizationHandlerContext context = BuildContext(
-            userId, claimValue: null, otherClaims: new Dictionary<string, string>());
+            userId, claimValue: null, otherClaims: []);
 
         await handler.HandleAsync(context);
 
@@ -105,7 +105,7 @@ public class AdminOnlyAuthorizationHandlerTests
         var handler = BuildHandler(users, cacheEnabled: false);
 
         AuthorizationHandlerContext context = BuildContext(
-            userId, claimValue: "true", otherClaims: new Dictionary<string, string>());
+            userId, claimValue: "true", otherClaims: []);
 
         await handler.HandleAsync(context);
 
@@ -124,7 +124,7 @@ public class AdminOnlyAuthorizationHandlerTests
         var handler = BuildHandler(users, cacheEnabled: false);
 
         AuthorizationHandlerContext context = BuildContext(
-            userId, claimValue: "false", otherClaims: new Dictionary<string, string>());
+            userId, claimValue: "false", otherClaims: []);
 
         await handler.HandleAsync(context);
 
@@ -143,7 +143,7 @@ public class AdminOnlyAuthorizationHandlerTests
         var handler = BuildHandler(users, cacheEnabled: false);
 
         AuthorizationHandlerContext context = BuildContext(
-            userId, claimValue: null, otherClaims: new Dictionary<string, string>());
+            userId, claimValue: null, otherClaims: []);
 
         await handler.HandleAsync(context);
 
@@ -158,7 +158,7 @@ public class AdminOnlyAuthorizationHandlerTests
 
         ClaimsPrincipal anonymous = new(new ClaimsIdentity()); // not authenticated
         AuthorizationHandlerContext context = new(
-            new[] { new AdminOnlyRequirement() },
+            [new AdminOnlyRequirement()],
             anonymous,
             resource: null);
 
@@ -192,7 +192,7 @@ public class AdminOnlyAuthorizationHandlerTests
         ClaimsIdentity identity = new(claims, authenticationType: "TestScheme");
         ClaimsPrincipal principal = new(identity);
         return new AuthorizationHandlerContext(
-            new[] { new AdminOnlyRequirement() },
+            [new AdminOnlyRequirement()],
             principal,
             resource: null);
     }

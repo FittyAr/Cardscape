@@ -2,7 +2,6 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists.Errors;
 using Cardscape.Domain.Lists.Events;
-using static Cardscape.Domain.Lists.Errors.ListErrors;
 
 namespace Cardscape.Domain.Lists;
 

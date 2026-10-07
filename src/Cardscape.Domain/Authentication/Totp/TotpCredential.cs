@@ -1,4 +1,3 @@
-using Cardscape.Domain.Authentication.Totp.Errors;
 using Cardscape.Domain.Authentication.Totp.Events;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;

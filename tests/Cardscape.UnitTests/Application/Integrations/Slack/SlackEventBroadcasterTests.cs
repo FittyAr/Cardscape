@@ -8,7 +8,6 @@ using Cardscape.Domain.Cards.Events;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Integrations.Slack;
 using Cardscape.Domain.Lists;
-using Cardscape.Domain.Workspaces;
 using Cardscape.Tests.Common.Fakes;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -192,52 +191,35 @@ public sealed class SlackEventBroadcasterTests
 
     private sealed record UnsupportedEvent(DateTimeOffset OccurredAt) : IDomainEvent;
 
-    private sealed class SlackTestContext : IDisposable
+    private sealed class SlackTestContext(
+        BoardId boardId,
+        Card card,
+        BoardList list,
+        SlackWorkspace workspace,
+        IReadOnlyList<SlackChannel> channels,
+        Mock<ICardRepository> cards,
+        Mock<IBoardListRepository> lists,
+        Mock<ISlackChannelRepository> channelRepository,
+        Mock<ISlackWorkspaceRepository> workspaceRepository,
+        Mock<ISlackNotificationService> notifier,
+        Mock<IUnitOfWork> unitOfWork,
+        FakeClock clock) : IDisposable
     {
         private ServiceProvider? _services;
 
-        public SlackTestContext(
-            BoardId boardId,
-            Card card,
-            BoardList list,
-            SlackWorkspace workspace,
-            IReadOnlyList<SlackChannel> channels,
-            Mock<ICardRepository> cards,
-            Mock<IBoardListRepository> lists,
-            Mock<ISlackChannelRepository> channelRepository,
-            Mock<ISlackWorkspaceRepository> workspaceRepository,
-            Mock<ISlackNotificationService> notifier,
-            Mock<IUnitOfWork> unitOfWork,
-            FakeClock clock)
-        {
-            BoardId = boardId;
-            Card = card;
-            List = list;
-            Workspace = workspace;
-            ChannelIds = channels.Select(channel => channel.ChannelId).ToArray();
-            Cards = cards;
-            Lists = lists;
-            Channels = channelRepository;
-            Workspaces = workspaceRepository;
-            Notifier = notifier;
-            UnitOfWork = unitOfWork;
-            Clock = clock;
-            CardCreatedEvent = new CardCreated(card.Id, list.Id, card.Title, Now);
-        }
-
-        public BoardId BoardId { get; }
-        public Card Card { get; }
-        public BoardList List { get; }
-        public SlackWorkspace Workspace { get; }
-        public IReadOnlyList<string> ChannelIds { get; }
-        public Mock<ICardRepository> Cards { get; }
-        public Mock<IBoardListRepository> Lists { get; }
-        public Mock<ISlackChannelRepository> Channels { get; }
-        public Mock<ISlackWorkspaceRepository> Workspaces { get; }
-        public Mock<ISlackNotificationService> Notifier { get; }
-        public Mock<IUnitOfWork> UnitOfWork { get; }
-        public FakeClock Clock { get; }
-        public CardCreated CardCreatedEvent { get; }
+        public BoardId BoardId { get; } = boardId;
+        public Card Card { get; } = card;
+        public BoardList List { get; } = list;
+        public SlackWorkspace Workspace { get; } = workspace;
+        public IReadOnlyList<string> ChannelIds { get; } = channels.Select(channel => channel.ChannelId).ToArray();
+        public Mock<ICardRepository> Cards { get; } = cards;
+        public Mock<IBoardListRepository> Lists { get; } = lists;
+        public Mock<ISlackChannelRepository> Channels { get; } = channelRepository;
+        public Mock<ISlackWorkspaceRepository> Workspaces { get; } = workspaceRepository;
+        public Mock<ISlackNotificationService> Notifier { get; } = notifier;
+        public Mock<IUnitOfWork> UnitOfWork { get; } = unitOfWork;
+        public FakeClock Clock { get; } = clock;
+        public CardCreated CardCreatedEvent { get; } = new CardCreated(card.Id, list.Id, card.Title, Now);
         public SlackEventBroadcaster Broadcaster { get; private set; } = null!;
         public List<(SlackWorkspace Workspace, string ChannelId, string Message)> Sends { get; } = [];
 

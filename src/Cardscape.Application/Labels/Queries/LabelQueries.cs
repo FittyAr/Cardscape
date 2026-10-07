@@ -2,7 +2,6 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Labels.DTOs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Labels;
 using Wolverine;
 
 namespace Cardscape.Application.Labels.Queries;

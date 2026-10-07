@@ -1,10 +1,6 @@
-using Cardscape.Application.Common;
 using Cardscape.Application.Security.Commands;
 using Cardscape.Application.Security.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Security;
@@ -83,5 +79,4 @@ public static class SecurityEndpoints
     public sealed record RevokeApiTokenBody(string? Reason);
 
     public sealed record UpdateRateLimitBody(int RateLimitPerHour, int BurstSize);
-
 }

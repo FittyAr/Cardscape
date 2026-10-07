@@ -1,4 +1,3 @@
-using System.Net.Http;
 using Cardscape.Web.Shared;
 
 namespace Cardscape.Web.Services.Api;

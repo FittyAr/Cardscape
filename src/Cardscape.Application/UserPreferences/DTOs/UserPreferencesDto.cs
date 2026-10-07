@@ -1,5 +1,3 @@
-using Cardscape.Domain.UserPreferences;
-
 namespace Cardscape.Application.UserPreferences.DTOs;
 
 /// <summary>

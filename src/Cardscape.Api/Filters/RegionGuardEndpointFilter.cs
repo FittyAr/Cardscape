@@ -1,7 +1,6 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Workspaces;
-using Microsoft.AspNetCore.Http;
 
 namespace Cardscape.Api.Filters;
 

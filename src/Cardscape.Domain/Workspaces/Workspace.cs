@@ -1,5 +1,4 @@
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Workspaces.Errors;
 using Cardscape.Domain.Workspaces.Events;
 using static Cardscape.Domain.Workspaces.Errors.WorkspaceErrors;
 

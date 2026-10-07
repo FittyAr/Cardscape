@@ -1,8 +1,6 @@
 using System.Text;
 using Cardscape.Api.Authentication;
-using Cardscape.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 

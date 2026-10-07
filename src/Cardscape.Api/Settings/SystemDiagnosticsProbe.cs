@@ -2,9 +2,6 @@ using System.Diagnostics;
 using System.Reflection;
 using Cardscape.Contracts.Settings;
 using Cardscape.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 
 namespace Cardscape.Api.Settings;
 

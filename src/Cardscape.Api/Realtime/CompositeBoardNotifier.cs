@@ -1,6 +1,5 @@
 using Cardscape.Api.Hubs;
 using Cardscape.Application.Abstractions.Realtime;
-using Cardscape.Application.Realtime;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Cardscape.Api.Realtime;
@@ -15,25 +14,16 @@ namespace Cardscape.Api.Realtime;
 /// notify is awaited. Transient failures propagate to the domain-event outbox
 /// so this broadcaster delivery remains pending and is retried.
 /// </summary>
-public sealed class CompositeBoardNotifier : IBoardNotifier
+public sealed class CompositeBoardNotifier(
+    IHubContext<BoardHub, IBoardClient> hub,
+    HttpMcpResourceNotifier mcpNotifier) : IBoardNotifier
 {
-    private readonly IHubContext<BoardHub, IBoardClient> _hub;
-    private readonly HttpMcpResourceNotifier _mcpNotifier;
-
-    public CompositeBoardNotifier(
-        IHubContext<BoardHub, IBoardClient> hub,
-        HttpMcpResourceNotifier mcpNotifier)
-    {
-        _hub = hub;
-        _mcpNotifier = mcpNotifier;
-    }
-
     public async Task BroadcastAsync(
         Guid boardId,
         Func<IBoardClient, Task> dispatch,
         CancellationToken ct = default)
     {
-        await dispatch(_hub.Clients.Group($"board:{boardId:N}"));
-        await _mcpNotifier.NotifyAsync(boardId, ct);
+        await dispatch(hub.Clients.Group($"board:{boardId:N}"));
+        await mcpNotifier.NotifyAsync(boardId, ct);
     }
 }

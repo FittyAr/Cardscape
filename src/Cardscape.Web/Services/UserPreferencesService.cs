@@ -48,19 +48,16 @@ public sealed class UserPreferencesService
 
     private readonly IUserPreferencesApiClient _api;
     private readonly ThemeService _themeService;
-    private readonly AuthenticationStateProvider _auth;
     private readonly ILogger<UserPreferencesService> _log;
     private bool _systemPreferenceKnown;
 
     public UserPreferencesService(
         IUserPreferencesApiClient api,
         ThemeService themeService,
-        AuthenticationStateProvider auth,
         ILogger<UserPreferencesService> log)
     {
         _api = api;
         _themeService = themeService;
-        _auth = auth;
         _log = log;
 
         string? initialTheme = _themeService.Theme;

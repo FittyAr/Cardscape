@@ -18,7 +18,7 @@ using Cardscape.Web.Theming;
 
 namespace Cardscape.UnitTests.Theming;
 
-public class ThemeCatalogTests
+public sealed class ThemeCatalogTests
 {
     [Fact]
     public void All_ExposesTwelveEntries()
@@ -92,14 +92,14 @@ public class ThemeCatalogTests
             .Where(e => !e.IsCustom)
             .Select(e => e.Name)
             .Should()
-            .BeEquivalentTo(new[]
-            {
+            .BeEquivalentTo(
+            [
                 "default", "dark",
                 "humanistic", "humanistic-dark",
                 "material", "material-dark",
                 "software", "software-dark",
                 "standard", "standard-dark",
-            });
+            ]);
     }
 
     [Theory]
@@ -133,7 +133,7 @@ public class ThemeCatalogTests
     }
 }
 
-public class CardscapeThemesTests
+public sealed class CardscapeThemesTests
 {
     [Fact]
     public void Classic_ProducesAFreshInstanceEachCall()

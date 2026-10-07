@@ -1,9 +1,8 @@
 using Cardscape.Domain.Cards;
-using Cardscape.Domain.Common;
 
 namespace Cardscape.UnitTests.Domain.ValueObjects;
 
-public class CardDescriptionTests
+public sealed class CardDescriptionTests
 {
     [Theory]
     [InlineData(null, "")]

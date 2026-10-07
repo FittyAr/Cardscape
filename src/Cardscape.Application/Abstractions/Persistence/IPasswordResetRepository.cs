@@ -1,5 +1,4 @@
 using Cardscape.Domain.Authentication.PasswordResets;
-using Cardscape.Domain.Members;
 
 namespace Cardscape.Application.Abstractions.Persistence;
 

@@ -3,7 +3,7 @@ using Cardscape.Domain.Members;
 
 namespace Cardscape.UnitTests.Domain.ValueObjects;
 
-public class PasswordHashTests
+public sealed class PasswordHashTests
 {
     [Fact]
     public void FromHashed_WithNonEmptyString_ReturnsSuccess()

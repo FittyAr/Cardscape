@@ -1,5 +1,4 @@
 using Cardscape.Application.Abstractions.Persistence;
-using Microsoft.EntityFrameworkCore;
 
 namespace Cardscape.Infrastructure.Persistence;
 

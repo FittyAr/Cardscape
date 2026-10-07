@@ -1,11 +1,8 @@
-using System.Linq;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-
-
 
 namespace Cardscape.Infrastructure.Repositories;
 
@@ -23,7 +20,6 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
         return await Db.Set<User>().FirstOrDefaultAsync(user => user.Email == typedEmail, ct);
     }
 
-
     public async Task<IReadOnlyList<User>> ListByIdsAsync(
         IReadOnlyList<UserId> ids, CancellationToken ct = default)
     {
@@ -38,7 +34,7 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
         // supports and avoids an N+1 round-trip when a list
         // projection (comments, activities, etc.) needs the
         // display name for every distinct author.
-        HashSet<UserId> wanted = new(ids);
+        HashSet<UserId> wanted = [.. ids];
         return await Db.Set<User>()
             .Where(u => wanted.Contains(u.Id))
             .ToListAsync(ct);

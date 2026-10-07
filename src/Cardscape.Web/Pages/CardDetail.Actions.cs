@@ -1,19 +1,11 @@
-using System.Text.Json;
-using Cardscape.Web.Resources;
 using Cardscape.Web.Services;
-using Cardscape.Web.Services.Api;
 using Cardscape.Web.Shared;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.Extensions.Localization;
-using Microsoft.JSInterop;
 using Radzen;
-using Radzen.Blazor;
 
 namespace Cardscape.Web.Pages;
 
-public partial class CardDetail
+public sealed partial class CardDetail
 {
     private async Task ToggleVoteAsync()
     {
@@ -178,7 +170,7 @@ public partial class CardDetail
             CaptureCommandOutcome(result, L["ActivityKindComment"]);
             if (result.IsSuccess)
             {
-                _comments = [.. (_comments ?? Array.Empty<CommentDto>()), result.Value!];
+                _comments = [.. (_comments ?? []), result.Value!];
                 _addCommentModel.Body = string.Empty;
             }
         }

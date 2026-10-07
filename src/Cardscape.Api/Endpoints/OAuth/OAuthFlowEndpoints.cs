@@ -1,13 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Application.Common;
-using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
-using Wolverine;
 
 namespace Cardscape.Api.Endpoints.OAuth;
 

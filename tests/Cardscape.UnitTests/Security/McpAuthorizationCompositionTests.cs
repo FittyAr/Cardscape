@@ -10,7 +10,6 @@ using Cardscape.Mcp.Authorization;
 using Cardscape.Mcp.Extensions;
 using Cardscape.Mcp.Idempotency;
 using Cardscape.Tests.Common.Fakes;
-using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;

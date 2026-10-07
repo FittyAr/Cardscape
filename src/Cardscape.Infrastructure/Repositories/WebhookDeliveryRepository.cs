@@ -3,8 +3,6 @@ using Cardscape.Domain.Webhooks;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-
-
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class WebhookDeliveryRepository(CardscapeDbContext db)
@@ -40,7 +38,7 @@ public sealed class WebhookDeliveryRepository(CardscapeDbContext db)
         rows.Sort((a, b) => b.CreatedAt.CompareTo(a.CreatedAt));
         if (skip >= rows.Count)
         {
-            return new List<WebhookDelivery>();
+            return [];
         }
 
         int end = Math.Min(skip + take, rows.Count);

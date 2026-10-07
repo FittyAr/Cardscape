@@ -1,9 +1,7 @@
 using Cardscape.Api.Logging;
-using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Application.Realtime;
 using Cardscape.Domain.Boards;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -18,22 +16,11 @@ namespace Cardscape.Api.Hubs;
 /// the actual events to every group member.
 /// </summary>
 [Authorize]
-public sealed class BoardHub : Hub<IBoardClient>
+public sealed class BoardHub(
+    IBoardRepository boards,
+    ICurrentUser currentUser,
+    ILogger<BoardHub> logger) : Hub<IBoardClient>
 {
-    private readonly IBoardRepository _boards;
-    private readonly ICurrentUser _currentUser;
-    private readonly ILogger<BoardHub> _logger;
-
-    public BoardHub(
-        IBoardRepository boards,
-        ICurrentUser currentUser,
-        ILogger<BoardHub> logger)
-    {
-        _boards = boards;
-        _currentUser = currentUser;
-        _logger = logger;
-    }
-
     public async Task JoinBoardAsync(Guid boardId)
     {
         // SECURITY: a logged-in user is not, by default, a
@@ -46,15 +33,15 @@ public sealed class BoardHub : Hub<IBoardClient>
         // but a leaked Guid (e.g. via a search response, a
         // shared link, or a notification payload) was enough
         // for a real-time IDOR.
-        if (_currentUser.Id is null)
+        if (currentUser.Id is null)
         {
             throw new HubException("Authentication required to join a board group.");
         }
 
-        Board? board = await _boards.GetWithMembersAsync(new BoardId(boardId));
-        if (board is null || !board.IsMember(_currentUser.Id.Value))
+        Board? board = await boards.GetWithMembersAsync(new BoardId(boardId));
+        if (board is null || !board.IsMember(currentUser.Id.Value))
         {
-            _logger.BoardHubJoinRejected(boardId, _currentUser.Id.Value);
+            logger.BoardHubJoinRejected(boardId, currentUser.Id.Value);
             // Generic message — we don't leak whether the
             // board exists or the user is just not a member.
             throw new HubException("You are not a member of that board.");

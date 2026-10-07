@@ -1,6 +1,3 @@
-using System.Net.Http;
-using System.Net.Http.Json;
-
 namespace Cardscape.Web.Services.Api;
 
 public interface IAiApiClient

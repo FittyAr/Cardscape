@@ -22,7 +22,7 @@ namespace Cardscape.UnitTests.Security;
 /// error posture (a misconfigured value should fail loud at
 /// composition time, not silently).
 /// </summary>
-public class ConfigurableSubsystemsOptionsTests
+public sealed class ConfigurableSubsystemsOptionsTests
 {
     [Fact]
     public void AdminAuthorizationOptions_Default_IsCacheEnabled()
@@ -145,7 +145,7 @@ public class ConfigurableSubsystemsOptionsTests
         // appsettings without the new keys) should land on
         // the safe InMemory defaults, not crash.
         IConfigurationRoot config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>())
+            .AddInMemoryCollection([])
             .Build();
 
         InfrastructureOptions options = InfrastructureOptions.Bind(config);

@@ -1,6 +1,3 @@
-using Cardscape.Domain.BackgroundJobs;
-using Cardscape.Domain.Idempotency;
-using Cardscape.Domain.Webhooks;
 using Cardscape.Seeder.Persistence;
 using Cardscape.Seeder.Reporting;
 
@@ -28,7 +25,7 @@ internal sealed class WebhooksAndBackgroundSeedStep : SeedStepBase
             string secretHash = Generators.PasswordGenerator.Sha256Hex(secret);
 
             string[] urls =
-            {
+            [
                 // The SSRF guard rejects anything whose host
                 // does not resolve via DNS, so the demo
                 // endpoints use real, public hosts. The
@@ -39,7 +36,7 @@ internal sealed class WebhooksAndBackgroundSeedStep : SeedStepBase
                 // environment.
                 "https://example.com/cardscape/webhook",
                 "https://httpbin.org/post"
-            };
+            ];
 
             foreach (string url in urls)
             {
@@ -111,12 +108,12 @@ internal sealed class WebhooksAndBackgroundSeedStep : SeedStepBase
         //    background-jobs page renders something
         //    interesting.
         string[] jobTypes =
-        {
+        [
             "card-repeater:spawn",
             "webhook-delivery:deliver",
             "retention-sweeper:purge",
             "scim:sync-group"
-        };
+        ];
 
         for (int i = 0; i < 12; i++)
         {

@@ -1,9 +1,8 @@
 using Cardscape.Domain.Checklists;
-using Cardscape.Domain.Common;
 
 namespace Cardscape.UnitTests.Domain.ValueObjects;
 
-public class ChecklistTitleTests
+public sealed class ChecklistTitleTests
 {
     [Theory]
     [InlineData("Pre-flight checks")]

@@ -1,11 +1,7 @@
-using Cardscape.Application.Common;
 using Cardscape.Application.OAuth.Commands;
 using Cardscape.Application.OAuth.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.OAuth;
@@ -65,5 +61,4 @@ public static class OAuthAppEndpoints
         string Name,
         IReadOnlyCollection<string>? AllowedScopes,
         IReadOnlyCollection<string>? RedirectUris);
-
 }

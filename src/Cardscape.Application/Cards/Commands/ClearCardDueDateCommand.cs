@@ -1,7 +1,6 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Application.Cards.Common;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Common;
 using Cardscape.Domain.Cards;

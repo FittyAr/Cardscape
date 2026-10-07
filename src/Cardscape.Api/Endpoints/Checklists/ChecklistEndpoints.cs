@@ -1,8 +1,5 @@
 using Cardscape.Application.Checklists;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Checklists;
@@ -100,5 +97,4 @@ public static class ChecklistEndpoints
     public sealed record RenameChecklistBody(string Title);
     public sealed record AddItemBody(string Text);
     public sealed record RenameItemBody(string Text);
-
 }

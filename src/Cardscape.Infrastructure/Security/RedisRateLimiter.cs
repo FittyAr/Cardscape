@@ -25,12 +25,15 @@ namespace Cardscape.Infrastructure.Security;
 /// elsewhere; the rate limiter is the right place to be
 /// permissive.
 /// </summary>
-public sealed class RedisRateLimiter : IRateLimiter
+public sealed class RedisRateLimiter(
+    IConnectionMultiplexer redis,
+    Infrastructure.Configuration.RedisOptions options,
+    Infrastructure.Configuration.RateLimiterOptions limiterOptions,
+    ILogger<RedisRateLimiter> logger) : IRateLimiter
 {
-    private readonly IConnectionMultiplexer _redis;
-    private readonly string _keyPrefix;
-    private readonly int _database;
-    private readonly ILogger<RedisRateLimiter> _logger;
+    private readonly IConnectionMultiplexer _redis = redis;
+    private readonly string _keyPrefix = limiterOptions.KeyPrefix;
+    private readonly int _database = options.Database;
 
     /// <summary>
     /// Atomic refill + consume. The script stores the bucket
@@ -107,18 +110,6 @@ else
 end
 ");
 
-    public RedisRateLimiter(
-        IConnectionMultiplexer redis,
-        Infrastructure.Configuration.RedisOptions options,
-        Infrastructure.Configuration.RateLimiterOptions limiterOptions,
-        ILogger<RedisRateLimiter> logger)
-    {
-        _redis = redis;
-        _keyPrefix = limiterOptions.KeyPrefix;
-        _database = options.Database;
-        _logger = logger;
-    }
-
     public RateLimitDecision TryAcquire(Guid tokenId, DateTimeOffset at)
     {
         // Configuration is read from the hash itself; we pass
@@ -145,15 +136,15 @@ end
             // A minimal write-only update: HSET the configured
             // values, leave the rest of the bucket alone. The
             // next TryAcquire picks them up.
-            db.HashSet(key, new HashEntry[]
-            {
+            db.HashSet(key,
+            [
                 new("configuredRate", rateLimitPerHour),
                 new("configuredBurst", burstSize)
-            });
+            ]);
         }
         catch (Exception ex)
         {
-            _logger.RedisRateLimitConfigureFailed(ex, tokenId);
+            logger.RedisRateLimitConfigureFailed(ex, tokenId);
         }
     }
 
@@ -216,7 +207,7 @@ end
         }
         catch (Exception ex)
         {
-            _logger.RedisRateLimitStatusFailed(ex, tokenId);
+            logger.RedisRateLimitStatusFailed(ex, tokenId);
             return null;
         }
     }
@@ -259,14 +250,14 @@ end
 
             if (result.IsNull)
             {
-                _logger.RedisRateLimitScriptReturnedNull(tokenId);
+                logger.RedisRateLimitScriptReturnedNull(tokenId);
                 return new RateLimitDecision(Allowed: true, RetryAfter: 0);
             }
 
             RedisResult[] arr = (RedisResult[])result!;
             if (arr.Length < 3)
             {
-                _logger.RedisRateLimitScriptShapeInvalid(tokenId);
+                logger.RedisRateLimitScriptShapeInvalid(tokenId);
                 return new RateLimitDecision(Allowed: true, RetryAfter: 0);
             }
 
@@ -281,7 +272,7 @@ end
             // Fail open: rate limiting is a soft guard. Logging
             // is loud enough that operators see the regression
             // in their dashboards.
-            _logger.RedisRateLimitAcquireFailed(ex, tokenId);
+            logger.RedisRateLimitAcquireFailed(ex, tokenId);
             return new RateLimitDecision(Allowed: true, RetryAfter: 0);
         }
     }

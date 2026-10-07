@@ -4,8 +4,6 @@ using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-
-
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class BoardRepository(CardscapeDbContext db) : RepositoryBase<Board, BoardId>(db), IBoardRepository
@@ -29,7 +27,7 @@ public sealed class BoardRepository(CardscapeDbContext db) : RepositoryBase<Boar
             return [];
         }
 
-        HashSet<WorkspaceId> wanted = new(workspaceIds);
+        HashSet<WorkspaceId> wanted = [.. workspaceIds];
         return await Db.Set<Board>()
             .AsNoTracking()
             .Where(board => !board.IsDeleted && wanted.Contains(board.WorkspaceId))

@@ -2,10 +2,7 @@ using Cardscape.Application.Dashboards.Commands;
 using Cardscape.Application.Dashboards.DTOs;
 using Cardscape.Application.Dashboards.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Dashboards;
@@ -50,5 +47,4 @@ public static class DashboardsEndpoints
 
         return app;
     }
-
 }

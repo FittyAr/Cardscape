@@ -5,7 +5,7 @@ using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Application.Handlers;
 
-public class CreateBoardCommandHandlerTests
+public sealed class CreateBoardCommandHandlerTests
 {
     [Fact]
     public async Task Handle_AsWorkspaceMember_CreatesAndPersistsBoard()

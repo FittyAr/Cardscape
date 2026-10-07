@@ -1,8 +1,5 @@
 using Cardscape.Application.Recurrence;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Recurrence;
@@ -60,5 +57,4 @@ public static class RecurrenceEndpoints
     }
 
     public sealed record RecurrenceBody(int IntervalDays, DateTimeOffset FirstOccurrenceAt);
-
 }

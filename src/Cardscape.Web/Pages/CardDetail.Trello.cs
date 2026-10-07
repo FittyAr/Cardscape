@@ -10,7 +10,7 @@ namespace Cardscape.Web.Pages;
 // Trello-style "Add to card" side panel: members, labels, dates, cover
 // and move, plus editing / deleting your own comments. Board context
 // (labels, lists, workspace members) is loaded once per card.
-public partial class CardDetail
+public sealed partial class CardDetail
 {
     [Inject] private IListsApiClient ListsApi { get; set; } = default!;
     [Inject] private ILabelsApiClient LabelsApi { get; set; } = default!;

@@ -1,5 +1,4 @@
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces;
 
 namespace Cardscape.Application.Abstractions.Security;

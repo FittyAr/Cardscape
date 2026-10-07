@@ -1,28 +1,22 @@
-using System.Net.Http;
-
 namespace Cardscape.Sdk;
 
 /// <summary>Provides operations for workspaces and their memberships.</summary>
-public sealed class WorkspacesClient
+/// <remarks>Initializes a new instance of the <see cref="WorkspacesClient"/> class.</remarks>
+/// <param name="parent">The client that supplies transport and serialization.</param>
+public sealed class WorkspacesClient(CardscapeClient parent)
 {
-    private readonly CardscapeClient _parent;
-
-    /// <summary>Initializes a new instance of the <see cref="WorkspacesClient"/> class.</summary>
-    /// <param name="parent">The client that supplies transport and serialization.</param>
-    public WorkspacesClient(CardscapeClient parent) => _parent = parent;
-
     /// <summary>Lists the workspaces accessible to the current user.</summary>
     /// <param name="ct">The token used to cancel the operation.</param>
     /// <returns>The accessible workspaces.</returns>
     public Task<IReadOnlyList<WorkspaceDto>> ListAsync(CancellationToken ct = default) =>
-        _parent.SendAsync<IReadOnlyList<WorkspaceDto>>(new HttpRequestMessage(HttpMethod.Get, "api/workspaces/"), ct);
+        parent.SendAsync<IReadOnlyList<WorkspaceDto>>(new HttpRequestMessage(HttpMethod.Get, "api/workspaces/"), ct);
 
     /// <summary>Gets a workspace by identifier.</summary>
     /// <param name="workspaceId">The workspace identifier.</param>
     /// <param name="ct">The token used to cancel the operation.</param>
     /// <returns>The requested workspace.</returns>
     public Task<WorkspaceDto> GetAsync(Guid workspaceId, CancellationToken ct = default) =>
-        _parent.SendAsync<WorkspaceDto>(new HttpRequestMessage(HttpMethod.Get, $"api/workspaces/{workspaceId}"), ct);
+        parent.SendAsync<WorkspaceDto>(new HttpRequestMessage(HttpMethod.Get, $"api/workspaces/{workspaceId}"), ct);
 
     /// <summary>Creates a workspace.</summary>
     /// <param name="body">The workspace creation values.</param>
@@ -30,8 +24,8 @@ public sealed class WorkspacesClient
     /// <returns>The created workspace.</returns>
     public Task<WorkspaceDto> CreateAsync(CreateWorkspaceRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Post, "api/workspaces/") { Content = _parent.CreateJsonContent(body) };
-        return _parent.SendAsync<WorkspaceDto>(req, ct);
+        HttpRequestMessage req = new(HttpMethod.Post, "api/workspaces/") { Content = parent.CreateJsonContent(body) };
+        return parent.SendAsync<WorkspaceDto>(req, ct);
     }
 
     /// <summary>Changes the data-hosting region of a workspace.</summary>
@@ -43,9 +37,9 @@ public sealed class WorkspacesClient
     {
         HttpRequestMessage req = new(HttpMethod.Post, $"api/workspaces/{workspaceId}/region")
         {
-            Content = _parent.CreateJsonContent(new SetWorkspaceRegionRequest(region))
+            Content = parent.CreateJsonContent(new SetWorkspaceRegionRequest(region))
         };
-        return _parent.SendAsync<WorkspaceDto>(req, ct);
+        return parent.SendAsync<WorkspaceDto>(req, ct);
     }
 
     /// <summary>Lists the members of a workspace.</summary>
@@ -53,6 +47,6 @@ public sealed class WorkspacesClient
     /// <param name="ct">The token used to cancel the operation.</param>
     /// <returns>The workspace memberships.</returns>
     public Task<IReadOnlyList<WorkspaceMemberDto>> ListMembersAsync(Guid workspaceId, CancellationToken ct = default) =>
-        _parent.SendAsync<IReadOnlyList<WorkspaceMemberDto>>(
+        parent.SendAsync<IReadOnlyList<WorkspaceMemberDto>>(
             new HttpRequestMessage(HttpMethod.Get, $"api/workspaces/{workspaceId}/members"), ct);
 }

@@ -1,9 +1,6 @@
-using Cardscape.Domain.Common;
-using Cardscape.Domain.Workspaces;
-
 namespace Cardscape.UnitTests.Workspaces;
 
-public class WorkspaceInvitationTests
+public sealed class WorkspaceInvitationTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);
 

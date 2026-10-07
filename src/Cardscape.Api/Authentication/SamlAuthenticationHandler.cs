@@ -10,7 +10,6 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Saml2CommandResult = Sustainsys.Saml2.WebSso.CommandResult;
 using Saml2ConfigurationOptions = Sustainsys.Saml2.Configuration.Options;
@@ -40,44 +39,24 @@ namespace Cardscape.Api.Authentication;
 /// returned via a redirect URL fragment that mirrors the
 /// OAuth external-login contract.
 /// </summary>
-public sealed class SamlAuthenticationHandler
-    : AuthenticationHandler<Saml2Options>, IAuthenticationRequestHandler
+public sealed class SamlAuthenticationHandler(
+    IOptionsMonitor<Saml2Options> options,
+    ILoggerFactory logger,
+    UrlEncoder encoder,
+    ISamlConnectionRepository connections,
+    IExternalLoginService externalLogins,
+    ITokenService tokens,
+    IUserRepository users,
+    IClock clock,
+    IConfiguration configuration,
+    IHttpClientFactory httpClientFactory)
+        : AuthenticationHandler<Saml2Options>(options, logger, encoder), IAuthenticationRequestHandler
 {
     private static readonly string[] UserScopes = ["user"];
 
     public const string SchemeName = "Saml";
     public const string SamlCallbackPath = "/saml/callback";
     public const string MetadataHttpClientName = SamlMetadataReader.HttpClientName;
-
-    private readonly ISamlConnectionRepository _connections;
-    private readonly IExternalLoginService _externalLogins;
-    private readonly ITokenService _tokens;
-    private readonly IUserRepository _users;
-    private readonly IClock _clock;
-    private readonly IConfiguration _configuration;
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public SamlAuthenticationHandler(
-        IOptionsMonitor<Saml2Options> options,
-        ILoggerFactory logger,
-        UrlEncoder encoder,
-        ISamlConnectionRepository connections,
-        IExternalLoginService externalLogins,
-        ITokenService tokens,
-        IUserRepository users,
-        IClock clock,
-        IConfiguration configuration,
-        IHttpClientFactory httpClientFactory)
-        : base(options, logger, encoder)
-    {
-        _connections = connections;
-        _externalLogins = externalLogins;
-        _tokens = tokens;
-        _users = users;
-        _clock = clock;
-        _configuration = configuration;
-        _httpClientFactory = httpClientFactory;
-    }
 
     public async Task<bool> HandleRequestAsync()
     {
@@ -97,7 +76,7 @@ public sealed class SamlAuthenticationHandler
         string action = segments[2].ToLowerInvariant();
 
         Domain.Authentication.Saml.SamlConnection? connection =
-            await _connections.FindBySlugAsync(slug, Context.RequestAborted);
+            await connections.FindBySlugAsync(slug, Context.RequestAborted);
         if (connection is null || !connection.IsActive)
         {
             // BETA-2-#12 — see test-results/BETA-TEST-REPORT.md.
@@ -232,8 +211,8 @@ public sealed class SamlAuthenticationHandler
             ?? result.Principal.FindFirstValue("displayName")
             ?? email;
 
-        DateTimeOffset at = _clock.UtcNow;
-        Result<ExternalLoginResolution> resolved = await _externalLogins.ResolveAsync(
+        DateTimeOffset at = clock.UtcNow;
+        Result<ExternalLoginResolution> resolved = await externalLogins.ResolveAsync(
             ExternalProvider.Saml, subjectResult.Value, email, displayName, at,
             Context.RequestAborted);
         if (resolved.IsFailure)
@@ -243,13 +222,13 @@ public sealed class SamlAuthenticationHandler
             return true;
         }
 
-        Domain.Members.User user = await _users.GetByIdAsync(resolved.Value.UserId, Context.RequestAborted)
+        Domain.Members.User user = await users.GetByIdAsync(resolved.Value.UserId, Context.RequestAborted)
             ?? throw new InvalidOperationException(
                 $"External login {resolved.Value.LoginId.Value} resolved to a missing user.");
 
-        string access = _tokens.IssueAccessToken(user, UserScopes);
-        string redirect = _configuration["Cardscape:Web:ExternalLoginRedirectUrl"]
-            ?? _configuration["Web:ExternalLoginRedirectUrl"]
+        string access = tokens.IssueAccessToken(user, UserScopes);
+        string redirect = configuration["Cardscape:Web:ExternalLoginRedirectUrl"]
+            ?? configuration["Web:ExternalLoginRedirectUrl"]
             ?? "/saml/callback";
         string fragment =
             $"access_token={Uri.EscapeDataString(access)}"
@@ -273,7 +252,7 @@ public sealed class SamlAuthenticationHandler
             .GetCommand(Sustainsys.Saml2.WebSso.CommandFactory.MetadataCommand)
             .Run(requestData, options);
 
-        Response.StatusCode = result.HttpStatusCode == HttpStatusCode.OK || result.HttpStatusCode == 0
+        Response.StatusCode = result.HttpStatusCode is HttpStatusCode.OK or 0
             ? StatusCodes.Status200OK
             : (int)result.HttpStatusCode;
         Response.ContentType = result.ContentType ?? "application/samlmetadata+xml";
@@ -322,7 +301,7 @@ public sealed class SamlAuthenticationHandler
             // ourselves and run the same inline parser.
             try
             {
-                HttpClient httpClient = _httpClientFactory.CreateClient(SamlMetadataReader.HttpClientName);
+                HttpClient httpClient = httpClientFactory.CreateClient(SamlMetadataReader.HttpClientName);
                 string metadataXml = await SamlMetadataReader.DownloadAsync(
                     httpClient,
                     connection.IdpMetadataUrl,

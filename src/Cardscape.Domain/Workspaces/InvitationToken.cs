@@ -1,5 +1,3 @@
-using Cardscape.Domain.Common;
-
 namespace Cardscape.Domain.Workspaces;
 
 /// <summary>

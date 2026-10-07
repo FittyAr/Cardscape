@@ -1,8 +1,6 @@
 using System.Security.Claims;
 using Cardscape.Api.Extensions;
 using Cardscape.Application.Abstractions;
-using Cardscape.Application.Abstractions.Authentication;
-using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.Authentication.ExternalLogins;
@@ -10,14 +8,6 @@ using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Domain.Authentication.ExternalLogins.Errors;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Configuration;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Auth;
@@ -83,7 +73,7 @@ public static class ExternalLoginEndpoints
                     ["cardscape.returnUrl"] = NormalizeReturnUrl(returnUrl)
                 }
             };
-            return Results.Challenge(properties, new[] { scheme });
+            return Results.Challenge(properties, [scheme]);
         }).Produces(StatusCodes.Status302Found);
 
         group.MapGet("/{provider}/callback", async (

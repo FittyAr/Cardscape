@@ -1,11 +1,10 @@
 using Cardscape.Application.Authentication.Queries;
-using Cardscape.Domain.Authentication.Totp;
 using Cardscape.Tests.Common.Fakes;
 using OtpNet;
 
 namespace Cardscape.UnitTests.Application.Handlers;
 
-public class LoginUserQueryHandlerTests
+public sealed class LoginUserQueryHandlerTests
 {
     [Fact]
     public async Task Handle_WithValidCredentials_ReturnsAuthResponseAndUpdatesLastLogin()

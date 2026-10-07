@@ -1,11 +1,10 @@
 using System.Text.Json;
 using Cardscape.Web.Services;
-using Cardscape.Web.Services.Api;
 using Cardscape.Web.Shared;
 
 namespace Cardscape.Web.Pages;
 
-public partial class BoardDetail
+public sealed partial class BoardDetail
 {
     // ── Drag-and-drop wiring ───────────────────────────────────
     // The HTML5 drag-and-drop API in Blazor's

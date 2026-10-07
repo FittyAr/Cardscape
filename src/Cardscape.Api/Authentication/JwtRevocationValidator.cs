@@ -1,8 +1,6 @@
 using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Cardscape.Api.Authentication;
 

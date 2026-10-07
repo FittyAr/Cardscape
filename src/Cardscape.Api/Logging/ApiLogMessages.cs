@@ -1,6 +1,4 @@
 using Cardscape.Domain.Members;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 
 namespace Cardscape.Api.Logging;
 

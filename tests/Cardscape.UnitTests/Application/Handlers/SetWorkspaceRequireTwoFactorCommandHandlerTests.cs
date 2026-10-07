@@ -1,5 +1,4 @@
 using Cardscape.Application.Workspaces.Commands;
-using Cardscape.Domain.Workspaces;
 using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Application.Handlers;

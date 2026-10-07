@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Http;
-
 namespace Cardscape.Api.Middleware;
 
 /// <summary>

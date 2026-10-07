@@ -7,7 +7,7 @@ namespace Cardscape.UnitTests.Security;
 /// Token-bucket math. Every test uses a fixed <c>at</c> timeline
 /// so refill calculations are deterministic.
 /// </summary>
-public class RateLimitTests
+public sealed class RateLimitTests
 {
     private static readonly DateTimeOffset T0 = new(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);
     private static readonly Guid TokenA = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -205,18 +205,17 @@ public class RateLimitTests
         // older than the cutoff is removed; a bucket
         // touched at or after the cutoff is kept.
         RateLimiter limiter = new RateLimiter();
-        DateTimeOffset configTime = T0;
         DateTimeOffset activeTime = T0.AddHours(3);
         DateTimeOffset cutoff = T0.AddHours(2);
 
         // TokenA is touched at activeTime (after the
         // cutoff → kept). TokenB is only configured,
-        // at configTime (before the cutoff → evicted).
+        // at T0 (before the cutoff → evicted).
         limiter.Configure(TokenA, rateLimitPerHour: 60, burstSize: 5);
         limiter.Configure(TokenB, rateLimitPerHour: 60, burstSize: 5);
 
         // Configure updates LastAccess; reset TokenA's
-        // LastAccess back to configTime by NOT
+        // LastAccess back to T0 by NOT
         // touching it, then schedule its real touch
         // for activeTime. The simplest way to do
         // that is to configure both, then call

@@ -1,5 +1,4 @@
 using Cardscape.Contracts.Settings;
-using Microsoft.Extensions.Configuration;
 
 namespace Cardscape.Api.Settings;
 

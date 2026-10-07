@@ -1,12 +1,9 @@
 using Cardscape.Application.Abstractions;
-using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Application.Integrations.Slack.DTOs;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Integrations.Slack;
-using Cardscape.Domain.Workspaces;
 using Wolverine;
 
 namespace Cardscape.Application.Integrations.Slack.Commands;

@@ -5,7 +5,7 @@ using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Application.Handlers;
 
-public class InitializeSystemCommandHandlerTests
+public sealed class InitializeSystemCommandHandlerTests
 {
     [Fact]
     public async Task Handle_WhenUsersAlreadyExist_ReturnsConflict()

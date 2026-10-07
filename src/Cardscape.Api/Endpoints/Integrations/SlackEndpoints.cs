@@ -3,10 +3,7 @@ using Cardscape.Application.Integrations.Slack.Commands;
 using Cardscape.Application.Integrations.Slack.DTOs;
 using Cardscape.Application.Integrations.Slack.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Integrations;
@@ -92,5 +89,4 @@ public static class SlackEndpoints
     public sealed record ConnectSlackRequest(string TeamId, string TeamName, string BotToken);
     public sealed record LinkSlackChannelRequest(
         Guid SlackWorkspaceId, Guid BoardId, string ChannelId, string ChannelName, IReadOnlyList<string> Events);
-
 }

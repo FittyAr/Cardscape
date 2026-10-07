@@ -1,6 +1,5 @@
 
 using Cardscape.Api.Settings;
-using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Settings;
@@ -10,11 +9,7 @@ using Cardscape.Application.Authentication.Queries;
 using Cardscape.Contracts.Settings;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Hosting;
 using Wolverine;
 namespace Cardscape.Api.Endpoints.Auth;
 
@@ -47,7 +42,6 @@ public static class AuthEndpoints
                 ? Results.Created("/api/auth/me", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
         }).Produces<AuthResponse>(StatusCodes.Status201Created);
-
 
         group.MapPost("/login", async (LoginRequest request, IMessageBus bus, CancellationToken ct) =>
         {
@@ -164,7 +158,6 @@ public static class AuthEndpoints
     /// the operator dashboard can later see why a
     /// session ended.</summary>
     public sealed record RevokeTokenRequest(string? Reason);
-
 }
 
 /// <summary>Body for <c>POST /api/auth/forgot-password</c>.</summary>

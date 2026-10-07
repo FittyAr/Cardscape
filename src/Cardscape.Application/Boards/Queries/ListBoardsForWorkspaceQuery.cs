@@ -1,11 +1,9 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.DTOs;
-using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
 using Wolverine;
-using static Cardscape.Domain.Boards.Errors.BoardErrors;
 
 namespace Cardscape.Application.Boards.Queries;
 

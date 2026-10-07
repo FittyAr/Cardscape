@@ -14,13 +14,13 @@ public static class GitHubEventTypes
     public const string CardCompleted = "card.completed";
     public const string CommentAdded = "comment.added";
 
-    public static readonly IReadOnlyList<string> All = new[]
-    {
+    public static readonly IReadOnlyList<string> All =
+    [
         CardCreated,
         CardMoved,
         CardCompleted,
         CommentAdded
-    };
+    ];
 
     public static bool IsKnown(string eventType) =>
         !string.IsNullOrWhiteSpace(eventType)

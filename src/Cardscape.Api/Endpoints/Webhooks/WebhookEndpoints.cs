@@ -1,10 +1,6 @@
-using Cardscape.Application.Abstractions;
 using Cardscape.Application.Webhooks;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Webhooks;
@@ -94,5 +90,4 @@ public static class WebhookEndpoints
 
     public sealed record CreateWebhookBody(string Url, string? Secret, IReadOnlyList<string> Events);
     public sealed record UpdateWebhookBody(string? Url, bool? Active);
-
 }

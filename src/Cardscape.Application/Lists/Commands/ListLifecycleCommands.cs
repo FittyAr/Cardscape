@@ -3,11 +3,8 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Common;
 using Cardscape.Application.Lists.DTOs;
-using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Lists;
 using Wolverine;
-using static Cardscape.Domain.Lists.Errors.ListErrors;
 
 namespace Cardscape.Application.Lists.Commands;
 

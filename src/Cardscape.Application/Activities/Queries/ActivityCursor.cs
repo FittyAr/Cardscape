@@ -68,7 +68,7 @@ public static class ActivityCursor
     /// cap).</summary>
     public static int ClampLimit(int? limit)
     {
-        if (limit is null || limit <= 0)
+        if (limit is null or <= 0)
         {
             return DefaultLimit;
         }

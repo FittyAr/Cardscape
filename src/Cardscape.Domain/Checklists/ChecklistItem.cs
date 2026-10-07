@@ -1,4 +1,3 @@
-using Cardscape.Domain.Checklists.Events;
 using Cardscape.Domain.Common;
 
 namespace Cardscape.Domain.Checklists;

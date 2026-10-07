@@ -1,8 +1,5 @@
 using Cardscape.Application.BackgroundJobs;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.BackgroundJobs;
@@ -24,5 +21,4 @@ public static class BackgroundJobEndpoints
 
         return app;
     }
-
 }

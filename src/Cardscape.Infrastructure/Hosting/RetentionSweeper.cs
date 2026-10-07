@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using Cardscape.Application.Abstractions;
-using Cardscape.Domain.Members;
 using Cardscape.Infrastructure.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -247,7 +246,7 @@ public sealed class RetentionSweeper(
         where TEntity : class
         where TId : notnull
     {
-        List<TId> ids = new();
+        List<TId> ids = [];
         await foreach (TEntity row in table.AsAsyncEnumerable().WithCancellation(ct))
         {
             if (dateSelector(row) <= cutoff)

@@ -1,5 +1,3 @@
-using System.Net.Http;
-using System.Net.Http.Json;
 using System.Text.Json;
 using Cardscape.Web.Shared;
 
@@ -180,7 +178,7 @@ public sealed class AuthService(
         // the endpoint group. We try them in order — the first
         // that matches and yields a non-empty message wins. See
         // ApiDtos.cs for the shape catalog and the endpoint list.
-        string? body = null;
+        string body;
         try
         {
             body = await response.Content.ReadAsStringAsync(ct);

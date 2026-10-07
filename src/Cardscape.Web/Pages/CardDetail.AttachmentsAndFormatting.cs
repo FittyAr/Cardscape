@@ -1,18 +1,12 @@
 using System.Globalization;
-using Cardscape.Web.Resources;
 using Cardscape.Web.Services;
-using Cardscape.Web.Services.Api;
 using Cardscape.Web.Shared;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 using Radzen;
-using Radzen.Blazor;
 
 namespace Cardscape.Web.Pages;
 
-public partial class CardDetail
+public sealed partial class CardDetail
 {
     private string FieldKindLabel(CustomFieldKind kind) => kind switch
     {

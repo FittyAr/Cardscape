@@ -2,7 +2,6 @@ using Cardscape.Api.Extensions;
 using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Contracts.Settings;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 
 namespace Cardscape.Api.Middleware;
 

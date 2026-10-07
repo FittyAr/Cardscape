@@ -46,7 +46,6 @@ public static class SeederServiceCollectionExtensions
         services.AddSingleton<SeedRunner>(sp => new SeedRunner(
             sp.GetRequiredService<IServiceScopeFactory>(),
             sp.GetRequiredService<IOptionsMonitor<SeederOptions>>(),
-            sp.GetRequiredService<IPasswordHasher>(),
             sp.GetServices<ISeedStep>(),
             sp.GetRequiredService<SeedReport>(),
             sp.GetRequiredService<ILogger<SeedRunner>>()));

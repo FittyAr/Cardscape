@@ -3,8 +3,6 @@ using Cardscape.Domain.Activities;
 using Cardscape.Domain.Attachments;
 using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Domain.Authentication.PasswordResets;
-using Cardscape.Domain.Authentication.Saml;
-using Cardscape.Domain.Authentication.Scim;
 using Cardscape.Domain.Authentication.Totp;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Boards;

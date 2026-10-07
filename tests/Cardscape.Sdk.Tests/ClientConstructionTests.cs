@@ -1,6 +1,4 @@
 using System.Net;
-using System.Text.Json;
-using Cardscape.Sdk;
 using FluentAssertions;
 using Xunit;
 

@@ -5,9 +5,6 @@ using Cardscape.Contracts.Settings;
 using Cardscape.Seeder;
 using Cardscape.Seeder.Configuration;
 using Cardscape.Seeder.Reporting;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 
 namespace Cardscape.Api.Endpoints.Seeder;
 

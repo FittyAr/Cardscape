@@ -189,7 +189,7 @@ public sealed class CustomFieldValue : AggregateRoot<CustomFieldValueId>
         try
         {
             using JsonDocument doc = JsonDocument.Parse(valueJson);
-            if (doc.RootElement.ValueKind != JsonValueKind.True && doc.RootElement.ValueKind != JsonValueKind.False)
+            if (doc.RootElement.ValueKind is not JsonValueKind.True and not JsonValueKind.False)
             {
                 return Result.Failure(DomainError.Validation(
                     "custom_fields.value_not_bool", "Checkbox value must be a JSON boolean."));

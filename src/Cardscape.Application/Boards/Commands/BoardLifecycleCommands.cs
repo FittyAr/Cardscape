@@ -5,11 +5,8 @@ using Cardscape.Application.Boards.DTOs;
 using Cardscape.Application.Boards.Mapping;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Workspaces;
 using Wolverine;
 using static Cardscape.Domain.Boards.Errors.BoardErrors;
-using BoardEntity = Cardscape.Domain.Boards.Board;
-using WorkspaceEntity = Cardscape.Domain.Workspaces.Workspace;
 
 namespace Cardscape.Application.Boards.Commands;
 

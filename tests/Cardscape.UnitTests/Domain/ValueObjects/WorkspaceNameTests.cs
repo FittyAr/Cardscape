@@ -1,9 +1,6 @@
-using Cardscape.Domain.Common;
-using Cardscape.Domain.Workspaces;
-
 namespace Cardscape.UnitTests.Domain.ValueObjects;
 
-public class WorkspaceNameTests
+public sealed class WorkspaceNameTests
 {
     [Theory]
     [InlineData("Acme")]

@@ -199,29 +199,21 @@ public sealed class CardscapeClient : IAsyncDisposable
 }
 
 /// <summary>Represents an unsuccessful or invalid response from the Cardscape API.</summary>
-public sealed class CardscapeApiException : Exception
+/// <remarks>
+/// Initializes a new instance of the <see cref="CardscapeApiException"/> class.
+/// </remarks>
+/// <param name="code">The stable machine-readable error code.</param>
+/// <param name="message">The human-readable error description.</param>
+/// <param name="statusCode">The HTTP status code associated with the response.</param>
+/// <param name="responseBody">The response body captured for diagnostics, when available.</param>
+public sealed class CardscapeApiException(string code, string message, int statusCode, string? responseBody = null) : Exception(message)
 {
     /// <summary>Gets the stable machine-readable error code.</summary>
-    public string Code { get; }
+    public string Code { get; } = code;
 
     /// <summary>Gets the HTTP status code associated with the response.</summary>
-    public int StatusCode { get; }
+    public int StatusCode { get; } = statusCode;
 
     /// <summary>Gets the response body captured for diagnostics, when available.</summary>
-    public string? ResponseBody { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CardscapeApiException"/> class.
-    /// </summary>
-    /// <param name="code">The stable machine-readable error code.</param>
-    /// <param name="message">The human-readable error description.</param>
-    /// <param name="statusCode">The HTTP status code associated with the response.</param>
-    /// <param name="responseBody">The response body captured for diagnostics, when available.</param>
-    public CardscapeApiException(string code, string message, int statusCode, string? responseBody = null)
-        : base(message)
-    {
-        Code = code;
-        StatusCode = statusCode;
-        ResponseBody = responseBody;
-    }
+    public string? ResponseBody { get; } = responseBody;
 }

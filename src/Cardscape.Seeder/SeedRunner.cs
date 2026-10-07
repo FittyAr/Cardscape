@@ -26,7 +26,6 @@ public sealed class SeedRunner : IDisposable
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IOptionsMonitor<SeederOptions> _options;
-    private readonly IPasswordHasher _hasher;
     private readonly IEnumerable<ISeedStep> _steps;
     private readonly SeedReport _report;
     private readonly ILogger<SeedRunner> _logger;
@@ -36,14 +35,12 @@ public sealed class SeedRunner : IDisposable
     internal SeedRunner(
         IServiceScopeFactory scopeFactory,
         IOptionsMonitor<SeederOptions> options,
-        IPasswordHasher hasher,
         IEnumerable<ISeedStep> steps,
         SeedReport report,
         ILogger<SeedRunner> logger)
     {
         _scopeFactory = scopeFactory;
         _options = options;
-        _hasher = hasher;
         _steps = steps;
         _report = report;
         _logger = logger;

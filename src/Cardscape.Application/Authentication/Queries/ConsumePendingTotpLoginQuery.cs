@@ -5,7 +5,6 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Domain.Authentication.Totp.Errors;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Members;
 using Wolverine;
 using static Cardscape.Domain.Members.Errors.UserErrors;
 

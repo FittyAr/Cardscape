@@ -1,9 +1,5 @@
-using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Integrations.GoogleCalendar;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Integrations;
@@ -66,5 +62,4 @@ public static class GoogleCalendarEndpoints
 
         return app;
     }
-
 }

@@ -1,8 +1,5 @@
 using Cardscape.Application.Voting;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Voting;
@@ -35,5 +32,4 @@ public static class VotingEndpoints
 
         return app;
     }
-
 }

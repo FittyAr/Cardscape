@@ -9,7 +9,7 @@ namespace Cardscape.Web.Pages;
 
 // Trello-parity features of the board page: card filters, archived
 // items, inline renames, list drag-to-reorder and quick complete.
-public partial class BoardDetail
+public sealed partial class BoardDetail
 {
     [Inject] private ILabelsApiClient LabelsApi { get; set; } = default!;
 

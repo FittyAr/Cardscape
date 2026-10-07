@@ -6,7 +6,6 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
-using Cardscape.Domain.Members;
 using Wolverine;
 
 namespace Cardscape.Application.Ai;

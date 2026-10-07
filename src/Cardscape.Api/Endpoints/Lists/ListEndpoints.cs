@@ -2,10 +2,7 @@ using Cardscape.Application.Lists.Commands;
 using Cardscape.Application.Lists.DTOs;
 using Cardscape.Application.Lists.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Lists;
@@ -89,5 +86,4 @@ public static class ListEndpoints
     public sealed record RenameBody(string Name);
     public sealed record MoveBody(double Position);
     public sealed record CopyBody(string? Name);
-
 }

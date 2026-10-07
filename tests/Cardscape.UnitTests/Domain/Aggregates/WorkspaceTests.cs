@@ -1,11 +1,10 @@
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Workspaces;
 using Cardscape.Domain.Workspaces.Errors;
 using Cardscape.Domain.Workspaces.Events;
 
 namespace Cardscape.UnitTests.Domain.Aggregates;
 
-public class WorkspaceTests
+public sealed class WorkspaceTests
 {
     private static readonly DateTimeOffset At = DateTimeOffset.UtcNow;
 

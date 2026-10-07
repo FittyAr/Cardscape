@@ -1,6 +1,5 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Members;
-using Wolverine;
 
 namespace Cardscape.Application.Users.Queries;
 

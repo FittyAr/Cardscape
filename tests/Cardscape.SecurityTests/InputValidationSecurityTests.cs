@@ -14,11 +14,8 @@ namespace Cardscape.SecurityTests;
 /// shell command.
 /// </summary>
 [Collection(SecurityApi.Name)]
-public sealed class InputValidationSecurityTests
+public sealed class InputValidationSecurityTests(SecurityTestsWebApplicationFactory factory)
 {
-    private readonly SecurityTestsWebApplicationFactory _factory;
-    public InputValidationSecurityTests(SecurityTestsWebApplicationFactory factory) => _factory = factory;
-
     [Theory]
     [InlineData("' OR 1=1 --")]
     [InlineData("'; DROP TABLE users; --")]
@@ -26,7 +23,7 @@ public sealed class InputValidationSecurityTests
     [InlineData("1' OR '1'='1")]
     public async Task Register_With_SQLi_In_Email_Is_Rejected(string sqli)
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         var body = new
         {
             email = sqli,
@@ -63,7 +60,7 @@ public sealed class InputValidationSecurityTests
         // segments). The test pins "no 500" so a
         // future regression that wires display
         // names into a file path fires here.
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         var body = new
         {
             email = $"path-{Guid.NewGuid():N}@cardscape.local",
@@ -80,7 +77,7 @@ public sealed class InputValidationSecurityTests
     [Fact]
     public async Task Register_With_Extremely_Long_Email_Is_Rejected()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         string longLocal = new('a', 300);
         var body = new
         {
@@ -99,7 +96,7 @@ public sealed class InputValidationSecurityTests
     [Fact]
     public async Task Register_With_Control_Characters_In_DisplayName_Is_Rejected()
     {
-        HttpClient client = _factory.CreateApiClient();
+        HttpClient client = factory.CreateApiClient();
         var body = new
         {
             email = $"ctrl-{Guid.NewGuid():N}@cardscape.local",

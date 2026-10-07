@@ -3,9 +3,6 @@ using Cardscape.Application.Notifications.Commands;
 using Cardscape.Application.Notifications.DTOs;
 using Cardscape.Application.Notifications.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Notifications;
@@ -74,7 +71,6 @@ public static class NotificationEndpoints
 
         return app;
     }
-
 }
 
 /// <summary>Response shape for <c>GET /api/notifications/unread-count</c>.</summary>

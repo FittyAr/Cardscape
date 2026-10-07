@@ -1,22 +1,13 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Application.Abstractions.Storage;
-using Cardscape.Application.Cards.Common;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Common;
-using Cardscape.Domain.Activities;
-using Cardscape.Domain.Attachments;
-using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
-using Cardscape.Domain.Lists;
-using Cardscape.Domain.Members;
-using Cardscape.Domain.Notifications;
 using Wolverine;
 using static Cardscape.Domain.Cards.Errors.CardErrors;
-using Color = Cardscape.Domain.Common.Color;
 
 namespace Cardscape.Application.Cards.Commands;
 
