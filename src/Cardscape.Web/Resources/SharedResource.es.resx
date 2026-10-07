@@ -70,6 +70,7 @@
   <data name="NavPlannerDesc" xml:space="preserve"><value>Cronograma y vencimientos por lista</value></data>
   <data name="CalendarPreviousMonth" xml:space="preserve"><value>Mes anterior ({0})</value></data>
   <data name="CalendarCurrentMonth" xml:space="preserve"><value>Ir al mes actual</value></data>
+  <data name="CalendarToday" xml:space="preserve"><value>Hoy</value></data>
   <data name="CalendarNextMonth" xml:space="preserve"><value>Mes siguiente ({0})</value></data>
   <data name="CalendarSubtitle" xml:space="preserve"><value>Tarjetas con vencimiento en {0}. Seleccioná una tarjeta para abrirla.</value></data>
   <data name="PlannerSubtitle" xml:space="preserve"><value>Tarjetas con vencimiento en {0}, agrupadas por lista.</value></data>

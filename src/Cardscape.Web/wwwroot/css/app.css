@@ -593,3 +593,15 @@ select:focus-visible,
     outline: 2px solid var(--rz-primary);
     outline-offset: 2px;
 }
+
+/* Calendar appointment states (Pages/Calendar.razor). */
+.rz-scheduler .rz-event.cs-appointment-overdue .rz-event-content {
+    background-color: var(--rz-danger);
+    color: var(--rz-on-danger);
+}
+
+.rz-scheduler .rz-event.cs-appointment-completed .rz-event-content {
+    background-color: var(--rz-success);
+    color: var(--rz-on-success);
+    text-decoration: line-through;
+}

@@ -47,54 +47,68 @@ public sealed class CardRepository(CardscapeDbContext db) : RepositoryBase<Card,
         DateTimeOffset rangeEnd,
         CancellationToken ct = default)
     {
-        IQueryable<CalendarCardReadModel> candidates =
-            from card in Db.Set<Card>().AsNoTracking()
-            join list in Db.Set<BoardList>().AsNoTracking() on card.ListId equals list.Id
-            join board in Db.Set<Board>().AsNoTracking() on list.BoardId equals board.Id
-            join workspace in Db.Set<Workspace>().AsNoTracking() on board.WorkspaceId equals workspace.Id
-            where card.DueDate != null
-                && !board.IsDeleted
-                && !workspace.IsDeleted
-                && (boardId != null
-                    ? board.Id == boardId
-                    : workspace.Members.Any(member => member.UserId == userId))
-            select new CalendarCardReadModel(
-                card.Id.Value,
-                list.Id.Value,
-                list.Name.Value,
-                board.Id.Value,
-                board.Name.Value,
-                card.Title.Value,
-                card.DueDate!.Value,
-                card.IsCompleted);
-
-        List<CalendarCardReadModel> rows;
         if (!Db.Database.IsSqlite())
         {
-            rows = await candidates
-                .Where(row => row.DueDate >= from && row.DueDate < rangeEnd)
-                .OrderBy(row => row.DueDate)
-                .ToListAsync(ct);
-        }
-        else
-        {
-            // SQLite cannot translate ordering or range comparisons over
-            // DateTimeOffset. Membership, tenant and relational filters
-            // still execute in SQL; only the provider limitation stays local.
-            rows = [];
-            await foreach (var row in candidates.AsAsyncEnumerable().WithCancellation(ct))
-            {
-                if (row.DueDate < from || row.DueDate >= rangeEnd)
-                {
-                    continue;
-                }
-
-                rows.Add(row);
-            }
+            return await QueryCalendarRange(Db, userId, boardId, from, rangeEnd).ToListAsync(ct);
         }
 
-        rows.Sort((a, b) => a.DueDate.CompareTo(b.DueDate));
+        // SQLite cannot translate ordering or range comparisons over
+        // DateTimeOffset. Membership, tenant and relational filters
+        // still execute in SQL; only the provider limitation stays local.
+        List<CalendarCardReadModel> rows = await QueryCalendarCandidates(Db, userId, boardId)
+            .Select(row => ToReadModel(row.Card, row.List, row.Board))
+            .AsAsyncEnumerable()
+            .Where(row => row.DueDate >= from && row.DueDate < rangeEnd)
+            .ToListAsync(ct);
+        rows.Sort(static (a, b) => a.DueDate.CompareTo(b.DueDate));
         return rows;
+    }
+
+    /// <summary>
+    /// Fully server-translated calendar query for providers with native
+    /// <see cref="DateTimeOffset"/> support. The range filter and ordering
+    /// run against the mapped column BEFORE projecting: EF Core cannot
+    /// translate member access on a constructor projection.
+    /// </summary>
+    internal static IQueryable<CalendarCardReadModel> QueryCalendarRange(
+        DbContext db, Guid userId, BoardId? boardId, DateTimeOffset from, DateTimeOffset rangeEnd) =>
+        QueryCalendarCandidates(db, userId, boardId)
+            .Where(row => row.Card.DueDate >= from && row.Card.DueDate < rangeEnd)
+            .OrderBy(row => row.Card.DueDate)
+            .Select(row => ToReadModel(row.Card, row.List, row.Board));
+
+    private static IQueryable<CalendarCandidate> QueryCalendarCandidates(
+        DbContext db, Guid userId, BoardId? boardId) =>
+        from card in db.Set<Card>().AsNoTracking()
+        join list in db.Set<BoardList>().AsNoTracking() on card.ListId equals list.Id
+        join board in db.Set<Board>().AsNoTracking() on list.BoardId equals board.Id
+        join workspace in db.Set<Workspace>().AsNoTracking() on board.WorkspaceId equals workspace.Id
+        where card.DueDate != null
+            && !card.IsArchived
+            && !board.IsDeleted
+            && !workspace.IsDeleted
+            && (boardId != null
+                ? board.Id == boardId
+                : workspace.Members.Any(member => member.UserId == userId))
+        select new CalendarCandidate { Card = card, List = list, Board = board };
+
+    private static CalendarCardReadModel ToReadModel(Card card, BoardList list, Board board) => new(
+        card.Id.Value,
+        list.Id.Value,
+        list.Name.Value,
+        board.Id.Value,
+        board.Name.Value,
+        card.Title.Value,
+        card.DueDate!.Value,
+        card.IsCompleted);
+
+    private sealed class CalendarCandidate
+    {
+        public required Card Card { get; init; }
+
+        public required BoardList List { get; init; }
+
+        public required Board Board { get; init; }
     }
 
     public async Task<Card?> GetWithDetailsAsync(CardId id, CancellationToken ct = default)

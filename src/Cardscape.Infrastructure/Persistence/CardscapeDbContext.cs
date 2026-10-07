@@ -22,6 +22,7 @@ using Cardscape.Domain.Recurrence;
 using Cardscape.Domain.Security;
 using Cardscape.Domain.Voting;
 using Cardscape.Domain.Workspaces;
+using Cardscape.Infrastructure.Persistence.Conventions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cardscape.Infrastructure.Persistence;
@@ -87,6 +88,13 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         ApplyOptimisticConcurrencyConvention(modelBuilder);
         base.OnModelCreating(modelBuilder);
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<DateTimeOffset>().HaveConversion<UtcDateTimeOffsetConverter>();
+        configurationBuilder.Properties<DateTimeOffset?>().HaveConversion<UtcDateTimeOffsetConverter>();
+        base.ConfigureConventions(configurationBuilder);
     }
 
     private static void ApplyOptimisticConcurrencyConvention(ModelBuilder modelBuilder)

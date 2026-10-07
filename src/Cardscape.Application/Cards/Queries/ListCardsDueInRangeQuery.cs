@@ -52,10 +52,12 @@ public static class ListCardsDueInRangeQueryHandler
             }
         }
 
+        // Npgsql only accepts UTC offsets for timestamptz parameters; callers
+        // may legitimately send local month boundaries (e.g. -03:00).
         IReadOnlyList<CalendarCardReadModel> rows = await cards.ListCalendarEntriesAsync(
-            userId, boardId, query.From, query.To, cancellationToken);
+            userId, boardId, query.From.ToUniversalTime(), query.To.ToUniversalTime(), cancellationToken);
 
         return Result.Success<IReadOnlyList<CalendarEntryDto>>(
-            rows.Select(CalendarEntryDto.FromReadModel).ToList());
+            [.. rows.Select(CalendarEntryDto.FromReadModel)]);
     }
 }

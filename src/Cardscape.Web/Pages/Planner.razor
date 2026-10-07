@@ -1,36 +1,22 @@
 @page "/planner"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
-@using Cardscape.Web.Services
-@using Cardscape.Web.Services.Api
-@using Cardscape.Web.Shared
-@using Cardscape.Web.Resources
-@using Microsoft.Extensions.Localization
-@inject ICardsApiClient Cards
-@inject Microsoft.AspNetCore.Components.NavigationManager Nav
-@inject IStringLocalizer<SharedResource> L
+@inherits DueDatesPageBase
 
 <PageTitle>@L["NavPlanner"] @L["PageTitleSuffix"]</PageTitle>
 
-<PageHeader Title="@monthLabel" Subtitle="@L["PlannerSubtitle", monthLabel]">
+<PageHeader Title="@Month.Label" Subtitle="@L["PlannerSubtitle", Month.Label]">
     <Actions>
-        <RadzenButton Text="◀" ButtonStyle="@ButtonStyle.Light" Click="@PrevMonthAsync" Disabled="@loading"
-                      aria-label="@L["CalendarPreviousMonth", firstOfMonth.AddMonths(-1).ToString("Y")]"
-                      title="@L["CalendarPreviousMonth", firstOfMonth.AddMonths(-1).ToString("Y")]" />
-        <RadzenButton Text="Today" ButtonStyle="@ButtonStyle.Light" Click="@GoToCurrentMonthAsync" Disabled="@loading"
-                      aria-label="@L["CalendarCurrentMonth"]" title="@L["CalendarCurrentMonth"]" />
-        <RadzenButton Text="▶" ButtonStyle="@ButtonStyle.Light" Click="@NextMonthAsync" Disabled="@loading"
-                      aria-label="@L["CalendarNextMonth", firstOfMonth.AddMonths(1).ToString("Y")]"
-                      title="@L["CalendarNextMonth", firstOfMonth.AddMonths(1).ToString("Y")]" />
+        <MonthNavigator Month="@Month" Disabled="@IsLoading" MonthChanged="@ShowMonthAsync" />
     </Actions>
 </PageHeader>
 
-@if (loading)
+@if (IsLoading)
 {
     <RadzenProgressBarCircular ShowValue="false" Mode="@ProgressBarMode.Indeterminate" />
 }
-else if (error is not null)
+else if (Error is not null)
 {
-    <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false">@error</RadzenAlert>
+    <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false">@Error</RadzenAlert>
 }
 else if (swimlanes.Count == 0)
 {
@@ -44,18 +30,18 @@ else
             <RadzenCard Variant="@Variant.Outlined">
                 <RadzenStack Gap="0.5rem">
                     <RadzenStack Gap="0.25rem">
-                        <RadzenText Text="@lane.Title" TextStyle="@TextStyle.H6" TagName="@TagName.H3" />
+                        <RadzenText Text="@lane.ListName" TextStyle="@TextStyle.H6" TagName="@TagName.H3" />
                         <RadzenText Text="@lane.BoardName" TextStyle="@TextStyle.Caption"
                                     class="rz-color-text-secondary" />
                     </RadzenStack>
-                    <RadzenStack Gap="0.25rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="0.25rem">
                         @foreach (CalendarEntryDto entry in lane.Entries)
                         {
-                            <RadzenBadge BadgeStyle="@BadgeStyle.Info"
-                                         Text="@entry.Title"
-                                         title="@($"{entry.Title} — {entry.DueDate.LocalDateTime:yyyy-MM-dd}")"
+                            <RadzenBadge BadgeStyle="@BadgeStyleFor(entry)"
+                                         Text="@($"{entry.DueDate.LocalDateTime:d} · {entry.Title}")"
+                                         title="@($"{entry.Title} — {entry.DueDate.LocalDateTime:g}")"
                                          IsClickable="true"
-                                         Click="@(() => Nav.NavigateTo($"cards/{entry.CardId}"))" />
+                                         Click="@(() => OpenCard(entry.CardId))" />
                         }
                     </RadzenStack>
                 </RadzenStack>
@@ -65,85 +51,27 @@ else
 }
 
 @code {
-    // BUG-A6-007 — see test-results/beta/reports/A6-views.md. The
-    // swimlane header used to read "List 2a33ae28" (a truncated
-    // GUID) because the API DTO didn't carry the list's human
-    // name. CalendarEntryDto now exposes `ListName`; we use it
-    // here, falling back to the truncated id only if the API
-    // ever returns an empty string.
-    private DateTimeOffset firstOfMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
-    private IReadOnlyList<CalendarEntryDto> entries = [];
-    private List<Swimlane> swimlanes = [];
-    private string monthLabel = DateTime.UtcNow.ToString("MMMM yyyy");
-    private bool loading;
-    private string? error;
+    private IReadOnlyList<Swimlane> swimlanes = [];
 
-    private sealed record Swimlane(Guid ListId, string Title, string BoardName, List<CalendarEntryDto> Entries);
+    private sealed record Swimlane(string BoardName, string ListName, IReadOnlyList<CalendarEntryDto> Entries);
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnEntriesLoaded() =>
+        swimlanes =
+        [
+            .. Entries
+                .GroupBy(entry => entry.ListId)
+                .Select(group => new Swimlane(
+                    group.First().BoardName,
+                    group.First().ListName,
+                    [.. group.OrderBy(entry => entry.DueDate)]))
+                .OrderBy(lane => lane.BoardName)
+                .ThenBy(lane => lane.ListName),
+        ];
+
+    private static BadgeStyle BadgeStyleFor(CalendarEntryDto entry) => entry switch
     {
-        await ReloadAsync();
-    }
-
-    private async Task ReloadAsync()
-    {
-        loading = true;
-        error = null;
-        monthLabel = firstOfMonth.ToString("MMMM yyyy");
-        DateTimeOffset from = firstOfMonth;
-        DateTimeOffset to = firstOfMonth.AddMonths(1);
-
-        try
-        {
-            ApiResult<IReadOnlyList<CalendarEntryDto>> result = await Cards.CalendarAsync(from, to, boardId: null);
-            if (result.IsSuccess && result.Value is not null)
-            {
-                entries = result.Value;
-            }
-            else
-            {
-                entries = [];
-                error = result.Error ?? L["CalendarLoadFailed"];
-            }
-        }
-        catch (Exception ex)
-        {
-            entries = [];
-            error = ex.Message;
-        }
-        finally
-        {
-            loading = false;
-        }
-
-        swimlanes = entries
-            .GroupBy(e => e.ListId)
-            .Select(g => new Swimlane(
-                g.Key,
-                string.IsNullOrWhiteSpace(g.First().ListName) ? $"List {g.Key.ToString()[..8]}" : g.First().ListName,
-                g.First().BoardName,
-                g.OrderBy(e => e.DueDate).ToList()))
-            .OrderBy(s => s.BoardName)
-            .ThenBy(s => s.Title)
-            .ToList();
-    }
-
-    private async Task PrevMonthAsync()
-    {
-        firstOfMonth = firstOfMonth.AddMonths(-1);
-        await ReloadAsync();
-    }
-
-    private async Task NextMonthAsync()
-    {
-        firstOfMonth = firstOfMonth.AddMonths(1);
-        await ReloadAsync();
-    }
-
-    private async Task GoToCurrentMonthAsync()
-    {
-        DateTime utcNow = DateTime.UtcNow;
-        firstOfMonth = new DateTimeOffset(utcNow.Year, utcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
-        await ReloadAsync();
-    }
+        { IsCompleted: true } => BadgeStyle.Success,
+        { IsOverdue: true } => BadgeStyle.Danger,
+        _ => BadgeStyle.Info,
+    };
 }

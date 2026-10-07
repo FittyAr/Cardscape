@@ -197,6 +197,30 @@ public sealed class ArchitectureTests
             .ToArray();
     }
 
+    /// <summary>
+    /// A page is localized when it injects the shared localizer itself or
+    /// inherits a Web base class that does.
+    /// </summary>
+    private static bool UsesSharedLocalizer(string webRoot, string pageSource)
+    {
+        const string Localizer = "IStringLocalizer<SharedResource>";
+        if (pageSource.Contains(Localizer, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        Match inherits = Regex.Match(
+            pageSource, @"^@inherits\s+(?<type>[\w.]+)", RegexOptions.Multiline);
+        if (!inherits.Success)
+        {
+            return false;
+        }
+
+        string typeName = inherits.Groups["type"].Value.Split('.')[^1];
+        return Directory.GetFiles(webRoot, $"{typeName}.cs", SearchOption.AllDirectories)
+            .Any(file => File.ReadAllText(file).Contains(Localizer, StringComparison.Ordinal));
+    }
+
     private static DirectoryInfo FindRepositoryRoot()
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
@@ -374,11 +398,11 @@ public sealed class ArchitectureTests
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
         string pagesRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages");
 
+        string webRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web");
+
         string[] violations = Directory.GetFiles(pagesRoot, "*.razor", SearchOption.AllDirectories)
             .Where(file => File.ReadAllText(file).Contains("@page ", StringComparison.Ordinal))
-            .Where(file => !File.ReadAllText(file).Contains(
-                "IStringLocalizer<SharedResource>",
-                StringComparison.Ordinal))
+            .Where(file => !UsesSharedLocalizer(webRoot, File.ReadAllText(file)))
             .Select(file => Path.GetRelativePath(repositoryRoot.FullName, file))
             .Order(StringComparer.Ordinal)
             .ToArray();
@@ -393,17 +417,22 @@ public sealed class ArchitectureTests
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
         string pagesRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages");
         string[] pages = ["Calendar.razor", "Planner.razor"];
+        string pageBase = File.ReadAllText(Path.Combine(
+            repositoryRoot.FullName, "src", "Cardscape.Web", "Shared", "DueDatesPageBase.cs"));
 
         string[] violations = pages
             .Where(page =>
             {
                 string source = File.ReadAllText(Path.Combine(pagesRoot, page));
-                return !source.Contains("@if (loading)", StringComparison.Ordinal)
-                    || !source.Contains("else if (error is not null)", StringComparison.Ordinal)
-                    || !source.Contains("result.Error", StringComparison.Ordinal);
+                return !source.Contains("@inherits DueDatesPageBase", StringComparison.Ordinal)
+                    || !source.Contains("@if (IsLoading)", StringComparison.Ordinal)
+                    || !source.Contains("else if (Error is not null)", StringComparison.Ordinal);
             })
             .Order(StringComparer.Ordinal)
             .ToArray();
+
+        pageBase.Should().Contain("result.Error",
+            "the shared loader must surface the API error instead of an empty schedule");
 
         violations.Should().BeEmpty(
             "calendar experiences must not misrepresent transport failures as valid empty schedules");

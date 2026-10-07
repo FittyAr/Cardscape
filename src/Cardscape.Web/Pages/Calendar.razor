@@ -1,174 +1,61 @@
 @page "/calendar"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
-@using Cardscape.Web.Services
-@using Cardscape.Web.Services.Api
-@using Cardscape.Web.Shared
-@using Cardscape.Web.Resources
-@using Microsoft.Extensions.Localization
-@inject ICardsApiClient Cards
-@inject Microsoft.AspNetCore.Components.NavigationManager Nav
-@inject IStringLocalizer<SharedResource> L
+@inherits DueDatesPageBase
 
 <PageTitle>@L["NavCalendar"] @L["PageTitleSuffix"]</PageTitle>
 
-<PageHeader Title="@monthLabel" Subtitle="@L["CalendarSubtitle", monthLabel]">
+<PageHeader Title="@Month.Label" Subtitle="@L["CalendarSubtitle", Month.Label]">
     <Actions>
-        <RadzenButton Text="◀" ButtonStyle="@ButtonStyle.Light" Click="@PrevMonthAsync" Disabled="@loading"
-                      aria-label="@L["CalendarPreviousMonth", firstOfMonth.AddMonths(-1).ToString("Y")]" />
-        <RadzenButton Text="Today" ButtonStyle="@ButtonStyle.Light" Click="@GoToCurrentMonthAsync" Disabled="@loading"
-                      aria-label="@L["CalendarCurrentMonth"]" />
-        <RadzenButton Text="▶" ButtonStyle="@ButtonStyle.Light" Click="@NextMonthAsync" Disabled="@loading"
-                      aria-label="@L["CalendarNextMonth", firstOfMonth.AddMonths(1).ToString("Y")]" />
+        <MonthNavigator Month="@Month" Disabled="@IsLoading" MonthChanged="@ShowMonthAsync" />
     </Actions>
 </PageHeader>
 
-@if (loading)
+@if (IsLoading)
 {
     <RadzenProgressBarCircular ShowValue="false" Mode="@ProgressBarMode.Indeterminate" />
 }
-else if (error is not null)
+else if (Error is not null)
 {
-    <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false">@error</RadzenAlert>
+    <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false">@Error</RadzenAlert>
 }
 else
 {
-<RadzenScheduler @key="@schedulerKey"
-                 TItem="CalendarSchedulerItem"
-                 Data="@SchedulerItems"
-                 StartProperty="Start"
-                 EndProperty="End"
-                 TextProperty="Title"
-                 Date="@schedulerCurrentDate"
-                 AppointmentSelect="@OnAppointmentSelect"
-                 Style="height: 700px">
-    <RadzenMonthView />
-</RadzenScheduler>
+    @* Re-keyed per month: RadzenScheduler has no two-way bindable date, so a
+       new instance is the only way to keep its grid in step with the header. *@
+    <RadzenScheduler @key="@Month"
+                     TItem="CalendarEntryDto"
+                     Data="@Entries"
+                     StartProperty="@nameof(CalendarEntryDto.DayStart)"
+                     EndProperty="@nameof(CalendarEntryDto.DayEnd)"
+                     TextProperty="@nameof(CalendarEntryDto.Title)"
+                     Date="@Month.FirstDay"
+                     AppointmentRender="@OnAppointmentRender"
+                     AppointmentSelect="@OnAppointmentSelect"
+                     Style="height: 700px">
+        <RadzenMonthView />
+    </RadzenScheduler>
 }
 
 @code {
-    // BUG-A6-002 — see test-results/beta/reports/A6-views.md. The
-    // page-level prev/next buttons (◀ / ▶ in the page header) and
-    // the RadzenScheduler's own built-in nav (◀ / ▶ in the
-    // scheduler toolbar) were stepping over each other: the
-    // header updated but the scheduler kept showing the original
-    // month. The Radzen component does not expose a
-    // CurrentDateChanged event, so we cannot two-way bind. Every
-    // time `firstOfMonth` changes we re-key the RadzenScheduler
-    // so Blazor tears it down and rebuilds it with the new
-    // `Date` value, and the data array also refreshes.
-    private DateTimeOffset firstOfMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
-    private IReadOnlyList<CalendarEntryDto> entries = [];
-    private string monthLabel = DateTime.UtcNow.ToString("MMMM yyyy");
-    private bool loading;
-    private string? error;
-
-    // The RadzenScheduler takes a plain DateTime (not DateTimeOffset)
-    // for Date; we project at the boundary so the scheduler
-    // never sees a kind it can't handle.
-    private DateTime schedulerCurrentDate => firstOfMonth.UtcDateTime.Date;
-
-    // Bump this every time firstOfMonth changes so Blazor
-    // re-instantiates the RadzenScheduler with the new `Date`.
-    private int schedulerKey;
-
-    protected override async Task OnInitializedAsync()
+    private void OnAppointmentSelect(SchedulerAppointmentSelectEventArgs<CalendarEntryDto> args)
     {
-        await ReloadAsync();
-    }
-
-    private async Task ReloadAsync()
-    {
-        loading = true;
-        error = null;
-        // BUG-A6-002 — set the label and scheduler key BEFORE the
-        // await so the page header updates in lock-step with the
-        // scheduler grid. Without this, the scheduler re-mounts
-        // (Date=newValue) the moment the await completes and
-        // schedulerKey++ runs, but monthLabel was only assigned
-        // later in the same method so a transient mid-render
-        // would show the new month in the grid and the old month
-        // in the header for ~50 ms.
-        monthLabel = firstOfMonth.ToString("MMMM yyyy");
-        schedulerKey++;
-
-        DateTimeOffset from = firstOfMonth;
-        DateTimeOffset to = firstOfMonth.AddMonths(1);
-
-        try
+        if (args.Data is { } entry)
         {
-            ApiResult<IReadOnlyList<CalendarEntryDto>> result = await Cards.CalendarAsync(from, to, boardId: null);
-            if (result.IsSuccess && result.Value is not null)
-            {
-                entries = result.Value;
-            }
-            else
-            {
-                entries = [];
-                error = result.Error ?? L["CalendarLoadFailed"];
-            }
-        }
-        catch (Exception ex)
-        {
-            entries = [];
-            error = ex.Message;
-        }
-        finally
-        {
-            loading = false;
+            OpenCard(entry.CardId);
         }
     }
 
-    private async Task PrevMonthAsync()
+    private static void OnAppointmentRender(SchedulerAppointmentRenderEventArgs<CalendarEntryDto> args)
     {
-        firstOfMonth = firstOfMonth.AddMonths(-1);
-        await ReloadAsync();
-    }
-
-    private async Task NextMonthAsync()
-    {
-        firstOfMonth = firstOfMonth.AddMonths(1);
-        await ReloadAsync();
-    }
-
-    private async Task GoToCurrentMonthAsync()
-    {
-        DateTime utcNow = DateTime.UtcNow;
-        firstOfMonth = new DateTimeOffset(utcNow.Year, utcNow.Month, 1, 0, 0, 0, TimeSpan.Zero);
-        await ReloadAsync();
-    }
-
-    // RadzenScheduler's TItem contract requires Start/End/Text
-    // properties. The API returns CalendarEntryDto with only
-    // DueDate, so we project each entry to a thin wrapper that
-    // exposes the start (start of the due day) and the end
-    // (end of the same day) for the month view. The original
-    // DTO is kept in `Source` so the AppointmentSelect handler
-    // can navigate to the card without an extra round-trip.
-    private IReadOnlyList<CalendarSchedulerItem> SchedulerItems => entries
-        .Select(e => new CalendarSchedulerItem
+        string? state = args.Data switch
         {
-            Id = e.CardId,
-            Title = e.Title,
-            Start = e.DueDate.UtcDateTime.Date,
-            End = e.DueDate.UtcDateTime.Date.AddDays(1).AddTicks(-1),
-            Source = e
-        })
-        .ToList();
-
-    private void OnAppointmentSelect(SchedulerAppointmentSelectEventArgs<CalendarSchedulerItem> args)
-    {
-        if (args.Data is not null)
+            { IsCompleted: true } => "cs-appointment-completed",
+            { IsOverdue: true } => "cs-appointment-overdue",
+            _ => null,
+        };
+        if (state is not null)
         {
-            Nav.NavigateTo($"cards/{args.Data.Source.CardId}");
+            args.Attributes["class"] = state;
         }
-    }
-
-    private sealed class CalendarSchedulerItem
-    {
-        public Guid Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public DateTime Start { get; set; }
-        public DateTime End { get; set; }
-        public CalendarEntryDto Source { get; set; } = default!;
     }
 }
