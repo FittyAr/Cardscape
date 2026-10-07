@@ -45,48 +45,37 @@ public sealed class RedisRateLimiter(
     ///   <item><c>configuredBurst</c>: int, burst cap</item>
     ///   <item><c>configuredRate</c>: int, requests / hour</item>
     /// </list>
+    /// The configuration fields are written by
+    /// <see cref="Configure"/>; the script only reads them. A
+    /// bucket with no configuration, or a rate of 0, is treated
+    /// as disabled (every request allowed), matching the
+    /// in-memory <see cref="RateLimiter"/>.
     /// Returns a 3-element array: {allowed (0/1), remaining
     /// tokens (float), retry-after (seconds, 0 when allowed)}.
     /// </summary>
     private static readonly LuaScript RefillAndConsumeScript = LuaScript.Prepare("""
-local key = KEYS[1]
+local key = @key
 local now = tonumber(@now)
-local argBurst = tonumber(@burst)
-local argRate = tonumber(@rate)
 
 local data = redis.call('HMGET', key, 'tokens', 'lastRefill', 'configuredBurst', 'configuredRate')
 local tokens = tonumber(data[1])
 local lastRefill = tonumber(data[2])
-local configuredBurst = tonumber(data[3])
-local configuredRate = tonumber(data[4])
+local configuredBurst = tonumber(data[3]) or 0
+local configuredRate = tonumber(data[4]) or 0
 
--- First time we see this bucket: seed it.
-if tokens == nil then
-  configuredBurst = argBurst
-  configuredRate = argRate
+-- Rate disabled (or never configured): allow and short-circuit.
+if configuredRate <= 0 then
+  return {1, tostring(configuredBurst), 0}
+end
+
+if configuredBurst < 1 then
+  configuredBurst = 1
+end
+
+-- First request against a configured bucket: start full.
+if tokens == nil or lastRefill == nil then
   tokens = configuredBurst
   lastRefill = now
-end
-
--- Pick up runtime configuration changes (Configure call).
--- We only overwrite the configured values; the running
--- tokens balance is preserved so a PATCH to the rate limit
--- does not silently reset the bucket.
-if argBurst ~= configuredBurst or argRate ~= configuredRate then
-  configuredBurst = argBurst
-  configuredRate = argRate
-  if configuredBurst <= 0 then
-    configuredBurst = 0
-  end
-  if configuredRate == 0 then
-    -- Rate disabled: pin the bucket full and short-circuit.
-    tokens = configuredBurst
-  end
-end
-
-if configuredRate == 0 then
-  redis.call('HSET', key, 'tokens', tostring(tokens), 'lastRefill', tostring(now), 'configuredBurst', tostring(configuredBurst), 'configuredRate', tostring(configuredRate))
-  return {1, tostring(configuredBurst), 0}
 end
 
 local elapsed = now - lastRefill
@@ -96,39 +85,26 @@ tokens = math.min(configuredBurst, tokens + elapsed * tokensPerSecond)
 
 if tokens >= 1.0 then
   tokens = tokens - 1.0
-  redis.call('HSET', key, 'tokens', tostring(tokens), 'lastRefill', tostring(now), 'configuredBurst', tostring(configuredBurst), 'configuredRate', tostring(configuredRate))
+  redis.call('HSET', key, 'tokens', tostring(tokens), 'lastRefill', tostring(now))
   return {1, tostring(tokens), 0}
 else
   local missing = 1.0 - tokens
-  local retryAfter = 1
-  if tokensPerSecond > 0 then
-    retryAfter = math.ceil(missing / tokensPerSecond)
-    if retryAfter < 1 then retryAfter = 1 end
-  end
-  redis.call('HSET', key, 'tokens', tostring(tokens), 'lastRefill', tostring(now), 'configuredBurst', tostring(configuredBurst), 'configuredRate', tostring(configuredRate))
+  local retryAfter = math.ceil(missing / tokensPerSecond)
+  if retryAfter < 1 then retryAfter = 1 end
+  redis.call('HSET', key, 'tokens', tostring(tokens), 'lastRefill', tostring(now))
   return {0, tostring(tokens), retryAfter}
 end
 """);
 
-    public RateLimitDecision TryAcquire(Guid tokenId, DateTimeOffset at)
-    {
-        // Configuration is read from the hash itself; we pass
-        // placeholder values (0/0) that the script will
-        // override with whatever is stored.
-        return ExecuteScript(tokenId, at, rateLimitPerHour: 0, burstSize: 0);
-    }
+    public RateLimitDecision TryAcquire(Guid tokenId, DateTimeOffset at) => ExecuteScript(tokenId, at);
 
     public void Configure(Guid tokenId, int rateLimitPerHour, int burstSize)
     {
-        // The script reads the configuredBurst / configuredRate
-        // off the hash and updates them when they differ from
-        // the call. We trigger an update by calling the script
-        // with sentinel values (1, 1) when no bucket exists
-        // yet, and with the new values when it does. The token
-        // is also consumed (rate-limit middleware calls
-        // Configure on every request), but a single token is
-        // cheap and the alternative — a separate config-only
-        // script — duplicates the state machine.
+        // Configuration lives in the bucket hash; TryAcquire's
+        // script reads it on every call. The running token
+        // balance is left alone so a PATCH to the rate limit
+        // does not silently reset the bucket (the script clamps
+        // it to the new burst on the next refill).
         try
         {
             IDatabase db = _redis.GetDatabase(_database);
@@ -231,8 +207,7 @@ end
         return 0;
     }
 
-    private RateLimitDecision ExecuteScript(
-        Guid tokenId, DateTimeOffset at, int rateLimitPerHour, int burstSize)
+    private RateLimitDecision ExecuteScript(Guid tokenId, DateTimeOffset at)
     {
         try
         {
@@ -243,9 +218,7 @@ end
                 new
                 {
                     key = (RedisKey)key,
-                    now = at.ToUnixTimeSeconds(),
-                    burst = burstSize,
-                    rate = rateLimitPerHour
+                    now = at.ToUnixTimeSeconds()
                 });
 
             if (result.IsNull)
