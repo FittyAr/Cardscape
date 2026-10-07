@@ -21,6 +21,18 @@ public sealed class SeedContext
 
     public DateTimeOffset Now => Timeline.Now;
 
+    /// <summary>
+    /// Stages <paramref name="entity"/> for insert and records it in
+    /// <paramref name="bucket"/> so later steps can reference it.
+    /// </summary>
+    public T Track<T>(List<T> bucket, T entity)
+        where T : class
+    {
+        Db.Set<T>().Add(entity);
+        bucket.Add(entity);
+        return entity;
+    }
+
     /// <summary>The primary (HQ) workspace.</summary>
     public WorkspaceId WorkspaceId { get; set; } = null!;
     public Guid WorkspaceOwnerId { get; set; }
@@ -132,15 +144,6 @@ public sealed class SeedContext
     public void Add<TEntity>(TEntity entity) where TEntity : class
     {
         Db.Set<TEntity>().Add(entity);
-    }
-
-    /// <summary>Counts the rows of an entity type that may or may
-    /// not have a <c>DbSet&lt;T&gt;</c> on the context. Returns
-    /// <c>0</c> if the table does not exist yet (a fresh
-    /// database that has not run the migrations).</summary>
-    public Task<long> CountAsync<TEntity>(CancellationToken cancellationToken = default) where TEntity : class
-    {
-        return Db.Set<TEntity>().LongCountAsync(cancellationToken);
     }
 
     /// <summary>Snapshot of every list the seeder has accumulated

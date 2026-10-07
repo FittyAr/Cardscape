@@ -5,6 +5,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Security;
+using Cardscape.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 
@@ -52,19 +53,12 @@ public sealed class ApiTokenAuthenticationHandler(
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        if (!Request.Headers.TryGetValue("Authorization", out var authHeader))
+        string? secret = BearerAuthorization.Credential(Request.Headers.Authorization.ToString());
+        if (secret is null)
         {
             return AuthenticateResult.NoResult();
         }
 
-        string raw = authHeader.ToString();
-        if (string.IsNullOrWhiteSpace(raw)
-            || !raw.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-        {
-            return AuthenticateResult.NoResult();
-        }
-
-        string secret = raw["Bearer ".Length..].Trim();
         if (string.IsNullOrWhiteSpace(secret))
         {
             return AuthenticateResult.Fail("Empty bearer secret.");

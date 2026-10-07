@@ -96,7 +96,7 @@
         connection = result.IsSuccess ? result.Value : Empty();
 
         var wsResult = await WorkspacesApi.ListAsync();
-        workspaces = wsResult.IsSuccess && wsResult.Value is not null
+        workspaces = wsResult.HasValue
             ? wsResult.Value
             : [];
     }

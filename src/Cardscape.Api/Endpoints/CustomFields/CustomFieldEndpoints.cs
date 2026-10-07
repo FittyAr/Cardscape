@@ -17,7 +17,7 @@ public static class CustomFieldEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CustomFieldDefinitionDto>>>(
                 new ListCustomFieldDefinitionsQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<CustomFieldDefinitionDto[]>();
 
         group.MapPost("/", async (
@@ -46,7 +46,7 @@ public static class CustomFieldEndpoints
         {
             var result = await bus.InvokeAsync<Result<CustomFieldDefinitionDto>>(
                 new RenameCustomFieldDefinitionCommand(fieldId, body.NewName), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<CustomFieldDefinitionDto>();
 
         group.MapDelete("/{fieldId:guid}", async (
@@ -57,7 +57,7 @@ public static class CustomFieldEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new DeleteCustomFieldDefinitionCommand(fieldId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         return app;
@@ -74,7 +74,7 @@ public static class CustomFieldEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CustomFieldValueDto>>>(
                 new ListCustomFieldValuesForCardQuery(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<CustomFieldValueDto[]>();
 
         group.MapPut("/{fieldId:guid}", async (
@@ -86,7 +86,7 @@ public static class CustomFieldEndpoints
         {
             var result = await bus.InvokeAsync<Result<CustomFieldValueDto>>(
                 new SetCustomFieldValueCommand(cardId, fieldId, body.ValueJson), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<CustomFieldValueDto>();
 
         return app;

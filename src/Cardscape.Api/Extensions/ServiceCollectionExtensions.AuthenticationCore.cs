@@ -1,5 +1,6 @@
 using System.Text;
 using Cardscape.Api.Authentication;
+using Cardscape.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -76,18 +77,7 @@ public static partial class ServiceCollectionExtensions
             return ScimAuthenticationHandler.SchemeName;
         }
 
-        if (!context.Request.Headers.TryGetValue("Authorization", out var authorization))
-        {
-            return JwtBearerDefaults.AuthenticationScheme;
-        }
-
-        string raw = authorization.ToString();
-        if (!raw.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-        {
-            return JwtBearerDefaults.AuthenticationScheme;
-        }
-
-        string secret = raw["Bearer ".Length..].Trim();
+        string? secret = BearerAuthorization.Credential(context.Request.Headers.Authorization.ToString());
         return !string.IsNullOrEmpty(secret) && !secret.Contains('.')
             ? ApiTokenAuthenticationHandler.SchemeName
             : JwtBearerDefaults.AuthenticationScheme;

@@ -19,10 +19,10 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
                 new ListCardsForBoardQuery(boardId, includeArchived), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -40,9 +40,9 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<CardDto>>(new GetCardQuery(cardId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -64,10 +64,10 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<CardDto>>(
                 new CreateCardCommand(listId, title, description), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             await push.PushCardCreatedAsync(new CardEventPayload(
                 value.Id, Guid.Empty, value.ListId, value.Title, DateTimeOffset.UtcNow), ct);
             __mcpSpan.MarkSuccess();
@@ -88,7 +88,7 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             // The board-resolving server side needs the source list id
             // to compute the from-list; we look it up via the loaded
             // card before invoking the command. This is one cheap
@@ -97,7 +97,7 @@ public sealed partial class BoardsTools
             var fromListId = existing?.ListId.Value;
             var result = await bus.InvokeAsync<Result<CardDto>>(
                 new MoveCardCommand(cardId, newListId, newPosition), ct);
-            var dto = Ensure(result);
+            var dto = result.OrThrow();
             await push.PushCardMovedAsync(new CardMovedPayload(
                 dto.Id, Guid.Empty, fromListId ?? dto.ListId, newListId, newPosition,
                 DateTimeOffset.UtcNow), ct);
@@ -118,9 +118,9 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<CardDto>>(new CompleteCardCommand(cardId), ct);
-            var dto = Ensure(result);
+            var dto = result.OrThrow();
             await push.PushCardCompletedAsync(new CardEventPayload(
                 dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
             __mcpSpan.MarkSuccess();
@@ -140,9 +140,9 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<CardDto>>(new ReopenCardCommand(cardId), ct);
-            var dto = Ensure(result);
+            var dto = result.OrThrow();
             await push.PushCardReopenedAsync(new CardEventPayload(
                 dto.Id, Guid.Empty, dto.ListId, dto.Title, DateTimeOffset.UtcNow), ct);
             __mcpSpan.MarkSuccess();
@@ -162,9 +162,9 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<CardDto>>(new ArchiveCardCommand(cardId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -182,9 +182,9 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<CardDto>>(new RestoreCardCommand(cardId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -206,7 +206,7 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             Result<CardDto> result = Result<CardDto>.Failure(DomainError.Validation(
                 "cards.nothing_to_update", "Provide at least one of newTitle or newDescription."));
 
@@ -219,7 +219,7 @@ public sealed partial class BoardsTools
                 result = await bus.InvokeAsync<Result<CardDto>>(
                     new ChangeCardDescriptionCommand(cardId, newDescription), ct);
             }
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -237,9 +237,9 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<CardDto>>(new AssignCardCommand(cardId, userId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -257,10 +257,10 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<CardDto>>(
                 new AttachLabelToCardCommand(cardId, labelId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -279,10 +279,10 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CalendarEntryDto>>>(
                 new ListCardsDueInRangeQuery(from, to, boardId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }

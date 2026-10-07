@@ -61,7 +61,7 @@ public sealed partial class CardDetail
             ApiResult<AttachmentDto> result = await Attachments.UploadAsync(
                 CardId, stream, file.Name, file.ContentType ?? "application/octet-stream");
             CaptureCommandOutcome(result, L["CardChooseAttachment"]);
-            if (result.IsSuccess && result.Value is not null)
+            if (result.HasValue)
             {
                 _attachments = [.. (_attachments ?? []), result.Value];
                 _attachmentsError = null;

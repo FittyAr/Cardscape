@@ -126,7 +126,7 @@
         try
         {
             var status = await SetupApi.GetStatusAsync();
-            if (status.IsSuccess && status.Value is not null && !status.Value.IsInitialized)
+            if (status.HasValue && !status.Value.IsInitialized)
             {
                 Nav.NavigateTo("/setup", forceLoad: true);
                 return;

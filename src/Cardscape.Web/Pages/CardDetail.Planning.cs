@@ -29,7 +29,7 @@ public sealed partial class CardDetail
     // leaving the keyboard.
     private async Task OnCreateChecklistKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
     {
-        if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
+        if (e.IsEnter)
         {
             await CreateChecklistAsync();
         }
@@ -37,7 +37,7 @@ public sealed partial class CardDetail
 
     private async Task OnAddItemKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, Guid checklistId)
     {
-        if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
+        if (e.IsEnter)
         {
             await AddItemAsync(checklistId);
         }
@@ -64,7 +64,7 @@ public sealed partial class CardDetail
         // re-renders without a full GET.
         ApiResult<ChecklistItemDto> result = await Checklists.AddItemAsync(checklistId, _newChecklistItemText);
         CaptureCommandOutcome(result, L["BoardAddItem"]);
-        if (result.IsSuccess && result.Value is not null && _checklists is not null)
+        if (result.HasValue && _checklists is not null)
         {
             _checklists = _checklists
                 .Select(c => c.Id != checklistId

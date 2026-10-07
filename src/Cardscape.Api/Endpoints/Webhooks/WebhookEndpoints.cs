@@ -32,7 +32,7 @@ public static class WebhookEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WebhookEndpointDto>>>(
                 new ListWebhookEndpointsQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<WebhookEndpointDto>>(StatusCodes.Status200OK);
 
         boardGroup.MapPost("/", async (
@@ -59,7 +59,7 @@ public static class WebhookEndpoints
             var result = await bus.InvokeAsync<Result<WebhookEndpointDto>>(
                 new UpdateWebhookEndpointCommand(
                     boardId, endpointId, body.Url, body.Active), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WebhookEndpointDto>(StatusCodes.Status200OK);
 
         boardGroup.MapDelete("/{endpointId:guid}", async (
@@ -70,7 +70,7 @@ public static class WebhookEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new DeleteWebhookEndpointCommand(boardId, endpointId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         boardGroup.MapGet("/{endpointId:guid}/deliveries", async (
@@ -82,7 +82,7 @@ public static class WebhookEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WebhookDeliveryDto>>>(
                 new ListWebhookDeliveriesQuery(boardId, endpointId, null, 0, take ?? 50), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<WebhookDeliveryDto>>(StatusCodes.Status200OK);
 
         return app;

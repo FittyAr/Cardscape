@@ -40,11 +40,11 @@ public sealed partial class BoardDetail
     // the markup above (AddList form + AddCard inline).
     private async Task OnAddListKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
     {
-        if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
+        if (e.IsEnter)
         {
             await AddListAsync();
         }
-        else if (string.Equals(e.Key, "Escape", StringComparison.Ordinal))
+        else if (e.IsEscape)
         {
             _showAddList = false;
         }
@@ -52,11 +52,11 @@ public sealed partial class BoardDetail
 
     private async Task OnAddCardKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, Guid listId)
     {
-        if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
+        if (e.IsEnter)
         {
             await ConfirmAddCardAsync(listId);
         }
-        else if (string.Equals(e.Key, "Escape", StringComparison.Ordinal))
+        else if (e.IsEscape)
         {
             CloseCardComposer();
         }
@@ -79,7 +79,7 @@ public sealed partial class BoardDetail
 
     private void OnCardKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, CardSummaryDto card)
     {
-        if (e.Key is "Enter" or " ")
+        if (e.IsActivation)
         {
             OpenCard(card);
         }

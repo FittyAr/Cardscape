@@ -19,7 +19,7 @@ public static class VotingEndpoints
         {
             var result = await bus.InvokeAsync<Result<CardVoteStateDto>>(
                 new ToggleCardVoteCommand(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<CardVoteStateDto>();
 
         // Read-only fetch of the current vote state for the card.
@@ -27,7 +27,7 @@ public static class VotingEndpoints
         {
             var result = await bus.InvokeAsync<Result<CardVoteStateDto>>(
                 new ListCardVotesQuery(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<CardVoteStateDto>();
 
         return app;

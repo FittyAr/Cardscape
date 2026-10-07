@@ -32,7 +32,7 @@ public static class IntegrationsEndpoints
                 new LinkGitHubRepoCommand(
                     body.BoardId, body.RepoFullName, body.Events),
                 ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         // BETA-2-#11 — see test-results/BETA-TEST-REPORT.md.
@@ -63,7 +63,7 @@ public static class IntegrationsEndpoints
 
             var result = await bus.InvokeAsync<Result<IReadOnlyList<GitHubPullRequestDto>>>(
                 new ListGitHubPullRequestsQuery(boardId, repoFullName, state ?? "open"), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<GitHubPullRequestDto>>(StatusCodes.Status200OK);
 
         group.MapPost("/pulls/link", async ([FromBody] LinkGitHubPullRequestRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -81,7 +81,7 @@ public static class IntegrationsEndpoints
             var result = await bus.InvokeAsync<Result<GitHubIssueDto>>(
                 new CreateGitHubIssueFromCardCommand(
                     body.CardId, body.RepoFullName, body.Title, body.Body), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<GitHubIssueDto>(StatusCodes.Status200OK);
 
         return app;
@@ -102,7 +102,7 @@ public static class IntegrationsEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<InboundEmailAddressDto>>>(
                 new ListInboundEmailAddressesQuery(workspaceId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<InboundEmailAddressDto>>(StatusCodes.Status200OK);
 
         authed.MapPost("/addresses", async ([FromBody] RegisterInboundEmailAddressRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -119,7 +119,7 @@ public static class IntegrationsEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new UnregisterInboundEmailAddressCommand(addressId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         // Public webhook surface — no authorization at the

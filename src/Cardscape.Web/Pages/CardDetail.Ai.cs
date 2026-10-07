@@ -18,8 +18,8 @@ public sealed partial class CardDetail
         try
         {
             ApiResult<AiGeneratedTextDto> result = await Ai.GenerateDescriptionAsync(CardId);
-            CaptureAiOutcome(result.IsSuccess && result.Value is not null, result.Error, L["AiGenerateDescription"]);
-            _aiGeneratedDescription = result.IsSuccess && result.Value is not null
+            CaptureAiOutcome(result.HasValue, result.Error, L["AiGenerateDescription"]);
+            _aiGeneratedDescription = result.HasValue
                 ? result.Value.Text
                 : null;
         }
@@ -41,8 +41,8 @@ public sealed partial class CardDetail
         {
             IReadOnlyList<Guid> commentIds = _comments.Select(c => c.Id).ToList();
             ApiResult<AiGeneratedTextDto> result = await Ai.SummarizeCommentsAsync(commentIds);
-            CaptureAiOutcome(result.IsSuccess && result.Value is not null, result.Error, L["AiSummarizeComments"]);
-            _aiSummary = result.IsSuccess && result.Value is not null
+            CaptureAiOutcome(result.HasValue, result.Error, L["AiSummarizeComments"]);
+            _aiSummary = result.HasValue
                 ? result.Value.Text
                 : null;
         }
@@ -111,8 +111,8 @@ public sealed partial class CardDetail
         try
         {
             ApiResult<AiOwnerSuggestionsDto> result = await Ai.SuggestOwnersAsync(CardId);
-            CaptureAiOutcome(result.IsSuccess && result.Value is not null, result.Error, L["AiSuggestOwners"]);
-            _aiSuggestedOwners = result.IsSuccess && result.Value is not null
+            CaptureAiOutcome(result.HasValue, result.Error, L["AiSuggestOwners"]);
+            _aiSuggestedOwners = result.HasValue
                 ? result.Value.Suggestions
                 : null;
         }
@@ -133,7 +133,7 @@ public sealed partial class CardDetail
         try
         {
             ApiResult<CardDto> result = await Cards.AssignAsync(CardId, suggestion.UserId);
-            if (result.IsSuccess && result.Value is not null)
+            if (result.HasValue)
             {
                 _card = result.Value;
                 _commandError = null;

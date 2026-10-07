@@ -23,7 +23,7 @@ public sealed class CompositeBoardNotifier(
         Func<IBoardClient, Task> dispatch,
         CancellationToken ct = default)
     {
-        await dispatch(hub.Clients.Group($"board:{boardId:N}"));
+        await dispatch(hub.Clients.Group(BoardHub.GroupName(boardId)));
         await mcpNotifier.NotifyAsync(boardId, ct);
     }
 }

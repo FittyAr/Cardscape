@@ -267,7 +267,7 @@ public sealed class UserPreferencesService
                     // 404 → no row yet. Create it with the
                     // current local state, then apply.
                     var create = await _api.CreateDefaultAsync();
-                    if (create.IsSuccess && create.Value is not null)
+                    if (create.HasValue)
                     {
                         await ApplyServerPreferencesAsync(create.Value);
                     }
@@ -368,18 +368,7 @@ public sealed class UserPreferencesService
         }
     }
 
-    private async Task NotifyChangedAsync()
-    {
-        if (Changed is null)
-        {
-            return;
-        }
-
-        foreach (Func<Task> handler in Changed.GetInvocationList().Cast<Func<Task>>())
-        {
-            await handler();
-        }
-    }
+    private Task NotifyChangedAsync() => Changed.InvokeSequentiallyAsync();
 
     /// <summary>Pick the matching sibling of a theme name
     /// for the given <c>prefersDark</c> value. For Light

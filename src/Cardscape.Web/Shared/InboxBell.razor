@@ -66,7 +66,7 @@
         try
         {
             ApiResult<UnreadCountResponse> result = await Notifications.GetUnreadCountAsync(ct);
-            if (result.IsSuccess && result.Value is not null)
+            if (result.HasValue)
             {
                 count = result.Value.Count;
                 await InvokeAsync(StateHasChanged);

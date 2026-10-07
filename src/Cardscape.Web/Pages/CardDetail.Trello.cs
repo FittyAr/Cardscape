@@ -118,7 +118,7 @@ public sealed partial class CardDetail
         _boardLists = lists.IsSuccess ? (lists.Value ?? []).Where(list => !list.IsArchived).OrderBy(list => list.Position).ToList() : [];
 
         ApiResult<BoardDto> board = await boardTask;
-        if (board.IsSuccess && board.Value is not null)
+        if (board.HasValue)
         {
             ApiResult<IReadOnlyList<WorkspaceMemberDto>> members =
                 await WorkspacesApi.ListMembersAsync(board.Value.WorkspaceId);
@@ -156,7 +156,7 @@ public sealed partial class CardDetail
     private static async Task OnOptionKeyAsync(
         Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, Func<Task> action, bool enterOnly = false)
     {
-        if (e.Key == "Enter" || (!enterOnly && e.Key == " "))
+        if (enterOnly ? e.IsEnter : e.IsActivation)
         {
             await action();
         }
@@ -165,7 +165,7 @@ public sealed partial class CardDetail
     private void ApplyCard(ApiResult<CardDto> result, string action)
     {
         CaptureCommandOutcome(result, action);
-        if (result.IsSuccess && result.Value is not null)
+        if (result.HasValue)
         {
             _card = result.Value;
         }
@@ -202,7 +202,7 @@ public sealed partial class CardDetail
 
         ApiResult<LabelDto> created = await LabelsApi.CreateAsync(EffectiveBoardId, name, _newLabelColor);
         CaptureCommandOutcome(created, L["CardLabelCreate"]);
-        if (created.IsSuccess && created.Value is not null)
+        if (created.HasValue)
         {
             _boardLabels = [.. _boardLabels, created.Value];
             _newLabelName = string.Empty;
@@ -212,11 +212,7 @@ public sealed partial class CardDetail
 
     private async Task DeleteLabelAsync(LabelDto label)
     {
-        bool? confirmed = await DialogService.Confirm(
-            L["CardLabelDeleteConfirm", label.Name],
-            L["CardLabelDelete"],
-            new ConfirmOptions { OkButtonText = L["ActionDelete"], CancelButtonText = L["ActionCancel"] });
-        if (confirmed != true)
+        if (!await DialogService.ConfirmDeleteAsync(L, L["CardLabelDeleteConfirm", label.Name], L["CardLabelDelete"]))
         {
             return;
         }
@@ -227,7 +223,7 @@ public sealed partial class CardDetail
         {
             _boardLabels = _boardLabels.Where(l => l.Id != label.Id).ToList();
             ApiResult<CardDto> refreshed = await Cards.GetAsync(CardId);
-            if (refreshed.IsSuccess && refreshed.Value is not null)
+            if (refreshed.HasValue)
             {
                 _card = refreshed.Value;
             }
@@ -388,7 +384,7 @@ public sealed partial class CardDetail
 
         ApiResult<CommentDto> result = await Comments.EditAsync(CardId, commentId, body);
         CaptureCommandOutcome(result, L["CommentEdit"]);
-        if (result.IsSuccess && result.Value is not null && _comments is not null)
+        if (result.HasValue && _comments is not null)
         {
             _comments = _comments.Select(c => c.Id == commentId ? result.Value : c).ToList();
             CancelEditingComment();
@@ -397,11 +393,7 @@ public sealed partial class CardDetail
 
     private async Task DeleteCommentAsync(Guid commentId)
     {
-        bool? confirmed = await DialogService.Confirm(
-            L["CommentDeleteConfirm"],
-            L["CommentDelete"],
-            new ConfirmOptions { OkButtonText = L["ActionDelete"], CancelButtonText = L["ActionCancel"] });
-        if (confirmed != true)
+        if (!await DialogService.ConfirmDeleteAsync(L, L["CommentDeleteConfirm"], L["CommentDelete"]))
         {
             return;
         }

@@ -96,8 +96,5 @@ public readonly struct McpToolSpanScope : IDisposable
         _activity?.SetStatus(ActivityStatusCode.Error, message ?? code);
     }
 
-    public void SetTag(string key, object? value) =>
-        _activity?.SetTag(key, value);
-
     public void Dispose() => _activity?.Dispose();
 }

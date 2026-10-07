@@ -1,3 +1,4 @@
+using System.Buffers.Text;
 using System.Security.Claims;
 using System.Text.Json;
 using Cardscape.Web.Shared;
@@ -70,16 +71,7 @@ public sealed class AuthStateProvider(TokenStore tokens) : AuthenticationStatePr
                 return [];
             }
 
-            string payload = parts[1]
-                .Replace('-', '+')
-                .Replace('_', '/');
-            switch (payload.Length % 4)
-            {
-                case 2: payload += "=="; break;
-                case 3: payload += "="; break;
-            }
-
-            byte[] bytes = Convert.FromBase64String(payload);
+            byte[] bytes = Base64Url.DecodeFromChars(parts[1]);
             using JsonDocument doc = JsonDocument.Parse(bytes);
             JsonElement root = doc.RootElement;
             List<Claim> claims = [];

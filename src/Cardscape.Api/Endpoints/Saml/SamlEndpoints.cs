@@ -69,7 +69,7 @@ public static class SamlEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new DisableSamlConnectionCommand(workspaceId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         return app;

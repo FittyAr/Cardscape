@@ -230,7 +230,7 @@ public sealed partial class BoardDetail
         ApiResult<IReadOnlyList<CardSummaryDto>> cardsResult = await CardsApi.ListForBoardAsync(
             BoardId, includeArchived: false, includeSnoozed: _showSnoozed);
         Dictionary<Guid, IReadOnlyList<CardSummaryDto>> next = [];
-        if (cardsResult.IsSuccess && cardsResult.Value is not null)
+        if (cardsResult.HasValue)
         {
             HashSet<Guid> seenIds = [];
             Dictionary<Guid, List<CardSummaryDto>> grouped = [];

@@ -13,7 +13,6 @@ public sealed class SeedReport
 {
     private readonly ConcurrentQueue<SeedLogEntry> _entries = new();
     private readonly ConcurrentDictionary<string, long> _tableCounts = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ConcurrentDictionary<string, (string Aggregate, string? Highlight)> _tableMeta = new(StringComparer.OrdinalIgnoreCase);
 
     private long _startedAtTicks;
     private long _finishedAtTicks;
@@ -23,11 +22,7 @@ public sealed class SeedReport
     public IReadOnlyList<SeedTableStatus> TableSnapshot() =>
         _tableCounts
             .OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
-            .Select(kv =>
-            {
-                _tableMeta.TryGetValue(kv.Key, out var meta);
-                return new SeedTableStatus(kv.Key, meta.Aggregate ?? kv.Key, kv.Value, meta.Highlight);
-            })
+            .Select(kv => new SeedTableStatus(kv.Key, AggregateName: kv.Key, kv.Value, Highlight: null))
             .ToList();
 
     public string Status { get; private set; } = "Idle";
@@ -54,7 +49,6 @@ public sealed class SeedReport
     {
         _entries.Clear();
         _tableCounts.Clear();
-        _tableMeta.Clear();
         Interlocked.Exchange(ref _startedAtTicks, 0);
         Interlocked.Exchange(ref _finishedAtTicks, 0);
         Status = "Idle";
@@ -87,9 +81,5 @@ public sealed class SeedReport
 
     public void Log(SeedLogEntry entry) => _entries.Enqueue(entry);
 
-    public void RecordTable(string tableKey, long rowCount, string aggregateName, string? highlight = null)
-    {
-        _tableCounts[tableKey] = rowCount;
-        _tableMeta[tableKey] = (aggregateName, highlight);
-    }
+    public void RecordTable(string tableKey, long rowCount) => _tableCounts[tableKey] = rowCount;
 }

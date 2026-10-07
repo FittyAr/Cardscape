@@ -141,57 +141,8 @@ public sealed partial class BoardDetail
 
         BoardExtensionDto? match = result.Value?.FirstOrDefault(r => r.Kind == CardAgingKind);
         _agingMode = match is { IsEnabled: true }
-            ? ParseAgingMode(match.ConfigJson)
+            ? CardAgingMode.FromConfigJson(match.ConfigJson)
             : CardAgingMode.Disabled;
-    }
-
-    private static CardAgingMode ParseAgingMode(string? configJson)
-    {
-        if (string.IsNullOrWhiteSpace(configJson))
-        {
-            return CardAgingMode.Disabled;
-        }
-
-        try
-        {
-            using JsonDocument doc = JsonDocument.Parse(configJson);
-            if (doc.RootElement.ValueKind == JsonValueKind.Object
-                && doc.RootElement.TryGetProperty("mode", out JsonElement modeEl)
-                && modeEl.ValueKind == JsonValueKind.String)
-            {
-                string? raw = modeEl.GetString();
-                if (Enum.TryParse<CardAgingMode>(raw, ignoreCase: true, out CardAgingMode parsed)
-                    && Enum.IsDefined(parsed))
-                {
-                    return parsed;
-                }
-            }
-        }
-        catch (JsonException)
-        {
-            // Fall through to the default below.
-        }
-
-        return CardAgingMode.Disabled;
-    }
-
-    // Linear opacity: cards stay at full opacity until the mode's
-    // staleness window, then fade toward 0.6 (the "stale but still
-    // legible" floor) over the same window.
-    //  ByActivity: window = 14 days since the last update.
-    private static double ComputeCardOpacity(
-        CardSummaryDto card, CardAgingMode mode, DateTimeOffset now)
-    {
-        if (mode == CardAgingMode.Disabled)
-        {
-            return 1.0;
-        }
-
-        const double fadeFloor = 0.6;
-        const double windowDays = 14.0;
-        double daysSince = Math.Max(0, (now - card.UpdatedAt).TotalDays);
-        double fade = Math.Min(1.0, daysSince / windowDays);
-        return fadeFloor + (1.0 - fadeFloor) * (1.0 - fade);
     }
 
     // Due-date chip colour on the kanban card.
@@ -230,24 +181,10 @@ public sealed partial class BoardDetail
         _ => "public",
     };
 
-    private string VisibilityLabel(BoardVisibility visibility) => visibility switch
-    {
-        BoardVisibility.Private => L["BoardsVisibilityPrivate"],
-        BoardVisibility.Workspace => L["BoardsVisibilityWorkspace"],
-        _ => L["BoardsVisibilityPublic"],
-    };
+    private string VisibilityLabel(BoardVisibility visibility) => L[visibility.LabelKey];
 
     private sealed class AddListModel
     {
         public string Name { get; set; } = string.Empty;
-    }
-
-    // Mirrors Cardscape.Domain.Cards.CardAgingMode. Kept local so
-    // the Web project doesn't need a domain reference just to drive
-    // the opacity math.
-    private enum CardAgingMode
-    {
-        Disabled = 0,
-        ByActivity = 1
     }
 }

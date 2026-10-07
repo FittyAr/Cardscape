@@ -55,34 +55,6 @@ public sealed class BoardHub(
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupName(boardId));
     }
 
-    public override async Task OnConnectedAsync()
-    {
-        await base.OnConnectedAsync();
-    }
-
-    public override async Task OnDisconnectedAsync(Exception? exception)
-    {
-        await base.OnDisconnectedAsync(exception);
-    }
-
-    private static string GroupName(Guid boardId) => $"board:{boardId:N}";
-}
-
-/// <summary>
-/// Pure-SignalR <see cref="IBoardNotifier"/> implementation
-/// (SignalR fan-out only; the MCP process is reached by the
-/// <c>CompositeBoardNotifier</c> wrapper that the API
-/// registers by default). Lives here so the test host that
-/// wants to exercise SignalR alone can register it directly
-/// without dragging in the MCP HTTP path.
-/// </summary>
-public sealed class BoardNotifier(IHubContext<BoardHub, IBoardClient> hub) : IBoardNotifier
-{
-    public async Task BroadcastAsync(
-        Guid boardId,
-        Func<IBoardClient, Task> dispatch,
-        CancellationToken ct = default)
-    {
-        await dispatch(hub.Clients.Group($"board:{boardId:N}"));
-    }
+    /// <summary>SignalR group every member viewing <paramref name="boardId"/> joins.</summary>
+    internal static string GroupName(Guid boardId) => $"board:{boardId:N}";
 }

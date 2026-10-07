@@ -60,8 +60,7 @@ internal sealed class ConversationsSeedStep : SeedStepBase
                 mentioned.DisplayName.Value);
 
         Comment comment = Comment.Create(CommentId.New(), card.Id, author.Id.Value, CommentBody.Create(body).Value, at).Value;
-        context.Db.Comments.Add(comment);
-        context.Comments.Add(comment);
+        context.Track(context.Comments, comment);
         context.RecordActivity(board, card.Id.Value, author, ActivityKind.CommentAdded, at, new { commentId = comment.Id.Value });
 
         if (mentioned is not null)
@@ -101,8 +100,7 @@ internal sealed class ConversationsSeedStep : SeedStepBase
             foreach (User voter in members.Where(_ => context.Timeline.Chance(0.4)))
             {
                 CardVote vote = CardVote.Create(CardVoteId.New(), card.Id, voter.Id.Value, context.Timeline.Between(card.CreatedAt)).Value;
-                context.Db.CardVotes.Add(vote);
-                context.CardVotes.Add(vote);
+                context.Track(context.CardVotes, vote);
             }
         }
     }

@@ -17,10 +17,10 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<IReadOnlyList<ChecklistDto>>>(
                 new ListCardChecklistsQuery(cardId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -38,10 +38,10 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new CreateChecklistCommand(cardId, title), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -59,10 +59,10 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new RenameChecklistCommand(checklistId, title), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -80,7 +80,7 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result>(
                 new DeleteChecklistCommand(checklistId), ct);
             if (result.IsFailure)
@@ -105,10 +105,10 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new AddChecklistItemCommand(checklistId, text), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -127,10 +127,10 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new RenameChecklistItemCommand(checklistId, itemId, text), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -149,10 +149,10 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new ToggleChecklistItemCommand(checklistId, itemId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -171,10 +171,10 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new DeleteChecklistItemCommand(checklistId, itemId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -183,25 +183,5 @@ public sealed class ChecklistsTools(IMessageBus bus, ICurrentUser currentUser)
             __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
             throw;
         }
-    }
-
-    private void RequireAuth()
-    {
-        if (!currentUser.IsAuthenticated)
-        {
-            throw new UnauthorizedAccessException(
-                "MCP tool call rejected: no authenticated principal. "
-                + "Pass a Bearer JWT or API token in the Authorization header.");
-        }
-    }
-
-    private static T Ensure<T>(Result<T> result)
-    {
-        if (result.IsFailure)
-        {
-            throw new InvalidOperationException($"{result.Error.Code}: {result.Error.Message}");
-        }
-
-        return result.Value!;
     }
 }

@@ -23,10 +23,10 @@ public sealed class ActivitiesTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<ActivityPage>>(
                 new ListBoardActivitiesQuery(boardId, cursor, limit), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -45,10 +45,10 @@ public sealed class ActivitiesTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<ActivityPage>>(
                 new ListCardActivitiesQuery(cardId, cursor, limit), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -57,25 +57,5 @@ public sealed class ActivitiesTools(IMessageBus bus, ICurrentUser currentUser)
             __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
             throw;
         }
-    }
-
-    private void RequireAuth()
-    {
-        if (!currentUser.IsAuthenticated)
-        {
-            throw new UnauthorizedAccessException(
-                "MCP tool call rejected: no authenticated principal. "
-                + "Pass a Bearer JWT or API token in the Authorization header.");
-        }
-    }
-
-    private static T Ensure<T>(Result<T> result)
-    {
-        if (result.IsFailure)
-        {
-            throw new InvalidOperationException($"{result.Error.Code}: {result.Error.Message}");
-        }
-
-        return result.Value!;
     }
 }

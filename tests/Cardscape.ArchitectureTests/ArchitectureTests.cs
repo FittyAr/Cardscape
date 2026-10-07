@@ -713,9 +713,9 @@ public sealed class ArchitectureTests
         ai.Split("CaptureAiOutcome(", StringSplitOptions.None).Length.Should().BeGreaterThanOrEqualTo(7);
         ai.Should().Contain("await Checklists.DeleteAsync(newChecklistId)",
             "a partially generated checklist must be compensated when any item fails");
-        ai.Should().Contain("if (result.IsSuccess && result.Value is not null)");
+        ai.Should().Contain("if (result.HasValue)");
         ai.IndexOf("_aiSuggestedOwners = _aiSuggestedOwners", StringComparison.Ordinal)
-            .Should().BeGreaterThan(ai.IndexOf("if (result.IsSuccess && result.Value is not null)", StringComparison.Ordinal));
+            .Should().BeGreaterThan(ai.IndexOf("if (result.HasValue)", StringComparison.Ordinal));
         ai.Should().NotContain("CreateAsync(CardId, \"AI suggestions\")");
     }
 

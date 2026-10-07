@@ -22,7 +22,7 @@ public static class AutomationEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardAutomationRuleDto>>>(
                 new ListBoardAutomationRulesQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardAutomationRuleDto[]>();
 
         group.MapPost("/", async (
@@ -47,21 +47,21 @@ public static class AutomationEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new EnableBoardAutomationRuleCommand(ruleId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/{ruleId:guid}/disable", async (Guid boardId, Guid ruleId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new DisableBoardAutomationRuleCommand(ruleId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         group.MapDelete("/{ruleId:guid}", async (Guid boardId, Guid ruleId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new DeleteBoardAutomationRuleCommand(ruleId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         return app;

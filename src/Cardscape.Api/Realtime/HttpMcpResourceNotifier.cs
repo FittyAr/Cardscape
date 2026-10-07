@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Cardscape.Api.Logging;
+using Cardscape.Infrastructure.Configuration;
 
 namespace Cardscape.Api.Realtime;
 
@@ -19,17 +20,11 @@ public sealed class HttpMcpResourceNotifier(
     IConfiguration config,
     ILogger<HttpMcpResourceNotifier> logger)
 {
-    public const string SecretHeader = "X-Internal-Secret";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNameCaseInsensitive = true
-    };
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerOptions.Web;
 
     private readonly HttpClient _http = factory.CreateClient("Cardscape.Mcp");
-    private readonly string? _secret = config["Internal:Secret"]
-            ?? config["Cardscape:Internal:Secret"]
-            ?? Environment.GetEnvironmentVariable("CARDS_CAPE__INTERNAL__SECRET");
+    private readonly string? _secret = config.OutboundInternalSecret;
     private readonly string? _baseUrl = config["Cardscape:Mcp:BaseUrl"]
             ?? config["Mcp:BaseUrl"]
             ?? Environment.GetEnvironmentVariable("CARDS_CAPE__MCP__BASEURL");
@@ -58,7 +53,7 @@ public sealed class HttpMcpResourceNotifier(
             using HttpRequestMessage request = new(
                 HttpMethod.Post,
                 new Uri(new Uri(_baseUrl, UriKind.Absolute), "api/internal/board-event/"));
-            request.Headers.Add(SecretHeader, _secret);
+            request.Headers.Add(InternalSecret.HeaderName, _secret);
             request.Content = JsonContent.Create(new { boardId }, options: JsonOptions);
 
             using HttpResponseMessage response = await _http.SendAsync(request, ct);

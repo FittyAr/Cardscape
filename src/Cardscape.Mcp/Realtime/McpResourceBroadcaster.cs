@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Common;
+using Cardscape.Mcp.Authorization;
 using Cardscape.Mcp.Logging;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -125,7 +126,7 @@ public sealed class McpResourceBroadcaster(
     /// </summary>
     public async Task BroadcastAsync(Guid boardId, CancellationToken ct = default)
     {
-        string uri = $"board://{boardId:N}";
+        string uri = McpBoardSubscriptionAuthorization.ToCanonicalUri(boardId);
 
         List<ResourceSubscription> targets;
         lock (_gate)

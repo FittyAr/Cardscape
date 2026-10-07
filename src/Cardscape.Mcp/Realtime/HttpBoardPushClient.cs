@@ -1,5 +1,7 @@
 using System.Text.Json;
+using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Realtime;
+using Cardscape.Infrastructure.Configuration;
 using Cardscape.Mcp.Logging;
 
 namespace Cardscape.Mcp.Realtime;
@@ -15,38 +17,32 @@ public sealed class HttpBoardPushClient(
     IConfiguration config,
     ILogger<HttpBoardPushClient> logger) : IBoardPushClient
 {
-    public const string SecretHeader = "X-Internal-Secret";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNameCaseInsensitive = true
-    };
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerOptions.Web;
 
     private readonly HttpClient _http = factory.CreateClient("Cardscape.Api");
-    private readonly string? _secret = config["Internal:Secret"]
-            ?? config["Cardscape:Internal:Secret"]
-            ?? Environment.GetEnvironmentVariable("CARDS_CAPE__INTERNAL__SECRET");
+    private readonly string? _secret = config.OutboundInternalSecret;
 
     public Task PushCardCreatedAsync(CardEventPayload payload, CancellationToken ct = default) =>
-        PushAsync("CardCreated", boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
+        PushAsync(nameof(IBoardClient.CardCreated), boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
 
     public Task PushCardUpdatedAsync(CardEventPayload payload, CancellationToken ct = default) =>
-        PushAsync("CardUpdated", boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
+        PushAsync(nameof(IBoardClient.CardUpdated), boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
 
     public Task PushCardMovedAsync(CardMovedPayload payload, CancellationToken ct = default) =>
-        PushAsync("CardMoved", boardId: payload.BoardId, listId: null, cardId: payload.CardId, payload, ct);
+        PushAsync(nameof(IBoardClient.CardMoved), boardId: payload.BoardId, listId: null, cardId: payload.CardId, payload, ct);
 
     public Task PushCardCompletedAsync(CardEventPayload payload, CancellationToken ct = default) =>
-        PushAsync("CardCompleted", boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
+        PushAsync(nameof(IBoardClient.CardCompleted), boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
 
     public Task PushCardReopenedAsync(CardEventPayload payload, CancellationToken ct = default) =>
-        PushAsync("CardReopened", boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
+        PushAsync(nameof(IBoardClient.CardReopened), boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
 
     public Task PushListCreatedAsync(ListEventPayload payload, CancellationToken ct = default) =>
-        PushAsync("ListCreated", boardId: payload.BoardId, listId: payload.ListId, cardId: null, payload, ct);
+        PushAsync(nameof(IBoardClient.ListCreated), boardId: payload.BoardId, listId: payload.ListId, cardId: null, payload, ct);
 
     public Task PushCommentAddedAsync(CommentEventPayload payload, CancellationToken ct = default) =>
-        PushAsync("CommentAdded", boardId: payload.BoardId, listId: null, cardId: payload.CardId, payload, ct);
+        PushAsync(nameof(IBoardClient.CommentAdded), boardId: payload.BoardId, listId: null, cardId: payload.CardId, payload, ct);
 
     private async Task PushAsync(
         string method,
@@ -65,7 +61,7 @@ public sealed class HttpBoardPushClient(
         try
         {
             using HttpRequestMessage request = new(HttpMethod.Post, "api/internal/broadcast/");
-            request.Headers.Add(SecretHeader, _secret);
+            request.Headers.Add(InternalSecret.HeaderName, _secret);
             request.Content = JsonContent.Create(new
             {
                 boardId,

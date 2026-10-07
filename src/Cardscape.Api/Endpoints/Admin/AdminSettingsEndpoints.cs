@@ -32,7 +32,7 @@ public static class AdminSettingsEndpoints
             CancellationToken ct) =>
         {
             Result<SystemSettings> updated = await settings.UpdateAsync(request, currentUser.Email, ct);
-            return updated.IsSuccess ? Results.Ok(updated.Value) : DomainErrorResults.ToProblem(updated.Error);
+            return updated.ToOk();
         })
         .Produces<SystemSettings>()
         .ProducesValidationProblem();

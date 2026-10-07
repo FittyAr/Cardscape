@@ -96,7 +96,7 @@
     protected override async Task OnInitializedAsync()
     {
         var result = await SamlApi.GetAsync(WorkspaceId);
-        connection = result.IsSuccess && result.Value is not null
+        connection = result.HasValue
             ? result.Value
             : Empty();
     }

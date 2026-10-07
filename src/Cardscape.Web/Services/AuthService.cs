@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Cardscape.Web.Shared;
 
@@ -23,6 +24,10 @@ public readonly record struct ApiResult<T>(
     int StatusCode = 0,
     LoginChallenge? Challenge = null)
 {
+    /// <summary>True when the call succeeded and returned a value.</summary>
+    [MemberNotNullWhen(true, nameof(Value))]
+    public bool HasValue => IsSuccess && Value is not null;
+
     public static ApiResult<T> Ok(T value) => new(true, value, null, 200, null);
     public static ApiResult<T> Fail(string error, int statusCode = 0) =>
         new(false, default, error, statusCode, null);

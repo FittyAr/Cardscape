@@ -284,18 +284,7 @@ public sealed class CultureSwitcher(
         await NotifyChangedAsync();
     }
 
-    private async Task NotifyChangedAsync()
-    {
-        if (Changed is null)
-        {
-            return;
-        }
-
-        foreach (Func<Task> handler in Changed.GetInvocationList().Cast<Func<Task>>())
-        {
-            await handler();
-        }
-    }
+    private Task NotifyChangedAsync() => Changed.InvokeSequentiallyAsync();
 
     private async Task<IReadOnlyDictionary<string, string>> LoadTranslationsAsync(string culture)
     {

@@ -173,7 +173,7 @@
         {
             ApiResult<IReadOnlyList<BoardListDto>> result =
                 await ListsApi.ListForBoardAsync(selectedBoardId);
-            lists = result.IsSuccess && result.Value is not null ? result.Value : [];
+            lists = result.HasValue ? result.Value : [];
             if (lists.Count > 0)
             {
                 selectedListId = lists[0].Id;

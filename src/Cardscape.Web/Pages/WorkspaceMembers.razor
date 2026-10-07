@@ -262,13 +262,7 @@
         }
     }
 
-    private string RoleName(WorkspaceRole role) => role switch
-    {
-        WorkspaceRole.Admin => L["WorkspaceRoleAdmin"],
-        WorkspaceRole.Member => L["WorkspaceRoleMember"],
-        WorkspaceRole.Observer => L["WorkspaceRoleObserver"],
-        _ => L["CommonUnknown"]
-    };
+    private string RoleName(WorkspaceRole role) => L[role.LabelKey];
 
     private sealed class InviteModel
     {

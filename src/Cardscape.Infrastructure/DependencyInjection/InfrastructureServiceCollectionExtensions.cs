@@ -95,7 +95,11 @@ public static partial class InfrastructureServiceCollectionExtensions
             IDomainEventBroadcaster,
             Cardscape.Application.Automation.AutomationEventBroadcaster>();
 
-        services.AddRepository<UserRepository, User, UserId, IUserRepository>();
+        // Registered by type (not forwarded through a factory lambda) so
+        // Wolverine can construct it inline in the many handlers that need
+        // it instead of falling back to service location.
+        services.AddScoped<IRepository<User, UserId>, UserRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
 
         services.AddRepository<WorkspaceRepository, Workspace, WorkspaceId, IWorkspaceRepository>();
 

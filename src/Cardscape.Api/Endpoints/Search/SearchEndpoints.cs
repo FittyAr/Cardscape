@@ -47,7 +47,7 @@ public static class SearchEndpoints
                     Page: page ?? 1,
                     PageSize: pageSize ?? 20),
                 ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<SearchPageDto>();
 
         return app;

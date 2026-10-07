@@ -163,7 +163,7 @@
         try
         {
             ApiResult<IReadOnlyList<BoardAutomationRuleDto>> result = await AutomationClient.ListRulesAsync(BoardId);
-            if (result.IsSuccess && result.Value is not null)
+            if (result.HasValue)
             {
                 rules = result.Value;
                 return;

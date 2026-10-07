@@ -61,7 +61,7 @@ public static class SlackEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<SlackChannelDto>>>(
                 new ListSlackChannelsForBoardQuery(workspaceId, boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<SlackChannelDto>>(StatusCodes.Status200OK);
 
         group.MapPost("/channels", async (Guid workspaceId, [FromBody] LinkSlackChannelRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -80,7 +80,7 @@ public static class SlackEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new UnlinkSlackChannelCommand(workspaceId, channelId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         return app;

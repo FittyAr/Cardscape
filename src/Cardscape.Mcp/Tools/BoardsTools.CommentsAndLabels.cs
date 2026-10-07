@@ -20,10 +20,10 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<CommentDto>>(
                 new AddCommentCommand(cardId, body), ct);
-            var dto = Ensure(result);
+            var dto = result.OrThrow();
             await push.PushCommentAddedAsync(new CommentEventPayload(
                 dto.Id, dto.CardId, Guid.Empty, dto.AuthorId, DateTimeOffset.UtcNow), ct);
             __mcpSpan.MarkSuccess();
@@ -43,10 +43,10 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<IReadOnlyList<CommentDto>>>(
                 new ListCommentsForCardQuery(cardId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -71,10 +71,10 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<CommentDto>>(
                 new EditCommentCommand(commentId, newBody), ct);
-            var dto = Ensure(result);
+            var dto = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return dto;
         }
@@ -92,7 +92,7 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result>(
                 new DeleteCommentCommand(commentId), ct);
             if (result.IsFailure)
@@ -116,10 +116,10 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<IReadOnlyList<LabelDto>>>(
                 new ListLabelsForBoardQuery(boardId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -137,10 +137,10 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<LabelDto>>(
                 new CreateLabelCommand(boardId, name, color), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }

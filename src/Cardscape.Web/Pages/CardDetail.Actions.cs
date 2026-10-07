@@ -60,7 +60,6 @@ public sealed partial class CardDetail
     // board id directly, so the cheapest stable post-delete
     // landing is the workspace the user came from — the back
     // button still works for the in-board flow).
-    [Inject] private Microsoft.AspNetCore.Components.NavigationManager NavForDelete { get; set; } = default!;
 
     // BETA-7-#11 — see test-results/BETA-TEST-REPORT.md.
     // The previous incarnation hard-deleted the card on
@@ -95,7 +94,7 @@ public sealed partial class CardDetail
             // back button or the workspace's board list takes
             // them to the right board without us having to
             // thread the board id through the card DTO.
-            NavForDelete.NavigateTo("workspaces");
+            Nav.NavigateTo("workspaces");
         }
     }
 
@@ -154,7 +153,7 @@ public sealed partial class CardDetail
     {
         ApiResult<CardDto> refreshed = await Cards.GetAsync(CardId);
         CaptureCommandOutcome(refreshed, L["CardRefresh"]);
-        if (refreshed.IsSuccess && refreshed.Value is not null)
+        if (refreshed.HasValue)
         {
             _card = refreshed.Value;
         }

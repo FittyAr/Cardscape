@@ -127,7 +127,7 @@ else
     // field initializer — see OnInitializedAsync below.
     private bool dataResidencyEnabled;
 
-    private record RegionOption(Region Value, string Label);
+    private sealed record RegionOption(Region Value, string Label);
 
     private IReadOnlyList<RegionOption> availableRegions = new[]
     {
@@ -144,7 +144,7 @@ else
             "Features:DataResidencyEnabled", false);
 
         ApiResult<IReadOnlyList<WorkspaceDto>> result = await WorkspacesApi.ListAsync();
-        if (result.IsSuccess && result.Value is not null)
+        if (result.HasValue)
         {
             workspaces = result.Value;
             return;

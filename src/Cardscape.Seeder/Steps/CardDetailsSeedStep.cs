@@ -61,8 +61,7 @@ internal sealed class CardDetailsSeedStep : SeedStepBase
             if (stage == CardStage.Backlog && LastTouched(card) < context.Now.AddDays(-30) && timeline.Chance(0.5))
             {
                 CardAgingSettings aging = CardAgingSettings.Create(card.Id, CardAgingMode.ByActivity, 10, card.CreatedAt).Value;
-                context.Db.CardAgingSettings.Add(aging);
-                context.CardAgingSettings.Add(aging);
+                context.Track(context.CardAgingSettings, aging);
             }
         }
 
@@ -97,8 +96,7 @@ internal sealed class CardDetailsSeedStep : SeedStepBase
             }
         }
 
-        context.Db.Checklists.Add(checklist);
-        context.Checklists.Add(checklist);
+        context.Track(context.Checklists, checklist);
         context.ChecklistItems.AddRange(checklist.Items);
     }
 
@@ -123,8 +121,7 @@ internal sealed class CardDetailsSeedStep : SeedStepBase
             };
             CustomFieldValue fieldValue = CustomFieldValue.Create(
                 definition.Id, card.Id, JsonSerializer.Serialize(value), card.CreatedAt.AddHours(3)).Value;
-            context.Db.CustomFieldValues.Add(fieldValue);
-            context.CustomFieldValues.Add(fieldValue);
+            context.Track(context.CustomFieldValues, fieldValue);
         }
     }
 
@@ -149,8 +146,7 @@ internal sealed class CardDetailsSeedStep : SeedStepBase
         DateTimeOffset at = context.Timeline.Between(card.CreatedAt, LastTouched(card) > card.CreatedAt ? LastTouched(card) : null);
         Attachment attachment = Attachment.Create(
             AttachmentId.New(), card.Id, fileName, mimeType, bytes.LongLength, storageKey, uploader.Id.Value, at).Value;
-        context.Db.Attachments.Add(attachment);
-        context.Attachments.Add(attachment);
+        context.Track(context.Attachments, attachment);
         context.RecordActivity(board, card.Id.Value, uploader, ActivityKind.AttachmentAdded, at,
             new { attachmentId = attachment.Id.Value, fileName });
     }
@@ -167,8 +163,7 @@ internal sealed class CardDetailsSeedStep : SeedStepBase
             DateTimeOffset next = card.DueDate is { } due && due > context.Now ? due : context.Now.AddDays(intervalDays / 3.0);
             CardRecurrence recurrence = CardRecurrence.Create(
                 CardRecurrenceId.New(), card.Id, intervalDays, next, card.CreatedBy ?? context.WorkspaceOwnerId, card.CreatedAt).Value;
-            context.Db.CardRecurrences.Add(recurrence);
-            context.CardRecurrences.Add(recurrence);
+            context.Track(context.CardRecurrences, recurrence);
         }
     }
 
@@ -188,14 +183,12 @@ internal sealed class CardDetailsSeedStep : SeedStepBase
 
             Card mirror = Card.Create(
                 CardId.New(), backlog.Id, source.Title, source.Description, Position.From(0.5), mirroredBy.Id.Value, at).Value;
-            context.Db.Cards.Add(mirror);
-            context.Cards.Add(mirror);
+            context.Track(context.Cards, mirror);
             context.RecordActivity(target, mirror.Id.Value, mirroredBy, ActivityKind.CardCreated, at,
                 new { title = source.Title.Value, mirroredFrom = source.Id.Value });
 
             CardMirror link = CardMirror.Create(source.Id, mirror.Id, backlog.Id, at, mirroredBy.Id.Value).Value;
-            context.Db.CardMirrors.Add(link);
-            context.CardMirrors.Add(link);
+            context.Track(context.CardMirrors, link);
         }
     }
 

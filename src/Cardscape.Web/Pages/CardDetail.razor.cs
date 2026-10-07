@@ -235,7 +235,7 @@ public sealed partial class CardDetail
             ApiResult<CardDto> result = await Cards.ChangeDescriptionAsync(
                 CardId, value);
             CaptureCommandOutcome(result, L["DescriptionSave"]);
-            if (result.IsSuccess && result.Value is not null)
+            if (result.HasValue)
             {
                 _card = result.Value;
             }
@@ -249,11 +249,11 @@ public sealed partial class CardDetail
 
     private async Task HandleTitleKeyDownAsync(KeyboardEventArgs args)
     {
-        if (string.Equals(args.Key, "Enter", StringComparison.Ordinal))
+        if (args.IsEnter)
         {
             await SaveTitleAsync();
         }
-        else if (string.Equals(args.Key, "Escape", StringComparison.Ordinal))
+        else if (args.IsEscape)
         {
             _editingTitle = false;
         }
@@ -276,7 +276,7 @@ public sealed partial class CardDetail
         _titleCts = new CancellationTokenSource();
         ApiResult<CardDto> result = await Cards.RenameAsync(CardId, newTitle, _titleCts.Token);
         CaptureCommandOutcome(result, L["CardEditTitle"]);
-        if (result.IsSuccess && result.Value is not null)
+        if (result.HasValue)
         {
             _card = result.Value;
         }

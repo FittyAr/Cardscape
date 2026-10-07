@@ -24,13 +24,13 @@ public static class WorkspaceEndpoints
         group.MapGet("/", async (IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceDto>>>(new ListWorkspacesForUserQuery(), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WorkspaceDto[]>();
 
         group.MapGet("/{workspaceId:guid}", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(new GetWorkspaceQuery(workspaceId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WorkspaceDto>();
 
         group.MapPost("/", async ([FromBody] CreateWorkspaceRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -46,7 +46,7 @@ public static class WorkspaceEndpoints
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
                 new SetWorkspaceRegionCommand(workspaceId, body.Region), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WorkspaceDto>();
 
         // Owner-only: toggle the workspace's two-factor
@@ -63,19 +63,19 @@ public static class WorkspaceEndpoints
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
                 new SetWorkspaceRequireTwoFactorCommand(workspaceId, body.Require), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WorkspaceDto>();
 
         group.MapPost("/{workspaceId:guid}/rename", async (Guid workspaceId, RenameWorkspaceRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(new RenameWorkspaceCommand(workspaceId, body.Name), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WorkspaceDto>();
 
         group.MapPost("/{workspaceId:guid}/archive", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(new ArchiveWorkspaceCommand(workspaceId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WorkspaceDto>();
 
         // BETA-A2-001 — see test-results/beta/00-FINAL-SUMMARY.md.
@@ -84,7 +84,7 @@ public static class WorkspaceEndpoints
         group.MapPost("/{workspaceId:guid}/unarchive", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(new UnarchiveWorkspaceCommand(workspaceId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WorkspaceDto>();
 
         // BETA-R2-A2-009 — see test-results/beta/round-2/reports/A2-workspaces.md.
@@ -96,19 +96,19 @@ public static class WorkspaceEndpoints
         group.MapDelete("/{workspaceId:guid}", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new DeleteWorkspaceCommand(workspaceId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         group.MapGet("/{workspaceId:guid}/members", async (Guid workspaceId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceMemberDto>>>(new ListWorkspaceMembersQuery(workspaceId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WorkspaceMemberDto[]>();
 
         group.MapPost("/{workspaceId:guid}/members", async (Guid workspaceId, AddWorkspaceMemberRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(new AddWorkspaceMemberCommand(workspaceId, body.UserId, body.Role), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WorkspaceDto>();
 
         // BETA-R2-A2-011 — see test-results/beta/round-2/reports/A2-workspaces.md.
@@ -125,13 +125,13 @@ public static class WorkspaceEndpoints
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
                 new ChangeWorkspaceMemberRoleCommand(workspaceId, userId, body.Role), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WorkspaceDto>();
 
         group.MapDelete("/{workspaceId:guid}/members/{userId:guid}", async (Guid workspaceId, Guid userId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(new RemoveWorkspaceMemberCommand(workspaceId, userId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WorkspaceDto>();
 
         return app;

@@ -14,7 +14,7 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<Stream>>(
                 new RenderBoardCalendarQuery(boardId), ct);
             if (result.IsFailure)
@@ -41,7 +41,7 @@ public sealed partial class BoardsTools
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<Stream>>(
                 new ExportBoardQuery(boardId), ct);
             if (result.IsFailure)

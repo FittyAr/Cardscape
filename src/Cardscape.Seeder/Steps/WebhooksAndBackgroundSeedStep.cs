@@ -154,8 +154,7 @@ internal sealed class WebhooksAndBackgroundSeedStep : SeedStepBase
                 }
             }
 
-            context.Db.BackgroundJobs.Add(job.Value);
-            context.BackgroundJobs.Add(job.Value);
+            context.Track(context.BackgroundJobs, job.Value);
         }
 
         // 3. Idempotency keys: three rows. Each has a
@@ -174,8 +173,7 @@ internal sealed class WebhooksAndBackgroundSeedStep : SeedStepBase
                 now.AddMinutes(-random.Next(0, 1440)));
             if (idem.IsSuccess)
             {
-                context.Db.IdempotencyKeys.Add(idem.Value);
-                context.IdempotencyKeys.Add(idem.Value);
+                context.Track(context.IdempotencyKeys, idem.Value);
             }
         }
 

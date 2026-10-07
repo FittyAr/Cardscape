@@ -82,6 +82,6 @@ public static class ImportEndpoints
         await using Stream stream = file.OpenReadStream();
         Result<Domain.Import.ImportResult> result = await import.ImportKanbanJsonAsync(
             stream, workspaceId, previewOnly, ct);
-        return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+        return result.ToOk();
     }
 }

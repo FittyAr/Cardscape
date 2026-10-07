@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Infrastructure.Security;
 using Cardscape.Mcp.Logging;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
@@ -41,13 +42,13 @@ public sealed class ApiTokenAuthenticationHandler(
             return AuthenticateResult.NoResult();
         }
 
-        if (!raw.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        string? secret = BearerAuthorization.Credential(raw);
+        if (secret is null)
         {
             return AuthenticateResult.Fail(
                 "Authorization header must be 'Bearer <secret>'.");
         }
 
-        string secret = raw["Bearer ".Length..].Trim();
         if (string.IsNullOrWhiteSpace(secret))
         {
             return AuthenticateResult.Fail("Empty bearer secret.");

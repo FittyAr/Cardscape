@@ -27,10 +27,10 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardAutomationRuleDto>>>(
                 new ListBoardAutomationRulesQuery(boardId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -56,13 +56,13 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<BoardAutomationRuleDto>>(
                 new CreateBoardAutomationRuleCommand(
                     boardId, name, (Domain.Boards.AutomationTrigger)trigger, triggerListId,
                     (Domain.Boards.AutomationAction)action, actionArgument, position),
                 ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -80,9 +80,9 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result>(new EnableBoardAutomationRuleCommand(ruleId), ct);
-            Ensure(result);
+            result.OrThrow();
             __mcpSpan.MarkSuccess();
             return "enabled";
         }
@@ -100,9 +100,9 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result>(new DisableBoardAutomationRuleCommand(ruleId), ct);
-            Ensure(result);
+            result.OrThrow();
             __mcpSpan.MarkSuccess();
             return "disabled";
         }
@@ -120,9 +120,9 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result>(new DeleteBoardAutomationRuleCommand(ruleId), ct);
-            Ensure(result);
+            result.OrThrow();
             __mcpSpan.MarkSuccess();
             return "deleted";
         }
@@ -130,36 +130,6 @@ public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)
         {
             __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
             throw;
-        }
-    }
-
-    private void RequireAuth()
-    {
-        if (!currentUser.IsAuthenticated)
-        {
-            throw new UnauthorizedAccessException(
-                "MCP tool call rejected: no authenticated principal. "
-                + "Pass a Bearer JWT or API token in the Authorization header.");
-        }
-    }
-
-    private static T Ensure<T>(Result<T> result)
-    {
-        if (result.IsFailure)
-        {
-            throw new InvalidOperationException(
-                $"{result.Error.Code}: {result.Error.Message}");
-        }
-
-        return result.Value!;
-    }
-
-    private static void Ensure(Result result)
-    {
-        if (result.IsFailure)
-        {
-            throw new InvalidOperationException(
-                $"{result.Error.Code}: {result.Error.Message}");
         }
     }
 }

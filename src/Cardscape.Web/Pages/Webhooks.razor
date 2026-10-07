@@ -133,7 +133,7 @@ else
     private async Task ReloadAsync()
     {
         ApiResult<IReadOnlyList<WebhookEndpointDto>> result = await WebhooksClient.ListForBoardAsync(BoardId);
-        if (result.IsSuccess && result.Value is not null)
+        if (result.HasValue)
         {
             rows = result.Value;
             loadError = null;
@@ -171,7 +171,7 @@ else
         {
             ApiResult<WebhookEndpointIssuance> result = await WebhooksClient.CreateAsync(
                 BoardId, new CreateWebhookRequestDto(createModel.Url.Trim(), null, events));
-            if (result.IsSuccess && result.Value is not null)
+            if (result.HasValue)
             {
                 showSecret = result.Value;
                 showCreate = false;
