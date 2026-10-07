@@ -1,7 +1,9 @@
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Domain.Members;
+using Cardscape.Infrastructure.Configuration;
 using Cardscape.Infrastructure.Logging;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace Cardscape.Infrastructure.Authentication;
@@ -27,14 +29,13 @@ namespace Cardscape.Infrastructure.Authentication;
 /// </summary>
 public sealed class RedisPendingTotpLoginStore(
     IConnectionMultiplexer redis,
-    Infrastructure.Configuration.RedisOptions redisOptions,
-    Infrastructure.Configuration.PendingTotpStoreOptions storeOptions,
+    IOptions<InfrastructureOptions> options,
     ILogger<RedisPendingTotpLoginStore> logger) : IPendingTotpLoginStore
 {
     private static readonly TimeSpan TokenLifetime = TimeSpan.FromMinutes(5);
 
-    private readonly string _keyPrefix = storeOptions.KeyPrefix;
-    private readonly int _database = redisOptions.Database;
+    private readonly string _keyPrefix = options.Value.PendingTotpStore.KeyPrefix;
+    private readonly int _database = options.Value.Redis.Database;
 
     public string Mint(UserId userId)
     {

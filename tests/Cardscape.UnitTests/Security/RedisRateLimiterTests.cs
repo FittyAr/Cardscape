@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Infrastructure.Configuration;
 using Cardscape.Infrastructure.Security;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace Cardscape.UnitTests.Security;
@@ -73,8 +74,10 @@ public sealed class RedisRateLimiterTests
     private static RedisRateLimiter CreateLimiter(IConnectionMultiplexer redis) =>
         new(
             redis,
-            new RedisOptions(),
-            new RateLimiterOptions { KeyPrefix = "cardscape-test:rl:" },
+            Options.Create(new InfrastructureOptions
+            {
+                RateLimiter = new RateLimiterOptions { KeyPrefix = "cardscape-test:rl:" }
+            }),
             NullLogger<RedisRateLimiter>.Instance);
 
     private static ConnectionMultiplexer ConnectOrSkip()

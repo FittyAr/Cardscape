@@ -1,7 +1,9 @@
 using System.Globalization;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Infrastructure.Configuration;
 using Cardscape.Infrastructure.Logging;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace Cardscape.Infrastructure.Security;
@@ -27,13 +29,12 @@ namespace Cardscape.Infrastructure.Security;
 /// </summary>
 public sealed class RedisRateLimiter(
     IConnectionMultiplexer redis,
-    Infrastructure.Configuration.RedisOptions options,
-    Infrastructure.Configuration.RateLimiterOptions limiterOptions,
+    IOptions<InfrastructureOptions> options,
     ILogger<RedisRateLimiter> logger) : IRateLimiter
 {
     private readonly IConnectionMultiplexer _redis = redis;
-    private readonly string _keyPrefix = limiterOptions.KeyPrefix;
-    private readonly int _database = options.Database;
+    private readonly string _keyPrefix = options.Value.RateLimiter.KeyPrefix;
+    private readonly int _database = options.Value.Redis.Database;
 
     /// <summary>
     /// Atomic refill + consume. The script stores the bucket
