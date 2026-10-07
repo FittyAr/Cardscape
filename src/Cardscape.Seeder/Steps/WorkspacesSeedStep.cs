@@ -1,114 +1,117 @@
-using Cardscape.Domain.Workspaces;
 using Cardscape.Seeder.Company;
+using Cardscape.Seeder.Generators;
 using Cardscape.Seeder.Persistence;
 using Cardscape.Seeder.Reporting;
+using Cardscape.Seeder.Simulation;
 
 namespace Cardscape.Seeder.Steps;
 
-/// <summary>Plants the demo workspace (single, owned by the
-/// first persona) and the per-persona <see cref="WorkspaceMember"/>
-/// rows. Memberships are added through the aggregate's
-/// <c>AddMember</c> method so the <c>WorkspaceMemberAdded</c>
-/// domain event fires and the audit log picks it up.</summary>
+/// <summary>
+/// Plants the HQ workspace (every persona, joined over time) and the small
+/// Labs workspace, plus one invitation in every lifecycle state: pending,
+/// accepted (the contractor), revoked and expired.
+/// </summary>
 internal sealed class WorkspacesSeedStep : SeedStepBase
 {
-    public override string Name => "Workspace + members";
+    public override string Name => "Workspaces + members + invitations";
     public override int Order => 20;
 
     public override Task ExecuteAsync(SeedContext context, SeedReport log, CancellationToken cancellationToken)
     {
-        DateTimeOffset now = context.Now;
-        if (context.Users.Count == 0)
-        {
-            Log(log, SeedLogLevel.Warning, "No users to attach to the workspace; skipping.");
-            return Task.CompletedTask;
-        }
+        SeedTimeline timeline = context.Timeline;
+        User owner = context.User(NexoraStudios.Personas[0]);
+        DateTimeOffset founded = timeline.OnDay(-SeedTimeline.HistoryDays - 5);
 
-        User owner = context.Users[0];
+        Workspace hq = Create(context, NexoraStudios.WorkspaceName, owner, Region.Europe, founded);
+        context.WorkspaceId = hq.Id;
         context.WorkspaceOwnerId = owner.Id.Value;
 
-        WorkspaceId wsId = WorkspaceId.New();
-        WorkspaceName name = WorkspaceName.Create(NexoraStudios.WorkspaceName).Value;
-        Result<Workspace> created = Workspace.Create(wsId, name, owner.Id.Value, Region.Unspecified, now);
-        if (created.IsFailure)
+        // Personas join over the simulated history; the last two joined
+        // recently, so their "added to workspace" notifications are unread.
+        IReadOnlyList<Persona> joiners = [.. NexoraStudios.Personas.Skip(1)];
+        for (int i = 0; i < joiners.Count; i++)
         {
-            Log(log, SeedLogLevel.Error, $"Failed to create workspace: {created.Error.Message}");
-            return Task.CompletedTask;
+            int dayOffset = i >= joiners.Count - 2
+                ? -timeline.Next(1, 3)
+                : -SeedTimeline.HistoryDays + (i * 3);
+            Join(context, hq, context.User(joiners[i]), joiners[i].WorkspaceRole, timeline.OnDay(dayOffset));
         }
 
-        Workspace workspace = created.Value;
-        context.WorkspaceId = wsId;
-        context.Db.Workspaces.Add(workspace);
-        Log(log, SeedLogLevel.Info, $"  · Workspace '{NexoraStudios.WorkspaceName}' owned by {owner.DisplayName}");
+        // The former employee was a member until they left.
+        User former = context.User(NexoraStudios.FormerEmployee);
+        hq.AddMember(former.Id.Value, WorkspaceRole.Member, founded);
+        hq.RemoveMember(former.Id.Value, timeline.OnDay(-35));
 
-        // Add every other persona as a member with the role
-        // declared in their persona definition. The owner is
-        // already a member (the Workspace.Create factory
-        // adds the owner as the first Admin), so we skip
-        // re-adding them.
-        for (int i = 1; i < context.Users.Count; i++)
+        Workspace labs = Create(
+            context, NexoraStudios.LabsWorkspaceName, context.User(NexoraStudios.LabsBoard.OwnerKey), Region.Unspecified, timeline.OnDay(-30));
+        foreach (string key in NexoraStudios.LabsBoard.TeamKeys)
         {
-            User member = context.Users[i];
-            Persona persona = NexoraStudios.Personas[i - 1] is { } p
-                ? p
-                : NexoraStudios.Personas[^1];
-
-            WorkspaceRole role = persona.WorkspaceRole switch
-            {
-                "Admin" => WorkspaceRole.Admin,
-                _ => WorkspaceRole.Member
-            };
-
-            Result addResult = workspace.AddMember(member.Id.Value, role, now);
-            if (addResult.IsFailure)
-            {
-                Log(log, SeedLogLevel.Warning, $"  ! Could not add {member.DisplayName}: {addResult.Error.Message}");
-                continue;
-            }
-
-            // The WorkspaceMember was added to the
-            // aggregate's navigation. EF Core will persist
-            // it via the OwnsMany on Workspace when
-            // SaveChanges fires. We only track the
-            // reference for the in-memory SeedContext.
-            WorkspaceMember? added = workspace.Members.FirstOrDefault(m => m.UserId == member.Id.Value);
-            if (added is not null)
-            {
-                context.WorkspaceMembers.Add(added);
-            }
+            Join(context, labs, context.User(key), WorkspaceRole.Member, timeline.OnDay(-29));
         }
 
-        // Three pending workspace invitations so the
-        // "invitations" page has something to show.
-        string[] inviteEmails =
-        {
-            "katherine.johnson@nexora.example",
-            "james.maxwell@nexora.example",
-            "olga.tokarczuk@nexora.example"
-        };
-        foreach (string inviteEmail in inviteEmails)
-        {
-            string plaintext = Generators.PasswordGenerator.RandomUrlSafeToken(24);
-            string tokenHash = Generators.PasswordGenerator.Sha256Hex(plaintext);
-            string prefix = Generators.PasswordGenerator.Prefix(plaintext, 10);
-            Result<WorkspaceInvitation> issued = WorkspaceInvitation.Issue(
-                wsId,
-                inviteEmail,
-                WorkspaceRole.Member,
-                owner.Id.Value,
-                tokenHash,
-                prefix,
-                now,
-                lifetime: TimeSpan.FromDays(7));
-            if (issued.IsSuccess)
-            {
-                context.Db.WorkspaceInvitations.Add(issued.Value);
-                context.WorkspaceInvitations.Add(issued.Value);
-            }
-        }
+        SeedInvitations(context, hq, owner);
 
         Log(log, SeedLogLevel.Success,
-            $"Inserted 1 workspace, {context.WorkspaceMembers.Count + 1} memberships, and {context.WorkspaceInvitations.Count} pending invitations.");
+            $"Inserted {context.Workspaces.Count} workspaces, {context.WorkspaceMembers.Count} memberships and {context.WorkspaceInvitations.Count} invitations.");
         return Task.CompletedTask;
+    }
+
+    private static Workspace Create(SeedContext context, string name, User owner, Region region, DateTimeOffset at)
+    {
+        Workspace workspace = Workspace.Create(
+            WorkspaceId.New(), WorkspaceName.Create(name).Value, owner.Id.Value, region, at).Value;
+        context.Db.Workspaces.Add(workspace);
+        context.Workspaces.Add(workspace);
+        context.WorkspaceMembers.AddRange(workspace.Members);
+        return workspace;
+    }
+
+    private static void Join(SeedContext context, Workspace workspace, User user, WorkspaceRole role, DateTimeOffset at)
+    {
+        if (workspace.AddMember(user.Id.Value, role, at).IsFailure)
+        {
+            return;
+        }
+
+        context.WorkspaceMembers.Add(workspace.Members.First(m => m.UserId == user.Id.Value));
+        context.Notify(Notification.AddedToWorkspace(
+            user.Id.Value, workspace.Id.Value, workspace.Name.Value, role.ToString(), at));
+    }
+
+    private static void SeedInvitations(SeedContext context, Workspace hq, User owner)
+    {
+        SeedTimeline timeline = context.Timeline;
+
+        Invite(context, hq, owner, "james.maxwell@nexora.example", timeline.OnDay(-2));
+
+        WorkspaceInvitation revoked = Invite(context, hq, owner, "olga.tokarczuk@nexora.example", timeline.OnDay(-9));
+        revoked.Revoke(owner.Id.Value, timeline.OnDay(-8));
+
+        // Issued 20 days ago with a 7-day lifetime: expired, never redeemed.
+        Invite(context, hq, owner, "alan.turing@nexora.example", timeline.OnDay(-20));
+
+        // The contractor redeemed theirs and is a (restricted) member now.
+        User contractor = context.User(NexoraStudios.Contractor);
+        WorkspaceInvitation accepted = Invite(context, hq, owner, NexoraStudios.Contractor.Email, timeline.OnDay(-13));
+        accepted.Accept(contractor.Id.Value, timeline.OnDay(-12));
+        Join(context, hq, contractor, WorkspaceRole.Member, timeline.OnDay(-12));
+    }
+
+    private static WorkspaceInvitation Invite(
+        SeedContext context, Workspace workspace, User inviter, string email, DateTimeOffset at)
+    {
+        string token = PasswordGenerator.RandomUrlSafeToken(24);
+        WorkspaceInvitation invitation = WorkspaceInvitation.Issue(
+            workspace.Id,
+            email,
+            WorkspaceRole.Member,
+            inviter.Id.Value,
+            PasswordGenerator.Sha256Hex(token),
+            PasswordGenerator.Prefix(token, 10),
+            at,
+            lifetime: TimeSpan.FromDays(7)).Value;
+        context.Db.WorkspaceInvitations.Add(invitation);
+        context.WorkspaceInvitations.Add(invitation);
+        return invitation;
     }
 }

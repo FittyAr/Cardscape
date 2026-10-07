@@ -63,12 +63,11 @@ public static class ReopenCardCommandHandler
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // BETA-7-#2 — record the reopen on the activity feed.
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             guard.Value.Board.Id,
             card.Id.Value,
             currentUser.Id.Value,
-            ActivityKind.CardMoved, // Reopen reuses CardMoved until a dedicated kind is added.
-            "{}",
+            ActivityKind.CardReopened,
             clock.UtcNow), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

@@ -87,28 +87,29 @@ public static class AssignCardCommandHandler
         // Notify the assignee (skip self-assign to avoid noise).
         if (command.UserId != currentUser.Id.Value)
         {
-            string payload = System.Text.Json.JsonSerializer.Serialize(new
-            {
-                cardId = card.Id.Value.ToString(),
-                cardTitle = card.Title.Value,
-                assignedBy = currentUser.Id.Value.ToString(),
-                boardId = guard.Value.Board.Id.Value.ToString()
-            });
             await notifications.AddAsync(
-                Notification.Create(command.UserId, NotificationKind.AssignedToCard, payload, clock.UtcNow),
+                Notification.AboutCard(
+                    command.UserId,
+                    NotificationKind.AssignedToCard,
+                    card.Id.Value,
+                    card.Title.Value,
+                    guard.Value.Board.Id.Value,
+                    currentUser.Id.Value,
+                    currentUser.DisplayName,
+                    clock.UtcNow),
                 cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // BETA-7-#2 — record the assignment on the activity feed.
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             guard.Value.Board.Id,
             card.Id.Value,
             currentUser.Id.Value,
             ActivityKind.CardAssigned,
-            $"{{\"userId\":\"{command.UserId}\"}}",
-            clock.UtcNow), cancellationToken);
+            clock.UtcNow,
+            new { userId = command.UserId, userName = assignee.DisplayName.Value }), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(card.MapToDto());

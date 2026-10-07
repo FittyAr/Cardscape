@@ -21,38 +21,81 @@ public static class NexoraStudios
     /// the operator's responsibility (use the wipe flag).</summary>
     public const string WorkspaceName = "Nexora Studios HQ";
 
-    /// <summary>One board per department. Names are short and
-    /// recognisable so the Web UI's sidebar / planner is
-    /// immediately legible.</summary>
-    public static readonly IReadOnlyList<BoardDefinition> Boards = new List<BoardDefinition>
-    {
-        new("Engineering", "Sprint board for the platform team — features, infra, bugs.", "Private"),
-        new("Product Discovery", "Research, user interviews, prototypes, and quarterly bets.", "Workspace"),
-        new("Design System", "Tokens, components, and design ops for the Cardscape shell.", "Workspace"),
-        new("Marketing", "Campaigns, content calendar, and growth experiments.", "Workspace"),
-        new("Operations", "HR, finance, legal, and the boring-but-critical glue.", "Private"),
-        new("Customer Support", "Tickets, escalations, and the public help-centre backlog.", "Workspace"),
-    };
+    /// <summary>Second, smaller workspace so the workspace switcher and
+    /// per-workspace scoping have something to show.</summary>
+    public const string LabsWorkspaceName = "Nexora Labs";
 
-    /// <summary>Personas for the demo users. Display names, roles
-    /// (mapped to <c>WorkspaceRole</c>), and board memberships are
-    /// baked in so the comments and assignments read like a real
-    /// team talking to each other.</summary>
-    public static readonly IReadOnlyList<Persona> Personas = new List<Persona>
-    {
-        new("Ada Lovelace", "ada.lovelace", "Engineering Lead", 0, "Admin"),
-        new("Linus Pauling", "linus.pauling", "Staff Engineer", 0, "Admin"),
-        new("Grace Brewster", "grace.brewster", "Senior Engineer", 0, "Member"),
-        new("Hedy Lamarr", "hedy.lamarr", "Product Manager", 1, "Admin"),
-        new("Maya Angelou", "maya.angelou", "Design Lead", 2, "Admin"),
-        new("Frida Castillo", "frida.castillo", "Product Designer", 2, "Member"),
-        new("Diego Velázquez", "diego.velazquez", "Marketing Manager", 3, "Admin"),
-        new("Rosa Luxembourg", "rosa.luxembourg", "Content Strategist", 3, "Member"),
-        new("Pedro Infante", "pedro.infante", "Operations Lead", 4, "Admin"),
-        new("Selena Quintero", "selena.quintero", "Support Specialist", 5, "Admin"),
-        new("Tobías Reyes", "tobias.reyes", "DevOps Engineer", 0, "Member"),
-        new("Eva Perón", "eva.peron", "Customer Success Manager", 5, "Member"),
-    };
+    /// <summary>One board per department, plus an archived one. Teams
+    /// (persona keys) decide board membership and who works the cards.
+    /// Ada (the demo login) is deliberately absent from Marketing so the
+    /// read-only, workspace-visible experience can be explored too.</summary>
+    public static readonly IReadOnlyList<BoardBlueprint> Boards =
+    [
+        new("Engineering", "Sprint board for the platform team — features, infra, bugs.",
+            BoardVisibility.Private, Color.Palette.Blue, "ada.lovelace",
+            ["linus.pauling", "grace.brewster", "tobias.reyes", "hedy.lamarr"],
+            BoardFeatures.CustomFields | BoardFeatures.Voting | BoardFeatures.Aging),
+        new("Product Discovery", "Research, user interviews, prototypes, and quarterly bets.",
+            BoardVisibility.Workspace, Color.Palette.Purple, "hedy.lamarr",
+            ["ada.lovelace", "maya.angelou", "frida.castillo", "eva.peron"],
+            BoardFeatures.Voting | BoardFeatures.CustomFields),
+        new("Design System", "Tokens, components, and design ops for the Cardscape shell.",
+            BoardVisibility.Workspace, Color.Palette.Pink, "maya.angelou",
+            ["frida.castillo", "grace.brewster", "ada.lovelace"],
+            BoardFeatures.CustomFields),
+        new("Marketing", "Campaigns, content calendar, and growth experiments.",
+            BoardVisibility.Workspace, Color.Palette.Orange, "diego.velazquez",
+            ["rosa.luxembourg", "hedy.lamarr", "eva.peron"],
+            BoardFeatures.Voting),
+        new("Operations", "HR, finance, legal, and the boring-but-critical glue.",
+            BoardVisibility.Private, Color.Palette.Green, "pedro.infante",
+            ["ada.lovelace", "tobias.reyes"],
+            BoardFeatures.Repeater | BoardFeatures.CustomFields),
+        new("Customer Support", "Tickets, escalations, and the public help-centre backlog.",
+            BoardVisibility.Workspace, Color.Palette.Red, "selena.quintero",
+            ["eva.peron", "ada.lovelace", "grace.brewster"],
+            BoardFeatures.Aging | BoardFeatures.CustomFields | BoardFeatures.Repeater),
+    ];
+
+    /// <summary>Last year's offsite board, kept archived so the archive views are populated.</summary>
+    public static readonly BoardBlueprint ArchivedBoard = new(
+        "Offsite 2025", "Logistics for the 2025 team offsite in Lisbon.",
+        BoardVisibility.Workspace, Color.Palette.Yellow, "pedro.infante",
+        ["ada.lovelace", "hedy.lamarr"], BoardFeatures.None);
+
+    /// <summary>The single board of the Labs workspace.</summary>
+    public static readonly BoardBlueprint LabsBoard = new(
+        "Hackathon 2026", "Weekend prototypes that might become features.",
+        BoardVisibility.Workspace, Color.Palette.Lime, "hedy.lamarr",
+        ["ada.lovelace", "linus.pauling", "frida.castillo"], BoardFeatures.Voting);
+
+    /// <summary>The kanban flow every seeded board uses, left to right.</summary>
+    public static readonly IReadOnlyList<string> Workflow = ["Backlog", "Doing", "Review", "Done"];
+
+    /// <summary>Team members. The first persona owns the HQ workspace and is the demo admin.</summary>
+    public static readonly IReadOnlyList<Persona> Personas =
+    [
+        new("Ada Lovelace", "ada.lovelace", "Engineering Lead", WorkspaceRole.Admin, "cardscape-classic", AppearanceMode.Dark),
+        new("Linus Pauling", "linus.pauling", "Staff Engineer", WorkspaceRole.Admin, "software", AppearanceMode.Dark),
+        new("Grace Brewster", "grace.brewster", "Senior Engineer", WorkspaceRole.Member, "standard", AppearanceMode.Light),
+        new("Hedy Lamarr", "hedy.lamarr", "Product Manager", WorkspaceRole.Admin, "material", AppearanceMode.Light),
+        new("Maya Angelou", "maya.angelou", "Design Lead", WorkspaceRole.Admin, "humanistic", AppearanceMode.Light),
+        new("Frida Castillo", "frida.castillo", "Product Designer", WorkspaceRole.Member, "humanistic", AppearanceMode.Dark),
+        new("Diego Velázquez", "diego.velazquez", "Marketing Manager", WorkspaceRole.Admin, "default", AppearanceMode.Light),
+        new("Rosa Luxembourg", "rosa.luxembourg", "Content Strategist", WorkspaceRole.Member, "cardscape-classic", AppearanceMode.Light),
+        new("Pedro Infante", "pedro.infante", "Operations Lead", WorkspaceRole.Admin, "standard", AppearanceMode.Light),
+        new("Selena Quintero", "selena.quintero", "Support Specialist", WorkspaceRole.Admin, "software", AppearanceMode.Light),
+        new("Tobías Reyes", "tobias.reyes", "DevOps Engineer", WorkspaceRole.Member, "cardscape-classic", AppearanceMode.Dark),
+        new("Eva Perón", "eva.peron", "Customer Success Manager", WorkspaceRole.Observer, "material", AppearanceMode.Light),
+    ];
+
+    /// <summary>A former employee: deactivated, still referenced by old cards and comments.</summary>
+    public static readonly Persona FormerEmployee =
+        new("Charles Babbage", "charles.babbage", "Former Staff Engineer", WorkspaceRole.Member, "default", AppearanceMode.Light);
+
+    /// <summary>An external contractor with a restricted account who joined through an invitation.</summary>
+    public static readonly Persona Contractor =
+        new("Katherine Johnson", "katherine.johnson", "Contract Data Analyst", WorkspaceRole.Member, "default", AppearanceMode.Light);
 
     /// <summary>Card titles per board. Index 0 is the Engineering
     /// board, etc. Titles are short enough to fit a column
@@ -122,6 +165,21 @@ public static class NexoraStudios
                 "Vendor security review: Sentry",
                 "Office lease renewal decision",
             },
+            ["Offsite 2025"] = new List<string>
+            {
+                "Book the Lisbon venue",
+                "Flights and visas for the team",
+                "Agenda: strategy day",
+                "Retro on the offsite budget",
+            },
+            ["Hackathon 2026"] = new List<string>
+            {
+                "Voice notes on cards",
+                "Board heatmap of stale cards",
+                "Slash commands in the card composer",
+                "Offline mode for the mobile web",
+                "Auto-tagging with embeddings",
+            },
             ["Customer Support"] = new List<string>
             {
                 "Escalation: SSO loop for Okta + SAML",
@@ -138,6 +196,24 @@ public static class NexoraStudios
     /// <summary>Comment templates per card-index-in-board. Used so
     /// the seeded comment threads look like the team is
     /// actually talking.</summary>
+    /// <summary>Comments that @mention a teammate; <c>{0}</c> is the
+    /// mentioned display name. Each one yields a Mentioned notification.</summary>
+    public static readonly IReadOnlyList<string> MentionBodies =
+    [
+        "@{0} can you take a look at this before standup?",
+        "Looping in @{0} — you know this area better than anyone.",
+        "@{0} I think this is blocked on your review, no rush.",
+        "Thanks @{0}! That fixed it on my side too.",
+    ];
+
+    /// <summary>Checklist templates; seeded cards pick one by index.</summary>
+    public static readonly IReadOnlyList<(string Title, IReadOnlyList<string> Items)> Checklists =
+    [
+        ("Definition of done", ["Spec reviewed", "Implementation merged", "Tests green on CI", "Docs updated", "Released behind a flag"]),
+        ("Acceptance criteria", ["Happy path works end to end", "Empty state handled", "Error state handled", "Keyboard accessible"]),
+        ("Launch checklist", ["Copy approved", "Assets ready", "Stakeholders notified", "Metrics dashboard live"]),
+    ];
+
     public static readonly IReadOnlyList<string> CommentBodies = new List<string>
     {
         "Picked this up — I think we can use the same helper we wrote for the boards endpoint. Let me draft a PR by EOD.",
@@ -153,10 +229,41 @@ public static class NexoraStudios
     };
 }
 
-/// <summary>Static description of a board the seed plants in the
-/// demo workspace.</summary>
-public sealed record BoardDefinition(string Name, string Description, string Visibility);
+/// <summary>Optional board extensions a blueprint switches on.</summary>
+[Flags]
+public enum BoardFeatures
+{
+    None = 0,
+    CustomFields = 1,
+    Voting = 2,
+    Repeater = 4,
+    Aging = 8,
+}
 
-/// <summary>Static description of a persona the seed plants in
-/// the demo workspace.</summary>
-public sealed record Persona(string DisplayName, string EmailLocalPart, string JobTitle, int PrimaryBoardIndex, string WorkspaceRole);
+/// <summary>Static description of a board the seed plants.</summary>
+public sealed record BoardBlueprint(
+    string Name,
+    string Description,
+    BoardVisibility Visibility,
+    Color Color,
+    string OwnerKey,
+    IReadOnlyList<string> TeamKeys,
+    BoardFeatures Features)
+{
+    /// <summary>Owner first, then the team.</summary>
+    public IEnumerable<string> MemberKeys => [OwnerKey, .. TeamKeys];
+
+    public bool Has(BoardFeatures feature) => Features.HasFlag(feature);
+}
+
+/// <summary>A demo user. <see cref="Key"/> is the e-mail local part.</summary>
+public sealed record Persona(
+    string DisplayName,
+    string Key,
+    string JobTitle,
+    WorkspaceRole WorkspaceRole,
+    string Theme,
+    AppearanceMode Mode)
+{
+    public string Email => $"{Key}@{NexoraStudios.DemoEmailDomain}";
+}

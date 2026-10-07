@@ -1,14 +1,15 @@
-using Cardscape.Domain.Boards;
 using Cardscape.Seeder.Company;
 using Cardscape.Seeder.Persistence;
 using Cardscape.Seeder.Reporting;
+using Cardscape.Seeder.Simulation;
 
 namespace Cardscape.Seeder.Steps;
 
-/// <summary>Plants the six department boards in the demo
-/// workspace, plus board members and stars. The aggregate
-/// factories are used for every row so board creation
-/// fires <c>BoardCreated</c> and the audit log picks it up.</summary>
+/// <summary>
+/// Plants every board of the blueprint with its colour, team and stars:
+/// the six HQ department boards, last year's archived offsite board and
+/// the Labs hackathon board.
+/// </summary>
 internal sealed class BoardsSeedStep : SeedStepBase
 {
     public override string Name => "Boards + members + stars";
@@ -16,89 +17,75 @@ internal sealed class BoardsSeedStep : SeedStepBase
 
     public override Task ExecuteAsync(SeedContext context, SeedReport log, CancellationToken cancellationToken)
     {
-        DateTimeOffset now = context.Now;
-        var random = new Random(7);
+        SeedTimeline timeline = context.Timeline;
+        Workspace hq = context.Workspaces[0];
+        Workspace labs = context.Workspaces[1];
 
-        foreach (BoardDefinition def in NexoraStudios.Boards)
+        for (int i = 0; i < NexoraStudios.Boards.Count; i++)
         {
-            BoardId id = BoardId.New();
-            BoardName name = BoardName.Create(def.Name).Value;
-            BoardDescription description = BoardDescription.Create(def.Description).Value;
-            BoardVisibility visibility = def.Visibility switch
-            {
-                "Private" => BoardVisibility.Private,
-                "Public" => BoardVisibility.Public,
-                _ => BoardVisibility.Workspace
-            };
-
-            Persona owner = NexoraStudios.Personas[Math.Min(def == NexoraStudios.Boards[0] ? 0 : def == NexoraStudios.Boards[1] ? 3 : def == NexoraStudios.Boards[2] ? 4 : def == NexoraStudios.Boards[3] ? 6 : def == NexoraStudios.Boards[4] ? 8 : 9, NexoraStudios.Personas.Count - 1)];
-            User creator = context.Users.First(u => u.Email.Value.StartsWith(owner.EmailLocalPart + "@", StringComparison.Ordinal));
-
-            Result<Board> created = Board.Create(
-                id, context.WorkspaceId, name, description, visibility, creator.Id.Value, now);
-            if (created.IsFailure)
-            {
-                Log(log, SeedLogLevel.Error, $"  ! {def.Name}: {created.Error.Message}");
-                continue;
-            }
-
-            Board board = created.Value;
-            context.Db.Boards.Add(board);
-            context.Boards.Add(board);
-            Log(log, SeedLogLevel.Info, $"  · {def.Name} ({visibility})");
-
-            // The first persona of the matching department
-            // (already added as Admin by Board.Create) plus a
-            // sprinkling of cross-team members. We use the
-            // aggregate's AddMember so the domain event fires.
-            int cross = random.Next(2, 5);
-            for (int i = 0; i < cross; i++)
-            {
-                User u = context.Users[random.Next(0, context.Users.Count)];
-                if (board.IsMember(u.Id.Value))
-                {
-                    continue;
-                }
-
-                BoardMemberRole role = random.NextDouble() < 0.2
-                    ? BoardMemberRole.Admin
-                    : BoardMemberRole.Member;
-                Result added = board.AddMember(u.Id.Value, role, now);
-                if (added.IsFailure)
-                {
-                    continue;
-                }
-
-                BoardMember? member = board.Members.FirstOrDefault(m => m.UserId == u.Id.Value);
-                if (member is not null)
-                {
-                    context.BoardMembers.Add(member);
-                }
-            }
-
-            // Two stars on every board — the workspace owner
-            // and a random member. The aggregate's Star() is
-            // idempotent so a double-star is a no-op.
-            board.Star(context.WorkspaceOwnerId, now);
-            BoardStar? ownerStar = board.Stars.FirstOrDefault(s => s.UserId == context.WorkspaceOwnerId);
-            if (ownerStar is not null)
-            {
-                context.Db.BoardStars.Add(ownerStar);
-                context.BoardStars.Add(ownerStar);
-            }
-
-            User secondStarrer = context.Users[random.Next(1, context.Users.Count)];
-            board.Star(secondStarrer.Id.Value, now);
-            BoardStar? secondStar = board.Stars.FirstOrDefault(s => s.UserId == secondStarrer.Id.Value);
-            if (secondStar is not null)
-            {
-                context.Db.BoardStars.Add(secondStar);
-                context.BoardStars.Add(secondStar);
-            }
+            Plant(context, NexoraStudios.Boards[i], hq, timeline.OnDay(-SeedTimeline.HistoryDays + i));
         }
 
+        Board offsite = Plant(context, NexoraStudios.ArchivedBoard, hq, timeline.OnDay(-SeedTimeline.HistoryDays));
+        DateTimeOffset archivedAt = timeline.OnDay(-25);
+        offsite.Archive(archivedAt);
+        context.RecordActivity(offsite, null, context.User(NexoraStudios.ArchivedBoard.OwnerKey), ActivityKind.BoardArchived, archivedAt);
+
+        Plant(context, NexoraStudios.LabsBoard, labs, timeline.OnDay(-28));
+
+        // Everyone stars the board they own; the demo admin also stars the
+        // two boards they live in, so the "Starred" home section is full.
+        foreach (Board board in context.Boards.Where(b => !b.IsArchived))
+        {
+            Star(context, board, board.Members.First().UserId);
+        }
+
+        Guid ada = context.User(NexoraStudios.Personas[0]).Id.Value;
+        Star(context, context.Boards.First(b => b.Name.Value == "Customer Support"), ada);
+        Star(context, context.Boards.First(b => b.Name.Value == "Product Discovery"), ada);
+
         Log(log, SeedLogLevel.Success,
-            $"Inserted {context.Boards.Count} boards, {context.BoardMembers.Count} board memberships, and {context.BoardStars.Count} stars.");
+            $"Inserted {context.Boards.Count} boards (1 archived), {context.BoardMembers.Count} board memberships and {context.BoardStars.Count} stars.");
         return Task.CompletedTask;
+    }
+
+    private static Board Plant(SeedContext context, BoardBlueprint blueprint, Workspace workspace, DateTimeOffset createdAt)
+    {
+        User owner = context.User(blueprint.OwnerKey);
+        Board board = Board.Create(
+            BoardId.New(),
+            workspace.Id,
+            BoardName.Create(blueprint.Name).Value,
+            BoardDescription.Create(blueprint.Description).Value,
+            blueprint.Visibility,
+            owner.Id.Value,
+            createdAt).Value;
+        board.ChangeColor(blueprint.Color, createdAt);
+        context.Db.Boards.Add(board);
+        context.Boards.Add(board);
+        context.RecordActivity(board, null, owner, ActivityKind.BoardCreated, createdAt, new { name = blueprint.Name });
+
+        // The first teammate co-administers the board; the rest are members.
+        for (int i = 0; i < blueprint.TeamKeys.Count; i++)
+        {
+            User member = context.User(blueprint.TeamKeys[i]);
+            BoardMemberRole role = i == 0 ? BoardMemberRole.Admin : BoardMemberRole.Member;
+            board.AddMember(member.Id.Value, role, context.Timeline.Between(createdAt, createdAt.AddDays(3)));
+        }
+
+        context.BoardMembers.AddRange(board.Members);
+        return board;
+    }
+
+    private static void Star(SeedContext context, Board board, Guid userId)
+    {
+        if (board.IsStarredBy(userId) || board.Star(userId, context.Timeline.Between(board.CreatedAt)).IsFailure)
+        {
+            return;
+        }
+
+        BoardStar star = board.Stars.First(s => s.UserId == userId);
+        context.Db.BoardStars.Add(star);
+        context.BoardStars.Add(star);
     }
 }

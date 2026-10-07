@@ -60,13 +60,13 @@ public static class ToggleChecklistItemCommandHandler
         ActivityKind kind = item.IsCompleted
             ? ActivityKind.ChecklistItemCompleted
             : ActivityKind.ChecklistItemUncompleted;
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             access.Value.BoardId,
             access.Value.Card.Id.Value,
             currentUser.Id.Value,
             kind,
-            $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{item.Id.Value}\"}}",
-            clock.UtcNow), ct);
+            clock.UtcNow,
+            new { checklistId = checklist.Id.Value, itemId = item.Id.Value }), ct);
         await uow.SaveChangesAsync(ct);
 
         return Result.Success(ChecklistDto.FromEntity(checklist));

@@ -678,6 +678,18 @@
   <data name="CardActivityChecklistItemUncompleted" xml:space="preserve"><value>Elemento reabierto</value></data>
   <data name="CardActivityAttachmentAdded" xml:space="preserve"><value>Adjunto agregado</value></data>
   <data name="CardActivityAttachmentRemoved" xml:space="preserve"><value>Adjunto eliminado</value></data>
+  <data name="CardActivityCardCompleted" xml:space="preserve"><value>Tarjeta completada</value></data>
+  <data name="CardActivityCardReopened" xml:space="preserve"><value>Tarjeta reabierta</value></data>
+  <data name="CardActivityCardDescriptionChanged" xml:space="preserve"><value>Descripción modificada</value></data>
+  <data name="CardActivityCardDeleted" xml:space="preserve"><value>Tarjeta eliminada</value></data>
+  <data name="CardActivityCommentEdited" xml:space="preserve"><value>Comentario editado</value></data>
+  <data name="CardActivityCommentDeleted" xml:space="preserve"><value>Comentario eliminado</value></data>
+  <data name="CardActivityLabelCreated" xml:space="preserve"><value>Etiqueta creada</value></data>
+  <data name="CardActivityLabelUpdated" xml:space="preserve"><value>Etiqueta actualizada</value></data>
+  <data name="CardActivityLabelDeleted" xml:space="preserve"><value>Etiqueta eliminada</value></data>
+  <data name="CardActivityChecklistItemAdded" xml:space="preserve"><value>Elemento de lista agregado</value></data>
+  <data name="CardActivityChecklistItemRenamed" xml:space="preserve"><value>Elemento de lista renombrado</value></data>
+  <data name="CardActivityChecklistItemDeleted" xml:space="preserve"><value>Elemento de lista eliminado</value></data>
   <data name="CardVotesLabel" xml:space="preserve"><value>Votos</value></data>
   <data name="CardSectionLoadFailed" xml:space="preserve"><value>No se pudo cargar {0}.</value></data>
   <data name="CardActionFailed" xml:space="preserve"><value>No se pudo completar la acción: {0}.</value></data>

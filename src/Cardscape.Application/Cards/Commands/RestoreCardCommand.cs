@@ -57,12 +57,11 @@ public static class RestoreCardCommandHandler
         card.Restore(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             guard.Value.Board.Id,
             card.Id.Value,
             currentUser.Id.Value,
             ActivityKind.CardRestored,
-            "{}",
             clock.UtcNow), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

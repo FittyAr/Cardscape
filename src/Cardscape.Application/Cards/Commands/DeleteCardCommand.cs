@@ -77,13 +77,13 @@ public static class DeleteCardCommandHandler
         // removed from the DB. The CardId is still valid
         // here; once the row is gone the activity feed would
         // hold a dangling foreign-key-like reference.
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             new Domain.Boards.BoardId(boardId),
             card.Id.Value,
             currentUser.Id.Value,
-            ActivityKind.CardArchived, // CardDeleted reuses CardArchived until a dedicated kind is added.
-            $"{{\"title\":\"{card.Title.Value.Replace("\"", "\\\"")}\"}}",
-            clock.UtcNow), cancellationToken);
+            ActivityKind.CardDeleted,
+            clock.UtcNow,
+            new { title = card.Title.Value }), cancellationToken);
 
         cards.Remove(card);
         await unitOfWork.SaveChangesAsync(cancellationToken);

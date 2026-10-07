@@ -51,13 +51,13 @@ public static class RenameChecklistItemCommandHandler
             return Result.Failure<ChecklistDto>(update.Error);
         }
 
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             access.Value.BoardId,
             access.Value.Card.Id.Value,
             currentUser.Id.Value,
-            ActivityKind.ChecklistCreated,
-            $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{command.ItemId}\"}}",
-            clock.UtcNow), ct);
+            ActivityKind.ChecklistItemRenamed,
+            clock.UtcNow,
+            new { checklistId = checklist.Id.Value, itemId = command.ItemId }), ct);
         await uow.SaveChangesAsync(ct);
 
         return Result.Success(ChecklistDto.FromEntity(checklist));

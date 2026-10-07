@@ -76,13 +76,13 @@ public static class EditCommentCommandHandler
         IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(cancellationToken);
         if (card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
         {
-            await activities.AddAsync(Activity.Create(
+            await activities.AddAsync(Activity.Record(
                 new Domain.Boards.BoardId(boardId),
                 comment.CardId.Value,
                 currentUser.Id.Value,
-                ActivityKind.CommentAdded,
-                $"{{\"commentId\":\"{comment.Id.Value}\",\"action\":\"edit\"}}",
-                clock.UtcNow), cancellationToken);
+                ActivityKind.CommentEdited,
+                clock.UtcNow,
+                new { commentId = comment.Id.Value }), cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
 

@@ -48,13 +48,13 @@ public static class DeleteChecklistItemCommandHandler
             return Result.Failure<ChecklistDto>(remove.Error);
         }
 
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             access.Value.BoardId,
             access.Value.Card.Id.Value,
             currentUser.Id.Value,
-            ActivityKind.ChecklistCreated,
-            $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{command.ItemId}\",\"action\":\"delete\"}}",
-            clock.UtcNow), ct);
+            ActivityKind.ChecklistItemDeleted,
+            clock.UtcNow,
+            new { checklistId = checklist.Id.Value, itemId = command.ItemId }), ct);
         await uow.SaveChangesAsync(ct);
 
         return Result.Success(ChecklistDto.FromEntity(checklist));

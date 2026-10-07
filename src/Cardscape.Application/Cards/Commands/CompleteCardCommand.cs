@@ -63,12 +63,11 @@ public static class CompleteCardCommandHandler
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // BETA-7-#2 — record the completion on the activity feed.
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             guard.Value.Board.Id,
             card.Id.Value,
             currentUser.Id.Value,
-            ActivityKind.CardMoved, // CardCompleted reuses CardMoved until a dedicated kind is added.
-            "{}",
+            ActivityKind.CardCompleted,
             clock.UtcNow), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

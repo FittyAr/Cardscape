@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 
@@ -9,6 +10,8 @@ namespace Cardscape.Domain.Activities;
 /// </summary>
 public sealed class Activity : Entity<ActivityId>
 {
+    private static readonly JsonSerializerOptions PayloadJsonOptions = new(JsonSerializerDefaults.Web);
+
     public BoardId BoardId { get; private set; } = null!;
     public Guid? CardId { get; private set; }
     public Guid ActorId { get; private set; }
@@ -45,4 +48,25 @@ public sealed class Activity : Entity<ActivityId>
         string payloadJson,
         DateTimeOffset occurredAt) =>
         new(ActivityId.New(), boardId, cardId, actorId, kind, payloadJson ?? "{}", occurredAt);
+
+    /// <summary>
+    /// Records an activity whose payload is serialised from
+    /// <paramref name="payload"/> (camelCase JSON; an anonymous object is
+    /// fine). Prefer this over <see cref="Create"/>: it keeps the JSON
+    /// well-formed regardless of quotes or newlines in user content.
+    /// </summary>
+    public static Activity Record(
+        BoardId boardId,
+        Guid? cardId,
+        Guid actorId,
+        ActivityKind kind,
+        DateTimeOffset occurredAt,
+        object? payload = null) =>
+        Create(
+            boardId,
+            cardId,
+            actorId,
+            kind,
+            payload is null ? "{}" : JsonSerializer.Serialize(payload, payload.GetType(), PayloadJsonOptions),
+            occurredAt);
 }

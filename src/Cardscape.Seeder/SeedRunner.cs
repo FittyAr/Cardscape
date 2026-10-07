@@ -1,10 +1,12 @@
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Persistence.Outbox;
+using Cardscape.Seeder.Company;
 using Cardscape.Seeder.Configuration;
 using Cardscape.Seeder.Logging;
 using Cardscape.Seeder.Persistence;
 using Cardscape.Seeder.Reporting;
+using Cardscape.Seeder.Simulation;
 using Cardscape.Seeder.Steps;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -75,7 +77,8 @@ public sealed class SeedRunner : IDisposable
             SeedContext context = new()
             {
                 Db = db,
-                Now = now,
+                Timeline = new SeedTimeline(now),
+                Services = scope.ServiceProvider,
                 ActorName = "SeedRunner"
             };
 
@@ -84,6 +87,11 @@ public sealed class SeedRunner : IDisposable
                 report.Log(new SeedLogEntry(DateTimeOffset.UtcNow, SeedLogLevel.Warning, "Wipe",
                     "Wiping every table in dependency order before planting new data."));
                 await WipeAsync(db, report, cancellationToken);
+            }
+            else if (await IsAlreadySeededAsync(db, cancellationToken))
+            {
+                throw new InvalidOperationException(
+                    "The demo dataset is already present. Run the seeder with 'wipe' to replant it.");
             }
 
             foreach ((ISeedStep step, int index) in orderedSteps.Select((s, i) => (s, i)))
@@ -124,6 +132,10 @@ public sealed class SeedRunner : IDisposable
             // change tracker handles row versions, and the
             // WAL/Redo logs of every supported provider keep the
             // commit atomic.
+            // Seeded rows are history, not live user actions: dropping their
+            // domain events keeps the outbox from replaying them into
+            // automation rules, webhooks, Slack and calendar sync.
+            DiscardDomainEvents(db);
             int added = await db.SaveChangesAsync(cancellationToken);
             report.Log(new SeedLogEntry(DateTimeOffset.UtcNow, SeedLogLevel.Success, "Commit",
                 $"Persisted {added} rows across {orderedSteps.Count} steps."));
@@ -177,6 +189,22 @@ public sealed class SeedRunner : IDisposable
         }
     }
 
+    private static Task<bool> IsAlreadySeededAsync(CardscapeDbContext db, CancellationToken cancellationToken)
+    {
+        EmailAddress demoAdmin = EmailAddress.Create(NexoraStudios.DemoAdminEmail).Value;
+        return db.Users.AnyAsync(user => user.Email == demoAdmin, cancellationToken);
+    }
+
+    private static void DiscardDomainEvents(CardscapeDbContext db)
+    {
+        foreach (IAggregateRoot aggregate in db.ChangeTracker.Entries()
+                     .Select(entry => entry.Entity)
+                     .OfType<IAggregateRoot>())
+        {
+            aggregate.ClearDomainEvents();
+        }
+    }
+
     private static async Task WipeAsync(CardscapeDbContext db, SeedReport report, CancellationToken cancellationToken)
     {
         // Order matters: every row that has a foreign key must be deleted before
@@ -209,7 +237,8 @@ public sealed class SeedRunner : IDisposable
             ("notifications", () => db.Notifications.ExecuteDeleteAsync(cancellationToken)),
             ("activities", () => db.Activities.ExecuteDeleteAsync(cancellationToken)),
             ("comments", () => db.Comments.ExecuteDeleteAsync(cancellationToken)),
-            ("checklist_items", () => db.ChecklistItems.ExecuteDeleteAsync(cancellationToken)),
+            // Owned collections (checklist items, card members/labels, board and
+            // workspace members) go with their owner through the FK cascade.
             ("checklists", () => db.Checklists.ExecuteDeleteAsync(cancellationToken)),
             ("attachments", () => db.Attachments.ExecuteDeleteAsync(cancellationToken)),
             ("card_votes", () => db.CardVotes.ExecuteDeleteAsync(cancellationToken)),
@@ -217,8 +246,6 @@ public sealed class SeedRunner : IDisposable
             ("card_snoozes", () => db.CardSnoozes.ExecuteDeleteAsync(cancellationToken)),
             ("card_mirrors", () => db.CardMirrors.ExecuteDeleteAsync(cancellationToken)),
             ("card_aging_settings", () => db.CardAgingSettings.ExecuteDeleteAsync(cancellationToken)),
-            ("card_labels", () => db.Set<CardLabel>().ExecuteDeleteAsync(cancellationToken)),
-            ("card_members", () => db.Set<CardMember>().ExecuteDeleteAsync(cancellationToken)),
             ("custom_field_values", () => db.CustomFieldValues.ExecuteDeleteAsync(cancellationToken)),
             ("custom_field_definitions", () => db.CustomFieldDefinitions.ExecuteDeleteAsync(cancellationToken)),
             ("dashcards", () => db.Set<Dashcard>().ExecuteDeleteAsync(cancellationToken)),
@@ -228,10 +255,8 @@ public sealed class SeedRunner : IDisposable
             ("board_automation_rules", () => db.Set<BoardAutomationRule>().ExecuteDeleteAsync(cancellationToken)),
             ("board_extensions", () => db.BoardExtensions.ExecuteDeleteAsync(cancellationToken)),
             ("board_stars", () => db.BoardStars.ExecuteDeleteAsync(cancellationToken)),
-            ("board_members", () => db.Set<BoardMember>().ExecuteDeleteAsync(cancellationToken)),
             ("boards", () => db.Boards.ExecuteDeleteAsync(cancellationToken)),
             ("workspace_invitations", () => db.WorkspaceInvitations.ExecuteDeleteAsync(cancellationToken)),
-            ("workspace_members", () => db.Set<WorkspaceMember>().ExecuteDeleteAsync(cancellationToken)),
             ("workspaces", () => db.Workspaces.ExecuteDeleteAsync(cancellationToken)),
             ("user_preferences", () => db.Set<UserPreferences>().ExecuteDeleteAsync(cancellationToken)),
             ("users", () => db.Users.ExecuteDeleteAsync(cancellationToken)),
@@ -270,10 +295,10 @@ public sealed class SeedRunner : IDisposable
             ("users", "users", () => db.Set<User>().LongCountAsync(cancellationToken)),
             ("user_preferences", "user_preferences", () => db.Set<UserPreferences>().LongCountAsync(cancellationToken)),
             ("workspaces", "workspaces", () => db.Workspaces.LongCountAsync(cancellationToken)),
-            ("workspace_members", "workspace_members", () => db.Set<WorkspaceMember>().LongCountAsync(cancellationToken)),
+            ("workspace_members", "workspace_members", () => db.Workspaces.SelectMany(w => w.Members).LongCountAsync(cancellationToken)),
             ("workspace_invitations", "workspace_invitations", () => db.WorkspaceInvitations.LongCountAsync(cancellationToken)),
             ("boards", "boards", () => db.Boards.LongCountAsync(cancellationToken)),
-            ("board_members", "board_members", () => db.Set<BoardMember>().LongCountAsync(cancellationToken)),
+            ("board_members", "board_members", () => db.Boards.SelectMany(b => b.Members).LongCountAsync(cancellationToken)),
             ("board_stars", "board_stars", () => db.BoardStars.LongCountAsync(cancellationToken)),
             ("board_extensions", "board_extensions", () => db.BoardExtensions.LongCountAsync(cancellationToken)),
             ("board_automation_rules", "board_automation_rules", () => db.Set<BoardAutomationRule>().LongCountAsync(cancellationToken)),
@@ -283,8 +308,8 @@ public sealed class SeedRunner : IDisposable
             ("labels", "labels", () => db.Labels.LongCountAsync(cancellationToken)),
             ("lists", "lists", () => db.Lists.LongCountAsync(cancellationToken)),
             ("cards", "cards", () => db.Cards.LongCountAsync(cancellationToken)),
-            ("card_members", "card_members", () => db.Set<CardMember>().LongCountAsync(cancellationToken)),
-            ("card_labels", "card_labels", () => db.Set<CardLabel>().LongCountAsync(cancellationToken)),
+            ("card_members", "card_members", () => db.Cards.SelectMany(c => c.Members).LongCountAsync(cancellationToken)),
+            ("card_labels", "card_labels", () => db.Cards.SelectMany(c => c.CardLabels).LongCountAsync(cancellationToken)),
             ("card_aging_settings", "card_aging_settings", () => db.CardAgingSettings.LongCountAsync(cancellationToken)),
             ("card_snoozes", "card_snoozes", () => db.CardSnoozes.LongCountAsync(cancellationToken)),
             ("card_mirrors", "card_mirrors", () => db.CardMirrors.LongCountAsync(cancellationToken)),
@@ -292,7 +317,7 @@ public sealed class SeedRunner : IDisposable
             ("card_votes", "card_votes", () => db.CardVotes.LongCountAsync(cancellationToken)),
             ("attachments", "attachments", () => db.Attachments.LongCountAsync(cancellationToken)),
             ("checklists", "checklists", () => db.Checklists.LongCountAsync(cancellationToken)),
-            ("checklist_items", "checklist_items", () => db.Set<ChecklistItem>().LongCountAsync(cancellationToken)),
+            ("checklist_items", "checklist_items", () => db.Checklists.SelectMany(c => c.Items).LongCountAsync(cancellationToken)),
             ("comments", "comments", () => db.Comments.LongCountAsync(cancellationToken)),
             ("activities", "activities", () => db.Activities.LongCountAsync(cancellationToken)),
             ("notifications", "notifications", () => db.Notifications.LongCountAsync(cancellationToken)),

@@ -58,12 +58,11 @@ public static class ArchiveCardCommandHandler
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // BETA-7-#2 — record the archive on the activity feed.
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             guard.Value.Board.Id,
             card.Id.Value,
             currentUser.Id.Value,
             ActivityKind.CardArchived,
-            "{}",
             clock.UtcNow), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

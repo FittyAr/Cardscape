@@ -77,13 +77,13 @@ public static class CreateLabelCommandHandler
         // no dedicated ActivityKind, so we reuse CardRenamed
         // as the closest stand-in (a follow-up PR can add a
         // dedicated LabelCreated kind).
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             labelResult.Value.BoardId,
             null,
             currentUser.Id.Value,
-            ActivityKind.CardRenamed,
-            $"{{\"labelId\":\"{labelResult.Value.Id.Value}\",\"name\":\"{labelResult.Value.Name.Value.Replace("\"", "\\\"")}\"}}",
-            clock.UtcNow), cancellationToken);
+            ActivityKind.LabelCreated,
+            clock.UtcNow,
+            new { labelId = labelResult.Value.Id.Value, name = labelResult.Value.Name.Value }), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(new LabelDto(

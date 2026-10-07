@@ -81,8 +81,7 @@ public static class SetCustomFieldValueCommandHandler
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
 
-            return Result.Success(new CustomFieldValueDto(
-                field.Id.Value, card.Id.Value, field.Kind, string.Empty));
+            return Result.Success(CustomFieldValueDto.Empty(field, card.Id.Value));
         }
 
         Result shape = CustomFieldValue.ValidateShape(command.ValueJson, field.Kind);
@@ -109,7 +108,7 @@ public static class SetCustomFieldValueCommandHandler
             }
             await values.AddAsync(creation.Value, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Success(CustomFieldValueDto.FromEntity(creation.Value, field.Kind));
+            return Result.Success(CustomFieldValueDto.FromEntity(creation.Value, field));
         }
 
         var update = existing.SetValue(command.ValueJson, field.Kind, clock.UtcNow);
@@ -119,7 +118,7 @@ public static class SetCustomFieldValueCommandHandler
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Success(CustomFieldValueDto.FromEntity(existing, field.Kind));
+        return Result.Success(CustomFieldValueDto.FromEntity(existing, field));
     }
 
     private static Result ValidateDropdownAgainstOptions(string valueJson, string optionsJson)

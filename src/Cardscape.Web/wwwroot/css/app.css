@@ -595,12 +595,12 @@ select:focus-visible,
 }
 
 /* Calendar appointment states (Pages/Calendar.razor). */
-.rz-scheduler .rz-event.cs-appointment-overdue .rz-event-content {
+.rz-scheduler .rz-event-content.cs-appointment-overdue {
     background-color: var(--rz-danger);
     color: var(--rz-on-danger);
 }
 
-.rz-scheduler .rz-event.cs-appointment-completed .rz-event-content {
+.rz-scheduler .rz-event-content.cs-appointment-completed {
     background-color: var(--rz-success);
     color: var(--rz-on-success);
     text-decoration: line-through;

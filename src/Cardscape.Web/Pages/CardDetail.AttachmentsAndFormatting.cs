@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.Json;
 using Cardscape.Web.Resources;
 using Cardscape.Web.Services;
 using Cardscape.Web.Services.Api;
@@ -48,34 +47,7 @@ public partial class CardDetail
     private static int ChecklistProgressPercent(ChecklistDto cl) =>
         cl.TotalCount == 0 ? 0 : (int)Math.Round(100.0 * cl.CompletedCount / cl.TotalCount);
 
-    private static string FormatActivityPayload(ActivityDto a)
-    {
-        if (string.IsNullOrEmpty(a.PayloadJson) || a.PayloadJson == "{}")
-        {
-            return string.Empty;
-        }
-
-        try
-        {
-            using JsonDocument doc = JsonDocument.Parse(a.PayloadJson);
-            if (doc.RootElement.ValueKind == JsonValueKind.Object)
-            {
-                List<string> parts = [];
-                foreach (JsonProperty p in doc.RootElement.EnumerateObject())
-                {
-                    parts.Add($"{p.Name}: {p.Value}");
-                }
-
-                return string.Join(" · ", parts);
-            }
-        }
-        catch
-        {
-            // fall through
-        }
-
-        return a.PayloadJson;
-    }
+    private static string FormatActivityPayload(ActivityDto a) => ActivityPresentation.Describe(a.PayloadJson);
 
     // BUG-A5-002 — attachment handlers. The upload goes through
     // IAttachmentsApiClient.UploadAsync with a streamed file; the

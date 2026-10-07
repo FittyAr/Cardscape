@@ -28,5 +28,17 @@ public enum ActivityKind
     ChecklistItemCompleted = 21,
     ChecklistItemUncompleted = 22,
     AttachmentAdded = 23,
-    AttachmentRemoved = 24
+    AttachmentRemoved = 24,
+    CardCompleted = 25,
+    CardReopened = 26,
+    CardDescriptionChanged = 27,
+    CardDeleted = 28,
+    CommentEdited = 29,
+    CommentDeleted = 30,
+    LabelCreated = 31,
+    LabelUpdated = 32,
+    LabelDeleted = 33,
+    ChecklistItemAdded = 34,
+    ChecklistItemRenamed = 35,
+    ChecklistItemDeleted = 36
 }

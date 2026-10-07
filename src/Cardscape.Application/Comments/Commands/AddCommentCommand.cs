@@ -91,13 +91,13 @@ public static class AddCommentCommandHandler
 
         if (boardId is Guid bid2)
         {
-            await activities.AddAsync(Activity.Create(
+            await activities.AddAsync(Activity.Record(
                 new Domain.Boards.BoardId(bid2),
                 commentResult.Value.CardId.Value,
                 currentUser.Id.Value,
                 ActivityKind.CommentAdded,
-                $"{{\"commentId\":\"{commentResult.Value.Id.Value}\"}}",
-                clock.UtcNow), cancellationToken);
+                clock.UtcNow,
+                new { commentId = commentResult.Value.Id.Value }), cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
 

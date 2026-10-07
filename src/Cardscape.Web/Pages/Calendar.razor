@@ -20,8 +20,8 @@ else if (Error is not null)
 }
 else
 {
-    @* Re-keyed per month: RadzenScheduler has no two-way bindable date, so a
-       new instance is the only way to keep its grid in step with the header. *@
+    @* The page header owns month navigation, so the scheduler's own toolbar is
+       hidden. Re-keyed per month: Date is only read when the scheduler mounts. *@
     <RadzenScheduler @key="@Month"
                      TItem="CalendarEntryDto"
                      Data="@Entries"
@@ -29,6 +29,7 @@ else
                      EndProperty="@nameof(CalendarEntryDto.DayEnd)"
                      TextProperty="@nameof(CalendarEntryDto.Title)"
                      Date="@Month.FirstDay"
+                     ShowHeader="false"
                      AppointmentRender="@OnAppointmentRender"
                      AppointmentSelect="@OnAppointmentSelect"
                      Style="height: 700px">

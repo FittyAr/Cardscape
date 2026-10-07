@@ -493,6 +493,7 @@ $RECYCLE.BIN/
 .fmtlog.txt
 .testlog.txt
 src/Cardscape.Api/Data/
+src/Cardscape.Api/Storage/
 **/*.db
 **/*.db-wal
 **/*.db-shm

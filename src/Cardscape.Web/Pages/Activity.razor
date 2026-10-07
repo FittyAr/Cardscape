@@ -1,6 +1,5 @@
 @page "/boards/{BoardId:guid}/activity"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
-@using System.Text.Json
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
@@ -200,34 +199,7 @@ else
         }
     }
 
-    private static string FormatPayload(ActivityDto a)
-    {
-        if (string.IsNullOrEmpty(a.PayloadJson) || a.PayloadJson == "{}")
-        {
-            return string.Empty;
-        }
-
-        try
-        {
-            using JsonDocument doc = JsonDocument.Parse(a.PayloadJson);
-            if (doc.RootElement.ValueKind == JsonValueKind.Object)
-            {
-                List<string> parts = [];
-                foreach (JsonProperty p in doc.RootElement.EnumerateObject())
-                {
-                    parts.Add($"{p.Name}: {p.Value}");
-                }
-
-                return string.Join(" · ", parts);
-            }
-        }
-        catch
-        {
-            // fall through
-        }
-
-        return a.PayloadJson;
-    }
+    private static string FormatPayload(ActivityDto a) => ActivityPresentation.Describe(a.PayloadJson);
 
     private sealed record ActivityKindOption(string Value, string Label);
 }

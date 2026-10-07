@@ -69,12 +69,11 @@ public static class ChangeCardDescriptionCommandHandler
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             guard.Value.Board.Id,
             card.Id.Value,
             currentUser.Id.Value,
-            ActivityKind.CardCreated, // Description change reuses the same kind until a dedicated one is added.
-            "{}",
+            ActivityKind.CardDescriptionChanged,
             clock.UtcNow), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

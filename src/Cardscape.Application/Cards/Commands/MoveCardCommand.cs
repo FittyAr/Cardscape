@@ -58,15 +58,12 @@ public static class MoveCardCommandHandler
         // The destination list must live on the same board as the
         // card. Otherwise an attacker who somehow has a target list
         // id could shuffle cards across boards they don't own.
-        if (card.ListId.Value != command.NewListId)
+        var destinationList = await lists.GetByIdAsync(new BoardListId(command.NewListId), cancellationToken);
+        if (destinationList is null || destinationList.BoardId.Value != guard.Value.Board.Id.Value)
         {
-            var destinationList = await lists.GetByIdAsync(new BoardListId(command.NewListId), cancellationToken);
-            if (destinationList is null || destinationList.BoardId.Value != guard.Value.Board.Id.Value)
-            {
-                return Result.Failure<CardDto>(DomainError.Validation(
-                    "cards.invalid_move",
-                    "Destination list must belong to the same board as the card."));
-            }
+            return Result.Failure<CardDto>(DomainError.Validation(
+                "cards.invalid_move",
+                "Destination list must belong to the same board as the card."));
         }
 
         // BETA-A4-007 — see test-results/beta/round-2/reports/A4-cards-lists.md.
@@ -115,13 +112,13 @@ public static class MoveCardCommandHandler
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // BETA-7-#2 — record the move on the activity feed.
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             guard.Value.Board.Id,
             card.Id.Value,
             currentUser.Id.Value,
             ActivityKind.CardMoved,
-            $"{{\"listId\":\"{command.NewListId}\",\"position\":{command.NewPosition}}}",
-            clock.UtcNow), cancellationToken);
+            clock.UtcNow,
+            new { listId = command.NewListId, listName = destinationList.Name.Value, position = command.NewPosition }), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(card.MapToDto());

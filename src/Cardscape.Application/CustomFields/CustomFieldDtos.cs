@@ -25,8 +25,14 @@ public sealed record CustomFieldValueDto(
     Guid FieldDefinitionId,
     Guid CardId,
     CustomFieldKind Kind,
-    string ValueJson)
+    string ValueJson,
+    string FieldName,
+    int Position)
 {
-    public static CustomFieldValueDto FromEntity(CustomFieldValue v, CustomFieldKind kind) =>
-        new(v.FieldDefinitionId.Value, v.CardId.Value, kind, v.ValueJson);
+    public static CustomFieldValueDto FromEntity(CustomFieldValue value, CustomFieldDefinition field) =>
+        new(field.Id.Value, value.CardId.Value, field.Kind, value.ValueJson, field.Name, field.Position);
+
+    /// <summary>The field shown with no value (a cleared value).</summary>
+    public static CustomFieldValueDto Empty(CustomFieldDefinition field, Guid cardId) =>
+        new(field.Id.Value, cardId, field.Kind, string.Empty, field.Name, field.Position);
 }

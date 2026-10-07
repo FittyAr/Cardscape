@@ -68,12 +68,11 @@ public static class RenameCardCommandHandler
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             guard.Value.Board.Id,
             card.Id.Value,
             currentUser.Id.Value,
             ActivityKind.CardRenamed,
-            "{}",
             clock.UtcNow), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

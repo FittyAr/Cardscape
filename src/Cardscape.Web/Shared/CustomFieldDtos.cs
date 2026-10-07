@@ -13,7 +13,9 @@ public sealed record CustomFieldValueDto(
     Guid FieldDefinitionId,
     Guid CardId,
     CustomFieldKind Kind,
-    string ValueJson);
+    string ValueJson,
+    string FieldName = "",
+    int Position = 0);
 
 public sealed record CreateCustomFieldRequestDto(
     string Name,

@@ -63,13 +63,13 @@ public static class UnassignCardCommandHandler
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // BETA-7-#2 — record the unassignment on the activity feed.
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             guard.Value.Board.Id,
             card.Id.Value,
             currentUser.Id.Value,
             ActivityKind.CardUnassigned,
-            $"{{\"userId\":\"{command.UserId}\"}}",
-            clock.UtcNow), cancellationToken);
+            clock.UtcNow,
+            new { userId = command.UserId }), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(card.MapToDto());

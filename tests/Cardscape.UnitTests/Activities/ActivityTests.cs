@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Cardscape.Application.Activities.Queries;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
@@ -143,5 +144,28 @@ public class ActivityTests
         dto.Kind.Should().Be(ActivityKind.CardMoved);
         dto.PayloadJson.Should().Be("{\"from\":\"a\"}");
         dto.OccurredAt.Should().Be(at);
+    }
+
+    // ── typed payloads ──────────────────────────────────────
+
+    [Fact]
+    public void Record_Serialises_Payload_As_CamelCase_Json_Escaping_User_Content()
+    {
+        Activity activity = Activity.Record(
+            TestBoard, TestCard.Value, TestActor, ActivityKind.CardCreated, Now, new { Title = "Say \"hi\"\nnow" });
+
+        using JsonDocument doc = JsonDocument.Parse(activity.PayloadJson);
+        doc.RootElement.GetProperty("title").GetString().Should().Be("Say \"hi\"\nnow");
+        activity.Kind.Should().Be(ActivityKind.CardCreated);
+        activity.OccurredAt.Should().Be(Now);
+    }
+
+    [Fact]
+    public void Record_Without_Payload_Stores_Empty_Object()
+    {
+        Activity activity = Activity.Record(TestBoard, null, TestActor, ActivityKind.BoardCreated, Now);
+
+        activity.PayloadJson.Should().Be("{}");
+        activity.CardId.Should().BeNull();
     }
 }

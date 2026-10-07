@@ -31,16 +31,15 @@ public static class SeederServiceCollectionExtensions
         // SeedRunner (also singleton) and the SeedReport
         // (singleton), so the seeder is safe to invoke from
         // multiple HTTP requests in sequence.
-        services.AddSingleton<ISeedStep, UsersSeedStep>();
+        services.AddSingleton<ISeedStep, PeopleSeedStep>();
         services.AddSingleton<ISeedStep, WorkspacesSeedStep>();
         services.AddSingleton<ISeedStep, BoardsSeedStep>();
-        services.AddSingleton<ISeedStep, BoardExtensionsSeedStep>();
-        services.AddSingleton<ISeedStep, LabelsAndDashboardsSeedStep>();
-        services.AddSingleton<ISeedStep, ListsAndCardsSeedStep>();
-        services.AddSingleton<ISeedStep, EngagementSeedStep>();
-        services.AddSingleton<ISeedStep, AttachmentsAndMirrorsSeedStep>();
-        services.AddSingleton<ISeedStep, CustomFieldValuesAndAgingSeedStep>();
-        services.AddSingleton<ISeedStep, NotificationsAndTokensSeedStep>();
+        services.AddSingleton<ISeedStep, BoardSetupSeedStep>();
+        services.AddSingleton<ISeedStep, CardStoriesSeedStep>();
+        services.AddSingleton<ISeedStep, CardDetailsSeedStep>();
+        services.AddSingleton<ISeedStep, ConversationsSeedStep>();
+        services.AddSingleton<ISeedStep, DueRemindersSeedStep>();
+        services.AddSingleton<ISeedStep, ApiTokensSeedStep>();
         services.AddSingleton<ISeedStep, IntegrationsSeedStep>();
         services.AddSingleton<ISeedStep, EnterpriseAuthSeedStep>();
         services.AddSingleton<ISeedStep, WebhooksAndBackgroundSeedStep>();

@@ -232,12 +232,14 @@ else if (notifications is not null)
 
     private string FormatAssignedToCard(JsonElement root)
     {
-        // The payload is { cardId, cardTitle, assignedBy, boardId }.
+        // The payload is { cardId, cardTitle, boardId, actorId, actorName, assignedBy }.
         // We render the human-facing message; the IDs stay accessible
-        // via the "Open card" button rather than the body text.
+        // via the "Open card" button rather than the body text. Older
+        // payloads only carry the assigner's id.
         string cardTitle = TryGetString(root, "cardTitle") ?? L["NotificationFallbackCard"];
-        string assignedBy = TryGetString(root, "assignedBy") ?? L["NotificationFallbackPerson"];
-        return L["NotificationAssigned", cardTitle, ShortenId(assignedBy)];
+        string assignedBy = TryGetString(root, "actorName")
+            ?? (TryGetString(root, "assignedBy") is { } id ? ShortenId(id) : L["NotificationFallbackPerson"]);
+        return L["NotificationAssigned", cardTitle, assignedBy];
     }
 
     private string FormatAddedAsMember(JsonElement root)

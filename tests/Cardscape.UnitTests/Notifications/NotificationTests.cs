@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Cardscape.Domain.Notifications;
 
 namespace Cardscape.UnitTests.Notifications;
@@ -70,5 +71,45 @@ public class NotificationTests
         n.MarkUnread();
 
         n.IsRead.Should().BeFalse();
+    }
+
+    [Fact]
+    public void AboutCard_Assignment_Carries_Card_Actor_Name_And_Legacy_AssignedBy()
+    {
+        Guid cardId = Guid.NewGuid();
+        Guid boardId = Guid.NewGuid();
+        Guid actorId = Guid.NewGuid();
+
+        Notification n = Notification.AboutCard(
+            Guid.NewGuid(), NotificationKind.AssignedToCard, cardId, "Ship \"v2\"", boardId, actorId, "Ada Lovelace", Now);
+
+        using JsonDocument doc = JsonDocument.Parse(n.PayloadJson);
+        doc.RootElement.GetProperty("cardId").GetGuid().Should().Be(cardId);
+        doc.RootElement.GetProperty("cardTitle").GetString().Should().Be("Ship \"v2\"");
+        doc.RootElement.GetProperty("boardId").GetGuid().Should().Be(boardId);
+        doc.RootElement.GetProperty("actorName").GetString().Should().Be("Ada Lovelace");
+        doc.RootElement.GetProperty("assignedBy").GetGuid().Should().Be(actorId);
+    }
+
+    [Fact]
+    public void AboutCard_Reminder_Has_No_AssignedBy()
+    {
+        Notification n = Notification.AboutCard(
+            Guid.NewGuid(), NotificationKind.Overdue, Guid.NewGuid(), "Card", Guid.NewGuid(), actorId: null, actorName: null, Now);
+
+        using JsonDocument doc = JsonDocument.Parse(n.PayloadJson);
+        n.Kind.Should().Be(NotificationKind.Overdue);
+        doc.RootElement.TryGetProperty("assignedBy", out _).Should().BeFalse();
+    }
+
+    [Fact]
+    public void AddedToWorkspace_Carries_Workspace_Name_And_Role()
+    {
+        Notification n = Notification.AddedToWorkspace(Guid.NewGuid(), Guid.NewGuid(), "Nexora Labs", "Member", Now);
+
+        using JsonDocument doc = JsonDocument.Parse(n.PayloadJson);
+        n.Kind.Should().Be(NotificationKind.AddedAsMember);
+        doc.RootElement.GetProperty("workspaceName").GetString().Should().Be("Nexora Labs");
+        doc.RootElement.GetProperty("role").GetString().Should().Be("Member");
     }
 }

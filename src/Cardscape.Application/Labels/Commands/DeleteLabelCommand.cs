@@ -40,13 +40,13 @@ public static class DeleteLabelCommandHandler
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Record the deletion on the activity feed.
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             label.BoardId,
             null,
             currentUser.Id.Value,
-            ActivityKind.CardRenamed, // LabelDeleted reuses CardRenamed until a dedicated kind is added.
-            $"{{\"labelId\":\"{label.Id.Value}\"}}",
-            clock.UtcNow), cancellationToken);
+            ActivityKind.LabelDeleted,
+            clock.UtcNow,
+            new { labelId = label.Id.Value }), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

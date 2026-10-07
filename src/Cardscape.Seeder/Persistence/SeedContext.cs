@@ -1,4 +1,6 @@
 using Cardscape.Infrastructure.Persistence;
+using Cardscape.Seeder.Company;
+using Cardscape.Seeder.Simulation;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cardscape.Seeder.Persistence;
@@ -11,62 +13,115 @@ namespace Cardscape.Seeder.Persistence;
 /// </summary>
 public sealed class SeedContext
 {
-    public required DateTimeOffset Now { get; init; }
+    public required SeedTimeline Timeline { get; init; }
     public required string ActorName { get; init; }
 
+    /// <summary>Scoped services of the run (storage, hashing, …).</summary>
+    public required IServiceProvider Services { get; init; }
+
+    public DateTimeOffset Now => Timeline.Now;
+
+    /// <summary>The primary (HQ) workspace.</summary>
     public WorkspaceId WorkspaceId { get; set; } = null!;
     public Guid WorkspaceOwnerId { get; set; }
 
-    public List<User> Users { get; } = new();
-    public List<WorkspaceMember> WorkspaceMembers { get; } = new();
-    public List<WorkspaceInvitation> WorkspaceInvitations { get; } = new();
-    public List<UserPreferences> UserPreferences { get; } = new();
-    public List<Board> Boards { get; } = new();
-    public List<BoardMember> BoardMembers { get; } = new();
-    public List<BoardStar> BoardStars { get; } = new();
-    public List<BoardExtension> BoardExtensions { get; } = new();
-    public List<BoardAutomationRule> AutomationRules { get; } = new();
-    public List<CustomFieldDefinition> CustomFieldDefinitions { get; } = new();
-    public List<CustomFieldValue> CustomFieldValues { get; } = new();
-    public List<Dashcard> Dashcards { get; } = new();
-    public List<Label> Labels { get; } = new();
-    public List<BoardList> Lists { get; } = new();
-    public List<Card> Cards { get; } = new();
-    public List<CardMember> CardMembers { get; } = new();
-    public List<CardLabel> CardLabels { get; } = new();
-    public List<CardAgingSettings> CardAgingSettings { get; } = new();
-    public List<CardSnooze> CardSnoozes { get; } = new();
-    public List<CardMirror> CardMirrors { get; } = new();
-    public List<CardRecurrence> CardRecurrences { get; } = new();
-    public List<CardVote> CardVotes { get; } = new();
-    public List<Attachment> Attachments { get; } = new();
-    public List<Checklist> Checklists { get; } = new();
-    public List<ChecklistItem> ChecklistItems { get; } = new();
-    public List<Comment> Comments { get; } = new();
-    public List<Activity> Activities { get; } = new();
-    public List<Notification> Notifications { get; } = new();
-    public List<ApiToken> ApiTokens { get; } = new();
-    public List<BackgroundJob> BackgroundJobs { get; } = new();
-    public List<IdempotencyKey> IdempotencyKeys { get; } = new();
-    public List<ExternalLogin> ExternalLogins { get; } = new();
-    public List<TotpCredential> TotpCredentials { get; } = new();
-    public List<PasswordReset> PasswordResets { get; } = new();
-    public List<RevokedToken> RevokedTokens { get; } = new();
-    public List<OAuthApp> OAuthApps { get; } = new();
-    public List<OAuthAuthorizationCode> OAuthAuthorizationCodes { get; } = new();
-    public List<OAuthAccessToken> OAuthAccessTokens { get; } = new();
-    public List<ScimToken> ScimTokens { get; } = new();
-    public List<SamlConnection> SamlConnections { get; } = new();
-    public List<SlackWorkspace> SlackWorkspaces { get; } = new();
-    public List<SlackChannel> SlackChannels { get; } = new();
-    public List<GitHubRepoLink> GitHubRepoLinks { get; } = new();
-    public List<GitHubPullRequestLink> GitHubPullRequestLinks { get; } = new();
-    public List<GoogleCalendarConnection> GoogleCalendarConnections { get; } = new();
-    public List<InboundEmailAddress> InboundEmailAddresses { get; } = new();
-    public List<WebhookEndpoint> WebhookEndpoints { get; } = new();
-    public List<WebhookDelivery> WebhookDeliveries { get; } = new();
+    public List<Workspace> Workspaces { get; } = [];
+
+    public List<User> Users { get; } = [];
+    public List<WorkspaceMember> WorkspaceMembers { get; } = [];
+    public List<WorkspaceInvitation> WorkspaceInvitations { get; } = [];
+    public List<UserPreferences> UserPreferences { get; } = [];
+    public List<Board> Boards { get; } = [];
+    public List<BoardMember> BoardMembers { get; } = [];
+    public List<BoardStar> BoardStars { get; } = [];
+    public List<BoardExtension> BoardExtensions { get; } = [];
+    public List<BoardAutomationRule> AutomationRules { get; } = [];
+    public List<CustomFieldDefinition> CustomFieldDefinitions { get; } = [];
+    public List<CustomFieldValue> CustomFieldValues { get; } = [];
+    public List<Dashcard> Dashcards { get; } = [];
+    public List<Label> Labels { get; } = [];
+    public List<BoardList> Lists { get; } = [];
+    public List<Card> Cards { get; } = [];
+    public List<CardAgingSettings> CardAgingSettings { get; } = [];
+    public List<CardSnooze> CardSnoozes { get; } = [];
+    public List<CardMirror> CardMirrors { get; } = [];
+    public List<CardRecurrence> CardRecurrences { get; } = [];
+    public List<CardVote> CardVotes { get; } = [];
+    public List<Attachment> Attachments { get; } = [];
+    public List<Checklist> Checklists { get; } = [];
+    public List<ChecklistItem> ChecklistItems { get; } = [];
+    public List<Comment> Comments { get; } = [];
+    public List<Activity> Activities { get; } = [];
+    public List<Notification> Notifications { get; } = [];
+    public List<ApiToken> ApiTokens { get; } = [];
+    public List<BackgroundJob> BackgroundJobs { get; } = [];
+    public List<IdempotencyKey> IdempotencyKeys { get; } = [];
+    public List<ExternalLogin> ExternalLogins { get; } = [];
+    public List<TotpCredential> TotpCredentials { get; } = [];
+    public List<PasswordReset> PasswordResets { get; } = [];
+    public List<RevokedToken> RevokedTokens { get; } = [];
+    public List<OAuthApp> OAuthApps { get; } = [];
+    public List<OAuthAuthorizationCode> OAuthAuthorizationCodes { get; } = [];
+    public List<OAuthAccessToken> OAuthAccessTokens { get; } = [];
+    public List<ScimToken> ScimTokens { get; } = [];
+    public List<SamlConnection> SamlConnections { get; } = [];
+    public List<SlackWorkspace> SlackWorkspaces { get; } = [];
+    public List<SlackChannel> SlackChannels { get; } = [];
+    public List<GitHubRepoLink> GitHubRepoLinks { get; } = [];
+    public List<GitHubPullRequestLink> GitHubPullRequestLinks { get; } = [];
+    public List<GoogleCalendarConnection> GoogleCalendarConnections { get; } = [];
+    public List<InboundEmailAddress> InboundEmailAddresses { get; } = [];
+    public List<WebhookEndpoint> WebhookEndpoints { get; } = [];
+    public List<WebhookDelivery> WebhookDeliveries { get; } = [];
 
     public required CardscapeDbContext Db { get; init; }
+
+    /// <summary>The seeded user for a persona key (e-mail local part).</summary>
+    public User User(string personaKey) =>
+        Users.First(u => u.Email.Value.StartsWith(personaKey + "@", StringComparison.Ordinal));
+
+    public User User(Persona persona) => User(persona.Key);
+
+    public Board BoardOf(BoardList list) => Boards.First(b => b.Id == list.BoardId);
+
+    public Board BoardOf(Card card) => BoardOf(ListOf(card));
+
+    public BoardList ListOf(Card card) => Lists.First(l => l.Id == card.ListId);
+
+    public IReadOnlyList<BoardList> ListsOf(Board board) =>
+        [.. Lists.Where(l => l.BoardId == board.Id && !l.IsArchived).OrderBy(l => l.Position.Value)];
+
+    public BoardList List(Board board, string name) =>
+        Lists.First(l => l.BoardId == board.Id && l.Name.Value == name);
+
+    public IReadOnlyList<Card> CardsOf(Board board) =>
+        [.. Cards.Where(c => Lists.Any(l => l.Id == c.ListId && l.BoardId == board.Id))];
+
+    /// <summary>Members of a board as seeded users (owner first).</summary>
+    public IReadOnlyList<User> MembersOf(Board board) =>
+        [.. board.Members.Select(m => Users.First(u => u.Id.Value == m.UserId))];
+
+    /// <summary>Appends an activity row exactly as the application handlers would.</summary>
+    public Activity RecordActivity(
+        Board board, Guid? cardId, User actor, ActivityKind kind, DateTimeOffset at, object? payload = null)
+    {
+        Activity activity = Activity.Record(board.Id, cardId, actor.Id.Value, kind, at, payload);
+        Db.Activities.Add(activity);
+        Activities.Add(activity);
+        return activity;
+    }
+
+    /// <summary>Queues a notification; anything older than three days is already read.</summary>
+    public void Notify(Notification notification)
+    {
+        if (notification.CreatedAt < Now.AddDays(-3))
+        {
+            notification.MarkRead(Timeline.Between(notification.CreatedAt));
+        }
+
+        Db.Notifications.Add(notification);
+        Notifications.Add(notification);
+    }
 
     /// <summary>Add a row whose type has no <c>DbSet&lt;T&gt;</c> on
     /// the context (e.g. <c>UserPreferences</c>,
@@ -114,7 +169,7 @@ public sealed class SeedContext
     {
         yield return ("users", Users.Count);
         yield return ("user_preferences", UserPreferences.Count);
-        yield return ("workspaces", WorkspaceId is null ? 0 : 1);
+        yield return ("workspaces", Workspaces.Count);
         yield return ("workspace_members", WorkspaceMembers.Count);
         yield return ("workspace_invitations", WorkspaceInvitations.Count);
         yield return ("boards", Boards.Count);

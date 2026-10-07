@@ -45,16 +45,21 @@ public static class ListCustomFieldValuesForCardQueryHandler
         }
 
         IReadOnlyList<CustomFieldValue> rows = await values.ListForCardAsync(card.Id, cancellationToken);
-        var dtos = new List<CustomFieldValueDto>();
-        foreach (CustomFieldValue v in rows)
+        if (rows.Count == 0 || await lists.GetByIdAsync(card.ListId, cancellationToken) is not { } list)
         {
-            CustomFieldDefinition? field = await definitions.GetByIdAsync(v.FieldDefinitionId, cancellationToken);
-            if (field is null)
-            {
-                continue;
-            }
-            dtos.Add(CustomFieldValueDto.FromEntity(v, field.Kind));
+            return Result.Success<IReadOnlyList<CustomFieldValueDto>>([]);
         }
+
+        // One round-trip for the board's definitions instead of one per value.
+        Dictionary<CustomFieldDefinitionId, CustomFieldDefinition> fields =
+            (await definitions.ListForBoardAsync(list.BoardId, cancellationToken)).ToDictionary(f => f.Id);
+        List<CustomFieldValueDto> dtos =
+        [
+            .. rows
+                .Where(v => fields.ContainsKey(v.FieldDefinitionId))
+                .Select(v => CustomFieldValueDto.FromEntity(v, fields[v.FieldDefinitionId]))
+                .OrderBy(dto => dto.Position),
+        ];
         return Result.Success<IReadOnlyList<CustomFieldValueDto>>(dtos);
     }
 }

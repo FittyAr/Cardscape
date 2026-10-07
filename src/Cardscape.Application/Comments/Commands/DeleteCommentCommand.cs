@@ -60,13 +60,13 @@ public static class DeleteCommentCommandHandler
         IReadOnlyDictionary<Guid, Guid> map = await lists.ListBoardIdsByListIdAsync(cancellationToken);
         if (card is not null && map.TryGetValue(card.ListId.Value, out Guid boardId))
         {
-            await activities.AddAsync(Activity.Create(
+            await activities.AddAsync(Activity.Record(
                 new Domain.Boards.BoardId(boardId),
                 comment.CardId.Value,
                 currentUser.Id.Value,
-                ActivityKind.CommentAdded, // CommentDeleted reuses CommentAdded until a dedicated kind is added.
-                $"{{\"commentId\":\"{comment.Id.Value}\",\"action\":\"delete\"}}",
-                clock.UtcNow), cancellationToken);
+                ActivityKind.CommentDeleted,
+                clock.UtcNow,
+                new { commentId = comment.Id.Value }), cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
 

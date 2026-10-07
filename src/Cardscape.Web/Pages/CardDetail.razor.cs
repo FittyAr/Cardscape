@@ -109,7 +109,9 @@ public partial class CardDetail
     private IReadOnlyList<MetadataListItem> CustomFieldItems => _fieldValues is null
         ? Array.Empty<MetadataListItem>()
         : _fieldValues
-            .Select(v => MetadataListItem.Text(FieldKindLabel(v.Kind), FormatFieldValue(v)))
+            .Select(v => MetadataListItem.Text(
+                string.IsNullOrWhiteSpace(v.FieldName) ? FieldKindLabel(v.Kind) : v.FieldName,
+                FormatFieldValue(v)))
             .ToList();
 
     private async Task ReloadChecklistsAsync()

@@ -58,13 +58,13 @@ public static class UpdateLabelCommandHandler
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Record the update on the activity feed.
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             label.BoardId,
             null,
             currentUser.Id.Value,
-            ActivityKind.CardRenamed, // LabelUpdated reuses CardRenamed until a dedicated kind is added.
-            $"{{\"labelId\":\"{label.Id.Value}\",\"name\":\"{label.Name.Value.Replace("\"", "\\\"")}\"}}",
-            clock.UtcNow), cancellationToken);
+            ActivityKind.LabelUpdated,
+            clock.UtcNow,
+            new { labelId = label.Id.Value, name = label.Name.Value }), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(new LabelDto(

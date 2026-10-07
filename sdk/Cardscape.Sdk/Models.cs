@@ -100,7 +100,31 @@ public enum ActivityKind
     /// <summary>An attachment was added.</summary>
     AttachmentAdded = 23,
     /// <summary>An attachment was removed.</summary>
-    AttachmentRemoved = 24
+    AttachmentRemoved = 24,
+    /// <summary>A card was marked complete.</summary>
+    CardCompleted = 25,
+    /// <summary>A completed card was reopened.</summary>
+    CardReopened = 26,
+    /// <summary>A card's description changed.</summary>
+    CardDescriptionChanged = 27,
+    /// <summary>A card was permanently deleted.</summary>
+    CardDeleted = 28,
+    /// <summary>A comment was edited.</summary>
+    CommentEdited = 29,
+    /// <summary>A comment was deleted.</summary>
+    CommentDeleted = 30,
+    /// <summary>A board label was created.</summary>
+    LabelCreated = 31,
+    /// <summary>A board label was renamed or recoloured.</summary>
+    LabelUpdated = 32,
+    /// <summary>A board label was deleted.</summary>
+    LabelDeleted = 33,
+    /// <summary>A checklist item was added.</summary>
+    ChecklistItemAdded = 34,
+    /// <summary>A checklist item was renamed.</summary>
+    ChecklistItemRenamed = 35,
+    /// <summary>A checklist item was deleted.</summary>
+    ChecklistItemDeleted = 36
 }
 
 // ── Workspaces ─────────────────────────────────────────

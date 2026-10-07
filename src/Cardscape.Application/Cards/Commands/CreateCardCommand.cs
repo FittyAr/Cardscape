@@ -95,13 +95,13 @@ public static class CreateCardCommandHandler
         await cards.AddAsync(cardResult.Value, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var activity = Activity.Create(
+        var activity = Activity.Record(
             list.BoardId,
             cardResult.Value.Id.Value,
             currentUser.Id.Value,
             ActivityKind.CardCreated,
-            $"{{\"title\":\"{cardResult.Value.Title.Value.Replace("\"", "\\\"")}\"}}",
-            clock.UtcNow);
+            clock.UtcNow,
+            new { title = cardResult.Value.Title.Value });
         await activities.AddAsync(activity, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

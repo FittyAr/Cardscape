@@ -101,13 +101,13 @@ public static class CopyCardCommandHandler
             return Result.Failure<CardDto>(copy.Error);
         }
 
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             target.BoardId,
             copy.Value.Id.Value,
             currentUser.Id.Value,
             ActivityKind.CardCreated,
-            $"{{\"title\":\"{copy.Value.Title.Value.Replace("\"", "\\\"")}\",\"copiedFrom\":\"{source.Id.Value}\"}}",
-            clock.UtcNow), cancellationToken);
+            clock.UtcNow,
+            new { title = copy.Value.Title.Value, copiedFrom = source.Id.Value }), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(copy.Value.MapToDto());

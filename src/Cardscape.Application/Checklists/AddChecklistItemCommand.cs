@@ -48,13 +48,13 @@ public static class AddChecklistItemCommandHandler
         Position position = Position.From(checklist.Items.Count + 1);
         ChecklistItem newItem = checklist.AddItem(textResult.Value, position, clock.UtcNow);
 
-        await activities.AddAsync(Activity.Create(
+        await activities.AddAsync(Activity.Record(
             access.Value.BoardId,
             access.Value.Card.Id.Value,
             currentUser.Id.Value,
-            ActivityKind.ChecklistCreated,
-            $"{{\"checklistId\":\"{checklist.Id.Value}\",\"itemId\":\"{newItem.Id.Value}\"}}",
-            clock.UtcNow), ct);
+            ActivityKind.ChecklistItemAdded,
+            clock.UtcNow,
+            new { checklistId = checklist.Id.Value, itemId = newItem.Id.Value }), ct);
         await uow.SaveChangesAsync(ct);
 
         return Result.Success(new ChecklistItemDto(
