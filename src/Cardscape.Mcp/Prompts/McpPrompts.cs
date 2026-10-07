@@ -39,7 +39,7 @@ public sealed class McpPrompts(IMessageBus bus)
     {
         DateTimeOffset from = DateTimeOffset.UtcNow;
         DateTimeOffset to = from.AddDays(lookaheadDays);
-        Result<IReadOnlyList<CardSummaryDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
+        Result<IReadOnlyList<CalendarEntryDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<CalendarEntryDto>>>(
             new ListCardsDueInRangeQuery(from, to, BoardId: null), ct);
 
         var sb = new StringBuilder();
@@ -47,7 +47,7 @@ public sealed class McpPrompts(IMessageBus bus)
         if (result.IsSuccess)
         {
             int count = 0;
-            foreach (CardSummaryDto card in result.Value)
+            foreach (CalendarEntryDto card in result.Value)
             {
                 if (count++ >= maxCards)
                 {
@@ -154,7 +154,7 @@ public sealed class McpPrompts(IMessageBus bus)
     {
         DateTimeOffset from = DateTimeOffset.UtcNow.AddDays(-7);
         DateTimeOffset to = DateTimeOffset.UtcNow;
-        Result<IReadOnlyList<CardSummaryDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<CardSummaryDto>>>(
+        Result<IReadOnlyList<CalendarEntryDto>> result = await bus.InvokeAsync<Result<IReadOnlyList<CalendarEntryDto>>>(
             new ListCardsDueInRangeQuery(from, to, BoardId: null), ct);
 
         var sb = new StringBuilder();
@@ -164,7 +164,7 @@ public sealed class McpPrompts(IMessageBus bus)
         if (result.IsSuccess)
         {
             int done = 0, open = 0;
-            foreach (CardSummaryDto card in result.Value)
+            foreach (CalendarEntryDto card in result.Value)
             {
                 if (card.IsCompleted)
                 {
