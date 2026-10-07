@@ -126,9 +126,7 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
                 a.Id.Value,
                 a.Name,
                 a.ClientId,
-                SecretPrefix: a.ClientSecretHash.Length >= 8
-                    ? a.ClientSecretHash[..8]
-                    : a.ClientSecretHash,
+                SecretPrefix: a.ClientSecretPrefix,
                 a.AllowedScopes,
                 a.CreatedAt,
                 a.IsRevoked))
