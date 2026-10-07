@@ -87,6 +87,7 @@ public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Progr
         string? previousJwtKey = Environment.GetEnvironmentVariable("Jwt__SigningKey");
         string? previousStorage = Environment.GetEnvironmentVariable("Storage__LocalRoot");
         string? previousEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        string? previousDataRoot = Environment.GetEnvironmentVariable("Cardscape__DataRoot");
 
         Environment.SetEnvironmentVariable("ConnectionStrings__Default", _connectionString);
         Environment.SetEnvironmentVariable("Database__Provider", "Sqlite");
@@ -94,6 +95,13 @@ public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Progr
             "integration-tests-signing-key-please-override-in-production-32+chars");
         Environment.SetEnvironmentVariable("Storage__LocalRoot", _storageRoot);
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+        // SystemSettingsService persists system_settings.json under
+        // Cardscape:DataRoot (default: <cwd>/Data, i.e. the test bin
+        // folder). Give every host — including WithWebHostBuilder
+        // auxiliary hosts — its own folder so a test that flips a
+        // setting cannot leak into other hosts or later runs.
+        Environment.SetEnvironmentVariable("Cardscape__DataRoot",
+            Path.Combine(_storageRoot, $"data-{Guid.NewGuid():N}"));
 
         try
         {
@@ -106,6 +114,7 @@ public sealed class CardscapeWebApplicationFactory : WebApplicationFactory<Progr
             Environment.SetEnvironmentVariable("Jwt__SigningKey", previousJwtKey);
             Environment.SetEnvironmentVariable("Storage__LocalRoot", previousStorage);
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", previousEnv);
+            Environment.SetEnvironmentVariable("Cardscape__DataRoot", previousDataRoot);
         }
     }
 
