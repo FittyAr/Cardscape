@@ -9,9 +9,11 @@ namespace Cardscape.Mcp.Tools;
 
 /// <summary>
 /// MCP tool surface for board extensions. Kinds: 0 = CustomFields,
-/// 1 = Voting, 2 = CardRepeater. <c>configJson</c> is opaque to
-/// Cardscape core; pass the JSON shape documented by the matching
-/// extension feature.
+/// 1 = Voting, 2 = CardRepeater, 3 = CardAging. <c>configJson</c> is
+/// opaque to Cardscape core; pass the JSON shape documented by the
+/// matching extension feature. The numeric codes apply to tool
+/// arguments only; returned rows type <c>kind</c> as an enum
+/// (ADR 0014).
 /// </summary>
 [McpServerToolType]
 public sealed class BoardExtensionsTools(IMessageBus bus, ICurrentUser currentUser)

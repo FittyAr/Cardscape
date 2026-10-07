@@ -14,6 +14,8 @@ namespace Cardscape.Mcp.Tools;
 /// 3 = CardCreatedInList. Actions: 0 = MoveCardToList, 1 = AssignUser,
 /// 2 = SetDueDate, 3 = MarkComplete. <c>actionArgument</c> is the
 /// list id (Move), user id (Assign), or ISO-8601 timestamp (SetDueDate).
+/// The numeric codes apply to tool arguments only; returned rules type
+/// <c>trigger</c> and <c>action</c> as enums (ADR 0014).
 /// </summary>
 [McpServerToolType]
 public sealed class AutomationTools(IMessageBus bus, ICurrentUser currentUser)

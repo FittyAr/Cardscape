@@ -12,9 +12,9 @@ public sealed record BoardAutomationRuleDto(
     Guid Id,
     Guid BoardId,
     string Name,
-    int Trigger,
+    AutomationTrigger Trigger,
     Guid? TriggerListId,
-    int Action,
+    AutomationAction Action,
     string? ActionArgument,
     bool IsEnabled,
     int Position)
@@ -23,9 +23,9 @@ public sealed record BoardAutomationRuleDto(
         r.Id.Value,
         r.BoardId.Value,
         r.Name,
-        (int)r.Trigger,
+        r.Trigger,
         r.TriggerListId,
-        (int)r.Action,
+        r.Action,
         r.ActionArgument,
         r.IsEnabled,
         r.Position);

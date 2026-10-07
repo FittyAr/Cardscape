@@ -32,7 +32,10 @@ production there is one canonical, unversioned route surface.
 
 Enum values are camel-case names in JSON bodies, responses, and route/query
 segments (for example `"private"`, `customFields`, `kind=card`). Numeric CLR
-values are not part of the API contract and are rejected.
+values are not part of the API contract and are rejected. There are no
+exceptions: response DTOs declare these members with their enum type, and
+`WireEnumContractTests` fails the build otherwise
+([ADR 0014](../adr/0014-enum-typed-response-dtos.md)).
 - The token is sent in the `Authorization: Bearer <token>`
   header on every request.
 - Tokens expire after the configured access-token lifetime. Cardscape does not

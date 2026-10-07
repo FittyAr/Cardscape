@@ -86,7 +86,7 @@ public static class BoardExtensionEndpoints
             }
 
             var disable = await bus.InvokeAsync<Result>(
-                new DisableBoardExtensionCommand(boardId, row.Kind), ct);
+                new DisableBoardExtensionCommand(boardId, (int)row.Kind), ct);
             return disable.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(disable.Error);
         }).Produces(StatusCodes.Status204NoContent);
 

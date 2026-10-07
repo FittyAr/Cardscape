@@ -172,6 +172,40 @@ public sealed class OpenApiTests
     }
 
     [Fact]
+    public async Task OpenApi_EnumBackedResponseFields_Are_CamelCase_String_Enums()
+    {
+        (string Schema, string Property, string[] Values)[] contracts =
+        [
+            ("BoardExtensionDto", "kind", ["customFields", "voting", "cardRepeater", "cardAging"]),
+            ("CustomFieldDefinitionDto", "kind", ["text", "number", "date", "dropdown", "checkbox"]),
+            ("CustomFieldValueDto", "kind", ["text", "number", "date", "dropdown", "checkbox"]),
+            ("BoardAutomationRuleDto", "trigger", ["cardMoved", "cardCompleted", "cardReopened", "cardCreatedInList"]),
+            ("BoardAutomationRuleDto", "action", ["moveCardToList", "assignUser", "setDueDate", "markComplete"]),
+        ];
+
+        HttpClient client = _factory.CreateApiClient();
+        using HttpResponseMessage response = await client.GetAsync(
+            "openapi/v1.json", TestContext.Current.CancellationToken);
+        using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken));
+
+        foreach ((string schemaName, string propertyName, string[] values) in contracts)
+        {
+            JsonElement property = ResolveSchema(document, document.RootElement
+                .GetProperty("components")
+                .GetProperty("schemas")
+                .GetProperty(schemaName)
+                .GetProperty("properties")
+                .GetProperty(propertyName));
+
+            property.TryGetProperty("enum", out JsonElement members).Should().BeTrue(
+                $"{schemaName}.{propertyName} is an enum on the wire");
+            members.EnumerateArray().Select(member => member.GetString()).Should().Equal(values,
+                $"{schemaName}.{propertyName} uses camelCase enum names (docs/api/00-conventions.md)");
+        }
+    }
+
+    [Fact]
     public async Task OpenApi_AuthSuccessResponses_Match_Their_WireContracts()
     {
         (string Path, string Method, string Status, Type? Model)[] contracts =

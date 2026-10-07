@@ -13,20 +13,20 @@ public sealed record CustomFieldDefinitionDto(
     Guid Id,
     Guid BoardId,
     string Name,
-    int Kind,
+    CustomFieldKind Kind,
     string OptionsJson,
     int Position)
 {
     public static CustomFieldDefinitionDto FromEntity(CustomFieldDefinition d) => new(
-        d.Id.Value, d.BoardId.Value, d.Name, (int)d.Kind, d.OptionsJson, d.Position);
+        d.Id.Value, d.BoardId.Value, d.Name, d.Kind, d.OptionsJson, d.Position);
 }
 
 public sealed record CustomFieldValueDto(
     Guid FieldDefinitionId,
     Guid CardId,
-    int Kind,
+    CustomFieldKind Kind,
     string ValueJson)
 {
     public static CustomFieldValueDto FromEntity(CustomFieldValue v, CustomFieldKind kind) =>
-        new(v.FieldDefinitionId.Value, v.CardId.Value, (int)kind, v.ValueJson);
+        new(v.FieldDefinitionId.Value, v.CardId.Value, kind, v.ValueJson);
 }

@@ -82,7 +82,7 @@ public static class SetCustomFieldValueCommandHandler
             }
 
             return Result.Success(new CustomFieldValueDto(
-                field.Id.Value, card.Id.Value, (int)field.Kind, string.Empty));
+                field.Id.Value, card.Id.Value, field.Kind, string.Empty));
         }
 
         Result shape = CustomFieldValue.ValidateShape(command.ValueJson, field.Kind);

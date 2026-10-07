@@ -34,7 +34,8 @@ public sealed class CustomFieldTests
         CustomFieldDefinitionDto created =
             (await create.Content.ReadFromJsonAsync<CustomFieldDefinitionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         created.Name.Should().Be("Priority");
-        created.Kind.Should().Be(0);
+        // Enums are camelCase strings on the wire (docs/api/00-conventions.md).
+        created.Kind.Should().Be("text");
 
         // List
         HttpResponseMessage list = await client.GetAsync(
@@ -99,6 +100,7 @@ public sealed class CustomFieldTests
         CustomFieldValueDto setValue =
             (await set.Content.ReadFromJsonAsync<CustomFieldValueDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         setValue.ValueJson.Should().Be("\"high\"");
+        setValue.Kind.Should().Be("text");
 
         // List
         HttpResponseMessage list = await client.GetAsync(
@@ -237,14 +239,14 @@ public sealed class CustomFieldTests
         Guid Id,
         Guid BoardId,
         string Name,
-        int Kind,
+        string Kind,
         string OptionsJson,
         int Position);
 
     private sealed record CustomFieldValueDto(
         Guid FieldDefinitionId,
         Guid CardId,
-        int Kind,
+        string Kind,
         string ValueJson);
 
     private sealed record ListDto(Guid Id);

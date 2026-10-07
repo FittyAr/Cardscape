@@ -33,7 +33,8 @@ public sealed class BoardExtensionTests
         enable.IsSuccessStatusCode.Should().BeTrue();
         BoardExtensionDto enabled = (await enable.Content.ReadFromJsonAsync<BoardExtensionDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
         enabled.IsEnabled.Should().BeTrue();
-        enabled.Kind.Should().Be(0);
+        // Enums are camelCase strings on the wire (docs/api/00-conventions.md).
+        enabled.Kind.Should().Be("customFields");
 
         HttpResponseMessage list = await client.GetAsync($"api/boards/{board.Id}/extensions/", TestContext.Current.CancellationToken);
         list.IsSuccessStatusCode.Should().BeTrue();
@@ -183,7 +184,7 @@ public sealed class BoardExtensionTests
     public sealed record BoardExtensionDto(
         Guid Id,
         Guid BoardId,
-        int Kind,
+        string Kind,
         string? ConfigJson,
         bool IsEnabled);
 }

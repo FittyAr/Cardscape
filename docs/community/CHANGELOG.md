@@ -47,6 +47,26 @@ matrix in [`docs/roadmap/05-plan-v1.2.0.md`](../roadmap/05-plan-v1.2.0.md)
   third-party pen test + SOC 2 Type II audit are explicit
   v3.0+ work.
 
+### Changed — BREAKING (enum fields on the wire)
+
+- **Five response fields are now camelCase enum names instead of
+  integers**, matching the documented wire-enum rule
+  ([`docs/api/00-conventions.md`](../api/00-conventions.md#wire-enums)):
+  `BoardExtensionDto.kind` (`"customFields"`, …),
+  `CustomFieldDefinitionDto.kind` and `CustomFieldValueDto.kind`
+  (`"text"`, …), `BoardAutomationRuleDto.trigger` (`"cardMoved"`, …)
+  and `BoardAutomationRuleDto.action` (`"moveCardToList"`, …). Clients
+  that parsed them as numbers must read the name. The MCP extension and
+  automation tools return the same DTOs; their numeric arguments are
+  unchanged. See [ADR 0014](../adr/0014-enum-typed-response-dtos.md).
+- The Web client drops its per-property `JsonNumberEnumConverter`
+  workarounds for these fields.
+- **New** architecture test `WireEnumContractTests` fails when an
+  Application DTO types a member as non-enum while the matching Web DTO
+  reads an enum; **new** integration test
+  `OpenApi_EnumBackedResponseFields_Are_CamelCase_String_Enums` pins
+  the published schemas.
+
 ### Changed (this commit — OpenAPI tooling migration)
 
 - **Swashbuckle.AspNetCore is fully removed.** The API
