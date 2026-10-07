@@ -18,7 +18,9 @@ public sealed record CardDto(
     int ChecklistCount = 0,
     bool IsSnoozed = false,
     DateTimeOffset? SnoozeUntil = null,
-    Guid? MirrorOfCardId = null);
+    Guid? MirrorOfCardId = null,
+    IReadOnlyList<Guid>? LabelIds = null,
+    IReadOnlyList<Guid>? MemberIds = null);
 
 public sealed record CardSummaryDto(
     Guid Id,
@@ -35,7 +37,11 @@ public sealed record CardSummaryDto(
     IReadOnlyList<CardSummaryMemberDto>? Members = null,
     int ChecklistCompleted = 0,
     int ChecklistTotal = 0,
-    int CommentCount = 0);
+    int CommentCount = 0,
+    string? CoverColor = null,
+    bool HasDescription = false,
+    int AttachmentCount = 0,
+    bool IsArchived = false);
 
 /// <summary>Label attached to a card, as shown on the kanban card front.</summary>
 public sealed record CardSummaryLabelDto(Guid Id, string Name, string Color);

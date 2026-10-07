@@ -15,7 +15,12 @@ public partial class BoardDetail
     [Inject] private IWorkspacesApiClient WorkspacesApi { get; set; } = default!;
 
     private IReadOnlyList<KanbanColumn<CardSummaryDto>>? KanbanColumns => _lists?.Select(l =>
-        new KanbanColumn<CardSummaryDto>(l.Id.ToString(), l.Name, _cardsByList.GetValueOrDefault(l.Id, []))
+        new KanbanColumn<CardSummaryDto>(
+            l.Id.ToString(),
+            l.Name,
+            IsFiltering
+                ? _cardsByList.GetValueOrDefault(l.Id, []).Where(MatchesFilter).ToList()
+                : _cardsByList.GetValueOrDefault(l.Id, []))
     ).ToList();
 
     private BoardDto? _board;
@@ -74,40 +79,59 @@ public partial class BoardDetail
             }
         }
 
-        await ReloadListsAndCardsAsync();
-        await ReloadAgingModeAsync();
+        if (_lastSubscribedBoardId != BoardId)
+        {
+            // Navigating between boards reuses this component: drop
+            // the previous board's transient UI state.
+            ClearFilters();
+            _showSettings = false;
+            _showArchived = false;
+            _renamingListId = null;
+            _renamingBoard = false;
+        }
+
+        await Task.WhenAll(ReloadListsAndCardsAsync(), ReloadAgingModeAsync(), ReloadLabelsAsync());
 
         if (_lastSubscribedBoardId != BoardId)
         {
             // BETA-8-UI-#4 - see test-results/r8/r8-report.md.
-            // Reset the hub-subscription guard when the user
-            // navigates to a different board; the unsubscribe
-            // block in Dispose() handles the previous board.
-            _subscribedToHub = false;
-            await SubscribeToHubAsync();
+            // Handlers are attached once per component; switching
+            // boards only moves the hub group membership, otherwise
+            // every event would fire the reload once per board visited.
+            Guid previousBoardId = _lastSubscribedBoardId;
             _lastSubscribedBoardId = BoardId;
+            await SubscribeToHubAsync(previousBoardId);
         }
     }
 
-    private async Task SubscribeToHubAsync()
+    private async Task SubscribeToHubAsync(Guid previousBoardId)
     {
-        if (_subscribedToHub)
-        {
-            return;
-        }
-        _subscribedToHub = true;
         try
         {
-            HubClient.CardCreated += OnHubCardCreatedAsync;
-            HubClient.CardMoved += OnHubCardMovedAsync;
-            HubClient.CardCompleted += OnHubCardCompletedAsync;
-            HubClient.CardReopened += OnHubCardReopenedAsync;
-            HubClient.CardArchived += OnHubCardArchivedAsync;
-            HubClient.CardRestored += OnHubCardRestoredAsync;
-            HubClient.ListCreated += OnHubListCreatedAsync;
-            HubClient.CommentAdded += OnHubCommentAddedAsync;
+            if (!_subscribedToHub)
+            {
+                _subscribedToHub = true;
+                HubClient.CardCreated += OnHubCardCreatedAsync;
+                HubClient.CardUpdated += OnHubCardUpdatedAsync;
+                HubClient.CardMoved += OnHubCardMovedAsync;
+                HubClient.CardCompleted += OnHubCardCompletedAsync;
+                HubClient.CardReopened += OnHubCardReopenedAsync;
+                HubClient.CardArchived += OnHubCardArchivedAsync;
+                HubClient.CardRestored += OnHubCardRestoredAsync;
+                HubClient.ListCreated += OnHubListCreatedAsync;
+                HubClient.ListRenamed += OnHubListCreatedAsync;
+                HubClient.ListArchived += OnHubListCreatedAsync;
+                HubClient.ListRestored += OnHubListCreatedAsync;
+                HubClient.CommentAdded += OnHubCommentAddedAsync;
+                HubClient.LabelCreated += OnHubLabelCreatedAsync;
+            }
 
             await HubClient.StartAsync();
+            if (previousBoardId != Guid.Empty)
+            {
+                await HubClient.LeaveBoardAsync(previousBoardId);
+            }
+
             await HubClient.JoinBoardAsync(BoardId);
             _hubConnected = HubClient.IsConnected;
         }
@@ -120,6 +144,15 @@ public partial class BoardDetail
     private async Task OnHubCardCreatedAsync(CardEventPayload _)
     {
         await ReloadListsAndCardsAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnHubCardUpdatedAsync(CardEventPayload _) =>
+        await OnHubCardCreatedAsync(default!);
+
+    private async Task OnHubLabelCreatedAsync(LabelEventPayload _)
+    {
+        await ReloadLabelsAsync();
         await InvokeAsync(StateHasChanged);
     }
 
@@ -147,13 +180,18 @@ public partial class BoardDetail
     public async ValueTask DisposeAsync()
     {
         HubClient.CardCreated -= OnHubCardCreatedAsync;
+        HubClient.CardUpdated -= OnHubCardUpdatedAsync;
         HubClient.CardMoved -= OnHubCardMovedAsync;
         HubClient.CardCompleted -= OnHubCardCompletedAsync;
         HubClient.CardReopened -= OnHubCardReopenedAsync;
         HubClient.CardArchived -= OnHubCardArchivedAsync;
         HubClient.CardRestored -= OnHubCardRestoredAsync;
         HubClient.ListCreated -= OnHubListCreatedAsync;
+        HubClient.ListRenamed -= OnHubListCreatedAsync;
+        HubClient.ListArchived -= OnHubListCreatedAsync;
+        HubClient.ListRestored -= OnHubListCreatedAsync;
         HubClient.CommentAdded -= OnHubCommentAddedAsync;
+        HubClient.LabelCreated -= OnHubLabelCreatedAsync;
 
         try
         {

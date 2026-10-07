@@ -196,8 +196,14 @@ public sealed class Card : AggregateRoot<CardId>
             return Result.Failure(CardErrors.Archived);
         }
 
+        if (CoverColor == color)
+        {
+            return Result.Success();
+        }
+
         CoverColor = color;
         UpdatedAt = at;
+        AddDomainEvent(new CardDetailsChanged(Id, at));
         return Result.Success();
     }
 
@@ -239,6 +245,7 @@ public sealed class Card : AggregateRoot<CardId>
 
         _members.Add(CardMember.Create(Id, userId, at));
         UpdatedAt = at;
+        AddDomainEvent(new CardDetailsChanged(Id, at));
         return Result.Success();
     }
 
@@ -252,6 +259,7 @@ public sealed class Card : AggregateRoot<CardId>
 
         _members.Remove(member);
         UpdatedAt = at;
+        AddDomainEvent(new CardDetailsChanged(Id, at));
         return Result.Success();
     }
 
@@ -269,6 +277,7 @@ public sealed class Card : AggregateRoot<CardId>
 
         _cardLabels.Add(cardLabel);
         UpdatedAt = at;
+        AddDomainEvent(new CardDetailsChanged(Id, at));
         return Result.Success();
     }
 
@@ -287,6 +296,7 @@ public sealed class Card : AggregateRoot<CardId>
 
         _cardLabels.Remove(link);
         UpdatedAt = at;
+        AddDomainEvent(new CardDetailsChanged(Id, at));
         return Result.Success();
     }
 }

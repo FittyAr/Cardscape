@@ -32,7 +32,17 @@ else
                     <span>@(_workspace?.Name ?? L["WorkspaceBadge"])</span>
                 </a>
                 <div class="cs-board-bar-title-row">
-                    <h1 class="cs-board-bar-title">@_board.Name</h1>
+                    @if (_renamingBoard)
+                    {
+                        <RadzenTextBox @ref="_boardRenameBox" @bind-Value="_renamingBoardName" Immediate="true" class="cs-board-bar-title-input"
+                                       aria-label="@L["BoardNewName"]"
+                                       @onkeydown="@OnBoardRenameKeyDownAsync" @onblur="@CommitBoardRenameAsync" />
+                    }
+                    else
+                    {
+                        <h1 class="cs-board-bar-title" tabindex="0" title="@L["BoardRenameHint"]"
+                            @onclick="@StartRenamingBoard" @onkeydown="@OnBoardTitleKeyDown">@_board.Name</h1>
+                    }
                     <RadzenButton Icon="@(_board.IsStarred ? "star" : "star_outline")"
                                   ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
                                   class="@(_board.IsStarred ? "cs-star is-starred" : "cs-star")"
@@ -55,6 +65,11 @@ else
                 }
             </div>
             <div class="cs-board-bar-actions">
+                <RadzenButton Text="@(IsFiltering ? L["BoardFilterActive", ActiveFilterCount] : L["BoardFilter"])" Icon="filter_list"
+                              ButtonStyle="@(IsFiltering ? ButtonStyle.Primary : ButtonStyle.Base)"
+                              Variant="@(IsFiltering ? Variant.Flat : Variant.Text)"
+                              aria-expanded="@(_showFilters ? "true" : "false")"
+                              Click="@(() => _showFilters = !_showFilters)" />
                 <RadzenButton Text="@L["BoardActionDashboard"]" Icon="insights" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
                               Click="@(() => Nav.NavigateTo($"boards/{BoardId}/dashboard"))" />
                 <RadzenButton Text="@L["ActivityTitle"]" Icon="history" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
@@ -64,11 +79,144 @@ else
                         <RadzenMenuItem Text="@(_showSnoozed ? L["BoardHideSnoozed"] : L["BoardShowSnoozed"])" Icon="snooze" Click="@ToggleSnoozedAsync" />
                         <RadzenMenuItem Text="@L["CustomFieldsTitle"]" Icon="tune" Path="@($"boards/{BoardId}/custom-fields")" />
                         <RadzenMenuItem Text="@L["ExtensionsTitle"]" Icon="extension" Path="@($"boards/{BoardId}/extensions")" />
-                        <RadzenMenuItem Text="@L["BoardSettings"]" Icon="settings" Click="@(() => _showSettings = !_showSettings)" />
+                        <RadzenMenuItem Text="@L["BoardArchivedItems"]" Icon="inventory_2" Click="@ToggleArchivedAsync" />
+                        <RadzenMenuItem Text="@L["BoardSettings"]" Icon="settings" Click="@ToggleSettings" />
                     </RadzenMenuItem>
                 </RadzenMenu>
             </div>
         </div>
+
+        @if (_board.IsArchived)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="cs-board-archived">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                    <span>@L["BoardArchivedBanner"]</span>
+                    <RadzenButton Text="@L["BoardUnarchive"]" Icon="unarchive" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" Click="@UnarchiveBoardAsync" />
+                </RadzenStack>
+            </RadzenAlert>
+        }
+
+        @if (_showFilters)
+        {
+            <RadzenCard class="cs-board-panel">
+                <RadzenStack Gap="0.875rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                        <RadzenText Text="@L["BoardFilter"]" TextStyle="TextStyle.H6" TagName="TagName.H2" Class="rz-m-0" />
+                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                      aria-label="@L["ActionCancel"]" Click="@(() => _showFilters = false)" />
+                    </RadzenStack>
+                    <RadzenTextBox @bind-Value="_filterText" Immediate="true" Placeholder="@L["BoardFilterKeyword"]" Style="width:100%"
+                                   aria-label="@L["BoardFilterKeyword"]" />
+                    @if (_boardLabels.Count > 0)
+                    {
+                        <div class="cs-filter-group">
+                            <h3 class="cs-filter-title">@L["CardLabels"]</h3>
+                            <div class="cs-filter-chips">
+                                @foreach (LabelDto label in _boardLabels)
+                                {
+                                    bool on = _filterLabels.Contains(label.Id);
+                                    <span class="cs-filter-chip cs-filter-chip--label @(on ? "is-on" : null)" role="checkbox" tabindex="0"
+                                          style="--cs-label-color: @label.Color"
+                                          aria-checked="@(on ? "true" : "false")"
+                                          @onclick="@(() => Toggle(_filterLabels, label.Id))"
+                                          @onkeydown="@(e => { if (e.Key is "Enter" or " ") Toggle(_filterLabels, label.Id); })">@label.Name</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                    @if (BoardCardMembers.Count > 0)
+                    {
+                        <div class="cs-filter-group">
+                            <h3 class="cs-filter-title">@L["MembersTitle"]</h3>
+                            <div class="cs-filter-chips">
+                                @foreach (CardSummaryMemberDto member in BoardCardMembers)
+                                {
+                                    bool on = _filterMembers.Contains(member.UserId);
+                                    <span class="cs-filter-chip @(on ? "is-on" : null)" role="checkbox" tabindex="0"
+                                          aria-checked="@(on ? "true" : "false")"
+                                          @onclick="@(() => Toggle(_filterMembers, member.UserId))"
+                                          @onkeydown="@(e => { if (e.Key is "Enter" or " ") Toggle(_filterMembers, member.UserId); })">
+                                        <span class="cs-card-avatar" aria-hidden="true">@UserInitials.From(member.DisplayName)</span>
+                                        @member.DisplayName
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    }
+                    <div class="cs-filter-group">
+                        <h3 class="cs-filter-title">@L["CardDueDate"]</h3>
+                        <div class="cs-filter-chips">
+                            @foreach (DueFilter due in Enum.GetValues<DueFilter>())
+                            {
+                                bool on = _filterDue.Contains(due);
+                                <span class="cs-filter-chip @(on ? "is-on" : null)" role="checkbox" tabindex="0"
+                                      aria-checked="@(on ? "true" : "false")"
+                                      @onclick="@(() => Toggle(_filterDue, due))"
+                                      @onkeydown="@(e => { if (e.Key is "Enter" or " ") Toggle(_filterDue, due); })">@DueFilterLabel(due)</span>
+                            }
+                        </div>
+                    </div>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                        <span class="cs-filter-count" role="status">@L["BoardFilterMatches", VisibleCardCount]</span>
+                        <RadzenButton Text="@L["BoardFilterClear"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                      Disabled="@(!IsFiltering)" Click="@ClearFilters" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        }
+
+        @if (_showArchived)
+        {
+            <RadzenCard class="cs-board-panel">
+                <RadzenStack Gap="0.75rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                        <RadzenText Text="@L["BoardArchivedItems"]" TextStyle="TextStyle.H6" TagName="TagName.H2" Class="rz-m-0" />
+                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                      aria-label="@L["ActionCancel"]" Click="@(() => _showArchived = false)" />
+                    </RadzenStack>
+                    @if (_archivedCards.Count == 0 && _archivedLists.Count == 0)
+                    {
+                        <span class="cs-muted">@L["BoardArchivedEmpty"]</span>
+                    }
+                    @if (_archivedLists.Count > 0)
+                    {
+                        <h3 class="cs-filter-title">@L["BoardArchivedLists"]</h3>
+                        <ul class="cs-archived-list">
+                            @foreach (BoardListDto list in _archivedLists)
+                            {
+                                <li class="cs-archived-item">
+                                    <RadzenIcon Icon="view_column" />
+                                    <span class="cs-archived-name">@list.Name</span>
+                                    <RadzenButton Text="@L["ActionRestore"]" Icon="unarchive" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                                  Click="@(() => RestoreArchivedListAsync(list.Id))" />
+                                </li>
+                            }
+                        </ul>
+                    }
+                    @if (_archivedCards.Count > 0)
+                    {
+                        <h3 class="cs-filter-title">@L["BoardArchivedCards"]</h3>
+                        <ul class="cs-archived-list">
+                            @foreach (CardSummaryDto card in _archivedCards)
+                            {
+                                <li class="cs-archived-item">
+                                    <RadzenIcon Icon="article" />
+                                    <span class="cs-archived-name">
+                                        <RadzenLink Text="@card.Title" Path="@($"cards/{card.Id}/{BoardId}")" />
+                                        <span class="cs-muted">@ArchivedCardListName(card)</span>
+                                    </span>
+                                    <RadzenButton Text="@L["ActionRestore"]" Icon="unarchive" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                                  Click="@(() => RestoreArchivedCardAsync(card.Id))" />
+                                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small"
+                                                  aria-label="@L["ActionDelete"]" title="@L["ActionDelete"]"
+                                                  Click="@(() => DeleteArchivedCardAsync(card))" />
+                                </li>
+                            }
+                        </ul>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        }
 
         @* BETA-6-#6 — board settings (rename / description / visibility /
            archive / unarchive). Opened from the "…" menu above. *@
@@ -127,8 +275,24 @@ else
                     Guid listId = Guid.Parse(column.Id);
                     BoardListDto? listDto = _lists?.FirstOrDefault(l => l.Id == listId);
                 }
-                @* BUG-A4-002 — per-list menu (rename / move / archive). *@
-                <h2 class="cs-column-title">@column.Title</h2>
+                @* BUG-A4-002 — per-list menu (rename / move / archive).
+                   The title doubles as the drag handle for reordering lists
+                   and turns into a text box on click (Trello-style). *@
+                @if (listDto is not null && _renamingListId == listId)
+                {
+                    <RadzenTextBox @ref="_listRenameBox" @bind-Value="_renamingListName" Immediate="true" class="cs-column-title-input"
+                                   aria-label="@L["BoardListName"]"
+                                   @onkeydown="@OnListRenameKeyDownAsync" @onblur="@CommitListRenameAsync" />
+                }
+                else
+                {
+                    <h2 class="cs-column-title @(_draggingListId == listId ? "is-dragging" : null)" tabindex="0"
+                        title="@L["BoardListDragHint"]"
+                        draggable="true"
+                        @ondragstart="@(() => OnListDragStart(listId))"
+                        @onclick="@(() => { if (listDto is not null) StartRenamingList(listDto); })"
+                        @onkeydown="@(e => { if (listDto is not null) OnListTitleKeyDown(e, listDto); })">@column.Title</h2>
+                }
                 <span class="cs-column-count">@column.Cards.Count</span>
                 @if (listDto is not null)
                 {
@@ -173,20 +337,36 @@ else
                      @ondragenter="@(() => OnCardDragEnter(card))"
                      @onkeydown="@(e => OnCardKeyDown(e, card))"
                      @onclick="@(() => OpenCard(card))">
+                    @if (card.CoverColor is not null)
+                    {
+                        <span class="cs-card-cover" style="--cs-cover-color: @card.CoverColor" aria-hidden="true"></span>
+                    }
                     @if (card.Labels is { Count: > 0 } labels)
                     {
-                        <span class="cs-card-labels">
+                        <span class="cs-card-labels @(_labelsExpanded ? "is-expanded" : null)" title="@L["BoardLabelsToggle"]"
+                              @onclick="@ToggleLabelNames" @onclick:stopPropagation="true">
                             @foreach (CardSummaryLabelDto label in labels)
                             {
-                                <span class="cs-card-label" style="--cs-label-color: @label.Color" title="@label.Name"></span>
+                                <span class="cs-card-label" style="--cs-label-color: @label.Color" title="@label.Name">@(_labelsExpanded ? label.Name : null)</span>
                             }
                         </span>
                     }
-                    <span class="cs-card-title">@card.Title</span>
+                    <span class="cs-card-title-row">
+                        <span class="cs-card-check @(card.IsCompleted ? "is-done" : null)" role="checkbox" tabindex="0"
+                              aria-checked="@(card.IsCompleted ? "true" : "false")"
+                              aria-label="@(card.IsCompleted ? L["ActionReopen"] : L["CardComplete"])"
+                              title="@(card.IsCompleted ? L["ActionReopen"] : L["CardComplete"])"
+                              @onclick="@(() => ToggleCardCompleteAsync(card))" @onclick:stopPropagation="true"
+                              @onkeydown="@(e => OnCompleteKeyDownAsync(e, card))" @onkeydown:stopPropagation="true">
+                            <RadzenIcon Icon="@(card.IsCompleted ? "check_circle" : "radio_button_unchecked")" />
+                        </span>
+                        <span class="cs-card-title">@card.Title</span>
+                    </span>
                     @{
                         bool hasMembers = card.Members is { Count: > 0 };
                         bool hasBadges = card.DueDate is not null || card.IsCompleted || card.MirrorOfCardId is not null
-                                         || card.IsSnoozed || card.ChecklistTotal > 0 || card.CommentCount > 0;
+                                         || card.IsSnoozed || card.ChecklistTotal > 0 || card.CommentCount > 0
+                                         || card.HasDescription || card.AttachmentCount > 0;
                     }
                     @if (hasBadges || hasMembers)
                     {
@@ -203,11 +383,22 @@ else
                                 {
                                     <span class="cs-card-due cs-card-due--done"><RadzenIcon Icon="check_circle" /></span>
                                 }
+                                @if (card.HasDescription)
+                                {
+                                    <span class="cs-card-icon" title="@L["BoardCardHasDescription"]"><RadzenIcon Icon="notes" /></span>
+                                }
                                 @if (card.CommentCount > 0)
                                 {
                                     <span class="cs-card-count" title="@L["BoardCardComments", card.CommentCount]">
                                         <RadzenIcon Icon="chat_bubble_outline" />
                                         @card.CommentCount
+                                    </span>
+                                }
+                                @if (card.AttachmentCount > 0)
+                                {
+                                    <span class="cs-card-count" title="@L["BoardCardAttachments", card.AttachmentCount]">
+                                        <RadzenIcon Icon="attach_file" />
+                                        @card.AttachmentCount
                                     </span>
                                 }
                                 @if (card.ChecklistTotal > 0)
@@ -250,7 +441,7 @@ else
                 {
                     <div class="cs-composer">
                         @* BETA-8-UI-#17 — Enter submits, Escape closes. *@
-                        <RadzenTextBox @bind-Value="_newCardTitle" Immediate="true" Placeholder="@L["BoardCardTitle"]"
+                        <RadzenTextBox @ref="_cardComposerBox" @bind-Value="_newCardTitle" Immediate="true" Placeholder="@L["BoardCardTitle"]"
                                        Style="width:100%" class="cs-composer-input"
                                        @onkeydown="@(e => OnAddCardKeyDownAsync(e, listId))" />
                         <div class="cs-composer-actions">
@@ -274,7 +465,7 @@ else
                         <RadzenTemplateForm TItem="AddListModel" Data="@_addListModel" Submit="@AddListAsync">
                             <div class="cs-composer">
                                 @* BETA-8-UI-#17 — Enter submits explicitly. *@
-                                <RadzenTextBox @bind-Value="_addListModel.Name" Immediate="true" Name="list-name" Placeholder="@L["BoardListName"]"
+                                <RadzenTextBox @ref="_listComposerBox" @bind-Value="_addListModel.Name" Immediate="true" Name="list-name" Placeholder="@L["BoardListName"]"
                                                Style="width:100%" class="cs-composer-input"
                                                @onkeydown="@OnAddListKeyDownAsync" />
                                 <RadzenRequiredValidator Component="list-name" Text="@L["ValidationRequired"]" />

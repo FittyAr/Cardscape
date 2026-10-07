@@ -322,4 +322,43 @@ public class CardTests
         result.IsSuccess.Should().BeTrue();
         card.CoverColor.Should().Be(color);
     }
+
+    [Fact]
+    public void Assign_RaisesDetailsChangedForRealtimeSubscribers()
+    {
+        var card = NewCard();
+        card.ClearDomainEvents();
+
+        card.Assign(Guid.NewGuid(), At);
+
+        card.DomainEvents.Should().ContainSingle()
+            .Which.Should().BeOfType<CardDetailsChanged>();
+    }
+
+    [Fact]
+    public void AttachAndDetachLabel_EachRaiseDetailsChanged()
+    {
+        var card = NewCard();
+        var labelId = LabelId.New();
+        card.ClearDomainEvents();
+
+        card.AttachLabel(CardLabel.Create(card.Id, labelId, At), At);
+        card.DetachLabel(labelId, At);
+
+        card.DomainEvents.Should().HaveCount(2)
+            .And.AllBeOfType<CardDetailsChanged>();
+    }
+
+    [Fact]
+    public void SetCoverColor_WithSameColor_IsNoop()
+    {
+        var card = NewCard();
+        card.SetCoverColor(Color.Palette.Blue, At);
+        card.ClearDomainEvents();
+
+        var result = card.SetCoverColor(Color.Palette.Blue, At);
+
+        result.IsSuccess.Should().BeTrue();
+        card.DomainEvents.Should().BeEmpty();
+    }
 }

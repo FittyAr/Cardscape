@@ -44,6 +44,10 @@ else if (_card is null)
 else
 {
     <div class="cs-card-detail">
+        @if (CoverColor is not null)
+        {
+            <div class="cs-card-detail-cover" style="--cs-cover-color: @CoverColor" aria-hidden="true"></div>
+        }
         <RadzenButton Text="@L["ActivityBackToBoard"]" Icon="arrow_back" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
                       Size="ButtonSize.Small" class="cs-card-detail-back" Click="@GoBackToBoard" />
 
@@ -61,9 +65,8 @@ else
             <div class="cs-card-detail-heading">
                 @if (_editingTitle)
                 {
-                    <RadzenTextBox @bind-Value="_editingTitleValue"
+                    <RadzenTextBox @ref="_titleBox" @bind-Value="_editingTitleValue"
                                    class="cs-card-detail-title-input"
-                                   autofocus
                                    @onkeydown="@HandleTitleKeyDownAsync"
                                    @onblur="@SaveTitleAsync" />
                 }
@@ -89,6 +92,54 @@ else
                                      Text="@L["CardSnoozedUntil", snoozeUntil.LocalDateTime.ToString("g")]" />
                         <RadzenButton Text="@L["CardUnsnooze"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
                                       Size="ButtonSize.ExtraSmall" Click="@UnsnoozeAsync" />
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(_listName))
+                {
+                    <p class="cs-card-detail-inlist">@L["CardInList", _listName]</p>
+                }
+                @* Trello-style badges row: members, labels and due date,
+                   each opening the matching side-panel picker. *@
+                <div class="cs-card-detail-meta">
+                    @if (CardMembers.Count > 0)
+                    {
+                        <div class="cs-meta-group">
+                            <h2 class="cs-aside-title">@L["MembersTitle"]</h2>
+                            <div class="cs-meta-row">
+                                @foreach (WorkspaceMemberDto member in CardMembers)
+                                {
+                                    <span class="cs-avatar cs-avatar--sm" title="@member.DisplayName">@UserInitials.From(member.DisplayName)</span>
+                                }
+                                <RadzenButton Icon="add" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                              class="cs-meta-add" aria-label="@L["MembersTitle"]" Click="@(() => TogglePanel(CardPanel.Members))" />
+                            </div>
+                        </div>
+                    }
+                    @if (CardLabels.Count > 0)
+                    {
+                        <div class="cs-meta-group">
+                            <h2 class="cs-aside-title">@L["CardLabels"]</h2>
+                            <div class="cs-meta-row">
+                                @foreach (LabelDto label in CardLabels)
+                                {
+                                    <span class="cs-label-chip" style="--cs-label-color: @label.Color">@label.Name</span>
+                                }
+                                <RadzenButton Icon="add" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                              class="cs-meta-add" aria-label="@L["CardLabels"]" Click="@(() => TogglePanel(CardPanel.Labels))" />
+                            </div>
+                        </div>
+                    }
+                    @if (_card.DueDate is { } dueDate)
+                    {
+                        <div class="cs-meta-group">
+                            <h2 class="cs-aside-title">@L["CardDueDate"]</h2>
+                            <div class="cs-meta-row">
+                                <RadzenCheckBox TValue="bool" Value="@_card.IsCompleted" Change="@(async (bool _) => await ToggleCompleteFromDueAsync())"
+                                                aria-label="@L["CardComplete"]" />
+                                <RadzenButton Text="@FormatDue(dueDate)" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" Size="ButtonSize.Small"
+                                              class="@($"cs-due-chip {DueStateClass()}")" Click="@(() => TogglePanel(CardPanel.Dates))" />
+                            </div>
+                        </div>
                     }
                 </div>
             </div>
@@ -335,8 +386,35 @@ else
                                         <div class="cs-comment-meta">
                                             <strong>@authorLabel</strong>
                                             <span class="cs-muted">@($"{c.CreatedAt.LocalDateTime:g}")</span>
+                                            @if (c.UpdatedAt is not null)
+                                            {
+                                                <span class="cs-muted">@L["CommentEdited"]</span>
+                                            }
                                         </div>
-                                        <div class="cs-comment-text">@c.Body</div>
+                                        @if (_editingCommentId == c.Id)
+                                        {
+                                            <RadzenTextArea @bind-Value="_editingCommentBody" Rows="2" Style="width:100%"
+                                                            aria-label="@L["CommentEdit"]" />
+                                            <div class="cs-row rz-mt-1">
+                                                <RadzenButton Text="@L["DescriptionSave"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                                              Click="@(() => SaveCommentAsync(c.Id))" />
+                                                <RadzenButton Text="@L["DescriptionCancel"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                                                              Size="ButtonSize.Small" Click="@CancelEditingComment" />
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="cs-comment-text">@c.Body</div>
+                                            @if (IsOwnComment(c))
+                                            {
+                                                <div class="cs-comment-actions">
+                                                    <RadzenButton Text="@L["CommentEdit"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                                                                  Size="ButtonSize.ExtraSmall" Click="@(() => StartEditingComment(c))" />
+                                                    <RadzenButton Text="@L["ActionDelete"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                                                                  Size="ButtonSize.ExtraSmall" Click="@(() => DeleteCommentAsync(c.Id))" />
+                                                </div>
+                                            }
+                                        }
                                     </div>
                                 </li>
                             }
@@ -387,7 +465,139 @@ else
             @* ── Side panel ──────────────────────────────── *@
             <aside class="cs-card-detail-aside">
                 <section class="cs-aside-group">
+                    <h2 class="cs-aside-title">@L["CardAddToCard"]</h2>
+                    @if (_currentUserId is { } me && !HasMember(me))
+                    {
+                        <RadzenButton Text="@L["CardJoin"]" Icon="person_add" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat"
+                                      class="cs-aside-button" Click="@JoinCardAsync" />
+                    }
+                    <RadzenButton Text="@L["MembersTitle"]" Icon="person_outline" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat"
+                                  class="@PanelButtonClass(CardPanel.Members)" Click="@(() => TogglePanel(CardPanel.Members))" />
+                    @if (_openPanel == CardPanel.Members)
+                    {
+                        <div class="cs-panel">
+                            @foreach (WorkspaceMemberDto member in _workspaceMembers)
+                            {
+                                bool assigned = HasMember(member.UserId);
+                                <div class="cs-panel-option @(assigned ? "is-selected" : null)" role="button" tabindex="0"
+                                     aria-pressed="@(assigned ? "true" : "false")"
+                                     @onclick="@(() => ToggleMemberAsync(member.UserId))"
+                                     @onkeydown="@(e => OnOptionKeyAsync(e, () => ToggleMemberAsync(member.UserId)))">
+                                    <span class="cs-avatar cs-avatar--sm" aria-hidden="true">@UserInitials.From(member.DisplayName)</span>
+                                    <span class="cs-panel-option-text">@member.DisplayName</span>
+                                    @if (assigned)
+                                    {
+                                        <RadzenIcon Icon="check" />
+                                    }
+                                </div>
+                            }
+                            <RadzenButton Text="@L["AiSuggestOwners"]" Icon="auto_awesome" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                                          Size="ButtonSize.Small" Click="@SuggestOwnersAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
+                        </div>
+                    }
+                    <RadzenButton Text="@L["CardLabels"]" Icon="label" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat"
+                                  class="@PanelButtonClass(CardPanel.Labels)" Click="@(() => TogglePanel(CardPanel.Labels))" />
+                    @if (_openPanel == CardPanel.Labels)
+                    {
+                        <div class="cs-panel">
+                            @foreach (LabelDto label in _boardLabels)
+                            {
+                                bool attached = HasLabel(label.Id);
+                                <div class="cs-panel-label-row">
+                                    <div class="cs-panel-label @(attached ? "is-selected" : null)" role="button" tabindex="0"
+                                         style="--cs-label-color: @label.Color"
+                                         aria-pressed="@(attached ? "true" : "false")"
+                                         @onclick="@(() => ToggleLabelAsync(label.Id))"
+                                         @onkeydown="@(e => OnOptionKeyAsync(e, () => ToggleLabelAsync(label.Id)))">
+                                        <span>@label.Name</span>
+                                        @if (attached)
+                                        {
+                                            <RadzenIcon Icon="check" />
+                                        }
+                                    </div>
+                                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.ExtraSmall"
+                                                  aria-label="@L["CardLabelDelete"]" title="@L["CardLabelDelete"]"
+                                                  Click="@(() => DeleteLabelAsync(label))" />
+                                </div>
+                            }
+                            <div class="cs-panel-divider"></div>
+                            <RadzenTextBox @bind-Value="_newLabelName" Immediate="true" Placeholder="@L["CardLabelName"]" Style="width:100%"
+                                           aria-label="@L["CardLabelName"]"
+                                           @onkeydown="@(e => OnOptionKeyAsync(e, CreateLabelAsync, enterOnly: true))" />
+                            <div class="cs-swatches" role="radiogroup" aria-label="@L["CardLabelColor"]">
+                                @foreach (CardPalette.Swatch swatch in CardPalette.All)
+                                {
+                                    <span class="cs-swatch @(_newLabelColor == swatch.Hex ? "is-selected" : null)" role="radio" tabindex="0"
+                                          style="--cs-swatch: @swatch.Hex" title="@swatch.Name"
+                                          aria-checked="@(_newLabelColor == swatch.Hex ? "true" : "false")"
+                                          @onclick="@(() => _newLabelColor = swatch.Hex)"
+                                          @onkeydown="@(e => OnOptionKeyAsync(e, () => { _newLabelColor = swatch.Hex; return Task.CompletedTask; }))"></span>
+                                }
+                            </div>
+                            <RadzenButton Text="@L["CardLabelCreate"]" Icon="add" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                          Click="@CreateLabelAsync" Disabled="@string.IsNullOrWhiteSpace(_newLabelName)" />
+                        </div>
+                    }
+                    <RadzenButton Text="@L["CardDates"]" Icon="schedule" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat"
+                                  class="@PanelButtonClass(CardPanel.Dates)" Click="@(() => TogglePanel(CardPanel.Dates))" />
+                    @if (_openPanel == CardPanel.Dates)
+                    {
+                        <div class="cs-panel">
+                            <RadzenDatePicker TValue="DateTime?" @bind-Value="_dueDateLocal" ShowTime="true"
+                                              DateFormat="@CardDateTimeFormat" Style="width:100%" aria-label="@L["CardDueDate"]" />
+                            <div class="cs-row">
+                                <RadzenButton Text="@L["DescriptionSave"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                              Click="@SaveDueDateAsync" />
+                                @if (_card.DueDate is not null)
+                                {
+                                    <RadzenButton Text="@L["CardRemoveDate"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                                  Click="@ClearDueDateAsync" />
+                                }
+                            </div>
+                        </div>
+                    }
+                    <RadzenButton Text="@L["CardCover"]" Icon="palette" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat"
+                                  class="@PanelButtonClass(CardPanel.Cover)" Click="@(() => TogglePanel(CardPanel.Cover))" />
+                    @if (_openPanel == CardPanel.Cover)
+                    {
+                        <div class="cs-panel">
+                            <div class="cs-swatches cs-swatches--cover" role="radiogroup" aria-label="@L["CardCover"]">
+                                @foreach (CardPalette.Swatch swatch in CardPalette.All)
+                                {
+                                    bool current = string.Equals(CoverColor, swatch.Hex, StringComparison.OrdinalIgnoreCase);
+                                    <span class="cs-swatch @(current ? "is-selected" : null)" role="radio" tabindex="0"
+                                          style="--cs-swatch: @swatch.Hex" title="@swatch.Name"
+                                          aria-checked="@(current ? "true" : "false")"
+                                          @onclick="@(() => SetCoverAsync(swatch.Name))"
+                                          @onkeydown="@(e => OnOptionKeyAsync(e, () => SetCoverAsync(swatch.Name)))"></span>
+                                }
+                            </div>
+                            @if (CoverColor is not null)
+                            {
+                                <RadzenButton Text="@L["CardRemoveCover"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                              Click="@(() => SetCoverAsync(null))" />
+                            }
+                        </div>
+                    }
+                </section>
+
+                <section class="cs-aside-group">
                     <h2 class="cs-aside-title">@L["CardActions"]</h2>
+                    <RadzenButton Text="@L["CardMove"]" Icon="arrow_forward" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat"
+                                  class="@PanelButtonClass(CardPanel.Move)" Click="@(() => TogglePanel(CardPanel.Move))" />
+                    @if (_openPanel == CardPanel.Move)
+                    {
+                        <div class="cs-panel">
+                            <RadzenDropDown TValue="Guid?" @bind-Value="_moveTargetListId" Data="@_boardLists"
+                                            TextProperty="Name" ValueProperty="Id" Style="width:100%" aria-label="@L["CardMoveList"]" />
+                            <div class="cs-row">
+                                <RadzenCheckBox TValue="bool" @bind-Value="_moveToTop" Name="move-top" />
+                                <RadzenLabel Text="@L["CardMoveTop"]" Component="move-top" />
+                            </div>
+                            <RadzenButton Text="@L["CardMove"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                          Click="@MoveCardAsync" Disabled="@(_moveTargetListId is null)" />
+                        </div>
+                    }
                     @if (_card.IsCompleted)
                     {
                         <RadzenButton Text="@L["ActionReopen"]" Icon="replay" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" Click="@ReopenAsync" class="cs-aside-button" />

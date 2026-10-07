@@ -29,6 +29,7 @@ public static class ListCardsForBoardQueryHandler
         IUserRepository users,
         IChecklistRepository checklists,
         ICommentRepository comments,
+        IAttachmentRepository attachments,
         ICurrentUser currentUser,
         IClock clock,
         CancellationToken cancellationToken)
@@ -99,6 +100,8 @@ public static class ListCardsForBoardQueryHandler
             await checklists.ListProgressForCardsAsync(cardIds, cancellationToken);
         IReadOnlyDictionary<Guid, int> commentCounts =
             await comments.CountForCardsAsync(cardIds, cancellationToken);
+        IReadOnlyDictionary<Guid, int> attachmentCounts =
+            await attachments.CountForCardsAsync(cardIds, cancellationToken);
 
         List<CardSummaryDto> rows = visible
             .Select(card =>
@@ -128,7 +131,11 @@ public static class ListCardsForBoardQueryHandler
                         .ToList(),
                     ChecklistCompleted: checklist?.Completed ?? 0,
                     ChecklistTotal: checklist?.Total ?? 0,
-                    CommentCount: commentCounts.GetValueOrDefault(id));
+                    CommentCount: commentCounts.GetValueOrDefault(id),
+                    CoverColor: card.CoverColor?.Value,
+                    HasDescription: !string.IsNullOrWhiteSpace(card.Description.Value),
+                    AttachmentCount: attachmentCounts.GetValueOrDefault(id),
+                    IsArchived: card.IsArchived);
             })
             .ToList();
 

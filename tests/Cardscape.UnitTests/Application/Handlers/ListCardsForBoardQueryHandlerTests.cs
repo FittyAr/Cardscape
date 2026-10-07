@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Cards.Queries;
+using Cardscape.Domain.Attachments;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Comments;
@@ -29,6 +30,8 @@ public class ListCardsForBoardQueryHandlerTests
         await ctx.Labels.AddAsync(label, TestContext.Current.CancellationToken);
         card.AttachLabel(CardLabel.Create(card.Id, label.Id, ctx.Clock.UtcNow), ctx.Clock.UtcNow);
         card.Assign(owner.Id.Value, ctx.Clock.UtcNow);
+        card.SetCoverColor(Color.Palette.Blue, ctx.Clock.UtcNow);
+        card.ChangeDescription(CardDescription.Create("Steps to reproduce").Value, ctx.Clock.UtcNow);
 
         var checklist = Checklist.Create(ChecklistId.New(), card.Id, ChecklistTitle.Create("Todo").Value,
             owner.Id.Value, ctx.Clock.UtcNow).Value;
@@ -48,6 +51,7 @@ public class ListCardsForBoardQueryHandlerTests
             new ListCardsForBoardQuery(board.Id.Value),
             ctx.Cards, new EmptySnoozes(), new EmptyMirrors(), ctx.Boards,
             ctx.Labels, ctx.Users, ctx.Checklists, ctx.Comments,
+            new FixedAttachmentCounts(card.Id.Value, 3),
             ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -59,12 +63,41 @@ public class ListCardsForBoardQueryHandlerTests
         busy.ChecklistCompleted.Should().Be(1);
         busy.ChecklistTotal.Should().Be(3);
         busy.CommentCount.Should().Be(2);
+        busy.CoverColor.Should().Be(Color.Palette.Blue.Value);
+        busy.HasDescription.Should().BeTrue();
+        busy.AttachmentCount.Should().Be(3);
+        busy.IsArchived.Should().BeFalse();
 
         CardSummaryDto empty = result.Value.Single(c => c.Id == bare.Id.Value);
         empty.Labels.Should().BeEmpty();
         empty.Members.Should().BeEmpty();
         empty.ChecklistTotal.Should().Be(0);
         empty.CommentCount.Should().Be(0);
+        empty.CoverColor.Should().BeNull();
+        empty.AttachmentCount.Should().Be(0);
+    }
+
+    private sealed class FixedAttachmentCounts(Guid cardId, int count) : IAttachmentRepository
+    {
+        public Task<IReadOnlyDictionary<Guid, int>> CountForCardsAsync(
+            IReadOnlyCollection<Guid> cardIds, CancellationToken ct = default) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, int>>(
+                cardIds.Contains(cardId) ? new Dictionary<Guid, int> { [cardId] = count } : new Dictionary<Guid, int>());
+
+        public Task<IReadOnlyList<Attachment>> ListForCardAsync(Guid id, CancellationToken ct = default) =>
+            Task.FromResult<IReadOnlyList<Attachment>>([]);
+
+        public Task<int> CountForCardAsync(Guid id, CancellationToken ct = default) =>
+            Task.FromResult(id == cardId ? count : 0);
+
+        public Task<Attachment?> GetByIdAsync(AttachmentId id, CancellationToken ct = default) =>
+            Task.FromResult<Attachment?>(null);
+
+        public Task AddAsync(Attachment aggregate, CancellationToken ct = default) => Task.CompletedTask;
+
+        public void Remove(Attachment aggregate)
+        {
+        }
     }
 
     private sealed class EmptySnoozes : ICardSnoozeRepository

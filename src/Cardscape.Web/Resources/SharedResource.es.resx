@@ -768,4 +768,45 @@
   <data name="WorkspaceBadge" xml:space="preserve"><value>Espacio de trabajo</value></data>
   <data name="BoardOpenKanban" xml:space="preserve"><value>Abrir Tablero Kanban</value></data>
   <data name="BoardActionDashboard" xml:space="preserve"><value>Métricas / Dashboard</value></data>
+  <data name="BoardArchivedBanner" xml:space="preserve"><value>Este tablero está archivado. Restáuralo para seguir trabajando en él.</value></data>
+  <data name="BoardArchivedCards" xml:space="preserve"><value>Tarjetas</value></data>
+  <data name="BoardArchivedEmpty" xml:space="preserve"><value>No hay elementos archivados en este tablero.</value></data>
+  <data name="BoardArchivedItems" xml:space="preserve"><value>Elementos archivados</value></data>
+  <data name="BoardArchivedLists" xml:space="preserve"><value>Listas</value></data>
+  <data name="BoardCardAttachments" xml:space="preserve"><value>Adjuntos: {0}</value></data>
+  <data name="BoardCardHasDescription" xml:space="preserve"><value>Esta tarjeta tiene descripción</value></data>
+  <data name="BoardDeleteCardConfirm" xml:space="preserve"><value>¿Eliminar «{0}» definitivamente? No se puede deshacer.</value></data>
+  <data name="BoardFilter" xml:space="preserve"><value>Filtrar</value></data>
+  <data name="BoardFilterActive" xml:space="preserve"><value>Filtro ({0})</value></data>
+  <data name="BoardFilterClear" xml:space="preserve"><value>Limpiar filtros</value></data>
+  <data name="BoardFilterCompleted" xml:space="preserve"><value>Completadas</value></data>
+  <data name="BoardFilterDueSoon" xml:space="preserve"><value>Vencen en 48 h</value></data>
+  <data name="BoardFilterKeyword" xml:space="preserve"><value>Buscar por título o etiqueta…</value></data>
+  <data name="BoardFilterMatches" xml:space="preserve"><value>{0} tarjetas coinciden</value></data>
+  <data name="BoardFilterNoDate" xml:space="preserve"><value>Sin fecha</value></data>
+  <data name="BoardFilterOpen" xml:space="preserve"><value>Sin completar</value></data>
+  <data name="BoardFilterOverdue" xml:space="preserve"><value>Vencidas</value></data>
+  <data name="BoardLabelsToggle" xml:space="preserve"><value>Mostrar u ocultar nombres de etiquetas</value></data>
+  <data name="BoardListDragHint" xml:space="preserve"><value>Clic para renombrar, arrastra para reordenar</value></data>
+  <data name="BoardRenameHint" xml:space="preserve"><value>Clic para renombrar el tablero</value></data>
+  <data name="CardAddToCard" xml:space="preserve"><value>Añadir a la tarjeta</value></data>
+  <data name="CardCover" xml:space="preserve"><value>Portada</value></data>
+  <data name="CardCreated" xml:space="preserve"><value>Creada</value></data>
+  <data name="CardDates" xml:space="preserve"><value>Fechas</value></data>
+  <data name="CardInList" xml:space="preserve"><value>en la lista {0}</value></data>
+  <data name="CardJoin" xml:space="preserve"><value>Unirse</value></data>
+  <data name="CardLabelColor" xml:space="preserve"><value>Color de la etiqueta</value></data>
+  <data name="CardLabelCreate" xml:space="preserve"><value>Crear etiqueta</value></data>
+  <data name="CardLabelDelete" xml:space="preserve"><value>Eliminar etiqueta</value></data>
+  <data name="CardLabelDeleteConfirm" xml:space="preserve"><value>¿Eliminar la etiqueta «{0}» de todas las tarjetas del tablero?</value></data>
+  <data name="CardLabelName" xml:space="preserve"><value>Nombre de la nueva etiqueta</value></data>
+  <data name="CardMove" xml:space="preserve"><value>Mover</value></data>
+  <data name="CardMoveList" xml:space="preserve"><value>Lista de destino</value></data>
+  <data name="CardMoveTop" xml:space="preserve"><value>Colocar arriba</value></data>
+  <data name="CardRemoveCover" xml:space="preserve"><value>Quitar portada</value></data>
+  <data name="CardRemoveDate" xml:space="preserve"><value>Quitar</value></data>
+  <data name="CommentDelete" xml:space="preserve"><value>Eliminar comentario</value></data>
+  <data name="CommentDeleteConfirm" xml:space="preserve"><value>¿Eliminar este comentario? No se puede deshacer.</value></data>
+  <data name="CommentEdit" xml:space="preserve"><value>Editar</value></data>
+  <data name="CommentEdited" xml:space="preserve"><value>(editado)</value></data>
 </root>

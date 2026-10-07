@@ -188,7 +188,7 @@ public partial class CardDetail
         }
     }
 
-    // P3.3 / G6c ” open the "Mirror to..." dialog and, on
+    // P3.3 / G6c — open the "Mirror to..." dialog and, on
     // confirm, call the mirror endpoint. The dialog returns the
     // target list id; the card id is the page's [Parameter].
     private bool _mirroring;

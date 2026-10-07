@@ -73,7 +73,7 @@ public partial class CardDetail
     private IReadOnlyList<AiOwnerSuggestionDto>? _aiSuggestedOwners;
     private readonly AddCommentModel _addCommentModel = new();
 
-    // P3.2 / G6b ” default the snooze picker to "tomorrow 9am"
+    // P3.2 / G6b — default the snooze picker to "tomorrow 9am"
     // so the common case is one click. The backend rejects
     // values that are not strictly in the future, so the date
     // is computed off the local clock each time the user opens
@@ -87,21 +87,15 @@ public partial class CardDetail
     private static string CardDateTimeFormat =>
         $"{CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern} HH:mm";
 
-    // P3.4 / MetadataList adapters ” translate the card projection
+    // P3.4 / MetadataList adapters — translate the card projection
     // into the IReadOnlyList<MetadataListItem> shape that the
-    // <MetadataList> shared component expects. The Members row
-    // needs a custom RenderFragment because the AI "Suggest owners"
-    // button lives next to the count; the other rows are plain text.
+    // <MetadataList> shared component expects. Members, labels and
+    // the due date render in the header (Trello-style) instead.
     private IReadOnlyList<MetadataListItem> CardMetaItems => _card is null
         ? Array.Empty<MetadataListItem>()
         : new MetadataListItem[]
         {
-            MetadataListItem.Text(L["CardDueDate"],
-                _card.DueDate is null
-                    ? L["CardNone"]
-                    : _card.DueDate.Value.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)),
-            new(L["MembersTitle"], MakeMembersValueFragment(_card)),
-            MetadataListItem.Text(L["CardLabels"], _card.LabelCount.ToString(CultureInfo.CurrentCulture)),
+            MetadataListItem.Text(L["CardCreated"], _card.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)),
             // BUG-A5-003 — see test-results/beta/reports/A5-card-extras.md.
             // The header now surfaces comment / attachment /
             // checklist counts alongside the existing member /
@@ -117,26 +111,6 @@ public partial class CardDetail
         : _fieldValues
             .Select(v => MetadataListItem.Text(FieldKindLabel(v.Kind), FormatFieldValue(v)))
             .ToList();
-
-    private RenderFragment MakeMembersValueFragment(CardDto cardRef) => __builder =>
-    {
-        __builder.OpenElement(0, "span");
-        __builder.AddContent(1, cardRef.MemberCount.ToString(CultureInfo.CurrentCulture));
-        __builder.AddContent(2, " ");
-        __builder.OpenComponent<Radzen.Blazor.RadzenButton>(3);
-        __builder.AddAttribute(4, "Text", $" {L["AiSuggestOwners"]}");
-        __builder.AddAttribute(5, "Icon", "auto_awesome");
-        __builder.AddAttribute(6, "ButtonStyle", ButtonStyle.Light);
-        __builder.AddAttribute(7, "Size", ButtonSize.ExtraSmall);
-        __builder.AddAttribute(8, "Click",
-            EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(
-                this, SuggestOwnersAsync));
-        __builder.AddAttribute(9, "Disabled", _aiBusy);
-        __builder.AddAttribute(10, "IsBusy", _aiBusy);
-        __builder.AddAttribute(11, "Style", "margin-left:.5rem");
-        __builder.CloseComponent();
-        __builder.CloseElement();
-    };
 
     private async Task ReloadChecklistsAsync()
     {
@@ -174,9 +148,11 @@ public partial class CardDetail
         Task<ApiResult<IReadOnlyList<ChecklistDto>>> checklistsTask = Checklists.ListForCardAsync(CardId);
         Task<ApiResult<CardRecurrenceDto?>> recurrenceTask = Recurrence.GetAsync(CardId);
         Task<ApiResult<IReadOnlyList<AttachmentDto>>> attachmentsTask = Attachments.ListAsync(CardId);
+        Task boardContextTask = LoadBoardContextAsync();
+        _openPanel = CardPanel.None;
 
         await Task.WhenAll(commentsTask, valuesTask, activityTask, voteTask,
-            checklistsTask, recurrenceTask, attachmentsTask);
+            checklistsTask, recurrenceTask, attachmentsTask, boardContextTask);
 
         ApiResult<IReadOnlyList<CommentDto>> commentsResult = await commentsTask;
         (_comments, _commentsError) = CollectionOutcome(commentsResult, L["CardComments"]);
@@ -220,6 +196,7 @@ public partial class CardDetail
         }
         _editingTitleValue = _card.Title;
         _editingTitle = true;
+        _focusTitle = true;
     }
 
     // BETA-8-UI-#15 - manual description editor. The state lives

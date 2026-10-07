@@ -33,4 +33,23 @@ public sealed class AttachmentRepository(CardscapeDbContext db)
         return await Db.Set<Attachment>()
             .CountAsync(attachment => attachment.CardId == typedCardId && !attachment.IsDeleted, ct);
     }
+
+    public async Task<IReadOnlyDictionary<Guid, int>> CountForCardsAsync(
+        IReadOnlyCollection<Guid> cardIds, CancellationToken ct = default)
+    {
+        if (cardIds.Count == 0)
+        {
+            return new Dictionary<Guid, int>();
+        }
+
+        HashSet<CardId> wanted = [.. cardIds.Select(id => new CardId(id))];
+        var rows = await Db.Set<Attachment>()
+            .AsNoTracking()
+            .Where(attachment => wanted.Contains(attachment.CardId) && !attachment.IsDeleted)
+            .GroupBy(attachment => attachment.CardId)
+            .Select(group => new { CardId = group.Key, Count = group.Count() })
+            .ToListAsync(ct);
+
+        return rows.ToDictionary(row => row.CardId.Value, row => row.Count);
+    }
 }

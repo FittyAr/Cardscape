@@ -50,6 +50,14 @@ public sealed record CardDueDateCleared(
     CardId CardId,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
 
+/// <summary>
+/// Raised when a card's members, labels or cover change. Carries no
+/// payload: realtime subscribers re-read the card front.
+/// </summary>
+public sealed record CardDetailsChanged(
+    CardId CardId,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
 /// <summary>Raised when a card is completed (marked as done).</summary>
 public sealed record CardCompleted(
     CardId CardId,

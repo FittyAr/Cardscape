@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cardscape-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/Cardscape.Api", "--no-build", "--launch-profile", "http"],
+      "port": 5291
+    }
+  ]
+}

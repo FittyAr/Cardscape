@@ -768,4 +768,45 @@
   <data name="WorkspaceBadge" xml:space="preserve"><value>Workspace</value></data>
   <data name="BoardOpenKanban" xml:space="preserve"><value>Open Kanban Board</value></data>
   <data name="BoardActionDashboard" xml:space="preserve"><value>Metrics / Dashboard</value></data>
+  <data name="BoardArchivedBanner" xml:space="preserve"><value>This board is archived. Restore it to keep working on it.</value></data>
+  <data name="BoardArchivedCards" xml:space="preserve"><value>Cards</value></data>
+  <data name="BoardArchivedEmpty" xml:space="preserve"><value>No archived items on this board.</value></data>
+  <data name="BoardArchivedItems" xml:space="preserve"><value>Archived items</value></data>
+  <data name="BoardArchivedLists" xml:space="preserve"><value>Lists</value></data>
+  <data name="BoardCardAttachments" xml:space="preserve"><value>Attachments: {0}</value></data>
+  <data name="BoardCardHasDescription" xml:space="preserve"><value>This card has a description</value></data>
+  <data name="BoardDeleteCardConfirm" xml:space="preserve"><value>Delete "{0}" permanently? This cannot be undone.</value></data>
+  <data name="BoardFilter" xml:space="preserve"><value>Filter</value></data>
+  <data name="BoardFilterActive" xml:space="preserve"><value>Filter ({0})</value></data>
+  <data name="BoardFilterClear" xml:space="preserve"><value>Clear filters</value></data>
+  <data name="BoardFilterCompleted" xml:space="preserve"><value>Completed</value></data>
+  <data name="BoardFilterDueSoon" xml:space="preserve"><value>Due in the next 48 h</value></data>
+  <data name="BoardFilterKeyword" xml:space="preserve"><value>Search by title or label…</value></data>
+  <data name="BoardFilterMatches" xml:space="preserve"><value>{0} matching cards</value></data>
+  <data name="BoardFilterNoDate" xml:space="preserve"><value>No due date</value></data>
+  <data name="BoardFilterOpen" xml:space="preserve"><value>Not completed</value></data>
+  <data name="BoardFilterOverdue" xml:space="preserve"><value>Overdue</value></data>
+  <data name="BoardLabelsToggle" xml:space="preserve"><value>Show or hide label names</value></data>
+  <data name="BoardListDragHint" xml:space="preserve"><value>Click to rename, drag to reorder</value></data>
+  <data name="BoardRenameHint" xml:space="preserve"><value>Click to rename the board</value></data>
+  <data name="CardAddToCard" xml:space="preserve"><value>Add to card</value></data>
+  <data name="CardCover" xml:space="preserve"><value>Cover</value></data>
+  <data name="CardCreated" xml:space="preserve"><value>Created</value></data>
+  <data name="CardDates" xml:space="preserve"><value>Dates</value></data>
+  <data name="CardInList" xml:space="preserve"><value>in list {0}</value></data>
+  <data name="CardJoin" xml:space="preserve"><value>Join</value></data>
+  <data name="CardLabelColor" xml:space="preserve"><value>Label colour</value></data>
+  <data name="CardLabelCreate" xml:space="preserve"><value>Create label</value></data>
+  <data name="CardLabelDelete" xml:space="preserve"><value>Delete label</value></data>
+  <data name="CardLabelDeleteConfirm" xml:space="preserve"><value>Delete the label "{0}" from every card on this board?</value></data>
+  <data name="CardLabelName" xml:space="preserve"><value>New label name</value></data>
+  <data name="CardMove" xml:space="preserve"><value>Move</value></data>
+  <data name="CardMoveList" xml:space="preserve"><value>Destination list</value></data>
+  <data name="CardMoveTop" xml:space="preserve"><value>Place at the top</value></data>
+  <data name="CardRemoveCover" xml:space="preserve"><value>Remove cover</value></data>
+  <data name="CardRemoveDate" xml:space="preserve"><value>Remove</value></data>
+  <data name="CommentDelete" xml:space="preserve"><value>Delete comment</value></data>
+  <data name="CommentDeleteConfirm" xml:space="preserve"><value>Delete this comment? This cannot be undone.</value></data>
+  <data name="CommentEdit" xml:space="preserve"><value>Edit</value></data>
+  <data name="CommentEdited" xml:space="preserve"><value>(edited)</value></data>
 </root>

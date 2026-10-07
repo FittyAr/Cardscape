@@ -28,6 +28,9 @@ public interface ICardsApiClient
     Task<ApiResult<CardDto>> AttachLabelAsync(Guid cardId, Guid labelId, CancellationToken ct = default);
     Task<ApiResult<CardDto>> DetachLabelAsync(Guid cardId, Guid labelId, CancellationToken ct = default);
 
+    /// <summary>Sets the card cover to a palette colour name, or clears it when <paramref name="colorName"/> is null.</summary>
+    Task<ApiResult<CardDto>> SetCoverAsync(Guid cardId, string? colorName, CancellationToken ct = default);
+
     // G6b — Card Snooze (P3.2). Wraps the REST endpoints at
     // `/api/cards/{id}/snooze` and the board-scoped
     // `/api/cards/snoozed?boardId=...` list. The Web UI
@@ -222,5 +225,13 @@ public sealed class CardsApiClient(IHttpClientFactory http) : ApiClientBase(http
 
         HttpResponseMessage response = await CreateClient().GetAsync(url, ct);
         return await ReadAsync<IReadOnlyList<CalendarEntryDto>>(response, ct);
+    }
+
+    public async Task<ApiResult<CardDto>> SetCoverAsync(Guid cardId, string? colorName, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = colorName is null
+            ? await CreateClient().DeleteAsync($"api/cards/{cardId}/cover", ct)
+            : await CreateClient().PostAsJsonAsync($"api/cards/{cardId}/cover", new SetCardCoverRequestDto(colorName), ct);
+        return await ReadAsync<CardDto>(response, ct);
     }
 }

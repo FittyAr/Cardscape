@@ -34,7 +34,9 @@ public static class CardMappingExtensions
         card.CoverColor?.Value,
         card.CreatedAt,
         card.Members.Count,
-        card.CardLabels.Count);
+        card.CardLabels.Count,
+        LabelIds: card.CardLabels.Select(cardLabel => cardLabel.LabelId.Value).ToList(),
+        MemberIds: card.Members.OrderBy(member => member.AssignedAt).Select(member => member.UserId).ToList());
 
     /// <summary>
     /// Overload that also projects the per-card snooze state.

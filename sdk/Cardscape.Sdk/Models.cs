@@ -246,6 +246,8 @@ public sealed record CreateListRequest(
 /// <param name="IsSnoozed"><see langword="true"/> when the card is currently snoozed.</param>
 /// <param name="SnoozeUntil">The optional snooze expiration.</param>
 /// <param name="MirrorOfCardId">The source card identifier when this card is a mirror.</param>
+/// <param name="LabelIds">The identifiers of the labels attached to the card.</param>
+/// <param name="MemberIds">The identifiers of the assigned users, in assignment order.</param>
 public sealed record CardDto(
     [property: JsonPropertyName("id")] Guid Id,
     [property: JsonPropertyName("listId")] Guid ListId,
@@ -264,7 +266,9 @@ public sealed record CardDto(
     [property: JsonPropertyName("checklistCount")] int ChecklistCount,
     [property: JsonPropertyName("isSnoozed")] bool IsSnoozed,
     [property: JsonPropertyName("snoozeUntil")] DateTimeOffset? SnoozeUntil,
-    [property: JsonPropertyName("mirrorOfCardId")] Guid? MirrorOfCardId);
+    [property: JsonPropertyName("mirrorOfCardId")] Guid? MirrorOfCardId,
+    [property: JsonPropertyName("labelIds")] IReadOnlyList<Guid>? LabelIds = null,
+    [property: JsonPropertyName("memberIds")] IReadOnlyList<Guid>? MemberIds = null);
 
 /// <summary>Represents the compact card projection returned by board lists.</summary>
 public sealed record CardSummaryDto(
@@ -282,7 +286,11 @@ public sealed record CardSummaryDto(
     [property: JsonPropertyName("members")] IReadOnlyList<CardSummaryMemberDto>? Members = null,
     [property: JsonPropertyName("checklistCompleted")] int ChecklistCompleted = 0,
     [property: JsonPropertyName("checklistTotal")] int ChecklistTotal = 0,
-    [property: JsonPropertyName("commentCount")] int CommentCount = 0);
+    [property: JsonPropertyName("commentCount")] int CommentCount = 0,
+    [property: JsonPropertyName("coverColor")] string? CoverColor = null,
+    [property: JsonPropertyName("hasDescription")] bool HasDescription = false,
+    [property: JsonPropertyName("attachmentCount")] int AttachmentCount = 0,
+    [property: JsonPropertyName("isArchived")] bool IsArchived = false);
 
 /// <summary>Represents a label shown on a card in the board listing.</summary>
 public sealed record CardSummaryLabelDto(

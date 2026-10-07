@@ -69,6 +69,7 @@ public partial class BoardDetail
     {
         _newCardTitle = string.Empty;
         _openAddCardFor = listId;
+        _focusTarget = () => _cardComposerBox;
     }
 
     private void CloseCardComposer()
@@ -120,6 +121,7 @@ public partial class BoardDetail
         if (!_showAddList)
         {
             _addListModel.Name = string.Empty;
+            _focusTarget = () => _listComposerBox;
         }
         _showAddList = !_showAddList;
     }
@@ -196,23 +198,21 @@ public partial class BoardDetail
     private async Task RenameBoardAsync()
     {
         if (string.IsNullOrWhiteSpace(_renameModel.NewName)) return;
-        ApiResult<BoardDto> result = await BoardsApi.RenameAsync(BoardId, _renameModel.NewName);
+        ApiResult<BoardDto> result = await BoardsApi.RenameAsync(BoardId, _renameModel.NewName.Trim());
         if (result.IsSuccess)
         {
             _board = result.Value;
-            _renameModel.NewName = string.Empty;
         }
     }
 
+    // An empty description is valid: it clears the board description.
     private async Task ChangeDescriptionAsync()
     {
-        if (string.IsNullOrWhiteSpace(_descriptionModel.NewDescription)) return;
         ApiResult<BoardDto> result = await BoardsApi.ChangeDescriptionAsync(
-            BoardId, _descriptionModel.NewDescription);
+            BoardId, (_descriptionModel.NewDescription ?? string.Empty).Trim());
         if (result.IsSuccess)
         {
             _board = result.Value;
-            _descriptionModel.NewDescription = string.Empty;
         }
     }
 

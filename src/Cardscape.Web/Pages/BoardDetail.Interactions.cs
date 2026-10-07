@@ -57,6 +57,7 @@ public partial class BoardDetail
     private void OnCardDragEnd()
     {
         _draggingCardId = null;
+        _draggingListId = null;
         _dropTarget = null;
     }
 
@@ -68,7 +69,14 @@ public partial class BoardDetail
     private string? DropTailColumnId =>
         _draggingCardId is not null && _dropTarget is { CardId: null } target ? target.ListId.ToString() : null;
 
-    private Task OnKanbanDropAsync(string columnId) => OnColumnDropAsync(Guid.Parse(columnId));
+    private async Task OnKanbanDropAsync(string columnId)
+    {
+        Guid listId = Guid.Parse(columnId);
+        if (!await TryDropListAsync(listId))
+        {
+            await OnColumnDropAsync(listId);
+        }
+    }
 
     private async Task OnColumnDropAsync(Guid destinationListId)
     {

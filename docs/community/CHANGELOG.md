@@ -38,6 +38,24 @@ matrix in [`docs/roadmap/05-plan-v1.2.0.md`](../roadmap/05-plan-v1.2.0.md)
   30 minutes.
 - **UI Web drag-and-drop** — HTML5-native, no JS interop
   (ADR-0009 compliance).
+- **Trello-parity board and card UX** — card detail gains an
+  "Add to card" panel (members, labels with inline label
+  creation/deletion, due date, cover colour), "Move" to
+  another list, a Trello-style badges row and edit/delete of
+  your own comments. The board gains card filters (keyword,
+  label, member, due state), an archived-items panel with
+  restore/delete, inline board and list renames, list
+  drag-to-reorder, quick-complete on the card front, cover
+  strips, description/attachment badges and click-to-expand
+  label names. Board settings now open pre-filled and the
+  description can be cleared.
+- **Realtime fixes** — the board page now reacts to
+  `CardUpdated`, `ListRenamed`, `ListArchived`, `ListRestored`
+  and `LabelCreated`; the server broadcasts description, due
+  date, member, label and cover changes (new
+  `CardDetailsChanged` domain event) plus list reorders.
+  Switching boards no longer stacks duplicate hub handlers or
+  stays joined to the previous board's group.
 - **Audit prep** — OWASP ASVS v4.0.3 L1 line-by-line
   matrix (`docs/security/06-asvs-controls.md`), GDPR
   Article 30 records of processing template

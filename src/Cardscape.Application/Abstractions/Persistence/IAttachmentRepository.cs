@@ -16,4 +16,11 @@ public interface IAttachmentRepository : IRepository<Attachment, AttachmentId>
 
     /// <summary>Count of attachments for a card. Used by the card detail header.</summary>
     Task<int> CountForCardAsync(Guid cardId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Batch attachment counts keyed by card id (one grouped query). Cards
+    /// without attachments are absent from the result.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, int>> CountForCardsAsync(
+        IReadOnlyCollection<Guid> cardIds, CancellationToken ct = default);
 }

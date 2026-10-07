@@ -16,6 +16,16 @@ public sealed partial class BoardEventBroadcaster
             c => c.ListRenamed,
             ct);
 
+    // Reordering has no dedicated client message; ListRenamed carries the
+    // current name and makes subscribers re-read the board's lists.
+    private Task HandleListMoved(ListMoved @event, CancellationToken ct) =>
+        BroadcastPersistedListAsync(
+            @event.ListId,
+            @event.OccurredAt,
+            name: null,
+            c => c.ListRenamed,
+            ct);
+
     private Task HandleListArchived(ListArchived @event, CancellationToken ct) =>
         BroadcastPersistedListAsync(
             @event.ListId,

@@ -11,3 +11,5 @@ public sealed record CommentDto(
     DateTimeOffset? UpdatedAt);
 
 public sealed record AddCommentRequestDto(string Body);
+
+public sealed record EditCommentRequestDto(string NewBody);
