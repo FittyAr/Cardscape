@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.DTOs;
 using Cardscape.Application.Boards.Mapping;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
@@ -23,6 +24,7 @@ public static class RenameBoardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -48,10 +50,22 @@ public static class RenameBoardCommandHandler
             return Result.Failure<BoardDto>(nameResult.Error);
         }
 
+        bool renamed = board.Name.Value != nameResult.Value.Value;
         var renameResult = board.Rename(nameResult.Value, clock.UtcNow);
         if (renameResult.IsFailure)
         {
             return Result.Failure<BoardDto>(renameResult.Error);
+        }
+
+        if (renamed)
+        {
+            await activities.AddAsync(Activity.Record(
+                board.Id,
+                null,
+                currentUser.Id.Value,
+                ActivityKind.BoardRenamed,
+                clock.UtcNow,
+                new { name = board.Name.Value }), cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

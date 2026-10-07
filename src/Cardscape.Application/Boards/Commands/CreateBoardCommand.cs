@@ -5,6 +5,7 @@ using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Application.Boards.DTOs;
 using Cardscape.Application.Boards.Mapping;
 using Cardscape.Application.Settings;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
@@ -31,6 +32,7 @@ public static class CreateBoardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -94,6 +96,13 @@ public static class CreateBoardCommandHandler
         }
 
         await boards.AddAsync(boardResult.Value, cancellationToken);
+        await activities.AddAsync(Activity.Record(
+            boardResult.Value.Id,
+            null,
+            currentUser.Id.Value,
+            ActivityKind.BoardCreated,
+            clock.UtcNow,
+            new { name = boardResult.Value.Name.Value }), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(boardResult.Value.ToDto(false));

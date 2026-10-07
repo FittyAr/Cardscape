@@ -33,6 +33,7 @@ public static class AttachLabelToCardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -71,11 +72,23 @@ public static class AttachLabelToCardCommandHandler
                 "Label must belong to the same board as the card."));
         }
 
+        bool attached = card.CardLabels.All(cl => cl.LabelId.Value != label.Id.Value);
         var link = CardLabel.Create(card.Id, label.Id, clock.UtcNow);
         var result = card.AttachLabel(link, clock.UtcNow);
         if (result.IsFailure)
         {
             return Result.Failure<CardDto>(result.Error);
+        }
+
+        if (attached)
+        {
+            await activities.AddAsync(Activity.Record(
+                guard.Value.Board.Id,
+                card.Id.Value,
+                currentUser.Id.Value,
+                ActivityKind.LabelAdded,
+                clock.UtcNow,
+                new { labelId = label.Id.Value, name = label.Name.Value }), cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

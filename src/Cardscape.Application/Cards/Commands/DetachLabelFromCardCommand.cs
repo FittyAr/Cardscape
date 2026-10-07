@@ -29,9 +29,11 @@ public static class DetachLabelFromCardCommandHandler
         ICardRepository cards,
         IBoardListRepository lists,
         IBoardRepository boards,
+        ILabelRepository labels,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -53,10 +55,23 @@ public static class DetachLabelFromCardCommandHandler
             return Result.Failure<CardDto>(guard.Error);
         }
 
+        bool detached = card.CardLabels.Any(cl => cl.LabelId.Value == command.LabelId);
         var result = card.DetachLabel(new LabelId(command.LabelId), clock.UtcNow);
         if (result.IsFailure)
         {
             return Result.Failure<CardDto>(result.Error);
+        }
+
+        if (detached)
+        {
+            Label? label = await labels.GetByIdAsync(new LabelId(command.LabelId), cancellationToken);
+            await activities.AddAsync(Activity.Record(
+                guard.Value.Board.Id,
+                card.Id.Value,
+                currentUser.Id.Value,
+                ActivityKind.LabelRemoved,
+                clock.UtcNow,
+                new { labelId = command.LabelId, name = label?.Name.Value }), cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

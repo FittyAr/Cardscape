@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Common;
 using Cardscape.Application.Lists.DTOs;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
 using Wolverine;
@@ -20,6 +21,7 @@ public static class RenameListCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -42,10 +44,22 @@ public static class RenameListCommandHandler
         }
 
         BoardList list = guard.Value.List;
+        bool renamed = list.Name.Value != nameResult.Value.Value;
         var renameResult = list.Rename(nameResult.Value, clock.UtcNow);
         if (renameResult.IsFailure)
         {
             return Result.Failure<BoardListDto>(renameResult.Error);
+        }
+
+        if (renamed)
+        {
+            await activities.AddAsync(Activity.Record(
+                list.BoardId,
+                null,
+                currentUser.Id.Value,
+                ActivityKind.ListRenamed,
+                clock.UtcNow,
+                new { listId = list.Id.Value, name = list.Name.Value }), cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -1,4 +1,5 @@
 using Cardscape.Application.Boards.Commands;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Tests.Common.Fakes;
@@ -18,13 +19,15 @@ public class CreateBoardCommandHandlerTests
         var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(workspace.Id.Value, "Sprint", "desc",
                                   BoardVisibility.Private),
-            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Name.Should().Be("Sprint");
         result.Value.MemberCount.Should().Be(1);
         ctx.Boards.All.Should().HaveCount(1);
         ctx.UnitOfWork.SaveChangesCallCount.Should().Be(1);
+        ctx.Activities.All.Should().ContainSingle(a => a.Kind == ActivityKind.BoardCreated
+            && a.BoardId.Value == result.Value.Id && a.PayloadJson.Contains("\"name\":\"Sprint\""));
     }
 
     [Fact]
@@ -38,11 +41,12 @@ public class CreateBoardCommandHandlerTests
         var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(workspace.Id.Value, "Sprint", "desc",
                                   BoardVisibility.Private),
-            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Unauthenticated);
         ctx.Boards.All.Should().BeEmpty();
+        ctx.Activities.All.Should().BeEmpty();
     }
 
     [Fact]
@@ -55,7 +59,7 @@ public class CreateBoardCommandHandlerTests
         var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(Guid.NewGuid(), "Sprint", "desc",
                                   BoardVisibility.Private),
-            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.NotFound);
@@ -73,7 +77,7 @@ public class CreateBoardCommandHandlerTests
         var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(workspace.Id.Value, "Sprint", "desc",
                                   BoardVisibility.Private),
-            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("boards.not_member");
@@ -90,7 +94,7 @@ public class CreateBoardCommandHandlerTests
         var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(workspace.Id.Value, "", "desc",
                                   BoardVisibility.Private),
-            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("boards.name.required");
@@ -108,10 +112,10 @@ public class CreateBoardCommandHandlerTests
         await ctx.Settings.UpdateAsync(limited, "admin", TestContext.Current.CancellationToken);
         var command = new CreateBoardCommand(workspace.Id.Value, "Sprint", "desc", BoardVisibility.Private);
         await CreateBoardCommandHandler.HandleAsync(
-            command, ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            command, ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         var result = await CreateBoardCommandHandler.HandleAsync(
-            command, ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            command, ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("boards.quota_reached");

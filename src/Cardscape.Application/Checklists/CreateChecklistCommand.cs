@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists;
@@ -22,6 +23,7 @@ public static class CreateChecklistCommandHandler
         ICurrentUser currentUser,
         IUnitOfWork uow,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken ct)
     {
         if (currentUser.Id is null)
@@ -65,6 +67,13 @@ public static class CreateChecklistCommandHandler
         }
 
         await checklists.AddAsync(create.Value, ct);
+        await activities.AddAsync(Activity.Record(
+            boardId,
+            card.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.ChecklistCreated,
+            clock.UtcNow,
+            new { checklistId = create.Value.Id.Value, title = create.Value.Title.Value }), ct);
         await uow.SaveChangesAsync(ct);
         return Result.Success(ChecklistDto.FromEntity(create.Value));
     }

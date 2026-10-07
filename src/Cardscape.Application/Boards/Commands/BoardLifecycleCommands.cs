@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.DTOs;
 using Cardscape.Application.Boards.Mapping;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
@@ -23,6 +24,7 @@ public static class ArchiveBoardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -42,7 +44,18 @@ public static class ArchiveBoardCommandHandler
             return Result.Failure<BoardDto>(NotMember);
         }
 
-        board.Archive(clock.UtcNow);
+        if (!board.IsArchived)
+        {
+            board.Archive(clock.UtcNow);
+            await activities.AddAsync(Activity.Record(
+                board.Id,
+                null,
+                currentUser.Id.Value,
+                ActivityKind.BoardArchived,
+                clock.UtcNow,
+                new { name = board.Name.Value }), cancellationToken);
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(board.ToDto(board.IsStarredBy(currentUser.Id.Value)));
@@ -59,6 +72,7 @@ public static class UnarchiveBoardCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -78,7 +92,18 @@ public static class UnarchiveBoardCommandHandler
             return Result.Failure<BoardDto>(NotMember);
         }
 
-        board.Unarchive(clock.UtcNow);
+        if (board.IsArchived)
+        {
+            board.Unarchive(clock.UtcNow);
+            await activities.AddAsync(Activity.Record(
+                board.Id,
+                null,
+                currentUser.Id.Value,
+                ActivityKind.BoardUnarchived,
+                clock.UtcNow,
+                new { name = board.Name.Value }), cancellationToken);
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(board.ToDto(board.IsStarredBy(currentUser.Id.Value)));

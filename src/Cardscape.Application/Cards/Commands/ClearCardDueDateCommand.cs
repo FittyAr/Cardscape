@@ -4,6 +4,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Cards.Common;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Common;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Wolverine;
@@ -23,6 +24,7 @@ public static class ClearCardDueDateCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -44,10 +46,22 @@ public static class ClearCardDueDateCommandHandler
             return Result.Failure<CardDto>(guard.Error);
         }
 
+        DateTimeOffset? previousDueDate = card.DueDate;
         var result = card.ClearDueDate(clock.UtcNow);
         if (result.IsFailure)
         {
             return Result.Failure<CardDto>(result.Error);
+        }
+
+        if (previousDueDate.HasValue)
+        {
+            await activities.AddAsync(Activity.Record(
+                guard.Value.Board.Id,
+                card.Id.Value,
+                currentUser.Id.Value,
+                ActivityKind.CardDueDateCleared,
+                clock.UtcNow,
+                new { previousDueDate }), cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

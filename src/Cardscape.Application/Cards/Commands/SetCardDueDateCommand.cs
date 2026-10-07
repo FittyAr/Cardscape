@@ -4,6 +4,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Cards.Common;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Common;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Wolverine;
@@ -23,6 +24,7 @@ public static class SetCardDueDateCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -44,10 +46,22 @@ public static class SetCardDueDateCommandHandler
             return Result.Failure<CardDto>(guard.Error);
         }
 
+        bool changed = card.DueDate != command.DueDate;
         var result = card.SetDueDate(command.DueDate, clock.UtcNow);
         if (result.IsFailure)
         {
             return Result.Failure<CardDto>(result.Error);
+        }
+
+        if (changed)
+        {
+            await activities.AddAsync(Activity.Record(
+                guard.Value.Board.Id,
+                card.Id.Value,
+                currentUser.Id.Value,
+                ActivityKind.CardDueDateSet,
+                clock.UtcNow,
+                new { dueDate = command.DueDate }), cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

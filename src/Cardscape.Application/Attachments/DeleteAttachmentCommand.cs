@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Storage;
 using Cardscape.Application.Common;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Attachments;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
@@ -24,6 +25,7 @@ public static class DeleteAttachmentCommandHandler
         IStorageService storage,
         IClock clock,
         ICurrentUser currentUser,
+        IActivityRepository activities,
         CancellationToken ct)
     {
         if (currentUser.Id is null)
@@ -61,6 +63,13 @@ public static class DeleteAttachmentCommandHandler
 
         string storageKey = attachment.StorageKey;
         attachments.Remove(attachment);
+        await activities.AddAsync(Activity.Record(
+            guard.Value.Board.Id,
+            card.Id.Value,
+            currentUser.Id.Value,
+            ActivityKind.AttachmentRemoved,
+            clock.UtcNow,
+            new { attachmentId = attachment.Id.Value, fileName = attachment.FileName }), ct);
         await unitOfWork.SaveChangesAsync(ct);
 
         try
@@ -73,7 +82,6 @@ public static class DeleteAttachmentCommandHandler
             // and a stale blob is harmless next to the row.
         }
 
-        _ = clock.UtcNow; // surface dependency
         return Result.Success(true);
     }
 }

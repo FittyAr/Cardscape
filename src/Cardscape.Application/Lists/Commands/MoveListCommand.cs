@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Common;
 using Cardscape.Application.Lists.DTOs;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
@@ -22,6 +23,7 @@ public static class MoveListCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -80,10 +82,22 @@ public static class MoveListCommandHandler
             sibling.Move(Position.From(cursor), clock.UtcNow);
         }
 
+        bool moved = Math.Abs(list.Position.Value - newPosition.Value) >= double.Epsilon;
         var moveResult = list.Move(newPosition, clock.UtcNow);
         if (moveResult.IsFailure)
         {
             return Result.Failure<BoardListDto>(moveResult.Error);
+        }
+
+        if (moved)
+        {
+            await activities.AddAsync(Activity.Record(
+                list.BoardId,
+                null,
+                currentUser.Id.Value,
+                ActivityKind.ListMoved,
+                clock.UtcNow,
+                new { listId = list.Id.Value, name = list.Name.Value, position = command.NewPosition }), cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Storage;
 using Cardscape.Application.Attachments;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Attachments;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
@@ -57,6 +58,10 @@ public sealed class UploadAttachmentCommandHandlerTests
         fixture.AddedAttachment.FileName.Should().Be(result.Value.FileName);
         fixture.UnitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         fixture.Storage.Verify(x => x.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        var activity = fixture.Activities.All.Should().ContainSingle().Subject;
+        activity.Kind.Should().Be(ActivityKind.AttachmentAdded);
+        activity.CardId.Should().Be(fixture.Card.Id.Value);
+        activity.PayloadJson.Should().Contain("\"fileName\":\"quarterone.pdf\"");
     }
 
     [Fact]
@@ -146,7 +151,7 @@ public sealed class UploadAttachmentCommandHandlerTests
 
         return new HandlerFixture(
             attachments, cards, lists, boards, unitOfWork, storage,
-            new FakeClock(Now), currentUser.Object, card, userId,
+            new FakeClock(Now), currentUser.Object, new InMemoryActivityRepository(), card, userId,
             () => addedAttachment, () => savedKey);
     }
 
@@ -159,6 +164,7 @@ public sealed class UploadAttachmentCommandHandlerTests
         Mock<IStorageService> Storage,
         IClock Clock,
         ICurrentUser CurrentUser,
+        InMemoryActivityRepository Activities,
         Card Card,
         Guid UserId,
         Func<Attachment?> AddedAttachmentAccessor,
@@ -170,7 +176,7 @@ public sealed class UploadAttachmentCommandHandlerTests
         public Task<Result<AttachmentDto>> HandleAsync(UploadAttachmentCommand command) =>
             UploadAttachmentCommandHandler.HandleAsync(
                 command, Attachments.Object, Cards.Object, Lists.Object, Boards.Object,
-                UnitOfWork.Object, Storage.Object, Clock, CurrentUser,
+                UnitOfWork.Object, Storage.Object, Clock, CurrentUser, Activities,
                 TestContext.Current.CancellationToken);
     }
 }

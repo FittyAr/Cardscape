@@ -153,7 +153,7 @@ public class ChecklistTests
         var result = await CreateChecklistCommandHandler.HandleAsync(
             new CreateChecklistCommand(card.Id.Value, "My checklist"),
             checklists, ctx.Cards, ctx.Lists, ctx.Boards,
-            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
+            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Title.Should().Be("My checklist");
@@ -176,7 +176,7 @@ public class ChecklistTests
         var created = await CreateChecklistCommandHandler.HandleAsync(
             new CreateChecklistCommand(card.Id.Value, "Todos"),
             checklists, ctx.Cards, ctx.Lists, ctx.Boards,
-            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
+            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, ctx.Activities, CancellationToken.None);
 
         var withItem = await AddChecklistItemCommandHandler.HandleAsync(
             new AddChecklistItemCommand(created.Value!.Id, "Buy milk"),
@@ -215,7 +215,7 @@ public class ChecklistTests
         var created = await CreateChecklistCommandHandler.HandleAsync(
             new CreateChecklistCommand(card.Id.Value, "c"),
             checklists, ctx.Cards, ctx.Lists, ctx.Boards,
-            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, CancellationToken.None);
+            ctx.CurrentUser, ctx.UnitOfWork, ctx.Clock, ctx.Activities, CancellationToken.None);
         await AddChecklistItemCommandHandler.HandleAsync(
             new AddChecklistItemCommand(created.Value!.Id, "x"),
             checklists, ctx.Cards, ctx.Lists, ctx.Boards,

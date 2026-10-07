@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Common;
 using Cardscape.Application.Lists.DTOs;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
@@ -21,6 +22,7 @@ public static class CreateListCommandHandler
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
+        IActivityRepository activities,
         CancellationToken cancellationToken)
     {
         if (currentUser.Id is null)
@@ -57,6 +59,13 @@ public static class CreateListCommandHandler
         }
 
         await lists.AddAsync(listResult.Value, cancellationToken);
+        await activities.AddAsync(Activity.Record(
+            boardId,
+            null,
+            currentUser.Id.Value,
+            ActivityKind.ListCreated,
+            clock.UtcNow,
+            new { listId = listResult.Value.Id.Value, name = listResult.Value.Name.Value }), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(BoardListDto.FromEntity(listResult.Value));

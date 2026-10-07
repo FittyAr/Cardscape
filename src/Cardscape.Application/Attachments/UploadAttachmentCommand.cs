@@ -3,6 +3,7 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Storage;
 using Cardscape.Application.Common;
+using Cardscape.Domain.Activities;
 using Cardscape.Domain.Attachments;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
@@ -29,6 +30,7 @@ public static class UploadAttachmentCommandHandler
         IStorageService storage,
         IClock clock,
         ICurrentUser currentUser,
+        IActivityRepository activities,
         CancellationToken ct)
     {
         if (currentUser.Id is null)
@@ -122,6 +124,13 @@ public static class UploadAttachmentCommandHandler
         {
             await storage.SaveAsync(storageKey, command.Content, mimeType, ct);
             await attachments.AddAsync(creation.Value, ct);
+            await activities.AddAsync(Activity.Record(
+                guard.Value.Board.Id,
+                card.Id.Value,
+                currentUser.Id.Value,
+                ActivityKind.AttachmentAdded,
+                clock.UtcNow,
+                new { attachmentId = creation.Value.Id.Value, fileName = creation.Value.FileName }), ct);
             await unitOfWork.SaveChangesAsync(ct);
         }
         catch
