@@ -19,6 +19,9 @@ public sealed class Board : AggregateRoot<BoardId>
     public BoardVisibility Visibility { get; private set; }
     public bool IsArchived { get; private set; }
 
+    /// <summary>Background colour of the board canvas; null keeps the theme default.</summary>
+    public Color? Color { get; private set; }
+
     private readonly List<BoardMember> _members = [];
     public IReadOnlyCollection<BoardMember> Members => _members.AsReadOnly();
 
@@ -120,6 +123,24 @@ public sealed class Board : AggregateRoot<BoardId>
         Visibility = newVisibility;
         UpdatedAt = at;
         AddDomainEvent(new BoardVisibilityChanged(Id, newVisibility, at));
+        return Result.Success();
+    }
+
+    public Result ChangeColor(Color? newColor, DateTimeOffset at)
+    {
+        if (IsArchived)
+        {
+            return Result.Failure(BoardErrors.Archived);
+        }
+
+        if (newColor == Color)
+        {
+            return Result.Success();
+        }
+
+        Color = newColor;
+        UpdatedAt = at;
+        AddDomainEvent(new BoardColorChanged(Id, newColor, at));
         return Result.Success();
     }
 

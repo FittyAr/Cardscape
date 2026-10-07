@@ -31,6 +31,10 @@ public interface ICardsApiClient
     /// <summary>Sets the card cover to a palette colour name, or clears it when <paramref name="colorName"/> is null.</summary>
     Task<ApiResult<CardDto>> SetCoverAsync(Guid cardId, string? colorName, CancellationToken ct = default);
 
+    /// <summary>Copies a card (title, description, cover, labels, members, checklists) into a list of the same board.</summary>
+    Task<ApiResult<CardDto>> CopyAsync(
+        Guid cardId, Guid targetListId, string? title, double? position, CancellationToken ct = default);
+
     // G6b — Card Snooze (P3.2). Wraps the REST endpoints at
     // `/api/cards/{id}/snooze` and the board-scoped
     // `/api/cards/snoozed?boardId=...` list. The Web UI
@@ -232,6 +236,16 @@ public sealed class CardsApiClient(IHttpClientFactory http) : ApiClientBase(http
         HttpResponseMessage response = colorName is null
             ? await CreateClient().DeleteAsync($"api/cards/{cardId}/cover", ct)
             : await CreateClient().PostAsJsonAsync($"api/cards/{cardId}/cover", new SetCardCoverRequestDto(colorName), ct);
+        return await ReadAsync<CardDto>(response, ct);
+    }
+
+    public async Task<ApiResult<CardDto>> CopyAsync(
+        Guid cardId, Guid targetListId, string? title, double? position, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
+            $"api/cards/{cardId}/copy",
+            new { TargetListId = targetListId, Title = title, Position = position },
+            ct);
         return await ReadAsync<CardDto>(response, ct);
     }
 }

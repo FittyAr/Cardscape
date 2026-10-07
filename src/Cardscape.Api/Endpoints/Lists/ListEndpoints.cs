@@ -62,6 +62,14 @@ public static class ListEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         }).Produces<BoardListDto>();
 
+        // Trello-style copy: a new list right after the source with copies
+        // of its non-archived cards. Name defaults to the source name.
+        group.MapPost("/{listId:guid}/copy", async (Guid listId, CopyBody body, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<BoardListDto>>(new CopyListCommand(listId, body.Name), ct);
+            return result.IsSuccess ? Results.Created($"/api/lists/{result.Value.Id}", result.Value) : DomainErrorResults.ToProblem(result.Error);
+        }).Produces<BoardListDto>(StatusCodes.Status201Created);
+
         group.MapPost("/{listId:guid}/archive", async (Guid listId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardListDto>>(new ArchiveListCommand(listId), ct);
@@ -80,5 +88,6 @@ public static class ListEndpoints
     public sealed record CreateListBody(Guid BoardId, string Name);
     public sealed record RenameBody(string Name);
     public sealed record MoveBody(double Position);
+    public sealed record CopyBody(string? Name);
 
 }

@@ -118,4 +118,20 @@ public sealed class BoardsClient
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync(ct);
     }
+
+    /// <summary>Sets or clears a board's background colour.</summary>
+    /// <param name="boardId">The board identifier.</param>
+    /// <param name="colorName">A palette colour name, or <see langword="null"/> to clear the colour.</param>
+    /// <param name="ct">The token used to cancel the operation.</param>
+    /// <returns>The updated board.</returns>
+    public Task<BoardDto> SetColorAsync(Guid boardId, string? colorName, CancellationToken ct = default)
+    {
+        HttpRequestMessage req = colorName is null
+            ? new(HttpMethod.Delete, $"api/boards/{boardId}/color")
+            : new(HttpMethod.Post, $"api/boards/{boardId}/color")
+            {
+                Content = _parent.CreateJsonContent(new BoardColorRequest(colorName))
+            };
+        return _parent.SendAsync<BoardDto>(req, ct);
+    }
 }

@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.DTOs;
+using Cardscape.Application.Boards.Mapping;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
@@ -85,16 +86,7 @@ public static class CreateBoardCommandHandler
         await boards.AddAsync(boardResult.Value, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new BoardDto(
-            boardResult.Value.Id.Value,
-            boardResult.Value.WorkspaceId.Value,
-            boardResult.Value.Name.Value,
-            boardResult.Value.Description.Value,
-            boardResult.Value.Visibility,
-            boardResult.Value.IsArchived,
-            false,
-            boardResult.Value.CreatedAt,
-            boardResult.Value.Members.Count));
+        return Result.Success(boardResult.Value.ToDto(false));
     }
 }
 

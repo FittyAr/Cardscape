@@ -13,6 +13,8 @@ public interface IBoardsApiClient
     Task<ApiResult<BoardDto>> RenameAsync(Guid boardId, string newName, CancellationToken ct = default);
     Task<ApiResult<BoardDto>> ChangeDescriptionAsync(Guid boardId, string newDescription, CancellationToken ct = default);
     Task<ApiResult<BoardDto>> ChangeVisibilityAsync(Guid boardId, string newVisibility, CancellationToken ct = default);
+    /// <summary>Sets the board background to a palette colour name; null clears it.</summary>
+    Task<ApiResult<BoardDto>> SetColorAsync(Guid boardId, string? colorName, CancellationToken ct = default);
     Task<ApiResult<BoardDto>> StarAsync(Guid boardId, CancellationToken ct = default);
     Task<ApiResult<BoardDto>> UnstarAsync(Guid boardId, CancellationToken ct = default);
     Task<ApiResult<BoardDto>> ArchiveAsync(Guid boardId, CancellationToken ct = default);
@@ -96,6 +98,14 @@ public sealed class BoardsApiClient(IHttpClientFactory http) : ApiClientBase(htt
     {
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             $"api/boards/{boardId}/visibility", new { visibility = newVisibility }, JsonOptions, ct);
+        return await ReadAsync<BoardDto>(response, ct);
+    }
+
+    public async Task<ApiResult<BoardDto>> SetColorAsync(Guid boardId, string? colorName, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = colorName is null
+            ? await CreateClient().DeleteAsync($"api/boards/{boardId}/color", ct)
+            : await CreateClient().PostAsJsonAsync($"api/boards/{boardId}/color", new { color = colorName }, JsonOptions, ct);
         return await ReadAsync<BoardDto>(response, ct);
     }
 }

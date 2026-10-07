@@ -122,6 +122,17 @@ public static class CardEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         }).Produces<CardDto>();
 
+        // Trello-style copy: title, description, cover, labels, members
+        // and checklists into a list of the same board.
+        group.MapPost("/{cardId:guid}/copy", async (Guid cardId, CopyBody body, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<CardDto>>(
+                new CopyCardCommand(cardId, body.TargetListId, body.Title, body.Position), ct);
+            return result.IsSuccess
+                ? Results.Created($"/api/cards/{result.Value.Id}", result.Value)
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces<CardDto>(StatusCodes.Status201Created);
+
         group.MapPost("/{cardId:guid}/complete", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<CardDto>>(new CompleteCardCommand(cardId), ct);
@@ -229,5 +240,6 @@ public static class CardEndpoints
     public sealed record SnoozeBody(DateTimeOffset Until);
     public sealed record SnoozeResult(DateTimeOffset Until);
     public sealed record CoverBody(string? Color);
+    public sealed record CopyBody(Guid TargetListId, string? Title, double? Position);
 
 }

@@ -560,6 +560,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("Color")
+                        .HasMaxLength(7)
+                        .HasColumnType("varchar(7)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetime");
 

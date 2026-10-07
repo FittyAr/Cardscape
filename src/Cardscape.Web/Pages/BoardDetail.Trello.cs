@@ -378,4 +378,46 @@ public partial class BoardDetail
             _newVisibility = _board.Visibility.ToString().ToLowerInvariant();
         }
     }
+
+    // ── Board colour ─────────────────────────────────────────
+    private async Task SetBoardColorAsync(string? colorName)
+    {
+        ApiResult<BoardDto> result = await BoardsApi.SetColorAsync(BoardId, colorName);
+        if (result.IsSuccess && result.Value is not null)
+        {
+            _board = result.Value;
+        }
+    }
+
+    private static async Task OnSwatchKeyAsync(KeyboardEventArgs e, Func<Task> action)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            await action();
+        }
+    }
+
+    // ── Copy list ────────────────────────────────────────────
+    private async Task PromptCopyListAsync(Guid listId, string currentName)
+    {
+        object? result = await DialogService.OpenAsync<RenameListDialog>(
+            L["ListCopy"],
+            new Dictionary<string, object?>
+            {
+                { "CurrentName", currentName },
+                { "Heading", L["ListCopyTitle"].Value },
+                { "Blurb", L["ListCopyBlurb"].Value },
+                { "ConfirmText", L["ListCopyConfirm"].Value },
+            },
+            new DialogOptions { Width = "420px", Height = "auto", CloseDialogOnOverlayClick = true });
+
+        if (result is string name && !string.IsNullOrWhiteSpace(name))
+        {
+            ApiResult<BoardListDto> copy = await ListsApi.CopyAsync(listId, name);
+            if (copy.IsSuccess)
+            {
+                await ReloadListsAndCardsAsync();
+            }
+        }
+    }
 }

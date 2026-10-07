@@ -28,4 +28,15 @@ public sealed class ListsClient
         HttpRequestMessage req = new(HttpMethod.Post, "api/lists/") { Content = _parent.CreateJsonContent(body) };
         return _parent.SendAsync<BoardListDto>(req, ct);
     }
+
+    /// <summary>Copies a list and its open cards; the copy is placed right after the source.</summary>
+    /// <param name="listId">The source list identifier.</param>
+    /// <param name="body">The copy options.</param>
+    /// <param name="ct">The token used to cancel the operation.</param>
+    /// <returns>The new list.</returns>
+    public Task<BoardListDto> CopyAsync(Guid listId, CopyListRequest body, CancellationToken ct = default)
+    {
+        HttpRequestMessage req = new(HttpMethod.Post, $"api/lists/{listId}/copy") { Content = _parent.CreateJsonContent(body) };
+        return _parent.SendAsync<BoardListDto>(req, ct);
+    }
 }

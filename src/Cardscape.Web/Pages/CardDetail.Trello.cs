@@ -26,6 +26,7 @@ public partial class CardDetail
         Dates,
         Cover,
         Move,
+        Copy,
     }
 
     private CardPanel _openPanel = CardPanel.None;
@@ -46,6 +47,12 @@ public partial class CardDetail
     // Move panel.
     private Guid? _moveTargetListId;
     private bool _moveToTop;
+
+    // Copy panel.
+    private string _copyTitle = string.Empty;
+    private Guid? _copyTargetListId;
+    private bool _copyToTop;
+    private bool _copying;
 
     // Comment editing.
     private Guid? _editingCommentId;
@@ -132,6 +139,12 @@ public partial class CardDetail
         {
             _moveTargetListId = _card?.ListId;
             _moveToTop = false;
+        }
+        else if (_openPanel == CardPanel.Copy)
+        {
+            _copyTitle = _card?.Title ?? string.Empty;
+            _copyTargetListId = _card?.ListId;
+            _copyToTop = false;
         }
     }
 
@@ -298,22 +311,54 @@ public partial class CardDetail
             return;
         }
 
-        ApiResult<IReadOnlyList<CardSummaryDto>> boardCards =
-            await Cards.ListForBoardAsync(EffectiveBoardId, includeArchived: false, includeSnoozed: true);
-        List<CardSummaryDto> column = (boardCards.Value ?? [])
-            .Where(card => card.ListId == targetListId && card.Id != CardId)
-            .OrderBy(card => card.Position)
-            .ToList();
-        double position = _moveToTop
-            ? CardDropPosition.Between(null, column.FirstOrDefault()?.Position)
-            : CardDropPosition.Between(column.LastOrDefault()?.Position, null);
-
+        double position = await ComputeEdgePositionAsync(targetListId, _moveToTop, excludeSelf: true);
         ApiResult<CardDto> result = await Cards.MoveAsync(CardId, targetListId, position);
         ApplyCard(result, L["CardMove"]);
         if (result.IsSuccess)
         {
             _listName = _boardLists.FirstOrDefault(list => list.Id == targetListId)?.Name ?? _listName;
             _openPanel = CardPanel.None;
+        }
+    }
+
+    /// <summary>Position at the top or bottom of a list; a move ignores the card itself, a copy does not.</summary>
+    private async Task<double> ComputeEdgePositionAsync(Guid listId, bool top, bool excludeSelf)
+    {
+        ApiResult<IReadOnlyList<CardSummaryDto>> boardCards =
+            await Cards.ListForBoardAsync(EffectiveBoardId, includeArchived: false, includeSnoozed: true);
+        List<CardSummaryDto> column = (boardCards.Value ?? [])
+            .Where(card => card.ListId == listId && (!excludeSelf || card.Id != CardId))
+            .OrderBy(card => card.Position)
+            .ToList();
+        return top
+            ? CardDropPosition.Between(null, column.FirstOrDefault()?.Position)
+            : CardDropPosition.Between(column.LastOrDefault()?.Position, null);
+    }
+
+    // ── Copy ─────────────────────────────────────────────────
+    private async Task CopyCardAsync()
+    {
+        if (_card is null || _copyTargetListId is not { } targetListId || string.IsNullOrWhiteSpace(_copyTitle))
+        {
+            return;
+        }
+
+        _copying = true;
+        try
+        {
+            double position = await ComputeEdgePositionAsync(targetListId, _copyToTop, excludeSelf: false);
+            ApiResult<CardDto> result = await Cards.CopyAsync(CardId, targetListId, _copyTitle.Trim(), position);
+            CaptureCommandOutcome(result, L["CardCopy"]);
+            if (result.IsSuccess)
+            {
+                string listName = _boardLists.FirstOrDefault(list => list.Id == targetListId)?.Name ?? _listName;
+                Notify.Notify(NotificationSeverity.Success, L["CardCopy"], L["CardCopied", listName]);
+                _openPanel = CardPanel.None;
+            }
+        }
+        finally
+        {
+            _copying = false;
         }
     }
 

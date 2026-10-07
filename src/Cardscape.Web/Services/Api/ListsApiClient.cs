@@ -24,6 +24,9 @@ public interface IListsApiClient
     Task<ApiResult<BoardListDto>> MoveAsync(Guid listId, double newPosition, CancellationToken ct = default);
     Task<ApiResult<BoardListDto>> ArchiveAsync(Guid listId, CancellationToken ct = default);
     Task<ApiResult<BoardListDto>> RestoreAsync(Guid listId, CancellationToken ct = default);
+
+    /// <summary>Copies a list and its open cards; the copy lands right after the source.</summary>
+    Task<ApiResult<BoardListDto>> CopyAsync(Guid listId, string? name, CancellationToken ct = default);
 }
 
 public sealed class ListsApiClient(IHttpClientFactory http) : ApiClientBase(http), IListsApiClient
@@ -86,6 +89,15 @@ public sealed class ListsApiClient(IHttpClientFactory http) : ApiClientBase(http
         HttpResponseMessage response = await CreateClient().PostAsync(
             $"api/lists/{listId}/restore",
             content: null,
+            ct);
+        return await ReadAsync<BoardListDto>(response, ct);
+    }
+
+    public async Task<ApiResult<BoardListDto>> CopyAsync(Guid listId, string? name, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
+            $"api/lists/{listId}/copy",
+            new { Name = name },
             ct);
         return await ReadAsync<BoardListDto>(response, ct);
     }

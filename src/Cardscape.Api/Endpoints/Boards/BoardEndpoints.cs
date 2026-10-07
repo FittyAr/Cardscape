@@ -87,6 +87,19 @@ public static class BoardEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
         }).Produces<BoardDto>();
 
+        // Board background colour (palette name, "none" or null clears it).
+        group.MapPost("/{boardId:guid}/color", async (Guid boardId, ColorRequest body, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardColorCommand(boardId, body.Color), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+        }).Produces<BoardDto>();
+
+        group.MapDelete("/{boardId:guid}/color", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardColorCommand(boardId, null), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+        }).Produces<BoardDto>();
+
         group.MapPost("/{boardId:guid}/archive", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new ArchiveBoardCommand(boardId), ct);
@@ -207,6 +220,7 @@ public static class BoardEndpoints
     public sealed record RenameRequest(string Name);
     public sealed record DescriptionRequest(string Description);
     public sealed record VisibilityRequest(BoardVisibility Visibility);
+    public sealed record ColorRequest(string? Color);
     public sealed record AddBoardMemberBody(Guid UserId, BoardMemberRole Role);
 
 }

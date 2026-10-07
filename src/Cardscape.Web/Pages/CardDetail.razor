@@ -598,6 +598,25 @@ else
                                           Click="@MoveCardAsync" Disabled="@(_moveTargetListId is null)" />
                         </div>
                     }
+                    <RadzenButton Text="@L["CardCopy"]" Icon="file_copy" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat"
+                                  class="@PanelButtonClass(CardPanel.Copy)" Click="@(() => TogglePanel(CardPanel.Copy))" />
+                    @if (_openPanel == CardPanel.Copy)
+                    {
+                        <div class="cs-panel">
+                            <RadzenTextBox @bind-Value="_copyTitle" Immediate="true" Style="width:100%" aria-label="@L["CardCopyTitle"]"
+                                           Placeholder="@L["CardCopyTitle"]" />
+                            <span class="cs-muted">@L["CardCopyKeeps"]</span>
+                            <RadzenDropDown TValue="Guid?" @bind-Value="_copyTargetListId" Data="@_boardLists"
+                                            TextProperty="Name" ValueProperty="Id" Style="width:100%" aria-label="@L["CardMoveList"]" />
+                            <div class="cs-row">
+                                <RadzenCheckBox TValue="bool" @bind-Value="_copyToTop" Name="copy-top" />
+                                <RadzenLabel Text="@L["CardMoveTop"]" Component="copy-top" />
+                            </div>
+                            <RadzenButton Text="@L["CardCopyCreate"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                          Click="@CopyCardAsync" IsBusy="@_copying"
+                                          Disabled="@(_copying || _copyTargetListId is null || string.IsNullOrWhiteSpace(_copyTitle))" />
+                        </div>
+                    }
                     @if (_card.IsCompleted)
                     {
                         <RadzenButton Text="@L["ActionReopen"]" Icon="replay" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" Click="@ReopenAsync" class="cs-aside-button" />

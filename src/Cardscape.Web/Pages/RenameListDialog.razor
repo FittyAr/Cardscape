@@ -13,8 +13,8 @@
 @inject DialogService Dialog
 
 <RadzenStack Gap="1rem">
-    <RadzenText Text="@L["ListRenameTitle"]" TextStyle="TextStyle.H5" TagName="TagName.H2" />
-    <RadzenText Text="@L["ListRenameBlurb"]" TextStyle="TextStyle.Body2"
+    <RadzenText Text="@(Heading ?? L["ListRenameTitle"])" TextStyle="TextStyle.H5" TagName="TagName.H2" />
+    <RadzenText Text="@(Blurb ?? L["ListRenameBlurb"])" TextStyle="TextStyle.Body2"
                 class="rz-color-text-secondary" />
 
     <RadzenTextBox @bind-Value="newName" Name="rename-list-name"
@@ -23,13 +23,18 @@
 
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
         <RadzenButton Text="@L["CommonCancel"]" ButtonStyle="ButtonStyle.Light" Click="@Cancel" />
-        <RadzenButton Text="@L["CommonSave"]" ButtonStyle="ButtonStyle.Primary"
+        <RadzenButton Text="@(ConfirmText ?? L["CommonSave"])" ButtonStyle="ButtonStyle.Primary"
                       Click="@Save" Disabled="@(string.IsNullOrWhiteSpace(newName))" />
     </RadzenStack>
 </RadzenStack>
 
 @code {
     [Parameter] public string CurrentName { get; set; } = string.Empty;
+
+    // Optional overrides so the same name prompt serves "Copy list".
+    [Parameter] public string? Heading { get; set; }
+    [Parameter] public string? Blurb { get; set; }
+    [Parameter] public string? ConfirmText { get; set; }
 
     private string newName = string.Empty;
     private RadzenTextBox? input;

@@ -28,6 +28,12 @@ public sealed record BoardVisibilityChanged(
     BoardVisibility NewVisibility,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
 
+/// <summary>Raised when a board's background colour is set or cleared.</summary>
+public sealed record BoardColorChanged(
+    BoardId BoardId,
+    Color? NewColor,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
 /// <summary>Raised when a board is archived.</summary>
 public sealed record BoardArchived(
     BoardId BoardId,

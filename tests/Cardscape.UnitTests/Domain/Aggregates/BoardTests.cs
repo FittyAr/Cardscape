@@ -270,4 +270,55 @@ public class BoardTests
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be(BoardErrors.NotMember.Code);
     }
+
+    [Fact]
+    public void ChangeColor_SetsColorAndRaisesEvent()
+    {
+        var board = NewBoard();
+        board.ClearDomainEvents();
+
+        var result = board.ChangeColor(Color.Palette.Blue, At);
+
+        result.IsSuccess.Should().BeTrue();
+        board.Color.Should().Be(Color.Palette.Blue);
+        board.DomainEvents.OfType<BoardColorChanged>().Should().ContainSingle()
+            .Which.NewColor.Should().Be(Color.Palette.Blue);
+    }
+
+    [Fact]
+    public void ChangeColor_ToSameColor_IsNoOp()
+    {
+        var board = NewBoard();
+        board.ChangeColor(Color.Palette.Green, At);
+        board.ClearDomainEvents();
+
+        board.ChangeColor(Color.Palette.Green, At).IsSuccess.Should().BeTrue();
+
+        board.DomainEvents.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ChangeColor_ToNull_ClearsColor()
+    {
+        var board = NewBoard();
+        board.ChangeColor(Color.Palette.Red, At);
+
+        board.ChangeColor(null, At).IsSuccess.Should().BeTrue();
+
+        board.Color.Should().BeNull();
+        board.DomainEvents.OfType<BoardColorChanged>().Last().NewColor.Should().BeNull();
+    }
+
+    [Fact]
+    public void ChangeColor_WhenArchived_ReturnsArchivedFailure()
+    {
+        var board = NewBoard();
+        board.Archive(At);
+
+        var result = board.ChangeColor(Color.Palette.Blue, At);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be(BoardErrors.Archived.Code);
+        board.Color.Should().BeNull();
+    }
 }

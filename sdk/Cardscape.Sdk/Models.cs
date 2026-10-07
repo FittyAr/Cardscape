@@ -159,6 +159,7 @@ public sealed record SetWorkspaceRegionRequest(
 /// <param name="IsStarred"><see langword="true"/> when the current user has starred the board; otherwise, <see langword="false"/>.</param>
 /// <param name="CreatedAt">The creation timestamp in UTC.</param>
 /// <param name="MemberCount">The number of board members.</param>
+/// <param name="Color">The board background colour in <c>#RRGGBB</c> form, or <see langword="null"/> for the theme default.</param>
 public sealed record BoardDto(
     [property: JsonPropertyName("id")] Guid Id,
     [property: JsonPropertyName("workspaceId")] Guid WorkspaceId,
@@ -168,7 +169,8 @@ public sealed record BoardDto(
     [property: JsonPropertyName("isArchived")] bool IsArchived,
     [property: JsonPropertyName("isStarred")] bool IsStarred,
     [property: JsonPropertyName("createdAt")] DateTimeOffset CreatedAt,
-    [property: JsonPropertyName("memberCount")] int MemberCount);
+    [property: JsonPropertyName("memberCount")] int MemberCount,
+    [property: JsonPropertyName("color")] string? Color = null);
 
 /// <summary>Represents the compact board projection used in board collections.</summary>
 /// <param name="Id">The board identifier.</param>
@@ -201,6 +203,11 @@ public sealed record CreateBoardRequest(
 public sealed record RenameBoardRequest(
     [property: JsonPropertyName("name")] string Name);
 
+/// <summary>Provides a board background colour.</summary>
+/// <param name="Color">A palette colour name such as <c>blue</c> or <c>green</c>; <c>none</c> clears it.</param>
+public sealed record BoardColorRequest(
+    [property: JsonPropertyName("color")] string? Color);
+
 // ── Lists ──────────────────────────────────────────────
 /// <summary>Represents a list and its ordering metadata within a board.</summary>
 /// <param name="Id">The list identifier.</param>
@@ -225,6 +232,11 @@ public sealed record BoardListDto(
 public sealed record CreateListRequest(
     [property: JsonPropertyName("boardId")] Guid BoardId,
     [property: JsonPropertyName("name")] string Name);
+
+/// <summary>Provides the values used to copy a list.</summary>
+/// <param name="Name">The name of the copy; defaults to the source list name.</param>
+public sealed record CopyListRequest(
+    [property: JsonPropertyName("name")] string? Name = null);
 
 // ── Cards ──────────────────────────────────────────────
 /// <summary>Represents a card and its workflow state.</summary>
@@ -318,6 +330,15 @@ public sealed record CreateCardRequest(
 public sealed record MoveCardRequest(
     [property: JsonPropertyName("listId")] Guid ListId,
     [property: JsonPropertyName("position")] double Position);
+
+/// <summary>Provides the destination and options used to copy a card.</summary>
+/// <param name="TargetListId">The destination list; it must belong to the card's board.</param>
+/// <param name="Title">The title of the copy; defaults to the source title.</param>
+/// <param name="Position">The ordering value in the destination list; defaults to the bottom.</param>
+public sealed record CopyCardRequest(
+    [property: JsonPropertyName("targetListId")] Guid TargetListId,
+    [property: JsonPropertyName("title")] string? Title = null,
+    [property: JsonPropertyName("position")] double? Position = null);
 
 // ── Labels ─────────────────────────────────────────────
 /// <summary>Represents a board-scoped label returned by the Cardscape API.</summary>

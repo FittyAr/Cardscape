@@ -24,7 +24,9 @@
 }
 else
 {
-    <div class="cs-full-bleed cs-board-page">
+    @* Board background colour: the hex travels through a CSS custom
+       property and the has-color class switches the tinted canvas on. *@
+    <div class="cs-full-bleed cs-board-page @(_board.Color is null ? null : "has-color")" style="--cs-board-color: @_board.Color">
         <div class="cs-board-bar">
             <div class="cs-board-bar-main">
                 <a class="cs-board-bar-crumb" href="@($"workspaces/{_board.WorkspaceId}")">
@@ -261,6 +263,27 @@ else
                             <RadzenButton Text="@L["ActionArchive"]" Icon="archive" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@ArchiveBoardAsync" />
                         }
                     </RadzenStack>
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenText Text="@L["BoardColor"]" TextStyle="TextStyle.Body2" Class="rz-m-0" />
+                        <div class="cs-swatches" role="radiogroup" aria-label="@L["BoardColor"]">
+                            @foreach (CardPalette.Swatch swatch in CardPalette.All)
+                            {
+                                bool current = string.Equals(_board.Color, swatch.Hex, StringComparison.OrdinalIgnoreCase);
+                                <span class="cs-swatch @(current ? "is-selected" : null)" role="radio" tabindex="0"
+                                      style="--cs-swatch: @swatch.Hex" title="@swatch.Name"
+                                      aria-checked="@(current ? "true" : "false")"
+                                      @onclick="@(() => SetBoardColorAsync(swatch.Name))"
+                                      @onkeydown="@(e => OnSwatchKeyAsync(e, () => SetBoardColorAsync(swatch.Name)))"></span>
+                            }
+                        </div>
+                        @if (_board.Color is not null)
+                        {
+                            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                                <RadzenButton Text="@L["BoardRemoveColor"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                              Click="@(() => SetBoardColorAsync(null))" />
+                            </RadzenStack>
+                        }
+                    </RadzenStack>
                 </RadzenStack>
             </RadzenCard>
         }
@@ -300,6 +323,11 @@ else
                         <RadzenMenuItem Icon="more_horiz" title="@L["BoardMore"]">
                             <RadzenMenuItem Text="@L["CustomFieldsRename"]" Icon="edit"
                                             Click="@(() => PromptRenameListAsync(listId, listDto.Name))" />
+                            @if (!listDto.IsArchived)
+                            {
+                                <RadzenMenuItem Text="@L["ListCopy"]" Icon="content_copy"
+                                                Click="@(() => PromptCopyListAsync(listId, listDto.Name))" />
+                            }
                             <RadzenMenuItem Text="@L["BoardMoveListStart"]" Icon="first_page"
                                             Click="@(() => MoveListToPositionAsync(listId, 0.0d))" />
                             <RadzenMenuItem Text="@L["BoardMoveListEnd"]" Icon="last_page"

@@ -137,6 +137,45 @@
     margin-bottom: 1rem;
 }
 
+/* ── Board background colour ───────────────────────────── */
+
+/* The colour is a palette hex passed as --cs-board-color. The canvas
+   bleeds into .cs-main's padding and mixes the hue with the theme
+   background so cards and text keep their contrast in both modes. */
+.cs-board-page.has-color {
+    margin: -1rem -1.25rem -1.5rem;
+    padding: 1rem 1.25rem 1.5rem;
+    min-height: calc(100% + 2.5rem);
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--cs-board-color) 42%, var(--rz-body-background-color)) 0%,
+        color-mix(in srgb, var(--cs-board-color) 16%, var(--rz-body-background-color)) 100%);
+}
+
+.cs-swatches {
+    display: grid;
+    grid-template-columns: repeat(11, minmax(1.75rem, 1fr));
+    gap: 0.375rem;
+}
+
+.cs-swatch {
+    height: 1.75rem;
+    border-radius: 4px;
+    background: var(--cs-swatch);
+    cursor: pointer;
+    outline-offset: 2px;
+}
+
+.cs-swatch.is-selected {
+    outline: 2px solid var(--rz-primary);
+}
+
+@media (max-width: 640px) {
+    .cs-swatches {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
 /* ── Column header (rendered via ColumnHeaderTemplate) ─── */
 
 .cs-column-title {

@@ -49,6 +49,23 @@ matrix in [`docs/roadmap/05-plan-v1.2.0.md`](../roadmap/05-plan-v1.2.0.md)
   strips, description/attachment badges and click-to-expand
   label names. Board settings now open pre-filled and the
   description can be cleared.
+- **Board background colour** — boards carry an optional
+  palette colour (`Board.ChangeColor`, `BoardColorChanged`
+  event, nullable `boards.Color` column with migrations for
+  SQLite, PostgreSQL, MySQL and MariaDB). `POST`/`DELETE
+  /api/boards/{id}/color` sets or clears it; `BoardDto` gains
+  an additive `color` field (Web and SDK models, SDK
+  `Boards.SetColorAsync`). Board settings offer a swatch
+  picker and the board canvas is tinted with it.
+- **Copy card and copy list** — `POST /api/cards/{id}/copy`
+  duplicates a card's title, description, cover, labels,
+  members and checklists (items keep their order and
+  completion) into a list of the same board, with an optional
+  new title and position. `POST /api/lists/{id}/copy` adds a
+  list right after the source with copies of its open cards.
+  The card detail "Actions" panel gains "Copy" and the list
+  "…" menu gains "Copy list"; SDK `Cards.CopyAsync` and
+  `Lists.CopyAsync`.
 - **Realtime fixes** — the board page now reacts to
   `CardUpdated`, `ListRenamed`, `ListArchived`, `ListRestored`
   and `LabelCreated`; the server broadcasts description, due

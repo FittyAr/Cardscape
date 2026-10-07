@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.DTOs;
+using Cardscape.Application.Boards.Mapping;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
@@ -55,16 +56,7 @@ public static class RenameBoardCommandHandler
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new BoardDto(
-            board.Id.Value,
-            board.WorkspaceId.Value,
-            board.Name.Value,
-            board.Description.Value,
-            board.Visibility,
-            board.IsArchived,
-            board.IsStarredBy(currentUser.Id.Value),
-            board.CreatedAt,
-            board.Members.Count));
+        return Result.Success(board.ToDto(board.IsStarredBy(currentUser.Id.Value)));
     }
 }
 

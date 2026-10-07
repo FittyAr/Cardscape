@@ -10,7 +10,8 @@ public sealed record BoardDto(
     bool IsArchived,
     bool IsStarred,
     DateTimeOffset CreatedAt,
-    int MemberCount);
+    int MemberCount,
+    string? Color = null);
 
 public sealed record BoardSummaryDto(
     Guid Id,

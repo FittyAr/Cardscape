@@ -24,6 +24,11 @@ public sealed class BoardConfiguration : IEntityTypeConfiguration<Board>
             .IsRequired();
         builder.Property(x => x.Visibility).HasConversion<int>().IsRequired();
         builder.Property(x => x.IsArchived).IsRequired();
+        builder.Property(x => x.Color)
+            .HasConversion(
+                c => c == null ? null : c.Value,
+                v => v == null ? null : Domain.Common.Color.Create(v).Value)
+            .HasMaxLength(7);
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt);
         builder.Property(x => x.CreatedBy);

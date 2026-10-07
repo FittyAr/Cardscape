@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.DTOs;
+using Cardscape.Application.Boards.Mapping;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
@@ -56,16 +57,7 @@ public static class StarBoardCommandHandler
             return Result.Failure<BoardDto>(NotFound);
         }
 
-        return Result.Success(new BoardDto(
-            board.Id.Value,
-            board.WorkspaceId.Value,
-            board.Name.Value,
-            board.Description.Value,
-            board.Visibility,
-            board.IsArchived,
-            true,
-            board.CreatedAt,
-            board.Members.Count));
+        return Result.Success(board.ToDto(true));
     }
 }
 
@@ -99,16 +91,7 @@ public static class UnstarBoardCommandHandler
             return Result.Failure<BoardDto>(NotFound);
         }
 
-        return Result.Success(new BoardDto(
-            board.Id.Value,
-            board.WorkspaceId.Value,
-            board.Name.Value,
-            board.Description.Value,
-            board.Visibility,
-            board.IsArchived,
-            false,
-            board.CreatedAt,
-            board.Members.Count));
+        return Result.Success(board.ToDto(false));
     }
 }
 

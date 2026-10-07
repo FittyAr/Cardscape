@@ -809,4 +809,15 @@
   <data name="CommentDeleteConfirm" xml:space="preserve"><value>Delete this comment? This cannot be undone.</value></data>
   <data name="CommentEdit" xml:space="preserve"><value>Edit</value></data>
   <data name="CommentEdited" xml:space="preserve"><value>(edited)</value></data>
+  <data name="BoardColor" xml:space="preserve"><value>Background colour</value></data>
+  <data name="BoardRemoveColor" xml:space="preserve"><value>Remove background colour</value></data>
+  <data name="ListCopy" xml:space="preserve"><value>Copy list</value></data>
+  <data name="ListCopyTitle" xml:space="preserve"><value>Copy list</value></data>
+  <data name="ListCopyBlurb" xml:space="preserve"><value>A new list with copies of this list's open cards is added right after it.</value></data>
+  <data name="ListCopyConfirm" xml:space="preserve"><value>Create list</value></data>
+  <data name="CardCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="CardCopyTitle" xml:space="preserve"><value>Title of the copy</value></data>
+  <data name="CardCopyKeeps" xml:space="preserve"><value>Description, labels, members and checklists are copied too.</value></data>
+  <data name="CardCopyCreate" xml:space="preserve"><value>Create card</value></data>
+  <data name="CardCopied" xml:space="preserve"><value>Card copied to {0}.</value></data>
 </root>

@@ -809,4 +809,15 @@
   <data name="CommentDeleteConfirm" xml:space="preserve"><value>¿Eliminar este comentario? No se puede deshacer.</value></data>
   <data name="CommentEdit" xml:space="preserve"><value>Editar</value></data>
   <data name="CommentEdited" xml:space="preserve"><value>(editado)</value></data>
+  <data name="BoardColor" xml:space="preserve"><value>Color de fondo</value></data>
+  <data name="BoardRemoveColor" xml:space="preserve"><value>Quitar color de fondo</value></data>
+  <data name="ListCopy" xml:space="preserve"><value>Copiar lista</value></data>
+  <data name="ListCopyTitle" xml:space="preserve"><value>Copiar lista</value></data>
+  <data name="ListCopyBlurb" xml:space="preserve"><value>Se añade justo después una lista nueva con copias de las tarjetas abiertas de esta lista.</value></data>
+  <data name="ListCopyConfirm" xml:space="preserve"><value>Crear lista</value></data>
+  <data name="CardCopy" xml:space="preserve"><value>Copiar</value></data>
+  <data name="CardCopyTitle" xml:space="preserve"><value>Título de la copia</value></data>
+  <data name="CardCopyKeeps" xml:space="preserve"><value>También se copian la descripción, las etiquetas, los miembros y las listas de verificación.</value></data>
+  <data name="CardCopyCreate" xml:space="preserve"><value>Crear tarjeta</value></data>
+  <data name="CardCopied" xml:space="preserve"><value>Tarjeta copiada en {0}.</value></data>
 </root>

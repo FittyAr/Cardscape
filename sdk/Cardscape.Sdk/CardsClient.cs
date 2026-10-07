@@ -96,4 +96,15 @@ public sealed class CardsClient
         return _parent.SendAsync<object>(
             new HttpRequestMessage(HttpMethod.Post, $"api/cards/{cardId}/labels/{labelId}"), ct);
     }
+
+    /// <summary>Copies a card (title, description, cover, labels, members and checklists) into a list of the same board.</summary>
+    /// <param name="cardId">The source card identifier.</param>
+    /// <param name="body">The destination list and copy options.</param>
+    /// <param name="ct">The token used to cancel the operation.</param>
+    /// <returns>The new card.</returns>
+    public Task<CardDto> CopyAsync(Guid cardId, CopyCardRequest body, CancellationToken ct = default)
+    {
+        HttpRequestMessage req = new(HttpMethod.Post, $"api/cards/{cardId}/copy") { Content = _parent.CreateJsonContent(body) };
+        return _parent.SendAsync<CardDto>(req, ct);
+    }
 }

@@ -463,6 +463,98 @@ public sealed class SubClientTests
         body.GetProperty("region").GetString().Should().Be("europe");
     }
 
+    private static (CardscapeClient Client, HttpClient Http, HttpMessageHandlerStub Handler) ClientReturning(
+        RequestCapture capture, object responseBody)
+    {
+        HttpMessageHandlerStub handler = new(req =>
+        {
+            capture.CaptureSync(req);
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(responseBody) };
+        });
+        HttpClient http = new(handler) { BaseAddress = new("https://api.example.test/") };
+        CardscapeClient client = new(http, new CardscapeClientOptions { BaseAddress = new("https://api.example.test/") });
+        return (client, http, handler);
+    }
+
+    [Fact]
+    public async Task Boards_SetColor_Async_Posts_The_Palette_Name_And_Reads_The_Hex()
+    {
+        RequestCapture capture = new();
+        var (client, http, handler) = ClientReturning(capture, new
+        {
+            id = Guid.NewGuid(),
+            name = "Board",
+            visibility = "private",
+            color = "#0079bf"
+        });
+        using HttpMessageHandlerStub _ = handler;
+        using HttpClient __ = http;
+        await using CardscapeClient ___ = client;
+
+        Guid boardId = Guid.NewGuid();
+        BoardDto board = await client.Boards.SetColorAsync(boardId, "blue", TestContext.Current.CancellationToken);
+
+        board.Color.Should().Be("#0079bf");
+        capture.Method.Should().Be(HttpMethod.Post);
+        capture.Path.Should().Be($"/api/boards/{boardId}/color");
+        JsonDocument.Parse(capture.Body).RootElement.GetProperty("color").GetString().Should().Be("blue");
+    }
+
+    [Fact]
+    public async Task Boards_SetColor_Async_With_Null_Deletes_The_Colour()
+    {
+        RequestCapture capture = new();
+        var (client, http, handler) = ClientReturning(capture, new { id = Guid.NewGuid(), name = "Board", visibility = "private" });
+        using HttpMessageHandlerStub _ = handler;
+        using HttpClient __ = http;
+        await using CardscapeClient ___ = client;
+
+        Guid boardId = Guid.NewGuid();
+        BoardDto board = await client.Boards.SetColorAsync(boardId, null, TestContext.Current.CancellationToken);
+
+        board.Color.Should().BeNull();
+        capture.Method.Should().Be(HttpMethod.Delete);
+        capture.Path.Should().Be($"/api/boards/{boardId}/color");
+    }
+
+    [Fact]
+    public async Task Cards_Copy_Async_Posts_Target_List_Title_And_Position()
+    {
+        RequestCapture capture = new();
+        var (client, http, handler) = ClientReturning(capture, new { id = Guid.NewGuid(), listId = Guid.NewGuid(), title = "Copy" });
+        using HttpMessageHandlerStub _ = handler;
+        using HttpClient __ = http;
+        await using CardscapeClient ___ = client;
+
+        Guid cardId = Guid.NewGuid();
+        Guid listId = Guid.NewGuid();
+        await client.Cards.CopyAsync(cardId, new CopyCardRequest(listId, "Copy", 3.5), TestContext.Current.CancellationToken);
+
+        capture.Method.Should().Be(HttpMethod.Post);
+        capture.Path.Should().Be($"/api/cards/{cardId}/copy");
+        JsonElement body = JsonDocument.Parse(capture.Body).RootElement;
+        body.GetProperty("targetListId").GetGuid().Should().Be(listId);
+        body.GetProperty("title").GetString().Should().Be("Copy");
+        body.GetProperty("position").GetDouble().Should().Be(3.5);
+    }
+
+    [Fact]
+    public async Task Lists_Copy_Async_Posts_The_Name()
+    {
+        RequestCapture capture = new();
+        var (client, http, handler) = ClientReturning(capture, new { id = Guid.NewGuid(), boardId = Guid.NewGuid(), name = "To Do" });
+        using HttpMessageHandlerStub _ = handler;
+        using HttpClient __ = http;
+        await using CardscapeClient ___ = client;
+
+        Guid listId = Guid.NewGuid();
+        await client.Lists.CopyAsync(listId, new CopyListRequest("To Do"), TestContext.Current.CancellationToken);
+
+        capture.Method.Should().Be(HttpMethod.Post);
+        capture.Path.Should().Be($"/api/lists/{listId}/copy");
+        JsonDocument.Parse(capture.Body).RootElement.GetProperty("name").GetString().Should().Be("To Do");
+    }
+
     private sealed class RequestCapture
     {
         public HttpMethod Method { get; private set; } = HttpMethod.Get;
