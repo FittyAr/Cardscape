@@ -51,6 +51,20 @@ public sealed class LocalFileStorageServiceTests
         Directory.GetFiles(directory.Path, "*", SearchOption.AllDirectories).Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task SaveAsync_KeyEscapingIntoASiblingDirectoryWithTheSamePrefix_IsRejected()
+    {
+        using var directory = new TemporaryDirectory();
+        string root = Path.Combine(directory.Path, "storage");
+        var sut = new LocalFileStorageService(root);
+
+        Func<Task> act = () => sut.SaveAsync(
+            "../storage2/escaped.txt", new MemoryStream([1]), "text/plain");
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        File.Exists(Path.Combine(directory.Path, "storage2", "escaped.txt")).Should().BeFalse();
+    }
+
     private sealed class ControlledCopyStream(
         byte[] bytes,
         Action? duringCopy = null,
