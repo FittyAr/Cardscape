@@ -82,7 +82,7 @@ public sealed partial class CardDetail
             return;
         }
         await JS.InvokeVoidAsync(
-            "downloadFromBytes",
+            "cardscape.downloadFromBytes",
             attachment.FileName,
             "application/octet-stream",
             Convert.ToBase64String(result.Value));

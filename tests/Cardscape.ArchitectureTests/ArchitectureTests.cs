@@ -260,6 +260,36 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebJsInteropCalls_TargetFunctionsDefinedInWwwroot()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string webRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web");
+        Regex interopCall = new(
+            @"\b(?:JS|Js|js|JSRuntime)\.Invoke(?:Void)?Async(?:<[^>]+>)?\(\s*""(?<name>[^""]+)""",
+            RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1));
+        string scripts = string.Concat(
+            Directory.GetFiles(Path.Combine(webRoot, "wwwroot"), "*.js", SearchOption.AllDirectories)
+                .Select(File.ReadAllText));
+        string[] browserBuiltIns = ["localStorage.", "sessionStorage.", "console."];
+
+        string[] undefinedFunctions = Directory.GetFiles(webRoot, "*.*", SearchOption.AllDirectories)
+            .Where(file => file.EndsWith(".cs", StringComparison.Ordinal)
+                || file.EndsWith(".razor", StringComparison.Ordinal))
+            .Where(file => !file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .SelectMany(file => interopCall.Matches(File.ReadAllText(file)).Select(match => match.Groups["name"].Value))
+            .Where(name => !browserBuiltIns.Any(prefix => name.StartsWith(prefix, StringComparison.Ordinal)))
+            .Where(name => !scripts.Contains($"window.{name} =", StringComparison.Ordinal))
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        undefinedFunctions.Should().BeEmpty(
+            "every IJSRuntime call must name a function the Web client's wwwroot scripts assign on window");
+    }
+
+    [Fact]
     public void AsyncApiEndpointLambdas_AcceptCancellationToken()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
