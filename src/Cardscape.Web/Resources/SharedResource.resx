@@ -758,8 +758,8 @@
   <data name="SeederStatusIdle" xml:space="preserve"><value>Idle</value></data>
   <data name="SeederStatusDisabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="SeederNoRun" xml:space="preserve"><value>No run in progress</value></data>
-  <data name="SeederWipeConfirm" xml:space="preserve"><value>Are you sure you want to wipe all seeded data? This is destructive.</value></data>
-  <data name="SeederWipeConfirmTitle" xml:space="preserve"><value>Confirm Wipe</value></data>
+  <data name="SeederWipeConfirm" xml:space="preserve"><value>This deletes ALL data, including every user account (yours too). You will be signed out and the instance returns to the first-run setup wizard. Continue?</value></data>
+  <data name="SeederWipeConfirmTitle" xml:space="preserve"><value>Destructive action</value></data>
   <data name="SeederAlreadyRunning" xml:space="preserve"><value>A Seeder operation is already running.</value></data>
   <data name="SeederDisabled" xml:space="preserve"><value>The seeder is disabled in system configuration.</value></data>
   <data name="SeederDisabledAlert" xml:space="preserve"><value>The database seeder is currently disabled. You can enable it in System Configuration.</value></data>
@@ -935,4 +935,18 @@
   <data name="NoticeSeveritySuccess" xml:space="preserve"><value>Success</value></data>
   <data name="NoticeSeverityWarning" xml:space="preserve"><value>Warning</value></data>
   <data name="NoticeSeverityDanger" xml:space="preserve"><value>Critical</value></data>
+  <data name="SeederReseedConfirm" xml:space="preserve"><value>This deletes ALL data, including every user account (yours too), and replaces it with the demo company. Afterwards sign in with {0} / {1}. Continue?</value></data>
+  <data name="SeederDemoAccountTitle" xml:space="preserve"><value>Demo administrator account</value></data>
+  <data name="SeederDemoAccountMessage" xml:space="preserve"><value>Seeding creates this administrator. If you seed with wipe, every existing account (yours included) is deleted and this is the only way back in.</value></data>
+  <data name="SeederReseededTitle" xml:space="preserve"><value>Demo data ready: sign in again</value></data>
+  <data name="SeederReseededMessage" xml:space="preserve"><value>Every previous account was deleted, including the one you are using. Sign in with the demo administrator:</value></data>
+  <data name="SeederSignInAsDemo" xml:space="preserve"><value>Sign in as demo admin</value></data>
+  <data name="SeederWipedTitle" xml:space="preserve"><value>Database wiped</value></data>
+  <data name="SeederWipedMessage" xml:space="preserve"><value>Every account was deleted, including yours. Create a new administrator in the setup wizard, or seed the demo data from there.</value></data>
+  <data name="SeederGoToSetup" xml:space="preserve"><value>Open the setup wizard</value></data>
+  <data name="SeederDemoEmail" xml:space="preserve"><value>E-mail</value></data>
+  <data name="SeederDemoPassword" xml:space="preserve"><value>Password</value></data>
+  <data name="SeederCopyEmail" xml:space="preserve"><value>Copy e-mail</value></data>
+  <data name="SeederCopyPassword" xml:space="preserve"><value>Copy password</value></data>
+  <data name="SeederDemoSharedPassword" xml:space="preserve"><value>Every seeded person (e.g. linus.pauling@nexora.example) uses the same password, so you can explore the app from different roles.</value></data>
 </root>

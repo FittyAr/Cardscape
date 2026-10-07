@@ -72,6 +72,20 @@ public sealed class SeederAdminEndpointTests
         }
     }
 
+    [Fact]
+    public async Task SeederOptions_ExposeTheDemoAccount_SoTheUiCanShowHowToSignInAfterAWipe()
+    {
+        using WebApplicationFactory<Program> enabledFactory = CreateEnabledFactory();
+        using HttpClient client = await CreateAdminClientAsync(enabledFactory);
+
+        string json = await client.GetStringAsync("api/admin/seeder/options", TestContext.Current.CancellationToken);
+
+        using System.Text.Json.JsonDocument doc = System.Text.Json.JsonDocument.Parse(json);
+        System.Text.Json.JsonElement demo = doc.RootElement.GetProperty("demoAccount");
+        demo.GetProperty("email").GetString().Should().Be(Cardscape.Seeder.Company.NexoraStudios.DemoAdminEmail);
+        demo.GetProperty("password").GetString().Should().Be(Cardscape.Seeder.Company.NexoraStudios.DemoAdminPassword);
+    }
+
     [Theory]
     [InlineData("api/admin/seeder/run")]
     [InlineData("api/admin/seeder/wipe")]

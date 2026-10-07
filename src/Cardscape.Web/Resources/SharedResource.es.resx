@@ -758,8 +758,8 @@
   <data name="SeederStatusIdle" xml:space="preserve"><value>Inactivo</value></data>
   <data name="SeederStatusDisabled" xml:space="preserve"><value>Deshabilitado</value></data>
   <data name="SeederNoRun" xml:space="preserve"><value>Ninguna ejecución en curso</value></data>
-  <data name="SeederWipeConfirm" xml:space="preserve"><value>¿Está seguro de que desea limpiar todos los datos del seeder? Esta acción eliminará registros existentes.</value></data>
-  <data name="SeederWipeConfirmTitle" xml:space="preserve"><value>Confirmar Limpieza</value></data>
+  <data name="SeederWipeConfirm" xml:space="preserve"><value>Esto borra TODOS los datos, incluidas todas las cuentas de usuario (también la tuya). Se cerrará tu sesión y la instancia volverá al asistente de configuración inicial. ¿Continuar?</value></data>
+  <data name="SeederWipeConfirmTitle" xml:space="preserve"><value>Acción destructiva</value></data>
   <data name="SeederAlreadyRunning" xml:space="preserve"><value>Ya hay una operación de seeder en ejecución.</value></data>
   <data name="SeederDisabled" xml:space="preserve"><value>El seeder está deshabilitado en la configuración del sistema.</value></data>
   <data name="SeederDisabledAlert" xml:space="preserve"><value>El seeder de datos está deshabilitado en el sistema. Puede habilitarlo en la Configuración del Sistema.</value></data>
@@ -935,4 +935,18 @@
   <data name="NoticeSeveritySuccess" xml:space="preserve"><value>Éxito</value></data>
   <data name="NoticeSeverityWarning" xml:space="preserve"><value>Advertencia</value></data>
   <data name="NoticeSeverityDanger" xml:space="preserve"><value>Crítico</value></data>
+  <data name="SeederReseedConfirm" xml:space="preserve"><value>Esto borra TODOS los datos, incluidas todas las cuentas de usuario (también la tuya), y los reemplaza por la empresa de demo. Después iniciá sesión con {0} / {1}. ¿Continuar?</value></data>
+  <data name="SeederDemoAccountTitle" xml:space="preserve"><value>Cuenta de administrador de demo</value></data>
+  <data name="SeederDemoAccountMessage" xml:space="preserve"><value>El seeder crea este administrador. Si generás con borrado, se eliminan todas las cuentas existentes (incluida la tuya) y esta es la única forma de volver a entrar.</value></data>
+  <data name="SeederReseededTitle" xml:space="preserve"><value>Datos de demo listos: volvé a iniciar sesión</value></data>
+  <data name="SeederReseededMessage" xml:space="preserve"><value>Se eliminaron todas las cuentas anteriores, incluida la que estás usando. Iniciá sesión con el administrador de demo:</value></data>
+  <data name="SeederSignInAsDemo" xml:space="preserve"><value>Entrar como admin de demo</value></data>
+  <data name="SeederWipedTitle" xml:space="preserve"><value>Base de datos borrada</value></data>
+  <data name="SeederWipedMessage" xml:space="preserve"><value>Se eliminaron todas las cuentas, incluida la tuya. Creá un nuevo administrador en el asistente de configuración inicial.</value></data>
+  <data name="SeederGoToSetup" xml:space="preserve"><value>Ir al asistente de configuración</value></data>
+  <data name="SeederDemoEmail" xml:space="preserve"><value>E-mail</value></data>
+  <data name="SeederDemoPassword" xml:space="preserve"><value>Contraseña</value></data>
+  <data name="SeederCopyEmail" xml:space="preserve"><value>Copiar e-mail</value></data>
+  <data name="SeederCopyPassword" xml:space="preserve"><value>Copiar contraseña</value></data>
+  <data name="SeederDemoSharedPassword" xml:space="preserve"><value>Todas las personas generadas (p. ej. linus.pauling@nexora.example) usan la misma contraseña, así podés recorrer la app con distintos roles.</value></data>
 </root>

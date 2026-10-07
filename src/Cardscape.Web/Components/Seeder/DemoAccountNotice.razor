@@ -1,0 +1,74 @@
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services.Api
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@inject IJSRuntime JS
+
+@* DemoAccountNotice — the demo administrator's credentials, with copy
+   buttons. Cardscape is open source and the demo data is public, so the
+   seeder page shows them plainly: after a wipe they are the only way in. *@
+
+<RadzenAlert AlertStyle="@AlertStyle" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false"
+             Icon="@Icon" Title="@Title" class="rz-m-0">
+    <RadzenStack Gap="0.75rem">
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <RadzenText Text="@Message" TextStyle="TextStyle.Body2" class="rz-m-0" />
+        }
+        <RadzenRow Gap="0.75rem" AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="5">
+                <RadzenStack Gap="0.25rem">
+                    <RadzenText Text="@L["SeederDemoEmail"]" TextStyle="TextStyle.Caption" class="rz-m-0" />
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <SecretBox Secret="@Account.Email" AriaLabel="@L["SeederDemoEmail"]" />
+                        <RadzenButton Icon="content_copy" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                      aria-label="@L["SeederCopyEmail"]" title="@L["SeederCopyEmail"]" Click="@(() => CopyAsync(Account.Email))" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenStack Gap="0.25rem">
+                    <RadzenText Text="@L["SeederDemoPassword"]" TextStyle="TextStyle.Caption" class="rz-m-0" />
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <SecretBox Secret="@Account.Password" AriaLabel="@L["SeederDemoPassword"]" />
+                        <RadzenButton Icon="content_copy" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                      aria-label="@L["SeederCopyPassword"]" title="@L["SeederCopyPassword"]" Click="@(() => CopyAsync(Account.Password))" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenColumn>
+            @if (Actions is not null)
+            {
+                <RadzenColumn Size="12" SizeMD="3">
+                    @Actions
+                </RadzenColumn>
+            }
+        </RadzenRow>
+        <RadzenText Text="@L["SeederDemoSharedPassword"]" TextStyle="TextStyle.Caption" class="rz-m-0" />
+    </RadzenStack>
+</RadzenAlert>
+
+@code {
+    [Parameter, EditorRequired] public SeederDemoAccountDto Account { get; set; } = default!;
+
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+
+    [Parameter] public string? Message { get; set; }
+
+    [Parameter] public AlertStyle AlertStyle { get; set; } = AlertStyle.Info;
+
+    [Parameter] public string Icon { get; set; } = "key";
+
+    [Parameter] public RenderFragment? Actions { get; set; }
+
+    private async Task CopyAsync(string value)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", value);
+        }
+        catch (JSException)
+        {
+            // Clipboard denied (insecure context); the value stays selectable on screen.
+        }
+    }
+}

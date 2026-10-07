@@ -1,12 +1,16 @@
 @page "/admin/seeder"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
 @using System.Globalization
+@using Cardscape.Web.Components.Seeder
 @using Cardscape.Web.Resources
+@using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> L
 @inject ISeederApiClient Seeder
 @inject DialogService DialogService
+@inject AuthService Auth
+@inject NavigationManager Nav
 @implements IAsyncDisposable
 
 <PageTitle>@L["SeederTitle"] @L["PageTitleSuffix"]</PageTitle>
@@ -45,6 +49,35 @@
                 <RadzenLink Path="admin/settings" Text="@L["SeederGoToSettings"]" />
             </RadzenStack>
         </RadzenAlert>
+    }
+
+    @if (_completed is DestructiveRun.WipeOnly)
+    {
+        <RadzenAlert AlertStyle="@AlertStyle.Warning" Variant="@Variant.Flat" Shade="@Shade.Lighter" AllowClose="false"
+                     Icon="restart_alt" Title="@L["SeederWipedTitle"]" class="rz-m-0">
+            <RadzenStack Gap="0.75rem">
+                <RadzenText Text="@L["SeederWipedMessage"]" TextStyle="@TextStyle.Body2" class="rz-m-0" />
+                <RadzenButton Text="@L["SeederGoToSetup"]" Icon="rocket_launch" ButtonStyle="@ButtonStyle.Warning"
+                              Click="@(() => SignOutToAsync("/setup"))" class="rz-align-self-start" />
+            </RadzenStack>
+        </RadzenAlert>
+    }
+    else if (_options?.DemoAccount is { } demo)
+    {
+        @if (_completed is DestructiveRun.WipeAndSeed)
+        {
+            <DemoAccountNotice Account="@demo" AlertStyle="@AlertStyle.Success" Icon="check_circle"
+                               Title="@L["SeederReseededTitle"]" Message="@L["SeederReseededMessage"]">
+                <Actions>
+                    <RadzenButton Text="@L["SeederSignInAsDemo"]" Icon="login" ButtonStyle="@ButtonStyle.Success"
+                                  Click="@(() => SignOutToAsync("/login"))" />
+                </Actions>
+            </DemoAccountNotice>
+        }
+        else
+        {
+            <DemoAccountNotice Account="@demo" Title="@L["SeederDemoAccountTitle"]" Message="@L["SeederDemoAccountMessage"]" />
+        }
     }
 
     @if (_error is not null)
@@ -149,6 +182,17 @@
     private bool _busy;
     private string? _error;
     private CancellationTokenSource? _pollCts;
+
+    // A wipe deletes every account, the operator's included; once such a
+    // run finishes the page tells them how to get back in.
+    private DestructiveRun? _pending;
+    private DestructiveRun? _completed;
+
+    private enum DestructiveRun
+    {
+        WipeAndSeed,
+        WipeOnly,
+    }
     private Task? _pollTask;
 
     private bool ActionsDisabled => _busy || _options is null || !_options.Enabled;
@@ -261,6 +305,10 @@
     private async Task ApplyStatusAsync(SeederStatusDto status)
     {
         _status = status;
+        if (_pending is { } pending && !status.Running && status.Report.Status is "Succeeded" or "Wiped")
+        {
+            (_completed, _pending) = (pending, null);
+        }
         // The endpoints return every log entry the
         // server has ever emitted. A full seed run is
         // ~80 entries; the full live grid is the
@@ -273,7 +321,13 @@
     private async Task RunAsync(bool wipe)
     {
         if (_busy) { return; }
+        if (wipe && !await ConfirmAsync(L["SeederReseedConfirm", DemoEmail, DemoPassword], L["SeederForceReseed"]))
+        {
+            return;
+        }
+
         _busy = true;
+        _completed = null;
         _error = null;
         try
         {
@@ -281,6 +335,10 @@
             if (!r.IsSuccess)
             {
                 _error = TranslateError(r.Error);
+            }
+            else if (r.Value?.Wipe == true)
+            {
+                _pending = DestructiveRun.WipeAndSeed;
             }
         }
         catch (Exception ex)
@@ -297,13 +355,13 @@
     {
         if (_busy) { return; }
 
-        bool? confirmed = await DialogService.Confirm(
-            L["SeederWipeConfirm"],
-            L["SeederWipeConfirmTitle"],
-            new ConfirmOptions { OkButtonText = L["SeederWipe"], CancelButtonText = L["CommonCancel"] });
-        if (confirmed != true) { return; }
+        if (!await ConfirmAsync(L["SeederWipeConfirm"], L["SeederWipe"]))
+        {
+            return;
+        }
 
         _busy = true;
+        _completed = null;
         _error = null;
         try
         {
@@ -311,6 +369,10 @@
             if (!r.IsSuccess)
             {
                 _error = TranslateError(r.Error);
+            }
+            else
+            {
+                _pending = DestructiveRun.WipeOnly;
             }
         }
         catch (Exception ex)
@@ -321,6 +383,23 @@
         {
             _busy = false;
         }
+    }
+
+    private string DemoEmail => _options?.DemoAccount?.Email ?? string.Empty;
+
+    private string DemoPassword => _options?.DemoAccount?.Password ?? string.Empty;
+
+    private async Task<bool> ConfirmAsync(string message, string okText) =>
+        await DialogService.Confirm(
+            message,
+            L["SeederWipeConfirmTitle"],
+            new ConfirmOptions { OkButtonText = okText, CancelButtonText = L["CommonCancel"] }) == true;
+
+    /// <summary>The operator's account no longer exists after a wipe: drop the stale session and go on.</summary>
+    private async Task SignOutToAsync(string path)
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo(path, forceLoad: true);
     }
 
     private string TranslateError(string? raw)

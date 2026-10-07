@@ -39,7 +39,11 @@ public sealed record SeederTableStatusDto(
 public sealed record SeederOptionsDto(
     bool Enabled,
     bool WipeBeforeSeed,
-    DateTimeOffset? FixedNow);
+    DateTimeOffset? FixedNow,
+    SeederDemoAccountDto? DemoAccount = null);
+
+/// <summary>The demo administrator created by the seeder (all demo users share the password).</summary>
+public sealed record SeederDemoAccountDto(string Email, string Password);
 
 /// <summary>JSON shape returned by <c>POST /api/admin/seeder/run</c>.</summary>
 public sealed record SeederRunAcceptedDto(

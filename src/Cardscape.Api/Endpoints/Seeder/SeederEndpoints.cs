@@ -3,6 +3,7 @@ using Cardscape.Api.Extensions;
 using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Contracts.Settings;
 using Cardscape.Seeder;
+using Cardscape.Seeder.Company;
 using Cardscape.Seeder.Configuration;
 using Cardscape.Seeder.Reporting;
 using Microsoft.AspNetCore.Builder;
@@ -63,7 +64,8 @@ public static class SeederEndpoints
             return Results.Ok(new SeederOptionsResponse(
                 seeder.Enabled,
                 seeder.WipeBeforeSeed,
-                options.Value.FixedNow));
+                options.Value.FixedNow,
+                new SeederDemoAccountResponse(NexoraStudios.DemoAdminEmail, NexoraStudios.DemoAdminPassword)));
         }).Produces<SeederOptionsResponse>(StatusCodes.Status200OK);
 
         // Async run: the endpoint returns 202 the moment
@@ -151,7 +153,15 @@ public static class SeederEndpoints
 public sealed record SeederRunRequest(bool? Wipe);
 
 public sealed record SeederStatusResponse(bool Enabled, bool Running, SeedReportResponse Report);
-public sealed record SeederOptionsResponse(bool Enabled, bool WipeBeforeSeed, DateTimeOffset? FixedNow);
+public sealed record SeederOptionsResponse(
+    bool Enabled, bool WipeBeforeSeed, DateTimeOffset? FixedNow, SeederDemoAccountResponse DemoAccount);
+
+/// <summary>
+/// The administrator account the demo dataset creates. Every seeded person
+/// shares this password. Published on purpose: it only exists after an
+/// operator seeds demo data, and a wipe deletes every other account.
+/// </summary>
+public sealed record SeederDemoAccountResponse(string Email, string Password);
 public sealed record SeederRunAcceptedResponse(bool Running, bool Wipe, DateTimeOffset? StartedAt);
 public sealed record SeederWipeAcceptedResponse(bool Running, bool WipeOnly, DateTimeOffset? StartedAt);
 public sealed record SeedReportResponse(

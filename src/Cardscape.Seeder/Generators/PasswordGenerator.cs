@@ -13,7 +13,7 @@ public static class PasswordGenerator
     /// same across runs — the seeder is for demo only, not for
     /// production deployments — but the value is hashed with the
     /// configured <c>IPasswordHasher</c> before persistence.</summary>
-    public static string DemoPassword() => "Nexora!Demo-2026";
+    public static string DemoPassword() => Company.NexoraStudios.DemoAdminPassword;
 
     /// <summary>Returns a 64-character lowercase hex SHA-256
     /// digest of <paramref name="input"/>. Used to seed the
