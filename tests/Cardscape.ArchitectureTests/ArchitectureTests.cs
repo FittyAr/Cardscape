@@ -290,6 +290,28 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void WebComponents_DoNotInjectTheUnconfiguredHttpClient()
+    {
+        // Program.cs registers only named clients; the default
+        // HttpClient has no API base address and no bearer token.
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string webRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web");
+        Regex rawHttpClientInjection = new(
+            @"^\s*@inject\s+(?:System\.Net\.Http\.)?HttpClient\s",
+            RegexOptions.CultureInvariant | RegexOptions.Multiline,
+            TimeSpan.FromSeconds(1));
+
+        string[] violations = Directory.GetFiles(webRoot, "*.razor", SearchOption.AllDirectories)
+            .Where(file => rawHttpClientInjection.IsMatch(File.ReadAllText(file)))
+            .Select(file => Path.GetRelativePath(repositoryRoot.FullName, file))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "Web components must call the API through the typed clients built on the named \"Cardscape.Api\" client");
+    }
+
+    [Fact]
     public void AsyncApiEndpointLambdas_AcceptCancellationToken()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();

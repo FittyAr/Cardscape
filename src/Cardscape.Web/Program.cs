@@ -215,6 +215,7 @@ builder.Services.AddScoped<ISearchApiClient, SearchApiClient>();
 // the client fronts the multipart upload, list, download and
 // delete endpoints.
 builder.Services.AddScoped<IAttachmentsApiClient, AttachmentsApiClient>();
+builder.Services.AddScoped<IImportsApiClient, ImportsApiClient>();
 
 builder.Services.AddScoped<SetupApiClient>();
 builder.Services.AddScoped<IAdminSettingsApiClient, AdminSettingsApiClient>();
