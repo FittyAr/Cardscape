@@ -92,7 +92,7 @@ public sealed partial class BoardEventBroadcaster
             c => c.CardMoved(new CardMovedPayload(
                 card.Id.Value,
                 boardId,
-                card.ListId.Value,
+                @event.PreviousListId.Value,
                 @event.NewListId.Value,
                 @event.NewPosition.Value,
                 @event.OccurredAt)),

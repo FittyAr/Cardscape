@@ -142,7 +142,7 @@ public sealed class AutomationEventBroadcasterTests
             boardId,
             rules,
             unitOfWork,
-            new CardMoved(card.Id, sourceListId, card.Position, Now));
+            new CardMoved(card.Id, BoardListId.New(), sourceListId, card.Position, Now));
     }
 
     private sealed record AutomationTestContext(

@@ -119,10 +119,11 @@ public sealed class Card : AggregateRoot<CardId>
             return Result.Success();
         }
 
+        BoardListId previousListId = ListId;
         ListId = newListId;
         Position = newPosition;
         UpdatedAt = at;
-        AddDomainEvent(new CardMoved(Id, newListId, newPosition, at));
+        AddDomainEvent(new CardMoved(Id, previousListId, newListId, newPosition, at));
         return Result.Success();
     }
 

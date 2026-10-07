@@ -25,6 +25,7 @@ public sealed record CardDescriptionChanged(
 /// <summary>Raised when a card is moved (within a list or to a different list).</summary>
 public sealed record CardMoved(
     CardId CardId,
+    BoardListId PreviousListId,
     BoardListId NewListId,
     Position NewPosition,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);

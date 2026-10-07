@@ -72,6 +72,22 @@ public sealed class WebhookEventBroadcasterTests
     }
 
     [Fact]
+    public async Task BroadcastAsync_CardMoved_ReportsThePreviousListAsTheSource()
+    {
+        using var context = CreateContext(Result.Success(), WebhookEventTypes.CardMoved);
+        var fromListId = BoardListId.New();
+
+        await context.Broadcaster.BroadcastAsync(
+            new CardMoved(context.Card.Id, fromListId, context.List.Id, Position.From(4.0), Now),
+            TestContext.Current.CancellationToken);
+
+        using JsonDocument payload = JsonDocument.Parse(context.AddedDelivery!.PayloadJson);
+        JsonElement data = payload.RootElement.GetProperty("data");
+        data.GetProperty("fromListId").GetGuid().Should().Be(fromListId.Value);
+        data.GetProperty("toListId").GetGuid().Should().Be(context.List.Id.Value);
+    }
+
+    [Fact]
     public async Task BroadcastAsync_CardCreated_WhenSchedulerFails_PropagatesFailure()
     {
         using var context = CreateContext(Result.Failure(DomainError.External(
@@ -113,7 +129,9 @@ public sealed class WebhookEventBroadcasterTests
         scopeFactory.VerifyNoOtherCalls();
     }
 
-    private static WebhookTestContext CreateContext(Result schedulerResult)
+    private static WebhookTestContext CreateContext(
+        Result schedulerResult,
+        string eventType = WebhookEventTypes.CardCreated)
     {
         var boardId = BoardId.New();
         var listId = BoardListId.New();
@@ -137,7 +155,7 @@ public sealed class WebhookEventBroadcasterTests
             boardId,
             "https://93.184.216.34/hook",
             "protected-secret",
-            WebhookEventTypes.CardCreated,
+            eventType,
             Now.AddDays(-1)).Value;
 
         var cards = new Mock<ICardRepository>(MockBehavior.Strict);
@@ -147,7 +165,7 @@ public sealed class WebhookEventBroadcasterTests
         var endpoints = new Mock<IWebhookEndpointRepository>(MockBehavior.Strict);
         endpoints.Setup(x => x.ListActiveForEventAsync(
                 boardId,
-                WebhookEventTypes.CardCreated,
+                eventType,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([endpoint]);
         var deliveries = new Mock<IWebhookDeliveryRepository>(MockBehavior.Strict);

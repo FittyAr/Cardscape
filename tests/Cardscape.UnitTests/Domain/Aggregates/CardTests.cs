@@ -87,6 +87,7 @@ public sealed class CardTests
     {
         var card = NewCard();
         card.ClearDomainEvents();
+        var previousList = card.ListId;
         var newList = BoardListId.New();
         var newPos = Position.From(2.0);
 
@@ -96,7 +97,7 @@ public sealed class CardTests
         card.ListId.Should().Be(newList);
         card.Position.Value.Should().Be(2.0);
         card.DomainEvents.Should().ContainSingle()
-            .Which.Should().BeOfType<CardMoved>();
+            .Which.Should().Be(new CardMoved(card.Id, previousList, newList, newPos, At));
     }
 
     [Fact]

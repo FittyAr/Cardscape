@@ -44,7 +44,7 @@ public sealed partial class WebhookEventBroadcaster
             new
             {
                 cardId = resolved.Card.Id.Value,
-                fromListId = resolved.Card.ListId.Value,
+                fromListId = @event.PreviousListId.Value,
                 toListId = @event.NewListId.Value,
                 position = @event.NewPosition.Value
             },
