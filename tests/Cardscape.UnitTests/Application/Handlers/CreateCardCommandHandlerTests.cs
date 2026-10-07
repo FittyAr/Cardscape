@@ -28,6 +28,26 @@ public class CreateCardCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_AppendsNewCardAfterTheLastCardInTheList()
+    {
+        var ctx = new HandlersTestContext();
+        var user = await ctx.SeedUserAsync();
+        var workspace = await ctx.SeedWorkspaceAsync(user.Id.Value);
+        var board = await ctx.SeedBoardAsync(workspace.Id, user.Id.Value);
+        var list = await ctx.SeedListAsync(board.Id);
+        ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
+
+        var first = await CreateCardCommandHandler.HandleAsync(
+            new CreateCardCommand(list.Id.Value, "First", null),
+            ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
+        var second = await CreateCardCommandHandler.HandleAsync(
+            new CreateCardCommand(list.Id.Value, "Second", null),
+            ctx.Lists, ctx.Boards, ctx.Cards, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.Activities, CancellationToken.None);
+
+        second.Value.Position.Should().BeGreaterThan(first.Value.Position);
+    }
+
+    [Fact]
     public async Task Handle_AsAnonymous_ReturnsUnauthenticated()
     {
         var ctx = new HandlersTestContext();

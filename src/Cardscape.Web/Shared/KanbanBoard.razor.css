@@ -77,6 +77,25 @@
     overflow-y: auto;
 }
 
+/* Space after the last card: lets a drag target "end of list" and
+   shows the insertion bar there. */
+.cs-kanban-drop-tail {
+    position: relative;
+    flex: none;
+    min-height: 0.75rem;
+    margin-top: -0.5rem;
+}
+
+.cs-kanban-drop-tail.is-active::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0.25rem;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--rz-primary);
+}
+
 .cs-kanban-column-footer {
     padding: 0.375rem 0.5rem 0.5rem;
 }

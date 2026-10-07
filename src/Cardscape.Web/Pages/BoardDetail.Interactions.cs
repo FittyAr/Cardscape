@@ -22,40 +22,99 @@ public partial class BoardDetail
     // collide.
     private Guid? _draggingCardId;
 
+    // Insertion point under the pointer. Updated on dragenter only
+    // (one C# round trip per card crossed, not per mouse move) and
+    // rendered as the insertion indicator.
+    private CardDropTarget? _dropTarget;
+
     private void OnCardDragStart(CardSummaryDto card)
     {
         _draggingCardId = card.Id;
+        _dropTarget = null;
     }
+
+    private void OnCardDragEnter(CardSummaryDto hovered)
+    {
+        CardSummaryDto? dragged = FindCard(_draggingCardId);
+        if (dragged is null)
+        {
+            return;
+        }
+
+        _dropTarget = hovered.Id == dragged.Id
+            ? null
+            : CardDropPosition.TargetFor(CardsOf(hovered.ListId), dragged, hovered);
+    }
+
+    private void OnColumnTailDragEnter(string columnId)
+    {
+        if (_draggingCardId is not null)
+        {
+            _dropTarget = new CardDropTarget(Guid.Parse(columnId), CardId: null, After: false);
+        }
+    }
+
+    private void OnCardDragEnd()
+    {
+        _draggingCardId = null;
+        _dropTarget = null;
+    }
+
+    private string? DropIndicatorClass(CardSummaryDto card) =>
+        _dropTarget is { CardId: { } id } target && id == card.Id && _draggingCardId is not null
+            ? (target.After ? "is-drop-after" : "is-drop-before")
+            : null;
+
+    private string? DropTailColumnId =>
+        _draggingCardId is not null && _dropTarget is { CardId: null } target ? target.ListId.ToString() : null;
 
     private Task OnKanbanDropAsync(string columnId) => OnColumnDropAsync(Guid.Parse(columnId));
 
     private async Task OnColumnDropAsync(Guid destinationListId)
     {
         Guid? cardId = _draggingCardId;
+        CardDropTarget? target = _dropTarget;
         _draggingCardId = null;
+        _dropTarget = null;
         if (cardId is null)
         {
             return;
         }
 
-        if (await MoveCardAsync(cardId.Value, destinationListId))
+        // A stale target from another column (the pointer crossed a
+        // column's padding last) degrades to "append".
+        if (target is null || target.ListId != destinationListId)
+        {
+            target = new CardDropTarget(destinationListId, CardId: null, After: false);
+        }
+
+        double? position = CardDropPosition.Compute(CardsOf(destinationListId), cardId.Value, target);
+        if (position is null)
+        {
+            return;
+        }
+
+        if (await MoveCardAsync(cardId.Value, destinationListId, position.Value))
         {
             await ReloadListsAndCardsAsync();
         }
     }
 
+    private IReadOnlyList<CardSummaryDto> CardsOf(Guid listId) =>
+        _cardsByList.GetValueOrDefault(listId, []);
+
+    private CardSummaryDto? FindCard(Guid? cardId) =>
+        cardId is null
+            ? null
+            : _cardsByList.Values.SelectMany(cards => cards).FirstOrDefault(card => card.Id == cardId);
+
     // Public for the unit test: pure I/O so the
     // logic is exercised in isolation. Returns
     // true when the API accepted the move.
-    public async Task<bool> MoveCardAsync(Guid cardId, Guid destinationListId)
+    public async Task<bool> MoveCardAsync(Guid cardId, Guid destinationListId, double position)
     {
-        // Drop at the end of the destination column:
-        // the API's Move endpoint takes a double position;
-        // we send a large sentinel so the server
-        // appends rather than inserts mid-column.
-        const double appendPosition = double.MaxValue;
         ApiResult<CardDto> result = await CardsApi.MoveAsync(
-            cardId, destinationListId, appendPosition, CancellationToken.None);
+            cardId, destinationListId, position, CancellationToken.None);
         return result.IsSuccess;
     }
 

@@ -616,6 +616,8 @@
   <data name="BoardCompletedSuffix" xml:space="preserve"><value> (completada)</value></data>
   <data name="BoardMirrorSuffix" xml:space="preserve"><value> (espejo)</value></data>
   <data name="BoardMirrorCard" xml:space="preserve"><value>Tarjeta espejo</value></data>
+  <data name="BoardCardComments" xml:space="preserve"><value>Comentarios: {0}</value></data>
+  <data name="BoardCardChecklist" xml:space="preserve"><value>Elementos de checklist: {0} de {1} completados</value></data>
   <data name="BoardCardTitle" xml:space="preserve"><value>Título de la tarjeta…</value></data>
   <data name="CardLoading" xml:space="preserve"><value>Cargando tarjeta…</value></data>
   <data name="CardSnoozedUntil" xml:space="preserve"><value>Pospuesta hasta {0}</value></data>

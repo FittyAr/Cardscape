@@ -18,6 +18,37 @@ public sealed class ChecklistRepository(CardscapeDbContext db)
             .CountAsync(checklist => checklist.CardId == typedCardId && !checklist.IsDeleted, ct);
     }
 
+    public async Task<IReadOnlyDictionary<Guid, ChecklistProgressReadModel>> ListProgressForCardsAsync(
+        IReadOnlyCollection<Guid> cardIds, CancellationToken ct = default)
+    {
+        if (cardIds.Count == 0)
+        {
+            return new Dictionary<Guid, ChecklistProgressReadModel>();
+        }
+
+        // One row per checklist with correlated item counts; a card rarely
+        // has more than a couple of checklists, so summing per card in
+        // memory is cheaper than a provider-specific GroupBy translation.
+        HashSet<CardId> wanted = [.. cardIds.Select(id => new CardId(id))];
+        var rows = await Db.Set<Checklist>()
+            .AsNoTracking()
+            .Where(checklist => wanted.Contains(checklist.CardId) && !checklist.IsDeleted)
+            .Select(checklist => new
+            {
+                checklist.CardId,
+                Completed = checklist.Items.Count(item => item.IsCompleted && !item.IsDeleted),
+                Total = checklist.Items.Count(item => !item.IsDeleted),
+            })
+            .ToListAsync(ct);
+
+        return rows
+            .GroupBy(row => row.CardId.Value)
+            .Select(group => (CardId: group.Key, Progress: new ChecklistProgressReadModel(
+                group.Sum(row => row.Completed), group.Sum(row => row.Total))))
+            .Where(entry => entry.Progress.Total > 0)
+            .ToDictionary(entry => entry.CardId, entry => entry.Progress);
+    }
+
     public async Task<IReadOnlyList<Checklist>> ListForCardAsync(
         Guid cardId, CancellationToken ct = default)
     {

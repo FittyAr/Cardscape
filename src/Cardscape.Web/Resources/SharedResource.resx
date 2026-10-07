@@ -617,6 +617,8 @@
   <data name="BoardCompletedSuffix" xml:space="preserve"><value> (completed)</value></data>
   <data name="BoardMirrorSuffix" xml:space="preserve"><value> (mirror)</value></data>
   <data name="BoardMirrorCard" xml:space="preserve"><value>Mirror card</value></data>
+  <data name="BoardCardComments" xml:space="preserve"><value>Comments: {0}</value></data>
+  <data name="BoardCardChecklist" xml:space="preserve"><value>Checklist items: {0} of {1} done</value></data>
   <data name="BoardCardTitle" xml:space="preserve"><value>Card title…</value></data>
   <data name="CardLoading" xml:space="preserve"><value>Loading card…</value></data>
   <data name="CardSnoozedUntil" xml:space="preserve"><value>Snoozed until {0}</value></data>

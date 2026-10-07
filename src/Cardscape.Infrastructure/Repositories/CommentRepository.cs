@@ -16,6 +16,25 @@ public sealed class CommentRepository(CardscapeDbContext db) : RepositoryBase<Co
             .CountAsync(comment => comment.CardId == cardId && !comment.IsDeleted, ct);
     }
 
+    public async Task<IReadOnlyDictionary<Guid, int>> CountForCardsAsync(
+        IReadOnlyCollection<Guid> cardIds, CancellationToken ct = default)
+    {
+        if (cardIds.Count == 0)
+        {
+            return new Dictionary<Guid, int>();
+        }
+
+        HashSet<CardId> wanted = [.. cardIds.Select(id => new CardId(id))];
+        var rows = await Db.Set<Comment>()
+            .AsNoTracking()
+            .Where(comment => wanted.Contains(comment.CardId) && !comment.IsDeleted)
+            .GroupBy(comment => comment.CardId)
+            .Select(group => new { CardId = group.Key, Count = group.Count() })
+            .ToListAsync(ct);
+
+        return rows.ToDictionary(row => row.CardId.Value, row => row.Count);
+    }
+
     public async Task<IReadOnlyList<Comment>> ListForCardAsync(CardId cardId, CancellationToken ct = default)
     {
         IQueryable<Comment> query = Db.Set<Comment>()

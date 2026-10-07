@@ -214,7 +214,9 @@ public partial class BoardDetail
             }
             foreach (KeyValuePair<Guid, List<CardSummaryDto>> kv in grouped)
             {
-                next[kv.Key] = kv.Value;
+                // Drop positions are computed from the rendered order,
+                // so it must be the persisted order.
+                next[kv.Key] = kv.Value.OrderBy(card => card.Position).ToList();
             }
         }
         _cardsByList = next;

@@ -68,12 +68,22 @@ public static class CreateCardCommandHandler
             return Result.Failure<CardDto>(descResult.Error);
         }
 
+        // New cards go to the bottom of the list. Giving every card the
+        // same start position left the order to the CreatedAt tiebreak
+        // and made drag-and-drop reordering (which averages neighbour
+        // positions) impossible.
+        IReadOnlyList<Card> siblings = await cards.ListForListAsync(
+            list.Id, includeArchived: true, cancellationToken);
+        Position position = siblings.Count == 0
+            ? Position.Start()
+            : Position.After(Position.From(siblings.Max(sibling => sibling.Position.Value)));
+
         var cardResult = Card.Create(
             CardId.New(),
             new BoardListId(command.ListId),
             titleResult.Value,
             descResult.Value,
-            Position.Start(),
+            position,
             currentUser.Id.Value,
             clock.UtcNow);
 

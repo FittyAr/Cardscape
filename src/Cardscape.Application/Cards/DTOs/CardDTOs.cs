@@ -30,7 +30,18 @@ public sealed record CardSummaryDto(
     DateTimeOffset UpdatedAt,
     bool IsSnoozed = false,
     DateTimeOffset? SnoozeUntil = null,
-    Guid? MirrorOfCardId = null);
+    Guid? MirrorOfCardId = null,
+    IReadOnlyList<CardSummaryLabelDto>? Labels = null,
+    IReadOnlyList<CardSummaryMemberDto>? Members = null,
+    int ChecklistCompleted = 0,
+    int ChecklistTotal = 0,
+    int CommentCount = 0);
+
+/// <summary>Label attached to a card, as shown on the kanban card front.</summary>
+public sealed record CardSummaryLabelDto(Guid Id, string Name, string Color);
+
+/// <summary>Card assignee with the display name used for avatar initials.</summary>
+public sealed record CardSummaryMemberDto(Guid UserId, string DisplayName);
 
 /// <summary>
 /// Per-card snooze projection. The <see cref="IsSnoozed"/> flag

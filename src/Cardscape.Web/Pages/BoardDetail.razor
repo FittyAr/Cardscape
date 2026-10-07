@@ -118,7 +118,9 @@ else
         }
 
         <KanbanBoard TItem="CardSummaryDto" Columns="@KanbanColumns"
-                     DropEnabled="true" OnColumnDrop="@OnKanbanDropAsync">
+                     DropEnabled="true" OnColumnDrop="@OnKanbanDropAsync"
+                     OnColumnTailDragEnter="@OnColumnTailDragEnter" OnDragEnd="@OnCardDragEnd"
+                     DropTailColumnId="@DropTailColumnId">
             <ColumnHeaderTemplate>
                 @{
                     var column = context;
@@ -161,39 +163,80 @@ else
                 @* BETA-3-UI-#15 — draggable for mouse users; tabindex +
                    role + aria-label surface the card to keyboard and
                    screen-reader users, and Enter / Space open it. *@
-                <div class="cs-card @(card.IsCompleted ? "is-completed" : null) @(_draggingCardId == card.Id ? "is-dragging" : null)"
+                <div class="cs-card @(card.IsCompleted ? "is-completed" : null) @(_draggingCardId == card.Id ? "is-dragging" : null) @DropIndicatorClass(card)"
                      style="@(opacity < 1 ? $"opacity: {opacity.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)};" : null)"
                      role="button"
                      aria-label="@L["BoardCardAria", card.Title, card.IsCompleted ? L["BoardCompletedSuffix"] : string.Empty, card.MirrorOfCardId is not null ? L["BoardMirrorSuffix"] : string.Empty]"
                      tabindex="0"
                      draggable="true"
                      @ondragstart="@(() => OnCardDragStart(card))"
+                     @ondragenter="@(() => OnCardDragEnter(card))"
                      @onkeydown="@(e => OnCardKeyDown(e, card))"
                      @onclick="@(() => OpenCard(card))">
-                    <span class="cs-card-title">@card.Title</span>
-                    @if (card.DueDate is not null || card.IsCompleted || card.MirrorOfCardId is not null || card.IsSnoozed)
+                    @if (card.Labels is { Count: > 0 } labels)
                     {
-                        <span class="cs-card-badges">
-                            @if (card.DueDate is not null)
+                        <span class="cs-card-labels">
+                            @foreach (CardSummaryLabelDto label in labels)
                             {
-                                <span class="cs-card-due cs-card-due--@due.ToString().ToLowerInvariant()" title="@($"{card.DueDate.Value.LocalDateTime:d} {card.DueDate.Value.LocalDateTime:t}")">
-                                    <RadzenIcon Icon="@(card.IsCompleted ? "check_circle" : "schedule")" />
-                                    @card.DueDate.Value.LocalDateTime.ToString("d MMM")
+                                <span class="cs-card-label" style="--cs-label-color: @label.Color" title="@label.Name"></span>
+                            }
+                        </span>
+                    }
+                    <span class="cs-card-title">@card.Title</span>
+                    @{
+                        bool hasMembers = card.Members is { Count: > 0 };
+                        bool hasBadges = card.DueDate is not null || card.IsCompleted || card.MirrorOfCardId is not null
+                                         || card.IsSnoozed || card.ChecklistTotal > 0 || card.CommentCount > 0;
+                    }
+                    @if (hasBadges || hasMembers)
+                    {
+                        <span class="cs-card-footer">
+                            <span class="cs-card-badges">
+                                @if (card.DueDate is not null)
+                                {
+                                    <span class="cs-card-due cs-card-due--@due.ToString().ToLowerInvariant()" title="@($"{card.DueDate.Value.LocalDateTime:d} {card.DueDate.Value.LocalDateTime:t}")">
+                                        <RadzenIcon Icon="@(card.IsCompleted ? "check_circle" : "schedule")" />
+                                        @card.DueDate.Value.LocalDateTime.ToString("d MMM")
+                                    </span>
+                                }
+                                else if (card.IsCompleted)
+                                {
+                                    <span class="cs-card-due cs-card-due--done"><RadzenIcon Icon="check_circle" /></span>
+                                }
+                                @if (card.CommentCount > 0)
+                                {
+                                    <span class="cs-card-count" title="@L["BoardCardComments", card.CommentCount]">
+                                        <RadzenIcon Icon="chat_bubble_outline" />
+                                        @card.CommentCount
+                                    </span>
+                                }
+                                @if (card.ChecklistTotal > 0)
+                                {
+                                    <span class="cs-card-count @(card.ChecklistCompleted == card.ChecklistTotal ? "is-complete" : null)"
+                                          title="@L["BoardCardChecklist", card.ChecklistCompleted, card.ChecklistTotal]">
+                                        <RadzenIcon Icon="check_box" />
+                                        @($"{card.ChecklistCompleted}/{card.ChecklistTotal}")
+                                    </span>
+                                }
+                                @if (card.IsSnoozed)
+                                {
+                                    <span class="cs-card-icon" title="@(card.SnoozeUntil is null ? null : L["CardSnoozedUntil", card.SnoozeUntil.Value.LocalDateTime.ToString("g")].Value)"><RadzenIcon Icon="snooze" /></span>
+                                }
+                                @* BETA-7-#13 — mirror cards share title/description
+                                   with their source; the icon tells the copies apart. *@
+                                @if (card.MirrorOfCardId is not null)
+                                {
+                                    <span class="cs-card-icon" title="@L["BoardMirrorCard"]"><RadzenIcon Icon="content_copy" /></span>
+                                }
+                            </span>
+                            @if (hasMembers)
+                            {
+                                <span class="cs-card-members">
+                                    @foreach (CardSummaryMemberDto member in card.Members!)
+                                    {
+                                        <span class="cs-card-avatar" title="@member.DisplayName">@UserInitials.From(member.DisplayName)</span>
+                                    }
                                 </span>
-                            }
-                            else if (card.IsCompleted)
-                            {
-                                <span class="cs-card-due cs-card-due--done"><RadzenIcon Icon="check_circle" /></span>
-                            }
-                            @if (card.IsSnoozed)
-                            {
-                                <span class="cs-card-icon" title="@(card.SnoozeUntil is null ? null : L["CardSnoozedUntil", card.SnoozeUntil.Value.LocalDateTime.ToString("g")].Value)"><RadzenIcon Icon="snooze" /></span>
-                            }
-                            @* BETA-7-#13 — mirror cards share title/description
-                               with their source; the icon tells the copies apart. *@
-                            @if (card.MirrorOfCardId is not null)
-                            {
-                                <span class="cs-card-icon" title="@L["BoardMirrorCard"]"><RadzenIcon Icon="content_copy" /></span>
                             }
                         </span>
                     }

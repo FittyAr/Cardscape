@@ -5,6 +5,8 @@ using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Common;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Labels;
+using Cardscape.Domain.Members;
 using Wolverine;
 
 namespace Cardscape.Application.Cards.Queries;
@@ -23,6 +25,10 @@ public static class ListCardsForBoardQueryHandler
         ICardSnoozeRepository snoozes,
         ICardMirrorRepository mirrors,
         IBoardRepository boards,
+        ILabelRepository labels,
+        IUserRepository users,
+        IChecklistRepository checklists,
+        ICommentRepository comments,
         ICurrentUser currentUser,
         IClock clock,
         CancellationToken cancellationToken)
@@ -65,18 +71,65 @@ public static class ListCardsForBoardQueryHandler
             ? items
             : items.Where(card => !snoozedCardIds.Contains(card.Id.Value));
 
-        List<CardSummaryDto> rows = filtered
-            .Select(card => new CardSummaryDto(
-                card.Id.Value,
-                card.ListId.Value,
-                card.Title.Value,
-                card.Position.Value,
-                card.DueDate,
-                card.IsCompleted,
-                card.UpdatedAt ?? card.CreatedAt,
-                IsSnoozed: snoozedCardIds.Contains(card.Id.Value),
-                SnoozeUntil: snoozeUntil.GetValueOrDefault(card.Id.Value),
-                MirrorOfCardId: MirrorOf(card.Id.Value)))
+        List<Card> visible = filtered.ToList();
+
+        // Card-front badges: every lookup below is one batched query for
+        // the whole board, so the listing stays O(1) round-trips.
+        List<Guid> cardIds = visible.Select(card => card.Id.Value).ToList();
+        IReadOnlyList<Label> boardLabels = await labels.ListForBoardAsync(
+            new Domain.Boards.BoardId(query.BoardId), cancellationToken);
+        Dictionary<Guid, CardSummaryLabelDto> labelsById = boardLabels.ToDictionary(
+            label => label.Id.Value,
+            label => new CardSummaryLabelDto(label.Id.Value, label.Name.Value, label.Color.Value));
+
+        List<UserId> memberIds = visible
+            .SelectMany(card => card.Members)
+            .Select(member => member.UserId)
+            .Distinct()
+            .Select(id => new UserId(id))
+            .ToList();
+        IReadOnlyList<User> memberUsers = memberIds.Count == 0
+            ? []
+            : await users.ListByIdsAsync(memberIds, cancellationToken);
+        Dictionary<Guid, string> displayNames = memberUsers.ToDictionary(
+            user => user.Id.Value,
+            user => user.DisplayName.Value);
+
+        IReadOnlyDictionary<Guid, ChecklistProgressReadModel> progress =
+            await checklists.ListProgressForCardsAsync(cardIds, cancellationToken);
+        IReadOnlyDictionary<Guid, int> commentCounts =
+            await comments.CountForCardsAsync(cardIds, cancellationToken);
+
+        List<CardSummaryDto> rows = visible
+            .Select(card =>
+            {
+                Guid id = card.Id.Value;
+                ChecklistProgressReadModel? checklist = progress.GetValueOrDefault(id);
+                return new CardSummaryDto(
+                    id,
+                    card.ListId.Value,
+                    card.Title.Value,
+                    card.Position.Value,
+                    card.DueDate,
+                    card.IsCompleted,
+                    card.UpdatedAt ?? card.CreatedAt,
+                    IsSnoozed: snoozedCardIds.Contains(id),
+                    SnoozeUntil: snoozeUntil.GetValueOrDefault(id),
+                    MirrorOfCardId: MirrorOf(id),
+                    Labels: card.CardLabels
+                        .Select(cardLabel => labelsById.GetValueOrDefault(cardLabel.LabelId.Value))
+                        .OfType<CardSummaryLabelDto>()
+                        .ToList(),
+                    Members: card.Members
+                        .OrderBy(member => member.AssignedAt)
+                        .Select(member => new CardSummaryMemberDto(
+                            member.UserId,
+                            displayNames.GetValueOrDefault(member.UserId, string.Empty)))
+                        .ToList(),
+                    ChecklistCompleted: checklist?.Completed ?? 0,
+                    ChecklistTotal: checklist?.Total ?? 0,
+                    CommentCount: commentCounts.GetValueOrDefault(id));
+            })
             .ToList();
 
         return Result.Success<IReadOnlyList<CardSummaryDto>>(rows);

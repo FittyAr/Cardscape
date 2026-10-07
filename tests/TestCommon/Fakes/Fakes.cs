@@ -607,6 +607,18 @@ public sealed class InMemoryChecklistRepository
         Task.FromResult<IReadOnlyList<Checklist>>(
             Store.Values.Where(c => c.CardId.Value == cardId && !c.IsDeleted)
                 .OrderBy(c => c.CreatedAt).ToList());
+
+    public Task<IReadOnlyDictionary<Guid, ChecklistProgressReadModel>> ListProgressForCardsAsync(
+        IReadOnlyCollection<Guid> cardIds, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyDictionary<Guid, ChecklistProgressReadModel>>(
+            Store.Values
+                .Where(c => cardIds.Contains(c.CardId.Value) && !c.IsDeleted)
+                .GroupBy(c => c.CardId.Value)
+                .Select(g => (g.Key, Progress: new ChecklistProgressReadModel(
+                    g.Sum(c => c.Items.Count(i => i.IsCompleted)),
+                    g.Sum(c => c.Items.Count))))
+                .Where(e => e.Progress.Total > 0)
+                .ToDictionary(e => e.Key, e => e.Progress));
 }
 
 public sealed class InMemoryChecklistItemRepository
@@ -1036,4 +1048,12 @@ public sealed class InMemoryCommentRepository
     public Task<IReadOnlyList<Comment>> ListForCardAsync(CardId cardId, CancellationToken ct = default) =>
         Task.FromResult<IReadOnlyList<Comment>>(
             Store.Values.Where(c => c.CardId.Value == cardId.Value).OrderBy(c => c.CreatedAt).ToList());
+
+    public Task<IReadOnlyDictionary<Guid, int>> CountForCardsAsync(
+        IReadOnlyCollection<Guid> cardIds, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyDictionary<Guid, int>>(
+            Store.Values
+                .Where(c => cardIds.Contains(c.CardId.Value) && !c.IsDeleted)
+                .GroupBy(c => c.CardId.Value)
+                .ToDictionary(g => g.Key, g => g.Count()));
 }

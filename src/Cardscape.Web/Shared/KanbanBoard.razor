@@ -12,6 +12,12 @@
    header with the per-list menu (rename / move / archive). When
    it is null the component falls back to "title + count".
 
+   Reordering: the parent tracks the insertion point while the
+   pointer crosses its cards; entering the space below the last
+   card (or the footer) raises OnColumnTailDragEnter so the parent
+   can switch to "append". DropTailColumnId shows the insertion
+   indicator in that tail slot.
+
    TrailingContent renders after the last column — BoardDetail
    uses it for the "Add another list" column. Styles live in
    KanbanBoard.razor.css. *@
@@ -29,7 +35,7 @@
 }
 else
 {
-    <div class="cs-kanban" @ondragend="@ClearDropTarget">
+    <div class="cs-kanban" @ondragend="@OnDragEndAsync">
         @foreach (KanbanColumn<TItem> column in Columns)
         {
             <section class="cs-kanban-column @(DropEnabled && _dropTargetId == column.Id ? "is-drop-target" : null)"
@@ -56,10 +62,17 @@ else
                             @CardTemplate(card)
                         }
                     }
+                    @if (DropEnabled)
+                    {
+                        <div class="cs-kanban-drop-tail @(DropTailColumnId == column.Id ? "is-active" : null)"
+                             aria-hidden="true"
+                             @ondragenter="@(() => OnTailDragEnterAsync(column.Id))"></div>
+                    }
                 </div>
                 @if (ChildContent is not null)
                 {
-                    <footer class="cs-kanban-column-footer">
+                    <footer class="cs-kanban-column-footer"
+                            @ondragenter="@(() => OnTailDragEnterAsync(column.Id))">
                         @ChildContent(column)
                     </footer>
                 }
@@ -82,7 +95,30 @@ else
     /// <summary>Raised with the destination column id when something is dropped on a column.</summary>
     [Parameter] public EventCallback<string> OnColumnDrop { get; set; }
 
+    /// <summary>Raised with the column id when the pointer enters the space after its last card.</summary>
+    [Parameter] public EventCallback<string> OnColumnTailDragEnter { get; set; }
+
+    /// <summary>Raised when a drag ends anywhere on the board (dropped or cancelled).</summary>
+    [Parameter] public EventCallback OnDragEnd { get; set; }
+
+    /// <summary>Column whose tail slot shows the insertion indicator.</summary>
+    [Parameter] public string? DropTailColumnId { get; set; }
+
     private string? _dropTargetId;
+
+    private async Task OnTailDragEnterAsync(string columnId)
+    {
+        if (DropEnabled)
+        {
+            await OnColumnTailDragEnter.InvokeAsync(columnId);
+        }
+    }
+
+    private async Task OnDragEndAsync()
+    {
+        _dropTargetId = null;
+        await OnDragEnd.InvokeAsync();
+    }
 
     private void OnDragEnter(string columnId)
     {
@@ -91,8 +127,6 @@ else
             _dropTargetId = columnId;
         }
     }
-
-    private void ClearDropTarget() => _dropTargetId = null;
 
     private async Task OnDropAsync(string columnId)
     {

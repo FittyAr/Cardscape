@@ -277,7 +277,23 @@ public sealed record CardSummaryDto(
     [property: JsonPropertyName("updatedAt")] DateTimeOffset UpdatedAt,
     [property: JsonPropertyName("isSnoozed")] bool IsSnoozed,
     [property: JsonPropertyName("snoozeUntil")] DateTimeOffset? SnoozeUntil,
-    [property: JsonPropertyName("mirrorOfCardId")] Guid? MirrorOfCardId);
+    [property: JsonPropertyName("mirrorOfCardId")] Guid? MirrorOfCardId,
+    [property: JsonPropertyName("labels")] IReadOnlyList<CardSummaryLabelDto>? Labels = null,
+    [property: JsonPropertyName("members")] IReadOnlyList<CardSummaryMemberDto>? Members = null,
+    [property: JsonPropertyName("checklistCompleted")] int ChecklistCompleted = 0,
+    [property: JsonPropertyName("checklistTotal")] int ChecklistTotal = 0,
+    [property: JsonPropertyName("commentCount")] int CommentCount = 0);
+
+/// <summary>Represents a label shown on a card in the board listing.</summary>
+public sealed record CardSummaryLabelDto(
+    [property: JsonPropertyName("id")] Guid Id,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("color")] string Color);
+
+/// <summary>Represents a card assignee in the board listing.</summary>
+public sealed record CardSummaryMemberDto(
+    [property: JsonPropertyName("userId")] Guid UserId,
+    [property: JsonPropertyName("displayName")] string DisplayName);
 
 /// <summary>Provides the values required to create a card.</summary>
 /// <param name="ListId">The list that will contain the card.</param>
