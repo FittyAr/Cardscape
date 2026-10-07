@@ -1,273 +1,223 @@
 @page "/"
 @using System.Security.Claims
 @using Cardscape.Web.Resources
+@using Cardscape.Web.Services.Api
 @using Microsoft.Extensions.Localization
 @inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
+@inject IWorkspacesApiClient WorkspacesApi
+@inject IBoardsApiClient BoardsApi
 
 <PageTitle>@L["HomeTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <AuthorizeView>
     <Authorized>
-        <RadzenStack Gap="1.5rem">
-            <RadzenRow AlignItems="@AlignItems.Center">
-                <RadzenColumn Size="12">
-                    <RadzenText Text="@Greeting(context.User)" TextStyle="@TextStyle.H3" TagName="@TagName.H1" Class="rz-m-0" />
-                    <RadzenText Text="@L["HomeLeadAuthorized"]" TextStyle="@TextStyle.Body1" class="rz-color-text-secondary" />
-                </RadzenColumn>
-            </RadzenRow>
+        <div class="cs-home">
+            <PageHeader Title="@Greeting(context.User)" Subtitle="@L["HomeLeadAuthorized"]" />
 
-            @* Visual Hierarchy Guide: clarifies Workspaces vs Boards vs Lists vs Dashboard *@
-            <RadzenCard Variant="@Variant.Outlined" Class="rz-p-4 rz-border-radius-2">
-                <RadzenStack Gap="0.75rem">
-                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
-                        <RadzenIcon Icon="account_tree" Class="rz-color-primary" Style="font-size: 1.5rem;" />
-                        <RadzenText Text="@L["HierarchyGuideTitle"]" TextStyle="@TextStyle.Subtitle1" TagName="@TagName.H2" Class="rz-m-0 rz-font-weight-bold" />
-                    </RadzenStack>
-                    <RadzenRow Gap="0.75rem">
-                        <RadzenColumn Size="12" SizeMD="3">
-                            <RadzenCard Variant="@Variant.Filled" Class="rz-p-3 rz-h-100">
-                                <RadzenStack Gap="0.25rem">
-                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
-                                        <RadzenIcon Icon="domain" Class="rz-color-primary" />
-                                        <RadzenText Text="1. Espacio" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
-                                    </RadzenStack>
-                                    <RadzenText Text="@L["HierarchyWorkspacesDesc"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
-                                </RadzenStack>
-                            </RadzenCard>
-                        </RadzenColumn>
-                        <RadzenColumn Size="12" SizeMD="3">
-                            <RadzenCard Variant="@Variant.Filled" Class="rz-p-3 rz-h-100">
-                                <RadzenStack Gap="0.25rem">
-                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
-                                        <RadzenIcon Icon="view_kanban" Class="rz-color-info" />
-                                        <RadzenText Text="2. Tablero / Proyecto" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
-                                    </RadzenStack>
-                                    <RadzenText Text="@L["HierarchyBoardsDesc"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
-                                </RadzenStack>
-                            </RadzenCard>
-                        </RadzenColumn>
-                        <RadzenColumn Size="12" SizeMD="3">
-                            <RadzenCard Variant="@Variant.Filled" Class="rz-p-3 rz-h-100">
-                                <RadzenStack Gap="0.25rem">
-                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
-                                        <RadzenIcon Icon="view_column" Class="rz-color-warning" />
-                                        <RadzenText Text="3. Listas y Fases" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
-                                    </RadzenStack>
-                                    <RadzenText Text="@L["HierarchyListsDesc"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
-                                </RadzenStack>
-                            </RadzenCard>
-                        </RadzenColumn>
-                        <RadzenColumn Size="12" SizeMD="3">
-                            <RadzenCard Variant="@Variant.Filled" Class="rz-p-3 rz-h-100">
-                                <RadzenStack Gap="0.25rem">
-                                    <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
-                                        <RadzenIcon Icon="insights" Class="rz-color-success" />
-                                        <RadzenText Text="4. Métricas / Dashboard" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
-                                    </RadzenStack>
-                                    <RadzenText Text="@L["HierarchyDashboardDesc"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
-                                </RadzenStack>
-                            </RadzenCard>
-                        </RadzenColumn>
-                    </RadzenRow>
-                </RadzenStack>
-            </RadzenCard>
+            @if (_loadError is not null)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_loadError</RadzenAlert>
+            }
 
-            @* Quick Access Shortcuts Hub *@
-            <RadzenRow Gap="1rem">
-                <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenCard Variant="@Variant.Outlined" Class="rz-p-3 rz-h-100" Style="cursor: pointer;"
-                                @onclick="@(() => Nav.NavigateTo("workspaces"))">
-                        <RadzenStack Orientation="@Orientation.Horizontal" Gap="0.75rem" AlignItems="@AlignItems.Center">
-                            <RadzenIcon Icon="domain" Class="rz-color-primary" Style="font-size: 2rem;" />
-                            <RadzenStack Gap="0">
-                                <RadzenText Text="@L["HomeWorkspacesHeading"]" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
-                                <RadzenText Text="@L["HomeWorkspacesBlurb"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
-                            </RadzenStack>
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenColumn>
-                <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenCard Variant="@Variant.Outlined" Class="rz-p-3 rz-h-100" Style="cursor: pointer;"
-                                @onclick="@(() => Nav.NavigateTo("calendar"))">
-                        <RadzenStack Orientation="@Orientation.Horizontal" Gap="0.75rem" AlignItems="@AlignItems.Center">
-                            <RadzenIcon Icon="calendar_month" Class="rz-color-info" Style="font-size: 2rem;" />
-                            <RadzenStack Gap="0">
-                                <RadzenText Text="@L["NavCalendar"]" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
-                                <RadzenText Text="@L["NavCalendarDesc"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
-                            </RadzenStack>
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenColumn>
-                <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenCard Variant="@Variant.Outlined" Class="rz-p-3 rz-h-100" Style="cursor: pointer;"
-                                @onclick="@(() => Nav.NavigateTo("planner"))">
-                        <RadzenStack Orientation="@Orientation.Horizontal" Gap="0.75rem" AlignItems="@AlignItems.Center">
-                            <RadzenIcon Icon="view_timeline" Class="rz-color-warning" Style="font-size: 2rem;" />
-                            <RadzenStack Gap="0">
-                                <RadzenText Text="@L["NavPlanner"]" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
-                                <RadzenText Text="@L["NavPlannerDesc"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
-                            </RadzenStack>
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenColumn>
-            </RadzenRow>
+            @* Starred boards — the Trello "pinned" row. *@
+            <section class="cs-home-section">
+                <h2 class="cs-section-title"><RadzenIcon Icon="star" />@L["HomeStarredHeading"]</h2>
+                @if (_starredError is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_starredError</RadzenAlert>
+                }
+                else if (_starred is null)
+                {
+                    <div class="cs-board-grid">
+                        @for (int i = 0; i < 3; i++)
+                        {
+                            <div class="cs-board-tile-skeleton"></div>
+                        }
+                    </div>
+                }
+                else if (_starred.Count == 0)
+                {
+                    <p class="cs-home-hint">@L["HomeStarredEmpty"]</p>
+                }
+                else
+                {
+                    <div class="cs-board-grid">
+                        @foreach (BoardSummaryDto board in _starred)
+                        {
+                            <BoardTile BoardId="board.Id" Name="@board.Name" IsStarred="true" />
+                        }
+                    </div>
+                }
+            </section>
 
-            @* Workspaces Section *@
-            <RadzenRow>
-                <RadzenColumn Size="12">
-                    <RadzenCard Variant="@Variant.Outlined" Class="rz-p-4" Style="cursor: pointer;"
-                                @onclick="@(() => Nav.NavigateTo("workspaces"))">
-                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center" Wrap="@FlexWrap.Wrap" Gap="1rem">
-                            <RadzenStack Orientation="@Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center">
-                                <RadzenIcon Icon="domain" Class="rz-background-color-primary-light rz-color-on-primary-light rz-border-radius-2 cs-tile-icon" />
-                                <RadzenStack Gap="0">
-                                    <RadzenText Text="@L["HomeWorkspacesHeading"]" TextStyle="@TextStyle.Subtitle1" TagName="@TagName.H4" Class="rz-m-0" />
-                                    <RadzenText Text="@L["HomeWorkspacesBlurb"]" TextStyle="@TextStyle.Body2" class="rz-color-text-secondary" />
-                                </RadzenStack>
-                            </RadzenStack>
-                            <RadzenButton Text="@L["HomeOpenWorkspaces"]" Icon="open_in_new" ButtonStyle="@ButtonStyle.Primary"
-                                          Click="@(() => Nav.NavigateTo("workspaces"))" />
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenColumn>
-            </RadzenRow>
+            @* One section per workspace with its boards. *@
+            @if (_workspaces is not null)
+            {
+                @if (_workspaces.Count == 0)
+                {
+                    <div class="cs-empty">
+                        <RadzenIcon Icon="space_dashboard" />
+                        <span>@L["HomeWorkspacesEmpty"]</span>
+                        <RadzenButton Text="@L["WorkspacesNew"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                                      Click="@(() => Nav.NavigateTo("workspaces"))" />
+                    </div>
+                }
 
-            @* Starred Boards Section *@
-            <RadzenRow>
-                <RadzenColumn Size="12">
-                    <RadzenCard Variant="@Variant.Outlined" Class="rz-p-4" Style="cursor: pointer;"
-                                @onclick="@(() => Nav.NavigateTo("workspaces"))">
-                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.SpaceBetween" AlignItems="@AlignItems.Center" Wrap="@FlexWrap.Wrap" Gap="1rem">
-                            <RadzenStack Orientation="@Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center">
-                                <RadzenIcon Icon="star" Class="rz-background-color-warning-light rz-color-on-warning-light rz-border-radius-2 cs-tile-icon" />
-                                <RadzenStack Gap="0">
-                                    <RadzenText Text="@L["HomeStarredHeading"]" TextStyle="@TextStyle.Subtitle1" TagName="@TagName.H4" Class="rz-m-0" />
-                                    <RadzenText Text="@L["HomeStarredBlurb"]" TextStyle="@TextStyle.Body2" class="rz-color-text-secondary" />
-                                </RadzenStack>
-                            </RadzenStack>
-                            <RadzenButton Text="@L["HomeSeeStarred"]" Icon="star" ButtonStyle="@ButtonStyle.Light"
-                                          Click="@(() => Nav.NavigateTo("workspaces"))" />
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenColumn>
-            </RadzenRow>
-
-            @* Features and Capabilities Overview *@
-            <RadzenRow Gap="1rem">
-                <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenCard Variant="@Variant.Outlined" Class="rz-p-3 rz-h-100">
-                        <RadzenStack Gap="0.5rem">
-                            <RadzenIcon Icon="view_kanban" Class="rz-color-primary" Style="font-size: 1.5rem;" />
-                            <RadzenText Text="@L["HomePointBoardsTitle"]" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
-                            <RadzenText Text="@L["HomePointBoardsBody"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenColumn>
-                <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenCard Variant="@Variant.Outlined" Class="rz-p-3 rz-h-100">
-                        <RadzenStack Gap="0.5rem">
-                            <RadzenIcon Icon="lock" Class="rz-color-warning" Style="font-size: 1.5rem;" />
-                            <RadzenText Text="@L["HomePointSelfHostTitle"]" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
-                            <RadzenText Text="@L["HomePointSelfHostBody"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenColumn>
-                <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenCard Variant="@Variant.Outlined" Class="rz-p-3 rz-h-100">
-                        <RadzenStack Gap="0.5rem">
-                            <RadzenIcon Icon="smart_toy" Class="rz-color-success" Style="font-size: 1.5rem;" />
-                            <RadzenText Text="@L["HomePointMcpTitle"]" TextStyle="@TextStyle.Subtitle2" Class="rz-m-0 rz-font-weight-bold" />
-                            <RadzenText Text="@L["HomePointMcpBody"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenColumn>
-            </RadzenRow>
-        </RadzenStack>
+                @foreach (WorkspaceDto workspace in _workspaces)
+                {
+                    _boardsByWorkspace.TryGetValue(workspace.Id, out IReadOnlyList<BoardSummaryDto>? boards);
+                    _boardErrors.TryGetValue(workspace.Id, out string? boardsError);
+                    <section class="cs-home-section">
+                        <div class="cs-home-workspace-header">
+                            <span class="cs-workspace-avatar" style="--cs-tile-color: @BoardTile.ColorFor(workspace.Id);" aria-hidden="true">@workspace.Name[..1].ToUpperInvariant()</span>
+                            <div class="cs-home-workspace-text">
+                                <h2 class="cs-home-workspace-name">@workspace.Name</h2>
+                                <span class="cs-home-workspace-meta">@L["HomeWorkspaceMembers", workspace.MemberCount]</span>
+                            </div>
+                            <RadzenButton Text="@L["BoardsTitle"]" Icon="arrow_forward" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                          Click="@(() => Nav.NavigateTo($"workspaces/{workspace.Id}"))" />
+                        </div>
+                        @if (boardsError is not null)
+                        {
+                            <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@boardsError</RadzenAlert>
+                        }
+                        <div class="cs-board-grid">
+                            @if (boards is null && boardsError is null)
+                            {
+                                <div class="cs-board-tile-skeleton"></div>
+                            }
+                            else if (boards is not null)
+                            {
+                                @foreach (BoardSummaryDto board in boards.Where(b => !b.IsArchived))
+                                {
+                                    <BoardTile BoardId="board.Id" Name="@board.Name" IsStarred="board.IsStarred" />
+                                }
+                            }
+                            <a class="cs-board-tile cs-board-tile--new" href="@($"workspaces/{workspace.Id}?create=1")">
+                                <RadzenIcon Icon="add" />
+                                <span>@L["BoardsNew"]</span>
+                            </a>
+                        </div>
+                    </section>
+                }
+            }
+        </div>
     </Authorized>
     <NotAuthorized>
-        <RadzenStack Gap="2rem">
-            <RadzenRow AlignItems="@AlignItems.Center" Gap="2rem">
-                <RadzenColumn Size="12" SizeMD="6">
-                    <RadzenStack Gap="1rem">
-                        <RadzenText Text="@L["HomeLandingEyebrow"]" TextStyle="@TextStyle.Overline" Class="cs-eyebrow" />
-                        <RadzenText Text="@L["AppName"]" TextStyle="@TextStyle.H1" TagName="@TagName.H1" />
-                        <RadzenText Text="@L["AppTagline"]" TextStyle="@TextStyle.Body1" />
-                        <RadzenStack Orientation="@Orientation.Horizontal" Gap="0.75rem" Class="rz-mt-4">
-                            <RadzenButton Text="@L["AuthSignIn"]" ButtonStyle="@ButtonStyle.Primary" Size="@ButtonSize.Large" Click="@(() => Nav.NavigateTo("login"))" />
-                            <RadzenButton Text="@L["AuthCreateAccount"]" ButtonStyle="@ButtonStyle.Light" Size="@ButtonSize.Large" Click="@(() => Nav.NavigateTo("register"))" />
-                        </RadzenStack>
-                    </RadzenStack>
-                </RadzenColumn>
-                <RadzenColumn Size="12" SizeMD="6">
-                    <RadzenCard Variant="@Variant.Filled" Class="rz-p-6 cs-hero-board">
-                        <RadzenStack Gap="1rem">
-                            <RadzenRow Gap="0.5rem">
-                                <RadzenColumn Size="4">
-                                    <RadzenStack Gap="0.5rem">
-                                        <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="1" />
-                                        <RadzenCard Class="cs-hero-card-tall" />
-                                        <RadzenCard Class="cs-hero-card-short" />
-                                    </RadzenStack>
-                                </RadzenColumn>
-                                <RadzenColumn Size="4">
-                                    <RadzenStack Gap="0.5rem">
-                                        <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="2" />
-                                        <RadzenCard Class="rz-background-color-primary-light cs-hero-card-tall" />
-                                        <RadzenCard Class="cs-hero-card-short" />
-                                        <RadzenCard Class="cs-hero-card-short" />
-                                    </RadzenStack>
-                                </RadzenColumn>
-                                <RadzenColumn Size="4">
-                                    <RadzenStack Gap="0.5rem">
-                                        <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="3" />
-                                        <RadzenCard Class="cs-hero-card-short" />
-                                        <RadzenCard Class="cs-hero-card-tall" />
-                                    </RadzenStack>
-                                </RadzenColumn>
-                            </RadzenRow>
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenColumn>
-            </RadzenRow>
-            <RadzenRow Gap="1rem">
-                <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenCard>
-                        <RadzenStack Gap="0.5rem">
-                            <RadzenIcon Icon="view_kanban" Class="cs-feature-icon" />
-                            <RadzenText Text="@L["HomePointBoardsTitle"]" TextStyle="@TextStyle.H5" TagName="@TagName.H3" />
-                            <RadzenText Text="@L["HomePointBoardsBody"]" />
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenColumn>
-                <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenCard>
-                        <RadzenStack Gap="0.5rem">
-                            <RadzenIcon Icon="lock" Class="cs-feature-icon" />
-                            <RadzenText Text="@L["HomePointSelfHostTitle"]" TextStyle="@TextStyle.H5" TagName="@TagName.H3" />
-                            <RadzenText Text="@L["HomePointSelfHostBody"]" />
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenColumn>
-                <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenCard>
-                        <RadzenStack Gap="0.5rem">
-                            <RadzenIcon Icon="android" Class="cs-feature-icon" />
-                            <RadzenText Text="@L["HomePointMcpTitle"]" TextStyle="@TextStyle.H5" TagName="@TagName.H3" />
-                            <RadzenText Text="@L["HomePointMcpBody"]" />
-                        </RadzenStack>
-                    </RadzenCard>
-                </RadzenColumn>
-            </RadzenRow>
-        </RadzenStack>
+        <div class="cs-landing">
+            <div class="cs-landing-hero">
+                <div class="cs-landing-copy">
+                    <span class="cs-eyebrow">@L["HomeLandingEyebrow"]</span>
+                    <h1 class="cs-landing-title">@L["AppName"]</h1>
+                    <p class="cs-landing-lead">@L["AppTagline"]</p>
+                    <div class="cs-landing-actions">
+                        <RadzenButton Text="@L["AuthCreateAccount"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" Click="@(() => Nav.NavigateTo("register"))" />
+                        <RadzenButton Text="@L["AuthSignIn"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" Size="ButtonSize.Large" Click="@(() => Nav.NavigateTo("login"))" />
+                    </div>
+                </div>
+
+                @* Decorative mini board. *@
+                <div class="cs-landing-board" aria-hidden="true">
+                    @foreach (int cards in new[] { 3, 2, 4 })
+                    {
+                        <div class="cs-landing-col">
+                            <span class="cs-landing-col-title"></span>
+                            @for (int i = 0; i < cards; i++)
+                            {
+                                <span class="cs-landing-card @(cards == 2 && i == 0 ? "is-accent" : null)"></span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="cs-landing-features">
+                <div class="cs-landing-feature">
+                    <RadzenIcon Icon="view_kanban" />
+                    <h3>@L["HomePointBoardsTitle"]</h3>
+                    <p>@L["HomePointBoardsBody"]</p>
+                </div>
+                <div class="cs-landing-feature">
+                    <RadzenIcon Icon="dns" />
+                    <h3>@L["HomePointSelfHostTitle"]</h3>
+                    <p>@L["HomePointSelfHostBody"]</p>
+                </div>
+                <div class="cs-landing-feature">
+                    <RadzenIcon Icon="smart_toy" />
+                    <h3>@L["HomePointMcpTitle"]</h3>
+                    <p>@L["HomePointMcpBody"]</p>
+                </div>
+            </div>
+        </div>
     </NotAuthorized>
 </AuthorizeView>
 
 @code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    private IReadOnlyList<BoardSummaryDto>? _starred;
+    private IReadOnlyList<WorkspaceDto>? _workspaces;
+    private readonly Dictionary<Guid, IReadOnlyList<BoardSummaryDto>> _boardsByWorkspace = new();
+    private readonly Dictionary<Guid, string> _boardErrors = new();
+    private string? _starredError;
+    private string? _loadError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is null || (await AuthState).User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        var starredTask = BoardsApi.ListStarredAsync();
+        var workspacesTask = WorkspacesApi.ListAsync();
+        await Task.WhenAll(starredTask, workspacesTask);
+
+        // A failed request keeps its own error state; it is never
+        // shown as an empty collection.
+        ApiResult<IReadOnlyList<BoardSummaryDto>> starred = await starredTask;
+        if (starred.IsSuccess)
+        {
+            _starred = starred.Value ?? [];
+        }
+        else
+        {
+            _starredError = starred.Error ?? L["BoardsLoadFailed"];
+        }
+
+        ApiResult<IReadOnlyList<WorkspaceDto>> workspaces = await workspacesTask;
+        if (!workspaces.IsSuccess)
+        {
+            _loadError = workspaces.Error ?? L["BoardsLoadFailed"];
+            return;
+        }
+
+        _workspaces = (workspaces.Value ?? []).Where(w => !w.IsArchived).ToList();
+        StateHasChanged();
+
+        // Board lists load per workspace in parallel; each section
+        // fills in as soon as its own request returns.
+        await Task.WhenAll(_workspaces.Select(async workspace =>
+        {
+            ApiResult<IReadOnlyList<BoardSummaryDto>> boards = await BoardsApi.ListForWorkspaceAsync(workspace.Id);
+            if (boards.IsSuccess)
+            {
+                _boardsByWorkspace[workspace.Id] = boards.Value ?? [];
+            }
+            else
+            {
+                _boardErrors[workspace.Id] = boards.Error ?? L["BoardsLoadFailed"];
+            }
+
+            StateHasChanged();
+        }));
+    }
+
     private string Greeting(ClaimsPrincipal user)
     {
-        string? name = user.Identity?.Name
-            ?? user.FindFirst(ClaimTypes.GivenName)?.Value
+        string? name = user.FindFirst(ClaimTypes.GivenName)?.Value
+            ?? user.Identity?.Name
             ?? user.FindFirst("name")?.Value;
 
         if (string.IsNullOrWhiteSpace(name))
@@ -275,6 +225,6 @@
             return L["HomeTitle"];
         }
 
-        return string.Format(L["HomeGreeting"].Value, name);
+        return string.Format(L["HomeGreeting"].Value, name.Split(' ')[0]);
     }
 }

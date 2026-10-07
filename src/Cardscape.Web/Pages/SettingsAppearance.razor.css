@@ -1,0 +1,109 @@
+.cs-appearance {
+    max-width: 56rem;
+}
+
+.cs-appearance-section {
+    margin-bottom: 2rem;
+}
+
+.cs-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+    gap: 1rem;
+}
+
+/* Rendered by RadzenButton (ChildContent); the overrides below
+   replace Radzen's button chrome with the tile look. */
+.cs-theme-grid ::deep .cs-theme-option {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 2px solid var(--cs-border);
+    border-radius: var(--rz-card-border-radius, 10px);
+    background: var(--cs-surface);
+    color: var(--rz-text-color);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: border-color var(--cs-fast), box-shadow var(--cs-fast);
+}
+
+.cs-theme-grid ::deep .cs-theme-option:hover {
+    border-color: var(--cs-border-strong);
+    box-shadow: var(--rz-shadow-2);
+}
+
+.cs-theme-grid ::deep .cs-theme-option.is-selected {
+    border-color: var(--rz-primary);
+}
+
+.cs-theme-grid ::deep .cs-theme-option .rz-button-box {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+/* Miniature board drawn with the theme's own colours. */
+.cs-theme-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 5.5rem;
+    padding: 6px;
+    border-radius: calc(var(--rz-card-border-radius, 10px) - 4px);
+    background: var(--bg);
+    overflow: hidden;
+}
+
+.cs-theme-preview-bar {
+    height: 8px;
+    border-radius: 3px;
+    background: var(--sf);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tx) 10%, transparent);
+}
+
+.cs-theme-preview-cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    flex: 1;
+}
+
+.cs-theme-preview-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--tx) 7%, var(--bg));
+}
+
+.cs-theme-preview-col i {
+    display: block;
+    height: 12px;
+    border-radius: 3px;
+    background: var(--sf);
+    box-shadow: 0 1px 1px color-mix(in srgb, var(--tx) 15%, transparent);
+}
+
+.cs-theme-preview-col i.is-accent {
+    background: var(--p);
+}
+
+.cs-theme-option-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-inline: 0.25rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.cs-theme-grid ::deep .cs-theme-option-check {
+    font-size: 1.125rem;
+    color: var(--rz-primary);
+}

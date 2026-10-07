@@ -27,482 +27,443 @@
 
 @if (_notFound)
 {
-    <RadzenCard>
-        <RadzenStack Gap="0.5rem">
-            <RadzenText Text="@L["CardNotFoundTitle"]" TextStyle="TextStyle.H4" TagName="TagName.H2" />
-            <RadzenText Text="@L["CardNotFoundBody"]" TextStyle="TextStyle.Body1" class="rz-color-text-secondary" />
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                <RadzenButton Text="@L["CardNotFoundBack"]" Icon="arrow_back" ButtonStyle="ButtonStyle.Primary"
-                              Click="@(() => Nav.NavigateTo("workspaces"))" />
-            </RadzenStack>
-        </RadzenStack>
-    </RadzenCard>
+    <div class="cs-empty">
+        <RadzenIcon Icon="search_off" />
+        <RadzenText Text="@L["CardNotFoundTitle"]" TextStyle="TextStyle.H5" TagName="TagName.H2" Class="rz-m-0" />
+        <span>@L["CardNotFoundBody"]</span>
+        <RadzenButton Text="@L["CardNotFoundBack"]" Icon="arrow_back" ButtonStyle="ButtonStyle.Primary"
+                      Click="@(() => Nav.NavigateTo("workspaces"))" />
+    </div>
 }
 else if (_card is null)
 {
-    <RadzenText Text="@L["CardLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <div class="cs-card-detail" aria-busy="true">
+        <div class="cs-card-detail-skeleton"></div>
+    </div>
 }
 else
 {
-    <RadzenCard>
-        <RadzenStack Gap="1rem">
-            @if (_commandError is not null)
-            {
-                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_commandError</RadzenAlert>
-            }
-            <RadzenStack Gap="0.5rem">
+    <div class="cs-card-detail">
+        <RadzenButton Text="@L["ActivityBackToBoard"]" Icon="arrow_back" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                      Size="ButtonSize.Small" class="cs-card-detail-back" Click="@GoBackToBoard" />
+
+        @* Mutation failures surface above the editable title so they
+           are visible whichever control triggered them. *@
+        @if (_commandError is not null)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_commandError</RadzenAlert>
+        }
+
+        @* ── Title + status ───────────────────────────────── *@
+        <header class="cs-card-detail-header">
+            <RadzenIcon Icon="@(_card.IsCompleted ? "check_circle" : "radio_button_unchecked")"
+                        class="@(_card.IsCompleted ? "cs-card-detail-status is-done" : "cs-card-detail-status")" />
+            <div class="cs-card-detail-heading">
                 @if (_editingTitle)
                 {
                     <RadzenTextBox @bind-Value="_editingTitleValue"
-                                   Style="font-size: 1.5rem; font-weight: 600; width: 100%"
+                                   class="cs-card-detail-title-input"
                                    autofocus
                                    @onkeydown="@HandleTitleKeyDownAsync"
                                    @onblur="@SaveTitleAsync" />
                 }
                 else
                 {
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenText Text="@_card.Title" TextStyle="TextStyle.H5" TagName="TagName.H1" />
-                        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
-                                      Click="@StartEditingTitle" title="@L["CardEditTitle"]"
-                                      aria-label="@L["CardEditTitle"]" />
-                    </RadzenStack>
+                    <h1 class="cs-card-detail-title" title="@L["CardEditTitle"]" tabindex="0"
+                        @onclick="@StartEditingTitle"
+                        @onkeydown="@(e => { if (e.Key == "Enter") StartEditingTitle(); })">@_card.Title</h1>
                 }
-                @* P3.2 / G6b ” "Snoozed" badge. Rendered below the
-                   title only when the card carries an active snooze
-                   (Until > now). The unsnooze affordance is a small
-                   link so the user can flip the toggle in one click. *@
-                @if (_card.IsSnoozed && _card.SnoozeUntil is { } snoozeUntil)
-                {
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenBadge BadgeStyle="BadgeStyle.Warning"
-                                     Text="@L["CardSnoozedUntil", snoozeUntil.LocalDateTime.ToString("g")]" />
-                        <RadzenButton Text="@L["CardUnsnooze"]" ButtonStyle="ButtonStyle.Light"
-                                      Size="ButtonSize.ExtraSmall" Click="@UnsnoozeAsync" />
-                    </RadzenStack>
-                }
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
-                             Wrap="FlexWrap.Wrap">
-                    <RadzenButton Text="@L["ActivityBackToBoard"]" Icon="arrow_back"
-                                  ButtonStyle="ButtonStyle.Light"
-                                  Click="@GoBackToBoard" />
+                <div class="cs-card-detail-chips">
                     @if (_card.IsCompleted)
                     {
-                        <RadzenButton Text="@L["ActivityKindReopen"]" ButtonStyle="ButtonStyle.Light" Click="@ReopenAsync" />
+                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Variant="Variant.Flat" Shade="Shade.Lighter" Text="@L["CardCompletedBadge"]" />
+                    }
+                    @if (_card.IsArchived)
+                    {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" Text="@L["CardArchivedBadge"]" />
+                    }
+                    @* P3.2 / G6b — snoozed badge + one-click unsnooze. *@
+                    @if (_card.IsSnoozed && _card.SnoozeUntil is { } snoozeUntil)
+                    {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter"
+                                     Text="@L["CardSnoozedUntil", snoozeUntil.LocalDateTime.ToString("g")]" />
+                        <RadzenButton Text="@L["CardUnsnooze"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                                      Size="ButtonSize.ExtraSmall" Click="@UnsnoozeAsync" />
+                    }
+                </div>
+            </div>
+        </header>
+
+        @if (_voteError is not null)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_voteError</RadzenAlert>
+        }
+
+        <div class="cs-card-detail-grid">
+            @* ── Main column ─────────────────────────────── *@
+            <div class="cs-card-detail-main">
+                @if (_aiSuggestedOwners is { Count: > 0 })
+                {
+                    <section class="cs-card-section">
+                        <h2 class="cs-card-section-title"><RadzenIcon Icon="auto_awesome" />@L["AiSuggestOwners"]</h2>
+                        @foreach (AiOwnerSuggestionDto suggestion in _aiSuggestedOwners)
+                        {
+                            <div class="cs-row">
+                                <strong>@suggestion.DisplayName</strong>
+                                <span class="cs-muted">— @suggestion.Reason</span>
+                                <RadzenButton Text="@L["BoardAddItem"]" Size="ButtonSize.ExtraSmall"
+                                              ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat"
+                                              Click="@(() => AssignSuggestedOwnerAsync(suggestion))"
+                                              Disabled="@_aiBusy" />
+                            </div>
+                        }
+                    </section>
+                }
+
+                <section class="cs-card-section">
+                    <h2 class="cs-card-section-title"><RadzenIcon Icon="notes" />@L["CardDescription"]</h2>
+                    @* BETA-8-UI-#15 — manual description editor.
+                       BUG-A4-005 — wrapped in a RadzenTemplateForm with an
+                       explicit Submit so the latest text is committed
+                       before the handler runs. *@
+                    @if (_editingDescription)
+                    {
+                        <RadzenTemplateForm TItem="string" Data="@_editingDescriptionValue" Submit="@SaveDescriptionAsync">
+                            <RadzenTextArea @bind-Value="_editingDescriptionValue" Name="description-editor"
+                                            Rows="5" Style="width:100%" Placeholder="@L["DescriptionEmpty"]" />
+                            <div class="cs-row rz-mt-2">
+                                <RadzenButton Text="@L["DescriptionSave"]" Icon="check"
+                                              ButtonType="ButtonType.Submit"
+                                              ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                              IsBusy="@_savingDescription" />
+                                <RadzenButton Text="@L["DescriptionCancel"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                                              Size="ButtonSize.Small"
+                                              Click="@(() => _editingDescription = false)" />
+                            </div>
+                        </RadzenTemplateForm>
                     }
                     else
                     {
-                        <RadzenButton Text="@L["CardComplete"]" ButtonStyle="ButtonStyle.Success" Click="@CompleteAsync" />
+                        <div class="cs-card-description @(string.IsNullOrWhiteSpace(_card.Description) ? "is-empty" : null)"
+                             role="button" tabindex="0" title="@L["DescriptionEdit"]"
+                             @onclick="@StartEditingDescription"
+                             @onkeydown="@(e => { if (e.Key == "Enter") StartEditingDescription(); })">
+                            @(string.IsNullOrWhiteSpace(_card.Description) ? L["DescriptionEmpty"] : _card.Description)
+                        </div>
+                        <div class="cs-row">
+                            <RadzenButton Text="@L["AiGenerateDescription"]" Icon="auto_awesome"
+                                          ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                          Click="@GenerateDescriptionAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
+                        </div>
+                        @if (_aiGeneratedDescription is not null)
+                        {
+                            <p class="cs-muted">@_aiGeneratedDescription</p>
+                        }
                     }
-                    <RadzenButton Text="@(_card.IsArchived ? L["ActivityKindRestore"] : L["ActivityKindArchive"])"
-                                  ButtonStyle="ButtonStyle.Warning" Click="@ToggleArchiveAsync" />
-                    <RadzenButton Text="@L["ActionDelete"]" Icon="delete" ButtonStyle="ButtonStyle.Danger"
-                                  Click="@DeleteCardAsync" />
-                    @* P3.3 / G6c ” "Mirror to..." entry. Opens a RadzenDialog
-                       with a board picker + a list picker. On confirm the
-                       dialog returns the target list id and the parent
-                       calls ICardsApiClient.MirrorToAsync. *@
-                    <RadzenButton Text="@L["MirrorToButton"]"
-                                  Icon="content_copy"
-                                  ButtonStyle="ButtonStyle.Light"
-                                  Click="@OpenMirrorDialogAsync"
-                                  Disabled="@_mirroring"
-                                  IsBusy="@_mirroring"
-                                  title="@L["MirrorToTitle"]" />
-                    <RadzenButton Text="@(_voteState is { CurrentUserHasVoted: true } ? " " : " ")"
-                                  ButtonStyle="@(_voteState is { CurrentUserHasVoted: true } ? ButtonStyle.Danger : ButtonStyle.Light)"
+                </section>
+
+                <section class="cs-card-section">
+                    <h2 class="cs-card-section-title"><RadzenIcon Icon="checklist" />@L["CardChecklists"]</h2>
+                    @if (_checklistsError is not null)
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_checklistsError</RadzenAlert>
+                    }
+                    else if (_checklists is null)
+                    {
+                        <span class="cs-muted">@L["CardLoadingChecklists"]</span>
+                    }
+                    else
+                    {
+                        @foreach (ChecklistDto cl in _checklists)
+                        {
+                            <div class="cs-checklist">
+                                <div class="cs-checklist-header">
+                                    <strong class="cs-checklist-title">@cl.Title</strong>
+                                    <span class="cs-muted tabular-nums">@($"{cl.CompletedCount}/{cl.TotalCount}")</span>
+                                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.ExtraSmall"
+                                                  Click="@(() => DeleteChecklistAsync(cl.Id))"
+                                                  title="@L["ChecklistDelete"]" aria-label="@L["ChecklistDelete"]" />
+                                </div>
+                                @* BETA-8-UI-#16 — percent computed here, Max pinned to 100. *@
+                                <RadzenProgressBar Value="@ChecklistProgressPercent(cl)" Max="100" ShowValue="false"
+                                                   ProgressBarStyle="@(cl.TotalCount > 0 && cl.CompletedCount == cl.TotalCount ? ProgressBarStyle.Success : ProgressBarStyle.Primary)"
+                                                   class="cs-checklist-progress" />
+                                @foreach (ChecklistItemDto item in cl.Items)
+                                {
+                                    <div class="cs-checklist-item @(item.IsCompleted ? "is-done" : null)">
+                                        <RadzenCheckBox Value="@item.IsCompleted"
+                                                        Change="@(async (bool _) => await ToggleItemAsync(cl.Id, item.Id))" />
+                                        <span class="cs-checklist-item-text">@item.Text</span>
+                                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.ExtraSmall"
+                                                      Click="@(() => DeleteItemAsync(cl.Id, item.Id))"
+                                                      aria-label="@L["ChecklistItemDelete"]" class="cs-checklist-item-delete" />
+                                    </div>
+                                }
+                                <div class="cs-row">
+                                    <RadzenTextBox @bind-Value="_newChecklistItemText" Immediate="true" Placeholder="@L["CardChecklistItem"]"
+                                                   Style="flex:1"
+                                                   @onkeydown="@(e => OnAddItemKeyDownAsync(e, cl.Id))" />
+                                    <RadzenButton Text="@L["BoardAddItem"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" Size="ButtonSize.Small"
+                                                  Click="@(() => AddItemAsync(cl.Id))" />
+                                </div>
+                            </div>
+                        }
+                        <div class="cs-row">
+                            <RadzenTextBox @bind-Value="_newChecklistTitle" Immediate="true" Placeholder="@L["CardChecklistTitle"]"
+                                           Style="flex:1"
+                                           @onkeydown="@OnCreateChecklistKeyDownAsync" />
+                            <RadzenButton Text="@L["CardCreateChecklist"]" Icon="add" ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" Size="ButtonSize.Small"
+                                          Click="@CreateChecklistAsync" />
+                            <RadzenButton Text="@L["AiGenerateChecklist"]" Icon="auto_awesome"
+                                          ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                          Click="@MakeChecklistAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
+                        </div>
+                    }
+                </section>
+
+                @* BUG-A5-002 — direct file upload / list / download / delete. *@
+                <section class="cs-card-section">
+                    <h2 class="cs-card-section-title"><RadzenIcon Icon="attach_file" />@L["CardAttachments"]</h2>
+                    <div class="cs-row">
+                        <RadzenUpload Change="@OnAttachmentSelectedAsync" Accept="*/*" Auto="false" Multiple="false"
+                                      Disabled="@_uploadingAttachment" ChooseText="@L["CardChooseAttachment"]" />
+                        @if (_uploadingAttachment)
+                        {
+                            <RadzenProgressBarCircular ProgressBarType="ProgressBarType.Indeterminate"
+                                                       Size="ProgressBarCircularSize.Small" />
+                        }
+                    </div>
+                    @if (_attachmentsError is not null)
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_attachmentsError</RadzenAlert>
+                    }
+                    else if (_attachments is null)
+                    {
+                        <span class="cs-muted">@L["ActionLoading"]</span>
+                    }
+                    else if (_attachments.Count == 0)
+                    {
+                        <span class="cs-muted">@L["CardNoAttachments"]</span>
+                    }
+                    else
+                    {
+                        <ul class="cs-attachment-list">
+                            @foreach (AttachmentDto attachment in _attachments)
+                            {
+                                <li class="cs-attachment">
+                                    <span class="cs-attachment-icon"><RadzenIcon Icon="description" /></span>
+                                    <span class="cs-attachment-name">@attachment.FileName</span>
+                                    <span class="cs-muted tabular-nums">@FormatSize(attachment.SizeBytes)</span>
+                                    <RadzenButton Icon="download" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                                                  Size="ButtonSize.ExtraSmall" title="@L["CardDownload"]" aria-label="@L["CardDownload"]"
+                                                  Click="@(() => DownloadAttachmentAsync(attachment))" />
+                                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                                                  Size="ButtonSize.ExtraSmall" title="@L["ActionDelete"]" aria-label="@L["ActionDelete"]"
+                                                  Click="@(() => DeleteAttachmentAsync(attachment))" />
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+
+                @if (_fieldValuesError is not null)
+                {
+                    <section class="cs-card-section">
+                        <h2 class="cs-card-section-title"><RadzenIcon Icon="tune" />@L["CustomFieldsTitle"]</h2>
+                        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_fieldValuesError</RadzenAlert>
+                    </section>
+                }
+                else if (_fieldValues is not null && _fieldValues.Count > 0)
+                {
+                    <section class="cs-card-section">
+                        <h2 class="cs-card-section-title"><RadzenIcon Icon="tune" />@L["CustomFieldsTitle"]</h2>
+                        <MetadataList Items="@CustomFieldItems" />
+                    </section>
+                }
+
+                <section class="cs-card-section">
+                    <div class="cs-card-section-title-row">
+                        <h2 class="cs-card-section-title"><RadzenIcon Icon="forum" />@L["CardComments"]</h2>
+                        @if (_comments is { Count: > 0 })
+                        {
+                            <RadzenButton Text="@L["AiSummarizeComments"]" Icon="auto_awesome"
+                                          ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                          Click="@SummarizeCommentsAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
+                        }
+                    </div>
+
+                    <RadzenTemplateForm TItem="AddCommentModel" Data="@_addCommentModel" Submit="@AddCommentAsync">
+                        <div class="cs-comment-composer">
+                            <RadzenTextArea @bind-Value="_addCommentModel.Body" Name="comment-body" Rows="2" Placeholder="@L["CardWriteComment"]"
+                                            Style="width:100%" />
+                            <RadzenRequiredValidator Component="comment-body" Text="@L["ValidationRequired"]" />
+                            <div class="cs-row">
+                                <RadzenButton Text="@L["CardSendComment"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                                              Size="ButtonSize.Small" IsBusy="@_addingComment" />
+                            </div>
+                        </div>
+                    </RadzenTemplateForm>
+
+                    @if (_commentsError is not null)
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_commentsError</RadzenAlert>
+                    }
+                    else if (_comments is null)
+                    {
+                        <span class="cs-muted">@L["CardLoadingComments"]</span>
+                    }
+                    else
+                    {
+                        @if (_aiSummary is not null)
+                        {
+                            <div class="cs-ai-summary">
+                                <strong>@L["AiSummaryTitle"]</strong>
+                                <p>@_aiSummary</p>
+                            </div>
+                        }
+                        <ol class="cs-comment-list">
+                            @foreach (CommentDto c in _comments)
+                            {
+                                // BETA-8-UI-#12 — fall back to the GUID when the
+                                // author's display name is missing.
+                                string authorLabel = !string.IsNullOrEmpty(c.AuthorDisplayName)
+                                    ? c.AuthorDisplayName
+                                    : c.AuthorId.ToString();
+                                <li class="cs-comment">
+                                    <span class="cs-avatar cs-avatar--sm" aria-hidden="true">@UserInitials.From(authorLabel)</span>
+                                    <div class="cs-comment-body">
+                                        <div class="cs-comment-meta">
+                                            <strong>@authorLabel</strong>
+                                            <span class="cs-muted">@($"{c.CreatedAt.LocalDateTime:g}")</span>
+                                        </div>
+                                        <div class="cs-comment-text">@c.Body</div>
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    }
+                </section>
+
+                <section class="cs-card-section">
+                    <h2 class="cs-card-section-title"><RadzenIcon Icon="history" />@L["ActivityTitle"]</h2>
+                    @if (_activityError is not null)
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_activityError</RadzenAlert>
+                    }
+                    else if (_recentActivity is null)
+                    {
+                        <span class="cs-muted">@L["ActivityLoading"]</span>
+                    }
+                    else if (_recentActivity.Count == 0)
+                    {
+                        <span class="cs-muted">@L["CardActivityEmpty"]</span>
+                    }
+                    else
+                    {
+                        <ol class="cs-activity-list">
+                            @foreach (ActivityDto a in _recentActivity)
+                            {
+                                // BETA-8-UI-#13 — fall back to the GUID when the
+                                // actor's display name is missing.
+                                string actorLabel = !string.IsNullOrEmpty(a.ActorDisplayName)
+                                    ? a.ActorDisplayName
+                                    : a.ActorId.ToString();
+                                string payload = FormatActivityPayload(a);
+                                <li class="cs-activity">
+                                    <strong>@actorLabel</strong>
+                                    <span>@ActivityKindLabel(a.Kind)</span>
+                                    @if (!string.IsNullOrWhiteSpace(payload))
+                                    {
+                                        <span class="cs-muted">· @payload</span>
+                                    }
+                                    <span class="cs-muted cs-activity-time">@($"{a.OccurredAt.LocalDateTime:g}")</span>
+                                </li>
+                            }
+                        </ol>
+                    }
+                </section>
+            </div>
+
+            @* ── Side panel ──────────────────────────────── *@
+            <aside class="cs-card-detail-aside">
+                <section class="cs-aside-group">
+                    <h2 class="cs-aside-title">@L["CardActions"]</h2>
+                    @if (_card.IsCompleted)
+                    {
+                        <RadzenButton Text="@L["ActionReopen"]" Icon="replay" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" Click="@ReopenAsync" class="cs-aside-button" />
+                    }
+                    else
+                    {
+                        <RadzenButton Text="@L["CardComplete"]" Icon="check" ButtonStyle="ButtonStyle.Primary" Click="@CompleteAsync" class="cs-aside-button" />
+                    }
+                    <RadzenButton Text="@L["CardVotes", _voteState?.VoteCount ?? 0]"
+                                  Icon="@(_voteState is { CurrentUserHasVoted: true } ? "thumb_up" : "thumb_up_off_alt")"
+                                  ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat"
+                                  class="@(_voteState is { CurrentUserHasVoted: true } ? "cs-aside-button is-active" : "cs-aside-button")"
                                   Click="@ToggleVoteAsync"
                                   Disabled="@_togglingVote"
                                   IsBusy="@_togglingVote"
-                                  title="@L["CardVote"]" aria-label="@L["CardVote"]" />
-                    <RadzenBadge BadgeStyle="BadgeStyle.Light"
-                                 Text="@L["CardVotes", _voteState?.VoteCount ?? 0]" />
-                </RadzenStack>
-                @if (_voteError is not null)
+                                  title="@L["CardVote"]"
+                                  aria-pressed="@(_voteState is { CurrentUserHasVoted: true } ? "true" : "false")" />
+                    @* P3.3 / G6c — "Mirror to…" opens the board + list picker dialog. *@
+                    <RadzenButton Text="@L["MirrorToButton"]" Icon="content_copy"
+                                  ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" class="cs-aside-button"
+                                  Click="@OpenMirrorDialogAsync"
+                                  Disabled="@_mirroring" IsBusy="@_mirroring"
+                                  title="@L["MirrorToTitle"]" />
+                </section>
+
+                @* P3.2 / G6b — snooze. Hidden while snoozed: the badge in
+                   the header carries the unsnooze control. *@
+                @if (!_card.IsSnoozed)
                 {
-                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_voteError</RadzenAlert>
+                    <section class="cs-aside-group">
+                        <h2 class="cs-aside-title">@L["CardSnooze"]</h2>
+                        <RadzenDatePicker @bind-Value="_snoozeUntilLocal" ShowTime="true"
+                                          DateFormat="@CardDateTimeFormat" Style="width: 100%;" />
+                        <RadzenButton Text="@L["CardSnoozeUntil"]" Icon="snooze"
+                                      ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" class="cs-aside-button"
+                                      Click="@SnoozeAsync" Disabled="@_snoozing" IsBusy="@_snoozing" />
+                    </section>
                 }
-            </RadzenStack>
 
-            <MetadataList Items="@CardMetaItems" />
-
-            @* P3.2 / G6b ” snooze section. Hidden when the card is
-               already snoozed because the badge in the header
-               already surfaces the controls (and double-bookkeeping
-               would let the user stash the card twice). The
-               datetime picker defaults to "tomorrow 9am" so the
-               common case is one click. *@
-            @if (!_card.IsSnoozed)
-            {
-                <RadzenCard Variant="Variant.Flat">
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenText Text="@L["CardSnooze"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                        <RadzenDatePicker @bind-Value="_snoozeUntilLocal"
-                                          ShowTime="true"
-                                          DateFormat="@CardDateTimeFormat" />
-                        <RadzenButton Text="@L["CardSnoozeUntil"]"
-                                      Icon="schedule"
-                                      ButtonStyle="ButtonStyle.Secondary"
-                                      Click="@SnoozeAsync"
-                                      Disabled="@_snoozing"
-                                      IsBusy="@_snoozing" />
-                    </RadzenStack>
-                </RadzenCard>
-            }
-
-            @if (_aiSuggestedOwners is { Count: > 0 })
-            {
-                <RadzenCard>
-                    <RadzenStack Gap="0.5rem">
-                        <RadzenText Text="@L["AiSuggestOwners"]" TextStyle="TextStyle.Subtitle1"
-                                    TagName="TagName.Span" />
-                        <RadzenStack Gap="0.25rem">
-                            @foreach (AiOwnerSuggestionDto suggestion in _aiSuggestedOwners)
-                            {
-                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
-                                             Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                                    <RadzenText Text="@suggestion.DisplayName" TextStyle="TextStyle.Body1"
-                                                TagName="TagName.Span" />
-                                    <RadzenText Text="@($"” {suggestion.Reason}")" TextStyle="TextStyle.Body2"
-                                                class="rz-color-text-secondary" />
-                                    <RadzenButton Text="@L["BoardAddItem"]" Size="ButtonSize.ExtraSmall"
-                                                  ButtonStyle="ButtonStyle.Success"
-                                                  Click="@(() => AssignSuggestedOwnerAsync(suggestion))"
-                                                  Disabled="@_aiBusy" />
-                                </RadzenStack>
-                            }
-                        </RadzenStack>
-                    </RadzenStack>
-                </RadzenCard>
-            }
-
-            <RadzenStack Gap="0.5rem">
-                <RadzenText Text="@L["CardDescription"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @* BETA-8-UI-#15 - see test-results/r8/r8-report.md.
-                   Manual description editor. The endpoint
-                   (POST /api/cards/{id}/description) and
-                   ChangeDescriptionAsync have been in the API
-                   client since v1.0.0; this just wires the
-                   editor so the field isn't read-only without
-                   an AI round-trip. *@
-                @if (_editingDescription)
-                {
-                    @* BUG-A4-005 — see test-results/beta/reports/A4-cards-lists.md.
-                       Radzen's TextArea @bind-Value uses oninput semantics, so
-                       the C# field does not always reflect the latest text
-                       when the user clicks Save without first blurring the
-                       field. Wrapping the editor in a RadzenTemplateForm
-                       with an explicit Submit button guarantees the value
-                       is committed before the handler runs, the same way
-                       the BETA-8-UI-#17 add-list / add-card forms do. *@
-                    <RadzenTemplateForm TItem="string" Data="@_editingDescriptionValue" Submit="@SaveDescriptionAsync">
-                        <RadzenTextArea @bind-Value="_editingDescriptionValue" Name="description-editor"
-                                        Rows="4" Style="width:100%" Placeholder="@L["DescriptionEmpty"]" />
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Class="rz-mt-2">
-                            <RadzenButton Text="@L["DescriptionSave"]" Icon="check"
-                                          ButtonType="ButtonType.Submit"
-                                          ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
-                                          IsBusy="@_savingDescription" />
-                            <RadzenButton Text="@L["DescriptionCancel"]" ButtonStyle="ButtonStyle.Light"
-                                          Size="ButtonSize.Small"
-                                          Click="@(() => _editingDescription = false)" />
-                        </RadzenStack>
-                    </RadzenTemplateForm>
-                }
-                else
-                {
-                    <RadzenText Text="@(string.IsNullOrWhiteSpace(_card.Description) ? L["DescriptionEmpty"] : _card.Description)"
-                                TextStyle="TextStyle.Body1" Style="white-space: pre-wrap" />
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
-                                 Wrap="FlexWrap.Wrap">
-                        <RadzenButton Text="@L["DescriptionEdit"]" Icon="edit"
-                                      ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                                      Click="@StartEditingDescription" />
-                        <RadzenButton Text="@($" {L["AiGenerateDescription"]}")" Icon="auto_awesome"
-                                  ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                                  Click="@GenerateDescriptionAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
-                    @if (_aiGeneratedDescription is not null)
+                <section class="cs-aside-group">
+                    <h2 class="cs-aside-title">@L["CardRecurrence"]</h2>
+                    @if (_recurrenceError is not null)
                     {
-                        <RadzenText Text="@_aiGeneratedDescription" TextStyle="TextStyle.Body2"
-                                    TagName="TagName.Span" class="rz-color-text-secondary" />
+                        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_recurrenceError</RadzenAlert>
                     }
-                    </RadzenStack>
-                }
-            </RadzenStack>
-
-            @* BUG-A5-002 — see test-results/beta/reports/A5-card-extras.md.
-               Direct file upload / list / download / delete. The
-               endpoints are new in this pass; before, the only way
-               to attach a file to a card was through the Google
-               Drive picker. Now any user with write access to the
-               card can attach a file via the standard file picker
-               and download / delete it from the list. *@
-            <RadzenStack Gap="0.5rem">
-                <RadzenText Text="@L["CardAttachments"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
-                             Wrap="FlexWrap.Wrap">
-                    <RadzenUpload Change="@OnAttachmentSelectedAsync" Accept="*/*" Auto="false" Multiple="false"
-                                  Disabled="@_uploadingAttachment" ChooseText="@L["CardChooseAttachment"]" />
-                    @if (_uploadingAttachment)
+                    else if (_recurrence is { IsActive: true })
                     {
-                        <RadzenProgressBarCircular ProgressBarType="ProgressBarType.Indeterminate"
-                                                   Size="ProgressBarCircularSize.Small" />
+                        <span class="cs-aside-text">@L["CardRecurrenceSummary", _recurrence.IntervalDays, _recurrence.NextOccurrenceAt.LocalDateTime.ToString("g")]</span>
+                        <RadzenButton Text="@L["CardRecurrenceStop"]" Icon="event_busy" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat"
+                                      class="cs-aside-button" Click="@ClearRecurrenceAsync" />
                     }
-                </RadzenStack>
-                @if (_attachmentsError is not null)
-                {
-                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_attachmentsError</RadzenAlert>
-                }
-                else if (_attachments is null)
-                {
-                    <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
-                }
-                else if (_attachments.Count == 0)
-                {
-                    <RadzenText Text="@L["CardNoAttachments"]" TextStyle="TextStyle.Body2"
-                                class="rz-color-text-secondary" />
-                }
-                else
-                {
-                    <RadzenStack Gap="0.25rem">
-                        @foreach (AttachmentDto attachment in _attachments)
-                        {
-                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
-                                         Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                                <RadzenIcon Icon="attach_file" />
-                                <RadzenText Text="@attachment.FileName" TextStyle="TextStyle.Body2" />
-                                <RadzenText Text="@FormatSize(attachment.SizeBytes)"
-                                            TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
-                                <RadzenButton Text="@L["CardDownload"]" Icon="download" ButtonStyle="ButtonStyle.Light"
-                                              Size="ButtonSize.ExtraSmall" Click="@(() => DownloadAttachmentAsync(attachment))" />
-                                <RadzenButton Text="@L["ActionDelete"]" Icon="delete" ButtonStyle="ButtonStyle.Danger"
-                                              Size="ButtonSize.ExtraSmall" Click="@(() => DeleteAttachmentAsync(attachment))" />
-                            </RadzenStack>
-                        }
-                    </RadzenStack>
-                }
-            </RadzenStack>
-
-            @if (_fieldValuesError is not null)
-            {
-                <RadzenStack Gap="0.5rem">
-                    <RadzenText Text="@L["CustomFieldsTitle"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_fieldValuesError</RadzenAlert>
-                </RadzenStack>
-            }
-            else if (_fieldValues is not null && _fieldValues.Count > 0)
-            {
-                <RadzenStack Gap="0.5rem">
-                    <RadzenText Text="@L["CustomFieldsTitle"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                    <MetadataList Items="@CustomFieldItems" />
-                </RadzenStack>
-            }
-
-            <RadzenStack Gap="0.5rem">
-                <RadzenText Text="@L["CardComments"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @if (_commentsError is not null)
-                {
-                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_commentsError</RadzenAlert>
-                }
-                else if (_comments is null)
-                {
-                    <RadzenText Text="@L["CardLoadingComments"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
-                }
-                else
-                {
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenButton Text="@($" {L["AiSummarizeComments"]}")" Icon="auto_awesome"
-                                      ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                                      Click="@SummarizeCommentsAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
-                    </RadzenStack>
-                    @if (_aiSummary is not null)
+                    else
                     {
-                        <RadzenCard>
-                            <RadzenStack Gap="0.25rem">
-                                <RadzenText Text="@L["AiSummaryTitle"]" TextStyle="TextStyle.Subtitle1"
-                                            TagName="TagName.Span" />
-                                <RadzenText Text="@_aiSummary" TextStyle="TextStyle.Body2" />
-                            </RadzenStack>
-                        </RadzenCard>
+                        <div class="cs-row">
+                            <RadzenNumeric @bind-Value="_recurrenceIntervalDays" Min="1" Max="365" ShowUpDown="true" Style="width:5.5rem" />
+                            <span class="cs-muted">@L["CardDays"]</span>
+                        </div>
+                        <RadzenButton Text="@L["CardSetRecurrence"]" Icon="event_repeat" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat"
+                                      class="cs-aside-button" Click="@SaveRecurrenceAsync" />
                     }
-                    @foreach (CommentDto c in _comments)
-                    {
-                        // BETA-8-UI-#12 — see test-results/r8/r8-report.md.
-                        // The backend now populates AuthorDisplayName
-                        // for both the list and the add/edit handlers.
-                        // We fall back to the GUID when the user was
-                        // deleted (or for any row that pre-dates the
-                        // DTO change) so the line never goes blank.
-                        string authorLabel = !string.IsNullOrEmpty(c.AuthorDisplayName)
-                            ? c.AuthorDisplayName
-                            : c.AuthorId.ToString();
-                        <RadzenCard Variant="Variant.Flat">
-                            <RadzenStack Gap="0.25rem">
-                                <RadzenText Text="@($"{c.CreatedAt.LocalDateTime:g} · {authorLabel}")"
-                                            TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
-                                <RadzenText Text="@c.Body" TextStyle="TextStyle.Body2" />
-                            </RadzenStack>
-                        </RadzenCard>
-                    }
-                }
+                </section>
 
-                <RadzenTemplateForm TItem="AddCommentModel" Data="@_addCommentModel" Submit="@AddCommentAsync">
-                    <RadzenStack Gap="0.5rem" Class="rz-mt-2">
-                        <RadzenTextArea @bind-Value="_addCommentModel.Body" Name="comment-body" Rows="2" Placeholder="@L["CardWriteComment"]"
-                                        Style="width:100%" />
-                        <RadzenRequiredValidator Component="comment-body" Text="@L["ValidationRequired"]" />
-                        <RadzenButton Text="@L["ActivityKindComment"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
-                                      IsBusy="@_addingComment" />
-                    </RadzenStack>
-                </RadzenTemplateForm>
-            </RadzenStack>
+                <section class="cs-aside-group">
+                    <h2 class="cs-aside-title">@L["CardDetails"]</h2>
+                    <MetadataList Items="@CardMetaItems" />
+                </section>
 
-            <RadzenStack Gap="0.5rem">
-                <RadzenText Text="@L["CardRecurrence"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @if (_recurrenceError is not null)
-                {
-                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_recurrenceError</RadzenAlert>
-                }
-                else if (_recurrence is { IsActive: true })
-                {
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
-                                 Wrap="FlexWrap.Wrap">
-                        <RadzenText Text="@L["CardRecurrenceSummary", _recurrence.IntervalDays, _recurrence.NextOccurrenceAt.LocalDateTime.ToString("g")]"
-                                    TextStyle="TextStyle.Body2" />
-                        <RadzenButton Text="@L["CardRecurrenceStop"]" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small"
-                                      Click="@ClearRecurrenceAsync" />
-                    </RadzenStack>
-                }
-                else
-                {
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenNumeric @bind-Value="_recurrenceIntervalDays" Min="1" Max="365"
-                                       ShowUpDown="true" Style="width:6rem" />
-                        <RadzenText Text="@L["CardDays"]" TextStyle="TextStyle.Body2" />
-                        <RadzenButton Text="@L["CardSetRecurrence"]" ButtonStyle="ButtonStyle.Secondary"
-                                      Click="@SaveRecurrenceAsync" />
-                    </RadzenStack>
-                }
-            </RadzenStack>
-
-            <RadzenStack Gap="0.5rem">
-                <RadzenText Text="@L["CardChecklists"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @if (_checklistsError is not null)
-                {
-                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_checklistsError</RadzenAlert>
-                }
-                else if (_checklists is null)
-                {
-                    <RadzenText Text="@L["CardLoadingChecklists"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
-                }
-                else
-                {
-                    @foreach (ChecklistDto cl in _checklists)
-                    {
-                        <RadzenCard Variant="Variant.Flat">
-                            <RadzenStack Gap="0.5rem">
-                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
-                                             Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                                    <RadzenText Text="@cl.Title" TextStyle="TextStyle.Subtitle1"
-                                                TagName="TagName.Span" />
-                                    @* BETA-8-UI-#16 — see test-results/r8/r8-report.md.
-                                       The previous incarnation passed `Value=1, Max=3`
-                                       directly to RadzenProgressBar, which renders
-                                       `Value` as a 0–100 percent against `Max`
-                                       (so 1 of 3 displayed as `1%`). Computing the
-                                       percent ourselves and pinning `Max=100` makes
-                                       the bar match the human-readable `X / Y`
-                                       label next to it. *@
-                                    <RadzenProgressBar Value="@ChecklistProgressPercent(cl)"
-                                                       Max="100"
-                                                       ShowValue="true" Style="flex: 1" />
-                                    <RadzenText Text="@($"{cl.CompletedCount} / {cl.TotalCount}")"
-                                                TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
-                                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
-                                                  Click="@(() => DeleteChecklistAsync(cl.Id))"
-                                                  aria-label="@L["ChecklistDelete"]" />
-                                </RadzenStack>
-                                @foreach (ChecklistItemDto item in cl.Items)
-                                {
-                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
-                                                 Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                                        <RadzenCheckBox Value="@item.IsCompleted"
-                                                        Change="@(async (bool _) => await ToggleItemAsync(cl.Id, item.Id))" />
-                                        <RadzenText Text="@item.Text" TextStyle="TextStyle.Body2"
-                                                    Class="@(item.IsCompleted ? "rz-color-text-disabled" : null)"
-                                                    Style="@(item.IsCompleted ? "text-decoration: line-through;" : null)" />
-                                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
-                                                      Click="@(() => DeleteItemAsync(cl.Id, item.Id))"
-                                                      aria-label="@L["ChecklistItemDelete"]" />
-                                    </RadzenStack>
-                                }
-                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
-                                             Gap="0.5rem">
-                                    <RadzenTextBox @bind-Value="_newChecklistItemText" Placeholder="@L["CardChecklistItem"]"
-                                                   Style="flex:1"
-                                                   @onkeydown="@(e => OnAddItemKeyDownAsync(e, cl.Id))" />
-                                    <RadzenButton Text="@L["BoardAddItem"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
-                                                  Click="@(() => AddItemAsync(cl.Id))" />
-                                </RadzenStack>
-                            </RadzenStack>
-                        </RadzenCard>
-                    }
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
-                                 Wrap="FlexWrap.Wrap">
-                        <RadzenTextBox @bind-Value="_newChecklistTitle" Placeholder="@L["CardChecklistTitle"]"
-                                       Style="flex:1"
-                                       @onkeydown="@OnCreateChecklistKeyDownAsync" />
-                        <RadzenButton Text="@L["CardCreateChecklist"]" Icon="add" ButtonStyle="ButtonStyle.Secondary"
-                                      Click="@CreateChecklistAsync" />
-                        <RadzenButton Text="@($" {L["AiGenerateChecklist"]}")" Icon="auto_awesome"
-                                      ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                                      Click="@MakeChecklistAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
-                    </RadzenStack>
-                }
-            </RadzenStack>
-
-            <RadzenStack Gap="0.5rem">
-                <RadzenText Text="@L["ActivityTitle"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                @if (_activityError is not null)
-                {
-                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_activityError</RadzenAlert>
-                }
-                else if (_recentActivity is null)
-                {
-                    <RadzenText Text="@L["ActivityLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
-                }
-                else if (_recentActivity.Count == 0)
-                {
-                    <RadzenText Text="@L["CardActivityEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
-                }
-                else
-                {
-                    <RadzenStack Gap="0.25rem">
-                        @foreach (ActivityDto a in _recentActivity)
-                        {
-                            // BETA-8-UI-#13 — see test-results/r8/r8-report.md.
-                            // The backend now joins the actor's
-                            // display name; if it's missing (deleted
-                            // user, very old row) we fall back to the
-                            // GUID so the line is never empty.
-                            string actorLabel = !string.IsNullOrEmpty(a.ActorDisplayName)
-                                ? a.ActorDisplayName
-                                : a.ActorId.ToString();
-                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
-                                         Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                                <RadzenText Text="@ActivityKindLabel(a.Kind)" TextStyle="TextStyle.Body2"
-                                            TagName="TagName.Span" />
-                                <RadzenText Text="@actorLabel" TextStyle="TextStyle.Body2"
-                                            TagName="TagName.Span" class="rz-color-text-secondary" />
-                                <RadzenText Text="@($"· {a.OccurredAt.LocalDateTime:g}")"
-                                            TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
-                                <RadzenText Text="@($"· {FormatActivityPayload(a)}")" TextStyle="TextStyle.Body2"
-                                            class="rz-color-text-secondary" />
-                            </RadzenStack>
-                        }
-                    </RadzenStack>
-                }
-            </RadzenStack>
-        </RadzenStack>
-    </RadzenCard>
+                <section class="cs-aside-group">
+                    <RadzenButton Text="@(_card.IsArchived ? L["ActionRestore"] : L["ActionArchive"])"
+                                  Icon="@(_card.IsArchived ? "unarchive" : "archive")"
+                                  ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" class="cs-aside-button"
+                                  Click="@ToggleArchiveAsync" />
+                    <RadzenButton Text="@L["ActionDelete"]" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
+                                  class="cs-aside-button" Click="@DeleteCardAsync" />
+                </section>
+            </aside>
+        </div>
+    </div>
 }

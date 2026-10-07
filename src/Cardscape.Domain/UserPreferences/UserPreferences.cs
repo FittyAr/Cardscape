@@ -37,6 +37,14 @@ public sealed class UserPreferences : AggregateRoot<UserId>
     /// value, so the cookie and the server agree on day one.</summary>
     public const string DefaultThemeName = "default";
 
+    /// <summary>Theme assigned to rows created through the
+    /// application layer (new accounts). The Cardscape brand
+    /// theme; follows the OS light/dark preference because new
+    /// rows start in <see cref="AppearanceMode.System"/>.
+    /// <see cref="DefaultThemeName"/> stays as the database
+    /// column default so existing migrations remain valid.</summary>
+    public const string InitialThemeName = "cardscape-classic";
+
     private UserPreferences() { }
 
     private UserPreferences(UserId userId, string themeName, AppearanceMode mode, DateTimeOffset at)

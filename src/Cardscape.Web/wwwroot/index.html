@@ -20,9 +20,13 @@
         elements still need the styles.
     -->
     <link rel="stylesheet" href="css/app.css" />
+    <!-- Bundle of every component-scoped *.razor.css file. Without
+         this link none of the isolated styles (KanbanBoard, Home,
+         EmptyLayout, PageHeader, …) reach the page. -->
+    <link rel="stylesheet" href="Cardscape.Web.styles.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="manifest" href="manifest.webmanifest" />
-    <meta name="theme-color" content="#0f3d3e" />
+    <meta name="theme-color" content="#0f766e" />
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
     <script src="cardscape-helpers.js"></script>
 </head>

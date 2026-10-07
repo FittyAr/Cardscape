@@ -1,6 +1,7 @@
 @* PageHeader — consistent header for non-auth pages.
    Replaces the `<div class="page-shell"><div class="page-header"><h1>...`
-   pattern that was repeated on every page. *@
+   pattern that was repeated on every page. Styles live in
+   PageHeader.razor.css. *@
 
 @code {
     [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
@@ -9,26 +10,22 @@
     [Parameter] public string? Hint { get; set; }
 }
 
-<RadzenStack Orientation="Orientation.Horizontal"
-             AlignItems="AlignItems.Center"
-             JustifyContent="JustifyContent.SpaceBetween"
-             Gap="1rem"
-             Class="rz-mb-4">
-    <RadzenStack Gap="0.25rem">
-        <RadzenText Text="@Title" TextStyle="TextStyle.H4" TagName="TagName.H1" />
+<header class="cs-page-header">
+    <div class="cs-page-header-text">
+        <RadzenText Text="@Title" TextStyle="TextStyle.H4" TagName="TagName.H1" class="cs-page-header-title" />
         @if (!string.IsNullOrEmpty(Subtitle))
         {
-            <RadzenText Text="@Subtitle" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+            <RadzenText Text="@Subtitle" TextStyle="TextStyle.Body2" class="cs-page-header-subtitle" />
         }
         @if (!string.IsNullOrEmpty(Hint))
         {
-            <RadzenText Text="@Hint" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
+            <RadzenText Text="@Hint" TextStyle="TextStyle.Caption" class="cs-page-header-subtitle" />
         }
-    </RadzenStack>
+    </div>
     @if (Actions is not null)
     {
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+        <div class="cs-page-header-actions">
             @Actions
-        </RadzenStack>
+        </div>
     }
-</RadzenStack>
+</header>

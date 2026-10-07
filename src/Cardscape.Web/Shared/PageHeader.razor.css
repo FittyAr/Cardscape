@@ -1,0 +1,33 @@
+.cs-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.cs-page-header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+.cs-page-header ::deep .cs-page-header-title {
+    margin: 0;
+    font-weight: 700;
+    color: var(--rz-text-title-color);
+}
+
+.cs-page-header ::deep .cs-page-header-subtitle {
+    margin: 0;
+    color: var(--rz-text-secondary-color);
+}
+
+.cs-page-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}

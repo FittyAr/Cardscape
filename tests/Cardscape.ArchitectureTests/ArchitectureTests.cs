@@ -410,14 +410,21 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void WebHome_DoesNotFetchDataItDoesNotRender()
+    public void WebHome_RendersEveryCollectionItLoads()
     {
+        // The signed-in home is a dashboard (starred boards + boards per
+        // workspace). Every request it issues must feed something it
+        // renders, and each failure must surface as its own error state.
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
         string homePath = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "Home.razor");
         string source = File.ReadAllText(homePath);
 
-        source.Should().NotContain("ApiClient", "the home page must not issue requests for data absent from its UI");
-        source.Should().NotContain("OnInitializedAsync", "the static home experience requires no data-loading lifecycle");
+        source.Should().Contain("ListStarredAsync").And.Contain("@foreach (BoardSummaryDto board in _starred)");
+        source.Should().Contain("ListForWorkspaceAsync").And.Contain("_boardsByWorkspace.TryGetValue(workspace.Id");
+        source.Should().Contain("WorkspacesApi.ListAsync").And.Contain("@foreach (WorkspaceDto workspace in _workspaces)");
+        source.Should().Contain("_starredError = starred.Error ?? L[");
+        source.Should().Contain("_boardErrors[workspace.Id] = boards.Error ?? L[");
+        source.Should().Contain("Task.WhenAll(", "independent requests must not form a serial waterfall");
     }
 
     [Fact]
@@ -569,7 +576,7 @@ public sealed class ArchitectureTests
         string source = File.ReadAllText(path);
 
         source.Should().NotContain("RadzenCard @onclick", "board navigation must be keyboard-focusable");
-        source.Should().Contain("RadzenButton Text=\"@L[\"BoardsOpen\"]\"");
+        source.Should().Contain("<BoardTile ", "boards open through BoardTile, a real link");
         source.Should().Contain("Data=\"@VisibilityOptions\"");
         source.Should().Contain("LocalDateTime.ToString(\"d\")");
         source.Should().NotContain("PageHeader Title=\"Boards\"");

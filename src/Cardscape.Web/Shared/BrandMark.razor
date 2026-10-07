@@ -1,0 +1,24 @@
+@*
+  BrandMark — the Cardscape glyph from docs/brand/00-brand-kit.md §1:
+  three offset rectangles (a card in front of the list behind it).
+  Drawn with currentColor / the primary token so it follows the
+  active theme. Optional wordmark next to it.
+*@
+
+<span class="cs-brand @Class" aria-hidden="@(ShowWordmark ? null : "true")">
+    <svg class="cs-brand-glyph" viewBox="0 0 24 24" width="@Size" height="@Size" aria-hidden="true" focusable="false">
+        <rect x="9" y="2" width="12" height="15" rx="2.5" fill="var(--rz-primary)" opacity="0.35" />
+        <rect x="6" y="4.5" width="12" height="15" rx="2.5" fill="var(--rz-primary)" opacity="0.6" />
+        <rect x="3" y="7" width="12" height="15" rx="2.5" fill="var(--rz-primary)" />
+    </svg>
+    @if (ShowWordmark)
+    {
+        <span class="cs-brand-wordmark">Cardscape</span>
+    }
+</span>
+
+@code {
+    [Parameter] public bool ShowWordmark { get; set; } = true;
+    [Parameter] public int Size { get; set; } = 24;
+    [Parameter] public string? Class { get; set; }
+}

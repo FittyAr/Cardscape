@@ -683,6 +683,47 @@
   <data name="CardRefresh" xml:space="preserve"><value>Refresh card</value></data>
   <data name="CardUpdateChecklistItem" xml:space="preserve"><value>Update checklist item</value></data>
   <data name="CardAiChecklistTitle" xml:space="preserve"><value>AI suggestions</value></data>
+  <data name="NavAdministration" xml:space="preserve"><value>Administration</value></data>
+  <data name="NavSystemSettings" xml:space="preserve"><value>System settings</value></data>
+  <data name="BoardMore" xml:space="preserve"><value>More actions</value></data>
+  <data name="BoardShowSnoozed" xml:space="preserve"><value>Show snoozed cards</value></data>
+  <data name="BoardHideSnoozed" xml:space="preserve"><value>Hide snoozed cards</value></data>
+  <data name="BoardLiveShort" xml:space="preserve"><value>Live</value></data>
+  <data name="BoardOfflineShort" xml:space="preserve"><value>Offline</value></data>
+  <data name="CommonSave" xml:space="preserve"><value>Save</value></data>
+  <data name="CommonError" xml:space="preserve"><value>Something went wrong.</value></data>
+  <data name="ListRenameTitle" xml:space="preserve"><value>Rename list</value></data>
+  <data name="ListRenameBlurb" xml:space="preserve"><value>Give this list a new name. Cards stay where they are.</value></data>
+  <data name="ListRenamePlaceholder" xml:space="preserve"><value>List name</value></data>
+  <data name="ImportPreviewing" xml:space="preserve"><value>Reading the file…</value></data>
+  <data name="ImportApplying" xml:space="preserve"><value>Importing…</value></data>
+  <data name="ImportPreviewTitle" xml:space="preserve"><value>Preview</value></data>
+  <data name="ImportPreviewBlurb" xml:space="preserve"><value>This is what will be created in the workspace:</value></data>
+  <data name="ImportPreviewBoards" xml:space="preserve"><value>Boards</value></data>
+  <data name="ImportPreviewLists" xml:space="preserve"><value>Lists</value></data>
+  <data name="ImportPreviewCards" xml:space="preserve"><value>Cards</value></data>
+  <data name="ImportPreviewLabels" xml:space="preserve"><value>Labels</value></data>
+  <data name="ImportPreviewMembers" xml:space="preserve"><value>Members</value></data>
+  <data name="ImportPreviewSampleBoards" xml:space="preserve"><value>Sample boards</value></data>
+  <data name="ImportPreviewSampleLists" xml:space="preserve"><value>Sample lists</value></data>
+  <data name="ImportPreviewSampleCards" xml:space="preserve"><value>Sample cards</value></data>
+  <data name="ImportApply" xml:space="preserve"><value>Import</value></data>
+  <data name="ImportCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ImportResultTitle" xml:space="preserve"><value>Import finished</value></data>
+  <data name="ImportResultSummary" xml:space="preserve"><value>The boards, lists and cards were created in this workspace.</value></data>
+  <data name="ImportPreviewFailed" xml:space="preserve"><value>Could not read the file</value></data>
+  <data name="ImportNoFile" xml:space="preserve"><value>Choose a file to import first.</value></data>
+  <data name="ImportFailed" xml:space="preserve"><value>The import failed</value></data>
+  <data name="ActionArchive" xml:space="preserve"><value>Archive</value></data>
+  <data name="ActionRestore" xml:space="preserve"><value>Restore</value></data>
+  <data name="CardCompletedBadge" xml:space="preserve"><value>Completed</value></data>
+  <data name="CardArchivedBadge" xml:space="preserve"><value>Archived</value></data>
+  <data name="CardActions" xml:space="preserve"><value>Actions</value></data>
+  <data name="CardDetails" xml:space="preserve"><value>Details</value></data>
+  <data name="ActionReopen" xml:space="preserve"><value>Reopen</value></data>
+  <data name="CardSendComment" xml:space="preserve"><value>Comment</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>Search cards, comments…</value></data>
+  <data name="SearchNoResults" xml:space="preserve"><value>No matches.</value></data>
   <data name="NavSeeder" xml:space="preserve"><value>Database Seeder</value></data>
   <data name="SeederTitle" xml:space="preserve"><value>Database Seeder</value></data>
   <data name="SeederSubtitle" xml:space="preserve"><value>Seed and maintain demo/development dataset</value></data>

@@ -47,6 +47,10 @@ public partial class BoardDetail
         {
             await AddListAsync();
         }
+        else if (string.Equals(e.Key, "Escape", StringComparison.Ordinal))
+        {
+            _showAddList = false;
+        }
     }
 
     private async Task OnAddCardKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, Guid listId)
@@ -54,6 +58,32 @@ public partial class BoardDetail
         if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
         {
             await ConfirmAddCardAsync(listId);
+        }
+        else if (string.Equals(e.Key, "Escape", StringComparison.Ordinal))
+        {
+            CloseCardComposer();
+        }
+    }
+
+    private void OpenCardComposer(Guid listId)
+    {
+        _newCardTitle = string.Empty;
+        _openAddCardFor = listId;
+    }
+
+    private void CloseCardComposer()
+    {
+        _newCardTitle = string.Empty;
+        _openAddCardFor = null;
+    }
+
+    private void OpenCard(CardSummaryDto card) => Nav.NavigateTo($"cards/{card.Id}/{BoardId}");
+
+    private void OnCardKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, CardSummaryDto card)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            OpenCard(card);
         }
     }
 
@@ -100,8 +130,9 @@ public partial class BoardDetail
         ApiResult<CardDto> result = await CardsApi.CreateAsync(listId, _newCardTitle, null);
         if (result.IsSuccess)
         {
+            // The composer stays open (Trello-style) so several
+            // cards can be typed in a row; Escape or × closes it.
             _newCardTitle = string.Empty;
-            _openAddCardFor = null;
             await ReloadListsAndCardsAsync();
         }
     }
@@ -113,7 +144,7 @@ public partial class BoardDetail
     private async Task PromptRenameListAsync(Guid listId, string currentName)
     {
         object? result = await DialogService.OpenAsync<RenameListDialog>(
-            "Rename list",
+            L["CustomFieldsRename"],
             new Dictionary<string, object?> { { "CurrentName", currentName } },
             new DialogOptions { Width = "420px", Height = "auto", CloseDialogOnOverlayClick = true });
 

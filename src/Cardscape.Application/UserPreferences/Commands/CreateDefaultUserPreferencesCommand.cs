@@ -50,7 +50,7 @@ public static class CreateDefaultUserPreferencesCommandHandler
 
         var createResult = UserPreferencesAggregate.Create(
             userId: userId,
-            themeName: UserPreferencesAggregate.DefaultThemeName,
+            themeName: UserPreferencesAggregate.InitialThemeName,
             mode: AppearanceModeAlias.System,
             at: clock.UtcNow);
 

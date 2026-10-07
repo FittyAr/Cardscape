@@ -1,49 +1,171 @@
-/* Home — utility classes for the landing page hero, the
-   dashboard tile icons, and the eyebrow label. These are
-   the only places in the home page that need values the
-   Radzen utility classes (rz-m-*, rz-px-*, …) can't
-   express — the gradient + the "real" icon size. */
+/* ── Signed-in dashboard ───────────────────────────────── */
 
-/* Tile icon (workspaces / starred) — 32 px on a 64×64 swatch
-   so the glyph sits inside the rounded color block. */
-.cs-tile-icon {
-    font-size: 32px;
-    min-width: 64px;
-    min-height: 64px;
+.cs-home-section {
+    margin-bottom: 2.25rem;
 }
 
-/* Feature icon (boards / self-host / MCP) — 28 px, brand color.
-   Smaller than the tile icon because there's no background
-   swatch behind it. */
-.cs-feature-icon {
-    font-size: 28px;
-    color: var(--rz-primary);
+.cs-home-hint {
+    margin: 0;
+    color: var(--rz-text-secondary-color);
+    font-size: 0.875rem;
 }
 
-/* Landing eyebrow ("Cardscape — open source kanban" tag-line
-   above the H1). Brand color, wide tracking for the
-   overline-style label. */
+.cs-home-workspace-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.875rem;
+}
+
+.cs-workspace-avatar {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--rz-border-radius);
+    background: var(--cs-tile-color);
+    color: #fff;
+    font-weight: 700;
+}
+
+.cs-home-workspace-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin-inline-end: auto;
+}
+
+.cs-home-workspace-name {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--rz-text-title-color);
+}
+
+.cs-home-workspace-meta {
+    font-size: 0.75rem;
+    color: var(--rz-text-secondary-color);
+}
+
+/* ── Anonymous landing ─────────────────────────────────── */
+
+.cs-landing-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 3rem;
+    padding-block: 3rem 3.5rem;
+}
+
+@media (max-width: 860px) {
+    .cs-landing-hero {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding-block: 1.5rem 2rem;
+    }
+}
+
 .cs-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     color: var(--rz-primary);
-    letter-spacing: 0.15em;
 }
 
-/* Hero board — the dark gradient card on the right side of
-   the landing. Replaces the inline `linear-gradient` so the
-   gradient is editable in one place. */
-.cs-hero-board {
-    min-height: 360px;
+.cs-landing-title {
+    margin: 0.5rem 0 1rem;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--rz-text-title-color);
+}
+
+.cs-landing-lead {
+    max-width: 34rem;
+    margin: 0 0 1.75rem;
+    font-size: 1.125rem;
+    line-height: 1.55;
+    color: var(--rz-text-secondary-color);
+}
+
+.cs-landing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.cs-landing-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    padding: 1.25rem;
+    border-radius: 16px;
     background: linear-gradient(135deg,
-        var(--rz-primary-dark) 0%,
-        var(--rz-primary-darker) 100%);
+        color-mix(in srgb, var(--rz-primary) 85%, white),
+        color-mix(in srgb, var(--rz-primary) 70%, black));
+    box-shadow: var(--rz-shadow-4);
 }
 
-/* Mini cards inside the hero board: two heights to give the
-   visual rhythm of an actual Kanban-style board. */
-.cs-hero-card-tall {
-    min-height: 60px;
+.cs-landing-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.625rem;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--rz-body-background-color) 88%, transparent);
 }
 
-.cs-hero-card-short {
-    min-height: 40px;
+.cs-landing-col-title {
+    width: 55%;
+    height: 0.5rem;
+    margin-bottom: 0.25rem;
+    border-radius: 4px;
+    background: var(--cs-border-strong);
+}
+
+.cs-landing-card {
+    height: 2.5rem;
+    border-radius: 6px;
+    background: var(--rz-base-background-color);
+    box-shadow: var(--rz-shadow-1);
+}
+
+.cs-landing-card.is-accent {
+    height: 3.75rem;
+    border-inline-start: 4px solid var(--rz-primary);
+}
+
+.cs-landing-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem;
+}
+
+.cs-landing-feature {
+    padding: 1.25rem;
+    border: 1px solid var(--cs-border);
+    border-radius: var(--rz-card-border-radius, 10px);
+    background: var(--cs-surface);
+}
+
+.cs-landing-feature ::deep .rzi {
+    font-size: 1.5rem;
+    color: var(--rz-primary);
+}
+
+.cs-landing-feature h3 {
+    margin: 0.5rem 0 0.375rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--rz-text-title-color);
+}
+
+.cs-landing-feature p {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--rz-text-secondary-color);
 }

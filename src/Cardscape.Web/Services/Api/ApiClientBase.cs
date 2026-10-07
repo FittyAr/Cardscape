@@ -56,7 +56,21 @@ public abstract class ApiClientBase(IHttpClientFactory httpClientFactory)
                 return ApiResult<T>.Ok(default!);
             }
 
-            T? payload = await response.Content.ReadFromJsonAsync<T>(JsonOptions, ct);
+            // A response that does not match the client DTO (e.g. a
+            // numeric enum where a name is expected) used to throw out
+            // of the page's OnParametersSetAsync and blank the whole
+            // view. Surface it as a failed result instead so the page
+            // can degrade the one widget that needed the data.
+            T? payload;
+            try
+            {
+                payload = await response.Content.ReadFromJsonAsync<T>(JsonOptions, ct);
+            }
+            catch (JsonException ex)
+            {
+                return ApiResult<T>.Fail($"Unexpected response from server: {ex.Message}", (int)response.StatusCode);
+            }
+
             return payload is null
                 ? ApiResult<T>.Fail("Empty response from server.", (int)response.StatusCode)
                 : ApiResult<T>.Ok(payload);

@@ -1,63 +1,71 @@
-@* KanbanBoard — Kanban-style horizontal scroll kanban with
-   columns of cards. Replaces the `.lists-row` / `.list-column` /
-   `.card-mini` CSS that lived in `app.css:1015-1072`. The look
-   stays the same; the markup moves here so consumers (BoardDetail)
-   can pass a `TItem` + render fragments and stop reimplementing
-   the column/card layout.
+@* KanbanBoard — horizontal track of columns, each with a header,
+   a scrollable list of cards and a footer slot (ChildContent).
 
-   The visual styling is in `KanbanBoard.razor.css` (Blazor scoped
-   CSS) so it can be tweaked per-deployment without polluting
-   the global `app.css`.
+   Drag and drop: the WHOLE column is the drop target. The parent
+   records which card is being dragged (dragstart on the card it
+   renders) and receives OnColumnDrop with the destination column
+   id. dragenter marks the column under the pointer so it can be
+   highlighted; dragover only needs preventDefault (no C# round
+   trip per mouse move).
 
-   BUG-A4-002 — see test-results/beta/reports/A4-cards-lists.md.
-   The board API has supported rename / move / archive / restore
-   on lists since v1.0.0 but the Web never exposed a per-column
-   context menu. `ColumnHeaderTemplate` lets the parent page
-   (BoardDetail) render a custom header that includes the
-   RadzenMenu with those actions. When the parameter is null
-   the component falls back to the original "title + count" so
-   other consumers (calendar / planner tiles if any) keep
-   working unchanged. *@
+   BUG-A4-002 — ColumnHeaderTemplate lets the parent render a
+   header with the per-list menu (rename / move / archive). When
+   it is null the component falls back to "title + count".
+
+   TrailingContent renders after the last column — BoardDetail
+   uses it for the "Add another list" column. Styles live in
+   KanbanBoard.razor.css. *@
 
 @typeparam TItem
 
 @if (Columns is null)
 {
-    <RadzenText Text="Loading…" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <div class="cs-kanban" aria-busy="true">
+        @for (int i = 0; i < 3; i++)
+        {
+            <div class="cs-kanban-column cs-kanban-column--skeleton"></div>
+        }
+    </div>
 }
 else
 {
-    <div class="cs-kanban">
+    <div class="cs-kanban" @ondragend="@ClearDropTarget">
         @foreach (KanbanColumn<TItem> column in Columns)
         {
-            <div class="cs-kanban-column">
-                @if (ColumnHeaderTemplate is not null)
-                {
-                    @ColumnHeaderTemplate(column)
-                }
-                else
-                {
-                    <RadzenStack Orientation="Orientation.Horizontal"
-                                 AlignItems="AlignItems.Center"
-                                 JustifyContent="JustifyContent.SpaceBetween">
-                        <RadzenText Text="@column.Title" TextStyle="TextStyle.Subtitle1" TagName="TagName.Span" />
-                        <RadzenText Text="@column.Cards.Count.ToString()"
-                                    TextStyle="TextStyle.Caption"
-                                    class="rz-color-text-secondary" />
-                    </RadzenStack>
-                }
-                <div class="cs-kanban-column-cards">
-                    @foreach (TItem card in column.Cards)
+            <section class="cs-kanban-column @(DropEnabled && _dropTargetId == column.Id ? "is-drop-target" : null)"
+                     aria-label="@column.Title"
+                     @ondragenter="@(() => OnDragEnter(column.Id))"
+                     @ondragover:preventDefault="@DropEnabled"
+                     @ondrop="@(() => OnDropAsync(column.Id))">
+                <header class="cs-kanban-column-header">
+                    @if (ColumnHeaderTemplate is not null)
                     {
-                        @if (CardTemplate is not null)
+                        @ColumnHeaderTemplate(column)
+                    }
+                    else
+                    {
+                        <h2 class="cs-kanban-column-title">@column.Title</h2>
+                        <span class="cs-kanban-column-count">@column.Cards.Count</span>
+                    }
+                </header>
+                <div class="cs-kanban-column-cards">
+                    @if (CardTemplate is not null)
+                    {
+                        @foreach (TItem card in column.Cards)
                         {
                             @CardTemplate(card)
                         }
                     }
-                    @ChildContent?.Invoke(column)
                 </div>
-            </div>
+                @if (ChildContent is not null)
+                {
+                    <footer class="cs-kanban-column-footer">
+                        @ChildContent(column)
+                    </footer>
+                }
+            </section>
         }
+        @TrailingContent
     </div>
 }
 
@@ -66,4 +74,32 @@ else
     [Parameter] public RenderFragment<TItem>? CardTemplate { get; set; }
     [Parameter] public RenderFragment<KanbanColumn<TItem>>? ChildContent { get; set; }
     [Parameter] public RenderFragment<KanbanColumn<TItem>>? ColumnHeaderTemplate { get; set; }
+    [Parameter] public RenderFragment? TrailingContent { get; set; }
+
+    /// <summary>When true, columns accept drops and raise <see cref="OnColumnDrop"/>.</summary>
+    [Parameter] public bool DropEnabled { get; set; }
+
+    /// <summary>Raised with the destination column id when something is dropped on a column.</summary>
+    [Parameter] public EventCallback<string> OnColumnDrop { get; set; }
+
+    private string? _dropTargetId;
+
+    private void OnDragEnter(string columnId)
+    {
+        if (DropEnabled)
+        {
+            _dropTargetId = columnId;
+        }
+    }
+
+    private void ClearDropTarget() => _dropTargetId = null;
+
+    private async Task OnDropAsync(string columnId)
+    {
+        _dropTargetId = null;
+        if (DropEnabled)
+        {
+            await OnColumnDrop.InvokeAsync(columnId);
+        }
+    }
 }

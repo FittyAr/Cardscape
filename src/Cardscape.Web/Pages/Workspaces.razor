@@ -20,7 +20,7 @@
 
 @if (showCreate)
 {
-    <RadzenCard>
+    <RadzenCard class="rz-mb-6" Style="max-width: 36rem;">
         <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateWorkspaceAsync">
             <LabeledField Text="@L["WorkspacesName"]" Component="ws-name">
                 <RadzenTextBox @bind-Value="createModel.Name" Name="ws-name" Style="width:100%" />
@@ -70,35 +70,42 @@ else if (workspaces is null)
 }
 else if (workspaces.Count == 0)
 {
-    <RadzenText Text="@L["WorkspacesEmpty"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <div class="cs-empty">
+        <RadzenIcon Icon="space_dashboard" />
+        <span>@L["WorkspacesEmpty"]</span>
+        <RadzenButton Text="@L["WorkspacesNew"]" Icon="add" ButtonStyle="ButtonStyle.Primary" Click="@(() => showCreate = true)" />
+    </div>
 }
 else
 {
-    <RadzenRow Gap="1rem">
+    <div class="cs-workspace-grid">
         @foreach (WorkspaceDto ws in workspaces)
         {
-            <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
-                <RadzenCard @onclick="@(() => Nav.NavigateTo($"workspaces/{ws.Id}"))">
-                    <RadzenText Text="@ws.Name" TextStyle="TextStyle.H5" TagName="TagName.H3" />
-                    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
-                        @ws.MemberCount members · created @ws.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd")
-                    </RadzenText>
-                    @if (dataResidencyEnabled && ws.Region != Region.Unspecified)
+            <a class="cs-workspace-card @(ws.IsArchived ? "is-archived" : null)" href="@($"workspaces/{ws.Id}")">
+                <span class="cs-workspace-card-avatar" style="--cs-tile-color: @BoardTile.ColorFor(ws.Id);" aria-hidden="true">@ws.Name[..1].ToUpperInvariant()</span>
+                <span class="cs-workspace-card-text">
+                    <span class="cs-workspace-card-name">@ws.Name</span>
+                    <span class="cs-workspace-card-meta">
+                        @L["HomeWorkspaceMembers", ws.MemberCount] · @ws.CreatedAt.LocalDateTime.ToString("d")
+                    </span>
+                    @if ((dataResidencyEnabled && ws.Region != Region.Unspecified) || ws.IsArchived)
                     {
-                        <div class="rz-mt-2">
-                            <RadzenBadge Text="@RegionLabel(ws.Region)" BadgeStyle="BadgeStyle.Info" />
-                        </div>
+                        <span class="cs-row rz-mt-1">
+                            @if (dataResidencyEnabled && ws.Region != Region.Unspecified)
+                            {
+                                <RadzenBadge Text="@RegionLabel(ws.Region)" BadgeStyle="BadgeStyle.Info" />
+                            }
+                            @if (ws.IsArchived)
+                            {
+                                <RadzenBadge Text="@L["ActionArchived"]" BadgeStyle="BadgeStyle.Warning" />
+                            }
+                        </span>
                     }
-                    @if (ws.IsArchived)
-                    {
-                        <div class="rz-mt-2">
-                            <RadzenBadge Text="@L["ActionArchived"]" BadgeStyle="BadgeStyle.Warning" />
-                        </div>
-                    }
-                </RadzenCard>
-            </RadzenColumn>
+                </span>
+                <RadzenIcon Icon="chevron_right" class="cs-workspace-card-chevron" />
+            </a>
         }
-    </RadzenRow>
+    </div>
 }
 
 @code {

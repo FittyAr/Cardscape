@@ -1,0 +1,383 @@
+/* CardDetail — two-column card view: content on the left, actions
+   and metadata in a side panel (collapses under 960px). */
+
+.cs-card-detail {
+    max-width: 68rem;
+    margin-inline: auto;
+}
+
+.cs-card-detail-skeleton {
+    height: 24rem;
+    border-radius: var(--rz-card-border-radius, 10px);
+    background: var(--cs-surface-sunken);
+    animation: cs-pulse 1.4s ease-in-out infinite;
+}
+
+.cs-card-detail ::deep .cs-card-detail-back {
+    margin: 0 0 0.75rem -0.5rem;
+    color: var(--rz-text-secondary-color);
+}
+
+/* ── Header ────────────────────────────────────────────── */
+
+.cs-card-detail-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.cs-card-detail-header ::deep .cs-card-detail-status {
+    margin-top: 0.35rem;
+    font-size: 1.5rem;
+    color: var(--rz-text-tertiary-color);
+}
+
+.cs-card-detail-header ::deep .cs-card-detail-status.is-done {
+    color: var(--rz-success);
+}
+
+.cs-card-detail-heading {
+    flex: 1;
+    min-width: 0;
+}
+
+.cs-card-detail-title {
+    margin: 0;
+    padding: 0.125rem 0.375rem;
+    margin-inline-start: -0.375rem;
+    border-radius: var(--rz-border-radius);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    color: var(--rz-text-title-color);
+    overflow-wrap: anywhere;
+    cursor: text;
+}
+
+.cs-card-detail-title:hover {
+    background: var(--cs-hover);
+}
+
+.cs-card-detail-heading ::deep .cs-card-detail-title-input {
+    width: 100%;
+    font-size: 1.375rem;
+    font-weight: 700;
+}
+
+.cs-card-detail-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.375rem;
+}
+
+/* ── Layout ────────────────────────────────────────────── */
+
+.cs-card-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 17rem;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 960px) {
+    .cs-card-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cs-card-detail-aside {
+        order: -1;
+    }
+}
+
+.cs-card-detail-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    min-width: 0;
+}
+
+.cs-card-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.cs-card-section-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.cs-card-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--rz-text-title-color);
+}
+
+.cs-card-section-title ::deep .rzi {
+    font-size: 1.25rem;
+    color: var(--rz-text-secondary-color);
+}
+
+/* ── Description ───────────────────────────────────────── */
+
+.cs-card-description {
+    padding: 0.625rem 0.75rem;
+    border-radius: 8px;
+    background: var(--cs-surface-sunken);
+    border: 1px solid transparent;
+    white-space: pre-wrap;
+    line-height: 1.55;
+    color: var(--rz-text-color);
+    cursor: text;
+    transition: border-color var(--cs-fast);
+}
+
+.cs-card-description:hover {
+    border-color: var(--cs-border-strong);
+}
+
+.cs-card-description.is-empty {
+    min-height: 4rem;
+    color: var(--rz-text-tertiary-color);
+}
+
+/* ── Checklists ────────────────────────────────────────── */
+
+.cs-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--cs-border);
+}
+
+.cs-checklist-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cs-checklist-title {
+    flex: 1;
+    min-width: 0;
+    color: var(--rz-text-title-color);
+}
+
+.cs-checklist ::deep .cs-checklist-progress {
+    height: 0.375rem;
+    margin-bottom: 0.25rem;
+}
+
+.cs-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.25rem;
+    border-radius: 6px;
+}
+
+.cs-checklist-item:hover {
+    background: var(--cs-hover);
+}
+
+.cs-checklist-item-text {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.875rem;
+    overflow-wrap: anywhere;
+}
+
+.cs-checklist-item.is-done .cs-checklist-item-text {
+    color: var(--rz-text-tertiary-color);
+    text-decoration: line-through;
+}
+
+.cs-checklist-item ::deep .cs-checklist-item-delete {
+    opacity: 0;
+}
+
+.cs-checklist-item:hover ::deep .cs-checklist-item-delete,
+.cs-checklist-item:focus-within ::deep .cs-checklist-item-delete {
+    opacity: 1;
+}
+
+/* ── Attachments ───────────────────────────────────────── */
+
+.cs-attachment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cs-attachment {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.375rem 0.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--cs-border);
+}
+
+.cs-attachment-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 6px;
+    background: var(--cs-surface-sunken);
+    color: var(--rz-text-secondary-color);
+}
+
+.cs-attachment-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Comments & activity ───────────────────────────────── */
+
+.cs-comment-composer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.cs-ai-summary {
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: var(--rz-primary-lighter);
+}
+
+.cs-ai-summary p {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+}
+
+.cs-comment-list,
+.cs-activity-list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cs-comment-list {
+    gap: 0.875rem;
+}
+
+.cs-comment {
+    display: flex;
+    gap: 0.625rem;
+}
+
+.cs-comment-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.cs-comment-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--rz-text-title-color);
+}
+
+.cs-comment-text {
+    margin-top: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    background: var(--cs-surface);
+    border: 1px solid var(--cs-border);
+    font-size: 0.875rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.cs-activity-list {
+    gap: 0.5rem;
+}
+
+.cs-activity {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--rz-text-color);
+}
+
+.cs-activity-time {
+    margin-inline-start: auto;
+    font-size: 0.75rem;
+}
+
+/* ── Side panel ────────────────────────────────────────── */
+
+.cs-card-detail-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    position: sticky;
+    top: 1rem;
+}
+
+.cs-aside-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.cs-aside-title {
+    margin: 0 0 0.125rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--rz-text-tertiary-color);
+}
+
+.cs-aside-text {
+    font-size: 0.8125rem;
+    color: var(--rz-text-secondary-color);
+}
+
+/* Radzen renders the button as display:block + text-align:center
+   with an inline-flex box inside. */
+.cs-aside-group ::deep .cs-aside-button {
+    width: 100%;
+    text-align: start;
+}
+
+.cs-aside-group ::deep .cs-aside-button.rz-base {
+    background: var(--cs-surface-sunken);
+}
+
+.cs-aside-group ::deep .cs-aside-button.rz-base:hover:not(.rz-state-disabled) {
+    background: var(--cs-hover);
+}
+
+.cs-aside-group ::deep .cs-aside-button.is-active {
+    background: var(--rz-primary-lighter);
+    color: var(--rz-primary);
+}

@@ -61,7 +61,7 @@ public sealed class UserPreferencesEndpointsTests
         create.StatusCode.Should().Be(HttpStatusCode.OK);
         UserPreferencesDto? created = await create.Content.ReadFromJsonAsync<UserPreferencesDto>(TestContext.Current.CancellationToken);
         created.Should().NotBeNull();
-        created!.ThemeName.Should().Be("default");
+        created!.ThemeName.Should().Be("cardscape-classic");
         created.Mode.Should().Be("System");
         created.UserId.Should().NotBeEmpty();
     }

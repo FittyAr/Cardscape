@@ -226,7 +226,14 @@ public sealed class CultureSwitcher
         }
         _initialized = true;
 
-        string saved = DefaultCulture;
+        // No saved choice → follow the browser language when we
+        // ship it. Without this the picker said "English" while
+        // the resource fallback (which follows the browser's UI
+        // culture) rendered Spanish.
+        string browserLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        string saved = AvailableCultures.Contains(browserLanguage, StringComparer.OrdinalIgnoreCase)
+            ? browserLanguage
+            : DefaultCulture;
         try
         {
             string? fromStorage = await _js.InvokeAsync<string?>("localStorage.getItem", StorageKey);
@@ -271,6 +278,16 @@ public sealed class CultureSwitcher
         }
 
         _currentCulture = culture;
+
+        // Keep .NET's culture in step with the picker: the resx
+        // fallback in HttpBackedStringLocalizer resolves through
+        // CurrentUICulture, and dates / numbers format through
+        // CurrentCulture.
+        CultureInfo info = CultureInfo.GetCultureInfo(culture);
+        CultureInfo.DefaultThreadCurrentCulture = info;
+        CultureInfo.DefaultThreadCurrentUICulture = info;
+        CultureInfo.CurrentCulture = info;
+        CultureInfo.CurrentUICulture = info;
 
         if (persist)
         {

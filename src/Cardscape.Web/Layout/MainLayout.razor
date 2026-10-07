@@ -10,10 +10,8 @@
 @inject IStringLocalizer<SharedResource> L
 @inject CultureSwitcher Culture
 
-<RadzenComponents />
-
 @*
-  BETA-3-UI-#14 � see test-results/BETA-TEST-REPORT.md.
+  BETA-3-UI-#14 — see test-results/BETA-TEST-REPORT.md.
   Skip-link is the single highest-impact a11y fix on a
   SPA: keyboard / screen-reader users hit Tab once and
   jump straight past the sidebar / header chrome to the
@@ -26,122 +24,107 @@
     <Authorized>
         <RadzenLayout>
             <RadzenHeader>
-                <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
-                    <RadzenColumn Size="3">
-                        <RadzenSidebarToggle Click="@ToggleSidebar" aria-label="@L["NavToggleSidebar"]" />
-                    </RadzenColumn>
-                    <RadzenColumn Size="9">
-                        <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                            <div class="topbar-search-slot rz-grow-1">
-                                <TopbarSearch />
-                            </div>
-                            <InboxBell />
-                            <AppearanceToggle />
-                            <LanguageSwitcher />
-                            <RadzenProfileMenu Click="@ProfileMenuClickAsync">
-                                <ChildContent>
-                                    @if (context.User.FindFirst("is_admin")?.Value == "true")
-                                    {
-                                        <RadzenProfileMenuItem Path="admin/settings" Icon="settings" Text="Configuración del Sistema" />
-                                        <RadzenProfileMenuItem Path="admin/seeder" Icon="storage" Text="@L["NavSeeder"]" />
-                                    }
-                                    <RadzenProfileMenuItem Path="account/api-tokens" Icon="key" Text="@L["NavApiTokens"]" />
-                                    <RadzenProfileMenuItem Path="settings/two-factor" Icon="security" Text="@L["SettingsTwoFactor"]" />
-                                    <RadzenProfileMenuItem Path="settings/appearance" Icon="palette" Text="@L["SettingsAppearance"]" />
-                                    <RadzenProfileMenuItem Text="@L["AuthLogOut"]" Value="logout" Icon="power_settings_new" />
-                                </ChildContent>
-                                <Template>
-                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" JustifyContent="JustifyContent.End" Class="rz-overflow-hidden">
-                                        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.End" Gap="0">
-                                            <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-text-default">
-                                                @context.User.Identity?.Name
-                                            </RadzenText>
-                                            <RadzenText Text="@context.User.FindFirst(ClaimTypes.Email)?.Value" TextStyle="TextStyle.Caption" Class="rz-color-text-default" />
-                                        </RadzenStack>
-                                    </RadzenStack>
-                                </Template>
-                            </RadzenProfileMenu>
-                        </RadzenStack>
-                    </RadzenColumn>
-                </RadzenRow>
+                <div class="cs-topbar">
+                    <RadzenSidebarToggle Click="@ToggleSidebar" aria-label="@L["NavToggleSidebar"]" />
+                    <a href="" class="cs-topbar-brand" aria-label="@L["AppName"]">
+                        <BrandMark Size="22" />
+                    </a>
+                    <div class="cs-topbar-search">
+                        <TopbarSearch />
+                    </div>
+                    <div class="cs-topbar-actions">
+                        <InboxBell />
+                        <AppearanceToggle />
+                        <LanguageSwitcher />
+                        <RadzenProfileMenu Click="@ProfileMenuClickAsync" class="cs-profile-menu">
+                            <ChildContent>
+                                <RadzenProfileMenuItem Path="settings/appearance" Icon="palette" Text="@L["SettingsAppearance"]" />
+                                <RadzenProfileMenuItem Path="settings/two-factor" Icon="security" Text="@L["SettingsTwoFactor"]" />
+                                <RadzenProfileMenuItem Path="account/api-tokens" Icon="key" Text="@L["NavApiTokens"]" />
+                                <RadzenProfileMenuItem Text="@L["AuthLogOut"]" Value="logout" Icon="logout" />
+                            </ChildContent>
+                            <Template>
+                                <span class="cs-profile">
+                                    <span class="cs-avatar" aria-hidden="true">@UserInitials.From(context.User.Identity?.Name)</span>
+                                    <span class="cs-profile-text">
+                                        <span class="cs-profile-name">@context.User.Identity?.Name</span>
+                                        <span class="cs-profile-email">@context.User.FindFirst(ClaimTypes.Email)?.Value</span>
+                                    </span>
+                                </span>
+                            </Template>
+                        </RadzenProfileMenu>
+                    </div>
+                </div>
             </RadzenHeader>
 
-            <RadzenSidebar Expanded="@sidebarExpanded">
-                <RadzenStack AlignItems="AlignItems.Center" Class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding); border-bottom: var(--rz-panel-menu-item-border);">
-                    <RadzenLink Path="" Text="@L["AppName"]" TextStyle="TextStyle.Subtitle1" />
-                </RadzenStack>
+            <RadzenSidebar Expanded="@sidebarExpanded" class="cs-sidebar">
                 <RadzenPanelMenu>
                     <RadzenPanelMenuItem Text="@L["NavHome"]" Path="" Icon="home" />
-                    <RadzenPanelMenuItem Text="@L["NavWorkspaces"]" Path="workspaces" Icon="workspaces" />
+                    <RadzenPanelMenuItem Text="@L["NavWorkspaces"]" Path="workspaces" Icon="space_dashboard" />
                     <RadzenPanelMenuItem Text="@L["NavInbox"]" Path="inbox" Icon="inbox" />
-                    <RadzenPanelMenuItem Text="@L["NavCalendar"]" Path="calendar" Icon="event" />
+                    <RadzenPanelMenuItem Text="@L["NavCalendar"]" Path="calendar" Icon="calendar_month" />
                     <RadzenPanelMenuItem Text="@L["NavPlanner"]" Path="planner" Icon="view_timeline" />
                     <RadzenPanelMenuItem Text="@L["NavInvitations"]" Path="invitations" Icon="mail" />
-                    @if (context.User.FindFirst("is_admin")?.Value == "true")
-                    {
-                        <RadzenPanelMenuItem Text="Configuración del Sistema" Path="admin/settings" Icon="settings" />
-                        <RadzenPanelMenuItem Text="@L["NavSeeder"]" Path="admin/seeder" Icon="storage" />
-                    }
                 </RadzenPanelMenu>
-                <RadzenStack AlignItems="@AlignItems.Center" Gap="0" Class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding);">
-                    <RadzenText Text="Cardscape v1.2.0" TextStyle="@TextStyle.Caption" Class="rz-color-text-disabled" TagName="@TagName.P" TextAlign="@TextAlign.Center" />
-                    <RadzenText Text="Copyright © 2026" TextStyle="@TextStyle.Caption" Class="rz-mb-0 rz-color-text-disabled" TagName="@TagName.P" TextAlign="@TextAlign.Center" />
-                </RadzenStack>
+                @if (context.User.FindFirst("is_admin")?.Value == "true")
+                {
+                    <div class="cs-sidebar-section">@L["NavAdministration"]</div>
+                    <RadzenPanelMenu>
+                        <RadzenPanelMenuItem Text="@L["NavSystemSettings"]" Path="admin/settings" Icon="tune" />
+                        <RadzenPanelMenuItem Text="@L["NavSeeder"]" Path="admin/seeder" Icon="database" />
+                    </RadzenPanelMenu>
+                }
+                <div class="cs-sidebar-footer">Cardscape @AppInfo.Version</div>
             </RadzenSidebar>
 
             <RadzenBody Expanded="@sidebarExpanded">
-                <RadzenRow Class="rz-mx-auto rz-px-4 rz-pt-2 rz-pt-md-4 rz-pt-lg-6 rz-pt-xl-12 rz-pb-2 rz-pb-lg-12" Style="max-width: 1440px;">
-                    <RadzenColumn Size="12">
-                        @* BETA-3-UI-#14 � see test-results/BETA-TEST-REPORT.md.
-                           id="main-content" is the target of the
-                           skip-link above. Keyboard / screen-reader
-                           users land here on the first Tab press. *@
-                        <main id="main-content" role="main">
-                            @* BETA-8-I18N-#3 — see test-results/r8/A8-settings.md.
-                               The router-provided @Body is a RenderFragment
-                               that is NOT re-invoked when the layout
-                               re-renders. We mount the wrapper with a
-                               key that we bump on every culture change;
-                               the new wrapper receives a fresh @Body
-                               and renders the page with the now-Spanish
-                               dictionary. *@
-                            @if (_bodyKey is not null)
-                            {
-                                <CultureReactiveBody @key="@_bodyKey">
-                                    @Body
-                                </CultureReactiveBody>
-                            }
-                        </main>
-                    </RadzenColumn>
-                </RadzenRow>
+                <div class="cs-main">
+                    @* BETA-3-UI-#14 — see test-results/BETA-TEST-REPORT.md.
+                       id="main-content" is the target of the
+                       skip-link above. Keyboard / screen-reader
+                       users land here on the first Tab press. *@
+                    <main id="main-content" role="main">
+                        @* BETA-8-I18N-#3 — see test-results/r8/A8-settings.md.
+                           The router-provided @Body is a RenderFragment
+                           that is NOT re-invoked when the layout
+                           re-renders. We mount the wrapper with a
+                           key that we bump on every culture change;
+                           the new wrapper receives a fresh @Body
+                           and renders the page with the now-Spanish
+                           dictionary. *@
+                        @if (_bodyKey is not null)
+                        {
+                            <CultureReactiveBody @key="@_bodyKey">
+                                @Body
+                            </CultureReactiveBody>
+                        }
+                    </main>
+                </div>
             </RadzenBody>
         </RadzenLayout>
     </Authorized>
     <NotAuthorized>
         <RadzenLayout>
             <RadzenHeader>
-                <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
-                    <RadzenColumn Size="6">
-                        <RadzenLink Path="" Text="@L["AppName"]" TextStyle="TextStyle.Subtitle1" />
-                    </RadzenColumn>
-                    <RadzenColumn Size="6">
-                        <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                            <div class="topbar-search-slot rz-grow-1">
-                                <TopbarSearch />
-                            </div>
-                            <LanguageSwitcher />
-                            <RadzenButton Text="@L["AuthSignIn"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Nav.NavigateTo("login"))" />
-                            <RadzenButton Text="@L["AuthCreateAccount"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" Click="@(() => Nav.NavigateTo("register"))" />
-                        </RadzenStack>
-                    </RadzenColumn>
-                </RadzenRow>
+                <div class="cs-topbar">
+                    <a href="" class="cs-topbar-brand" aria-label="@L["AppName"]">
+                        <BrandMark Size="22" />
+                    </a>
+                    <div class="cs-topbar-search">
+                        <TopbarSearch />
+                    </div>
+                    <div class="cs-topbar-actions">
+                        <AppearanceToggle />
+                        <LanguageSwitcher />
+                        <RadzenButton Text="@L["AuthSignIn"]" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Click="@(() => Nav.NavigateTo("login"))" />
+                        <RadzenButton Text="@L["AuthCreateAccount"]" ButtonStyle="ButtonStyle.Primary" Click="@(() => Nav.NavigateTo("register"))" />
+                    </div>
+                </div>
             </RadzenHeader>
             <RadzenBody Expanded="true">
-                <RadzenRow Class="rz-mx-auto rz-px-4 rz-pt-2 rz-pt-md-4 rz-pt-lg-6 rz-pt-xl-12 rz-pb-2 rz-pb-lg-12" Style="max-width: 1440px;">
-                    <RadzenColumn Size="12">
-                        @Body
-                    </RadzenColumn>
-                </RadzenRow>
+                <div class="cs-main">
+                    @Body
+                </div>
             </RadzenBody>
         </RadzenLayout>
     </NotAuthorized>

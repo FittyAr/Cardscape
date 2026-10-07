@@ -1,70 +1,82 @@
-/* KanbanBoard — Kanban-style horizontal scroll columns.
-   Equivalent to the old .lists-row / .list-column / .card-mini
-   block that lived in app.css:1015-1072. Moved to scoped CSS
-   so it stays close to the component that owns the markup. */
+/* KanbanBoard — Trello-style horizontal track. Colours come from
+   the --cs-* tokens in wwwroot/css/app.css so the board reads
+   correctly under every light and dark theme. */
 
 .cs-kanban {
     display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    padding-bottom: 1rem;
     align-items: flex-start;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 0.25rem 0.25rem 1rem;
+    /* Columns scroll internally; the track fills the viewport
+       below the board header. */
+    min-height: calc(100vh - var(--cs-topbar-height) - 9rem);
 }
 
 .cs-kanban-column {
-    background: var(--rz-base-200);
-    border-radius: var(--rz-border-radius);
-    padding: 0.75rem;
-    min-width: 18rem;
-    max-width: 18rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    flex: 0 0 18.5rem;
+    width: 18.5rem;
+    max-height: calc(100vh - var(--cs-topbar-height) - 10rem);
+    border-radius: 12px;
+    background: var(--cs-surface-sunken);
+    border: 1px solid var(--cs-border);
+    transition: box-shadow var(--cs-fast), border-color var(--cs-fast), background-color var(--cs-fast);
+}
+
+.cs-kanban-column.is-drop-target {
+    border-color: var(--rz-primary);
+    box-shadow: 0 0 0 1px var(--rz-primary);
+    background: color-mix(in srgb, var(--rz-primary) 7%, var(--cs-surface-sunken));
+}
+
+.cs-kanban-column--skeleton {
+    height: 16rem;
+    animation: cs-pulse 1.4s ease-in-out infinite;
 }
 
 .cs-kanban-column-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.625rem 0.5rem 0.375rem 0.875rem;
+    min-height: 2.75rem;
+}
+
+.cs-kanban-column-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--rz-text-title-color);
+    overflow-wrap: anywhere;
+}
+
+.cs-kanban-column-count {
+    flex: none;
+    min-width: 1.5rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    background: var(--cs-hover);
+    font-size: 0.75rem;
     font-weight: 600;
+    line-height: 1.375rem;
+    text-align: center;
+    color: var(--rz-text-secondary-color);
+    font-variant-numeric: tabular-nums;
 }
 
 .cs-kanban-column-cards {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    min-height: 1rem;
+    min-height: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    overflow-y: auto;
 }
 
-/* Cards inside the column: the consumer is expected to render
-   a RadzenCard for each TItem, optionally with the .card-mini
-   class for the legacy look. The styles below are still
-   available as a default. */
-.cs-kanban-column-cards ::deep .card-mini {
-    background: var(--rz-base-50);
-    padding: 0.5rem 0.75rem;
-    cursor: pointer;
-    box-shadow: var(--rz-shadow-1);
-    transition: background-color 0.1s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.cs-kanban-column-cards ::deep .card-mini:hover {
-    background: var(--rz-base-100);
-}
-
-.cs-kanban-column-cards ::deep .card-mini-title {
-    font-size: 0.875rem;
-    word-break: break-word;
-}
-
-.cs-kanban-column-cards ::deep .card-mini-title.completed {
-    text-decoration: line-through;
-    color: var(--rz-text-secondary-color);
-}
-
-/* Honor the user's reduced-motion preference. */
-@media (prefers-reduced-motion: reduce) {
-    .cs-kanban-column-cards ::deep .card-mini {
-        transition: none;
-    }
+.cs-kanban-column-footer {
+    padding: 0.375rem 0.5rem 0.5rem;
 }

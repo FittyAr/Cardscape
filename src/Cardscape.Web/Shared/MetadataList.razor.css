@@ -1,0 +1,19 @@
+.cs-meta {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.5rem 1rem;
+    align-items: baseline;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.cs-meta-label {
+    color: var(--rz-text-secondary-color);
+}
+
+.cs-meta-value {
+    margin: 0;
+    min-width: 0;
+    color: var(--rz-text-color);
+    overflow-wrap: anywhere;
+}

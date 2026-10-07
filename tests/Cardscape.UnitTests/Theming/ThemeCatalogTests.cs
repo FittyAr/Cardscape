@@ -151,35 +151,32 @@ public class CardscapeThemesTests
     [Fact]
     public void Classic_HasTheBrandTealAsPrimary()
     {
-        // #0f3d3e is the canonical brand anchor — pulled
-        // from <meta name="theme-color"> in
-        // wwwroot/index.html:14 and from
-        // docs/brand/00-brand-kit.md. A change to this
-        // value is a brand change and must be coordinated
-        // across the brand kit, the plan, and this test.
+        // The brand teal from docs/brand/00-brand-kit.md,
+        // deepened to #0f766e so white button text meets
+        // WCAG AA on the light surface. Must match
+        // wwwroot/css/themes/cardscape-classic-base.css and
+        // <meta name="theme-color"> in wwwroot/index.html.
         var theme = CardscapeThemes.Classic();
-        theme.Primary.Should().Be("#0f3d3e");
+        theme.Primary.Should().Be("#0f766e");
     }
 
     [Fact]
-    public void Classic_HasTheWarmSandSecondary()
+    public void Classic_HasTheInfoBlueSecondary()
     {
-        // #d4a574 is the delegated secondary colour —
-        // complementary to the brand teal, ~150° apart on
-        // the HSL wheel. See plan §4.4 for the reasoning.
+        // The brand kit's info blue (light-surface shade),
+        // used for links and secondary actions.
         var theme = CardscapeThemes.Classic();
-        theme.Secondary.Should().Be("#d4a574");
+        theme.Secondary.Should().Be("#0969da");
     }
 
     [Fact]
-    public void Classic_OverridesShapeToTighterRadius()
+    public void Classic_DeclaresControlAndCardRadius()
     {
-        // 4px vs the Software default of 6px — reads as
-        // "serious tool", not "consumer app". ADR 0011
-        // acceptance criterion.
+        // 6px controls keep the "serious tool" feel of
+        // ADR 0011; 10px cards soften the kanban surface.
         var theme = CardscapeThemes.Classic();
-        theme.ButtonRadius.Should().Be("4px");
-        theme.CardRadius.Should().Be("4px");
+        theme.ButtonRadius.Should().Be("6px");
+        theme.CardRadius.Should().Be("10px");
     }
 
     [Fact]
@@ -198,21 +195,19 @@ public class CardscapeThemesTests
     [Fact]
     public void ClassicDark_HasBrighterTealForDarkBackground()
     {
-        // Dark variant lifts the primary from #0f3d3e to
-        // #1a8a8b for contrast against the dark surface
-        // (#1a1d1e). Plan §4.3.
+        // Dark variant uses the brand kit's accent teal
+        // as-is (9.2:1 against the #0d1117 page background).
         var theme = CardscapeThemes.ClassicDark();
-        theme.Primary.Should().Be("#1a8a8b");
+        theme.Primary.Should().Be("#2dd4bf");
     }
 
     [Fact]
-    public void ClassicDark_KeepsTheSameSecondary()
+    public void ClassicDark_UsesTheDarkSurfaceInfoBlue()
     {
-        // The warm sand works on both light and dark
-        // surfaces (contrast 6.8:1 against #1a1d1e, well
-        // above the 4.5:1 body-text threshold).
+        // The brand kit's info blue for dark surfaces
+        // (6.0:1 against #0d1117).
         var theme = CardscapeThemes.ClassicDark();
-        theme.Secondary.Should().Be("#d4a574");
+        theme.Secondary.Should().Be("#58a6ff");
     }
 
     [Fact]
@@ -221,7 +216,7 @@ public class CardscapeThemesTests
         var resolved = CardscapeThemes.Resolve(CardscapeThemes.ClassicName);
         resolved.Should().NotBeNull();
         resolved!.Value.Should().Be(CardscapeThemes.ClassicName);
-        resolved.Primary.Should().Be("#0f3d3e");
+        resolved.Primary.Should().Be("#0f766e");
     }
 
     [Fact]
@@ -230,7 +225,7 @@ public class CardscapeThemesTests
         var resolved = CardscapeThemes.Resolve(CardscapeThemes.ClassicDarkName);
         resolved.Should().NotBeNull();
         resolved!.Value.Should().Be(CardscapeThemes.ClassicDarkName);
-        resolved.Primary.Should().Be("#1a8a8b");
+        resolved.Primary.Should().Be("#2dd4bf");
     }
 
     [Theory]

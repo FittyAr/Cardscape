@@ -18,254 +18,239 @@
 
 @if (_board is null)
 {
-    <RadzenText Text="@L["BoardLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <div class="cs-full-bleed">
+        <KanbanBoard TItem="CardSummaryDto" Columns="null" />
+    </div>
 }
 else
 {
-    <RadzenBreadCrumb Class="rz-mb-3">
-        <RadzenBreadCrumbItem Path="/workspaces" Text="@L["NavWorkspaces"]" Icon="domain" />
-        <RadzenBreadCrumbItem Path="@($"/workspaces/{_board.WorkspaceId}")" Text="@(_workspace?.Name ?? L["WorkspaceBadge"])" />
-        <RadzenBreadCrumbItem Text="@_board.Name" Icon="view_kanban" />
-    </RadzenBreadCrumb>
+    <div class="cs-full-bleed cs-board-page">
+        <div class="cs-board-bar">
+            <div class="cs-board-bar-main">
+                <a class="cs-board-bar-crumb" href="@($"workspaces/{_board.WorkspaceId}")">
+                    <RadzenIcon Icon="space_dashboard" />
+                    <span>@(_workspace?.Name ?? L["WorkspaceBadge"])</span>
+                </a>
+                <div class="cs-board-bar-title-row">
+                    <h1 class="cs-board-bar-title">@_board.Name</h1>
+                    <RadzenButton Icon="@(_board.IsStarred ? "star" : "star_outline")"
+                                  ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                  class="@(_board.IsStarred ? "cs-star is-starred" : "cs-star")"
+                                  title="@(_board.IsStarred ? L["BoardsStarred"] : L["BoardStar"])"
+                                  aria-label="@(_board.IsStarred ? L["BoardsStarred"] : L["BoardStar"])"
+                                  aria-pressed="@(_board.IsStarred ? "true" : "false")"
+                                  Click="@ToggleStarAsync" />
+                    <span class="cs-board-chip">
+                        <RadzenIcon Icon="@VisibilityIcon(_board.Visibility)" />
+                        @VisibilityLabel(_board.Visibility)
+                    </span>
+                    <span class="cs-live @(_hubConnected ? "is-live" : null)" title="@(_hubConnected ? L["BoardLiveHint"] : L["BoardOfflineHint"])">
+                        <span class="cs-live-dot" aria-hidden="true"></span>
+                        @(_hubConnected ? L["BoardLiveShort"] : L["BoardOfflineShort"])
+                    </span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(_board.Description))
+                {
+                    <p class="cs-board-bar-description">@_board.Description</p>
+                }
+            </div>
+            <div class="cs-board-bar-actions">
+                <RadzenButton Text="@L["BoardActionDashboard"]" Icon="insights" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                              Click="@(() => Nav.NavigateTo($"boards/{BoardId}/dashboard"))" />
+                <RadzenButton Text="@L["ActivityTitle"]" Icon="history" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                              Click="@(() => Nav.NavigateTo($"boards/{BoardId}/activity"))" />
+                <RadzenMenu Responsive="false" class="cs-board-more">
+                    <RadzenMenuItem Icon="more_horiz" title="@L["BoardMore"]">
+                        <RadzenMenuItem Text="@(_showSnoozed ? L["BoardHideSnoozed"] : L["BoardShowSnoozed"])" Icon="snooze" Click="@ToggleSnoozedAsync" />
+                        <RadzenMenuItem Text="@L["CustomFieldsTitle"]" Icon="tune" Path="@($"boards/{BoardId}/custom-fields")" />
+                        <RadzenMenuItem Text="@L["ExtensionsTitle"]" Icon="extension" Path="@($"boards/{BoardId}/extensions")" />
+                        <RadzenMenuItem Text="@L["BoardSettings"]" Icon="settings" Click="@(() => _showSettings = !_showSettings)" />
+                    </RadzenMenuItem>
+                </RadzenMenu>
+            </div>
+        </div>
 
-    <PageHeader Title="@_board.Name" Subtitle="@_board.Description">
-        <Actions>
-            <RadzenBadge BadgeStyle="@BadgeStyle.Info" Text="@L["BoardBadgeKanban"]" />
-            <RadzenBadge BadgeStyle="@(_hubConnected ? BadgeStyle.Success : BadgeStyle.Light)"
-                         Text="@(_hubConnected ? L["BoardLive"] : L["BoardOffline"])"
-                         title="@(_hubConnected ? L["BoardLiveHint"] : L["BoardOfflineHint"])" />
-            <RadzenButton Text="@(_board.IsStarred ? L["BoardsStarred"] : L["BoardStar"] )"
-                          ButtonStyle="@ButtonStyle.Secondary"
-                          Click="@ToggleStarAsync" />
-            <RadzenButton Text="@L["BoardAddList"]" Icon="add" ButtonStyle="@ButtonStyle.Light"
-                          Click="@ToggleAddList" />
-            <RadzenButton Text="@L["BoardActionDashboard"]" Icon="insights" ButtonStyle="@ButtonStyle.Light"
-                          Click="@(() => Nav.NavigateTo($"boards/{BoardId}/dashboard"))" />
-            <RadzenButton Text="@L["CustomFieldsTitle"]" Icon="list" ButtonStyle="@ButtonStyle.Light"
-                          Click="@(() => Nav.NavigateTo($"boards/{BoardId}/custom-fields"))" />
-            <RadzenButton Text="@L["ExtensionsTitle"]" Icon="extension" ButtonStyle="@ButtonStyle.Light"
-                          Click="@(() => Nav.NavigateTo($"boards/{BoardId}/extensions"))" />
-            <RadzenButton Text="@L["ActivityTitle"]" Icon="history" ButtonStyle="@ButtonStyle.Light"
-                          Click="@(() => Nav.NavigateTo($"boards/{BoardId}/activity"))" />
-            <RadzenButton Text="@L["BoardSettings"]" Icon="settings" ButtonStyle="@ButtonStyle.Light"
-                          Click="@(() => _showSettings = !_showSettings)" />
-        </Actions>
-    </PageHeader>
-
-    @if (_showAddList)
-    {
-        <RadzenCard>
-            <RadzenTemplateForm TItem="AddListModel" Data="@_addListModel" Submit="@AddListAsync">
-                <RadzenStack Gap="0.5rem">
-                    @* BETA-8-UI-#17 — see test-results/r8/r8-report.md.
-                       RadzenTemplateForm's HTML <form> would submit on
-                       Enter inside a TextBox *if* the submit button is
-                       the page's first RadzenButton. The form sits
-                       next to several Light-style buttons above, so
-                       we wire Enter explicitly through @onkeydown —
-                       that works regardless of button order. *@
-                    <RadzenTextBox @bind-Value="_addListModel.Name" Name="list-name" Placeholder="@L["BoardListName"]"
-                                   Style="width:100%"
-                                   @onkeydown="@OnAddListKeyDownAsync" />
-                    <RadzenRequiredValidator Component="list-name" Text="@L["ValidationRequired"]" />
-                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
-                                 Gap="0.5rem" Class="rz-mt-3">
-                        <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => _showAddList = false)" />
-                        <RadzenButton Text="@L["BoardAddItem"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" IsBusy="@_addingList" />
+        @* BETA-6-#6 — board settings (rename / description / visibility /
+           archive / unarchive). Opened from the "…" menu above. *@
+        @if (_showSettings)
+        {
+            <RadzenCard class="cs-board-settings">
+                <RadzenStack Gap="1rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                        <RadzenText Text="@L["BoardSettings"]" TextStyle="TextStyle.H6" TagName="TagName.H2" Class="rz-m-0" />
+                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                      aria-label="@L["ActionCancel"]" Click="@(() => _showSettings = false)" />
+                    </RadzenStack>
+                    <RadzenTemplateForm TItem="RenameBoardModel" Data="@_renameModel" Submit="@RenameBoardAsync">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Start">
+                            <RadzenStack Gap="0.25rem" Style="flex: 1;">
+                                <RadzenTextBox @bind-Value="_renameModel.NewName" Name="board-name" Placeholder="@L["BoardNewName"]" Style="width:100%" />
+                                <RadzenRequiredValidator Component="board-name" Text="@L["ValidationRequired"]" />
+                            </RadzenStack>
+                            <RadzenButton Text="@L["CustomFieldsRename"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
+                        </RadzenStack>
+                    </RadzenTemplateForm>
+                    <RadzenTemplateForm TItem="DescriptionBoardModel" Data="@_descriptionModel" Submit="@ChangeDescriptionAsync">
+                        <RadzenStack Gap="0.5rem">
+                            <RadzenTextArea @bind-Value="_descriptionModel.NewDescription" Rows="2" Placeholder="@L["BoardNewDescription"]" Style="width:100%" />
+                            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                                <RadzenButton Text="@L["BoardUpdateDescription"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenTemplateForm>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenText Text="@L["BoardsVisibility"]" TextStyle="TextStyle.Body2" Class="rz-m-0" />
+                            <RadzenDropDown TValue="string" @bind-Value="_newVisibility" Data="@VisibilityOptions"
+                                            TextProperty="Label" ValueProperty="Value" Change="@ChangeVisibilityAsync" Style="width:10rem" />
+                        </RadzenStack>
+                        @if (_board.IsArchived)
+                        {
+                            <RadzenButton Text="@L["BoardUnarchive"]" Icon="unarchive" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Click="@UnarchiveBoardAsync" />
+                        }
+                        else
+                        {
+                            <RadzenButton Text="@L["ActionArchive"]" Icon="archive" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@ArchiveBoardAsync" />
+                        }
                     </RadzenStack>
                 </RadzenStack>
-            </RadzenTemplateForm>
-        </RadzenCard>
-    }
+            </RadzenCard>
+        }
 
-    @* BETA-6-#6 — see test-results/BETA-TEST-REPORT.md.
-       The board API has supported rename / description / visibility /
-       archive / unarchive / delete endpoints since v1.0.0, but the
-       Blazor UI never surfaced them — the only affordance on the
-       board page was "Star" + "Add list" + navigation. This panel
-       closes that gap with a single expandable settings card. The
-       rename / description / visibility / archive / unarchive
-       commands already exist in IBoardsApiClient, so this is just
-       wiring. *@
-    @if (_showSettings)
-    {
-        <RadzenCard>
-            <RadzenStack Gap="0.75rem">
-                <RadzenText Text="@L["BoardSettings"]" TextStyle="TextStyle.H6" TagName="TagName.H3" />
-                <RadzenTemplateForm TItem="RenameBoardModel" Data="@_renameModel" Submit="@RenameBoardAsync">
-                    <RadzenStack Gap="0.5rem">
-                        <RadzenTextBox @bind-Value="_renameModel.NewName" Name="board-name" Placeholder="@L["BoardNewName"]"
-                                       Style="width:100%" />
-                        <RadzenRequiredValidator Component="board-name" Text="@L["ValidationRequired"]" />
-                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-                            <RadzenButton Text="@L["CustomFieldsRename"]" ButtonType="ButtonType.Submit"
-                                          ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" />
-                        </RadzenStack>
-                    </RadzenStack>
-                </RadzenTemplateForm>
-                <RadzenTemplateForm TItem="DescriptionBoardModel" Data="@_descriptionModel" Submit="@ChangeDescriptionAsync">
-                    <RadzenStack Gap="0.5rem">
-                        <RadzenTextArea @bind-Value="_descriptionModel.NewDescription" Rows="2"
-                                         Placeholder="@L["BoardNewDescription"]" Style="width:100%" />
-                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-                            <RadzenButton Text="@L["BoardUpdateDescription"]" ButtonType="ButtonType.Submit"
-                                          ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" />
-                        </RadzenStack>
-                    </RadzenStack>
-                </RadzenTemplateForm>
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
-                             Wrap="FlexWrap.Wrap">
-                    <RadzenText Text="@L["BoardsVisibility"]" TextStyle="TextStyle.Body2" />
-                    <RadzenDropDown TValue="string" @bind-Value="_newVisibility" Data="@VisibilityOptions"
-                                    TextProperty="Label" ValueProperty="Value" Change="@ChangeVisibilityAsync" Style="width:10rem" />
-                </RadzenStack>
-                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                    @if (_board.IsArchived)
+        <KanbanBoard TItem="CardSummaryDto" Columns="@KanbanColumns"
+                     DropEnabled="true" OnColumnDrop="@OnKanbanDropAsync">
+            <ColumnHeaderTemplate>
+                @{
+                    var column = context;
+                    Guid listId = Guid.Parse(column.Id);
+                    BoardListDto? listDto = _lists?.FirstOrDefault(l => l.Id == listId);
+                }
+                @* BUG-A4-002 — per-list menu (rename / move / archive). *@
+                <h2 class="cs-column-title">@column.Title</h2>
+                <span class="cs-column-count">@column.Cards.Count</span>
+                @if (listDto is not null)
+                {
+                    <RadzenMenu Responsive="false" class="cs-column-menu">
+                        <RadzenMenuItem Icon="more_horiz" title="@L["BoardMore"]">
+                            <RadzenMenuItem Text="@L["CustomFieldsRename"]" Icon="edit"
+                                            Click="@(() => PromptRenameListAsync(listId, listDto.Name))" />
+                            <RadzenMenuItem Text="@L["BoardMoveListStart"]" Icon="first_page"
+                                            Click="@(() => MoveListToPositionAsync(listId, 0.0d))" />
+                            <RadzenMenuItem Text="@L["BoardMoveListEnd"]" Icon="last_page"
+                                            Click="@(() => MoveListToPositionAsync(listId, double.MaxValue / 2))" />
+                            @if (listDto.IsArchived)
+                            {
+                                <RadzenMenuItem Text="@L["ActionRestore"]" Icon="unarchive"
+                                                Click="@(() => RestoreListAsync(listId))" />
+                            }
+                            else
+                            {
+                                <RadzenMenuItem Text="@L["ActionArchive"]" Icon="archive"
+                                                Click="@(() => ArchiveListAsync(listId))" />
+                            }
+                        </RadzenMenuItem>
+                    </RadzenMenu>
+                }
+            </ColumnHeaderTemplate>
+            <CardTemplate>
+                @{
+                    var card = context;
+                    double opacity = ComputeCardOpacity(card, _agingMode, _now);
+                    DueState due = GetDueState(card, _now);
+                }
+                @* BETA-3-UI-#15 — draggable for mouse users; tabindex +
+                   role + aria-label surface the card to keyboard and
+                   screen-reader users, and Enter / Space open it. *@
+                <div class="cs-card @(card.IsCompleted ? "is-completed" : null) @(_draggingCardId == card.Id ? "is-dragging" : null)"
+                     style="@(opacity < 1 ? $"opacity: {opacity.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)};" : null)"
+                     role="button"
+                     aria-label="@L["BoardCardAria", card.Title, card.IsCompleted ? L["BoardCompletedSuffix"] : string.Empty, card.MirrorOfCardId is not null ? L["BoardMirrorSuffix"] : string.Empty]"
+                     tabindex="0"
+                     draggable="true"
+                     @ondragstart="@(() => OnCardDragStart(card))"
+                     @onkeydown="@(e => OnCardKeyDown(e, card))"
+                     @onclick="@(() => OpenCard(card))">
+                    <span class="cs-card-title">@card.Title</span>
+                    @if (card.DueDate is not null || card.IsCompleted || card.MirrorOfCardId is not null || card.IsSnoozed)
                     {
-                        <RadzenButton Text="@L["BoardUnarchive"]" Icon="unarchive" ButtonStyle="ButtonStyle.Warning"
-                                      Click="@UnarchiveBoardAsync" />
+                        <span class="cs-card-badges">
+                            @if (card.DueDate is not null)
+                            {
+                                <span class="cs-card-due cs-card-due--@due.ToString().ToLowerInvariant()" title="@($"{card.DueDate.Value.LocalDateTime:d} {card.DueDate.Value.LocalDateTime:t}")">
+                                    <RadzenIcon Icon="@(card.IsCompleted ? "check_circle" : "schedule")" />
+                                    @card.DueDate.Value.LocalDateTime.ToString("d MMM")
+                                </span>
+                            }
+                            else if (card.IsCompleted)
+                            {
+                                <span class="cs-card-due cs-card-due--done"><RadzenIcon Icon="check_circle" /></span>
+                            }
+                            @if (card.IsSnoozed)
+                            {
+                                <span class="cs-card-icon" title="@(card.SnoozeUntil is null ? null : L["CardSnoozedUntil", card.SnoozeUntil.Value.LocalDateTime.ToString("g")].Value)"><RadzenIcon Icon="snooze" /></span>
+                            }
+                            @* BETA-7-#13 — mirror cards share title/description
+                               with their source; the icon tells the copies apart. *@
+                            @if (card.MirrorOfCardId is not null)
+                            {
+                                <span class="cs-card-icon" title="@L["BoardMirrorCard"]"><RadzenIcon Icon="content_copy" /></span>
+                            }
+                        </span>
+                    }
+                </div>
+            </CardTemplate>
+            <ChildContent>
+                @{
+                    Guid listId = Guid.Parse(context.Id);
+                }
+                @if (_openAddCardFor == listId)
+                {
+                    <div class="cs-composer">
+                        @* BETA-8-UI-#17 — Enter submits, Escape closes. *@
+                        <RadzenTextBox @bind-Value="_newCardTitle" Immediate="true" Placeholder="@L["BoardCardTitle"]"
+                                       Style="width:100%" class="cs-composer-input"
+                                       @onkeydown="@(e => OnAddCardKeyDownAsync(e, listId))" />
+                        <div class="cs-composer-actions">
+                            <RadzenButton Text="@L["BoardAddCard"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                          Click="@(() => ConfirmAddCardAsync(listId))" />
+                            <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                          aria-label="@L["ActionCancel"]" Click="@CloseCardComposer" />
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <RadzenButton Text="@L["BoardAddCard"]" Icon="add" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                                  class="cs-add-card" Click="@(() => OpenCardComposer(listId))" />
+                }
+            </ChildContent>
+            <TrailingContent>
+                <div class="cs-add-list">
+                    @if (_showAddList)
+                    {
+                        <RadzenTemplateForm TItem="AddListModel" Data="@_addListModel" Submit="@AddListAsync">
+                            <div class="cs-composer">
+                                @* BETA-8-UI-#17 — Enter submits explicitly. *@
+                                <RadzenTextBox @bind-Value="_addListModel.Name" Immediate="true" Name="list-name" Placeholder="@L["BoardListName"]"
+                                               Style="width:100%" class="cs-composer-input"
+                                               @onkeydown="@OnAddListKeyDownAsync" />
+                                <RadzenRequiredValidator Component="list-name" Text="@L["ValidationRequired"]" />
+                                <div class="cs-composer-actions">
+                                    <RadzenButton Text="@L["BoardAddList"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                                                  Size="ButtonSize.Small" IsBusy="@_addingList" />
+                                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                                  aria-label="@L["ActionCancel"]" Click="@(() => _showAddList = false)" />
+                                </div>
+                            </div>
+                        </RadzenTemplateForm>
                     }
                     else
                     {
-                        <RadzenButton Text="@L["ActivityKindArchive"]" Icon="archive" ButtonStyle="ButtonStyle.Warning"
-                                      Click="@ArchiveBoardAsync" />
+                        <RadzenButton Text="@L["BoardAddList"]" Icon="add" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                                      class="cs-add-list-button" Click="@ToggleAddList" />
                     }
-                </RadzenStack>
-            </RadzenStack>
-        </RadzenCard>
-    }
-
-    <KanbanBoard TItem="CardSummaryDto" Columns="@KanbanColumns">
-        <ColumnHeaderTemplate>
-            @{
-                var column = context;
-                Guid listId = Guid.Parse(column.Id);
-                BoardListDto? listDto = _lists?.FirstOrDefault(l => l.Id == listId);
-            }
-            @* BUG-A4-002 — see test-results/beta/reports/A4-cards-lists.md.
-               The list API has supported rename / move / archive /
-               restore since v1.0.0 but the Web never had a per-column
-               menu. Rendered via KanbanBoard.ColumnHeaderTemplate so
-               the menu lives next to the title in the same row. *@
-            <RadzenStack Orientation="Orientation.Horizontal"
-                         AlignItems="AlignItems.Center"
-                         JustifyContent="JustifyContent.SpaceBetween">
-                <RadzenText Text="@column.Title" TextStyle="TextStyle.Subtitle1" TagName="TagName.Span" />
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
-                    <RadzenText Text="@column.Cards.Count.ToString()"
-                                TextStyle="TextStyle.Caption"
-                                class="rz-color-text-secondary" />
-                    @if (listDto is not null)
-                    {
-                        <RadzenMenu>
-                            <RadzenMenuItem Text="…" Icon="more_horiz">
-                                <RadzenMenuItem Text="@L["CustomFieldsRename"]" Icon="edit"
-                                                Click="@(() => PromptRenameListAsync(listId, listDto.Name))" />
-                                <RadzenMenuItem Text="@L["BoardMoveListStart"]" Icon="first_page"
-                                                Click="@(() => MoveListToPositionAsync(listId, 0.0d))" />
-                                <RadzenMenuItem Text="@L["BoardMoveListEnd"]" Icon="last_page"
-                                                Click="@(() => MoveListToPositionAsync(listId, double.MaxValue / 2))" />
-                                @if (listDto.IsArchived)
-                                {
-                                    <RadzenMenuItem Text="@L["ActivityKindRestore"]" Icon="unarchive"
-                                                    Click="@(() => RestoreListAsync(listId))" />
-                                }
-                                else
-                                {
-                                    <RadzenMenuItem Text="@L["ActivityKindArchive"]" Icon="archive"
-                                                    Click="@(() => ArchiveListAsync(listId))" />
-                                }
-                            </RadzenMenuItem>
-                        </RadzenMenu>
-                    }
-                </RadzenStack>
-            </RadzenStack>
-        </ColumnHeaderTemplate>
-        <CardTemplate>
-            @{
-                var card = context;
-                double opacity = ComputeCardOpacity(card, _agingMode, _now);
-            }
-            @* BETA-3-UI-#15 — see test-results/BETA-TEST-REPORT.md.
-               The kanban card has both a mouse path (draggable=true
-               wired to OnCardDragStart) and a keyboard path
-               (tabindex="0" + role="group" + aria-label so a
-               screen reader announces it as "Card: <title>").
-               The full keyboard-only move flow is documented as
-               a follow-up in the report — the next iteration will
-               add a RadzenMenu button visible on focus that lists
-               every list as a "Move to <list>" action. The minimal
-               change here is enough to surface the card to the
-               accessibility tree. *@
-            <RadzenCard Style="@($"opacity: {opacity:0.00}; cursor: grab;")"
-                        role="group"
-                        aria-label="@L["BoardCardAria", card.Title, card.IsCompleted ? L["BoardCompletedSuffix"] : string.Empty, card.MirrorOfCardId is not null ? L["BoardMirrorSuffix"] : string.Empty]"
-                        tabindex="0"
-                        draggable="true"
-                        @ondragstart="@(() => OnCardDragStart(card))"
-                        @onclick="@(() => Nav.NavigateTo($"cards/{card.Id}/{BoardId}"))">
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
-                    <RadzenText Text="@card.Title" TextStyle="TextStyle.Body2"
-                                Class="@(card.IsCompleted ? "rz-color-text-disabled" : null)"
-                                Style="@(card.IsCompleted ? "text-decoration: line-through; word-break: break-word;" : "word-break: break-word;")" />
-                    @* BETA-7-#13 — see test-results/BETA-TEST-REPORT.md.
-                       A mirror card is a real Card row that
-                       shares title + description with the
-                       source. The "Mirror" badge tells the
-                       user which copy is the mirror so the
-                       two same-titled cards are not
-                       confusing in the kanban. *@
-                    @if (card.MirrorOfCardId is not null)
-                    {
-                        <RadzenIcon Icon="content_copy"
-                                    Style="font-size: 0.85rem;"
-                                    title="@L["BoardMirrorCard"]" />
-                    }
-                </RadzenStack>
-                @if (card.DueDate is not null)
-                {
-                    <RadzenText Text="@($"📅 {card.DueDate.Value.LocalDateTime:d}")"
-                                TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
-                }
-            </RadzenCard>
-        </CardTemplate>
-        <ChildContent>
-            @{
-                var list = context;
-                Guid listId = Guid.Parse(list.Id);
-            }
-            @* The `KanbanBoard` component renders each card in each column
-               from the `Columns` parameter via the `CardTemplate` above.
-               Re-rendering the cards here would duplicate every card (see
-               BUG #10 in test-results/BETA-TEST-REPORT.md), so the
-               ChildContent is reserved for the per-column shell: the
-               drop target and the add-card affordance. *@
-            <div class="cs-kanban-column-dropzone"
-                 @ondragover="@OnColumnDragOver"
-                 @ondragover:preventDefault
-                 @ondrop="@(() => OnColumnDropAsync(listId))">
-            </div>
-            @if (_openAddCardFor == listId)
-            {
-                <RadzenStack Gap="0.5rem">
-                    @* BETA-8-UI-#17 — see comment in AddList above. *@
-                    <RadzenTextBox @bind-Value="_newCardTitle" Placeholder="@L["BoardCardTitle"]"
-                                   Style="width:100%"
-                                   @onkeydown="@(e => OnAddCardKeyDownAsync(e, listId))" />
-                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
-                                 Gap="0.5rem">
-                        <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                                      Click="@(() => { _openAddCardFor = null; _newCardTitle = string.Empty; })" />
-                        <RadzenButton Text="@L["BoardAddItem"]" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
-                                      Click="@(() => ConfirmAddCardAsync(listId))" />
-                    </RadzenStack>
-                </RadzenStack>
-            }
-            else
-            {
-                <RadzenButton Text="@L["BoardAddCard"]" Icon="add" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                              Click="@(() => _openAddCardFor = listId)" />
-            }
-        </ChildContent>
-    </KanbanBoard>
+                </div>
+            </TrailingContent>
+        </KanbanBoard>
+    </div>
 }

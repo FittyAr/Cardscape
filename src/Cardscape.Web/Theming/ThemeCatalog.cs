@@ -7,28 +7,13 @@
 //      the picker UI (RadzenDropDown in AppearanceToggle.razor
 //      and the card list in /settings/appearance).
 //
-//   2. CardscapeThemes — the two custom themes (Light + Dark)
-//      exposed as fully-formed Radzen.Theme objects so
-//      ThemeService.SetTheme(theme) can apply them without
-//      needing a custom .css file. The five Radzen free
-//      themes are NOT listed here as Theme objects; the
-//      AddRadzenCookieThemeService already knows how to
-//      resolve their names to the matching <link>.
-//
-// The split keeps the catalog free of per-Radzen-version
-// fragility: the free theme names (Default, Humanistic, …,
-// Software, Standard, and their dark siblings) are the
-// exact values that Radzen.Blazor 11.2.8 ships in
-// _content/Radzen.Blazor/css/ — verified against the
-// installed NuGet package.
-//
-// Cardscape Classic is built on top of Radzen's Software
-// base (per maintainer direction; see
-// docs/roadmap/06-plan-radzen-themes.md §4.1). The free
-// Software CSS file handles shape (button radius, card
-// radius, font scale, focus ring); the custom Theme object
-// only overrides the color slots to inject the brand
-// teal #0f3d3e and the warm-sand secondary #d4a574.
+//   2. CardscapeThemes — metadata for the two custom themes
+//      (Light + Dark) as Radzen.Theme objects. Rendering is
+//      done by wwwroot/css/themes/cardscape-classic*-base.css,
+//      which import Radzen's Software theme and re-declare the
+//      brand tokens (docs/brand/00-brand-kit.md) on :root.
+//      The free Radzen themes need no metadata here; Radzen
+//      resolves their names to its own CSS files.
 
 using Radzen;
 
@@ -85,8 +70,8 @@ public static class ThemeCatalog
         // Custom Cardscape themes. The Name values are the
         // cookie values that the Blazor side recognises and
         // resolves via CardscapeThemes.Classic / .ClassicDark.
-        new ThemeEntry(CardscapeThemes.ClassicName,      "Cardscape Classic",      IsCustom: true),
-        new ThemeEntry(CardscapeThemes.ClassicDarkName,  "Cardscape Classic Dark", IsCustom: true),
+        new ThemeEntry(CardscapeThemes.ClassicName,      "Cardscape (Light)",     IsCustom: true),
+        new ThemeEntry(CardscapeThemes.ClassicDarkName,  "Cardscape (Dark)",      IsCustom: true),
     };
 
     /// <summary>
@@ -128,79 +113,49 @@ public static class CardscapeThemes
     };
 
     /// <summary>
-    /// Cardscape Classic (light). Built on top of Radzen's
-    /// <c>software</c> free theme — the maintainer's pick
-    /// for the most "serious tool" feel of the free options.
-    /// The Software base provides the shape (ButtonRadius,
-    /// CardRadius, font scale, focus ring); this object only
-    /// overrides the colour slots to inject the brand
-    /// palette documented in
-    /// docs/roadmap/06-plan-radzen-themes.md §4.2.
+    /// Cardscape (light). Mirrors the tokens declared in
+    /// wwwroot/css/themes/cardscape-classic-base.css: the
+    /// brand teal from docs/brand/00-brand-kit.md, deepened to
+    /// #0f766e so white button text meets WCAG AA, the brand
+    /// info blue as secondary, and GitHub-style light neutrals.
+    /// The CSS file is what renders; this object is the
+    /// metadata the theme pickers and tests read.
     /// </summary>
     public static Theme Classic() => new()
     {
-        Text = "Cardscape Classic",
+        Text = "Cardscape (Light)",
         Value = ClassicName,
-
-        // Brand teal — pulled from <meta name="theme-color">
-        // in wwwroot/index.html:14 (the canonical brand anchor).
-        Primary = "#0f3d3e",
-
-        // Warm sand secondary — see plan §4.4 for the hue
-        // rationale (complementary to teal, ~150° apart on
-        // the HSL wheel, works on both light and dark).
-        Secondary = "#d4a574",
-
-        // Background and content tokens. The Software base
-        // picks the surface elevations; these overrides pin
-        // the light variant to a one-shade-off-white
-        // background to reduce eye fatigue in long sessions.
-        Base = "#f7f8f8",
+        Primary = "#0f766e",
+        Secondary = "#0969da",
+        Base = "#f6f8fa",
         Content = "#ffffff",
-        TitleText = "#1a1d1e",
-        ContentText = "#1a1d1e",
-
-        // Selection tokens — used by RadzenDataGrid row hover,
-        // RadzenDropDown active row, etc. Tinted toward the
-        // primary so the brand colour cascades into the
-        // interactive states without becoming a "Christmas
-        // tree" UI.
-        Selection = "#1a5a5b",
-        SelectionText = "#ffffff",
-
-        // Tighter than the Software default (6px) — the plan
-        // calls for a 4px button / card radius to read as
-        // "serious tool", not "consumer app".
-        ButtonRadius = "4px",
-        CardRadius = "4px",
+        TitleText = "#1f2328",
+        ContentText = "#1f2328",
+        Selection = "rgba(13, 148, 136, 0.12)",
+        SelectionText = "#0f766e",
+        ButtonRadius = "6px",
+        CardRadius = "10px",
     };
 
     /// <summary>
-    /// Cardscape Classic Dark. Same Software base, dark
-    /// surface, brighter teal for the primary so it carries
-    /// against the dark background.
+    /// Cardscape (dark) — the brand kit's primary palette.
+    /// Mirrors wwwroot/css/themes/cardscape-classic-dark-base.css:
+    /// brand teal #2dd4bf (9.2:1 on #0d1117), info blue
+    /// secondary, and the dark neutrals of the brand kit.
     /// </summary>
     public static Theme ClassicDark() => new()
     {
-        Text = "Cardscape Classic Dark",
+        Text = "Cardscape (Dark)",
         Value = ClassicDarkName,
-
-        // Brighter teal for contrast against the dark surface.
-        Primary = "#1a8a8b",
-
-        // Same warm sand — works against the dark background
-        // too (contrast 6.8:1 against #1a1d1e).
-        Secondary = "#d4a574",
-
-        Base = "#1a1d1e",
-        Content = "#262a2b",
-        TitleText = "#f7f8f8",
-        ContentText = "#e0e2e3",
-
-        Selection = "#2fa9aa",
-        SelectionText = "#0f3d3e",
-
-        ButtonRadius = "4px",
-        CardRadius = "4px",
+        Primary = "#2dd4bf",
+        Secondary = "#58a6ff",
+        Base = "#0d1117",
+        Content = "#161b22",
+        TitleText = "#f0f6fc",
+        ContentText = "#e6edf3",
+        Selection = "rgba(45, 212, 191, 0.14)",
+        SelectionText = "#5eead4",
+        ButtonRadius = "6px",
+        CardRadius = "10px",
     };
 }

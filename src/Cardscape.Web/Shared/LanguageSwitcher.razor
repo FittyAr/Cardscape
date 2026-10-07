@@ -10,9 +10,15 @@
 @using Cardscape.Web.Services
 @using Microsoft.Extensions.Localization
 @inject CultureSwitcher Culture
+@implements IDisposable
 @inject IStringLocalizer<SharedResource> L
 
-<RadzenDropDown TValue="string"
+@* @key re-creates the dropdown whenever the culture changes:
+   RadzenDropDown caches its selected item on first render, so
+   without it the picker kept showing "English" after the saved
+   "es" culture loaded from localStorage. *@
+<RadzenDropDown @key="@Culture.CurrentCulture"
+                TValue="string"
                 Value="@Culture.CurrentCulture"
                 Change="@OnChangeAsync"
                 Data="@(Culture.AvailableCultures)"

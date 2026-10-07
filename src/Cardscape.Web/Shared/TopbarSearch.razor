@@ -8,15 +8,16 @@
 @inject IStringLocalizer<SharedResource> L
 @implements IDisposable
 
-<div class="topbar-search rz-display-flex rz-align-items-center">
+<div class="topbar-search">
+    <RadzenIcon Icon="search" class="topbar-search-icon" />
     <RadzenTextBox @bind-Value="query"
                    @oninput="@OnInputChangedAsync"
                    @onkeydown="@OnKeyDown"
                    @onfocus="@ShowResults"
                    @onblur="@HideResultsAsync"
-                   Placeholder="@Placeholder"
+                   Placeholder="@(Placeholder ?? L["SearchPlaceholder"])"
                    aria-label="@L["SearchAriaLabel"]"
-                   Style="width: 240px;" />
+                   class="topbar-search-input" />
     @if (resultsVisible && results is not null && results.Count > 0)
     {
         <RadzenCard Variant="@Variant.Outlined"
@@ -46,7 +47,7 @@
         <RadzenCard Variant="@Variant.Outlined"
                     class="rz-position-absolute"
                     Style="top: 38px; left: 0; right: 0; z-index: 1000; min-width: 320px;">
-            <RadzenText Text="No matches." TextStyle="@TextStyle.Body2" class="rz-color-text-secondary rz-p-2" />
+            <RadzenText Text="@L["SearchNoResults"]" TextStyle="@TextStyle.Body2" class="rz-color-text-secondary rz-p-2" />
         </RadzenCard>
     }
 </div>
@@ -61,7 +62,7 @@
     // added next to this file), and renders the results as a
     // dropdown that navigates to the hit's URL on click.
 
-    [Parameter] public string Placeholder { get; set; } = "Search…";
+    [Parameter] public string? Placeholder { get; set; }
 
     private string query = string.Empty;
     private List<SearchHitDto>? results;

@@ -18,15 +18,15 @@
 // coordinates between the two so the call site only sees
 // one SetAsync call.
 //
-// Custom theme note: Radzen's documented way to add a
-// custom theme is to ship a CSS file that declares the
-// matching --rz-* variables and point <RadzenTheme> at it
-// via the CssPath parameter. The 10 free themes do not
-// need a CssPath (Radzen's built-in CSS files cover
-// them); the 2 Cardscape Classic variants do. See
-// wwwroot/css/cardscape-classic.css and
-// cardscape-classic-dark.css for the brand colour
-// overrides on top of Radzen's Software base.
+// Custom theme note: <RadzenTheme> treats any theme that is
+// not one of Radzen's free themes as a premium theme and
+// emits <link href="{CssPath}/{theme}-base.css">. CssPath is
+// therefore a FOLDER, not a file. The 10 free themes leave
+// it null (Radzen's own _content path); the 2 Cardscape
+// variants point it at wwwroot/css/themes, where
+// cardscape-classic-base.css / cardscape-classic-dark-base.css
+// import the full Radzen Software theme and re-declare the
+// brand tokens on top of it.
 
 using Cardscape.Web.Logging;
 using Cardscape.Web.Services.Api;
@@ -44,13 +44,13 @@ namespace Cardscape.Web.Services;
 /// </summary>
 public sealed class UserPreferencesService
 {
-    private const string ClassicCssPath = "/css/cardscape-classic.css";
-    private const string ClassicDarkCssPath = "/css/cardscape-classic-dark.css";
+    private const string CustomThemesCssFolder = "css/themes";
 
     private readonly IUserPreferencesApiClient _api;
     private readonly ThemeService _themeService;
     private readonly AuthenticationStateProvider _auth;
     private readonly ILogger<UserPreferencesService> _log;
+    private bool _systemPreferenceKnown;
 
     public UserPreferencesService(
         IUserPreferencesApiClient api,
@@ -64,34 +64,35 @@ public sealed class UserPreferencesService
         _log = log;
 
         string? initialTheme = _themeService.Theme;
-        if (!string.IsNullOrEmpty(initialTheme) && ThemeCatalog.IsKnown(initialTheme))
+        if (string.IsNullOrEmpty(initialTheme) || !ThemeCatalog.IsKnown(initialTheme))
         {
-            CurrentThemeName = initialTheme;
-            CurrentCssPath = initialTheme switch
-            {
-                CardscapeThemes.ClassicName => ClassicCssPath,
-                CardscapeThemes.ClassicDarkName => ClassicDarkCssPath,
-                _ => null,
-            };
+            initialTheme = CardscapeThemes.ClassicName;
         }
+
+        CurrentThemeName = initialTheme;
+        AppliedThemeName = initialTheme;
+        CurrentCssPath = CssPathFor(initialTheme);
     }
 
     /// <summary>User's chosen theme name (one of the 12
     /// entries in <see cref="ThemeCatalog.All"/>). Bound to
     /// the <c>Theme</c> parameter of <c>&lt;RadzenTheme&gt;</c>
     /// in <c>App.razor</c>.</summary>
-    public string? CurrentThemeName { get; private set; } = "default";
+    public string? CurrentThemeName { get; private set; } = CardscapeThemes.ClassicName;
 
-    /// <summary>CSS path to load for the current theme, or
-    /// <c>null</c> for Radzen's default CSS path. The 10
-    /// free themes (default / humanistic / material /
-    /// software / standard and their -dark siblings) leave
-    /// this null; the 2 Cardscape Classic variants set it
-    /// to <c>/css/cardscape-classic.css</c> or
-    /// <c>/css/cardscape-classic-dark.css</c>. Bound to
-    /// the <c>CssPath</c> parameter of
-    /// <c>&lt;RadzenTheme&gt;</c> in <c>App.razor</c>.</summary>
-    public string? CurrentCssPath { get; private set; }
+    /// <summary>The theme actually rendered right now. Equals
+    /// <see cref="CurrentThemeName"/> for explicit Light / Dark
+    /// modes; in <c>System</c> mode it is the light or dark
+    /// sibling picked from the OS preference. Bound to the
+    /// <c>Theme</c> parameter of <c>&lt;RadzenTheme&gt;</c>.</summary>
+    public string AppliedThemeName { get; private set; } = CardscapeThemes.ClassicName;
+
+    /// <summary>Folder Radzen loads the current theme from, or
+    /// <c>null</c> for Radzen's default <c>_content</c> path
+    /// (the 10 free themes). The 2 Cardscape themes use
+    /// <c>css/themes</c>. Bound to the <c>CssPath</c> parameter
+    /// of <c>&lt;RadzenTheme&gt;</c> in <c>App.razor</c>.</summary>
+    public string? CurrentCssPath { get; private set; } = CustomThemesCssFolder;
 
     /// <summary>User's chosen appearance mode (Light / Dark /
     /// System). Stored server-side. The runtime resolver
@@ -174,7 +175,7 @@ public sealed class UserPreferencesService
         string? cookieName = _themeService.Theme;
         if (string.IsNullOrEmpty(cookieName) || !ThemeCatalog.IsKnown(cookieName))
         {
-            cookieName = "default";
+            cookieName = CardscapeThemes.ClassicName;
         }
 
         ApplyThemeName(cookieName!);
@@ -215,11 +216,7 @@ public sealed class UserPreferencesService
         // first; the cookie + the bound RadzenTheme reflect
         // the sibling, not the user's intent. The server
         // still stores the intent.
-        string appliedThemeName = mode == "System"
-            ? ResolveSiblingForSystem(themeName, SystemPrefersDark)
-            : themeName;
-
-        ApplyThemeName(appliedThemeName);
+        ApplyThemeName(ResolveApplied(themeName, mode));
         await NotifyChangedAsync();
 
         // R10-UI-#1 — beta test r10. For a user who has not
@@ -290,9 +287,20 @@ public sealed class UserPreferencesService
     {
         CurrentThemeName = prefs.ThemeName;
         CurrentMode = prefs.Mode;
-        ApplyThemeName(prefs.ThemeName);
+        ApplyThemeName(ResolveApplied(prefs.ThemeName, prefs.Mode));
         await NotifyChangedAsync();
     }
+
+    /// <summary>The theme to render for a stored (theme, mode)
+    /// pair: explicit Light / Dark force the matching sibling
+    /// (so "default" + Dark renders "dark"), System follows the
+    /// last OS preference reported by the media query.</summary>
+    private string ResolveApplied(string themeName, string mode) => mode switch
+    {
+        "Dark" => ResolveSiblingForSystem(themeName, prefersDark: true),
+        "Light" => ResolveSiblingForSystem(themeName, prefersDark: false),
+        _ => ResolveSiblingForSystem(themeName, SystemPrefersDark),
+    };
 
     /// <summary>Single source of truth for "the user picked
     /// theme <paramref name="themeName"/>; reflect that in
@@ -320,13 +328,14 @@ public sealed class UserPreferencesService
             _log.ThemeServiceUpdateFailed(ex, themeName);
         }
 
-        CurrentCssPath = themeName switch
-        {
-            CardscapeThemes.ClassicName => ClassicCssPath,
-            CardscapeThemes.ClassicDarkName => ClassicDarkCssPath,
-            _ => null,
-        };
+        AppliedThemeName = themeName;
+        CurrentCssPath = CssPathFor(themeName);
     }
+
+    private static string? CssPathFor(string themeName) =>
+        themeName is CardscapeThemes.ClassicName or CardscapeThemes.ClassicDarkName
+            ? CustomThemesCssFolder
+            : null;
 
     /// <summary>Called by the <c>&lt;RadzenMediaQuery&gt;</c>
     /// in <c>App.razor</c> when the OS
@@ -341,16 +350,20 @@ public sealed class UserPreferencesService
     /// not changed, only the OS-derived sibling.</summary>
     public async Task NotifySystemDarkChangedAsync(bool prefersDark)
     {
-        if (SystemPrefersDark == prefersDark)
+        // The first notification always goes through: the cookie
+        // may hold the sibling from a previous session whose OS
+        // preference differed from the current one.
+        if (_systemPreferenceKnown && SystemPrefersDark == prefersDark)
         {
             return;
         }
 
+        _systemPreferenceKnown = true;
         SystemPrefersDark = prefersDark;
         if (CurrentMode == "System" && !string.IsNullOrEmpty(CurrentThemeName))
         {
             string sibling = ResolveSiblingForSystem(CurrentThemeName, prefersDark);
-            if (sibling != CurrentThemeName)
+            if (sibling != AppliedThemeName)
             {
                 ApplyThemeName(sibling);
                 await NotifyChangedAsync();

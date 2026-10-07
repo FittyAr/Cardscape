@@ -1,0 +1,114 @@
+/*
+  Cardscape Dark — brand theme, dark-first variant.
+  See docs/brand/00-brand-kit.md §2 and the notes in
+  cardscape-classic-base.css about how this file is loaded.
+
+  Radzen's dark themes keep the light→dark base scale and remap
+  the semantic tokens (body = base-900, surface = base-800,
+  text = base-100, title = base-50). The scale below is the
+  brand kit's dark neutrals laid out in that same order.
+*/
+
+@import url("../../_content/Radzen.Blazor/css/software-dark.css");
+
+:root {
+    color-scheme: dark;
+
+    /* Typography */
+    --rz-text-font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    /* Neutral scale (brand kit dark neutrals). */
+    --rz-white: #ffffff;
+    --rz-black: #000000;
+    --rz-base-50: #f0f6fc;
+    --rz-base-100: #e6edf3;
+    --rz-base-200: #c9d1d9;
+    --rz-base-300: #8b949e;
+    --rz-base-400: #6e7681;
+    --rz-base-500: #484f58;
+    --rz-base-600: #30363d;
+    --rz-base-700: #21262d;
+    --rz-base-800: #161b22;
+    --rz-base-900: #0d1117;
+    --rz-base: #30363d;
+    --rz-on-base: #e6edf3;
+
+    /* Primary — brand teal (#2dd4bf, 9.2:1 on the page background). */
+    --rz-primary: #2dd4bf;
+    --rz-primary-light: #5eead4;
+    --rz-primary-lighter: rgba(45, 212, 191, 0.14);
+    --rz-primary-dark: #14b8a6;
+    --rz-primary-darker: #0d9488;
+    --rz-on-primary: #04211e;
+    --rz-on-primary-light: #04211e;
+    --rz-on-primary-lighter: #5eead4;
+    --rz-on-primary-dark: #04211e;
+    --rz-on-primary-darker: #ffffff;
+    --rz-border-primary: #2dd4bf;
+    --rz-border-primary-light: #5eead4;
+    --rz-border-primary-lighter: rgba(45, 212, 191, 0.28);
+    --rz-border-primary-dark: #14b8a6;
+    --rz-border-primary-darker: #0d9488;
+
+    /* Secondary — brand info blue. */
+    --rz-secondary: #58a6ff;
+    --rz-secondary-light: #79b8ff;
+    --rz-secondary-lighter: rgba(88, 166, 255, 0.14);
+    --rz-secondary-dark: #388bfd;
+    --rz-secondary-darker: #1f6feb;
+    --rz-on-secondary: #0d1117;
+    --rz-on-secondary-light: #0d1117;
+    --rz-on-secondary-lighter: #79b8ff;
+    --rz-on-secondary-dark: #0d1117;
+    --rz-on-secondary-darker: #ffffff;
+    --rz-border-secondary: #58a6ff;
+    --rz-border-secondary-light: #79b8ff;
+    --rz-border-secondary-lighter: rgba(88, 166, 255, 0.28);
+    --rz-border-secondary-dark: #388bfd;
+    --rz-border-secondary-darker: #1f6feb;
+
+    /* Status (brand kit — GitHub Primer). */
+    --rz-success: #3fb950;
+    --rz-warning: #d29922;
+    --rz-danger: #f85149;
+    --rz-info: #58a6ff;
+
+    /* Surfaces */
+    --rz-base-background-color: var(--rz-base-800);
+    --rz-body-background-color: var(--rz-base-900);
+    --rz-card-flat-background-color: var(--rz-base-700);
+
+    /* Text */
+    --rz-text-title-color: var(--rz-base-50);
+    --rz-text-color: var(--rz-base-100);
+    --rz-text-secondary-color: var(--rz-base-300);
+    --rz-text-tertiary-color: var(--rz-base-400);
+    --rz-text-disabled-color: var(--rz-base-400);
+    --rz-link-color: var(--rz-secondary);
+    --rz-link-hover-color: var(--rz-secondary-light);
+
+    /* Sidebar + navigation */
+    --rz-sidebar-background-color: var(--rz-base-800);
+    --rz-sidebar-color: var(--rz-text-color);
+    --rz-sidebar-border-inline-end: 1px solid var(--rz-base-600);
+    --rz-panel-menu-item-background-color: transparent;
+    --rz-panel-menu-item-color: var(--rz-text-secondary-color);
+    --rz-panel-menu-item-hover-background-color: var(--rz-base-700);
+    --rz-panel-menu-item-hover-color: var(--rz-text-title-color);
+    --rz-panel-menu-item-active-background-color: var(--rz-primary-lighter);
+    --rz-panel-menu-item-active-color: var(--rz-primary);
+    --rz-sidebar-toggle-hover-color: var(--rz-primary);
+    --rz-header-border: 1px solid var(--rz-base-600);
+
+    /* Shape */
+    --rz-border-radius: 6px;
+    --rz-button-border-radius: 6px;
+    --rz-input-border-radius: 6px;
+    --rz-card-border-radius: 10px;
+
+    /* Elevation — deeper shadows read on dark surfaces. */
+    --rz-shadow-1: 0 1px 2px rgba(1, 4, 9, 0.5);
+    --rz-shadow-2: 0 2px 6px rgba(1, 4, 9, 0.5);
+    --rz-shadow-3: 0 8px 20px rgba(1, 4, 9, 0.6);
+    --rz-shadow-4: 0 16px 32px rgba(1, 4, 9, 0.7);
+}

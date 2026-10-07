@@ -682,6 +682,48 @@
   <data name="CardRefresh" xml:space="preserve"><value>Actualizar tarjeta</value></data>
   <data name="CardUpdateChecklistItem" xml:space="preserve"><value>Actualizar elemento de la lista</value></data>
   <data name="CardAiChecklistTitle" xml:space="preserve"><value>Sugerencias de IA</value></data>
+  <data name="NavAdministration" xml:space="preserve"><value>Administración</value></data>
+  <data name="NavSystemSettings" xml:space="preserve"><value>Configuración del sistema</value></data>
+  <data name="BoardMore" xml:space="preserve"><value>Más acciones</value></data>
+  <data name="BoardShowSnoozed" xml:space="preserve"><value>Mostrar tarjetas pospuestas</value></data>
+  <data name="BoardHideSnoozed" xml:space="preserve"><value>Ocultar tarjetas pospuestas</value></data>
+  <data name="BoardLiveShort" xml:space="preserve"><value>En vivo</value></data>
+  <data name="BoardOfflineShort" xml:space="preserve"><value>Sin conexión</value></data>
+  <data name="CommonSave" xml:space="preserve"><value>Guardar</value></data>
+  <data name="CommonError" xml:space="preserve"><value>Algo salió mal.</value></data>
+  <data name="ListRenameTitle" xml:space="preserve"><value>Renombrar lista</value></data>
+  <data name="ListRenameBlurb" xml:space="preserve"><value>Dale un nombre nuevo a esta lista. Las tarjetas se quedan donde están.</value></data>
+  <data name="ListRenamePlaceholder" xml:space="preserve"><value>Nombre de la lista</value></data>
+  <data name="ImportPreviewing" xml:space="preserve"><value>Leyendo el archivo…</value></data>
+  <data name="ImportApplying" xml:space="preserve"><value>Importando…</value></data>
+  <data name="ImportPreviewTitle" xml:space="preserve"><value>Vista previa</value></data>
+  <data name="ImportPreviewBlurb" xml:space="preserve"><value>Esto es lo que se va a crear en el espacio de trabajo:</value></data>
+  <data name="ImportPreviewBoards" xml:space="preserve"><value>Tableros</value></data>
+  <data name="ImportPreviewLists" xml:space="preserve"><value>Listas</value></data>
+  <data name="ImportPreviewCards" xml:space="preserve"><value>Tarjetas</value></data>
+  <data name="ImportPreviewLabels" xml:space="preserve"><value>Etiquetas</value></data>
+  <data name="ImportPreviewMembers" xml:space="preserve"><value>Miembros</value></data>
+  <data name="ImportPreviewSampleBoards" xml:space="preserve"><value>Tableros de ejemplo</value></data>
+  <data name="ImportPreviewSampleLists" xml:space="preserve"><value>Listas de ejemplo</value></data>
+  <data name="ImportPreviewSampleCards" xml:space="preserve"><value>Tarjetas de ejemplo</value></data>
+  <data name="ImportApply" xml:space="preserve"><value>Importar</value></data>
+  <data name="ImportCancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="ImportResultTitle" xml:space="preserve"><value>Importación terminada</value></data>
+  <data name="ImportResultSummary" xml:space="preserve"><value>Los tableros, listas y tarjetas se crearon en este espacio de trabajo.</value></data>
+  <data name="ImportPreviewFailed" xml:space="preserve"><value>No se pudo leer el archivo</value></data>
+  <data name="ImportNoFile" xml:space="preserve"><value>Primero elegí un archivo para importar.</value></data>
+  <data name="ImportFailed" xml:space="preserve"><value>La importación falló</value></data>
+  <data name="MirrorToNoOtherBoards" xml:space="preserve"><value>El único tablero de este espacio es el de la tarjeta original. Creá otro tablero primero.</value></data>
+  <data name="ActionArchive" xml:space="preserve"><value>Archivar</value></data>
+  <data name="ActionRestore" xml:space="preserve"><value>Restaurar</value></data>
+  <data name="CardCompletedBadge" xml:space="preserve"><value>Completada</value></data>
+  <data name="CardArchivedBadge" xml:space="preserve"><value>Archivada</value></data>
+  <data name="CardActions" xml:space="preserve"><value>Acciones</value></data>
+  <data name="CardDetails" xml:space="preserve"><value>Detalles</value></data>
+  <data name="ActionReopen" xml:space="preserve"><value>Reabrir</value></data>
+  <data name="CardSendComment" xml:space="preserve"><value>Comentar</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>Buscar tarjetas, comentarios…</value></data>
+  <data name="SearchNoResults" xml:space="preserve"><value>Sin resultados.</value></data>
   <data name="NavSeeder" xml:space="preserve"><value>Seeder de Datos</value></data>
   <data name="SeederTitle" xml:space="preserve"><value>Seeder de Datos</value></data>
   <data name="SeederSubtitle" xml:space="preserve"><value>Población y mantenimiento de datos de prueba y desarrollo</value></data>

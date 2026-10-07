@@ -1,5 +1,6 @@
 @page "/settings/appearance"
 @inherits Cardscape.Web.Shared.CultureReactiveComponentBase
+@implements IDisposable
 @using Cardscape.Web.Resources
 @using Cardscape.Web.Services
 @using Cardscape.Web.Theming
@@ -9,143 +10,146 @@
 
 <PageTitle>@L["SettingsAppearanceTitle"] — Cardscape</PageTitle>
 
-<RadzenStack Class="rz-mx-auto" Style="max-width: 60rem;" Gap="1.5rem">
-    <RadzenText Text="@L["SettingsAppearanceTitle"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
-    <RadzenText Text="@L["SettingsAppearanceLead"]" TextStyle="TextStyle.Body1" Class="rz-color-text-secondary" />
+<div class="cs-appearance">
+    <PageHeader Title="@L["SettingsAppearanceTitle"]" Subtitle="@L["SettingsAppearanceLead"]" />
+
+    @* Mode: Light / Dark / follow the OS. *@
+    <section class="cs-appearance-section">
+        <h2 class="cs-section-title">@L["AppearanceMode"]</h2>
+        <RadzenSelectBar TValue="string"
+                         Value="@UserPreferences.CurrentMode"
+                         Change="@OnModeChangedAsync"
+                         Size="ButtonSize.Medium"
+                         aria-label="@L["AppearanceMode"]">
+            <Items>
+                <RadzenSelectBarItem Text="@L["AppearanceModeLight"]" Value="@("Light")" Icon="light_mode" />
+                <RadzenSelectBarItem Text="@L["AppearanceModeDark"]" Value="@("Dark")" Icon="dark_mode" />
+                <RadzenSelectBarItem Text="@L["AppearanceSystem"]" Value="@("System")" Icon="contrast" />
+            </Items>
+        </RadzenSelectBar>
+    </section>
 
     @*
-      Mode picker. Light / Dark / System. The "System"
-      option follows the OS prefers-color-scheme media
-      query; today the service treats System as Light
-      (the SystemAppearanceWatcher is a follow-up).
+      Theme families. Each family has a light and a dark
+      member in ThemeCatalog; the mode above decides which
+      one renders. The previews are drawn from each theme's
+      own primary / surface colours (copied from the Radzen
+      CSS files and css/themes/), so they show what the theme
+      looks like rather than the currently active one.
     *@
-    <RadzenCard>
-        <RadzenStack Gap="0.75rem">
-            <RadzenText Text="@L["AppearanceMode"]" TextStyle="TextStyle.H6" TagName="TagName.H2" />
-            <RadzenRadioButtonList TValue="string"
-                                   Value="@UserPreferences.CurrentMode"
-                                   Change="@OnModeChangedAsync">
-                <Items>
-                    <RadzenRadioButtonListItem Text="@L["AppearanceModeLight"]" Value="@("Light")" />
-                    <RadzenRadioButtonListItem Text="@L["AppearanceModeDark"]" Value="@("Dark")" />
-                    <RadzenRadioButtonListItem Text="@L["AppearanceSystem"]" Value="@("System")" />
-                </Items>
-            </RadzenRadioButtonList>
-        </RadzenStack>
-    </RadzenCard>
+    <section class="cs-appearance-section">
+        <h2 class="cs-section-title">@L["AppearanceTheme"]</h2>
+        <div class="cs-theme-grid" role="radiogroup" aria-label="@L["AppearanceTheme"]">
+            @foreach (ThemeFamily family in Families)
+            {
+                bool selected = family.Contains(UserPreferences.CurrentThemeName);
+                ThemeSwatch swatch = ShowDark ? family.DarkSwatch : family.LightSwatch;
+                <RadzenButton ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                              class="@(selected ? "cs-theme-option is-selected" : "cs-theme-option")"
+                              role="radio"
+                              aria-checked="@(selected ? "true" : "false")"
+                              aria-label="@family.Label"
+                              Click="@(() => OnFamilySelectedAsync(family))">
+                    <span class="cs-theme-preview" style="--p: @swatch.Primary; --bg: @swatch.Body; --sf: @swatch.Surface; --tx: @swatch.Text;">
+                        <span class="cs-theme-preview-bar"></span>
+                        <span class="cs-theme-preview-cols">
+                            <span class="cs-theme-preview-col"><i></i><i class="is-accent"></i></span>
+                            <span class="cs-theme-preview-col"><i></i></span>
+                            <span class="cs-theme-preview-col"><i></i><i></i></span>
+                        </span>
+                    </span>
+                    <span class="cs-theme-option-label">
+                        @family.Label
+                        @if (selected)
+                        {
+                            <RadzenIcon Icon="check_circle" class="cs-theme-option-check" />
+                        }
+                    </span>
+                </RadzenButton>
+            }
+        </div>
+    </section>
 
-    @*
-      Theme grid. One card per catalog entry. The card
-      shows the theme's display name, a row of 5
-      RadzenBadge color swatches (primary, secondary,
-      success, warning, danger), a "Custom" badge for
-      the 2 Cardscape Classic variants, and an Apply
-      button that switches the theme via the service.
-
-      The grid is built from RadzenCard + RadzenStack +
-      RadzenBadge + RadzenButton only — no custom CSS.
-      The swatches use the same Radzen CSS variables
-      that the theme's components read, so the swatch
-      color IS the color the user will see on
-      RadzenButton/Primary etc. for that theme.
-    *@
-    <RadzenCard>
-        <RadzenStack Gap="0.75rem">
-            <RadzenText Text="@L["AppearanceTheme"]" TextStyle="TextStyle.H6" TagName="TagName.H2" />
-
-            <RadzenRow Gap="1rem">
-                @foreach (ThemeEntry theme in _themes)
-                {
-                    bool isCurrent = theme.Name == UserPreferences.CurrentThemeName;
-                    <RadzenColumn Size="12" Medium="6" Large="4">
-                        <RadzenCard Class="@($"rz-p-4 {(isCurrent ? "rz-border-primary" : string.Empty)}")">
-                            <RadzenStack Gap="0.5rem">
-                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-                                    <RadzenText Text="@theme.DisplayName" TextStyle="TextStyle.Subtitle1" />
-                                    @if (theme.IsCustom)
-                                    {
-                                        <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="Cardscape" />
-                                    }
-                                </RadzenStack>
-
-                                @*
-                                  Swatches. We show the 5 base
-                                  theme colours as RadzenBadge
-                                  with a small width so the
-                                  row reads as a swatch strip.
-                                  Radzen's --rz-primary etc.
-                                  are read at render time, so
-                                  the user sees the actual
-                                  values that the theme's
-                                  components will use.
-                                *@
-                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
-                                    <RadzenBadge BadgeStyle="BadgeStyle.Primary" Text="P" />
-                                    <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="S" />
-                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="✓" />
-                                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="!" />
-                                    <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="✕" />
-                                </RadzenStack>
-
-                                <RadzenButton Text="@(isCurrent ? L["SettingsAppearanceCurrent"] : L["SettingsAppearanceApply"])"
-                                              ButtonStyle="@(isCurrent ? ButtonStyle.Light : ButtonStyle.Primary)"
-                                              Disabled="@isCurrent"
-                                              Click="@(() => OnApplyThemeAsync(theme.Name))"
-                                              Style="width: 100%;" />
-                            </RadzenStack>
-                        </RadzenCard>
-                    </RadzenColumn>
-                }
-            </RadzenRow>
-        </RadzenStack>
-    </RadzenCard>
-
-    @*
-      Live preview pane. Re-themes instantly on apply
-      because Radzen reads its CSS variables at render
-      time — no need to swap any in-page state. The
-      preview shows a representative slice of the UI:
-      a button (primary/secondary), a text input, a
-      DataGrid row, a badge.
-    *@
-    <RadzenCard>
-        <RadzenStack Gap="0.75rem">
-            <RadzenText Text="@L["SettingsAppearanceLivePreview"]" TextStyle="TextStyle.H6" TagName="TagName.H2" />
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <RadzenButton Text="Primary" ButtonStyle="ButtonStyle.Primary" />
-                <RadzenButton Text="Secondary" ButtonStyle="ButtonStyle.Secondary" />
-                <RadzenButton Text="Success" ButtonStyle="ButtonStyle.Success" />
-                <RadzenButton Text="Warning" ButtonStyle="ButtonStyle.Warning" />
-                <RadzenButton Text="Danger" ButtonStyle="ButtonStyle.Danger" />
+    <section class="cs-appearance-section">
+        <h2 class="cs-section-title">@L["SettingsAppearanceLivePreview"]</h2>
+        <RadzenCard>
+            <RadzenStack Gap="1rem">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                    <RadzenButton Text="Primary" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Text="Secondary" ButtonStyle="ButtonStyle.Secondary" />
+                    <RadzenButton Text="Base" ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
+                    <RadzenButton Text="Danger" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" />
+                </RadzenStack>
+                <RadzenTextBox Placeholder="Sample input" Style="max-width: 20rem;" />
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    <RadzenBadge BadgeStyle="BadgeStyle.Primary" Text="Primary" />
+                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Success" />
+                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Warning" />
+                    <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="Danger" />
+                </RadzenStack>
             </RadzenStack>
-            <RadzenTextBox Placeholder="Sample input" Style="max-width: 20rem;" />
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                <RadzenBadge BadgeStyle="BadgeStyle.Primary" Text="Primary badge" />
-                <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="Secondary badge" />
-                <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Success" />
-                <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Warning" />
-                <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="Danger" />
-            </RadzenStack>
-        </RadzenStack>
-    </RadzenCard>
-</RadzenStack>
+        </RadzenCard>
+    </section>
+</div>
 
 @code {
-    private IReadOnlyList<ThemeEntry> _themes = ThemeCatalog.All;
+    private sealed record ThemeSwatch(string Primary, string Body, string Surface, string Text);
 
-    private async Task OnApplyThemeAsync(string themeName)
+    private sealed record ThemeFamily(string Label, string LightName, string DarkName, ThemeSwatch LightSwatch, ThemeSwatch DarkSwatch)
     {
-        await UserPreferences.SetAsync(themeName, UserPreferences.CurrentMode);
+        public bool Contains(string? themeName) => themeName == LightName || themeName == DarkName;
     }
 
-    private async Task OnModeChangedAsync()
+    private static readonly IReadOnlyList<ThemeFamily> Families = new[]
     {
-        string? themeName = UserPreferences.CurrentThemeName;
-        if (string.IsNullOrEmpty(themeName))
-        {
-            return;
-        }
+        new ThemeFamily("Cardscape", CardscapeThemes.ClassicName, CardscapeThemes.ClassicDarkName,
+            new("#0f766e", "#f6f8fa", "#ffffff", "#1f2328"), new("#2dd4bf", "#0d1117", "#161b22", "#e6edf3")),
+        new ThemeFamily("Default", "default", "dark",
+            new("#ff6d41", "#f6f7fa", "#ffffff", "#28363c"), new("#ff6d41", "#28363c", "#38474e", "#f6f7fa")),
+        new ThemeFamily("Humanistic", "humanistic", "humanistic-dark",
+            new("#d64d42", "#f4f5f9", "#ffffff", "#2b3a50"), new("#d64d42", "#2b3a50", "#30445f", "#f4f5f9")),
+        new ThemeFamily("Material", "material", "material-dark",
+            new("#4340d2", "#f5f5f5", "#ffffff", "#212121"), new("#bb86fc", "#121212", "#1e1e1e", "#f5f5f5")),
+        new ThemeFamily("Software", "software", "software-dark",
+            new("#598087", "#f6f7fa", "#ffffff", "#28363c"), new("#598087", "#28363c", "#3a474d", "#f6f7fa")),
+        new ThemeFamily("Standard", "standard", "standard-dark",
+            new("#1151f3", "#f4f4f4", "#ffffff", "#262526"), new("#3871ff", "#19191a", "#242527", "#f4f4f4")),
+    };
 
-        await UserPreferences.SetAsync(themeName, UserPreferences.CurrentMode);
+    /// <summary>True when the previews should show the dark member of each family.</summary>
+    private bool ShowDark => UserPreferences.CurrentMode switch
+    {
+        "Dark" => true,
+        "Light" => false,
+        _ => UserPreferences.SystemPrefersDark,
+    };
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        UserPreferences.Changed += OnPreferencesChangedAsync;
     }
+
+    public new void Dispose()
+    {
+        UserPreferences.Changed -= OnPreferencesChangedAsync;
+        base.Dispose();
+    }
+
+    private Task OnPreferencesChangedAsync() => InvokeAsync(StateHasChanged);
+
+    private Task OnFamilySelectedAsync(ThemeFamily family) =>
+        UserPreferences.SetAsync(PickMember(family, UserPreferences.CurrentMode), UserPreferences.CurrentMode);
+
+    private Task OnModeChangedAsync(string mode)
+    {
+        ThemeFamily family = Families.FirstOrDefault(f => f.Contains(UserPreferences.CurrentThemeName)) ?? Families[0];
+        return UserPreferences.SetAsync(PickMember(family, mode), mode);
+    }
+
+    // The stored theme is the member matching the explicit mode;
+    // for System the light member is stored and the service
+    // swaps in the dark sibling while the OS is dark.
+    private static string PickMember(ThemeFamily family, string mode) =>
+        mode == "Dark" ? family.DarkName : family.LightName;
 }

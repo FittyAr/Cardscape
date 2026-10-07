@@ -2,7 +2,6 @@ using System.Text.Json;
 using Cardscape.Web.Services;
 using Cardscape.Web.Services.Api;
 using Cardscape.Web.Shared;
-using Microsoft.AspNetCore.Components.Web;
 
 namespace Cardscape.Web.Pages;
 
@@ -28,13 +27,7 @@ public partial class BoardDetail
         _draggingCardId = card.Id;
     }
 
-    private void OnColumnDragOver(DragEventArgs args)
-    {
-        if (_draggingCardId is not null)
-        {
-            args.DataTransfer!.DropEffect = "move";
-        }
-    }
+    private Task OnKanbanDropAsync(string columnId) => OnColumnDropAsync(Guid.Parse(columnId));
 
     private async Task OnColumnDropAsync(Guid destinationListId)
     {
@@ -117,7 +110,7 @@ public partial class BoardDetail
     }
 
     // Linear opacity: cards stay at full opacity until the mode's
-    // staleness window, then fade toward 0.4 (the "stale but still
+    // staleness window, then fade toward 0.6 (the "stale but still
     // legible" floor) over the same window.
     //  ByActivity: window = 14 days since the last update.
     private static double ComputeCardOpacity(
@@ -128,12 +121,55 @@ public partial class BoardDetail
             return 1.0;
         }
 
-        const double fadeFloor = 0.4;
+        const double fadeFloor = 0.6;
         const double windowDays = 14.0;
         double daysSince = Math.Max(0, (now - card.UpdatedAt).TotalDays);
         double fade = Math.Min(1.0, daysSince / windowDays);
         return fadeFloor + (1.0 - fadeFloor) * (1.0 - fade);
     }
+
+    // Due-date chip colour on the kanban card.
+    private enum DueState
+    {
+        Upcoming,
+        Soon,
+        Overdue,
+        Done,
+    }
+
+    private static DueState GetDueState(CardSummaryDto card, DateTimeOffset now)
+    {
+        if (card.IsCompleted)
+        {
+            return DueState.Done;
+        }
+
+        if (card.DueDate is not { } due)
+        {
+            return DueState.Upcoming;
+        }
+
+        if (due < now)
+        {
+            return DueState.Overdue;
+        }
+
+        return due - now <= TimeSpan.FromHours(48) ? DueState.Soon : DueState.Upcoming;
+    }
+
+    private static string VisibilityIcon(BoardVisibility visibility) => visibility switch
+    {
+        BoardVisibility.Private => "lock",
+        BoardVisibility.Workspace => "group",
+        _ => "public",
+    };
+
+    private string VisibilityLabel(BoardVisibility visibility) => visibility switch
+    {
+        BoardVisibility.Private => L["BoardsVisibilityPrivate"],
+        BoardVisibility.Workspace => L["BoardsVisibilityWorkspace"],
+        _ => L["BoardsVisibilityPublic"],
+    };
 
     private sealed class AddListModel
     {

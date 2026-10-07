@@ -1,0 +1,55 @@
+@*
+  BoardTile — the coloured board rectangle used on Home and on
+  the workspace board list. Boards have no colour of their own
+  yet, so the tile colour is derived from the board id: stable
+  across sessions and users, and varied enough that neighbouring
+  boards are told apart at a glance. Styles: .cs-board-tile in
+  wwwroot/css/app.css.
+*@
+
+<a class="cs-board-tile" href="@($"boards/{BoardId}")" style="--cs-tile-color: @ColorFor(BoardId);" title="@Name">
+    <span class="cs-board-tile-title">@Name</span>
+    <span class="cs-board-tile-meta">
+        @if (IsStarred)
+        {
+            <RadzenIcon Icon="star" class="cs-board-tile-star" />
+        }
+        @Meta
+    </span>
+</a>
+
+@code {
+    [Parameter, EditorRequired] public Guid BoardId { get; set; }
+    [Parameter, EditorRequired] public string Name { get; set; } = string.Empty;
+    [Parameter] public bool IsStarred { get; set; }
+    [Parameter] public string? Meta { get; set; }
+
+    // Mid-saturation hues that keep white text above 4.5:1.
+    private static readonly string[] Palette =
+    {
+        "#0f766e", // teal
+        "#1d4ed8", // blue
+        "#6d28d9", // violet
+        "#be185d", // pink
+        "#b45309", // amber
+        "#15803d", // green
+        "#0e7490", // cyan
+        "#9a3412", // rust
+        "#4338ca", // indigo
+        "#475569", // slate
+    };
+
+    public static string ColorFor(Guid id)
+    {
+        // FNV-1a over the bytes: stable across processes and it
+        // spreads sequential (v7-style) ids, which differ in only a
+        // few bytes, across the whole palette.
+        uint hash = 2166136261;
+        foreach (byte b in id.ToByteArray())
+        {
+            hash = (hash ^ b) * 16777619;
+        }
+
+        return Palette[hash % (uint)Palette.Length];
+    }
+}

@@ -1,5 +1,29 @@
 .topbar-search {
     position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.topbar-search ::deep .topbar-search-icon {
+    position: absolute;
+    inset-inline-start: 0.625rem;
+    z-index: 1;
+    font-size: 1.125rem;
+    color: var(--rz-text-tertiary-color);
+    pointer-events: none;
+}
+
+.topbar-search ::deep .topbar-search-input {
+    width: 100%;
+    min-width: 0;
+    padding-inline-start: 2.125rem;
+    background: var(--cs-surface-sunken);
+    border-color: transparent;
+}
+
+.topbar-search ::deep .topbar-search-input:focus {
+    background: var(--rz-base-background-color);
 }
 
 .topbar-search-result {
