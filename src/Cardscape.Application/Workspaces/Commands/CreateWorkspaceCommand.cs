@@ -1,6 +1,8 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Abstractions.Settings;
+using Cardscape.Application.Settings;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
@@ -15,6 +17,8 @@ public static class CreateWorkspaceCommandHandler
     public static async Task<Result<WorkspaceDto>> HandleAsync(
         CreateWorkspaceCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
+        IWorkspaceRepository workspaceQueries,
+        ISystemSettingsService settings,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -31,6 +35,14 @@ public static class CreateWorkspaceCommandHandler
         if (nameResult.IsFailure)
         {
             return Result.Failure<WorkspaceDto>(nameResult.Error);
+        }
+
+        Guid ownerId = currentUser.Id.Value;
+        int owned = (await workspaceQueries.ListForUserAsync(ownerId, cancellationToken)).Count(w => w.OwnerId == ownerId);
+        Result quota = (await settings.GetAsync(cancellationToken)).Limits.EnsureCanOwnAnotherWorkspace(owned);
+        if (quota.IsFailure)
+        {
+            return Result.Failure<WorkspaceDto>(quota.Error);
         }
 
         Region resolvedRegion = command.Region ?? deploymentRegion.Region;

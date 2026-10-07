@@ -125,6 +125,7 @@ internal static class ApiApplicationExtensions
         app.UseMiddleware<Cardscape.Api.Middleware.IdempotencyMiddleware>();
 
         app.UseAuthorization();
+        app.UseMiddleware<Cardscape.Api.Middleware.MaintenanceModeMiddleware>();
         app.UseMiddleware<RateLimitMiddleware>();
 
         app.MapCardscapeEndpoints();

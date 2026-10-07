@@ -63,6 +63,9 @@ public partial class CardDetail
     private bool _addingComment;
     private bool _togglingVote;
     private bool _aiBusy;
+
+    /// <summary>The assistant actions are offered only while the administrator keeps AI enabled.</summary>
+    private bool AiEnabled => Instance.Current.AiEnabled;
     private bool _snoozing;
     private string? _aiGeneratedDescription;
     private string? _aiSummary;
@@ -126,6 +129,7 @@ public partial class CardDetail
 
     protected override async Task OnParametersSetAsync()
     {
+        await Instance.GetAsync();
         ApiResult<CardDto> cardResult = await Cards.GetAsync(CardId);
         if (cardResult.IsSuccess)
         {

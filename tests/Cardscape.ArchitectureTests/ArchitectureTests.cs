@@ -149,18 +149,21 @@ public sealed class ArchitectureTests
     public void SourceProjects_HaveOnlyTheApprovedDirectProjectReferences()
     {
         // Api -> Web is the deliberate exception to the inward-only graph: the
-        // ASP.NET Core host serves the Blazor WebAssembly client. Reading the
-        // project files catches reference drift even before code uses a type.
+        // ASP.NET Core host serves the Blazor WebAssembly client. Contracts is
+        // the dependency-free wire vocabulary shared by Application and Web.
+        // Reading the project files catches reference drift even before code
+        // uses a type.
         IReadOnlyDictionary<string, string[]> approvedReferences =
             new Dictionary<string, string[]>(StringComparer.Ordinal)
             {
+                ["Cardscape.Contracts"] = [],
                 ["Cardscape.Domain"] = [],
-                ["Cardscape.Application"] = ["Cardscape.Domain"],
+                ["Cardscape.Application"] = ["Cardscape.Contracts", "Cardscape.Domain"],
                 ["Cardscape.Infrastructure"] = ["Cardscape.Application"],
                 ["Cardscape.Migrations.PostgreSql"] = ["Cardscape.Infrastructure"],
                 ["Cardscape.Migrations.MySql"] = ["Cardscape.Infrastructure"],
                 ["Cardscape.Migrations.MariaDb"] = ["Cardscape.Infrastructure"],
-                ["Cardscape.Web"] = [],
+                ["Cardscape.Web"] = ["Cardscape.Contracts"],
                 ["Cardscape.Seeder"] = ["Cardscape.Application", "Cardscape.Domain", "Cardscape.Infrastructure"],
                 ["Cardscape.Mcp"] = ["Cardscape.Application", "Cardscape.Infrastructure", "Cardscape.Migrations.MariaDb", "Cardscape.Migrations.MySql", "Cardscape.Migrations.PostgreSql"],
                 ["Cardscape.Api"] = ["Cardscape.Application", "Cardscape.Infrastructure", "Cardscape.Migrations.MariaDb", "Cardscape.Migrations.MySql", "Cardscape.Migrations.PostgreSql", "Cardscape.Seeder", "Cardscape.Web"],

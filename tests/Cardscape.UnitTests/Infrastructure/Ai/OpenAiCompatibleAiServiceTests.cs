@@ -1,9 +1,10 @@
 using System.Net;
 using System.Text;
 using Cardscape.Application.Abstractions;
+using Cardscape.Contracts.Settings;
 using Cardscape.Infrastructure.Ai;
+using Cardscape.Tests.Common.Fakes;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace Cardscape.UnitTests.Infrastructure.Ai;
 
@@ -65,12 +66,40 @@ public sealed class OpenAiCompatibleAiServiceTests
         result.Error.Message.Should().NotContain(secretBody);
     }
 
-    private static OpenAiCompatibleAiService CreateService(HttpMessageHandler handler)
+    [Fact]
+    public async Task CompleteAsync_WhenDisabledByAdministrator_FailsWithoutCallingProvider()
     {
-        var http = new HttpClient(handler) { BaseAddress = new Uri("https://ai.example/") };
+        var handler = new StubHandler(HttpStatusCode.OK, "{}");
+        var service = CreateService(handler, ai => ai.Enabled = false);
+
+        var result = await service.CompleteAsync(
+            new AiPrompt("system", "user"), new AiOptions(), TestContext.Current.CancellationToken);
+
+        result.Error.Code.Should().Be("ai.disabled");
+        handler.RequestUri.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CompleteAsync_UsesStoredKeyAndCapsMaxTokens()
+    {
+        var handler = new StubHandler(HttpStatusCode.OK, """{"id":"a","model":"m","choices":[{"index":0,"message":{"role":"assistant","content":"ok"}}]}""");
+        var service = CreateService(handler, ai => ai.MaxTokens = 100, apiKey: "sk-test");
+
+        await service.CompleteAsync(new AiPrompt("system", "user"), new AiOptions(MaxTokens: 4000), TestContext.Current.CancellationToken);
+
+        handler.Authorization.Should().Be("Bearer sk-test");
+        handler.Body.Should().Contain("\"max_tokens\":100");
+    }
+
+    private static OpenAiCompatibleAiService CreateService(
+        HttpMessageHandler handler, Action<AiSettings>? configure = null, string? apiKey = null)
+    {
+        var settings = new SystemSettings();
+        settings.Ai.Endpoint = "https://ai.example/";
+        configure?.Invoke(settings.Ai);
         return new OpenAiCompatibleAiService(
-            http,
-            Options.Create(new AiProviderOptions()),
+            new HttpClient(handler),
+            new InMemorySystemSettingsService(settings, apiKey),
             NullLogger<OpenAiCompatibleAiService>.Instance);
     }
 
@@ -78,15 +107,21 @@ public sealed class OpenAiCompatibleAiServiceTests
     {
         public Uri? RequestUri { get; private set; }
 
-        protected override Task<HttpResponseMessage> SendAsync(
+        public string? Authorization { get; private set; }
+
+        public string Body { get; private set; } = string.Empty;
+
+        protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
             RequestUri = request.RequestUri;
-            return Task.FromResult(new HttpResponseMessage(status)
+            Authorization = request.Headers.Authorization?.ToString();
+            Body = request.Content is null ? string.Empty : await request.Content.ReadAsStringAsync(cancellationToken);
+            return new HttpResponseMessage(status)
             {
                 Content = new StringContent(body, Encoding.UTF8, "application/json")
-            });
+            };
         }
     }
 }

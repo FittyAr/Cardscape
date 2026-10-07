@@ -1,6 +1,8 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Abstractions.Settings;
+using Cardscape.Application.Settings;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
 using Wolverine;
@@ -25,6 +27,7 @@ public static class IssueWorkspaceInvitationCommandHandler
         IssueWorkspaceInvitationCommand command,
         IInvitationService invitations,
         IWorkspaceRepository workspaces,
+        ISystemSettingsService settings,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -67,7 +70,7 @@ public static class IssueWorkspaceInvitationCommandHandler
             command.Email,
             command.Role,
             currentUser.Id.Value,
-            command.Lifetime,
+            command.Lifetime ?? (await settings.GetAsync(cancellationToken)).Limits.InvitationLifetime(),
             cancellationToken);
 
         return Result.Success(new WorkspaceInvitationIssuanceDto(

@@ -1,71 +1,69 @@
 using Cardscape.Api.Extensions;
+using Cardscape.Api.Settings;
+using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Settings;
+using Cardscape.Contracts.Settings;
+using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
 namespace Cardscape.Api.Endpoints.Admin;
 
+/// <summary>
+/// Instance administration: the runtime-editable <see cref="SystemSettings"/>,
+/// a read-only report of the startup configuration, live diagnostics and an
+/// AI connectivity check. Administrators only.
+/// </summary>
 public static class AdminSettingsEndpoints
 {
     public static IEndpointRouteBuilder MapAdminSettingsEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/admin/settings")
+        RouteGroupBuilder group = app.MapGroup("/api/admin/settings")
             .WithTags("AdminSettings")
             .RequireAuthorization(AdminOnlyPolicy.Name);
 
-        group.MapGet("/", async (
-            ISystemSettingsService settingsService,
-            CancellationToken ct) =>
-        {
-            SystemSettingsDto settings = await settingsService.GetSettingsAsync(ct);
-            return Results.Ok(settings);
-        })
-        .Produces<SystemSettingsDto>();
+        group.MapGet("/", async (ISystemSettingsService settings, CancellationToken ct) =>
+            Results.Ok(await settings.GetAsync(ct)))
+            .Produces<SystemSettings>();
 
         group.MapPut("/", async (
-            UpdateSystemSettingsRequest request,
-            ISystemSettingsService settingsService,
+            SystemSettings request,
+            ISystemSettingsService settings,
             ICurrentUser currentUser,
             CancellationToken ct) =>
         {
-            SystemSettingsDto updated = await settingsService.UpdateSettingsAsync(
-                request, currentUser.Email, ct);
-            return Results.Ok(updated);
+            Result<SystemSettings> updated = await settings.UpdateAsync(request, currentUser.Email, ct);
+            return updated.IsSuccess ? Results.Ok(updated.Value) : DomainErrorResults.ToProblem(updated.Error);
         })
-        .Produces<SystemSettingsDto>();
+        .Produces<SystemSettings>()
+        .ProducesValidationProblem();
 
-        group.MapPost("/reset", async (
-            ISystemSettingsService settingsService,
-            ICurrentUser currentUser,
-            CancellationToken ct) =>
-        {
-            SystemSettingsDto defaults = await settingsService.ResetToDefaultsAsync(
-                currentUser.Email, ct);
-            return Results.Ok(defaults);
-        })
-        .Produces<SystemSettingsDto>();
+        group.MapPost("/reset", async (ISystemSettingsService settings, ICurrentUser currentUser, CancellationToken ct) =>
+            Results.Ok(await settings.ResetAsync(currentUser.Email, ct)))
+            .Produces<SystemSettings>();
 
-        group.MapPost("/test-email", async (
-            TestEmailRequest request,
-            ISystemSettingsService settingsService,
-            CancellationToken ct) =>
-        {
-            TestEmailResponse result = await settingsService.TestEmailAsync(
-                request.TargetEmail, ct);
-            return Results.Ok(result);
-        })
-        .Produces<TestEmailResponse>();
+        group.MapGet("/runtime", (RuntimeConfigurationReport report) => Results.Ok(report.Build()))
+            .Produces<RuntimeConfigurationEntry[]>();
 
-        group.MapPost("/test-ai", async (
-            ISystemSettingsService settingsService,
-            CancellationToken ct) =>
+        group.MapGet("/diagnostics", async (SystemDiagnosticsProbe probe, CancellationToken ct) =>
+            Results.Ok(await probe.ProbeAsync(ct)))
+            .Produces<SystemDiagnostics>();
+
+        // Exercises the real completion path (endpoint, key, model, timeout)
+        // with a one-word prompt, so a green result means the assistant works.
+        group.MapPost("/test-ai", async (IAiService ai, CancellationToken ct) =>
         {
-            TestAiResponse result = await settingsService.TestAiConnectionAsync(ct);
-            return Results.Ok(result);
+            Result<AiTextCompletion> reply = await ai.CompleteAsync(
+                new AiPrompt("You are a health check. Reply with the single word OK.", "Ping"),
+                new AiOptions(Temperature: 0, MaxTokens: 8),
+                ct);
+            return Results.Ok(reply.IsSuccess
+                ? new AiConnectionTestResult(true, $"{reply.Value.Model ?? "model"}: {reply.Value.Text.Trim()}")
+                : new AiConnectionTestResult(false, reply.Error.Message));
         })
-        .Produces<TestAiResponse>();
+        .Produces<AiConnectionTestResult>();
 
         return app;
     }

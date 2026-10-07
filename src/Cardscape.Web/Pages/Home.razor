@@ -7,13 +7,14 @@
 @inject IStringLocalizer<SharedResource> L
 @inject IWorkspacesApiClient WorkspacesApi
 @inject IBoardsApiClient BoardsApi
+@inject InstanceSettingsState Instance
 
 <PageTitle>@L["HomeTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <AuthorizeView>
     <Authorized>
         <div class="cs-home">
-            <PageHeader Title="@Greeting(context.User)" Subtitle="@L["HomeLeadAuthorized"]" />
+            <PageHeader Title="@Greeting(context.User)" Subtitle="@(Instance.Current.WelcomeMessage ?? L["HomeLeadAuthorized"])" />
 
             @if (_loadError is not null)
             {
@@ -165,6 +166,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await Instance.GetAsync();
         if (AuthState is null || (await AuthState).User.Identity?.IsAuthenticated != true)
         {
             return;

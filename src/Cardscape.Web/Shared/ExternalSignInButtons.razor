@@ -1,0 +1,50 @@
+@using Cardscape.Contracts.Settings
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@inject NavigationManager Nav
+
+@* ExternalSignInButtons — one button per sign-in provider that is really
+   usable on this instance (enabled by the administrator AND configured on
+   the server). Used by the login page and to link more accounts. *@
+
+@if (Providers.Count > 0)
+{
+    <RadzenStack Gap="0.75rem">
+        @foreach (Provider provider in Providers)
+        {
+            <RadzenButton Text="@L[provider.LabelKey]" Icon="@provider.Icon" ButtonStyle="ButtonStyle.Light" Size="@Size"
+                          Click="@(() => Start(provider.Scheme))" />
+        }
+    </RadzenStack>
+}
+else if (EmptyContent is not null)
+{
+    @EmptyContent
+}
+
+@code {
+    [Parameter, EditorRequired] public PublicInstanceSettings Settings { get; set; } = default!;
+
+    /// <summary>Where the provider sends the user back to after signing in.</summary>
+    [Parameter] public string ReturnUrl { get; set; } = "/";
+
+    [Parameter] public ButtonSize Size { get; set; } = ButtonSize.Large;
+
+    [Parameter] public RenderFragment? EmptyContent { get; set; }
+
+    private IReadOnlyList<Provider> Providers =>
+    [
+        .. new Provider[]
+        {
+            new("google", "AuthSignInWithGoogle", "mail", Settings.Google),
+            new("microsoft", "AuthSignInWithMicrosoft", "desktop_windows", Settings.Microsoft),
+            new("apple", "AuthSignInWithApple", "phone_iphone", Settings.Apple),
+        }.Where(provider => provider.Available),
+    ];
+
+    private void Start(string scheme) =>
+        Nav.NavigateTo($"/api/auth/external/{scheme}/start?returnUrl={Uri.EscapeDataString(ReturnUrl)}", forceLoad: true);
+
+    private sealed record Provider(string Scheme, string LabelKey, string Icon, bool Available);
+}

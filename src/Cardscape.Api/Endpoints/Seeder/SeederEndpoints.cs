@@ -1,6 +1,7 @@
 using Cardscape.Api.BackgroundJobs;
 using Cardscape.Api.Extensions;
 using Cardscape.Application.Abstractions.Settings;
+using Cardscape.Contracts.Settings;
 using Cardscape.Seeder;
 using Cardscape.Seeder.Configuration;
 using Cardscape.Seeder.Reporting;
@@ -42,32 +43,27 @@ public static class SeederEndpoints
 
         group.MapGet("/status", async (
             SeedReport report,
-            SeedRunner runner,
             SeederOperationQueue queue,
             ISystemSettingsService settingsService,
             CancellationToken ct) =>
         {
-            bool isEnabled = await IsSeederEnabledAsync(runner, settingsService, ct);
+            SeederSettings seeder = await SeederSettingsAsync(settingsService, ct);
             return Results.Ok(new SeederStatusResponse(
-                isEnabled,
+                seeder.Enabled,
                 queue.IsBusy,
                 ToStatus(report)));
         }).Produces<SeederStatusResponse>(StatusCodes.Status200OK);
 
         group.MapGet("/options", async (
             Microsoft.Extensions.Options.IOptions<SeederOptions> options,
-            SeedRunner runner,
             ISystemSettingsService settingsService,
             CancellationToken ct) =>
         {
-            SeederOptions snapshot = options.Value;
-            bool isEnabled = await IsSeederEnabledAsync(runner, settingsService, ct);
-            SystemSettingsDto settings = await settingsService.GetSettingsAsync(ct);
-            bool wipe = snapshot.WipeBeforeSeed || settings.SeederWipeBeforeSeed;
+            SeederSettings seeder = await SeederSettingsAsync(settingsService, ct);
             return Results.Ok(new SeederOptionsResponse(
-                isEnabled,
-                wipe,
-                snapshot.FixedNow));
+                seeder.Enabled,
+                seeder.WipeBeforeSeed,
+                options.Value.FixedNow));
         }).Produces<SeederOptionsResponse>(StatusCodes.Status200OK);
 
         // Async run: the endpoint returns 202 the moment
@@ -78,22 +74,20 @@ public static class SeederEndpoints
         // a long seed (3-6 s) does not freeze the admin
         // page.
         group.MapPost("/run", async (
-            SeedRunner runner,
             SeederOperationQueue queue,
             SeedReport report,
             ISystemSettingsService settingsService,
             SeederRunRequest? request,
             CancellationToken ct) =>
         {
-            bool isEnabled = await IsSeederEnabledAsync(runner, settingsService, ct);
-            if (!isEnabled)
+            SeederSettings seeder = await SeederSettingsAsync(settingsService, ct);
+            if (!seeder.Enabled)
             {
                 return ApiProblemResults.NotFound(
                     "seeder.disabled",
                     "The Seeder feature is disabled.");
             }
-            SystemSettingsDto settings = await settingsService.GetSettingsAsync(ct);
-            bool wipe = request?.Wipe ?? (settings.SeederWipeBeforeSeed || runner.CurrentOptions.WipeBeforeSeed);
+            bool wipe = request?.Wipe ?? seeder.WipeBeforeSeed;
             if (!queue.TryEnqueueRun(wipe))
             {
                 return ApiProblemResults.Conflict(
@@ -113,8 +107,7 @@ public static class SeederEndpoints
             ISystemSettingsService settingsService,
             CancellationToken ct) =>
         {
-            bool isEnabled = await IsSeederEnabledAsync(runner, settingsService, ct);
-            if (!isEnabled)
+            if (!(await SeederSettingsAsync(settingsService, ct)).Enabled)
             {
                 return ApiProblemResults.NotFound(
                     "seeder.disabled",
@@ -136,19 +129,9 @@ public static class SeederEndpoints
         return app;
     }
 
-    private static async Task<bool> IsSeederEnabledAsync(
-        SeedRunner runner,
-        ISystemSettingsService settingsService,
-        CancellationToken ct)
-    {
-        if (runner.IsEnabled)
-        {
-            return true;
-        }
-
-        SystemSettingsDto settings = await settingsService.GetSettingsAsync(ct);
-        return settings.SeederEnabled || settings.AllowSeederExecution;
-    }
+    /// <summary>The admin settings own the switch; their defaults come from <c>Cardscape:Seeder</c>.</summary>
+    private static async Task<SeederSettings> SeederSettingsAsync(ISystemSettingsService settingsService, CancellationToken ct) =>
+        (await settingsService.GetAsync(ct)).Seeder;
 
     private static SeedReportResponse ToStatus(SeedReport report) => new(
         report.Status,

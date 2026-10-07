@@ -833,4 +833,106 @@
   <data name="CardCopyKeeps" xml:space="preserve"><value>También se copian la descripción, las etiquetas, los miembros y las listas de verificación.</value></data>
   <data name="CardCopyCreate" xml:space="preserve"><value>Crear tarjeta</value></data>
   <data name="CardCopied" xml:space="preserve"><value>Tarjeta copiada en {0}.</value></data>
+  <data name="ExternalLoginsNoneAvailable" xml:space="preserve"><value>No hay proveedores de inicio de sesión externos disponibles en esta instancia.</value></data>
+  <data name="MaintenanceBannerTitle" xml:space="preserve"><value>Modo mantenimiento</value></data>
+  <data name="MaintenanceBannerDefault" xml:space="preserve"><value>El servicio está en mantenimiento.</value></data>
+  <data name="SettingsSubtitle" xml:space="preserve"><value>Todo lo que cambies aquí se aplica al instante, sin reiniciar el servidor.</value></data>
+  <data name="SettingsTabGeneral" xml:space="preserve"><value>General</value></data>
+  <data name="SettingsTabAccess" xml:space="preserve"><value>Acceso</value></data>
+  <data name="SettingsTabNotices" xml:space="preserve"><value>Avisos</value></data>
+  <data name="SettingsTabLimits" xml:space="preserve"><value>Límites</value></data>
+  <data name="SettingsTabAi" xml:space="preserve"><value>Asistente IA</value></data>
+  <data name="SettingsTabSeeder" xml:space="preserve"><value>Datos de demo</value></data>
+  <data name="SettingsTabSystem" xml:space="preserve"><value>Sistema</value></data>
+  <data name="SettingsBrandingTitle" xml:space="preserve"><value>Marca</value></data>
+  <data name="SettingsBrandingDescription" xml:space="preserve"><value>Cómo se presenta esta instancia en la cabecera, el inicio de sesión y la página de inicio.</value></data>
+  <data name="SettingsInstanceTitle" xml:space="preserve"><value>Nombre de la instancia</value></data>
+  <data name="SettingsSupportEmail" xml:space="preserve"><value>E-mail de soporte</value></data>
+  <data name="SettingsLogoUrl" xml:space="preserve"><value>URL del logo (reemplaza la marca de Cardscape)</value></data>
+  <data name="SettingsWelcomeMessage" xml:space="preserve"><value>Mensaje de bienvenida</value></data>
+  <data name="SettingsWelcomeMessageHelp" xml:space="preserve"><value>Se muestra bajo el saludo en la página de inicio. Vacío = texto por defecto.</value></data>
+  <data name="SettingsDefaultsTitle" xml:space="preserve"><value>Valores por defecto</value></data>
+  <data name="SettingsDefaultsDescription" xml:space="preserve"><value>Se usan hasta que cada persona elige su propio idioma o tema.</value></data>
+  <data name="SettingsDefaultLanguage" xml:space="preserve"><value>Idioma por defecto</value></data>
+  <data name="SettingsDefaultTheme" xml:space="preserve"><value>Tema por defecto</value></data>
+  <data name="SettingsRegistrationTitle" xml:space="preserve"><value>Registro</value></data>
+  <data name="SettingsAllowPublicRegistration" xml:space="preserve"><value>Permitir registro público</value></data>
+  <data name="SettingsAllowPublicRegistrationHelp" xml:space="preserve"><value>Si está desactivado, solo se puede entrar con una invitación.</value></data>
+  <data name="SettingsSignInProvidersTitle" xml:space="preserve"><value>Proveedores de inicio de sesión</value></data>
+  <data name="SettingsSignInProvidersDescription" xml:space="preserve"><value>Un proveedor solo se ofrece si está activado aquí y sus credenciales están configuradas en el servidor (ver Sistema).</value></data>
+  <data name="SettingsSamlHelp" xml:space="preserve"><value>Cada espacio configura su proveedor de identidad en Espacio, SAML.</value></data>
+  <data name="SettingsAnnouncementTitle" xml:space="preserve"><value>Anuncio</value></data>
+  <data name="SettingsAnnouncementDescription" xml:space="preserve"><value>Un aviso que se muestra arriba de cada página a los usuarios conectados.</value></data>
+  <data name="SettingsAnnouncementEnabled" xml:space="preserve"><value>Mostrar anuncio</value></data>
+  <data name="SettingsMessage" xml:space="preserve"><value>Mensaje</value></data>
+  <data name="SettingsSeverity" xml:space="preserve"><value>Tipo</value></data>
+  <data name="SettingsPreview" xml:space="preserve"><value>Vista previa</value></data>
+  <data name="SettingsMaintenanceTitle" xml:space="preserve"><value>Modo mantenimiento</value></data>
+  <data name="SettingsMaintenanceDescription" xml:space="preserve"><value>Mientras está activo, todos salvo los administradores ven este mensaje en lugar de la aplicación.</value></data>
+  <data name="SettingsMaintenanceEnabled" xml:space="preserve"><value>Modo mantenimiento activo</value></data>
+  <data name="SettingsMaintenanceWarning" xml:space="preserve"><value>Al guardar, quienes no sean administradores quedarán bloqueados hasta que lo desactives.</value></data>
+  <data name="SettingsLimitsTitle" xml:space="preserve"><value>Cuotas</value></data>
+  <data name="SettingsLimitsDescription" xml:space="preserve"><value>Se comprueban al crear un espacio o un tablero, o al enviar una invitación.</value></data>
+  <data name="SettingsMaxWorkspacesPerUser" xml:space="preserve"><value>Espacios que puede tener cada persona</value></data>
+  <data name="SettingsMaxBoardsPerWorkspace" xml:space="preserve"><value>Tableros por espacio</value></data>
+  <data name="SettingsInvitationLifetimeDays" xml:space="preserve"><value>Validez de las invitaciones (días)</value></data>
+  <data name="SettingsZeroMeansUnlimited" xml:space="preserve"><value>0 significa sin límite.</value></data>
+  <data name="SettingsAiTitle" xml:space="preserve"><value>Asistente IA</value></data>
+  <data name="SettingsAiDescription" xml:space="preserve"><value>Cualquier endpoint compatible con OpenAI: OpenAI, Azure OpenAI, Ollama, LM Studio...</value></data>
+  <data name="SettingsAiEnabled" xml:space="preserve"><value>Activar el asistente IA</value></data>
+  <data name="SettingsAiEnabledHelp" xml:space="preserve"><value>Si está desactivado, los botones de IA desaparecen de las tarjetas y la API rechaza las peticiones de IA.</value></data>
+  <data name="SettingsAiEndpoint" xml:space="preserve"><value>URL del endpoint</value></data>
+  <data name="SettingsAiModel" xml:space="preserve"><value>Modelo</value></data>
+  <data name="SettingsAiApiKey" xml:space="preserve"><value>Clave de API</value></data>
+  <data name="SettingsSecretStored" xml:space="preserve"><value>(guardada)</value></data>
+  <data name="SettingsSecretNotSet" xml:space="preserve"><value>Sin configurar</value></data>
+  <data name="SettingsAiKeyKept" xml:space="preserve"><value>Hay una clave guardada y cifrada. Escribí una nueva para reemplazarla.</value></data>
+  <data name="SettingsAiKeyOptional" xml:space="preserve"><value>Opcional para modelos locales como Ollama.</value></data>
+  <data name="SettingsAiKeyWillBeReplaced" xml:space="preserve"><value>La clave guardada se reemplazará al guardar.</value></data>
+  <data name="SettingsAiKeyWillBeRemoved" xml:space="preserve"><value>La clave guardada se eliminará al guardar.</value></data>
+  <data name="SettingsAiRemoveKey" xml:space="preserve"><value>Quitar clave</value></data>
+  <data name="SettingsAiTimeout" xml:space="preserve"><value>Tiempo de espera (segundos)</value></data>
+  <data name="SettingsAiMaxTokens" xml:space="preserve"><value>Máximo de tokens por respuesta</value></data>
+  <data name="SettingsAiTest" xml:space="preserve"><value>Probar conexión</value></data>
+  <data name="SettingsAiTestSaveFirst" xml:space="preserve"><value>Guardá los cambios primero; la prueba usa la configuración guardada.</value></data>
+  <data name="SettingsSeederTitle" xml:space="preserve"><value>Generador de datos de demo</value></data>
+  <data name="SettingsSeederDescription" xml:space="preserve"><value>Llena la base con una empresa de demo realista. Para desarrollo y demos, nunca con datos de producción.</value></data>
+  <data name="SettingsSeederEnabled" xml:space="preserve"><value>Activar el generador</value></data>
+  <data name="SettingsSeederWipe" xml:space="preserve"><value>Borrar la base antes de generar, por defecto</value></data>
+  <data name="SettingsSeederWipeHelp" xml:space="preserve"><value>Elimina todas las filas, incluidos los usuarios, antes de cargar los datos de demo.</value></data>
+  <data name="SettingsSeederOpen" xml:space="preserve"><value>Abrir el generador</value></data>
+  <data name="SettingsDiagnosticsTitle" xml:space="preserve"><value>Diagnóstico</value></data>
+  <data name="SettingsRefresh" xml:space="preserve"><value>Actualizar</value></data>
+  <data name="SettingsDiagVersion" xml:space="preserve"><value>Versión</value></data>
+  <data name="SettingsDiagEnvironment" xml:space="preserve"><value>Entorno</value></data>
+  <data name="SettingsDiagDatabase" xml:space="preserve"><value>Base de datos</value></data>
+  <data name="SettingsDiagReachable" xml:space="preserve"><value>accesible</value></data>
+  <data name="SettingsDiagUnreachable" xml:space="preserve"><value>inaccesible</value></data>
+  <data name="SettingsDiagUptime" xml:space="preserve"><value>Tiempo activo</value></data>
+  <data name="SettingsDiagMemory" xml:space="preserve"><value>Memoria en uso</value></data>
+  <data name="SettingsDiagDisk" xml:space="preserve"><value>Espacio libre en disco</value></data>
+  <data name="SettingsDiagThreads" xml:space="preserve"><value>Hilos</value></data>
+  <data name="SettingsDiagUnknown" xml:space="preserve"><value>desconocido</value></data>
+  <data name="SettingsRuntimeTitle" xml:space="preserve"><value>Configuración del servidor</value></data>
+  <data name="SettingsRuntimeDescription" xml:space="preserve"><value>Se lee al arrancar el servidor desde appsettings o variables de entorno. Para cambiar un valor, modificá la variable y reiniciá.</value></data>
+  <data name="SettingsRuntimeCategory" xml:space="preserve"><value>Categoría</value></data>
+  <data name="SettingsRuntimeName" xml:space="preserve"><value>Ajuste</value></data>
+  <data name="SettingsRuntimeValue" xml:space="preserve"><value>Valor</value></data>
+  <data name="SettingsRuntimeVariable" xml:space="preserve"><value>Variable de entorno</value></data>
+  <data name="SettingsConfigured" xml:space="preserve"><value>Configurado</value></data>
+  <data name="SettingsNotConfigured" xml:space="preserve"><value>Sin configurar</value></data>
+  <data name="SettingsBuiltInDefault" xml:space="preserve"><value>(valor por defecto)</value></data>
+  <data name="SettingsUnsavedChanges" xml:space="preserve"><value>Tenés cambios sin guardar.</value></data>
+  <data name="SettingsAllSaved" xml:space="preserve"><value>Todos los cambios están guardados.</value></data>
+  <data name="SettingsResetDefaults" xml:space="preserve"><value>Restablecer valores</value></data>
+  <data name="SettingsResetConfirm" xml:space="preserve"><value>Todos los ajustes de esta página vuelven a su valor por defecto y se elimina la clave de IA guardada. ¿Continuar?</value></data>
+  <data name="SettingsResetDone" xml:space="preserve"><value>Configuración restablecida a sus valores por defecto.</value></data>
+  <data name="SettingsDiscard" xml:space="preserve"><value>Descartar cambios</value></data>
+  <data name="SettingsSave" xml:space="preserve"><value>Guardar cambios</value></data>
+  <data name="SettingsSaved" xml:space="preserve"><value>Configuración guardada.</value></data>
+  <data name="SettingsSaveFailed" xml:space="preserve"><value>No se pudo guardar la configuración</value></data>
+  <data name="NoticeSeverityInfo" xml:space="preserve"><value>Información</value></data>
+  <data name="NoticeSeveritySuccess" xml:space="preserve"><value>Éxito</value></data>
+  <data name="NoticeSeverityWarning" xml:space="preserve"><value>Advertencia</value></data>
+  <data name="NoticeSeverityDanger" xml:space="preserve"><value>Crítico</value></data>
 </root>

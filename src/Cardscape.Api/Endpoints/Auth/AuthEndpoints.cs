@@ -1,9 +1,13 @@
+
+using Cardscape.Api.Settings;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Application.Authentication.Commands;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.Authentication.Queries;
+using Cardscape.Contracts.Settings;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Microsoft.AspNetCore.Builder;
@@ -12,7 +16,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
 using Wolverine;
-
 namespace Cardscape.Api.Endpoints.Auth;
 
 public static class AuthEndpoints
@@ -21,36 +24,18 @@ public static class AuthEndpoints
     {
         var group = app.MapGroup("/api/auth").WithTags("Auth");
 
-        group.MapGet("/config", async (
-            Cardscape.Application.Abstractions.Settings.ISystemSettingsService settingsService,
-            CancellationToken ct) =>
-        {
-            var settings = await settingsService.GetSettingsAsync(ct);
-            return Results.Ok(new PublicAuthConfigResponse(
-                Google: settings.EnableGoogleAuth,
-                Microsoft: settings.EnableMicrosoftAuth,
-                Apple: settings.EnableAppleAuth,
-                GitHub: settings.EnableGitHubAuth,
-                Saml: settings.SamlSsoEnabled,
-                AllowPublicRegistration: settings.AllowPublicRegistration,
-                InstanceTitle: settings.InstanceTitle,
-                CustomLogoUrl: settings.CustomLogoUrl,
-                MaintenanceModeEnabled: settings.MaintenanceModeEnabled,
-                MaintenanceModeMessage: settings.MaintenanceModeMessage,
-                SystemAnnouncementEnabled: settings.SystemAnnouncementEnabled,
-                SystemAnnouncementType: settings.SystemAnnouncementType,
-                SystemAnnouncementMessage: settings.SystemAnnouncementMessage));
-        })
+        group.MapGet("/config", async (InstanceSettingsProvider instance, CancellationToken ct) =>
+            Results.Ok(await instance.GetPublicAsync(ct)))
         .AllowAnonymous()
-        .Produces<PublicAuthConfigResponse>();
+        .Produces<PublicInstanceSettings>();
 
         group.MapPost("/register", async (
             RegisterRequest request,
             IMessageBus bus,
-            Cardscape.Application.Abstractions.Settings.ISystemSettingsService settingsService,
+            ISystemSettingsService settingsService,
             CancellationToken ct) =>
         {
-            if (!await settingsService.IsPublicRegistrationAllowedAsync(ct))
+            if (!(await settingsService.GetAsync(ct)).Access.AllowPublicRegistration)
             {
                 return DomainErrorResults.ToProblem(
                     DomainError.Forbidden("Auth.RegistrationClosed", "Public registration is currently disabled by the administrator."));

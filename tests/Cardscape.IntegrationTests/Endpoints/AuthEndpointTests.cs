@@ -110,7 +110,7 @@ public sealed class AuthEndpointTests
         string json = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         using JsonDocument doc = JsonDocument.Parse(json);
         doc.RootElement.TryGetProperty("google", out _).Should().BeTrue();
-        doc.RootElement.TryGetProperty("gitHub", out _).Should().BeTrue();
+        doc.RootElement.TryGetProperty("gitHub", out _).Should().BeFalse("GitHub sign-in is not implemented, so it is not advertised");
         doc.RootElement.TryGetProperty("microsoft", out _).Should().BeTrue();
         doc.RootElement.TryGetProperty("apple", out _).Should().BeTrue();
         doc.RootElement.TryGetProperty("allowPublicRegistration", out _).Should().BeTrue();

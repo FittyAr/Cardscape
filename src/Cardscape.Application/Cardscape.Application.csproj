@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Cardscape.Domain\Cardscape.Domain.csproj" />
+    <ProjectReference Include="..\Cardscape.Contracts\Cardscape.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

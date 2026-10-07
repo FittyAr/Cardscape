@@ -33,6 +33,7 @@ public sealed class HandlersTestContext
     public FakeTokenService Tokens { get; } = new();
     public FakeCurrentUser CurrentUser { get; set; } = FakeCurrentUser.Anonymous();
     public FakeDeploymentRegion DeploymentRegion { get; } = new();
+    public InMemorySystemSettingsService Settings { get; } = new();
     public IdentitySecretProtector SecretProtector { get; } = new();
     public InMemoryPendingTotpLoginStore PendingTotpLogins { get; } = new();
 

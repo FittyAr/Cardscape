@@ -18,7 +18,7 @@ public class CreateBoardCommandHandlerTests
         var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(workspace.Id.Value, "Sprint", "desc",
                                   BoardVisibility.Private),
-            ctx.Boards, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Name.Should().Be("Sprint");
@@ -38,7 +38,7 @@ public class CreateBoardCommandHandlerTests
         var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(workspace.Id.Value, "Sprint", "desc",
                                   BoardVisibility.Private),
-            ctx.Boards, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Unauthenticated);
@@ -55,7 +55,7 @@ public class CreateBoardCommandHandlerTests
         var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(Guid.NewGuid(), "Sprint", "desc",
                                   BoardVisibility.Private),
-            ctx.Boards, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.NotFound);
@@ -73,7 +73,7 @@ public class CreateBoardCommandHandlerTests
         var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(workspace.Id.Value, "Sprint", "desc",
                                   BoardVisibility.Private),
-            ctx.Boards, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("boards.not_member");
@@ -90,9 +90,31 @@ public class CreateBoardCommandHandlerTests
         var result = await CreateBoardCommandHandler.HandleAsync(
             new CreateBoardCommand(workspace.Id.Value, "", "desc",
                                   BoardVisibility.Private),
-            ctx.Boards, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("boards.name.required");
+    }
+
+    [Fact]
+    public async Task Handle_WhenWorkspaceReachedBoardQuota_ReturnsConflict()
+    {
+        var ctx = new HandlersTestContext();
+        var user = await ctx.SeedUserAsync();
+        var workspace = await ctx.SeedWorkspaceAsync(user.Id.Value);
+        ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
+        var limited = await ctx.Settings.GetAsync(TestContext.Current.CancellationToken);
+        limited.Limits.MaxBoardsPerWorkspace = 1;
+        await ctx.Settings.UpdateAsync(limited, "admin", TestContext.Current.CancellationToken);
+        var command = new CreateBoardCommand(workspace.Id.Value, "Sprint", "desc", BoardVisibility.Private);
+        await CreateBoardCommandHandler.HandleAsync(
+            command, ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+
+        var result = await CreateBoardCommandHandler.HandleAsync(
+            command, ctx.Boards, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("boards.quota_reached");
+        ctx.Boards.All.Should().HaveCount(1);
     }
 }

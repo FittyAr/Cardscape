@@ -1,0 +1,43 @@
+@using Microsoft.AspNetCore.Components.Forms
+@implements IDisposable
+
+@* FormChangeListener — place inside a form to hear about every field edit.
+   Inputs notify the cascaded EditContext; a component that owns the form
+   (and renders state derived from the model, such as "unsaved changes")
+   would otherwise never re-render, because @bind only re-renders the
+   component that hosts the input. *@
+
+@code {
+    private EditContext? _subscribed;
+
+    [CascadingParameter] public EditContext? EditContext { get; set; }
+
+    [Parameter, EditorRequired] public EventCallback Changed { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(EditContext, _subscribed))
+        {
+            return;
+        }
+
+        Unsubscribe();
+        _subscribed = EditContext;
+        if (_subscribed is not null)
+        {
+            _subscribed.OnFieldChanged += OnFieldChanged;
+        }
+    }
+
+    public void Dispose() => Unsubscribe();
+
+    private void Unsubscribe()
+    {
+        if (_subscribed is not null)
+        {
+            _subscribed.OnFieldChanged -= OnFieldChanged;
+        }
+    }
+
+    private void OnFieldChanged(object? sender, FieldChangedEventArgs args) => _ = Changed.InvokeAsync();
+}

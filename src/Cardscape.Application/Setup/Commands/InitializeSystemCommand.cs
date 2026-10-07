@@ -4,6 +4,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Application.Authentication;
 using Cardscape.Application.Authentication.DTOs;
+using Cardscape.Contracts.Settings;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces;
@@ -109,17 +110,12 @@ public static class InitializeSystemCommandHandler
             }
         }
 
-        // 6. Update instance title if specified.
+        // 6. Name the instance if asked; every other setting keeps its value.
         if (!string.IsNullOrWhiteSpace(command.InstanceTitle))
         {
-            await settingsService.UpdateSettingsAsync(
-                new UpdateSystemSettingsRequest(
-                    command.InstanceTitle.Trim(),
-                    AllowPublicRegistration: true,
-                    DefaultLanguage: "es",
-                    JwtAccessTokenMinutes: 60),
-                adminUser.Email.Value,
-                cancellationToken);
+            SystemSettings settings = await settingsService.GetAsync(cancellationToken);
+            settings.General.InstanceTitle = command.InstanceTitle.Trim();
+            await settingsService.UpdateAsync(settings, adminUser.Email.Value, cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

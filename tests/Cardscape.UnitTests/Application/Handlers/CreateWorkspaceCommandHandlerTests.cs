@@ -15,7 +15,7 @@ public class CreateWorkspaceCommandHandlerTests
 
         var result = await CreateWorkspaceCommandHandler.HandleAsync(
             new CreateWorkspaceCommand("Acme"),
-            ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
+            ctx.Workspaces, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.OwnerId.Should().Be(user.Id.Value);
@@ -31,7 +31,7 @@ public class CreateWorkspaceCommandHandlerTests
 
         var result = await CreateWorkspaceCommandHandler.HandleAsync(
             new CreateWorkspaceCommand("Acme"),
-            ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
+            ctx.Workspaces, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Unauthenticated);
@@ -46,7 +46,7 @@ public class CreateWorkspaceCommandHandlerTests
 
         var result = await CreateWorkspaceCommandHandler.HandleAsync(
             new CreateWorkspaceCommand(string.Empty),
-            ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
+            ctx.Workspaces, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("workspaces.name.required");
@@ -61,7 +61,7 @@ public class CreateWorkspaceCommandHandlerTests
 
         var result = await CreateWorkspaceCommandHandler.HandleAsync(
             new CreateWorkspaceCommand("Acme", Region.NorthAmerica),
-            ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
+            ctx.Workspaces, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("workspaces.region_mismatch");
@@ -76,9 +76,29 @@ public class CreateWorkspaceCommandHandlerTests
 
         var result = await CreateWorkspaceCommandHandler.HandleAsync(
             new CreateWorkspaceCommand("Acme"),
-            ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
+            ctx.Workspaces, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Region.Should().Be(Region.Europe);
+    }
+
+    [Fact]
+    public async Task Handle_WhenOwnerReachedWorkspaceQuota_ReturnsConflict()
+    {
+        var ctx = new HandlersTestContext();
+        var user = await ctx.SeedUserAsync();
+        ctx.CurrentUser = FakeCurrentUser.AuthenticatedAs(user);
+        var limited = await ctx.Settings.GetAsync(TestContext.Current.CancellationToken);
+        limited.Limits.MaxWorkspacesPerUser = 1;
+        await ctx.Settings.UpdateAsync(limited, "admin", TestContext.Current.CancellationToken);
+        await ctx.SeedWorkspaceAsync(user.Id.Value);
+
+        var result = await CreateWorkspaceCommandHandler.HandleAsync(
+            new CreateWorkspaceCommand("Second"),
+            ctx.Workspaces, ctx.Workspaces, ctx.Settings, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, ctx.DeploymentRegion, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("workspaces.quota_reached");
+        ctx.Workspaces.All.Should().HaveCount(1);
     }
 }

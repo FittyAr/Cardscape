@@ -2,10 +2,11 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Settings;
+using Cardscape.Contracts.Settings;
 using Cardscape.Domain.Common;
 using Cardscape.Infrastructure.Logging;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Cardscape.Infrastructure.Ai;
 
@@ -25,106 +26,116 @@ namespace Cardscape.Infrastructure.Ai;
 /// "BYOK" is that the self-hoster owns the API key and the
 /// endpoint URL — Cardscape never proxies through a third party.
 /// </summary>
-public sealed class OpenAiCompatibleAiService : IAiService
+/// <summary>
+/// <see cref="IAiService"/> over any OpenAI-compatible chat completions
+/// endpoint (OpenAI, Azure OpenAI, Ollama, LM Studio…). Endpoint, model,
+/// key, timeout and token cap come from the administrator's
+/// <see cref="AiSettings"/> on every call, so changes apply without a
+/// restart; when the assistant is switched off every call fails fast.
+/// </summary>
+public sealed class OpenAiCompatibleAiService(
+    HttpClient http,
+    ISystemSettingsService settings,
+    ILogger<OpenAiCompatibleAiService> logger) : IAiService
 {
     private const int MaxResponseBytes = 1024 * 1024;
-
-    private readonly HttpClient _http;
-    private readonly AiProviderOptions _options;
-    private readonly ILogger<OpenAiCompatibleAiService> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
-    public OpenAiCompatibleAiService(HttpClient http, IOptions<AiProviderOptions> options, ILogger<OpenAiCompatibleAiService> logger)
-    {
-        _http = http;
-        _options = options.Value;
-        _logger = logger;
-        if (!string.IsNullOrWhiteSpace(_options.ApiKey))
-        {
-            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _options.ApiKey);
-        }
-    }
-
     public async Task<Result<AiTextCompletion>> CompleteAsync(AiPrompt prompt, AiOptions options, CancellationToken ct = default)
     {
+        AiSettings ai = (await settings.GetAsync(ct)).Ai;
+        if (!ai.Enabled)
+        {
+            return Failure("ai.disabled", "The AI assistant is disabled by the administrator.", ErrorType.Forbidden);
+        }
+
+        if (!Uri.TryCreate(ai.Endpoint, UriKind.Absolute, out Uri? endpoint)
+            || endpoint.Scheme is not ("http" or "https"))
+        {
+            return Failure("ai.endpoint_invalid", "The AI endpoint is not an absolute HTTP(S) URL.");
+        }
+
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeout.CancelAfter(TimeSpan.FromSeconds(ai.TimeoutSeconds));
         try
         {
             ChatCompletionsRequest request = new(
-                Model: options.ModelOverride ?? _options.Model,
+                Model: options.ModelOverride ?? ai.Model,
                 Messages:
                 [
                     new ChatMessage("system", prompt.System),
                     new ChatMessage("user", prompt.User)
                 ],
                 Temperature: options.Temperature,
-                MaxTokens: options.MaxTokens);
+                MaxTokens: Math.Min(options.MaxTokens, ai.MaxTokens));
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "v1/chat/completions")
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(endpoint, "v1/chat/completions"))
             {
                 Content = JsonContent.Create(request, options: JsonOptions)
             };
-            using HttpResponseMessage response = await _http.SendAsync(
-                httpRequest, HttpCompletionOption.ResponseHeadersRead, ct);
-            if (!response.IsSuccessStatusCode)
+            if (await settings.GetAiApiKeyAsync(ct) is { Length: > 0 } apiKey)
             {
-                _logger.AiProviderReturnedFailure((int)response.StatusCode);
-                return Result<AiTextCompletion>.Failure(new DomainError(
-                    ErrorType.External,
-                    "ai.provider_error",
-                    $"Provider returned HTTP {(int)response.StatusCode}."));
+                httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
             }
 
-            try
-            {
-                await response.Content.LoadIntoBufferAsync(MaxResponseBytes, ct);
-            }
-            catch (HttpRequestException)
-            {
-                return Result<AiTextCompletion>.Failure(new DomainError(
-                    ErrorType.External,
-                    "ai.response_too_large",
-                    $"Provider response exceeded {MaxResponseBytes} bytes."));
-            }
-
-            ChatCompletionsResponse? parsed;
-            try
-            {
-                parsed = await response.Content.ReadFromJsonAsync<ChatCompletionsResponse>(JsonOptions, ct);
-            }
-            catch (JsonException)
-            {
-                return Result<AiTextCompletion>.Failure(new DomainError(
-                    ErrorType.External,
-                    "ai.invalid_response",
-                    "Provider returned invalid JSON."));
-            }
-            if (parsed is null || parsed.Choices.Count == 0)
-            {
-                return Result<AiTextCompletion>.Failure(new DomainError(
-                    ErrorType.External,
-                    "ai.empty_response",
-                    "Provider returned an empty completion."));
-            }
-
-            string text = parsed.Choices[0].Message?.Content ?? string.Empty;
-            return Result<AiTextCompletion>.Success(new AiTextCompletion(
-                text, parsed.Model, parsed.Usage?.PromptTokens, parsed.Usage?.CompletionTokens));
+            using HttpResponseMessage response = await http.SendAsync(
+                httpRequest, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+            return await ReadCompletionAsync(response, timeout.Token);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            return Failure("ai.timeout", $"The AI provider did not answer within {ai.TimeoutSeconds} seconds.");
         }
         catch (HttpRequestException ex)
         {
-            _logger.AiProviderCallFailed(ex);
-            return Result<AiTextCompletion>.Failure(new DomainError(
-                ErrorType.External,
-                "ai.network_error",
-                ex.Message));
+            logger.AiProviderCallFailed(ex);
+            return Failure("ai.network_error", ex.Message);
         }
     }
 
-    // ── Wire types (OpenAI v1 /chat/completions) ─────
+    private async Task<Result<AiTextCompletion>> ReadCompletionAsync(HttpResponseMessage response, CancellationToken ct)
+    {
+        if (!response.IsSuccessStatusCode)
+        {
+            logger.AiProviderReturnedFailure((int)response.StatusCode);
+            return Failure("ai.provider_error", $"Provider returned HTTP {(int)response.StatusCode}.");
+        }
+
+        try
+        {
+            await response.Content.LoadIntoBufferAsync(MaxResponseBytes, ct);
+        }
+        catch (HttpRequestException)
+        {
+            return Failure("ai.response_too_large", $"Provider response exceeded {MaxResponseBytes} bytes.");
+        }
+
+        ChatCompletionsResponse? parsed;
+        try
+        {
+            parsed = await response.Content.ReadFromJsonAsync<ChatCompletionsResponse>(JsonOptions, ct);
+        }
+        catch (JsonException)
+        {
+            return Failure("ai.invalid_response", "Provider returned invalid JSON.");
+        }
+
+        if (parsed is null || parsed.Choices.Count == 0)
+        {
+            return Failure("ai.empty_response", "Provider returned an empty completion.");
+        }
+
+        string text = parsed.Choices[0].Message?.Content ?? string.Empty;
+        return Result<AiTextCompletion>.Success(new AiTextCompletion(
+            text, parsed.Model, parsed.Usage?.PromptTokens, parsed.Usage?.CompletionTokens));
+    }
+
+    private static Result<AiTextCompletion> Failure(string code, string message, ErrorType type = ErrorType.External) =>
+        Result<AiTextCompletion>.Failure(new DomainError(type, code, message));
 
     private sealed record ChatCompletionsRequest(string Model, IReadOnlyList<ChatMessage> Messages, double Temperature, int MaxTokens);
     private sealed record ChatMessage(string Role, string Content);

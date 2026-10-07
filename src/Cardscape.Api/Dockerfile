@@ -8,6 +8,7 @@ WORKDIR /src
 
 # Copy build configuration first so the package restore layer caches.
 COPY Directory.Build.props Directory.Packages.props global.json .editorconfig ./
+COPY src/Cardscape.Contracts/Cardscape.Contracts.csproj     src/Cardscape.Contracts/
 COPY src/Cardscape.Domain/Cardscape.Domain.csproj           src/Cardscape.Domain/
 COPY src/Cardscape.Application/Cardscape.Application.csproj src/Cardscape.Application/
 COPY src/Cardscape.Infrastructure/Cardscape.Infrastructure.csproj src/Cardscape.Infrastructure/

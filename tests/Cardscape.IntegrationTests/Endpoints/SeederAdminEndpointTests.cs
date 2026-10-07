@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Cardscape.Application.Abstractions.Settings;
+using Cardscape.Contracts.Settings;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.IntegrationTests.Fixtures;
 using Cardscape.Tests.Common.Fixtures;
@@ -104,10 +105,9 @@ public sealed class SeederAdminEndpointTests
         using HttpClient client = await CreateAdminClientAsync(disabledFactory);
 
         var settingsService = disabledFactory.Services.GetRequiredService<ISystemSettingsService>();
-        await settingsService.UpdateSettingsAsync(
-            new UpdateSystemSettingsRequest(AllowSeederExecution: true),
-            "test-admin",
-            TestContext.Current.CancellationToken);
+        SystemSettings settings = await settingsService.GetAsync(TestContext.Current.CancellationToken);
+        settings.Seeder.Enabled = true;
+        await settingsService.UpdateAsync(settings, "test-admin", TestContext.Current.CancellationToken);
 
         using HttpResponseMessage response = await client.PostAsJsonAsync(
             "api/admin/seeder/run", new { wipe = false }, TestContext.Current.CancellationToken);

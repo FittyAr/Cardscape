@@ -116,20 +116,6 @@ public sealed class AuthService(
         stateProvider.Notify();
     }
 
-    public async Task<PublicAuthConfigDto> GetPublicAuthConfigAsync(CancellationToken ct = default)
-    {
-        try
-        {
-            HttpClient http = httpClientFactory.CreateClient("Cardscape.Api");
-            return await http.GetFromJsonAsync<PublicAuthConfigDto>("api/auth/config", ct)
-                   ?? new PublicAuthConfigDto();
-        }
-        catch
-        {
-            return new PublicAuthConfigDto();
-        }
-    }
-
     private async Task<ApiResult<UserSummaryDto>> ParseAuthAsync(
         HttpResponseMessage response, CancellationToken ct)
     {

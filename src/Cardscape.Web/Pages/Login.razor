@@ -2,12 +2,14 @@
 @layout EmptyLayout
 @inherits Cardscape.Web.Shared.CultureReactiveComponentBase
 @using System.Web
+@using Cardscape.Contracts.Settings
 @using Cardscape.Web.Resources
 @using Cardscape.Web.Services
 @using Cardscape.Web.Shared
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.Extensions.Localization
 @inject AuthService Auth
+@inject InstanceSettingsState Instance
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthState
 @inject Cardscape.Web.Services.Api.SetupApiClient SetupApi
@@ -23,32 +25,7 @@
 
         @if (HasExternalProviders)
         {
-            <RadzenStack Gap="0.75rem">
-                @if (_publicConfig.Google)
-                {
-                    <RadzenButton Text="@L["AuthSignInWithGoogle"]"
-                                  Icon="account_circle"
-                                  ButtonStyle="ButtonStyle.Light"
-                                  Size="ButtonSize.Large"
-                                  Click="@(() => StartExternal("google"))" />
-                }
-                @if (_publicConfig.Microsoft)
-                {
-                    <RadzenButton Text="@L["AuthSignInWithMicrosoft"]"
-                                  Icon="account_circle"
-                                  ButtonStyle="ButtonStyle.Light"
-                                  Size="ButtonSize.Large"
-                                  Click="@(() => StartExternal("microsoft"))" />
-                }
-                @if (_publicConfig.Apple)
-                {
-                    <RadzenButton Text="@L["AuthSignInWithApple"]"
-                                  Icon="account_circle"
-                                  ButtonStyle="ButtonStyle.Light"
-                                  Size="ButtonSize.Large"
-                                  Click="@(() => StartExternal("apple"))" />
-                }
-            </RadzenStack>
+            <ExternalSignInButtons Settings="@_instance" ReturnUrl="@(string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : ReturnUrl)" />
 
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Class="rz-my-2">
                 <RadzenStack Class="rz-grow-1 rz-border-bottom" />
@@ -120,7 +97,7 @@
         </RadzenTemplateForm>
     }
 
-    @if (_publicConfig.AllowPublicRegistration)
+    @if (_instance.AllowPublicRegistration)
     {
         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" Class="rz-mt-2">
             <RadzenText Text="@L["AuthNoAccount"]" />
@@ -135,12 +112,12 @@
 @code {
     private readonly LoginModel model = new();
     private readonly TotpModel totpModel = new();
-    private PublicAuthConfigDto _publicConfig = new();
+    private PublicInstanceSettings _instance => Instance.Current;
     private bool busy;
     private string? error;
     private LoginChallenge? challenge;
 
-    private bool HasExternalProviders => _publicConfig.Google || _publicConfig.Microsoft || _publicConfig.Apple;
+    private bool HasExternalProviders => _instance.Google || _instance.Microsoft || _instance.Apple;
 
     [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
 
@@ -160,26 +137,13 @@
             // Ignore error and proceed to login
         }
 
-        try
-        {
-            _publicConfig = await Auth.GetPublicAuthConfigAsync();
-        }
-        catch
-        {
-            _publicConfig = new PublicAuthConfigDto();
-        }
+        await Instance.GetAsync();
 
         AuthenticationState state = await AuthState.GetAuthenticationStateAsync();
         if (state.User.Identity?.IsAuthenticated == true)
         {
             NavigateHome();
         }
-    }
-
-    private void StartExternal(string provider)
-    {
-        var returnUrl = string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : Uri.EscapeDataString(ReturnUrl);
-        Nav.NavigateTo($"/api/auth/external/{provider}/start?returnUrl={returnUrl}", forceLoad: true);
     }
 
     private async Task HandleSubmitAsync()

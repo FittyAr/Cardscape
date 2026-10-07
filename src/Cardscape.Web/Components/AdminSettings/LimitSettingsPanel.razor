@@ -1,0 +1,41 @@
+@* Quotas enforced by the API when content is created. *@
+
+<SettingsCard Title="@L["SettingsLimitsTitle"]" Description="@L["SettingsLimitsDescription"]">
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenFormField Text="@L["SettingsMaxWorkspacesPerUser"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenNumeric TValue="int" Name="MaxWorkspacesPerUser" @bind-Value="Model.MaxWorkspacesPerUser" Min="0" Max="1000" />
+                </ChildContent>
+                <Helper>
+                    <RadzenDataAnnotationValidator Component="MaxWorkspacesPerUser" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenFormField Text="@L["SettingsMaxBoardsPerWorkspace"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenNumeric TValue="int" Name="MaxBoardsPerWorkspace" @bind-Value="Model.MaxBoardsPerWorkspace" Min="0" Max="10000" />
+                </ChildContent>
+                <Helper>
+                    <RadzenDataAnnotationValidator Component="MaxBoardsPerWorkspace" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenFormField Text="@L["SettingsInvitationLifetimeDays"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenNumeric TValue="int" Name="InvitationLifetimeDays" @bind-Value="Model.InvitationLifetimeDays" Min="1" Max="90" />
+                </ChildContent>
+                <Helper>
+                    <RadzenDataAnnotationValidator Component="InvitationLifetimeDays" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenText Text="@L["SettingsZeroMeansUnlimited"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-m-0" />
+</SettingsCard>
+
+@code {
+    [Parameter, EditorRequired] public LimitSettings Model { get; set; } = default!;
+}

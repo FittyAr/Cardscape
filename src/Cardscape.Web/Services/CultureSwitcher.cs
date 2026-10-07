@@ -181,6 +181,7 @@ public sealed class CultureSwitcher
     private const string DefaultCulture = "en";
 
     private readonly HttpClient _http;
+    private readonly InstanceSettingsState _instance;
     private readonly IJSRuntime _js;
     private readonly ILogger<CultureSwitcher> _logger;
     private readonly Dictionary<string, IReadOnlyDictionary<string, string>> _translationsByCulture = new(StringComparer.OrdinalIgnoreCase);
@@ -189,9 +190,11 @@ public sealed class CultureSwitcher
 
     public CultureSwitcher(
         IHttpClientFactory httpClientFactory,
+        InstanceSettingsState instance,
         IJSRuntime js,
         ILogger<CultureSwitcher> logger)
     {
+        _instance = instance;
         // The default HttpClient in Blazor WASM has no base address,
         // so a relative URL like `Resources/SharedResource.en.resx`
         // throws `net_http_client_invalid_requesturi` and the page
@@ -226,14 +229,16 @@ public sealed class CultureSwitcher
         }
         _initialized = true;
 
-        // No saved choice → follow the browser language when we
-        // ship it. Without this the picker said "English" while
-        // the resource fallback (which follows the browser's UI
-        // culture) rendered Spanish.
+        // No saved choice → the administrator's default language
+        // (System settings → General); if the instance settings are
+        // unreachable, follow the browser language when we ship it.
         string browserLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-        string saved = AvailableCultures.Contains(browserLanguage, StringComparer.OrdinalIgnoreCase)
-            ? browserLanguage
-            : DefaultCulture;
+        string instanceLanguage = (await _instance.GetAsync()).DefaultLanguage;
+        string saved = AvailableCultures.Contains(instanceLanguage, StringComparer.OrdinalIgnoreCase)
+            ? instanceLanguage
+            : AvailableCultures.Contains(browserLanguage, StringComparer.OrdinalIgnoreCase)
+                ? browserLanguage
+                : DefaultCulture;
         try
         {
             string? fromStorage = await _js.InvokeAsync<string?>("localStorage.getItem", StorageKey);

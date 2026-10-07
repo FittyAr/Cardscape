@@ -5,7 +5,7 @@
 @using Cardscape.Web.Services.Api
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> L
-@inject NavigationManager Nav
+@inject Cardscape.Web.Services.InstanceSettingsState Instance
 
 <PageTitle>@L["ExternalLoginsTitle"] @L["PageTitleSuffix"]</PageTitle>
 
@@ -16,14 +16,20 @@
         <RadzenStack Gap="0.5rem">
             <RadzenText Text="@L["ExternalLoginsLinkAnother"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
             <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["ExternalLoginsLinkAnotherBlurb"]</RadzenText>
-            <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" Class="rz-mt-2">
-                <RadzenButton Text="@L["AuthSignInWithGoogle"]" ButtonStyle="ButtonStyle.Light" Icon="mail"
-                              Click="@(() => Nav.NavigateTo("/api/auth/external/google/start?returnUrl=/settings/external-logins", forceLoad: true))" />
-                <RadzenButton Text="@L["AuthSignInWithMicrosoft"]" ButtonStyle="ButtonStyle.Light" Icon="desktop_windows"
-                              Click="@(() => Nav.NavigateTo("/api/auth/external/microsoft/start?returnUrl=/settings/external-logins", forceLoad: true))" />
-                <RadzenButton Text="@L["AuthSignInWithApple"]" ButtonStyle="ButtonStyle.Light" Icon="phone_iphone"
-                              Click="@(() => Nav.NavigateTo("/api/auth/external/apple/start?returnUrl=/settings/external-logins", forceLoad: true))" />
-            </RadzenStack>
+            @if (_instance is not null)
+            {
+                <ExternalSignInButtons Settings="@_instance" ReturnUrl="/settings/external-logins" Size="ButtonSize.Medium">
+                    <EmptyContent>
+                        <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" AllowClose="false">@L["ExternalLoginsNoneAvailable"]</RadzenAlert>
+                    </EmptyContent>
+                </ExternalSignInButtons>
+            }
         </RadzenStack>
     </RadzenCard>
 </RadzenStack>
+
+@code {
+    private Cardscape.Contracts.Settings.PublicInstanceSettings? _instance;
+
+    protected override async Task OnInitializedAsync() => _instance = await Instance.GetAsync();
+}

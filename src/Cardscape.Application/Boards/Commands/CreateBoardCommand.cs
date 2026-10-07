@@ -1,8 +1,10 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Application.Boards.DTOs;
 using Cardscape.Application.Boards.Mapping;
+using Cardscape.Application.Settings;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
@@ -25,6 +27,7 @@ public static class CreateBoardCommandHandler
         CreateBoardCommand command,
         IBoardRepository boards,
         IRepository<WorkspaceEntity, WorkspaceId> workspaces,
+        ISystemSettingsService settings,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -67,6 +70,13 @@ public static class CreateBoardCommandHandler
             return Result.Failure<BoardDto>(DomainError.Validation(
                 "boards.visibility_invalid",
                 $"Visibility must be one of: {string.Join(", ", Enum.GetNames<BoardVisibility>())}."));
+        }
+
+        int existingBoards = (await boards.ListForWorkspaceAsync(new WorkspaceId(command.WorkspaceId), cancellationToken)).Count;
+        Result quota = (await settings.GetAsync(cancellationToken)).Limits.EnsureCanAddBoard(existingBoards);
+        if (quota.IsFailure)
+        {
+            return Result.Failure<BoardDto>(quota.Error);
         }
 
         var boardResult = BoardEntity.Create(

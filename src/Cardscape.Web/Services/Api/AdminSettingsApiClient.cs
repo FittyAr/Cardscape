@@ -1,41 +1,44 @@
 using System.Net.Http.Json;
-using Cardscape.Web.Shared;
+using Cardscape.Contracts.Settings;
 
 namespace Cardscape.Web.Services.Api;
 
-public sealed class AdminSettingsApiClient(IHttpClientFactory httpClientFactory) : ApiClientBase(httpClientFactory)
+/// <summary>Client for <c>/api/admin/settings</c> (administrators only).</summary>
+public interface IAdminSettingsApiClient
 {
-    public async Task<ApiResult<SystemSettingsDto>> GetSettingsAsync(CancellationToken ct = default)
-    {
-        HttpResponseMessage res = await CreateClient().GetAsync("api/admin/settings", ct);
-        return await ReadAsync<SystemSettingsDto>(res, ct);
-    }
+    Task<ApiResult<SystemSettings>> GetAsync(CancellationToken ct = default);
 
-    public async Task<ApiResult<SystemSettingsDto>> UpdateSettingsAsync(
-        UpdateSystemSettingsRequestDto request, CancellationToken ct = default)
-    {
-        HttpResponseMessage res = await CreateClient().PutAsJsonAsync(
-            "api/admin/settings", request, JsonOptions, ct);
-        return await ReadAsync<SystemSettingsDto>(res, ct);
-    }
+    Task<ApiResult<SystemSettings>> UpdateAsync(SystemSettings settings, CancellationToken ct = default);
 
-    public async Task<ApiResult<SystemSettingsDto>> ResetSettingsAsync(CancellationToken ct = default)
-    {
-        HttpResponseMessage res = await CreateClient().PostAsync("api/admin/settings/reset", null, ct);
-        return await ReadAsync<SystemSettingsDto>(res, ct);
-    }
+    Task<ApiResult<SystemSettings>> ResetAsync(CancellationToken ct = default);
 
-    public async Task<ApiResult<TestEmailResponseDto>> TestEmailAsync(
-        TestEmailRequestDto request, CancellationToken ct = default)
-    {
-        HttpResponseMessage res = await CreateClient().PostAsJsonAsync(
-            "api/admin/settings/test-email", request, JsonOptions, ct);
-        return await ReadAsync<TestEmailResponseDto>(res, ct);
-    }
+    Task<ApiResult<IReadOnlyList<RuntimeConfigurationEntry>>> GetRuntimeConfigurationAsync(CancellationToken ct = default);
 
-    public async Task<ApiResult<TestAiResponseDto>> TestAiAsync(CancellationToken ct = default)
-    {
-        HttpResponseMessage res = await CreateClient().PostAsync("api/admin/settings/test-ai", null, ct);
-        return await ReadAsync<TestAiResponseDto>(res, ct);
-    }
+    Task<ApiResult<SystemDiagnostics>> GetDiagnosticsAsync(CancellationToken ct = default);
+
+    Task<ApiResult<AiConnectionTestResult>> TestAiAsync(CancellationToken ct = default);
+}
+
+public sealed class AdminSettingsApiClient(IHttpClientFactory httpClientFactory)
+    : ApiClientBase(httpClientFactory), IAdminSettingsApiClient
+{
+    private const string Route = "api/admin/settings";
+
+    public async Task<ApiResult<SystemSettings>> GetAsync(CancellationToken ct = default) =>
+        await ReadAsync<SystemSettings>(await CreateClient().GetAsync(Route, ct), ct);
+
+    public async Task<ApiResult<SystemSettings>> UpdateAsync(SystemSettings settings, CancellationToken ct = default) =>
+        await ReadAsync<SystemSettings>(await CreateClient().PutAsJsonAsync(Route, settings, JsonOptions, ct), ct);
+
+    public async Task<ApiResult<SystemSettings>> ResetAsync(CancellationToken ct = default) =>
+        await ReadAsync<SystemSettings>(await CreateClient().PostAsync($"{Route}/reset", null, ct), ct);
+
+    public async Task<ApiResult<IReadOnlyList<RuntimeConfigurationEntry>>> GetRuntimeConfigurationAsync(CancellationToken ct = default) =>
+        await ReadAsync<IReadOnlyList<RuntimeConfigurationEntry>>(await CreateClient().GetAsync($"{Route}/runtime", ct), ct);
+
+    public async Task<ApiResult<SystemDiagnostics>> GetDiagnosticsAsync(CancellationToken ct = default) =>
+        await ReadAsync<SystemDiagnostics>(await CreateClient().GetAsync($"{Route}/diagnostics", ct), ct);
+
+    public async Task<ApiResult<AiConnectionTestResult>> TestAiAsync(CancellationToken ct = default) =>
+        await ReadAsync<AiConnectionTestResult>(await CreateClient().PostAsync($"{Route}/test-ai", null, ct), ct);
 }

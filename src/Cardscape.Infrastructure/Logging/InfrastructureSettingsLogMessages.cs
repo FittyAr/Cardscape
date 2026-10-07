@@ -13,9 +13,9 @@ internal static partial class InfrastructureSettingsLogMessages
     [LoggerMessage(EventId = 2302, Level = LogLevel.Information, Message = "System settings reset to defaults by {ResetBy}")]
     public static partial void SettingsReset(ILogger logger, string resetBy);
 
-    [LoggerMessage(EventId = 2303, Level = LogLevel.Information, Message = "AI connection test executed. Success: {Success}")]
-    public static partial void AiTestExecuted(ILogger logger, bool success);
+    [LoggerMessage(EventId = 2305, Level = LogLevel.Information, Message = "Migrated legacy system settings file {Path} to schema version {Version}")]
+    public static partial void LegacySettingsMigrated(ILogger logger, string path, int version);
 
-    [LoggerMessage(EventId = 2304, Level = LogLevel.Information, Message = "Email test executed to {TargetEmail}. Success: {Success}")]
-    public static partial void EmailTestExecuted(ILogger logger, string targetEmail, bool success);
+    [LoggerMessage(EventId = 2306, Level = LogLevel.Warning, Message = "Stored AI API key could not be decrypted (data-protection keys changed?); it must be entered again.")]
+    public static partial void AiApiKeyUnreadable(ILogger logger, Exception ex);
 }

@@ -1,0 +1,72 @@
+@* Branding and the defaults new visitors and users start with. *@
+
+<RadzenStack Gap="1rem">
+    <SettingsCard Title="@L["SettingsBrandingTitle"]" Description="@L["SettingsBrandingDescription"]">
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenFormField Text="@L["SettingsInstanceTitle"]" Style="width: 100%;">
+                    <ChildContent>
+                        <RadzenTextBox Name="InstanceTitle" @bind-Value="Model.InstanceTitle" MaxLength="80" />
+                    </ChildContent>
+                    <Helper>
+                        <RadzenDataAnnotationValidator Component="InstanceTitle" />
+                    </Helper>
+                </RadzenFormField>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenFormField Text="@L["SettingsSupportEmail"]" Style="width: 100%;">
+                    <ChildContent>
+                        <RadzenTextBox Name="SupportEmail" @bind-Value="Model.SupportEmail" MaxLength="254" />
+                    </ChildContent>
+                    <Helper>
+                        <RadzenDataAnnotationValidator Component="SupportEmail" />
+                    </Helper>
+                </RadzenFormField>
+            </RadzenColumn>
+            <RadzenColumn Size="12">
+                <RadzenFormField Text="@L["SettingsLogoUrl"]" Style="width: 100%;">
+                    <ChildContent>
+                        <RadzenTextBox Name="LogoUrl" @bind-Value="Model.LogoUrl" MaxLength="2048" Placeholder="https://" />
+                    </ChildContent>
+                    <Helper>
+                        <RadzenDataAnnotationValidator Component="LogoUrl" />
+                    </Helper>
+                </RadzenFormField>
+            </RadzenColumn>
+            <RadzenColumn Size="12">
+                <RadzenFormField Text="@L["SettingsWelcomeMessage"]" Style="width: 100%;">
+                    <ChildContent>
+                        <RadzenTextArea Name="WelcomeMessage" @bind-Value="Model.WelcomeMessage" MaxLength="280" Rows="2" />
+                    </ChildContent>
+                    <Helper>
+                        <RadzenText Text="@L["SettingsWelcomeMessageHelp"]" TextStyle="TextStyle.Caption" class="rz-m-0" />
+                    </Helper>
+                </RadzenFormField>
+            </RadzenColumn>
+        </RadzenRow>
+    </SettingsCard>
+
+    <SettingsCard Title="@L["SettingsDefaultsTitle"]" Description="@L["SettingsDefaultsDescription"]">
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenFormField Text="@L["SettingsDefaultLanguage"]" Style="width: 100%;">
+                    <RadzenDropDown Name="DefaultLanguage" @bind-Value="Model.DefaultLanguage" Data="@Languages"
+                                    TextProperty="Label" ValueProperty="Code" />
+                </RadzenFormField>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenFormField Text="@L["SettingsDefaultTheme"]" Style="width: 100%;">
+                    <RadzenDropDown Name="DefaultTheme" @bind-Value="Model.DefaultTheme" Data="@ThemeNames.All" />
+                </RadzenFormField>
+            </RadzenColumn>
+        </RadzenRow>
+    </SettingsCard>
+</RadzenStack>
+
+@code {
+    private static readonly Language[] Languages = [new("es", "Español"), new("en", "English")];
+
+    [Parameter, EditorRequired] public GeneralSettings Model { get; set; } = default!;
+
+    private sealed record Language(string Code, string Label);
+}

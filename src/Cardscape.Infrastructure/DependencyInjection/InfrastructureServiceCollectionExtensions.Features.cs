@@ -46,10 +46,12 @@ public static partial class InfrastructureServiceCollectionExtensions
                 "Ai:Endpoint must be an absolute HTTP or HTTPS URL.");
         }
 
+        // Endpoint, key and timeout are read from the admin AI settings on
+        // every call (see OpenAiCompatibleAiService); Ai:Endpoint above only
+        // seeds their defaults. The per-call timeout is enforced there.
         services.AddHttpClient<IAiService, OpenAiCompatibleAiService>(client =>
         {
-            client.BaseAddress = endpointUri;
-            client.Timeout = TimeSpan.FromSeconds(60);
+            client.Timeout = TimeSpan.FromMinutes(5);
         }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
         {
             AllowAutoRedirect = false

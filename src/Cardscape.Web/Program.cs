@@ -221,7 +221,12 @@ builder.Services.AddScoped<ISearchApiClient, SearchApiClient>();
 builder.Services.AddScoped<IAttachmentsApiClient, AttachmentsApiClient>();
 
 builder.Services.AddScoped<SetupApiClient>();
-builder.Services.AddScoped<AdminSettingsApiClient>();
+builder.Services.AddScoped<IAdminSettingsApiClient, AdminSettingsApiClient>();
+// Transient: one editing session per page instance. The layout can remount
+// the page (culture change); a shared editor would let an older load replace
+// the draft the visible form is bound to.
+builder.Services.AddTransient<Cardscape.Web.Components.AdminSettings.AdminSettingsEditor>();
+builder.Services.AddSingleton<InstanceSettingsState>();
 
 // ── Real-time (SignalR client) ──────────────────────────────
 builder.Services.AddScoped<BoardHubClient>();

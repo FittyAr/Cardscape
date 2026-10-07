@@ -1,242 +1,105 @@
 @page "/admin/settings"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
 @inherits Cardscape.Web.Shared.CultureReactiveComponentBase
-@using System.Text.Json
+@using Cardscape.Contracts.Settings
 @using Cardscape.Web.Resources
-@using Cardscape.Web.Services.Api
-@using Cardscape.Web.Shared
-@using Cardscape.Web.Components.AdminSettings
 @using Microsoft.Extensions.Localization
-@inject AdminSettingsApiClient SettingsApi
+@inject AdminSettingsEditor Editor
 @inject NotificationService Notify
 @inject DialogService Dialogs
-@inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Configuración Integral del Sistema @L["PageTitleSuffix"]</PageTitle>
+<PageTitle>@L["NavSystemSettings"] @L["PageTitleSuffix"]</PageTitle>
 
-<RadzenStack Gap="1.5rem" Class="rz-mx-auto" Style="max-width: 85rem;">
-    <RadzenRow AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Class="rz-mb-2">
-        <RadzenColumn Size="12" SizeMD="7">
-            <PageHeader Title="Panel de Configuración del Sistema"
-                        Subtitle="Administración modular y centralizada de todos los subsistemas, políticas, integraciones y recursos de Cardscape." />
-        </RadzenColumn>
-        <RadzenColumn Size="12" SizeMD="5">
-            <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.End" Gap="0.75rem" Wrap="@FlexWrap.Wrap">
-                <RadzenButton Icon="file_download" Text="Exportar JSON" ButtonStyle="@ButtonStyle.Light"
-                              Size="@ButtonSize.Medium" Click="@ExportJsonAsync" Disabled="@(_loading || _saving || _settings is null)" />
-                <RadzenButton Icon="restart_alt" Text="Restablecer" ButtonStyle="@ButtonStyle.Danger"
-                              Variant="@Variant.Outlined" Size="@ButtonSize.Medium" Click="@ConfirmResetAsync"
-                              Disabled="@(_loading || _saving || _settings is null)" />
-                <RadzenButton Icon="save" Text="@(_saving ? "Guardando..." : "Guardar Cambios")"
-                              ButtonStyle="@ButtonStyle.Primary" Size="@ButtonSize.Medium" Click="@SaveSettingsAsync"
-                              IsBusy="@_saving" Disabled="@(_loading || _saving || _settings is null)" />
-            </RadzenStack>
-        </RadzenColumn>
-    </RadzenRow>
+<PageHeader Title="@L["NavSystemSettings"]" Subtitle="@L["SettingsSubtitle"]" />
 
-    @if (_loading)
-    {
-        <RadzenCard>
-            <RadzenStack AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.Center" Class="rz-p-6">
-                <RadzenProgressBarCircular ShowValue="false" Mode="@ProgressBarMode.Indeterminate" Size="@ProgressBarCircularSize.Medium" />
-                <RadzenText Text="Cargando configuración integral..." TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary rz-mt-2" />
-            </RadzenStack>
-        </RadzenCard>
-    }
-    else if (_settings is not null)
-    {
-        @if (!string.IsNullOrEmpty(_error))
-        {
-            <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" Shade="@Shade.Lighter" AllowClose="true" Close="@(() => _error = null)">
-                @_error
-            </RadzenAlert>
-        }
+@if (_loadError is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_loadError</RadzenAlert>
+}
+else if (Editor.Draft is not { } draft)
+{
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    <RadzenTemplateForm TItem="SystemSettings" Data="@draft" Submit="@SaveAsync">
+        <FormChangeListener Changed="@StateHasChanged" />
+        <RadzenStack Gap="1rem">
+            <RadzenTabs RenderMode="TabRenderMode.Client">
+                <Tabs>
+                    <RadzenTabsItem Text="@L["SettingsTabGeneral"]" Icon="tune">
+                        <GeneralSettingsPanel Model="@draft.General" />
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="@L["SettingsTabAccess"]" Icon="login">
+                        <AccessSettingsPanel Model="@draft.Access" />
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="@L["SettingsTabNotices"]" Icon="campaign">
+                        <NoticeSettingsPanel Model="@draft.Notices" />
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="@L["SettingsTabLimits"]" Icon="speed">
+                        <LimitSettingsPanel Model="@draft.Limits" />
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="@L["SettingsTabAi"]" Icon="auto_awesome">
+                        <AiSettingsPanel Model="@draft.Ai" HasUnsavedChanges="@Editor.HasChanges" />
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="@L["SettingsTabSeeder"]" Icon="database">
+                        <SeederSettingsPanel Model="@draft.Seeder" />
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="@L["SettingsTabSystem"]" Icon="monitor_heart">
+                        <SystemInfoPanel />
+                    </RadzenTabsItem>
+                </Tabs>
+            </RadzenTabs>
 
-        <RadzenTabs RenderMode="@TabRenderMode.Client">
-            <Tabs>
-                @* 1. General *@
-                <RadzenTabsItem Text="General" Icon="tune">
-                    <GeneralSettingsSection Model="_model" />
-                </RadzenTabsItem>
-
-                @* 2. Seguridad *@
-                <RadzenTabsItem Text="Seguridad" Icon="security">
-                    <SecuritySettingsSection Model="_model" />
-                </RadzenTabsItem>
-
-                @* 3. Productividad *@
-                <RadzenTabsItem Text="Productividad" Icon="dashboard">
-                    <ProductivitySettingsSection Model="_model" />
-                </RadzenTabsItem>
-
-                @* 4. Colaboración *@
-                <RadzenTabsItem Text="Colaboración" Icon="group">
-                    <CollaborationSettingsSection Model="_model" />
-                </RadzenTabsItem>
-
-                @* 5. Integraciones *@
-                <RadzenTabsItem Text="Integraciones" Icon="hub">
-                    <IntegrationsSettingsSection Model="_model" />
-                </RadzenTabsItem>
-
-                @* 6. Sistema *@
-                <RadzenTabsItem Text="Sistema" Icon="settings">
-                    <SystemSettingsSection Model="_model" Settings="_settings" />
-                </RadzenTabsItem>
-            </Tabs>
-        </RadzenTabs>
-
-        <RadzenCard Class="rz-p-3 rz-mt-2">
-            <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.End" Gap="1rem" AlignItems="@AlignItems.Center">
-                <RadzenText Text="Guarde los cambios para aplicarlos globalmente en la plataforma." TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
-                <RadzenButton Icon="restart_alt" Text="Restablecer" ButtonStyle="@ButtonStyle.Danger"
-                              Variant="@Variant.Outlined" Size="@ButtonSize.Medium" Click="@ConfirmResetAsync"
-                              Disabled="@_saving" />
-                <RadzenButton Icon="save" Text="@(_saving ? "Guardando..." : "Guardar Todos los Cambios")"
-                              ButtonStyle="@ButtonStyle.Primary" Size="@ButtonSize.Medium" Click="@SaveSettingsAsync"
-                              IsBusy="@_saving" Disabled="@_saving" />
-            </RadzenStack>
-        </RadzenCard>
-    }
-    else
-    {
-        <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" Shade="@Shade.Lighter">
-            No se pudo obtener la configuración del sistema. Revise que la API se encuentre operativa.
-            @if (!string.IsNullOrEmpty(_error))
-            {
-                <div class="rz-mt-2 font-mono text-sm">@_error</div>
-            }
-        </RadzenAlert>
-    }
-</RadzenStack>
+            <RadzenCard Variant="Variant.Outlined" class="cs-settings-actions rz-p-3">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"
+                             AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                    <RadzenText Text="@(Editor.HasChanges ? L["SettingsUnsavedChanges"] : L["SettingsAllSaved"])"
+                                TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-m-0 rz-me-auto" />
+                    <RadzenButton Text="@L["SettingsResetDefaults"]" Icon="restart_alt" ButtonStyle="ButtonStyle.Danger"
+                                  Variant="Variant.Text" Click="@ResetAsync" Disabled="@_busy" />
+                    <RadzenButton Text="@L["SettingsDiscard"]" Icon="undo" ButtonStyle="ButtonStyle.Light"
+                                  Click="@Editor.Discard" Disabled="@(_busy || !Editor.HasChanges)" />
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="@L["SettingsSave"]" Icon="save"
+                                  ButtonStyle="ButtonStyle.Primary" IsBusy="@_busy" Disabled="@(!Editor.HasChanges)" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenStack>
+    </RadzenTemplateForm>
+}
 
 @code {
-    private bool _loading = true;
-    private bool _saving = false;
-    private string? _error;
-    private SystemSettingsDto? _settings;
-    private SettingsFormModel _model = new();
+    private string? _loadError;
+    private bool _busy;
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadSettingsAsync();
-    }
+    protected override async Task OnInitializedAsync() => _loadError = await Editor.LoadAsync();
 
-    private async Task LoadSettingsAsync()
-    {
-        _loading = true;
-        _error = null;
-        try
-        {
-            ApiResult<SystemSettingsDto> result = await SettingsApi.GetSettingsAsync();
-            if (result.IsSuccess && result.Value is not null)
-            {
-                _settings = result.Value;
-                _model.ApplyDto(_settings);
-            }
-            else
-            {
-                _error = result.Error ?? "Error al cargar la configuración.";
-            }
-        }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
-        }
-        finally
-        {
-            _loading = false;
-        }
-    }
+    private Task SaveAsync() => RunAsync(Editor.SaveAsync, L["SettingsSaved"]);
 
-    private async Task SaveSettingsAsync()
-    {
-        _saving = true;
-        _error = null;
-
-        try
-        {
-            UpdateSystemSettingsRequestDto req = _model.ToUpdateRequest();
-            ApiResult<SystemSettingsDto> result = await SettingsApi.UpdateSettingsAsync(req);
-            if (result.IsSuccess && result.Value is not null)
-            {
-                _settings = result.Value;
-                _model.ApplyDto(_settings);
-                Notify.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Success,
-                    Summary = "Configuración Actualizada",
-                    Detail = "Todos los parámetros del sistema han sido guardados con éxito.",
-                    Duration = 4000
-                });
-            }
-            else
-            {
-                _error = result.Error ?? "Error al actualizar la configuración.";
-                Notify.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error al Guardar",
-                    Detail = _error,
-                    Duration = 5000
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
-    }
-
-    private async Task ConfirmResetAsync()
+    private async Task ResetAsync()
     {
         bool? confirmed = await Dialogs.Confirm(
-            "¿Estás seguro de que deseas restablecer todos los parámetros del sistema a los valores de fábrica?",
-            "Restablecer Configuración",
-            new ConfirmOptions { OkButtonText = "Sí, Restablecer", CancelButtonText = "Cancelar" });
-
+            L["SettingsResetConfirm"], L["SettingsResetDefaults"],
+            new ConfirmOptions { OkButtonText = L["SettingsResetDefaults"], CancelButtonText = L["CommonCancel"] });
         if (confirmed == true)
         {
-            try
-            {
-                ApiResult<SystemSettingsDto> result = await SettingsApi.ResetSettingsAsync();
-                if (result.IsSuccess && result.Value is not null)
-                {
-                    _settings = result.Value;
-                    _model.ApplyDto(_settings);
-                    Notify.Notify(new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Success,
-                        Summary = "Valores de Fábrica Restaurados",
-                        Detail = "La configuración ha sido restablecida a sus parámetros predeterminados.",
-                        Duration = 4000
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                Notify.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error al Restablecer",
-                    Detail = ex.Message,
-                    Duration = 5000
-                });
-            }
+            await RunAsync(Editor.ResetToDefaultsAsync, L["SettingsResetDone"]);
         }
     }
 
-    private async Task ExportJsonAsync()
+    private async Task RunAsync(Func<Task<string?>> operation, string successMessage)
     {
-        if (_settings is null) return;
-        string json = JsonSerializer.Serialize(_settings, new JsonSerializerOptions { WriteIndented = true });
-        string bytesBase64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
-        string url = $"data:application/json;base64,{bytesBase64}";
-        await JS.InvokeVoidAsync("open", url, "_blank");
+        _busy = true;
+        string? error = await operation();
+        _busy = false;
+        if (error is null)
+        {
+            Notify.Notify(NotificationSeverity.Success, successMessage);
+        }
+        else
+        {
+            Notify.Notify(NotificationSeverity.Error, L["SettingsSaveFailed"], error, duration: 8000);
+        }
     }
 }

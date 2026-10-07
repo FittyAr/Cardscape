@@ -59,6 +59,12 @@ public static partial class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
 
+        // Instance settings at the HTTP edge (public config, sign-in
+        // availability) plus the admin-only runtime report and diagnostics.
+        services.AddScoped<Cardscape.Api.Settings.InstanceSettingsProvider>();
+        services.AddSingleton<Cardscape.Api.Settings.RuntimeConfigurationReport>();
+        services.AddScoped<Cardscape.Api.Settings.SystemDiagnosticsProbe>();
+
         // CORS for the Blazor WASM client. The client
         // (http(s)://localhost:5206 / 7188 in dev) needs to be
         // allowed to call this API with credentials. In

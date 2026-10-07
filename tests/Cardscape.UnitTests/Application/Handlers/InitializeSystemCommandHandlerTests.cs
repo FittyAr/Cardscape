@@ -1,9 +1,7 @@
-using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Application.Setup.Commands;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Cardscape.Tests.Common.Fakes;
-using Moq;
 
 namespace Cardscape.UnitTests.Application.Handlers;
 
@@ -15,7 +13,7 @@ public class InitializeSystemCommandHandlerTests
         var ctx = new HandlersTestContext();
         await ctx.SeedUserAsync(email: "existing@example.com", password: "Password123!");
 
-        var mockSettings = new Mock<ISystemSettingsService>();
+        var settings = new InMemorySystemSettingsService();
         var command = new InitializeSystemCommand(
             "Admin User", "admin@cardscape.test", "AdminPassword123!", "Cardscape", "Default");
 
@@ -27,7 +25,7 @@ public class InitializeSystemCommandHandlerTests
             ctx.UnitOfWork,
             ctx.Tokens,
             ctx.Clock,
-            mockSettings.Object,
+            settings,
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -40,9 +38,7 @@ public class InitializeSystemCommandHandlerTests
     public async Task Handle_OnCleanDatabase_CreatesAdminUserAndDefaultWorkspace()
     {
         var ctx = new HandlersTestContext();
-        var mockSettings = new Mock<ISystemSettingsService>();
-        mockSettings.Setup(s => s.UpdateSettingsAsync(It.IsAny<UpdateSystemSettingsRequest>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new SystemSettingsDto(InstanceTitle: "Cardscape Test", AllowPublicRegistration: true, DefaultLanguage: "es", JwtAccessTokenMinutes: 60, DatabaseProvider: "Sqlite", Environment: "Test", StorageRoot: "Storage", AppVersion: "1.2.0"));
+        var settings = new InMemorySystemSettingsService();
 
         var command = new InitializeSystemCommand(
             "Admin User", "admin@cardscape.test", "AdminPassword123!", "Cardscape Test", "Equipo Alpha");
@@ -55,7 +51,7 @@ public class InitializeSystemCommandHandlerTests
             ctx.UnitOfWork,
             ctx.Tokens,
             ctx.Clock,
-            mockSettings.Object,
+            settings,
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -71,6 +67,8 @@ public class InitializeSystemCommandHandlerTests
 
         result.Value.AccessToken.Should().NotBeNullOrEmpty();
         result.Value.User.Email.Should().Be("admin@cardscape.test");
+        (await settings.GetAsync(TestContext.Current.CancellationToken)).General.InstanceTitle.Should().Be("Cardscape Test",
+            "setup names the instance and leaves every other setting untouched");
     }
 
     [Theory]
@@ -79,7 +77,7 @@ public class InitializeSystemCommandHandlerTests
     public async Task Handle_WithInvalidPassword_ReturnsValidationFailure(string password)
     {
         var ctx = new HandlersTestContext();
-        var mockSettings = new Mock<ISystemSettingsService>();
+        var settings = new InMemorySystemSettingsService();
 
         var command = new InitializeSystemCommand(
             "Admin User", "admin@cardscape.test", password, "Cardscape", "Default");
@@ -92,7 +90,7 @@ public class InitializeSystemCommandHandlerTests
             ctx.UnitOfWork,
             ctx.Tokens,
             ctx.Clock,
-            mockSettings.Object,
+            settings,
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();

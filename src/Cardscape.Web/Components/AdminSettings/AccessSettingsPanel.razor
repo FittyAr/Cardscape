@@ -1,0 +1,22 @@
+@* Who may sign up, and which external sign-in options are offered.
+   A provider only appears on the login page when it is enabled here AND
+   its credentials are configured on the server (see the System tab). *@
+
+<RadzenStack Gap="1rem">
+    <SettingsCard Title="@L["SettingsRegistrationTitle"]">
+        <SettingToggle Name="AllowPublicRegistration" @bind-Value="Model.AllowPublicRegistration"
+                       Label="@L["SettingsAllowPublicRegistration"]" Help="@L["SettingsAllowPublicRegistrationHelp"]" />
+    </SettingsCard>
+
+    <SettingsCard Title="@L["SettingsSignInProvidersTitle"]" Description="@L["SettingsSignInProvidersDescription"]">
+        <SettingToggle Name="GoogleSignInEnabled" @bind-Value="Model.GoogleSignInEnabled" Label="Google" />
+        <SettingToggle Name="MicrosoftSignInEnabled" @bind-Value="Model.MicrosoftSignInEnabled" Label="Microsoft" />
+        <SettingToggle Name="AppleSignInEnabled" @bind-Value="Model.AppleSignInEnabled" Label="Apple" />
+        <SettingToggle Name="SamlSignInEnabled" @bind-Value="Model.SamlSignInEnabled" Label="SAML SSO"
+                       Help="@L["SettingsSamlHelp"]" />
+    </SettingsCard>
+</RadzenStack>
+
+@code {
+    [Parameter, EditorRequired] public AccessSettings Model { get; set; } = default!;
+}

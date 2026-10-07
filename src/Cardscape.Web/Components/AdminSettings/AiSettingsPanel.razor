@@ -1,0 +1,107 @@
+@using Cardscape.Web.Services.Api
+@inject IAdminSettingsApiClient Api
+
+@* The OpenAI-compatible endpoint behind the card assistant (descriptions,
+   checklists, thread summaries, owner suggestions). *@
+
+<SettingsCard Title="@L["SettingsAiTitle"]" Description="@L["SettingsAiDescription"]">
+    <SettingToggle Name="AiEnabled" @bind-Value="Model.Enabled" Label="@L["SettingsAiEnabled"]" Help="@L["SettingsAiEnabledHelp"]" />
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeMD="8">
+            <RadzenFormField Text="@L["SettingsAiEndpoint"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenTextBox Name="Endpoint" @bind-Value="Model.Endpoint" MaxLength="2048" Disabled="@(!Model.Enabled)" />
+                </ChildContent>
+                <Helper>
+                    <RadzenDataAnnotationValidator Component="Endpoint" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenFormField Text="@L["SettingsAiModel"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenTextBox Name="Model" @bind-Value="Model.Model" MaxLength="200" Disabled="@(!Model.Enabled)" />
+                </ChildContent>
+                <Helper>
+                    <RadzenDataAnnotationValidator Component="Model" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="8">
+            <RadzenFormField Text="@L["SettingsAiApiKey"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenPassword Name="ApiKey" @bind-Value="Model.ApiKey" Disabled="@(!Model.Enabled)"
+                                    Placeholder="@(Model.HasApiKey ? L["SettingsSecretStored"] : L["SettingsSecretNotSet"])" />
+                </ChildContent>
+                <Helper>
+                    <RadzenText Text="@KeyStatus" TextStyle="TextStyle.Caption" class="rz-m-0" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="4" class="rz-display-flex rz-align-items-center">
+            <RadzenButton Text="@L["SettingsAiRemoveKey"]" Icon="key_off" ButtonStyle="ButtonStyle.Light"
+                          Disabled="@(!Model.HasApiKey || Model.ApiKey == string.Empty)" Click="@(() => Model.ApiKey = string.Empty)" />
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenFormField Text="@L["SettingsAiTimeout"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenNumeric TValue="int" Name="TimeoutSeconds" @bind-Value="Model.TimeoutSeconds" Min="5" Max="300" Disabled="@(!Model.Enabled)" />
+                </ChildContent>
+                <Helper>
+                    <RadzenDataAnnotationValidator Component="TimeoutSeconds" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenFormField Text="@L["SettingsAiMaxTokens"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenNumeric TValue="int" Name="MaxTokens" @bind-Value="Model.MaxTokens" Min="64" Max="32768" Disabled="@(!Model.Enabled)" />
+                </ChildContent>
+                <Helper>
+                    <RadzenDataAnnotationValidator Component="MaxTokens" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+        <RadzenButton Text="@L["SettingsAiTest"]" Icon="network_check" ButtonStyle="ButtonStyle.Secondary"
+                      IsBusy="@_testing" Disabled="@(HasUnsavedChanges || !Model.Enabled)" Click="@TestAsync" />
+        @if (HasUnsavedChanges)
+        {
+            <RadzenText Text="@L["SettingsAiTestSaveFirst"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-m-0" />
+        }
+    </RadzenStack>
+    @if (_testResult is { } result)
+    {
+        <RadzenAlert AlertStyle="@(result.Success ? AlertStyle.Success : AlertStyle.Danger)" Variant="Variant.Flat"
+                     Shade="Shade.Lighter" AllowClose="false">
+            @result.Message
+        </RadzenAlert>
+    }
+</SettingsCard>
+
+@code {
+    private bool _testing;
+    private AiConnectionTestResult? _testResult;
+
+    [Parameter, EditorRequired] public AiSettings Model { get; set; } = default!;
+
+    /// <summary>The test runs against the saved settings, so it is offered only when nothing is pending.</summary>
+    [Parameter] public bool HasUnsavedChanges { get; set; }
+
+    private string KeyStatus => Model.ApiKey switch
+    {
+        "" => L["SettingsAiKeyWillBeRemoved"],
+        { Length: > 0 } => L["SettingsAiKeyWillBeReplaced"],
+        _ => Model.HasApiKey ? L["SettingsAiKeyKept"] : L["SettingsAiKeyOptional"],
+    };
+
+    private async Task TestAsync()
+    {
+        _testing = true;
+        ApiResult<AiConnectionTestResult> result = await Api.TestAiAsync();
+        _testResult = result.Value ?? new AiConnectionTestResult(false, result.Error ?? string.Empty);
+        _testing = false;
+    }
+}

@@ -1,0 +1,111 @@
+@using System.Globalization
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@inject IAdminSettingsApiClient Api
+
+@* Read-only: live diagnostics and the startup configuration (appsettings /
+   environment variables). These values are bound when the server starts,
+   so they are shown here instead of being offered as editable fields. *@
+
+<RadzenStack Gap="1rem">
+    <SettingsCard Title="@L["SettingsDiagnosticsTitle"]">
+        @if (_diagnostics is { } diagnostics)
+        {
+            <MetadataList Items="@DiagnosticsItems(diagnostics)" />
+        }
+        else if (_diagnosticsError is not null)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_diagnosticsError</RadzenAlert>
+        }
+        else
+        {
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+        }
+        <RadzenButton Text="@L["SettingsRefresh"]" Icon="refresh" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                      Click="@LoadDiagnosticsAsync" class="rz-align-self-start" />
+    </SettingsCard>
+
+    <SettingsCard Title="@L["SettingsRuntimeTitle"]" Description="@L["SettingsRuntimeDescription"]">
+        @if (_runtimeError is not null)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@_runtimeError</RadzenAlert>
+        }
+        else
+        {
+            <RadzenDataGrid TItem="RuntimeConfigurationEntry" Data="@_runtime" IsLoading="@(_runtime is null)"
+                            AllowGrouping="false" AllowPaging="false" Density="Density.Compact" GridLines="DataGridGridLines.Horizontal"
+                            Render="@OnGridRender">
+                <Columns>
+                    <RadzenDataGridColumn Property="@nameof(RuntimeConfigurationEntry.Category)" Title="@L["SettingsRuntimeCategory"]" Visible="false" />
+                    <RadzenDataGridColumn Property="@nameof(RuntimeConfigurationEntry.Name)" Title="@L["SettingsRuntimeName"]" />
+                    <RadzenDataGridColumn Title="@L["SettingsRuntimeValue"]" Sortable="false">
+                        <Template Context="entry">
+                            @if (entry.IsSecret)
+                            {
+                                <RadzenBadge BadgeStyle="@(entry.IsConfigured ? BadgeStyle.Success : BadgeStyle.Light)"
+                                             Text="@(entry.IsConfigured ? L["SettingsConfigured"] : L["SettingsNotConfigured"])" />
+                            }
+                            else
+                            {
+                                <RadzenText Text="@(entry.Value ?? L["SettingsBuiltInDefault"])" TextStyle="TextStyle.Body2"
+                                            class="@(entry.Value is null ? "rz-color-text-secondary rz-m-0" : "rz-m-0")" />
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(RuntimeConfigurationEntry.EnvironmentVariable)" Title="@L["SettingsRuntimeVariable"]">
+                        <Template Context="entry">
+                            <code>@entry.EnvironmentVariable</code>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        }
+    </SettingsCard>
+</RadzenStack>
+
+@code {
+    private SystemDiagnostics? _diagnostics;
+    private string? _diagnosticsError;
+    private IReadOnlyList<RuntimeConfigurationEntry>? _runtime;
+    private string? _runtimeError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Task diagnostics = LoadDiagnosticsAsync();
+        ApiResult<IReadOnlyList<RuntimeConfigurationEntry>> runtime = await Api.GetRuntimeConfigurationAsync();
+        (_runtime, _runtimeError) = runtime is { IsSuccess: true, Value: { } entries } ? (entries, (string?)null) : ([], runtime.Error);
+        await diagnostics;
+    }
+
+    private async Task LoadDiagnosticsAsync()
+    {
+        ApiResult<SystemDiagnostics> result = await Api.GetDiagnosticsAsync();
+        _diagnostics = result.IsSuccess ? result.Value : null;
+        _diagnosticsError = result.IsSuccess ? null : result.Error;
+    }
+
+    private static void OnGridRender(DataGridRenderEventArgs<RuntimeConfigurationEntry> args)
+    {
+        if (args.FirstRender)
+        {
+            args.Grid?.Groups.Add(new GroupDescriptor { Property = nameof(RuntimeConfigurationEntry.Category), SortOrder = SortOrder.Ascending });
+        }
+    }
+
+    private IReadOnlyList<MetadataListItem> DiagnosticsItems(SystemDiagnostics d) =>
+    [
+        MetadataListItem.Text(L["SettingsDiagVersion"], d.AppVersion),
+        MetadataListItem.Text(L["SettingsDiagEnvironment"], d.Environment),
+        MetadataListItem.Text(L["SettingsDiagDatabase"],
+            $"{d.DatabaseProvider} · {(d.DatabaseReachable ? L["SettingsDiagReachable"] : L["SettingsDiagUnreachable"])}"),
+        MetadataListItem.Text(L["SettingsDiagUptime"], FormatUptime(d.Uptime)),
+        MetadataListItem.Text(L["SettingsDiagMemory"], $"{d.WorkingSetMb.ToString("N0", CultureInfo.CurrentCulture)} MB"),
+        MetadataListItem.Text(L["SettingsDiagDisk"], d.FreeDiskSpaceMb < 0
+            ? L["SettingsDiagUnknown"]
+            : $"{d.FreeDiskSpaceMb.ToString("N0", CultureInfo.CurrentCulture)} MB"),
+        MetadataListItem.Text(L["SettingsDiagThreads"], d.ThreadCount.ToString(CultureInfo.CurrentCulture)),
+    ];
+
+    private static string FormatUptime(TimeSpan uptime) =>
+        uptime.TotalDays >= 1 ? $"{(int)uptime.TotalDays}d {uptime.Hours}h" : $"{uptime.Hours}h {uptime.Minutes}m";
+}

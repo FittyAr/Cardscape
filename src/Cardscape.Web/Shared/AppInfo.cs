@@ -1,9 +1,13 @@
+using System.Reflection;
+
 namespace Cardscape.Web.Shared;
 
 /// <summary>Product facts shown in the chrome (sidebar footer,
-/// auth screens). One constant so the two places cannot drift
-/// apart again (they used to say v1.2.0 and v1.0.0).</summary>
+/// auth screens). The version comes from the build (Directory.Build.props),
+/// the same source the server diagnostics report, so the two cannot drift.</summary>
 public static class AppInfo
 {
-    public const string Version = "v1.2.0";
+    public static string Version { get; } = "v" + (typeof(AppInfo).Assembly
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0]
+        ?? "0.0.0");
 }

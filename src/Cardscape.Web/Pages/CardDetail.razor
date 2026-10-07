@@ -15,6 +15,7 @@
 @inject IChecklistsApiClient Checklists
 @inject IRecurrenceApiClient Recurrence
 @inject IAiApiClient Ai
+@inject InstanceSettingsState Instance
 @inject IAttachmentsApiClient Attachments
 @inject IStringLocalizer<SharedResource> L
 @inject DialogService DialogService
@@ -202,7 +203,7 @@ else
                             @(string.IsNullOrWhiteSpace(_card.Description) ? L["DescriptionEmpty"] : _card.Description)
                         </div>
                         <div class="cs-row">
-                            <RadzenButton Text="@L["AiGenerateDescription"]" Icon="auto_awesome"
+                            <RadzenButton Text="@L["AiGenerateDescription"]" Icon="auto_awesome" Visible="@AiEnabled"
                                           ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
                                           Click="@GenerateDescriptionAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
                         </div>
@@ -265,7 +266,7 @@ else
                                            @onkeydown="@OnCreateChecklistKeyDownAsync" />
                             <RadzenButton Text="@L["CardCreateChecklist"]" Icon="add" ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" Size="ButtonSize.Small"
                                           Click="@CreateChecklistAsync" />
-                            <RadzenButton Text="@L["AiGenerateChecklist"]" Icon="auto_awesome"
+                            <RadzenButton Text="@L["AiGenerateChecklist"]" Icon="auto_awesome" Visible="@AiEnabled"
                                           ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
                                           Click="@MakeChecklistAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
                         </div>
@@ -337,7 +338,7 @@ else
                         <h2 class="cs-card-section-title"><RadzenIcon Icon="forum" />@L["CardComments"]</h2>
                         @if (_comments is { Count: > 0 })
                         {
-                            <RadzenButton Text="@L["AiSummarizeComments"]" Icon="auto_awesome"
+                            <RadzenButton Text="@L["AiSummarizeComments"]" Icon="auto_awesome" Visible="@AiEnabled"
                                           ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
                                           Click="@SummarizeCommentsAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
                         }
@@ -491,7 +492,7 @@ else
                                     }
                                 </div>
                             }
-                            <RadzenButton Text="@L["AiSuggestOwners"]" Icon="auto_awesome" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                            <RadzenButton Text="@L["AiSuggestOwners"]" Icon="auto_awesome" Visible="@AiEnabled" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
                                           Size="ButtonSize.Small" Click="@SuggestOwnersAsync" Disabled="@_aiBusy" IsBusy="@_aiBusy" />
                         </div>
                     }

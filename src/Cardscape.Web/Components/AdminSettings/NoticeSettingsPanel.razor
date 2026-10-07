@@ -1,0 +1,61 @@
+@* Messages every user sees, and the maintenance switch. *@
+
+<RadzenStack Gap="1rem">
+    <SettingsCard Title="@L["SettingsAnnouncementTitle"]" Description="@L["SettingsAnnouncementDescription"]">
+        <SettingToggle Name="AnnouncementEnabled" @bind-Value="Model.AnnouncementEnabled" Label="@L["SettingsAnnouncementEnabled"]" />
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeMD="8">
+                <RadzenFormField Text="@L["SettingsMessage"]" Style="width: 100%;">
+                    <ChildContent>
+                        <RadzenTextArea Name="AnnouncementMessage" @bind-Value="Model.AnnouncementMessage" MaxLength="500" Rows="2"
+                                        Disabled="@(!Model.AnnouncementEnabled)" />
+                    </ChildContent>
+                    <Helper>
+                        <RadzenDataAnnotationValidator Component="AnnouncementMessage" />
+                    </Helper>
+                </RadzenFormField>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenFormField Text="@L["SettingsSeverity"]" Style="width: 100%;">
+                    <RadzenDropDown Name="AnnouncementSeverity" @bind-Value="Model.AnnouncementSeverity"
+                                    Data="@Severities" TextProperty="Label" ValueProperty="Value"
+                                    Disabled="@(!Model.AnnouncementEnabled)" />
+                </RadzenFormField>
+            </RadzenColumn>
+        </RadzenRow>
+        @if (Model is { AnnouncementEnabled: true, AnnouncementMessage.Length: > 0 })
+        {
+            <RadzenAlert AlertStyle="@NoticeStyles.For(Model.AnnouncementSeverity)" Variant="Variant.Flat" Shade="Shade.Lighter"
+                         AllowClose="false" Title="@L["SettingsPreview"]">
+                @Model.AnnouncementMessage
+            </RadzenAlert>
+        }
+    </SettingsCard>
+
+    <SettingsCard Title="@L["SettingsMaintenanceTitle"]" Description="@L["SettingsMaintenanceDescription"]">
+        <SettingToggle Name="MaintenanceEnabled" @bind-Value="Model.MaintenanceEnabled" Label="@L["SettingsMaintenanceEnabled"]" />
+        <RadzenFormField Text="@L["SettingsMessage"]" Style="width: 100%;">
+            <ChildContent>
+                <RadzenTextArea Name="MaintenanceMessage" @bind-Value="Model.MaintenanceMessage" MaxLength="500" Rows="2" />
+            </ChildContent>
+            <Helper>
+                <RadzenDataAnnotationValidator Component="MaintenanceMessage" />
+            </Helper>
+        </RadzenFormField>
+        @if (Model.MaintenanceEnabled)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false">
+                @L["SettingsMaintenanceWarning"]
+            </RadzenAlert>
+        }
+    </SettingsCard>
+</RadzenStack>
+
+@code {
+    [Parameter, EditorRequired] public NoticeSettings Model { get; set; } = default!;
+
+    private IEnumerable<SeverityOption> Severities =>
+        Enum.GetValues<NoticeSeverity>().Select(value => new SeverityOption(value, L[$"NoticeSeverity{value}"]));
+
+    private sealed record SeverityOption(NoticeSeverity Value, string Label);
+}

@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Cardscape.Contracts/Cardscape.Contracts.csproj" />
     <Project Path="src/Cardscape.Domain/Cardscape.Domain.csproj" />
     <Project Path="src/Cardscape.Application/Cardscape.Application.csproj" />
     <Project Path="src/Cardscape.Infrastructure/Cardscape.Infrastructure.csproj" />

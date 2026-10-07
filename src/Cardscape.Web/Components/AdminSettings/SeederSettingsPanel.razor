@@ -1,0 +1,12 @@
+@* The demo-data seeder switch; the runs themselves live on the Seeder page. *@
+
+<SettingsCard Title="@L["SettingsSeederTitle"]" Description="@L["SettingsSeederDescription"]">
+    <SettingToggle Name="SeederEnabled" @bind-Value="Model.Enabled" Label="@L["SettingsSeederEnabled"]" />
+    <SettingToggle Name="WipeBeforeSeed" @bind-Value="Model.WipeBeforeSeed" Disabled="@(!Model.Enabled)"
+                   Label="@L["SettingsSeederWipe"]" Help="@L["SettingsSeederWipeHelp"]" />
+    <RadzenLink Path="admin/seeder" Text="@L["SettingsSeederOpen"]" Icon="arrow_forward" />
+</SettingsCard>
+
+@code {
+    [Parameter, EditorRequired] public SeederSettings Model { get; set; } = default!;
+}

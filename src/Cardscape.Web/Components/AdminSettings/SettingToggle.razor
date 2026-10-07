@@ -1,0 +1,33 @@
+@using System.Linq.Expressions
+
+@* SettingToggle — an on/off setting: label and explanation on the left,
+   the switch on the right. Two-way bindable via @bind-Value; the bound
+   expression is forwarded so the enclosing form hears the change. *@
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+             AlignItems="AlignItems.Center" Gap="1rem">
+    <RadzenStack Gap="0.125rem">
+        <RadzenLabel Text="@Label" Component="@Name" />
+        @if (!string.IsNullOrEmpty(Help))
+        {
+            <RadzenText Text="@Help" TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-m-0" />
+        }
+    </RadzenStack>
+    <RadzenSwitch Name="@Name" Value="@Value" ValueChanged="@ValueChanged" ValueExpression="@ValueExpression" Disabled="@Disabled" />
+</RadzenStack>
+
+@code {
+    [Parameter, EditorRequired] public string Name { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired] public string Label { get; set; } = string.Empty;
+
+    [Parameter] public string? Help { get; set; }
+
+    [Parameter] public bool Value { get; set; }
+
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+
+    [Parameter] public Expression<Func<bool>>? ValueExpression { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+}

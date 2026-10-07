@@ -1,0 +1,40 @@
+@using Cardscape.Contracts.Settings
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Microsoft.Extensions.Localization
+@implements IDisposable
+@inject InstanceSettingsState Instance
+@inject IStringLocalizer<SharedResource> L
+
+@* InstanceNoticeBanner — the administrator's announcement (dismissible for
+   the session) and the maintenance notice, shown above every page. *@
+
+@if (Instance.Current is { MaintenanceMessage: { } maintenance })
+{
+    <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false"
+                 Icon="construction" Title="@L["MaintenanceBannerTitle"]" class="rz-m-0 rz-mb-3">
+        @(string.IsNullOrWhiteSpace(maintenance) ? L["MaintenanceBannerDefault"] : maintenance)
+    </RadzenAlert>
+}
+
+@if (Instance.Current is { Announcement: { } announcement } current && announcement != _dismissed)
+{
+    <RadzenAlert AlertStyle="@NoticeStyles.For(current.AnnouncementSeverity)" Variant="Variant.Flat" Shade="Shade.Lighter"
+                 AllowClose="true" Close="@(() => _dismissed = announcement)" Icon="campaign" class="rz-m-0 rz-mb-3">
+        @announcement
+    </RadzenAlert>
+}
+
+@code {
+    private string? _dismissed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Instance.Changed += OnInstanceChanged;
+        await Instance.GetAsync();
+    }
+
+    public void Dispose() => Instance.Changed -= OnInstanceChanged;
+
+    private void OnInstanceChanged() => InvokeAsync(StateHasChanged);
+}

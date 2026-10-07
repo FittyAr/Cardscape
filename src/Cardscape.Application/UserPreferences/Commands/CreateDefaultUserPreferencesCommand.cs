@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Application.UserPreferences.DTOs;
 using Cardscape.Application.UserPreferences.Mappings;
 using Cardscape.Domain.Common;
@@ -26,6 +27,7 @@ public static class CreateDefaultUserPreferencesCommandHandler
     public static async Task<Result<UserPreferencesDto>> HandleAsync(
         CreateDefaultUserPreferencesCommand _,
         IUserPreferencesRepository preferences,
+        ISystemSettingsService settings,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -50,7 +52,7 @@ public static class CreateDefaultUserPreferencesCommandHandler
 
         var createResult = UserPreferencesAggregate.Create(
             userId: userId,
-            themeName: UserPreferencesAggregate.InitialThemeName,
+            themeName: (await settings.GetAsync(cancellation)).General.DefaultTheme,
             mode: AppearanceModeAlias.System,
             at: clock.UtcNow);
 

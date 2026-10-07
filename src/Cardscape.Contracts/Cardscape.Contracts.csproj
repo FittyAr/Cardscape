@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Cardscape.Contracts</AssemblyName>
+    <RootNamespace>Cardscape.Contracts</RootNamespace>
+    <Description>Wire contracts shared by the API and the Blazor client: DTOs and their validation rules. No dependencies.</Description>
+  </PropertyGroup>
+
+</Project>
