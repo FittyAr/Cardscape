@@ -36,72 +36,125 @@
                         TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
         </RadzenStack>
 
-        <RadzenTemplateForm TItem="SetupFormModel" Data="@_model" Submit="@HandleSubmitAsync">
-            <RadzenStack Gap="1rem">
-                <RadzenFormField Text="@L["SetupAdminName"]" Component="adminDisplayName">
-                    <RadzenTextBox @bind-Value="_model.AdminDisplayName" Name="adminDisplayName" Style="width:100%"
-                                   autocomplete="name" Placeholder="@L["SetupAdminNamePlaceholder"]" />
-                </RadzenFormField>
-                <RadzenRequiredValidator Component="adminDisplayName" Text="@L["SetupAdminNameRequired"]" />
-
-                <RadzenFormField Text="@L["AuthEmail"]" Component="adminEmail">
-                    <RadzenTextBox @bind-Value="_model.AdminEmail" Name="adminEmail" Style="width:100%"
-                                   autocomplete="email" Placeholder="admin@cardscape.local" />
-                </RadzenFormField>
-                <RadzenRequiredValidator Component="adminEmail" Text="@L["AuthEmailRequired"]" />
-                <RadzenEmailValidator Component="adminEmail" Text="@L["ValidationEmail"]" />
-
-                <RadzenFormField Text="@L["AuthPassword"]" Component="adminPassword">
-                    <RadzenPassword @bind-Value="_model.AdminPassword" Name="adminPassword" Style="width:100%"
-                                    autocomplete="new-password" />
-                    <RadzenText Text="@L["AuthPasswordHint"]" TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
-                </RadzenFormField>
-                <RadzenRequiredValidator Component="adminPassword" Text="@L["ValidationRequired"]" />
-
-                <RadzenFormField Text="@L["AuthConfirmPassword"]" Component="confirmPassword">
-                    <RadzenPassword @bind-Value="_model.ConfirmPassword" Name="confirmPassword" Style="width:100%"
-                                    autocomplete="new-password" />
-                    @if (!string.IsNullOrEmpty(_model.ConfirmPassword) && _model.AdminPassword != _model.ConfirmPassword)
-                    {
-                        <RadzenText Text="@L["AuthPasswordsDoNotMatch"]" TextStyle="@TextStyle.Caption"
-                                    Style="color: var(--rz-danger);" />
-                    }
-                </RadzenFormField>
-                <RadzenRequiredValidator Component="confirmPassword" Text="@L["ValidationRequired"]" />
-
-                <RadzenCard Variant="@Variant.Filled" Class="rz-p-3 rz-my-2">
-                    <RadzenStack Gap="0.75rem">
-                        <RadzenText Text="@L["SetupCustomizeTitle"]" TextStyle="@TextStyle.Subtitle2" />
-                        <RadzenFormField Text="@L["SetupInstanceTitle"]" Component="instanceTitle">
-                            <RadzenTextBox @bind-Value="_model.InstanceTitle" Name="instanceTitle" Style="width:100%"
-                                           Placeholder="Cardscape" />
-                        </RadzenFormField>
-
-                        <RadzenFormField Text="@L["SetupInitialWorkspace"]" Component="workspaceName">
-                            <RadzenTextBox @bind-Value="_model.InitialWorkspaceName" Name="workspaceName" Style="width:100%"
-                                           Placeholder="@L["SetupInitialWorkspaceDefault"]" />
-                        </RadzenFormField>
-                    </RadzenStack>
-                </RadzenCard>
-
-                @if (_error is not null)
+        @* Two ways in: plant the demo company (sign in as its admin), or
+           create the real administrator below. *@
+        @if (_demo is not null)
+        {
+            <RadzenCard Variant="@Variant.Outlined" class="rz-p-4">
+                @if (_demo.DemoEmail is { } demoEmail && _demo.DemoPassword is { } demoPassword)
                 {
-                    <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false">
-                        @_error
+                    <RadzenStack Gap="0.75rem">
+                        <RadzenAlert AlertStyle="@AlertStyle.Success" Variant="@Variant.Flat" Shade="@Shade.Lighter"
+                                     AllowClose="false" Icon="check_circle" class="rz-m-0">
+                            @L["SetupDemoReady"]
+                        </RadzenAlert>
+                        <RadzenText Text="@L["SetupDemoAccount", demoEmail, demoPassword]" TextStyle="@TextStyle.Body2" class="rz-m-0" />
+                        @if (_error is not null)
+                        {
+                            <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false" class="rz-m-0">@_error</RadzenAlert>
+                        }
+                        <RadzenButton Text="@L["SetupDemoSignIn"]" Icon="login" ButtonStyle="@ButtonStyle.Primary"
+                                      Size="@ButtonSize.Large" IsBusy="@_busy" Style="width:100%"
+                                      Click="@(() => SignInToDemoAsync(demoEmail, demoPassword))" />
+                    </RadzenStack>
+                }
+                else if (_demo.Running || _demo.Status is "Idle" or "Running")
+                {
+                    <LoadingState Text="@DemoProgressText" />
+                }
+                else
+                {
+                    <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false" class="rz-m-0">
+                        @L["SetupDemoFailed", _demo.Status]
                     </RadzenAlert>
                 }
+            </RadzenCard>
+        }
+        else
+        {
+            <RadzenCard Variant="@Variant.Outlined" class="rz-p-3">
+                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween"
+                             Gap="0.75rem" Wrap="@FlexWrap.Wrap">
+                    <RadzenStack Gap="0.125rem" Style="flex: 1 1 16rem;">
+                        <RadzenText Text="@L["SetupDemoTitle"]" TextStyle="@TextStyle.Subtitle1" TagName="@TagName.H2" class="rz-m-0" />
+                        <RadzenText Text="@L["SetupDemoBlurb"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary rz-m-0" />
+                    </RadzenStack>
+                    <RadzenButton Text="@L["SetupDemoStart"]" Icon="auto_awesome" ButtonStyle="@ButtonStyle.Secondary"
+                                  IsBusy="@_busy" Click="@StartDemoAsync" />
+                </RadzenStack>
+            </RadzenCard>
+            <RadzenText Text="@L["SetupOrCreateAdmin"]" TextStyle="@TextStyle.Overline" class="rz-color-text-secondary rz-m-0" />
+        }
 
-                <RadzenButton ButtonType="@ButtonType.Submit"
-                              Text="@L["SetupSubmit"]"
-                              Icon="rocket_launch"
-                              ButtonStyle="@ButtonStyle.Primary"
-                              Size="@ButtonSize.Large"
-                              IsBusy="@_busy"
-                              BusyText="@L["SetupSubmitting"]"
-                              Disabled="@(!CanSubmit())"
-                              Style="width:100%" />
-            </RadzenStack>
-        </RadzenTemplateForm>
+        @if (_demo is null)
+        {
+            <RadzenTemplateForm TItem="SetupFormModel" Data="@_model" Submit="@HandleSubmitAsync">
+                <RadzenStack Gap="1rem">
+                    <RadzenFormField Text="@L["SetupAdminName"]" Component="adminDisplayName">
+                        <RadzenTextBox @bind-Value="_model.AdminDisplayName" Name="adminDisplayName" Style="width:100%"
+                                       autocomplete="name" Placeholder="@L["SetupAdminNamePlaceholder"]" />
+                    </RadzenFormField>
+                    <RadzenRequiredValidator Component="adminDisplayName" Text="@L["SetupAdminNameRequired"]" />
+
+                    <RadzenFormField Text="@L["AuthEmail"]" Component="adminEmail">
+                        <RadzenTextBox @bind-Value="_model.AdminEmail" Name="adminEmail" Style="width:100%"
+                                       autocomplete="email" Placeholder="admin@cardscape.local" />
+                    </RadzenFormField>
+                    <RadzenRequiredValidator Component="adminEmail" Text="@L["AuthEmailRequired"]" />
+                    <RadzenEmailValidator Component="adminEmail" Text="@L["ValidationEmail"]" />
+
+                    <RadzenFormField Text="@L["AuthPassword"]" Component="adminPassword">
+                        <RadzenPassword @bind-Value="_model.AdminPassword" Name="adminPassword" Style="width:100%"
+                                        autocomplete="new-password" />
+                        <RadzenText Text="@L["AuthPasswordHint"]" TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                    </RadzenFormField>
+                    <RadzenRequiredValidator Component="adminPassword" Text="@L["ValidationRequired"]" />
+
+                    <RadzenFormField Text="@L["AuthConfirmPassword"]" Component="confirmPassword">
+                        <RadzenPassword @bind-Value="_model.ConfirmPassword" Name="confirmPassword" Style="width:100%"
+                                        autocomplete="new-password" />
+                        @if (!string.IsNullOrEmpty(_model.ConfirmPassword) && _model.AdminPassword != _model.ConfirmPassword)
+                        {
+                            <RadzenText Text="@L["AuthPasswordsDoNotMatch"]" TextStyle="@TextStyle.Caption"
+                                        Style="color: var(--rz-danger);" />
+                        }
+                    </RadzenFormField>
+                    <RadzenRequiredValidator Component="confirmPassword" Text="@L["ValidationRequired"]" />
+
+                    <RadzenCard Variant="@Variant.Filled" Class="rz-p-3 rz-my-2">
+                        <RadzenStack Gap="0.75rem">
+                            <RadzenText Text="@L["SetupCustomizeTitle"]" TextStyle="@TextStyle.Subtitle2" />
+                            <RadzenFormField Text="@L["SetupInstanceTitle"]" Component="instanceTitle">
+                                <RadzenTextBox @bind-Value="_model.InstanceTitle" Name="instanceTitle" Style="width:100%"
+                                               Placeholder="Cardscape" />
+                            </RadzenFormField>
+
+                            <RadzenFormField Text="@L["SetupInitialWorkspace"]" Component="workspaceName">
+                                <RadzenTextBox @bind-Value="_model.InitialWorkspaceName" Name="workspaceName" Style="width:100%"
+                                               Placeholder="@L["SetupInitialWorkspaceDefault"]" />
+                            </RadzenFormField>
+                        </RadzenStack>
+                    </RadzenCard>
+
+                    @if (_error is not null)
+                    {
+                        <RadzenAlert AlertStyle="@AlertStyle.Danger" Variant="@Variant.Flat" AllowClose="false">
+                            @_error
+                        </RadzenAlert>
+                    }
+
+                    <RadzenButton ButtonType="@ButtonType.Submit"
+                                  Text="@L["SetupSubmit"]"
+                                  Icon="rocket_launch"
+                                  ButtonStyle="@ButtonStyle.Primary"
+                                  Size="@ButtonSize.Large"
+                                  IsBusy="@_busy"
+                                  BusyText="@L["SetupSubmitting"]"
+                                  Disabled="@(!CanSubmit())"
+                                  Style="width:100%" />
+                </RadzenStack>
+            </RadzenTemplateForm>
+        }
     }
 </RadzenStack>
 
@@ -154,6 +207,64 @@
         {
             _loading = false;
         }
+    }
+
+    private DemoSetupStatusDto? _demo;
+
+    private string DemoProgressText => _demo is { TotalSteps: > 0 } demo
+        ? L["SetupDemoProgress", demo.CurrentStep, demo.TotalSteps, demo.CurrentStepName ?? string.Empty]
+        : L["SetupDemoStarting"];
+
+    private async Task StartDemoAsync()
+    {
+        _busy = true;
+        _error = null;
+        try
+        {
+            ApiResult started = await SetupApi.StartDemoAsync();
+            if (!started.IsSuccess)
+            {
+                _error = started.Error ?? L["SetupFailed"];
+                return;
+            }
+
+            _demo = new DemoSetupStatusDto(true, "Running", 0, 0, null, null, null);
+        }
+        finally
+        {
+            _busy = false;
+        }
+
+        // The run takes a few seconds: follow it until it ends.
+        while (_demo is { Running: true } or { Status: "Idle" or "Running" })
+        {
+            await Task.Delay(800);
+            ApiResult<DemoSetupStatusDto> status = await SetupApi.GetDemoStatusAsync();
+            if (status.HasValue)
+            {
+                _demo = status.Value;
+                StateHasChanged();
+            }
+        }
+
+        if (_demo?.DemoEmail is not null)
+        {
+            SetupStatus.MarkInitialized();
+        }
+    }
+
+    private async Task SignInToDemoAsync(string email, string password)
+    {
+        _busy = true;
+        ApiResult<UserSummaryDto> login = await Auth.LoginAsync(email, password);
+        _busy = false;
+        if (login.IsSuccess)
+        {
+            Nav.NavigateTo("", forceLoad: true);
+            return;
+        }
+
+        _error = login.Error ?? L["SetupFailed"];
     }
 
     private bool CanSubmit()

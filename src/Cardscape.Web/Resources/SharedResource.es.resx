@@ -1232,4 +1232,14 @@
   <data name="AuditCsvTarget" xml:space="preserve"><value>Objetivo</value></data>
   <data name="AuditCsvWorkspace" xml:space="preserve"><value>Espacio</value></data>
   <data name="AuditCsvBoard" xml:space="preserve"><value>Tablero</value></data>
+  <data name="SetupDemoTitle" xml:space="preserve"><value>Explorar con datos de demo</value></data>
+  <data name="SetupDemoBlurb" xml:space="preserve"><value>Llena Cardscape con una empresa de ejemplo (personas, tableros, tarjetas) y te deja entrar como su administrador. Después podés borrarla desde Configuración del sistema.</value></data>
+  <data name="SetupDemoStart" xml:space="preserve"><value>Cargar datos de demo</value></data>
+  <data name="SetupOrCreateAdmin" xml:space="preserve"><value>O creá tu cuenta de administrador</value></data>
+  <data name="SetupDemoStarting" xml:space="preserve"><value>Preparando los datos de demo…</value></data>
+  <data name="SetupDemoProgress" xml:space="preserve"><value>Cargando datos de demo · paso {0} de {1}: {2}</value></data>
+  <data name="SetupDemoReady" xml:space="preserve"><value>La empresa de demo está lista.</value></data>
+  <data name="SetupDemoAccount" xml:space="preserve"><value>Administrador de demo: {0} · contraseña {1}. Todas las personas de la demo usan la misma contraseña.</value></data>
+  <data name="SetupDemoSignIn" xml:space="preserve"><value>Entrar a la demo</value></data>
+  <data name="SetupDemoFailed" xml:space="preserve"><value>No se pudieron cargar los datos de demo ({0}). Revisá el log del servidor, o creá el administrador.</value></data>
 </root>

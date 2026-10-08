@@ -1,4 +1,7 @@
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Domain.Boards;
+using Cardscape.Domain.Members;
+using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Cardscape.Infrastructure.Persistence.Outbox;
 using Cardscape.Seeder.Company;
@@ -48,7 +51,10 @@ public sealed class SeedRunner : IDisposable
 
     public SeederOptions CurrentOptions => _options.CurrentValue;
 
-    public async Task<SeedReport> RunAsync(bool wipe, CancellationToken cancellationToken)
+    /// <param name="joinUserId">An existing account (the administrator who asked for
+    /// the run) to add as Admin to every seeded workspace and board, so the demo is
+    /// visible from their own account. Ignored after a wipe, which deletes it.</param>
+    public async Task<SeedReport> RunAsync(bool wipe, CancellationToken cancellationToken, Guid? joinUserId = null)
     {
         if (!await _runLock.WaitAsync(0, cancellationToken))
         {
@@ -119,6 +125,11 @@ public sealed class SeedRunner : IDisposable
                 }
             }
 
+            if (!wipe && joinUserId is { } joiner)
+            {
+                await JoinSeededDataAsync(context, joiner, now, report, cancellationToken);
+            }
+
             // Persist everything in a single transaction. SaveChanges
             // dispatches every Add() the steps accumulated; the
             // interceptor fans out domain events, the EF Core
@@ -180,6 +191,32 @@ public sealed class SeedRunner : IDisposable
         {
             _runLock.Release();
         }
+    }
+
+    // Without this, seeding an instance that was set up by hand plants a
+    // company the operator cannot see: their own account is not a member of
+    // any demo workspace or board.
+    private static async Task JoinSeededDataAsync(
+        SeedContext context, Guid userId, DateTimeOffset at, SeedReport report, CancellationToken cancellationToken)
+    {
+        UserId id = new(userId);
+        if (await context.Db.Users.AnyAsync(user => user.Id == id && user.IsActive, cancellationToken) is false)
+        {
+            return;
+        }
+
+        foreach (Workspace workspace in context.Workspaces.Where(w => !w.HasMember(userId)))
+        {
+            workspace.AddMember(userId, WorkspaceRole.Admin, at);
+        }
+
+        foreach (Board board in context.Boards.Where(b => !b.IsMember(userId)))
+        {
+            board.AddMember(userId, BoardMemberRole.Admin, at);
+        }
+
+        report.Log(new SeedLogEntry(DateTimeOffset.UtcNow, SeedLogLevel.Info, "Access",
+            $"Added the requesting administrator to {context.Workspaces.Count} workspaces and {context.Boards.Count} boards."));
     }
 
     private static Task<bool> IsAlreadySeededAsync(CardscapeDbContext db, CancellationToken cancellationToken)

@@ -20,7 +20,8 @@ internal sealed class SeederOperationQueue(
 
     public bool IsBusy => Volatile.Read(ref _busy) == 1;
 
-    public bool TryEnqueueRun(bool wipe) => TryEnqueue(new SeederOperation(wipe, WipeOnly: false));
+    public bool TryEnqueueRun(bool wipe, Guid? joinUserId = null) =>
+        TryEnqueue(new SeederOperation(wipe, WipeOnly: false, joinUserId));
 
     public bool TryEnqueueWipe() => TryEnqueue(new SeederOperation(Wipe: true, WipeOnly: true));
 
@@ -52,7 +53,7 @@ internal sealed class SeederOperationQueue(
                 }
                 else
                 {
-                    await runner.RunAsync(operation.Wipe, stoppingToken);
+                    await runner.RunAsync(operation.Wipe, stoppingToken, operation.JoinUserId);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -70,5 +71,5 @@ internal sealed class SeederOperationQueue(
         }
     }
 
-    private readonly record struct SeederOperation(bool Wipe, bool WipeOnly);
+    private readonly record struct SeederOperation(bool Wipe, bool WipeOnly, Guid? JoinUserId = null);
 }

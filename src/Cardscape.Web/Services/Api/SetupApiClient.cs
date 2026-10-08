@@ -10,6 +10,18 @@ public sealed class SetupApiClient(IHttpClientFactory httpClientFactory) : ApiCl
         return await ReadAsync<SetupStatusDto>(res, ct);
     }
 
+    public async Task<ApiResult> StartDemoAsync(CancellationToken ct = default)
+    {
+        HttpResponseMessage res = await CreateClient().PostAsync("api/setup/demo", content: null, ct);
+        return await ReadAsync(res, ct);
+    }
+
+    public async Task<ApiResult<DemoSetupStatusDto>> GetDemoStatusAsync(CancellationToken ct = default)
+    {
+        HttpResponseMessage res = await CreateClient().GetAsync("api/setup/demo/status", ct);
+        return await ReadAsync<DemoSetupStatusDto>(res, ct);
+    }
+
     public async Task<ApiResult<AuthResponseDto>> InitializeAsync(
         InitializeSystemRequestDto request, CancellationToken ct = default)
     {

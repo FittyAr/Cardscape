@@ -1,5 +1,6 @@
 using Cardscape.Api.BackgroundJobs;
 using Cardscape.Api.Extensions;
+using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Contracts.Settings;
 using Cardscape.Seeder;
@@ -76,6 +77,7 @@ public static class SeederEndpoints
             SeederOperationQueue queue,
             SeedReport report,
             ISystemSettingsService settingsService,
+            ICurrentUser currentUser,
             SeederRunRequest? request,
             CancellationToken ct) =>
         {
@@ -87,7 +89,9 @@ public static class SeederEndpoints
                     "The Seeder feature is disabled.");
             }
             bool wipe = request?.Wipe ?? seeder.WipeBeforeSeed;
-            if (!queue.TryEnqueueRun(wipe))
+            // Without a wipe the caller keeps their account: make the demo
+            // company visible from it.
+            if (!queue.TryEnqueueRun(wipe, wipe ? null : currentUser.Id?.Value))
             {
                 return ApiProblemResults.Conflict(
                     "seeder.already_running",

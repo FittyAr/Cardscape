@@ -1232,4 +1232,14 @@
   <data name="AuditCsvTarget" xml:space="preserve"><value>Target</value></data>
   <data name="AuditCsvWorkspace" xml:space="preserve"><value>Workspace</value></data>
   <data name="AuditCsvBoard" xml:space="preserve"><value>Board</value></data>
+  <data name="SetupDemoTitle" xml:space="preserve"><value>Explore with demo data</value></data>
+  <data name="SetupDemoBlurb" xml:space="preserve"><value>Fills Cardscape with a sample company (people, boards, cards) and signs you in as its administrator. You can wipe it later from System settings.</value></data>
+  <data name="SetupDemoStart" xml:space="preserve"><value>Load demo data</value></data>
+  <data name="SetupOrCreateAdmin" xml:space="preserve"><value>Or create your administrator account</value></data>
+  <data name="SetupDemoStarting" xml:space="preserve"><value>Preparing the demo data…</value></data>
+  <data name="SetupDemoProgress" xml:space="preserve"><value>Loading demo data · step {0} of {1}: {2}</value></data>
+  <data name="SetupDemoReady" xml:space="preserve"><value>The demo company is ready.</value></data>
+  <data name="SetupDemoAccount" xml:space="preserve"><value>Demo administrator: {0} · password {1}. Every demo person uses the same password.</value></data>
+  <data name="SetupDemoSignIn" xml:space="preserve"><value>Sign in to the demo</value></data>
+  <data name="SetupDemoFailed" xml:space="preserve"><value>Loading the demo data failed ({0}). Check the server log, or create the administrator instead.</value></data>
 </root>

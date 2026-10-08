@@ -36,6 +36,25 @@ public sealed class SetupAndSettingsEndpointTests
     }
 
     [Fact]
+    public async Task DemoSetup_IsRefused_OnceAnyoneExists_AndItsStatusIsPublic()
+    {
+        CancellationToken ct = TestContext.Current.CancellationToken;
+        HttpClient anonymous = _factory.CreateApiClient();
+        // Make sure the shared test instance has at least one account.
+        await anonymous.PostAsJsonAsync("api/auth/register",
+            new RegisterRequest($"demo-guard-{Guid.NewGuid():N}@cardscape.local", "Demo guard", "Password123!"), ct);
+
+        HttpResponseMessage start = await anonymous.PostAsync("api/setup/demo", null, ct);
+        start.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await start.Content.ReadAsStringAsync(ct)).Should().Contain("setup.already_initialized");
+
+        HttpResponseMessage status = await anonymous.GetAsync("api/setup/demo/status", ct);
+        status.StatusCode.Should().Be(HttpStatusCode.OK);
+        using JsonDocument doc = JsonDocument.Parse(await status.Content.ReadAsStringAsync(ct));
+        doc.RootElement.TryGetProperty("running", out _).Should().BeTrue();
+    }
+
+    [Fact]
     public async Task AdminSettings_Requires_Admin_Authorization()
     {
         HttpClient anonymousClient = _factory.CreateApiClient();
