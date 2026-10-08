@@ -603,7 +603,9 @@ h1, h2, h3,
     padding: 0.75rem 1.25rem;
     position: fixed;
     width: 100%;
-    z-index: 2000;
+    /* Above the boot splash (3000): if the runtime fails to start, the
+       error banner must not stay hidden behind the loading screen. */
+    z-index: 3001;
     font-weight: 500;
 }
 

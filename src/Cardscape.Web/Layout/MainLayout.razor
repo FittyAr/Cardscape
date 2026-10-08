@@ -160,14 +160,20 @@
         OnPasswordChangeRequired();
     }
 
-    // An account with a temporary password may only change it.
+    // An account with a temporary password may only change it. The router
+    // renders the "authorizing" state of /change-password itself inside
+    // this layout, so never re-navigate from there: that would loop.
     private void OnPasswordChangeRequired()
     {
-        if (PasswordChange.Required)
+        if (PasswordChange.Required && !IsOnChangePasswordPage())
         {
             _ = InvokeAsync(() => Nav.NavigateTo("change-password"));
         }
     }
+
+    private bool IsOnChangePasswordPage() =>
+        Nav.ToBaseRelativePath(Nav.Uri).Split('?', '#')[0]
+            .Equals("change-password", StringComparison.OrdinalIgnoreCase);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

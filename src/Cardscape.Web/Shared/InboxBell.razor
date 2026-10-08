@@ -32,11 +32,18 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Read the token before awaiting: the layout can be torn down while
+        // this is in flight (e.g. a redirect to the change-password page),
+        // and Token throws once the source is disposed.
+        CancellationToken ct = refreshCts.Token;
         authState = await AuthState.GetAuthenticationStateAsync();
-        if (authState.User.Identity?.IsAuthenticated == true)
+        if (authState.User.Identity?.IsAuthenticated == true && !ct.IsCancellationRequested)
         {
-            await RefreshCountAsync(refreshCts.Token);
-            refreshTask = RefreshLoopAsync(refreshCts.Token);
+            await RefreshCountAsync(ct);
+            if (!ct.IsCancellationRequested)
+            {
+                refreshTask = RefreshLoopAsync(ct);
+            }
         }
     }
 

@@ -216,9 +216,18 @@
 
     private string TableSummary => L["SeederTableSummaryText", _tables.Count, _tables.Sum(t => t.Rows)];
 
+    private bool _disposed;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadAsync();
+        // Leaving the tab while the first load is in flight disposes the
+        // component; starting the poll loop then would leak it.
+        if (_disposed)
+        {
+            return;
+        }
+
         _pollCts = new CancellationTokenSource();
         _pollTask = PollAsync(_pollCts.Token);
     }
@@ -417,6 +426,7 @@
 
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
         if (_pollCts is not null)
         {
             _pollCts.Cancel();
