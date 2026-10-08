@@ -14,7 +14,9 @@ namespace Cardscape.Infrastructure.Persistence.Audit;
 internal sealed record AuditEventFacts(
     string? PreviousRole = null,
     string? InvitationEmail = null,
-    string? InvitationRole = null);
+    string? InvitationRole = null,
+    string? WorkspaceName = null,
+    string? PreviousName = null);
 
 /// <summary>
 /// An audit entry before names are resolved. <see cref="NamedUsers"/>
@@ -95,6 +97,19 @@ internal static class AuditEventMapper
                 NamedUsers: new Dictionary<string, Guid>(StringComparer.Ordinal) { ["previousOwner"] = e.PreviousOwnerId },
                 FallbackActorId: e.ActorId),
 
+            // The workspace itself. Its name is snapshotted from the entity
+            // being saved: a new workspace is not in the database yet.
+            WorkspaceCreated e => ForWorkspace(e, e.WorkspaceId, AuditActions.WorkspaceCreated, e.Name.Value),
+            WorkspaceRenamed e => ForWorkspace(e, e.WorkspaceId, AuditActions.WorkspaceRenamed, e.NewName.Value,
+                Facts(("previousName", facts.PreviousName))),
+            WorkspaceArchived e => ForWorkspace(e, e.WorkspaceId, AuditActions.WorkspaceArchived, facts.WorkspaceName),
+            WorkspaceUnarchived e => ForWorkspace(e, e.WorkspaceId, AuditActions.WorkspaceUnarchived, facts.WorkspaceName),
+            WorkspaceDeleted e => ForWorkspace(e, e.WorkspaceId, AuditActions.WorkspaceDeleted, facts.WorkspaceName),
+            WorkspaceRegionChanged e => ForWorkspace(e, e.WorkspaceId, AuditActions.WorkspaceRegionChanged, facts.WorkspaceName,
+                Facts(("value", e.NewRegion.ToString()))),
+            WorkspaceTwoFactorRequirementChanged e => ForWorkspace(e, e.WorkspaceId, AuditActions.WorkspaceTwoFactorChanged,
+                facts.WorkspaceName, Facts(("value", e.Required ? "on" : "off")), fallbackActor: e.ActingUserId),
+
             BoardMemberAdded e => new AuditDraft(
                 e.OccurredAt, AuditActions.BoardMemberAdded, AuditTargetTypes.User, e.UserId,
                 BoardId: e.BoardId.Value,
@@ -111,6 +126,12 @@ internal static class AuditEventMapper
             _ => null
         };
     }
+
+    private static AuditDraft ForWorkspace(
+        IDomainEvent e, Domain.Workspaces.WorkspaceId workspaceId, string action, string? name,
+        IReadOnlyDictionary<string, string>? details = null, Guid? fallbackActor = null) =>
+        new(e.OccurredAt, action, AuditTargetTypes.Workspace, workspaceId.Value,
+            TargetName: name, WorkspaceId: workspaceId.Value, Details: details, FallbackActorId: fallbackActor);
 
     /// <summary>
     /// Drops entries that only restate another entry of the same save, so
@@ -129,6 +150,11 @@ internal static class AuditEventMapper
             .Where(d => d.Action == AuditActions.WorkspaceInvitationAccepted)
             .Select(d => (d.TargetId, d.WorkspaceId))
             .ToHashSet();
+        // Creating a workspace adds its owner as the first member.
+        HashSet<Guid?> createdWorkspaces = drafts
+            .Where(d => d.Action == AuditActions.WorkspaceCreated)
+            .Select(d => d.WorkspaceId)
+            .ToHashSet();
 
         // An administrator-created account is not also a self-service
         // registration.
@@ -139,6 +165,7 @@ internal static class AuditEventMapper
             .Where(d => !(d.Action == AuditActions.UserEmailVerified
                 && (registered.Contains(d.TargetId) || accepted.Any(a => a.Item1 == d.TargetId))))
             .Where(d => !(d.Action == AuditActions.WorkspaceMemberAdded && accepted.Contains((d.TargetId, d.WorkspaceId))))
+            .Where(d => !(d.Action == AuditActions.WorkspaceMemberAdded && createdWorkspaces.Contains(d.WorkspaceId)))
             .ToList();
     }
 

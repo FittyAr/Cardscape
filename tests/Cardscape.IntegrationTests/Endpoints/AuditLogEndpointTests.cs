@@ -106,7 +106,8 @@ public sealed class AuditLogEndpointTests(CardscapeWebApplicationFactory factory
             AuditActions.WorkspaceInvitationRevoked,
             AuditActions.WorkspaceInvitationIssued,
             AuditActions.WorkspaceInvitationAccepted,
-            AuditActions.WorkspaceInvitationIssued);
+            AuditActions.WorkspaceInvitationIssued,
+            AuditActions.WorkspaceCreated);
         entries.Should().OnlyContain(e => e.WorkspaceId == ws.Id && e.WorkspaceName == "Audited workspace");
 
         AuditEntryDto roleChanged = entries.Single(e => e.Action == AuditActions.WorkspaceMemberRoleChanged);
@@ -226,6 +227,32 @@ public sealed class AuditLogEndpointTests(CardscapeWebApplicationFactory factory
     }
 
     // ── helpers ────────────────────────────────────────────────
+
+    [Fact]
+    public async Task WorkspaceLifecycle_IsRecorded_WithTheOldNameOnRename()
+    {
+        CancellationToken ct = TestContext.Current.CancellationToken;
+        Account admin = await AdminAsync("ws-lifecycle");
+        WorkspaceDto ws = await CreateWorkspaceAsync(admin.Client, "First name");
+        (await admin.Client.PostAsJsonAsync($"api/workspaces/{ws.Id}/rename", new { name = "Second name" }, ct)).EnsureSuccessStatusCode();
+        (await admin.Client.PostAsync($"api/workspaces/{ws.Id}/archive", null, ct)).EnsureSuccessStatusCode();
+        (await admin.Client.PostAsync($"api/workspaces/{ws.Id}/unarchive", null, ct)).EnsureSuccessStatusCode();
+        (await admin.Client.DeleteAsync($"api/workspaces/{ws.Id}", ct)).EnsureSuccessStatusCode();
+
+        IReadOnlyList<AuditEntryDto> entries = await AdminLogAsync(admin.Client, $"workspaceId={ws.Id}");
+        entries.Select(e => e.Action).Should().Equal(
+            AuditActions.WorkspaceDeleted,
+            AuditActions.WorkspaceUnarchived,
+            AuditActions.WorkspaceArchived,
+            AuditActions.WorkspaceRenamed,
+            AuditActions.WorkspaceCreated);
+        entries.Should().OnlyContain(e => e.ActorUserId == admin.Id && e.TargetType == AuditTargetTypes.Workspace);
+        entries.Single(e => e.Action == AuditActions.WorkspaceCreated).TargetName.Should().Be("First name");
+        AuditEntryDto renamed = entries.Single(e => e.Action == AuditActions.WorkspaceRenamed);
+        renamed.TargetName.Should().Be("Second name");
+        renamed.Details.Should().Contain("previousName", "First name");
+        entries.Single(e => e.Action == AuditActions.WorkspaceDeleted).TargetName.Should().Be("Second name");
+    }
 
     private async Task<Account> AdminAsync(string prefix)
     {

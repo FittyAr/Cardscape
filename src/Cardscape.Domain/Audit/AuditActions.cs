@@ -29,6 +29,13 @@ public static class AuditActions
     public const string WorkspaceInvitationRevoked = "workspace.invitation_revoked";
     public const string WorkspaceInvitationAccepted = "workspace.invitation_accepted";
     public const string WorkspaceOwnershipTransferred = "workspace.ownership_transferred";
+    public const string WorkspaceCreated = "workspace.created";
+    public const string WorkspaceRenamed = "workspace.renamed";
+    public const string WorkspaceArchived = "workspace.archived";
+    public const string WorkspaceUnarchived = "workspace.unarchived";
+    public const string WorkspaceDeleted = "workspace.deleted";
+    public const string WorkspaceRegionChanged = "workspace.region_changed";
+    public const string WorkspaceTwoFactorChanged = "workspace.two_factor_changed";
 
     public const string BoardMemberAdded = "board.member_added";
     public const string BoardMemberRoleChanged = "board.member_role_changed";
@@ -43,6 +50,8 @@ public static class AuditActions
         WorkspaceMemberAdded, WorkspaceMemberRoleChanged, WorkspaceMemberRemoved,
         WorkspaceInvitationIssued, WorkspaceInvitationRevoked, WorkspaceInvitationAccepted,
         WorkspaceOwnershipTransferred,
+        WorkspaceCreated, WorkspaceRenamed, WorkspaceArchived, WorkspaceUnarchived, WorkspaceDeleted,
+        WorkspaceRegionChanged, WorkspaceTwoFactorChanged,
         BoardMemberAdded, BoardMemberRoleChanged, BoardMemberRemoved
     ];
 }
@@ -52,4 +61,5 @@ public static class AuditTargetTypes
 {
     public const string User = "user";
     public const string Invitation = "invitation";
+    public const string Workspace = "workspace";
 }

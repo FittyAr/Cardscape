@@ -1214,4 +1214,22 @@
   <data name="BoardMembersInviteGuestRoleAria" xml:space="preserve"><value>Board role for the guest</value></data>
   <data name="MembersInvitationToBoard" xml:space="preserve"><value>and the board {0}</value></data>
   <data name="RegisterInvitedToBoard" xml:space="preserve"><value>You were invited to the board {0} in {1}. Create your account with {2} to join.</value></data>
+  <data name="AuditWorkspaceCreated" xml:space="preserve"><value>{0} created the workspace {1}</value></data>
+  <data name="AuditWorkspaceRenamed" xml:space="preserve"><value>{0} renamed the workspace {8} to {1}</value></data>
+  <data name="AuditWorkspaceArchived" xml:space="preserve"><value>{0} archived the workspace {1}</value></data>
+  <data name="AuditWorkspaceUnarchived" xml:space="preserve"><value>{0} restored the workspace {1} from the archive</value></data>
+  <data name="AuditWorkspaceDeleted" xml:space="preserve"><value>{0} deleted the workspace {1}</value></data>
+  <data name="AuditWorkspaceRegionChanged" xml:space="preserve"><value>{0} moved the workspace {1} to the {9} region</value></data>
+  <data name="AuditWorkspaceTwoFactorChanged" xml:space="preserve"><value>{0} {9} in {1}</value></data>
+  <data name="AuditTwoFactorOn" xml:space="preserve"><value>made two-factor authentication required</value></data>
+  <data name="AuditTwoFactorOff" xml:space="preserve"><value>stopped requiring two-factor authentication</value></data>
+  <data name="AuditExportCsv" xml:space="preserve"><value>Export CSV</value></data>
+  <data name="AuditExporting" xml:space="preserve"><value>Exporting…</value></data>
+  <data name="AuditExportTruncated" xml:space="preserve"><value>Only the newest {0} entries were exported. Narrow the filters to export older ones.</value></data>
+  <data name="AuditCsvDate" xml:space="preserve"><value>Date</value></data>
+  <data name="AuditCsvArea" xml:space="preserve"><value>Area</value></data>
+  <data name="AuditCsvAction" xml:space="preserve"><value>Action code</value></data>
+  <data name="AuditCsvTarget" xml:space="preserve"><value>Target</value></data>
+  <data name="AuditCsvWorkspace" xml:space="preserve"><value>Workspace</value></data>
+  <data name="AuditCsvBoard" xml:space="preserve"><value>Board</value></data>
 </root>

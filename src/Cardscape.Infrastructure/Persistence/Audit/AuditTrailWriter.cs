@@ -128,6 +128,12 @@ internal sealed class AuditTrailWriter(IServiceProvider services)
             WorkspaceMemberRemoved e => new AuditEventFacts(PreviousRole: PreviousWorkspaceRole(context, e.WorkspaceId, e.UserId)),
             BoardMemberRoleChanged e => new AuditEventFacts(PreviousRole: PreviousBoardRole(context, e.BoardId, e.UserId)),
             BoardMemberRemoved e => new AuditEventFacts(PreviousRole: PreviousBoardRole(context, e.BoardId, e.UserId)),
+            WorkspaceRenamed when source.Entity is Workspace && source.State != EntityState.Added =>
+                new AuditEventFacts(PreviousName: source.OriginalValues.GetValue<WorkspaceName>(nameof(Workspace.Name))?.Value),
+            WorkspaceArchived or WorkspaceUnarchived or WorkspaceDeleted or WorkspaceRegionChanged
+                or WorkspaceTwoFactorRequirementChanged
+                when source.Entity is Workspace workspace =>
+                new AuditEventFacts(WorkspaceName: workspace.Name.Value),
             WorkspaceInvitationIssued or WorkspaceInvitationRevoked or WorkspaceInvitationAccepted
                 when source.Entity is WorkspaceInvitation invitation =>
                 new AuditEventFacts(InvitationEmail: invitation.Email, InvitationRole: invitation.Role.ToString()),

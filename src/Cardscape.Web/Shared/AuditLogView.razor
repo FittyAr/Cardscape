@@ -3,6 +3,8 @@
 @using Cardscape.Web.Services.Api
 @using Microsoft.Extensions.Localization
 @inject IAuditApiClient AuditApi
+@inject IJSRuntime Js
+@inject NotificationService Notifications
 @inject IStringLocalizer<SharedResource> L
 
 @*
@@ -40,6 +42,9 @@
             <RadzenButton Text="@L["AuditClearFilters"]" Icon="filter_alt_off" ButtonStyle="ButtonStyle.Base"
                           Variant="Variant.Text" Click="@ClearFiltersAsync" />
         }
+        <RadzenButton Text="@L["AuditExportCsv"]" Icon="download" ButtonStyle="ButtonStyle.Light"
+                      IsBusy="@exporting" BusyText="@L["AuditExporting"]" Disabled="@(total == 0)"
+                      Click="@ExportAsync" class="rz-ms-auto" />
     </RadzenStack>
 
     @if (error is not null)
@@ -186,6 +191,52 @@
             loading = false;
         }
     }
+
+    private bool exporting;
+
+    // Same filters as the grid, every page (up to AuditCsv.MaxRows), built
+    // here so descriptions and dates match what the user reads.
+    private async Task ExportAsync()
+    {
+        exporting = true;
+        try
+        {
+            AuditQuery query = new(from, to, area != AllAreas ? area : null, search);
+            List<AuditEntryDto> rows = [];
+            for (int exportPage = 0; rows.Count < AuditCsv.MaxRows; exportPage++)
+            {
+                ApiResult<AuditEntryPageDto> result = await AuditApi.ListAsync(WorkspaceId, query, exportPage, ExportPageSize);
+                if (!result.HasValue)
+                {
+                    Notifications.Notify(NotificationSeverity.Error, L["AuditExportCsv"], result.Error ?? L["AuditLoadFailed"]);
+                    return;
+                }
+
+                rows.AddRange(result.Value.Items);
+                if (result.Value.Items.Count < ExportPageSize || rows.Count >= result.Value.Total)
+                {
+                    break;
+                }
+            }
+
+            if (rows.Count >= AuditCsv.MaxRows)
+            {
+                rows = rows[..AuditCsv.MaxRows];
+                Notifications.Notify(NotificationSeverity.Warning, L["AuditExportCsv"], L["AuditExportTruncated", AuditCsv.MaxRows]);
+            }
+
+            // The BOM lets spreadsheet apps read the file as UTF-8.
+            string content = "\uFEFF" + AuditCsv.Build(rows, L);
+            string fileName = $"audit-{DateTime.Now:yyyyMMdd-HHmm}.csv";
+            await Js.InvokeVoidAsync("cardscape.downloadTextFile", fileName, "text/csv;charset=utf-8", content);
+        }
+        finally
+        {
+            exporting = false;
+        }
+    }
+
+    private const int ExportPageSize = 100;
 
     private sealed record AreaOption(string Value, string Label);
 }

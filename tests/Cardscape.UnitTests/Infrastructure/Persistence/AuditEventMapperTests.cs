@@ -187,4 +187,33 @@ public sealed class AuditEventMapperTests
 
         AuditEventMapper.Collapse([added]).Should().Equal(added);
     }
+
+    [Fact]
+    public void WorkspaceEvents_TargetTheWorkspace()
+    {
+        WorkspaceId id = WorkspaceId.New();
+        WorkspaceName name = WorkspaceName.Create("Nexora").Value;
+
+        AuditDraft created = AuditEventMapper.Map(new WorkspaceCreated(id, Guid.NewGuid(), name, At))!;
+        AuditDraft renamed = AuditEventMapper.Map(new WorkspaceRenamed(id, name, At), new AuditEventFacts(PreviousName: "Old"))!;
+        AuditDraft deleted = AuditEventMapper.Map(new WorkspaceDeleted(id, At), new AuditEventFacts(WorkspaceName: "Nexora"))!;
+        AuditDraft twoFactor = AuditEventMapper.Map(new WorkspaceTwoFactorRequirementChanged(id, true, Guid.NewGuid(), At))!;
+
+        created.Should().BeEquivalentTo(new { Action = AuditActions.WorkspaceCreated, TargetType = AuditTargetTypes.Workspace, TargetId = id.Value, TargetName = "Nexora" });
+        renamed.Details.Should().Contain("previousName", "Old");
+        deleted.TargetName.Should().Be("Nexora");
+        twoFactor.Details.Should().Contain("value", "on");
+        twoFactor.FallbackActorId.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void CreatingAWorkspace_HidesTheOwnersMemberAddedEntry()
+    {
+        WorkspaceId id = WorkspaceId.New();
+        Guid owner = Guid.NewGuid();
+        AuditDraft created = AuditEventMapper.Map(new WorkspaceCreated(id, owner, WorkspaceName.Create("Nexora").Value, At))!;
+        AuditDraft added = AuditEventMapper.Map(new WorkspaceMemberAdded(id, owner, WorkspaceRole.Admin, At))!;
+
+        AuditEventMapper.Collapse([created, added]).Should().Equal(created);
+    }
 }

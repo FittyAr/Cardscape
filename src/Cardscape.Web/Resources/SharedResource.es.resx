@@ -1214,4 +1214,22 @@
   <data name="BoardMembersInviteGuestRoleAria" xml:space="preserve"><value>Rol del invitado en el tablero</value></data>
   <data name="MembersInvitationToBoard" xml:space="preserve"><value>y el tablero {0}</value></data>
   <data name="RegisterInvitedToBoard" xml:space="preserve"><value>Te invitaron al tablero {0} de {1}. Creá tu cuenta con {2} para unirte.</value></data>
+  <data name="AuditWorkspaceCreated" xml:space="preserve"><value>{0} creó el espacio {1}</value></data>
+  <data name="AuditWorkspaceRenamed" xml:space="preserve"><value>{0} renombró el espacio {8} a {1}</value></data>
+  <data name="AuditWorkspaceArchived" xml:space="preserve"><value>{0} archivó el espacio {1}</value></data>
+  <data name="AuditWorkspaceUnarchived" xml:space="preserve"><value>{0} desarchivó el espacio {1}</value></data>
+  <data name="AuditWorkspaceDeleted" xml:space="preserve"><value>{0} eliminó el espacio {1}</value></data>
+  <data name="AuditWorkspaceRegionChanged" xml:space="preserve"><value>{0} cambió la región del espacio {1} a {9}</value></data>
+  <data name="AuditWorkspaceTwoFactorChanged" xml:space="preserve"><value>{0} {9} en {1}</value></data>
+  <data name="AuditTwoFactorOn" xml:space="preserve"><value>hizo obligatoria la verificación en dos pasos</value></data>
+  <data name="AuditTwoFactorOff" xml:space="preserve"><value>dejó de exigir la verificación en dos pasos</value></data>
+  <data name="AuditExportCsv" xml:space="preserve"><value>Exportar CSV</value></data>
+  <data name="AuditExporting" xml:space="preserve"><value>Exportando…</value></data>
+  <data name="AuditExportTruncated" xml:space="preserve"><value>Solo se exportaron las {0} entradas más recientes. Acotá los filtros para exportar las anteriores.</value></data>
+  <data name="AuditCsvDate" xml:space="preserve"><value>Fecha</value></data>
+  <data name="AuditCsvArea" xml:space="preserve"><value>Área</value></data>
+  <data name="AuditCsvAction" xml:space="preserve"><value>Código de acción</value></data>
+  <data name="AuditCsvTarget" xml:space="preserve"><value>Objetivo</value></data>
+  <data name="AuditCsvWorkspace" xml:space="preserve"><value>Espacio</value></data>
+  <data name="AuditCsvBoard" xml:space="preserve"><value>Tablero</value></data>
 </root>
