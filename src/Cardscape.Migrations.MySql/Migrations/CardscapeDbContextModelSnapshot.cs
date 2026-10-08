@@ -134,6 +134,71 @@ namespace Cardscape.Migrations.MySql.Migrations
                     b.ToTable("attachments", (string)null);
                 });
 
+            modelBuilder.Entity("Cardscape.Domain.Audit.AuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("ActorName")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("varchar(320)");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("BoardId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("BoardName")
+                        .HasMaxLength(320)
+                        .HasColumnType("varchar(320)");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(2048)
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<long>("OccurredAtUtcTicks")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("TargetId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("TargetName")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("varchar(320)");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<Guid?>("WorkspaceId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("WorkspaceName")
+                        .HasMaxLength(320)
+                        .HasColumnType("varchar(320)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("OccurredAtUtcTicks");
+
+                    b.HasIndex("TargetId");
+
+                    b.HasIndex("WorkspaceId", "OccurredAtUtcTicks");
+
+                    b.ToTable("audit_entries", (string)null);
+                });
+
             modelBuilder.Entity("Cardscape.Domain.Authentication.ExternalLogins.ExternalLogin", b =>
                 {
                     b.Property<Guid>("Id")

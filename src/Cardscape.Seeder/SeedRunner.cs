@@ -207,6 +207,7 @@ public sealed class SeedRunner : IDisposable
         var tablesInDeleteOrder = new (string Name, Func<Task<int>> Delete)[]
         {
             ("domain_event_outbox", () => db.Set<DomainEventOutboxMessage>().ExecuteDeleteAsync(cancellationToken)),
+            ("audit_entries", () => db.AuditEntries.ExecuteDeleteAsync(cancellationToken)),
             ("webhook_deliveries", () => db.Set<WebhookDelivery>().ExecuteDeleteAsync(cancellationToken)),
             ("webhook_endpoints", () => db.Set<WebhookEndpoint>().ExecuteDeleteAsync(cancellationToken)),
             ("inbound_email_addresses", () => db.Set<InboundEmailAddress>().ExecuteDeleteAsync(cancellationToken)),

@@ -199,6 +199,7 @@ builder.Services.AddScoped<IWebhooksApiClient, WebhooksApiClient>();
 builder.Services.AddScoped<IEmailIntegrationApiClient, EmailIntegrationApiClient>();
 builder.Services.AddScoped<IMcpSubscriptionsApiClient, McpSubscriptionsApiClient>();
 builder.Services.AddScoped<IAdminUsersApiClient, AdminUsersApiClient>();
+builder.Services.AddScoped<IAuditApiClient, AuditApiClient>();
 builder.Services.AddScoped<IEmailVerificationApiClient, EmailVerificationApiClient>();
 builder.Services.AddScoped<IAccountApiClient, AccountApiClient>();
 builder.Services.AddSingleton<PasswordChangeGate>();

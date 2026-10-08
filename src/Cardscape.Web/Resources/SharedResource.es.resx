@@ -1166,4 +1166,49 @@
   <data name="BoardMembersGuestInvitedShareLink" xml:space="preserve"><value>Invitación creada para {0}. Comparte este enlace; cuando acepte, agrégala a este tablero desde la lista de arriba.</value></data>
   <data name="BoardMembersInviteAnotherGuest" xml:space="preserve"><value>Invitar a otra persona</value></data>
   <data name="BoardMembersGuestCandidate" xml:space="preserve"><value>{0} ({1}) · Invitado</value></data>
+  <data name="NavAuditLog" xml:space="preserve"><value>Registro de auditoría</value></data>
+  <data name="AuditTitle" xml:space="preserve"><value>Registro de auditoría</value></data>
+  <data name="AuditSubtitle" xml:space="preserve"><value>Quién creó, invitó, cambió roles o desactivó a alguien, y cuándo.</value></data>
+  <data name="AuditWorkspaceTitle" xml:space="preserve"><value>Actividad de miembros</value></data>
+  <data name="AuditColumnWhen" xml:space="preserve"><value>Cuándo</value></data>
+  <data name="AuditColumnWho" xml:space="preserve"><value>Quién</value></data>
+  <data name="AuditColumnWhat" xml:space="preserve"><value>Qué</value></data>
+  <data name="AuditFilterSearch" xml:space="preserve"><value>Buscar nombres</value></data>
+  <data name="AuditFilterSearchPlaceholder" xml:space="preserve"><value>Persona, espacio o tablero</value></data>
+  <data name="AuditFilterArea" xml:space="preserve"><value>Área</value></data>
+  <data name="AuditFilterFrom" xml:space="preserve"><value>Desde</value></data>
+  <data name="AuditFilterTo" xml:space="preserve"><value>Hasta</value></data>
+  <data name="AuditClearFilters" xml:space="preserve"><value>Limpiar filtros</value></data>
+  <data name="AuditAreaAll" xml:space="preserve"><value>Todo</value></data>
+  <data name="AuditAreaUsers" xml:space="preserve"><value>Cuentas</value></data>
+  <data name="AuditAreaWorkspaces" xml:space="preserve"><value>Espacios</value></data>
+  <data name="AuditAreaBoards" xml:space="preserve"><value>Tableros</value></data>
+  <data name="AuditEmpty" xml:space="preserve"><value>Ninguna entrada coincide con estos filtros.</value></data>
+  <data name="AuditLoadFailed" xml:space="preserve"><value>No se pudo cargar el registro de auditoría.</value></data>
+  <data name="AuditActorSystem" xml:space="preserve"><value>Sistema</value></data>
+  <data name="AuditActorScim" xml:space="preserve"><value>Aprovisionamiento SCIM</value></data>
+  <data name="AuditUnknownAction" xml:space="preserve"><value>{0}: {7} ({1})</value></data>
+  <data name="AuditUserRegistered" xml:space="preserve"><value>{1} se registró</value></data>
+  <data name="AuditUserCreatedByAdmin" xml:space="preserve"><value>{0} creó la cuenta de {1}</value></data>
+  <data name="AuditUserAdminGranted" xml:space="preserve"><value>{0} hizo a {1} administrador de la instancia</value></data>
+  <data name="AuditUserAdminRevoked" xml:space="preserve"><value>{0} quitó a {1} el rol de administrador de la instancia</value></data>
+  <data name="AuditUserDeactivated" xml:space="preserve"><value>{0} desactivó a {1}</value></data>
+  <data name="AuditUserReactivated" xml:space="preserve"><value>{0} reactivó a {1}</value></data>
+  <data name="AuditUserDeleted" xml:space="preserve"><value>{0} eliminó la cuenta de {1}</value></data>
+  <data name="AuditUserRestored" xml:space="preserve"><value>{0} restauró la cuenta de {1}</value></data>
+  <data name="AuditUserAnonymised" xml:space="preserve"><value>{0} anonimizó la cuenta de {1}</value></data>
+  <data name="AuditUserRestricted" xml:space="preserve"><value>{0} restringió a {1}</value></data>
+  <data name="AuditUserUnrestricted" xml:space="preserve"><value>{0} levantó la restricción de {1}</value></data>
+  <data name="AuditUserEmailVerified" xml:space="preserve"><value>{0} verificó el correo de {1}</value></data>
+  <data name="AuditUserPasswordResetByAdmin" xml:space="preserve"><value>{0} restableció la contraseña de {1}</value></data>
+  <data name="AuditWorkspaceMemberAdded" xml:space="preserve"><value>{0} agregó a {1} a {2} como {5}</value></data>
+  <data name="AuditWorkspaceMemberRoleChanged" xml:space="preserve"><value>{0} cambió el rol de {1} de {4} a {5} en {2}</value></data>
+  <data name="AuditWorkspaceMemberRemoved" xml:space="preserve"><value>{0} quitó a {1} de {2}</value></data>
+  <data name="AuditWorkspaceInvitationIssued" xml:space="preserve"><value>{0} invitó a {1} a {2} como {5}</value></data>
+  <data name="AuditWorkspaceInvitationRevoked" xml:space="preserve"><value>{0} revocó la invitación de {1} a {2}</value></data>
+  <data name="AuditWorkspaceInvitationAccepted" xml:space="preserve"><value>{1} aceptó la invitación y se unió a {2} como {5}</value></data>
+  <data name="AuditWorkspaceOwnershipTransferred" xml:space="preserve"><value>{0} transfirió la propiedad de {2} de {6} a {1}</value></data>
+  <data name="AuditBoardMemberAdded" xml:space="preserve"><value>{0} agregó a {1} al tablero {3} como {5}</value></data>
+  <data name="AuditBoardMemberRoleChanged" xml:space="preserve"><value>{0} cambió el rol de {1} de {4} a {5} en el tablero {3}</value></data>
+  <data name="AuditBoardMemberRemoved" xml:space="preserve"><value>{0} quitó a {1} del tablero {3}</value></data>
 </root>

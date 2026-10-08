@@ -210,6 +210,11 @@
                 </Columns>
             </RadzenDataGrid>
         }
+
+        @* Membership activity: who invited, changed roles or removed
+           someone in this workspace and its boards. *@
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" Text="@L["AuditWorkspaceTitle"]" />
+        <AuditLogView @ref="auditLog" WorkspaceId="@WorkspaceId" @key="WorkspaceId" />
     }
 </RadzenStack>
 
@@ -232,6 +237,7 @@
     private bool canTransferOwnership;
     private Guid? pendingUserId;
     private readonly InviteModel inviteModel = new();
+    private AuditLogView? auditLog;
 
     private IReadOnlyList<RoleOption> Roles =>
     [
@@ -288,6 +294,12 @@
         invitationsError = invitationsResult.IsSuccess
             ? null
             : invitationsResult.Error ?? L["WorkspaceInvitationsLoadFailed"];
+
+        // A change made on this page shows up in the activity log at once.
+        if (auditLog is not null)
+        {
+            await auditLog.RefreshAsync();
+        }
     }
 
     private async Task SendInviteAsync()

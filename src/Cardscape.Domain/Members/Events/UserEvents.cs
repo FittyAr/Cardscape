@@ -92,3 +92,9 @@ public sealed record UserEmailVerified(
 public sealed record UserPasswordResetByAdmin(
     UserId UserId,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
+/// <summary>Raised when an administrator creates the account directly
+/// (no sign-up, no invitation). Follows <see cref="UserRegistered"/>.</summary>
+public sealed record UserCreatedByAdmin(
+    UserId UserId,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);

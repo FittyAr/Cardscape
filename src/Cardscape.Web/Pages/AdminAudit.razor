@@ -1,0 +1,13 @@
+@page "/admin/audit"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Shared
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["AuditTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["AuditTitle"]" Subtitle="@L["AuditSubtitle"]" />
+    <AuditLogView />
+</RadzenStack>

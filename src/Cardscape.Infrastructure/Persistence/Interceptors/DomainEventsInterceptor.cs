@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Domain.Common;
 using Cardscape.Infrastructure.Logging;
+using Cardscape.Infrastructure.Persistence.Audit;
 using Cardscape.Infrastructure.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -11,7 +12,9 @@ namespace Cardscape.Infrastructure.Persistence.Interceptors;
 
 /// <summary>
 /// Collects domain events from tracked aggregate roots and stores one durable
-/// delivery per broadcaster in the same <c>SaveChangesAsync</c> transaction.
+/// delivery per broadcaster in the same <c>SaveChangesAsync</c> transaction,
+/// together with the administration audit entries they imply
+/// (<see cref="AuditTrailWriter"/>).
 /// Also normalises entity state for new owned/child rows that EF
 /// mis-marks as <see cref="EntityState.Modified"/> when their parent
 /// navigation changes.
@@ -19,16 +22,22 @@ namespace Cardscape.Infrastructure.Persistence.Interceptors;
 internal sealed class DomainEventsInterceptor(
     IEnumerable<IDomainEventBroadcaster> broadcasters,
     DomainEventOutboxProcessor outboxProcessor,
+    AuditTrailWriter auditTrail,
     IClock clock,
     ILogger<DomainEventsInterceptor> logger) : SaveChangesInterceptor
 {
-    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
         if (eventData.Context is not null)
         {
+            // The administration audit log is written in the same save
+            // (and therefore the same transaction) as the change it
+            // describes, while the request's caller is still known.
+            await auditTrail.RecordAsync(eventData.Context, cancellationToken);
+
             // EF occasionally marks a brand-new child entity (e.g. a
             // BoardStar added to Board._stars) as Modified instead
             // of Added. That produces an UPDATE with the original
@@ -142,7 +151,7 @@ internal sealed class DomainEventsInterceptor(
             }
         }
 
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
+        return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
     public override async ValueTask<int> SavedChangesAsync(

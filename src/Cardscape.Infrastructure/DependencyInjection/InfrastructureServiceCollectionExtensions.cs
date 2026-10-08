@@ -60,6 +60,7 @@ public static partial class InfrastructureServiceCollectionExtensions
         });
 
         services.AddScoped<DomainEventsInterceptor>();
+        services.AddScoped<Persistence.Audit.AuditTrailWriter>();
         services.AddSingleton<DomainEventOutboxProcessor>();
         services.AddHostedService<DomainEventOutboxDispatcherService>();
         services.AddScoped<IExternalMessageInbox, ExternalMessageInbox>();
@@ -100,6 +101,7 @@ public static partial class InfrastructureServiceCollectionExtensions
         // it instead of falling back to service location.
         services.AddScoped<IRepository<User, UserId>, UserRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IAuditLogReader, AuditLogReader>();
 
         services.AddRepository<WorkspaceRepository, Workspace, WorkspaceId, IWorkspaceRepository>();
 

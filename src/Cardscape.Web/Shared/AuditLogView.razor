@@ -1,0 +1,191 @@
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Microsoft.Extensions.Localization
+@inject IAuditApiClient AuditApi
+@inject IStringLocalizer<SharedResource> L
+
+@*
+  AuditLogView — filters and a server-paged grid over the
+  administration audit log. Without WorkspaceId it reads the
+  instance-wide log (instance admins); with one, that workspace's
+  log (its owner, workspace Admins and instance admins).
+*@
+
+<RadzenStack Gap="1rem">
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.75rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+        <RadzenFormField Text="@L["AuditFilterSearch"]" Style="flex: 1 1 16rem;">
+            <RadzenTextBox @bind-Value="search" Change="@(_ => ReloadFromFirstPageAsync())"
+                           Placeholder="@L["AuditFilterSearchPlaceholder"]"
+                           aria-label="@L["AuditFilterSearch"]" Style="width:100%" />
+        </RadzenFormField>
+        <RadzenFormField Text="@L["AuditFilterArea"]" Style="flex: 0 1 12rem;">
+            <RadzenDropDown TValue="string" @bind-Value="area" Data="@AreaOptions"
+                            TextProperty="Label" ValueProperty="Value"
+                            Change="@(_ => ReloadFromFirstPageAsync())"
+                            aria-label="@L["AuditFilterArea"]" Style="width:100%" />
+        </RadzenFormField>
+        <RadzenFormField Text="@L["AuditFilterFrom"]" Style="flex: 0 1 11rem;">
+            <RadzenDatePicker TValue="DateTime?" @bind-Value="from" DateFormat="d" AllowClear="true"
+                              Change="@(_ => ReloadFromFirstPageAsync())"
+                              aria-label="@L["AuditFilterFrom"]" Style="width:100%" />
+        </RadzenFormField>
+        <RadzenFormField Text="@L["AuditFilterTo"]" Style="flex: 0 1 11rem;">
+            <RadzenDatePicker TValue="DateTime?" @bind-Value="to" DateFormat="d" AllowClear="true"
+                              Change="@(_ => ReloadFromFirstPageAsync())"
+                              aria-label="@L["AuditFilterTo"]" Style="width:100%" />
+        </RadzenFormField>
+        @if (HasFilters)
+        {
+            <RadzenButton Text="@L["AuditClearFilters"]" Icon="filter_alt_off" ButtonStyle="ButtonStyle.Base"
+                          Variant="Variant.Text" Click="@ClearFiltersAsync" />
+        }
+    </RadzenStack>
+
+    @if (error is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@error</RadzenAlert>
+    }
+
+    @* The grid stays rendered (it triggers the first load) but hidden
+       until the first page arrives. *@
+    @if (entries is null && error is null)
+    {
+        <LoadingState Size="LoadingSize.Section" />
+    }
+
+    <RadzenDataGrid @ref="grid" TItem="AuditEntryDto" Data="@entries" Count="@total" LoadData="@LoadAsync"
+                    IsLoading="@(loading && entries is not null)" AllowPaging="true" PageSize="@PageSize"
+                    PagerHorizontalAlign="HorizontalAlign.Left" EmptyText="@L["AuditEmpty"]"
+                    Style="@(entries is null ? "display: none;" : null)">
+        <Columns>
+            <RadzenDataGridColumn TItem="AuditEntryDto" Title="@L["AuditColumnWhen"]" Sortable="false" Width="11rem">
+                <Template Context="e">
+                    <span title="@e.OccurredAt.LocalDateTime.ToString("F")">@e.OccurredAt.LocalDateTime.ToString("g")</span>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="AuditEntryDto" Title="@L["AuditColumnWho"]" Sortable="false" Width="13rem">
+                <Template Context="e">
+                    @if (e.ActorUserId is null)
+                    {
+                        <span class="rz-color-text-secondary">@AuditPresentation.Actor(e, L)</span>
+                    }
+                    else
+                    {
+                        @e.ActorName
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="AuditEntryDto" Title="@L["AuditColumnWhat"]" Sortable="false" MinWidth="20rem">
+                <Template Context="e">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                        <RadzenBadge BadgeStyle="@AuditPresentation.Style(e.Action)" Variant="Variant.Outlined"
+                                     Text="@L[AuditPresentation.AreaKey(e.Action)]" />
+                        <span style="white-space: normal;">@AuditPresentation.Sentence(e, L)</span>
+                    </RadzenStack>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</RadzenStack>
+
+@code {
+    private const int PageSize = 25;
+
+    /// <summary>Null for the instance-wide log.</summary>
+    [Parameter] public Guid? WorkspaceId { get; set; }
+
+    private RadzenDataGrid<AuditEntryDto>? grid;
+    // Null until the first load: RadzenDataGrid only calls LoadData on
+    // its first render when Data is null.
+    private IReadOnlyList<AuditEntryDto>? entries;
+    private int total;
+    private int page;
+    private bool loading = true;
+    private string? error;
+    private string? search;
+    // A non-empty sentinel: Radzen treats "" as no value and then leaves the
+    // floating label on top of the "All" text.
+    private const string AllAreas = "*";
+
+    private string area = AllAreas;
+    private DateTime? from;
+    private DateTime? to;
+
+    private bool HasFilters => !string.IsNullOrWhiteSpace(search) || area != AllAreas || from is not null || to is not null;
+
+    private IReadOnlyList<AreaOption> AreaOptions => WorkspaceId is null
+        ?
+        [
+            new(AllAreas, L["AuditAreaAll"]),
+            new(AuditPresentation.ActionPrefixUsers, L["AuditAreaUsers"]),
+            new(AuditPresentation.ActionPrefixWorkspaces, L["AuditAreaWorkspaces"]),
+            new(AuditPresentation.ActionPrefixBoards, L["AuditAreaBoards"])
+        ]
+        :
+        [
+            new(AllAreas, L["AuditAreaAll"]),
+            new(AuditPresentation.ActionPrefixWorkspaces, L["AuditAreaWorkspaces"]),
+            new(AuditPresentation.ActionPrefixBoards, L["AuditAreaBoards"])
+        ];
+
+    private async Task LoadAsync(LoadDataArgs args)
+    {
+        page = (args.Skip ?? 0) / PageSize;
+        await FetchAsync();
+    }
+
+    private async Task ReloadFromFirstPageAsync()
+    {
+        page = 0;
+        if (grid is not null)
+        {
+            // Resets the pager; FirstPage triggers LoadData.
+            await grid.FirstPage(forceReload: true);
+            return;
+        }
+
+        await FetchAsync();
+    }
+
+    /// <summary>Re-reads the current page (e.g. after the host page changed something).</summary>
+    public async Task RefreshAsync()
+    {
+        await FetchAsync();
+        StateHasChanged();
+    }
+
+    private async Task ClearFiltersAsync()
+    {
+        search = null;
+        area = AllAreas;
+        from = null;
+        to = null;
+        await ReloadFromFirstPageAsync();
+    }
+
+    private async Task FetchAsync()
+    {
+        loading = true;
+        try
+        {
+            AuditQuery query = new(from, to, area != AllAreas ? area : null, search);
+            ApiResult<AuditEntryPageDto> result = await AuditApi.ListAsync(WorkspaceId, query, page, PageSize);
+            if (result.HasValue)
+            {
+                entries = result.Value.Items;
+                total = result.Value.Total;
+                error = null;
+                return;
+            }
+
+            error = result.Error ?? L["AuditLoadFailed"];
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private sealed record AreaOption(string Value, string Label);
+}
