@@ -233,8 +233,23 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
         return Result.Success();
     }
 
-    /// <summary>True if the user is a member of the workspace.</summary>
+    /// <summary>True if the user is a member of the workspace (guests included).</summary>
     public bool HasMember(Guid userId) => _members.Any(m => m.UserId == userId);
+
+    /// <summary>The user's workspace role, or <c>null</c> when they are not a member.</summary>
+    public WorkspaceRole? RoleOf(Guid userId) =>
+        _members.FirstOrDefault(m => m.UserId == userId)?.Role;
+
+    /// <summary>True if the user belongs to the workspace as a <see cref="WorkspaceRole.Guest"/>.</summary>
+    public bool IsGuest(Guid userId) => RoleOf(userId) == WorkspaceRole.Guest;
+
+    /// <summary>
+    /// True if the user is a full (non-guest) member: they see the
+    /// workspace's boards and roster and may create boards. Guests only
+    /// reach the boards they were explicitly added to.
+    /// </summary>
+    public bool HasFullMembership(Guid userId) =>
+        RoleOf(userId) is { } role && role != WorkspaceRole.Guest;
 
     /// <summary>
     /// True if the user may manage members and invitations: the owner

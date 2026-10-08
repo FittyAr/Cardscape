@@ -45,7 +45,10 @@ public enum WorkspaceRole
     Member = 1,
 
     /// <summary>Grants read-only access to workspace content.</summary>
-    Observer = 2
+    Observer = 2,
+
+    /// <summary>Grants access only to the boards the guest was explicitly added to.</summary>
+    Guest = 3
 }
 
 /// <summary>Categories emitted by the activity timeline.</summary>
@@ -137,6 +140,7 @@ public enum ActivityKind
 /// <param name="RequireTwoFactor"><see langword="true"/> when workspace members must use two-factor authentication.</param>
 /// <param name="CreatedAt">The creation timestamp in UTC.</param>
 /// <param name="MemberCount">The number of workspace members.</param>
+/// <param name="CallerRole">The calling user's own workspace role, when the server reports it.</param>
 public sealed record WorkspaceDto(
     [property: JsonPropertyName("id")] Guid Id,
     [property: JsonPropertyName("name")] string Name,
@@ -145,7 +149,8 @@ public sealed record WorkspaceDto(
     [property: JsonPropertyName("isArchived")] bool IsArchived,
     [property: JsonPropertyName("requireTwoFactor")] bool RequireTwoFactor,
     [property: JsonPropertyName("createdAt")] DateTimeOffset CreatedAt,
-    [property: JsonPropertyName("memberCount")] int MemberCount);
+    [property: JsonPropertyName("memberCount")] int MemberCount,
+    [property: JsonPropertyName("callerRole")] WorkspaceRole? CallerRole = null);
 
 /// <summary>Represents a user's membership in a workspace.</summary>
 /// <param name="UserId">The user identifier.</param>

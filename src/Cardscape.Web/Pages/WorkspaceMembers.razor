@@ -45,6 +45,10 @@
                                     TextProperty="Label" ValueProperty="Value"
                                     Name="invite-role" Style="width:100%" />
                 </LabeledField>
+                @if (inviteModel.Role == WorkspaceRole.Guest)
+                {
+                    <RadzenText Text="@L["MembersGuestInviteHint"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
+                }
 
                 @if (issuedLink is not null)
                 {
@@ -88,6 +92,11 @@
 
     <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" Text="@L["MembersCurrent"]" />
 
+    @if (workspace?.CallerIsGuest == true)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false">@L["MembersGuestRosterNotice"]</RadzenAlert>
+    }
+
     @if (membersError is not null)
     {
         <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@membersError</RadzenAlert>
@@ -104,7 +113,15 @@
     {
         <RadzenDataGrid TItem="WorkspaceMemberDto" Data="@members" AllowSorting="true" AllowPaging="true" PageSize="20">
             <Columns>
-                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="DisplayName" Title="@L["MembersName"]" />
+                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="DisplayName" Title="@L["MembersName"]">
+                    <Template Context="m">
+                        @m.DisplayName
+                        @if (m.IsGuest)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="@L["WorkspaceRoleGuest"]" title="@L["WorkspaceGuestHint"]" class="rz-ms-1" />
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
                 <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="Email" Title="@L["MembersEmail"]" />
                 <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="Role" Title="@L["MembersRole"]" Width="14rem">
                     <Template Context="m">
@@ -220,7 +237,8 @@
     [
         new(WorkspaceRole.Admin, L["WorkspaceRoleAdmin"]),
         new(WorkspaceRole.Member, L["WorkspaceRoleMember"]),
-        new(WorkspaceRole.Observer, L["WorkspaceRoleObserver"])
+        new(WorkspaceRole.Observer, L["WorkspaceRoleObserver"]),
+        new(WorkspaceRole.Guest, L["WorkspaceRoleGuest"])
     ];
 
     private RenderFragment ShowInviteButton() => __builder =>
@@ -388,6 +406,20 @@
         if (role == member.Role)
         {
             return;
+        }
+
+        if (role == WorkspaceRole.Guest)
+        {
+            bool confirmed = await DialogService.Confirm(
+                L["MembersMakeGuestConfirm", member.DisplayName],
+                L["MembersMakeGuest"],
+                new ConfirmOptions { OkButtonText = L["MembersMakeGuest"], CancelButtonText = L["ActionCancel"] }) ?? false;
+            if (!confirmed)
+            {
+                // Re-render so the dropdown snaps back to the current role.
+                await ReloadAsync();
+                return;
+            }
         }
 
         pendingUserId = member.UserId;

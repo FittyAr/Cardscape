@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.DTOs;
+using Cardscape.Application.Workspaces;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Boards.Errors;
 using Cardscape.Domain.Common;
@@ -49,6 +50,8 @@ public static class GetBoardMemberAccessQueryHandler
                 "boards.forbidden", "You are not a member of this board."));
         }
 
-        return Result.Success(new BoardMemberAccessDto(canManage, role));
+        bool canInviteGuests = workspace is { IsDeleted: false }
+            && await WorkspaceAccess.CanManageMembersAsync(workspace, currentUser.Id, users, cancellationToken);
+        return Result.Success(new BoardMemberAccessDto(canManage, role, canInviteGuests));
     }
 }

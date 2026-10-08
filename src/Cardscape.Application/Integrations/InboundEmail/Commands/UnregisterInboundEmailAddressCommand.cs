@@ -36,7 +36,7 @@ public static class UnregisterInboundEmailAddressCommandHandler
         }
 
         Workspace? workspace = await workspaces.GetWithMembersAsync(address.WorkspaceId, ct);
-        if (workspace is null || !workspace.HasMember(currentUser.Id.Value))
+        if (workspace is null || !workspace.HasFullMembership(currentUser.Id.Value))
         {
             return Result.Failure(DomainError.Forbidden(
                 "workspaces.forbidden", "You are not a member of this workspace."));

@@ -10,5 +10,15 @@ public enum WorkspaceRole
     Member = 1,
 
     /// <summary>Read-only access.</summary>
-    Observer = 2
+    Observer = 2,
+
+    /// <summary>
+    /// Trello-style guest: belongs to the workspace only through the
+    /// boards they were explicitly added to. A guest does not see
+    /// workspace-visible boards, cannot create boards, invite or manage
+    /// people, sees only the people on their shared boards, and holds
+    /// at most the <see cref="Boards.BoardMemberRole.Member"/> role on a
+    /// board (see <see cref="WorkspaceGuestRules"/>).
+    /// </summary>
+    Guest = 3
 }

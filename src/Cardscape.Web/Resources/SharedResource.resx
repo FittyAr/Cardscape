@@ -1151,4 +1151,19 @@
   <data name="AdminAccountTemporaryPassword" xml:space="preserve"><value>Temporary password for {0}:</value></data>
   <data name="AdminAccountTemporaryPasswordAria" xml:space="preserve"><value>Temporary password</value></data>
   <data name="AdminAccountTemporaryPasswordHint" xml:space="preserve"><value>It is shown only now. They will be asked to replace it when they sign in.</value></data>
+  <data name="WorkspaceRoleGuest" xml:space="preserve"><value>Guest</value></data>
+  <data name="WorkspaceGuestHint" xml:space="preserve"><value>Guests only see the boards they were added to.</value></data>
+  <data name="WorkspaceGuestBoardsNotice" xml:space="preserve"><value>You are a guest in this workspace: you only see the boards you were added to.</value></data>
+  <data name="MembersGuestRosterNotice" xml:space="preserve"><value>As a guest you only see the people on the boards you share.</value></data>
+  <data name="MembersGuestInviteHint" xml:space="preserve"><value>Guests only see the boards they are added to and can be at most a board member. Add them to boards from each board's Members panel.</value></data>
+  <data name="MembersMakeGuest" xml:space="preserve"><value>Make guest</value></data>
+  <data name="MembersMakeGuestConfirm" xml:space="preserve"><value>Make {0} a guest? They keep only the boards they are on, lose access to workspace-visible boards, and any board admin role becomes member.</value></data>
+  <data name="BoardMembersInviteGuestHeading" xml:space="preserve"><value>Invite a guest by email</value></data>
+  <data name="BoardMembersInviteGuestHint" xml:space="preserve"><value>The person joins the workspace as a guest and only sees the boards they are added to. Once they accept, add them to this board from the list above.</value></data>
+  <data name="BoardMembersInviteGuestEmailAria" xml:space="preserve"><value>Email address of the guest to invite</value></data>
+  <data name="BoardMembersInviteGuest" xml:space="preserve"><value>Invite as guest</value></data>
+  <data name="BoardMembersGuestInvitedEmailed" xml:space="preserve"><value>Invitation emailed to {0}. Once they accept, add them to this board from the list above.</value></data>
+  <data name="BoardMembersGuestInvitedShareLink" xml:space="preserve"><value>Invitation created for {0}. Share this link with them; once they accept, add them to this board from the list above.</value></data>
+  <data name="BoardMembersInviteAnotherGuest" xml:space="preserve"><value>Invite someone else</value></data>
+  <data name="BoardMembersGuestCandidate" xml:space="preserve"><value>{0} ({1}) · Guest</value></data>
 </root>

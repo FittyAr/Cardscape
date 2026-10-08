@@ -1,12 +1,16 @@
 @* Board members panel, opened from the board header. Lists the
    roster (name, email, role); people who can manage the board
    (board Admins, workspace owner / Admins, instance admins) change
-   roles, remove members and add workspace members; anyone can leave.
+   roles, remove members and add workspace members (guests included,
+   flagged with a Guest badge and never offered the board Admin role);
+   workspace managers can also invite someone by email as a workspace
+   guest from here; anyone can leave.
    The API enforces every rule; the controls are only hidden here.
    Closes with BoardMembersDialog.Left when the caller left the board,
    or true when the roster changed. *@
 
 @using System.Security.Claims
+@using Cardscape.Contracts.Email
 @using Cardscape.Web.Resources
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
@@ -16,6 +20,9 @@
 @using Radzen.Blazor
 @inject IBoardsApiClient BoardsApi
 @inject IWorkspacesApiClient WorkspacesApi
+@inject IInvitationsApiClient InvitationsApi
+@inject NavigationManager Nav
+@inject Microsoft.JSInterop.IJSRuntime JS
 @inject AuthenticationStateProvider AuthState
 @inject DialogService Dialog
 @inject IStringLocalizer<SharedResource> L
@@ -52,6 +59,10 @@
                             {
                                 <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L["BoardMembersYou"]" class="rz-ms-1" />
                             }
+                            @if (member.IsWorkspaceGuest)
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="@L["WorkspaceRoleGuest"]" title="@L["WorkspaceGuestHint"]" class="rz-ms-1" />
+                            }
                         </RadzenText>
                         @if (!string.IsNullOrWhiteSpace(member.Email))
                         {
@@ -60,7 +71,7 @@
                     </RadzenStack>
                     @if (_canManage && !isLastAdmin)
                     {
-                        <RadzenDropDown TValue="BoardMemberRole" Value="@member.Role" Data="@Roles"
+                        <RadzenDropDown TValue="BoardMemberRole" Value="@member.Role" Data="@RolesFor(member.IsWorkspaceGuest)"
                                         TextProperty="Label" ValueProperty="Value"
                                         Disabled="@(_pendingUserId is not null)"
                                         aria-label="@L["BoardMembersChangeRoleAria", name]"
@@ -100,13 +111,13 @@
                 else
                 {
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                        <RadzenDropDown TValue="Guid?" @bind-Value="_newMemberId" Data="@_candidates"
+                        <RadzenDropDown TValue="Guid?" Value="@_newMemberId" ValueChanged="@OnCandidateChanged" Data="@_candidates"
                                         TextProperty="Label" ValueProperty="Value"
                                         AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                                         Placeholder="@L["BoardMembersPickPerson"]"
                                         aria-label="@L["BoardMembersPickPerson"]"
                                         class="cs-board-members-pick" />
-                        <RadzenDropDown TValue="BoardMemberRole" @bind-Value="_newMemberRole" Data="@Roles"
+                        <RadzenDropDown TValue="BoardMemberRole" @bind-Value="_newMemberRole" Data="@RolesFor(NewMemberIsGuest)"
                                         TextProperty="Label" ValueProperty="Value"
                                         aria-label="@L["MembersRole"]"
                                         class="cs-board-member-role" />
@@ -114,6 +125,41 @@
                                       Disabled="@(_newMemberId is null || _pendingUserId is not null)"
                                       IsBusy="@(_pendingUserId is not null && _pendingUserId == _newMemberId)"
                                       Click="@AddAsync" />
+                    </RadzenStack>
+                }
+            </RadzenStack>
+        }
+
+        @if (_canInviteGuests)
+        {
+            <RadzenStack Gap="0.5rem" class="cs-board-members-add">
+                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H3" Text="@L["BoardMembersInviteGuestHeading"]" class="rz-m-0" />
+                <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0 rz-color-text-secondary" Text="@L["BoardMembersInviteGuestHint"]" />
+                @if (_guestLink is null)
+                {
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                        <RadzenTextBox @bind-Value="_guestEmail" Placeholder="@L["MembersEmail"]"
+                                       aria-label="@L["BoardMembersInviteGuestEmailAria"]"
+                                       class="cs-board-members-pick" />
+                        <RadzenButton Text="@L["BoardMembersInviteGuest"]" Icon="forward_to_inbox" ButtonStyle="ButtonStyle.Secondary"
+                                      Disabled="@_invitingGuest"
+                                      IsBusy="@_invitingGuest"
+                                      Click="@InviteGuestAsync" />
+                    </RadzenStack>
+                }
+                else
+                {
+                    <RadzenAlert AlertStyle="@(_guestEmailStatus == EmailDeliveryStatus.Sent ? AlertStyle.Success : AlertStyle.Info)"
+                                 Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
+                        @GuestInvitedText
+                    </RadzenAlert>
+                    <SecretBox Secret="@_guestLink" AriaLabel="@L["MembersInvitationLink"]" />
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                        <RadzenButton Text="@(_guestLinkCopied ? L["MembersInvitationLinkCopied"] : L["MembersInvitationCopyLink"])"
+                                      Icon="@(_guestLinkCopied ? "check" : "content_copy")"
+                                      ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" Click="@CopyGuestLinkAsync" />
+                        <RadzenButton Text="@L["BoardMembersInviteAnotherGuest"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                      Click="@ResetGuestInvite" />
                     </RadzenStack>
                 }
             </RadzenStack>
@@ -157,9 +203,27 @@
     private Guid? _newMemberId;
     private BoardMemberRole _newMemberRole = BoardMemberRole.Member;
     private bool _changed;
+    private bool _canInviteGuests;
+    private string _guestEmail = string.Empty;
+    private string _guestInvitedEmail = string.Empty;
+    private string? _guestLink;
+    private bool _guestLinkCopied;
+    private bool _invitingGuest;
+    private EmailDeliveryStatus _guestEmailStatus;
+    private HashSet<Guid> _guestIds = [];
 
     private sealed record RoleOption(BoardMemberRole Value, string Label);
     private sealed record CandidateOption(Guid? Value, string Label);
+
+    private bool NewMemberIsGuest => _newMemberId is Guid id && _guestIds.Contains(id);
+
+    /// <summary>Workspace guests are never offered the board Admin role.</summary>
+    private IReadOnlyList<RoleOption> RolesFor(bool isGuest) =>
+        isGuest ? [.. Roles.Where(r => r.Value != BoardMemberRole.Admin)] : Roles;
+
+    private string GuestInvitedText => _guestEmailStatus == EmailDeliveryStatus.Sent
+        ? L["BoardMembersGuestInvitedEmailed", _guestInvitedEmail]
+        : L["BoardMembersGuestInvitedShareLink", _guestInvitedEmail];
 
     private IReadOnlyList<RoleOption> Roles =>
     [
@@ -194,6 +258,7 @@
 
         _loadError = null;
         _canManage = access.Value.CanManageMembers;
+        _canInviteGuests = access.Value.CanInviteGuests;
         _myRole = access.Value.Role;
         _members = members.Value;
 
@@ -225,15 +290,74 @@
         }
 
         HashSet<Guid> onBoard = _members.Select(m => m.UserId).ToHashSet();
+        _guestIds = _workspaceMembers.Where(m => m.IsGuest).Select(m => m.UserId).ToHashSet();
         _candidates = _workspaceMembers
             .Where(m => !onBoard.Contains(m.UserId))
             .OrderBy(m => m.DisplayName, StringComparer.CurrentCultureIgnoreCase)
-            .Select(m => new CandidateOption(m.UserId, $"{m.DisplayName} ({m.Email})"))
+            .Select(m => new CandidateOption(m.UserId, m.IsGuest
+                ? L["BoardMembersGuestCandidate", m.DisplayName, m.Email].Value
+                : $"{m.DisplayName} ({m.Email})"))
             .ToList();
         if (_newMemberId is not null && _candidates.All(c => c.Value != _newMemberId))
         {
             _newMemberId = null;
         }
+    }
+
+    private void OnCandidateChanged(Guid? userId)
+    {
+        _newMemberId = userId;
+        if (NewMemberIsGuest && _newMemberRole == BoardMemberRole.Admin)
+        {
+            _newMemberRole = BoardMemberRole.Member;
+        }
+    }
+
+    private async Task InviteGuestAsync()
+    {
+        string email = _guestEmail.Trim();
+        if (email.Length == 0)
+        {
+            return;
+        }
+
+        _invitingGuest = true;
+        _error = null;
+        try
+        {
+            ApiResult<WorkspaceInvitationIssuanceDto> result = await InvitationsApi.IssueAsync(
+                WorkspaceId, email, WorkspaceRole.Guest, lifetime: null);
+            if (!result.IsSuccess)
+            {
+                _error = result.Error;
+                return;
+            }
+
+            WorkspaceInvitationIssuanceDto issued = result.Value!;
+            _guestLink = issued.AcceptUrl ?? InvitationsApi.BuildAcceptLink(Nav.BaseUri, issued.CleartextToken);
+            _guestEmailStatus = issued.EmailStatus;
+            _guestInvitedEmail = email;
+            _guestLinkCopied = false;
+        }
+        finally
+        {
+            _invitingGuest = false;
+        }
+    }
+
+    private async Task CopyGuestLinkAsync()
+    {
+        if (_guestLink is not null)
+        {
+            _guestLinkCopied = await JS.InvokeAsync<bool>("cardscape.copyText", _guestLink);
+        }
+    }
+
+    private void ResetGuestInvite()
+    {
+        _guestLink = null;
+        _guestEmail = string.Empty;
+        _guestLinkCopied = false;
     }
 
     private bool IsLastAdmin(BoardMemberDto member) =>

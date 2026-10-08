@@ -1,7 +1,9 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.DTOs;
+using Cardscape.Application.Common;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Workspaces;
 using Wolverine;
 
 namespace Cardscape.Application.Boards.Queries;
@@ -13,6 +15,7 @@ public static class ListStarredBoardsQueryHandler
     public static async Task<Result<IReadOnlyList<BoardSummaryDto>>> HandleAsync(
         ListStarredBoardsQuery query,
         IBoardRepository boards,
+        IWorkspaceRepository workspaces,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -22,8 +25,15 @@ public static class ListStarredBoardsQueryHandler
                 "auth.required", "Authentication is required."));
         }
 
-        var items = await boards.ListStarredByUserAsync(currentUser.Id.Value, cancellationToken);
+        Guid userId = currentUser.Id.Value;
+        var items = await boards.ListStarredByUserAsync(userId, cancellationToken);
+
+        // A guest who starred a board and was later removed from it
+        // must not keep seeing it.
+        HashSet<WorkspaceId> guestOf = await WorkspaceBoardScope.GuestWorkspaceIdsAsync(
+            workspaces, userId, cancellationToken);
         var rows = items
+            .Where(b => !guestOf.Contains(b.WorkspaceId) || b.IsMember(userId))
             .Select(b => new BoardSummaryDto(
                 b.Id.Value,
                 b.Name.Value,

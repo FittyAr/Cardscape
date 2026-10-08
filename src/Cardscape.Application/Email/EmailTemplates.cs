@@ -208,6 +208,7 @@ public static class EmailTemplates
     {
         WorkspaceRole.Admin => es ? "administrador" : "an admin",
         WorkspaceRole.Observer => es ? "observador" : "an observer",
+        WorkspaceRole.Guest => es ? "invitado" : "a guest",
         _ => es ? "miembro" : "a member",
     };
 

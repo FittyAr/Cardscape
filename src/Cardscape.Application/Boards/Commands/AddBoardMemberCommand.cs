@@ -5,6 +5,7 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Boards.Errors;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
+using Cardscape.Domain.Workspaces;
 using Wolverine;
 
 namespace Cardscape.Application.Boards.Commands;
@@ -14,7 +15,8 @@ namespace Cardscape.Application.Boards.Commands;
 /// role. Only people who can manage the board's roster (board Admins,
 /// the workspace owner / workspace Admins, active instance admins)
 /// may add members; the added user must already belong to the
-/// board's workspace.
+/// board's workspace. Workspace guests can be added as board Members
+/// or Observers, never as board Admins.
 /// </summary>
 public sealed record AddBoardMemberCommand(
     Guid BoardId,
@@ -61,6 +63,11 @@ public static class AddBoardMemberCommandHandler
         if (workspace is null || !workspace.HasMember(command.UserId))
         {
             return Result.Failure(BoardErrors.MemberNotInWorkspace);
+        }
+
+        if (!WorkspaceGuestRules.AllowsBoardRole(workspace.RoleOf(command.UserId), command.Role))
+        {
+            return Result.Failure(BoardErrors.GuestCannotBeAdmin);
         }
 
         var addResult = board.AddMember(command.UserId, command.Role, clock.UtcNow);

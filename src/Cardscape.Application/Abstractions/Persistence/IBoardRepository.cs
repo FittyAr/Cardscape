@@ -11,6 +11,14 @@ public interface IBoardRepository : IRepository<Board, BoardId>
         IReadOnlyList<WorkspaceId> workspaceIds,
         CancellationToken ct = default);
 
+    /// <summary>Ids of the live boards in <paramref name="workspaceIds"/>
+    /// on which <paramref name="userId"/> is an explicit board member
+    /// (what a workspace guest can see).</summary>
+    Task<IReadOnlyList<BoardId>> ListIdsForMemberAsync(
+        IReadOnlyList<WorkspaceId> workspaceIds,
+        Guid userId,
+        CancellationToken ct = default);
+
     Task<IReadOnlyList<Board>> ListStarredByUserAsync(Guid userId, CancellationToken ct = default);
 
     Task<Board?> GetWithMembersAsync(BoardId id, CancellationToken ct = default);

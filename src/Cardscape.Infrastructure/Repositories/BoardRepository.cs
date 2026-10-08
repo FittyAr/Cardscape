@@ -35,6 +35,26 @@ public sealed class BoardRepository(CardscapeDbContext db) : RepositoryBase<Boar
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<BoardId>> ListIdsForMemberAsync(
+        IReadOnlyList<WorkspaceId> workspaceIds,
+        Guid userId,
+        CancellationToken ct = default)
+    {
+        if (workspaceIds.Count == 0)
+        {
+            return [];
+        }
+
+        HashSet<WorkspaceId> wanted = [.. workspaceIds];
+        return await Set
+            .AsNoTracking()
+            .Where(board => !board.IsDeleted
+                && wanted.Contains(board.WorkspaceId)
+                && board.Members.Any(member => member.UserId == userId))
+            .Select(board => board.Id)
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<Board>> ListStarredByUserAsync(Guid userId, CancellationToken ct = default)
     {
         return await Set

@@ -31,4 +31,8 @@ public static class BoardErrors
 
     public static readonly DomainError InvalidMemberRole =
         DomainError.Validation("boards.members.invalid_role", "The board role is not valid.");
+
+    public static readonly DomainError GuestCannotBeAdmin =
+        DomainError.Validation("boards.members.guest_cannot_be_admin",
+            "Workspace guests can be board members or observers, not board admins.");
 }

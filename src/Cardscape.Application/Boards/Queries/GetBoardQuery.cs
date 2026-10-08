@@ -4,6 +4,7 @@ using Cardscape.Application.Boards.DTOs;
 using Cardscape.Application.Boards.Mapping;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Workspaces;
 using Wolverine;
 using static Cardscape.Domain.Boards.Errors.BoardErrors;
 
@@ -16,6 +17,7 @@ public static class GetBoardQueryHandler
     public static async Task<Result<BoardDto>> HandleAsync(
         GetBoardQuery query,
         IBoardRepository boards,
+        IWorkspaceRepository workspaces,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -31,7 +33,18 @@ public static class GetBoardQueryHandler
             return Result.Failure<BoardDto>(NotFound);
         }
 
-        if (!board.IsMember(currentUser.Id.Value) && board.Visibility == BoardVisibility.Private)
+        // Workspace-visible boards are open to the workspace's full
+        // members only: guests (and outsiders) need explicit membership.
+        Guid userId = currentUser.Id.Value;
+        if (!board.IsMember(userId) && board.Visibility == BoardVisibility.Workspace)
+        {
+            Workspace? workspace = await workspaces.GetWithMembersAsync(board.WorkspaceId, cancellationToken);
+            if (!WorkspaceGuestRules.CanOpenBoard(board, userId, workspace?.RoleOf(userId)))
+            {
+                return Result.Failure<BoardDto>(NotMember);
+            }
+        }
+        else if (!WorkspaceGuestRules.CanOpenBoard(board, userId, workspaceRole: null))
         {
             return Result.Failure<BoardDto>(NotMember);
         }

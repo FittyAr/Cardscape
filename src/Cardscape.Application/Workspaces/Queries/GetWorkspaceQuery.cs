@@ -36,6 +36,6 @@ public static class GetWorkspaceQueryHandler
             return Result.Failure<WorkspaceDto>(NotMember);
         }
 
-        return Result.Success(WorkspaceDto.FromEntity(workspace));
+        return Result.Success(WorkspaceDto.FromEntity(workspace, currentUser.Id.Value));
     }
 }

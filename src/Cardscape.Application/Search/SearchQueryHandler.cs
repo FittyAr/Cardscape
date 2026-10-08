@@ -1,9 +1,8 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Domain.Boards;
+using Cardscape.Application.Common;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Workspaces;
 
 namespace Cardscape.Application.Search;
 
@@ -37,7 +36,8 @@ public static class SearchQueryHandler
                 $"The search query exceeds the {MaxQueryLength}-character limit."));
         }
 
-        HashSet<Guid> allowedBoards = await CollectReadableBoardIdsAsync(
+        // Guests only search the boards they were added to.
+        HashSet<Guid> allowedBoards = await WorkspaceBoardScope.CollectVisibleBoardIdsAsync(
             boards, workspaces, currentUser.Id.Value, cancellationToken);
 
         SearchPage page = await searchService.SearchAsync(
@@ -57,22 +57,5 @@ public static class SearchQueryHandler
             .ToList();
 
         return Result.Success(new SearchPageDto(items, page.Total));
-    }
-
-    private static async Task<HashSet<Guid>> CollectReadableBoardIdsAsync(
-        IBoardRepository boards,
-        IWorkspaceRepository workspaces,
-        Guid userId,
-        CancellationToken cancellationToken)
-    {
-        IReadOnlyList<Workspace> visibleWorkspaces =
-            await workspaces.ListForUserAsync(userId, cancellationToken);
-        List<WorkspaceId> workspaceIds = visibleWorkspaces
-            .Select(workspace => workspace.Id)
-            .ToList();
-        IReadOnlyList<BoardId> boardIds =
-            await boards.ListIdsForWorkspacesAsync(workspaceIds, cancellationToken);
-
-        return boardIds.Select(boardId => boardId.Value).ToHashSet();
     }
 }

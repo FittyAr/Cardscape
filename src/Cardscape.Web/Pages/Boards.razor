@@ -21,18 +21,32 @@
     <Actions>
         <RadzenButton Text="@L["WorkspaceTabMembers"]" Icon="group" ButtonStyle="@ButtonStyle.Base" Variant="@Variant.Text"
                       Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/members"))" />
-        <RadzenButton Text="@L["WorkspaceTabIntegrations"]" Icon="hub" ButtonStyle="@ButtonStyle.Base" Variant="@Variant.Text"
-                      Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/integrations"))" />
-        <RadzenButton Text="@L["WorkspaceTabImport"]" Icon="upload_file" ButtonStyle="@ButtonStyle.Base" Variant="@Variant.Text"
-                      Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/import"))" />
-        <RadzenButton Text="@L["WorkspaceTabSecurity"]" Icon="shield" ButtonStyle="@ButtonStyle.Base" Variant="@Variant.Text"
-                      Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/security"))" />
-        <RadzenButton Text="@L["BoardsNew"]" Icon="add" ButtonStyle="@ButtonStyle.Primary"
-                      Click="@(() => showCreate = !showCreate)" />
+        @if (IsGuest)
+        {
+            <RadzenBadge Text="@L["WorkspaceRoleGuest"]" BadgeStyle="BadgeStyle.Secondary" title="@L["WorkspaceGuestHint"]" />
+        }
+        else if (workspace is not null)
+        {
+            <RadzenButton Text="@L["WorkspaceTabIntegrations"]" Icon="hub" ButtonStyle="@ButtonStyle.Base" Variant="@Variant.Text"
+                          Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/integrations"))" />
+            <RadzenButton Text="@L["WorkspaceTabImport"]" Icon="upload_file" ButtonStyle="@ButtonStyle.Base" Variant="@Variant.Text"
+                          Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/import"))" />
+            <RadzenButton Text="@L["WorkspaceTabSecurity"]" Icon="shield" ButtonStyle="@ButtonStyle.Base" Variant="@Variant.Text"
+                          Click="@(() => Nav.NavigateTo($"workspaces/{WorkspaceId}/security"))" />
+            <RadzenButton Text="@L["BoardsNew"]" Icon="add" ButtonStyle="@ButtonStyle.Primary"
+                          Click="@(() => showCreate = !showCreate)" />
+        }
     </Actions>
 </PageHeader>
 
-@if (showCreate)
+@if (IsGuest)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" Class="rz-mb-3">
+        @L["WorkspaceGuestBoardsNotice"]
+    </RadzenAlert>
+}
+
+@if (showCreate && !IsGuest)
 {
     <RadzenCard Class="rz-mb-4" Style="max-width: 36rem;">
         <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateBoardAsync">
@@ -83,8 +97,11 @@ else
         {
             <BoardTile BoardId="b.Id" Name="@b.Name" IsStarred="b.IsStarred" Meta="@TileMeta(b)" />
         }
-        <RadzenButton Text="@L["BoardsNew"]" Icon="add" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
-                      class="cs-board-tile cs-board-tile--new" Click="@(() => showCreate = true)" />
+        @if (!IsGuest)
+        {
+            <RadzenButton Text="@L["BoardsNew"]" Icon="add" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                          class="cs-board-tile cs-board-tile--new" Click="@(() => showCreate = true)" />
+        }
     </div>
 
     @if (archived.Any())
@@ -109,6 +126,10 @@ else
     [Inject] private NavigationManager Nav { get; set; } = default!;
 
     private WorkspaceDto? workspace;
+
+    /// <summary>Guests only see their own boards and cannot create boards
+    /// or open the workspace's integrations, import and security pages.</summary>
+    private bool IsGuest => workspace?.CallerIsGuest == true;
     private IReadOnlyList<BoardSummaryDto>? boards;
     private bool showCreate;
     private bool busy;

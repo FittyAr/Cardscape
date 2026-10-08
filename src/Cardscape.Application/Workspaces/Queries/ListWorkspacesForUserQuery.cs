@@ -23,7 +23,7 @@ public static class ListWorkspacesForUserQueryHandler
         }
 
         var items = await workspaces.ListForUserAsync(currentUser.Id.Value, cancellationToken);
-        List<WorkspaceDto> rows = items.Select(WorkspaceDto.FromEntity).ToList();
+        List<WorkspaceDto> rows = items.Select(w => WorkspaceDto.FromEntity(w, currentUser.Id.Value)).ToList();
 
         return Result.Success<IReadOnlyList<WorkspaceDto>>(rows);
     }

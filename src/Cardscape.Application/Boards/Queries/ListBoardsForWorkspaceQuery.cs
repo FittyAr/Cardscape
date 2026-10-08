@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Boards.DTOs;
+using Cardscape.Application.Common;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
 using Wolverine;
@@ -55,6 +56,10 @@ public static class ListBoardsForWorkspaceQueryHandler
         {
             items = items.Where(b => !b.IsArchived).ToList();
         }
+
+        // A guest only sees the boards they were explicitly added to.
+        WorkspaceRole? callerRole = workspace.RoleOf(currentUser.Id.Value);
+        items = items.Where(b => WorkspaceBoardScope.IsListed(b, currentUser.Id.Value, callerRole)).ToList();
 
         var rows = items
             .Select(b => new BoardSummaryDto(

@@ -37,7 +37,8 @@ public enum WorkspaceRole
 {
     Admin = 0,
     Member = 1,
-    Observer = 2
+    Observer = 2,
+    Guest = 3
 }
 
 // ── Boards ────────────────────────────────────────────────

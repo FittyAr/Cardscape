@@ -10,7 +10,8 @@ public sealed record WorkspaceDto(
     bool IsArchived,
     bool RequireTwoFactor,
     DateTimeOffset CreatedAt,
-    int MemberCount)
+    int MemberCount,
+    WorkspaceRole? CallerRole = null)
 {
     public static WorkspaceDto FromEntity(Workspace workspace) => new(
         workspace.Id.Value,
@@ -21,6 +22,11 @@ public sealed record WorkspaceDto(
         workspace.RequireTwoFactor,
         workspace.CreatedAt,
         workspace.Members.Count);
+
+    /// <summary>Same as <see cref="FromEntity(Workspace)"/> plus the
+    /// caller's own role, so clients can hide what a guest cannot use.</summary>
+    public static WorkspaceDto FromEntity(Workspace workspace, Guid callerId) =>
+        FromEntity(workspace) with { CallerRole = workspace.RoleOf(callerId) };
 }
 
 public sealed record WorkspaceMemberDto(

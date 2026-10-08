@@ -4,13 +4,15 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Boards.Errors;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Workspaces;
 using Wolverine;
 
 namespace Cardscape.Application.Boards.Commands;
 
 /// <summary>
 /// Changes a board member's role. Only board-roster managers may do
-/// it, and the aggregate keeps at least one board Admin.
+/// it, and the aggregate keeps at least one board Admin. A workspace
+/// guest cannot be promoted to board Admin.
 /// </summary>
 public sealed record ChangeBoardMemberRoleCommand(
     Guid BoardId,
@@ -45,6 +47,11 @@ public static class ChangeBoardMemberRoleCommandHandler
         if (!await BoardMemberAccess.CanManageMembersAsync(board, workspace, currentUser.Id, users, cancellationToken))
         {
             return Result.Failure(BoardErrors.Forbidden);
+        }
+
+        if (!WorkspaceGuestRules.AllowsBoardRole(workspace?.RoleOf(command.UserId), command.Role))
+        {
+            return Result.Failure(BoardErrors.GuestCannotBeAdmin);
         }
 
         var changeResult = board.ChangeMemberRole(command.UserId, command.Role, clock.UtcNow);
