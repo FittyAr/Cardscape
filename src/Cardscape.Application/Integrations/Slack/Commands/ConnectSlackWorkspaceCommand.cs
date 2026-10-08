@@ -3,7 +3,6 @@ using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Integrations.Slack.DTOs;
-using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Integrations.Slack;
 using Cardscape.Domain.Workspaces;
@@ -45,7 +44,7 @@ public static class ConnectSlackWorkspaceCommandHandler
                 "workspaces.not_found", "Workspace was not found."));
         }
 
-        if (workspace.OwnerId != currentUser.Id.Value)
+        if (!workspace.IsOwnedBy(currentUser.Id.Value))
         {
             return Result.Failure<SlackWorkspaceDto>(DomainError.Forbidden(
                 "workspaces.not_owner", "Only the workspace owner can connect Slack."));
@@ -94,6 +93,5 @@ public static class ConnectSlackWorkspaceCommandHandler
         await unitOfWork.SaveChangesAsync(ct);
         return Result.Success(SlackWorkspaceDto.FromEntity(entity));
     }
-
 }
 

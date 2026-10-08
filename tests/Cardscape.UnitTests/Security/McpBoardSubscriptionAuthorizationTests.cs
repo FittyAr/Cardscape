@@ -1,10 +1,7 @@
 using System.Globalization;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Boards;
-using Cardscape.Domain.Common;
-using Cardscape.Domain.Workspaces;
 using Cardscape.Mcp.Authorization;
-using FluentAssertions;
 using Moq;
 
 namespace Cardscape.UnitTests.Security;

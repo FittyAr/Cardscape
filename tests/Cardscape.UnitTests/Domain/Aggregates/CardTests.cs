@@ -7,7 +7,7 @@ using Cardscape.Domain.Lists;
 
 namespace Cardscape.UnitTests.Domain.Aggregates;
 
-public class CardTests
+public sealed class CardTests
 {
     private static readonly DateTimeOffset At = DateTimeOffset.UtcNow;
 
@@ -87,6 +87,7 @@ public class CardTests
     {
         var card = NewCard();
         card.ClearDomainEvents();
+        var previousList = card.ListId;
         var newList = BoardListId.New();
         var newPos = Position.From(2.0);
 
@@ -96,7 +97,7 @@ public class CardTests
         card.ListId.Should().Be(newList);
         card.Position.Value.Should().Be(2.0);
         card.DomainEvents.Should().ContainSingle()
-            .Which.Should().BeOfType<CardMoved>();
+            .Which.Should().Be(new CardMoved(card.Id, previousList, newList, newPos, At));
     }
 
     [Fact]

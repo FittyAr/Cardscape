@@ -151,7 +151,7 @@ else
         try
         {
             ApiResult<ActivityPageDto> result = await Activities.ListForBoardAsync(BoardId);
-            if (result.IsSuccess && result.Value is not null)
+            if (result.HasValue)
             {
                 items = result.Value.Items.ToList();
                 nextCursor = result.Value.NextCursor;
@@ -182,7 +182,7 @@ else
         {
             ApiResult<ActivityPageDto> result = await Activities.ListForBoardAsync(
                 BoardId, cursor: nextCursor);
-            if (result.IsSuccess && result.Value is not null)
+            if (result.HasValue)
             {
                 items ??= [];
                 items.AddRange(result.Value.Items);

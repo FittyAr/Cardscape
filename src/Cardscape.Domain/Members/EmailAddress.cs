@@ -9,11 +9,10 @@ namespace Cardscape.Domain.Members;
 /// string; the constructor performs the canonicalisation and
 /// validation in one place.
 /// </summary>
-public sealed record EmailAddress : IValueObject
+public sealed partial record EmailAddress : IValueObject
 {
-    private static readonly Regex EmailRegex = new(
-        @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    [GeneratedRegex(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", RegexOptions.CultureInvariant)]
+    private static partial Regex EmailRegex();
 
     /// <summary>Maximum allowed length, per the RFC 5321 practical limit.</summary>
     public const int MaxLength = 254;
@@ -37,7 +36,7 @@ public sealed record EmailAddress : IValueObject
                 "Email address is required."));
         }
 
-        var trimmed = input.Trim().ToLowerInvariant();
+        var trimmed = Normalize(input);
 
         if (trimmed.Length > MaxLength)
         {
@@ -46,7 +45,7 @@ public sealed record EmailAddress : IValueObject
                 $"Email address must be at most {MaxLength} characters."));
         }
 
-        if (!EmailRegex.IsMatch(trimmed))
+        if (!EmailRegex().IsMatch(trimmed))
         {
             return Result.Failure<EmailAddress>(DomainError.Validation(
                 "members.email.invalid",
@@ -55,6 +54,12 @@ public sealed record EmailAddress : IValueObject
 
         return Result.Success(new EmailAddress(trimmed));
     }
+
+    /// <summary>
+    /// The canonical form used for storage and lookups (trimmed,
+    /// lower-cased). Does not validate; <c>null</c> becomes empty.
+    /// </summary>
+    public static string Normalize(string? input) => (input ?? string.Empty).Trim().ToLowerInvariant();
 
     public override string ToString() => Value;
 }

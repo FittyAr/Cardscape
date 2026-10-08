@@ -2,7 +2,7 @@ using Cardscape.Domain.Common;
 
 namespace Cardscape.UnitTests.Domain.ValueObjects;
 
-public class ColorTests
+public sealed class ColorTests
 {
     [Theory]
     [InlineData("#000000")]

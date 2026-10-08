@@ -54,8 +54,8 @@ public sealed class Label : AggregateRoot<LabelId>
 
     public Result Update(LabelName newName, Color newColor, DateTimeOffset at)
     {
-        var sameName = newName.Value == Name.Value;
-        var sameColor = newColor.Value == Color.Value;
+        var sameName = newName == Name;
+        var sameColor = newColor == Color;
         if (sameName && sameColor)
         {
             return Result.Success();

@@ -121,7 +121,7 @@ else
                                           style="--cs-label-color: @label.Color"
                                           aria-checked="@(on ? "true" : "false")"
                                           @onclick="@(() => Toggle(_filterLabels, label.Id))"
-                                          @onkeydown="@(e => { if (e.Key is "Enter" or " ") Toggle(_filterLabels, label.Id); })">@label.Name</span>
+                                          @onkeydown="@(e => { if (e.IsActivation) Toggle(_filterLabels, label.Id); })">@label.Name</span>
                                 }
                             </div>
                         </div>
@@ -137,7 +137,7 @@ else
                                     <span class="cs-filter-chip @(on ? "is-on" : null)" role="checkbox" tabindex="0"
                                           aria-checked="@(on ? "true" : "false")"
                                           @onclick="@(() => Toggle(_filterMembers, member.UserId))"
-                                          @onkeydown="@(e => { if (e.Key is "Enter" or " ") Toggle(_filterMembers, member.UserId); })">
+                                          @onkeydown="@(e => { if (e.IsActivation) Toggle(_filterMembers, member.UserId); })">
                                         <span class="cs-card-avatar" aria-hidden="true">@UserInitials.From(member.DisplayName)</span>
                                         @member.DisplayName
                                     </span>
@@ -154,7 +154,7 @@ else
                                 <span class="cs-filter-chip @(on ? "is-on" : null)" role="checkbox" tabindex="0"
                                       aria-checked="@(on ? "true" : "false")"
                                       @onclick="@(() => Toggle(_filterDue, due))"
-                                      @onkeydown="@(e => { if (e.Key is "Enter" or " ") Toggle(_filterDue, due); })">@DueFilterLabel(due)</span>
+                                      @onkeydown="@(e => { if (e.IsActivation) Toggle(_filterDue, due); })">@DueFilterLabel(due)</span>
                             }
                         </div>
                     </div>
@@ -349,7 +349,7 @@ else
             <CardTemplate>
                 @{
                     var card = context;
-                    double opacity = ComputeCardOpacity(card, _agingMode, _now);
+                    double opacity = _agingMode.CardOpacity(card, _now);
                     DueState due = GetDueState(card, _now);
                 }
                 @* BETA-3-UI-#15 — draggable for mouse users; tabindex +

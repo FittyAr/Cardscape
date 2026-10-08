@@ -25,7 +25,7 @@
 
         @if (HasExternalProviders)
         {
-            <ExternalSignInButtons Settings="@_instance" ReturnUrl="@(string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : ReturnUrl)" />
+            <ExternalSignInButtons Settings="@_instance" ReturnUrl="@LocalReturnUrl.Normalize(ReturnUrl)" />
 
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Class="rz-my-2">
                 <RadzenStack Class="rz-grow-1 rz-border-bottom" />
@@ -126,7 +126,7 @@
         try
         {
             var status = await SetupApi.GetStatusAsync();
-            if (status.IsSuccess && status.Value is not null && !status.Value.IsInitialized)
+            if (status.HasValue && !status.Value.IsInitialized)
             {
                 Nav.NavigateTo("/setup", forceLoad: true);
                 return;
@@ -218,7 +218,9 @@
 
     private void NavigateHome()
     {
-        Nav.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : HttpUtility.UrlDecode(ReturnUrl), forceLoad: true);
+        // The query value is decoded once by [SupplyParameterFromQuery];
+        // decode again for callers that double-encode, then sanitise.
+        Nav.NavigateTo(LocalReturnUrl.Normalize(HttpUtility.UrlDecode(ReturnUrl)), forceLoad: true);
     }
 
     private sealed class LoginModel

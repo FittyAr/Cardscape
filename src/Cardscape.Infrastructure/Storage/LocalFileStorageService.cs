@@ -9,10 +9,13 @@ namespace Cardscape.Infrastructure.Storage;
 public sealed class LocalFileStorageService : IStorageService
 {
     private readonly string _root;
+    private readonly string _rootWithSeparator;
 
     public LocalFileStorageService(string root)
     {
-        _root = Path.GetFullPath(root);
+        _root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
+        // A filesystem root ("/", @"C:\") keeps its trailing separator.
+        _rootWithSeparator = Path.EndsInDirectorySeparator(_root) ? _root : _root + Path.DirectorySeparatorChar;
         Directory.CreateDirectory(_root);
     }
 
@@ -81,7 +84,7 @@ public sealed class LocalFileStorageService : IStorageService
     {
         var combined = Path.Combine(_root, key.Replace('\\', '/').TrimStart('/'));
         var full = Path.GetFullPath(combined);
-        if (!full.StartsWith(_root, StringComparison.Ordinal))
+        if (!full.StartsWith(_rootWithSeparator, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Storage key escapes the configured root.");
         }

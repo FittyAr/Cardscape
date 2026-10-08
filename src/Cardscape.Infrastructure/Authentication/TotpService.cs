@@ -7,6 +7,7 @@ using Cardscape.Domain.Authentication.Totp;
 using Cardscape.Domain.Authentication.Totp.Errors;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
+using Cardscape.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using OtpNet;
 
@@ -200,21 +201,11 @@ public sealed class TotpService(
             return Result.Failure(TotpErrors.NotEnrolled);
         }
 
-        string submittedHash = HashRecoveryCode(code.Trim());
-        var lines = credential.RecoveryCodesHash
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .ToList();
-        int matchIndex = lines.FindIndex(l =>
-            string.Equals(l, submittedHash, StringComparison.Ordinal));
-
-        if (matchIndex < 0)
+        if (!credential.TryConsumeRecoveryCode(HashRecoveryCode(code), clock.UtcNow))
         {
             return Result.Failure(TotpErrors.InvalidRecoveryCode);
         }
 
-        lines[matchIndex] = $"used:{clock.UtcNow.ToUnixTimeSeconds()}";
-        string updatedHash = string.Join('\n', lines);
-        credential.RecordRecoveryCodeUsed(updatedHash, clock.UtcNow);
         try
         {
             await unitOfWork.SaveChangesAsync(ct);
@@ -341,9 +332,7 @@ public sealed class TotpService(
                 RemainingRecoveryCodes: 0);
         }
 
-        int remaining = credential.RecoveryCodesHash
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Count(l => !l.StartsWith("used:", StringComparison.Ordinal));
+        int remaining = credential.RemainingRecoveryCodes;
 
         return new TotpStatus(
             IsEnrolled: true,
@@ -378,11 +367,7 @@ public sealed class TotpService(
         return sb.ToString();
     }
 
-    private static string HashRecoveryCode(string code)
-    {
-        byte[] digest = SHA256.HashData(Encoding.UTF8.GetBytes(code.Trim()));
-        return Convert.ToHexString(digest).ToLowerInvariant();
-    }
+    private static string HashRecoveryCode(string code) => SecureToken.HashHex(code.Trim());
 
     private Result<long> VerifyCode(TotpCredential credential, string code)
     {

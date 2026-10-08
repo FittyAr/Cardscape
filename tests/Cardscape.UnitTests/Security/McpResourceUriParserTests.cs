@@ -1,5 +1,4 @@
 using Cardscape.Mcp.Resources;
-using FluentAssertions;
 
 namespace Cardscape.UnitTests.Security;
 

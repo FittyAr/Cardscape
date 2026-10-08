@@ -1,4 +1,3 @@
-using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Workspaces;

@@ -59,8 +59,7 @@ internal sealed class PeopleSeedStep(IPasswordHasher hasher) : SeedStepBase
             DisplayName.Create(persona.DisplayName).Value,
             hasher.Hash(PasswordGenerator.DemoPassword()),
             at).Value;
-        context.Db.Users.Add(user);
-        context.Users.Add(user);
+        context.Track(context.Users, user);
         return user;
     }
 

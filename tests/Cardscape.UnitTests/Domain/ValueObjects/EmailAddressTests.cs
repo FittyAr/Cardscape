@@ -3,7 +3,7 @@ using Cardscape.Domain.Members;
 
 namespace Cardscape.UnitTests.Domain.ValueObjects;
 
-public class EmailAddressTests
+public sealed class EmailAddressTests
 {
     [Theory]
     [InlineData("alice@example.com")]

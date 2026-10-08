@@ -73,25 +73,12 @@ else
             // must not race the cookie-backed token write.
             await Tokens.SetAsync(access, user);
             Auth.Notify();
-            string returnUrl = NormalizeReturnUrl(query["return_url"]);
+            string returnUrl = LocalReturnUrl.Normalize(query["return_url"]);
             Nav.NavigateTo(returnUrl, forceLoad: true);
         }
         catch (Exception ex)
         {
             error = string.Format(L["AuthOauthError"].Value, ex.Message);
         }
-    }
-
-    private static string NormalizeReturnUrl(string? returnUrl)
-    {
-        if (string.IsNullOrWhiteSpace(returnUrl)
-            || returnUrl[0] != '/'
-            || returnUrl.StartsWith("//", StringComparison.Ordinal)
-            || returnUrl.Contains('\\'))
-        {
-            return "/";
-        }
-
-        return returnUrl;
     }
 }

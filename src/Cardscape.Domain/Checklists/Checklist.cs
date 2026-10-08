@@ -1,7 +1,6 @@
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Checklists.Events;
 using Cardscape.Domain.Common;
-using static Cardscape.Domain.Checklists.Errors.ChecklistErrors;
 
 namespace Cardscape.Domain.Checklists;
 
@@ -46,7 +45,7 @@ public sealed class Checklist : AggregateRoot<ChecklistId>
 
     public Result Rename(ChecklistTitle newTitle, DateTimeOffset at)
     {
-        if (newTitle.Value == Title.Value)
+        if (newTitle == Title)
         {
             return Result.Success();
         }
@@ -68,7 +67,7 @@ public sealed class Checklist : AggregateRoot<ChecklistId>
 
     public Result CheckItem(ChecklistItemId itemId, DateTimeOffset at)
     {
-        var item = _items.FirstOrDefault(i => i.Id.Value == itemId.Value);
+        var item = _items.FirstOrDefault(i => i.Id == itemId);
         if (item is null)
         {
             return Result.Failure(Errors.ChecklistErrors.ItemNotFound);
@@ -81,7 +80,7 @@ public sealed class Checklist : AggregateRoot<ChecklistId>
 
     public Result UncheckItem(ChecklistItemId itemId, DateTimeOffset at)
     {
-        var item = _items.FirstOrDefault(i => i.Id.Value == itemId.Value);
+        var item = _items.FirstOrDefault(i => i.Id == itemId);
         if (item is null)
         {
             return Result.Failure(Errors.ChecklistErrors.ItemNotFound);
@@ -94,7 +93,7 @@ public sealed class Checklist : AggregateRoot<ChecklistId>
 
     public Result UpdateItem(ChecklistItemId itemId, ChecklistItemText newText, DateTimeOffset at)
     {
-        var item = _items.FirstOrDefault(i => i.Id.Value == itemId.Value);
+        var item = _items.FirstOrDefault(i => i.Id == itemId);
         if (item is null)
         {
             return Result.Failure(Errors.ChecklistErrors.ItemNotFound);
@@ -107,7 +106,7 @@ public sealed class Checklist : AggregateRoot<ChecklistId>
 
     public Result RemoveItem(ChecklistItemId itemId, DateTimeOffset at)
     {
-        var item = _items.FirstOrDefault(i => i.Id.Value == itemId.Value);
+        var item = _items.FirstOrDefault(i => i.Id == itemId);
         if (item is null)
         {
             return Result.Failure(Errors.ChecklistErrors.ItemNotFound);

@@ -3,15 +3,13 @@ using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-
-
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class WorkspaceRepository(CardscapeDbContext db) : RepositoryBase<Workspace, WorkspaceId>(db), IWorkspaceRepository
 {
     public async Task<IReadOnlyList<Workspace>> ListForUserAsync(Guid userId, CancellationToken ct = default)
     {
-        return await Db.Set<Workspace>()
+        return await Set
             .AsNoTracking()
             .Include(workspace => workspace.Members)
             .Where(workspace => !workspace.IsDeleted && workspace.Members.Any(member => member.UserId == userId))
@@ -28,15 +26,15 @@ public sealed class WorkspaceRepository(CardscapeDbContext db) : RepositoryBase<
             return [];
         }
 
-        HashSet<WorkspaceId> wanted = new(ids);
-        return await Db.Set<Workspace>()
+        HashSet<WorkspaceId> wanted = [.. ids];
+        return await Set
             .AsNoTracking()
             .Where(workspace => wanted.Contains(workspace.Id))
             .ToListAsync(ct);
     }
 
     public Task<bool> AnyForUserRequiresTwoFactorAsync(Guid userId, CancellationToken ct = default) =>
-        Db.Set<Workspace>()
+        Set
             .AsNoTracking()
             .AnyAsync(
                 workspace => !workspace.IsDeleted
@@ -52,7 +50,7 @@ public sealed class WorkspaceRepository(CardscapeDbContext db) : RepositoryBase<
         // Don't reach into EF.Property<Guid> here — that path collides
         // with the converter and throws "Object must implement
         // IConvertible" at materialization time.
-        return await Db.Set<Workspace>()
+        return await Set
             .Include(w => w.Members)
             .FirstOrDefaultAsync(w => w.Id == id, ct);
     }

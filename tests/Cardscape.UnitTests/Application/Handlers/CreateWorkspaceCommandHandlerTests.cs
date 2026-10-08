@@ -4,7 +4,7 @@ using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Application.Handlers;
 
-public class CreateWorkspaceCommandHandlerTests
+public sealed class CreateWorkspaceCommandHandlerTests
 {
     [Fact]
     public async Task Handle_AsAuthenticatedUser_CreatesAndPersistsWorkspace()

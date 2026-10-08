@@ -1,8 +1,5 @@
 using Cardscape.Application.Checklists;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Checklists;
@@ -20,7 +17,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<ChecklistDto>>>(
                 new ListCardChecklistsQuery(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<ChecklistDto[]>();
 
         cardGroup.MapPost("/", async (
@@ -28,7 +25,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new CreateChecklistCommand(cardId, body.Title), ct);
-            return result.IsSuccess ? Results.Created($"/api/checklists/{result.Value.Id}", result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToCreated(created => $"/api/checklists/{created.Id}");
         }).Produces<ChecklistDto>(StatusCodes.Status201Created);
 
         var itemGroup = app.MapGroup("/api/checklists/{checklistId:guid}")
@@ -40,7 +37,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new RenameChecklistCommand(checklistId, body.Title), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<ChecklistDto>();
 
         itemGroup.MapDelete("/", async (
@@ -48,7 +45,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new DeleteChecklistCommand(checklistId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         itemGroup.MapPost("/items/", async (
@@ -74,7 +71,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new ToggleChecklistItemCommand(checklistId, itemId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<ChecklistDto>();
 
         itemGroup.MapPatch("/items/{itemId:guid}/rename", async (
@@ -82,7 +79,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new RenameChecklistItemCommand(checklistId, itemId, body.Text), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<ChecklistDto>();
 
         itemGroup.MapDelete("/items/{itemId:guid}", async (
@@ -90,7 +87,7 @@ public static class ChecklistEndpoints
         {
             var result = await bus.InvokeAsync<Result<ChecklistDto>>(
                 new DeleteChecklistItemCommand(checklistId, itemId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<ChecklistDto>();
 
         return app;
@@ -100,5 +97,4 @@ public static class ChecklistEndpoints
     public sealed record RenameChecklistBody(string Title);
     public sealed record AddItemBody(string Text);
     public sealed record RenameItemBody(string Text);
-
 }

@@ -1,4 +1,3 @@
-using System.IO;
 using System.Security.Claims;
 using System.Text;
 using Cardscape.Api.Logging;
@@ -8,9 +7,6 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Idempotency;
 using Cardscape.Domain.Members;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Cardscape.Api.Middleware;
 
@@ -207,8 +203,8 @@ public sealed class IdempotencyMiddleware(
         }
 
         int status = context.Response.StatusCode;
-        if (status != IdempotencyKey.ReservationStatusCode
-            && (status is >= 200 and < 300 or (>= 400 and < 500)))
+        if (status is not IdempotencyKey.ReservationStatusCode
+            and (>= 200 and < 300 or (>= 400 and < 500)))
         {
             string responseJson = Encoding.UTF8.GetString(captured.ToArray());
             bool completed = await store.CompleteReservationAsync(

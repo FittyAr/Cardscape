@@ -18,7 +18,7 @@ public sealed class ActivityRepository(CardscapeDbContext db) : RepositoryBase<A
         Guid? beforeId,
         CancellationToken ct = default)
     {
-        IQueryable<Activity> query = Db.Set<Activity>()
+        IQueryable<Activity> query = Set
             .AsNoTracking()
             .Where(activity => activity.BoardId == boardId);
         return await ExecutePageAsync(query, limit, beforeOccurredAt, beforeId, ct);
@@ -31,7 +31,7 @@ public sealed class ActivityRepository(CardscapeDbContext db) : RepositoryBase<A
         Guid? beforeId,
         CancellationToken ct = default)
     {
-        IQueryable<Activity> query = Db.Set<Activity>()
+        IQueryable<Activity> query = Set
             .AsNoTracking()
             .Where(activity => activity.CardId == cardId.Value);
         return await ExecutePageAsync(query, limit, beforeOccurredAt, beforeId, ct);

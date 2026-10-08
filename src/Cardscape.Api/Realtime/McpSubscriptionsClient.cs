@@ -1,8 +1,6 @@
-using System.Net.Http.Json;
 using System.Text.Json;
 using Cardscape.Api.Logging;
-using Cardscape.Application.Abstractions.Realtime;
-using Cardscape.Application.Realtime;
+using Cardscape.Infrastructure.Configuration;
 
 namespace Cardscape.Api.Realtime;
 
@@ -16,34 +14,19 @@ namespace Cardscape.Api.Realtime;
 /// Auth is the same shared secret the API uses for the
 /// reverse direction (<c>Internal:Secret</c>).
 /// </summary>
-public sealed class McpSubscriptionsClient
+public sealed class McpSubscriptionsClient(
+    IHttpClientFactory factory,
+    IConfiguration config,
+    ILogger<McpSubscriptionsClient> logger)
 {
-    public const string SecretHeader = "X-Internal-Secret";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNameCaseInsensitive = true
-    };
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerOptions.Web;
 
-    private readonly HttpClient _http;
-    private readonly string? _secret;
-    private readonly string? _baseUrl;
-    private readonly ILogger<McpSubscriptionsClient> _logger;
-
-    public McpSubscriptionsClient(
-        IHttpClientFactory factory,
-        IConfiguration config,
-        ILogger<McpSubscriptionsClient> logger)
-    {
-        _http = factory.CreateClient("Cardscape.Mcp");
-        _secret = config["Internal:Secret"]
-            ?? config["Cardscape:Internal:Secret"]
-            ?? Environment.GetEnvironmentVariable("CARDS_CAPE__INTERNAL__SECRET");
-        _baseUrl = config["Cardscape:Mcp:BaseUrl"]
+    private readonly HttpClient _http = factory.CreateClient("Cardscape.Mcp");
+    private readonly string? _secret = config.OutboundInternalSecret;
+    private readonly string? _baseUrl = config["Cardscape:Mcp:BaseUrl"]
             ?? config["Mcp:BaseUrl"]
             ?? Environment.GetEnvironmentVariable("CARDS_CAPE__MCP__BASEURL");
-        _logger = logger;
-    }
 
     /// <summary>
     /// Calls the MCP snapshot endpoint and returns the
@@ -56,13 +39,13 @@ public sealed class McpSubscriptionsClient
     {
         if (string.IsNullOrWhiteSpace(_baseUrl))
         {
-            _logger.McpSubscriptionsBaseUrlMissing();
+            logger.McpSubscriptionsBaseUrlMissing();
             return null;
         }
 
         if (string.IsNullOrWhiteSpace(_secret))
         {
-            _logger.McpSubscriptionsSecretMissing();
+            logger.McpSubscriptionsSecretMissing();
             return null;
         }
 
@@ -71,12 +54,12 @@ public sealed class McpSubscriptionsClient
             using HttpRequestMessage request = new(
                 HttpMethod.Get,
                 new Uri(new Uri(_baseUrl, UriKind.Absolute), "api/internal/board-event/subscriptions"));
-            request.Headers.Add(SecretHeader, _secret);
+            request.Headers.Add(InternalSecret.HeaderName, _secret);
 
             using HttpResponseMessage response = await _http.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode)
             {
-                _logger.McpSubscriptionsSnapshotUnsuccessful((int)response.StatusCode, response.ReasonPhrase);
+                logger.McpSubscriptionsSnapshotUnsuccessful((int)response.StatusCode, response.ReasonPhrase);
                 return null;
             }
 
@@ -84,7 +67,7 @@ public sealed class McpSubscriptionsClient
         }
         catch (Exception ex)
         {
-            _logger.McpSubscriptionsSnapshotFailed(ex);
+            logger.McpSubscriptionsSnapshotFailed(ex);
             return null;
         }
     }

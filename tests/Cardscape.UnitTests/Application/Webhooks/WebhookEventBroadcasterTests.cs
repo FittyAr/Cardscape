@@ -72,6 +72,22 @@ public sealed class WebhookEventBroadcasterTests
     }
 
     [Fact]
+    public async Task BroadcastAsync_CardMoved_ReportsThePreviousListAsTheSource()
+    {
+        using var context = CreateContext(Result.Success(), WebhookEventTypes.CardMoved);
+        var fromListId = BoardListId.New();
+
+        await context.Broadcaster.BroadcastAsync(
+            new CardMoved(context.Card.Id, fromListId, context.List.Id, Position.From(4.0), Now),
+            TestContext.Current.CancellationToken);
+
+        using JsonDocument payload = JsonDocument.Parse(context.AddedDelivery!.PayloadJson);
+        JsonElement data = payload.RootElement.GetProperty("data");
+        data.GetProperty("fromListId").GetGuid().Should().Be(fromListId.Value);
+        data.GetProperty("toListId").GetGuid().Should().Be(context.List.Id.Value);
+    }
+
+    [Fact]
     public async Task BroadcastAsync_CardCreated_WhenSchedulerFails_PropagatesFailure()
     {
         using var context = CreateContext(Result.Failure(DomainError.External(
@@ -113,7 +129,9 @@ public sealed class WebhookEventBroadcasterTests
         scopeFactory.VerifyNoOtherCalls();
     }
 
-    private static WebhookTestContext CreateContext(Result schedulerResult)
+    private static WebhookTestContext CreateContext(
+        Result schedulerResult,
+        string eventType = WebhookEventTypes.CardCreated)
     {
         var boardId = BoardId.New();
         var listId = BoardListId.New();
@@ -137,7 +155,7 @@ public sealed class WebhookEventBroadcasterTests
             boardId,
             "https://93.184.216.34/hook",
             "protected-secret",
-            WebhookEventTypes.CardCreated,
+            eventType,
             Now.AddDays(-1)).Value;
 
         var cards = new Mock<ICardRepository>(MockBehavior.Strict);
@@ -147,7 +165,7 @@ public sealed class WebhookEventBroadcasterTests
         var endpoints = new Mock<IWebhookEndpointRepository>(MockBehavior.Strict);
         endpoints.Setup(x => x.ListActiveForEventAsync(
                 boardId,
-                WebhookEventTypes.CardCreated,
+                eventType,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([endpoint]);
         var deliveries = new Mock<IWebhookDeliveryRepository>(MockBehavior.Strict);
@@ -182,46 +200,31 @@ public sealed class WebhookEventBroadcasterTests
 
     private sealed record UnsupportedEvent(DateTimeOffset OccurredAt) : IDomainEvent;
 
-    private sealed class WebhookTestContext : IDisposable
+    private sealed class WebhookTestContext(
+        BoardId boardId,
+        Card card,
+        BoardList list,
+        WebhookEndpoint endpoint,
+        Mock<ICardRepository> cards,
+        Mock<IBoardListRepository> lists,
+        Mock<IWebhookEndpointRepository> endpoints,
+        Mock<IWebhookDeliveryRepository> deliveries,
+        Mock<IBackgroundJobScheduler> scheduler,
+        FakeClock clock) : IDisposable
     {
         private ServiceProvider? _services;
 
-        public WebhookTestContext(
-            BoardId boardId,
-            Card card,
-            BoardList list,
-            WebhookEndpoint endpoint,
-            Mock<ICardRepository> cards,
-            Mock<IBoardListRepository> lists,
-            Mock<IWebhookEndpointRepository> endpoints,
-            Mock<IWebhookDeliveryRepository> deliveries,
-            Mock<IBackgroundJobScheduler> scheduler,
-            FakeClock clock)
-        {
-            BoardId = boardId;
-            Card = card;
-            List = list;
-            Endpoint = endpoint;
-            Cards = cards;
-            Lists = lists;
-            Endpoints = endpoints;
-            Deliveries = deliveries;
-            Scheduler = scheduler;
-            Clock = clock;
-            CardCreatedEvent = new CardCreated(card.Id, list.Id, card.Title, Now);
-        }
-
-        public BoardId BoardId { get; }
-        public Card Card { get; }
-        public BoardList List { get; }
-        public WebhookEndpoint Endpoint { get; }
-        public Mock<ICardRepository> Cards { get; }
-        public Mock<IBoardListRepository> Lists { get; }
-        public Mock<IWebhookEndpointRepository> Endpoints { get; }
-        public Mock<IWebhookDeliveryRepository> Deliveries { get; }
-        public Mock<IBackgroundJobScheduler> Scheduler { get; }
-        public FakeClock Clock { get; }
-        public CardCreated CardCreatedEvent { get; }
+        public BoardId BoardId { get; } = boardId;
+        public Card Card { get; } = card;
+        public BoardList List { get; } = list;
+        public WebhookEndpoint Endpoint { get; } = endpoint;
+        public Mock<ICardRepository> Cards { get; } = cards;
+        public Mock<IBoardListRepository> Lists { get; } = lists;
+        public Mock<IWebhookEndpointRepository> Endpoints { get; } = endpoints;
+        public Mock<IWebhookDeliveryRepository> Deliveries { get; } = deliveries;
+        public Mock<IBackgroundJobScheduler> Scheduler { get; } = scheduler;
+        public FakeClock Clock { get; } = clock;
+        public CardCreated CardCreatedEvent { get; } = new CardCreated(card.Id, list.Id, card.Title, Now);
         public WebhookEventBroadcaster Broadcaster { get; private set; } = null!;
         public WebhookDelivery? AddedDelivery { get; set; }
         public object? EnqueuedPayload { get; set; }

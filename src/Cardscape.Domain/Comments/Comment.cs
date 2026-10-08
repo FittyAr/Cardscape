@@ -1,7 +1,6 @@
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Comments.Events;
 using Cardscape.Domain.Common;
-using static Cardscape.Domain.Comments.Errors.CommentErrors;
 
 namespace Cardscape.Domain.Comments;
 
@@ -49,7 +48,7 @@ public sealed class Comment : AggregateRoot<CommentId>
             return Result.Failure(Errors.CommentErrors.Forbidden);
         }
 
-        if (newBody.Value == Body.Value)
+        if (newBody == Body)
         {
             return Result.Success();
         }

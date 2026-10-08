@@ -13,7 +13,7 @@ public sealed class PasswordResetRepository(CardscapeDbContext db)
     public async Task<PasswordReset?> FindByTokenHashAsync(string tokenHash, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(tokenHash)) return null;
-        return await Db.Set<PasswordReset>()
+        return await Set
             .FirstOrDefaultAsync(reset => reset.TokenHash == tokenHash && !reset.IsDeleted, ct);
     }
 }

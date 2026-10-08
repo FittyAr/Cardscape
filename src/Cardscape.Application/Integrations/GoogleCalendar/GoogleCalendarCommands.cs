@@ -1,5 +1,4 @@
 using Cardscape.Application.Abstractions;
-using Cardscape.Application.Abstractions.Integrations;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Common;

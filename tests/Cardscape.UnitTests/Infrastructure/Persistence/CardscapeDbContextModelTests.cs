@@ -1,5 +1,4 @@
 using Cardscape.Application.Abstractions.Realtime;
-using Cardscape.Application.Realtime;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Notifications;
 using Cardscape.Infrastructure.Persistence;
@@ -87,7 +86,7 @@ public sealed class CardscapeDbContextModelTests
             clock,
             NullLogger<DomainEventOutboxProcessor>.Instance);
         var interceptor = new DomainEventsInterceptor(
-            Array.Empty<IDomainEventBroadcaster>(),
+            [],
             processor,
             clock,
             NullLogger<DomainEventsInterceptor>.Instance);

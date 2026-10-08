@@ -1,9 +1,3 @@
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Cardscape.Web.Shared;
-
 namespace Cardscape.Web.Services.Api;
 
 /// <summary>JSON shape returned by <c>GET /api/admin/seeder/status</c>.</summary>

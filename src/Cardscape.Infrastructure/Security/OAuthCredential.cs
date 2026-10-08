@@ -7,13 +7,12 @@ internal static class OAuthCredential
 {
     internal const int SecretByteLength = 32;
 
-    internal static string GenerateClientId() => Generate(24);
+    internal static string GenerateClientId() => SecureToken.RandomBase64Url(24);
 
-    internal static string GenerateSecret() => Generate(SecretByteLength);
+    internal static string GenerateSecret() => SecureToken.RandomBase64Url(SecretByteLength);
 
     internal static string Hash(string cleartext) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.ASCII.GetBytes(cleartext)))
-            .ToLowerInvariant();
+        Convert.ToHexStringLower(SHA256.HashData(Encoding.ASCII.GetBytes(cleartext)));
 
     internal static bool MatchesHash(string cleartext, string expectedHash)
     {
@@ -30,14 +29,5 @@ internal static class OAuthCredential
 
         return expected.Length == SHA256.HashSizeInBytes
             && CryptographicOperations.FixedTimeEquals(actual, expected);
-    }
-
-    private static string Generate(int byteLength)
-    {
-        byte[] bytes = RandomNumberGenerator.GetBytes(byteLength);
-        return Convert.ToBase64String(bytes)
-            .Replace('+', '-')
-            .Replace('/', '_')
-            .TrimEnd('=');
     }
 }

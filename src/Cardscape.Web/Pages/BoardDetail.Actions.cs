@@ -1,13 +1,10 @@
 using Cardscape.Web.Services;
-using Cardscape.Web.Services.Api;
 using Cardscape.Web.Shared;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Radzen;
 
 namespace Cardscape.Web.Pages;
 
-public partial class BoardDetail
+public sealed partial class BoardDetail
 {
     private async Task ToggleSnoozedAsync()
     {
@@ -43,11 +40,11 @@ public partial class BoardDetail
     // the markup above (AddList form + AddCard inline).
     private async Task OnAddListKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
     {
-        if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
+        if (e.IsEnter)
         {
             await AddListAsync();
         }
-        else if (string.Equals(e.Key, "Escape", StringComparison.Ordinal))
+        else if (e.IsEscape)
         {
             _showAddList = false;
         }
@@ -55,11 +52,11 @@ public partial class BoardDetail
 
     private async Task OnAddCardKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, Guid listId)
     {
-        if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
+        if (e.IsEnter)
         {
             await ConfirmAddCardAsync(listId);
         }
-        else if (string.Equals(e.Key, "Escape", StringComparison.Ordinal))
+        else if (e.IsEscape)
         {
             CloseCardComposer();
         }
@@ -82,7 +79,7 @@ public partial class BoardDetail
 
     private void OnCardKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, CardSummaryDto card)
     {
-        if (e.Key is "Enter" or " ")
+        if (e.IsActivation)
         {
             OpenCard(card);
         }
@@ -97,7 +94,7 @@ public partial class BoardDetail
             ApiResult<BoardListDto> result = await ListsApi.CreateAsync(BoardId, _addListModel.Name);
             if (result.IsSuccess)
             {
-                _lists = [.. (_lists ?? Array.Empty<BoardListDto>()), result.Value!];
+                _lists = [.. (_lists ?? []), result.Value!];
                 _addListModel.Name = string.Empty;
                 _showAddList = false;
             }

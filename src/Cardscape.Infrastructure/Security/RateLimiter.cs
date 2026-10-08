@@ -140,7 +140,7 @@ public sealed class RateLimiter : IRateLimiter
     /// </summary>
     private sealed class Bucket
     {
-        public object SyncRoot { get; } = new();
+        public Lock SyncRoot { get; } = new();
 
         public int RateLimitPerHour { get; internal set; }
 
@@ -180,28 +180,12 @@ public sealed class RateLimiter : IRateLimiter
 
         public void Refill(DateTimeOffset at)
         {
-            if (Disabled || BurstSize == 0)
+            if (Disabled || BurstSize == 0 || LastRefill >= at)
             {
                 return;
             }
 
-            if (LastRefill is null)
-            {
-                LastRefill = at;
-                Tokens = BurstSize;
-                LastAccess = at;
-                return;
-            }
-
-            double elapsed = Math.Max(0, (at - LastRefill.Value).TotalSeconds);
-            if (elapsed <= 0)
-            {
-                return;
-            }
-
-            double tokensPerSecond = RateLimitPerHour / 3600.0;
-            double refilled = elapsed * tokensPerSecond;
-            Tokens = Math.Min(BurstSize, Tokens + refilled);
+            Tokens = PeekRefill(at);
             LastRefill = at;
             LastAccess = at;
         }
@@ -215,9 +199,8 @@ public sealed class RateLimiter : IRateLimiter
         /// <paramref name="at"/> without keeping the
         /// bucket warm — the same control-plane
         /// invariant <see cref="ApplyConfiguration"/>
-        /// already obeys. Mirrors the formula in
-        /// <see cref="Refill"/> exactly; if the formula
-        /// changes both methods must change in lockstep.
+        /// already obeys. <see cref="Refill"/> commits
+        /// this projection.
         /// </summary>
         public double PeekRefill(DateTimeOffset at)
         {

@@ -7,7 +7,6 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
 using Wolverine;
-using static Cardscape.Domain.Labels.Errors.LabelErrors;
 
 namespace Cardscape.Application.Labels.Commands;
 

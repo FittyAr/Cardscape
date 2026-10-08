@@ -26,7 +26,6 @@ public sealed class SeedRunner : IDisposable
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IOptionsMonitor<SeederOptions> _options;
-    private readonly IPasswordHasher _hasher;
     private readonly IEnumerable<ISeedStep> _steps;
     private readonly SeedReport _report;
     private readonly ILogger<SeedRunner> _logger;
@@ -36,22 +35,16 @@ public sealed class SeedRunner : IDisposable
     internal SeedRunner(
         IServiceScopeFactory scopeFactory,
         IOptionsMonitor<SeederOptions> options,
-        IPasswordHasher hasher,
         IEnumerable<ISeedStep> steps,
         SeedReport report,
         ILogger<SeedRunner> logger)
     {
         _scopeFactory = scopeFactory;
         _options = options;
-        _hasher = hasher;
         _steps = steps;
         _report = report;
         _logger = logger;
     }
-
-    public bool IsRunning => _runLock.CurrentCount == 0;
-
-    public bool IsEnabled => _options.CurrentValue.Enabled;
 
     public SeederOptions CurrentOptions => _options.CurrentValue;
 
@@ -114,7 +107,7 @@ public sealed class SeedRunner : IDisposable
                     // authoritative DB counts.
                     foreach ((string key, long count) in context.RecordedCounts())
                     {
-                        report.RecordTable(key, count, key);
+                        report.RecordTable(key, count);
                     }
                 }
                 catch (Exception ex)
@@ -290,65 +283,65 @@ public sealed class SeedRunner : IDisposable
         // relational command pipeline; the underlying provider
         // uses the index-only scan SQLite/PostgreSQL expose for
         // COUNT(*) on a single table.
-        var tables = new (string Key, string Aggregate, Func<Task<long>> Count)[]
+        var tables = new (string Key, Func<Task<long>> Count)[]
         {
-            ("users", "users", () => db.Set<User>().LongCountAsync(cancellationToken)),
-            ("user_preferences", "user_preferences", () => db.Set<UserPreferences>().LongCountAsync(cancellationToken)),
-            ("workspaces", "workspaces", () => db.Workspaces.LongCountAsync(cancellationToken)),
-            ("workspace_members", "workspace_members", () => db.Workspaces.SelectMany(w => w.Members).LongCountAsync(cancellationToken)),
-            ("workspace_invitations", "workspace_invitations", () => db.WorkspaceInvitations.LongCountAsync(cancellationToken)),
-            ("boards", "boards", () => db.Boards.LongCountAsync(cancellationToken)),
-            ("board_members", "board_members", () => db.Boards.SelectMany(b => b.Members).LongCountAsync(cancellationToken)),
-            ("board_stars", "board_stars", () => db.BoardStars.LongCountAsync(cancellationToken)),
-            ("board_extensions", "board_extensions", () => db.BoardExtensions.LongCountAsync(cancellationToken)),
-            ("board_automation_rules", "board_automation_rules", () => db.Set<BoardAutomationRule>().LongCountAsync(cancellationToken)),
-            ("custom_field_definitions", "custom_field_definitions", () => db.CustomFieldDefinitions.LongCountAsync(cancellationToken)),
-            ("custom_field_values", "custom_field_values", () => db.CustomFieldValues.LongCountAsync(cancellationToken)),
-            ("dashcards", "dashcards", () => db.Set<Dashcard>().LongCountAsync(cancellationToken)),
-            ("labels", "labels", () => db.Labels.LongCountAsync(cancellationToken)),
-            ("lists", "lists", () => db.Lists.LongCountAsync(cancellationToken)),
-            ("cards", "cards", () => db.Cards.LongCountAsync(cancellationToken)),
-            ("card_members", "card_members", () => db.Cards.SelectMany(c => c.Members).LongCountAsync(cancellationToken)),
-            ("card_labels", "card_labels", () => db.Cards.SelectMany(c => c.CardLabels).LongCountAsync(cancellationToken)),
-            ("card_aging_settings", "card_aging_settings", () => db.CardAgingSettings.LongCountAsync(cancellationToken)),
-            ("card_snoozes", "card_snoozes", () => db.CardSnoozes.LongCountAsync(cancellationToken)),
-            ("card_mirrors", "card_mirrors", () => db.CardMirrors.LongCountAsync(cancellationToken)),
-            ("card_recurrences", "card_recurrences", () => db.CardRecurrences.LongCountAsync(cancellationToken)),
-            ("card_votes", "card_votes", () => db.CardVotes.LongCountAsync(cancellationToken)),
-            ("attachments", "attachments", () => db.Attachments.LongCountAsync(cancellationToken)),
-            ("checklists", "checklists", () => db.Checklists.LongCountAsync(cancellationToken)),
-            ("checklist_items", "checklist_items", () => db.Checklists.SelectMany(c => c.Items).LongCountAsync(cancellationToken)),
-            ("comments", "comments", () => db.Comments.LongCountAsync(cancellationToken)),
-            ("activities", "activities", () => db.Activities.LongCountAsync(cancellationToken)),
-            ("notifications", "notifications", () => db.Notifications.LongCountAsync(cancellationToken)),
-            ("api_tokens", "api_tokens", () => db.ApiTokens.LongCountAsync(cancellationToken)),
-            ("background_jobs", "background_jobs", () => db.BackgroundJobs.LongCountAsync(cancellationToken)),
-            ("idempotency_keys", "idempotency_keys", () => db.IdempotencyKeys.LongCountAsync(cancellationToken)),
-            ("external_logins", "external_logins", () => db.ExternalLogins.LongCountAsync(cancellationToken)),
-            ("totp_credentials", "totp_credentials", () => db.TotpCredentials.LongCountAsync(cancellationToken)),
-            ("password_resets", "password_resets", () => db.PasswordResets.LongCountAsync(cancellationToken)),
-            ("revoked_tokens", "revoked_tokens", () => db.RevokedTokens.LongCountAsync(cancellationToken)),
-            ("oauth_apps", "oauth_apps", () => db.OAuthApps.LongCountAsync(cancellationToken)),
-            ("oauth_authorization_codes", "oauth_authorization_codes", () => db.OAuthAuthorizationCodes.LongCountAsync(cancellationToken)),
-            ("oauth_access_tokens", "oauth_access_tokens", () => db.OAuthAccessTokens.LongCountAsync(cancellationToken)),
-            ("scim_tokens", "scim_tokens", () => db.ScimTokens.LongCountAsync(cancellationToken)),
-            ("saml_connections", "saml_connections", () => db.SamlConnections.LongCountAsync(cancellationToken)),
-            ("slack_workspaces", "slack_workspaces", () => db.Set<SlackWorkspace>().LongCountAsync(cancellationToken)),
-            ("slack_channels", "slack_channels", () => db.Set<SlackChannel>().LongCountAsync(cancellationToken)),
-            ("github_repo_links", "github_repo_links", () => db.Set<GitHubRepoLink>().LongCountAsync(cancellationToken)),
-            ("github_pull_request_links", "github_pull_request_links", () => db.Set<GitHubPullRequestLink>().LongCountAsync(cancellationToken)),
-            ("google_calendar_connections", "google_calendar_connections", () => db.GoogleCalendarConnections.LongCountAsync(cancellationToken)),
-            ("inbound_email_addresses", "inbound_email_addresses", () => db.Set<InboundEmailAddress>().LongCountAsync(cancellationToken)),
-            ("webhook_endpoints", "webhook_endpoints", () => db.Set<WebhookEndpoint>().LongCountAsync(cancellationToken)),
-            ("webhook_deliveries", "webhook_deliveries", () => db.Set<WebhookDelivery>().LongCountAsync(cancellationToken)),
+            ("users", () => db.Set<User>().LongCountAsync(cancellationToken)),
+            ("user_preferences", () => db.Set<UserPreferences>().LongCountAsync(cancellationToken)),
+            ("workspaces", () => db.Workspaces.LongCountAsync(cancellationToken)),
+            ("workspace_members", () => db.Workspaces.SelectMany(w => w.Members).LongCountAsync(cancellationToken)),
+            ("workspace_invitations", () => db.WorkspaceInvitations.LongCountAsync(cancellationToken)),
+            ("boards", () => db.Boards.LongCountAsync(cancellationToken)),
+            ("board_members", () => db.Boards.SelectMany(b => b.Members).LongCountAsync(cancellationToken)),
+            ("board_stars", () => db.BoardStars.LongCountAsync(cancellationToken)),
+            ("board_extensions", () => db.BoardExtensions.LongCountAsync(cancellationToken)),
+            ("board_automation_rules", () => db.Set<BoardAutomationRule>().LongCountAsync(cancellationToken)),
+            ("custom_field_definitions", () => db.CustomFieldDefinitions.LongCountAsync(cancellationToken)),
+            ("custom_field_values", () => db.CustomFieldValues.LongCountAsync(cancellationToken)),
+            ("dashcards", () => db.Set<Dashcard>().LongCountAsync(cancellationToken)),
+            ("labels", () => db.Labels.LongCountAsync(cancellationToken)),
+            ("lists", () => db.Lists.LongCountAsync(cancellationToken)),
+            ("cards", () => db.Cards.LongCountAsync(cancellationToken)),
+            ("card_members", () => db.Cards.SelectMany(c => c.Members).LongCountAsync(cancellationToken)),
+            ("card_labels", () => db.Cards.SelectMany(c => c.CardLabels).LongCountAsync(cancellationToken)),
+            ("card_aging_settings", () => db.CardAgingSettings.LongCountAsync(cancellationToken)),
+            ("card_snoozes", () => db.CardSnoozes.LongCountAsync(cancellationToken)),
+            ("card_mirrors", () => db.CardMirrors.LongCountAsync(cancellationToken)),
+            ("card_recurrences", () => db.CardRecurrences.LongCountAsync(cancellationToken)),
+            ("card_votes", () => db.CardVotes.LongCountAsync(cancellationToken)),
+            ("attachments", () => db.Attachments.LongCountAsync(cancellationToken)),
+            ("checklists", () => db.Checklists.LongCountAsync(cancellationToken)),
+            ("checklist_items", () => db.Checklists.SelectMany(c => c.Items).LongCountAsync(cancellationToken)),
+            ("comments", () => db.Comments.LongCountAsync(cancellationToken)),
+            ("activities", () => db.Activities.LongCountAsync(cancellationToken)),
+            ("notifications", () => db.Notifications.LongCountAsync(cancellationToken)),
+            ("api_tokens", () => db.ApiTokens.LongCountAsync(cancellationToken)),
+            ("background_jobs", () => db.BackgroundJobs.LongCountAsync(cancellationToken)),
+            ("idempotency_keys", () => db.IdempotencyKeys.LongCountAsync(cancellationToken)),
+            ("external_logins", () => db.ExternalLogins.LongCountAsync(cancellationToken)),
+            ("totp_credentials", () => db.TotpCredentials.LongCountAsync(cancellationToken)),
+            ("password_resets", () => db.PasswordResets.LongCountAsync(cancellationToken)),
+            ("revoked_tokens", () => db.RevokedTokens.LongCountAsync(cancellationToken)),
+            ("oauth_apps", () => db.OAuthApps.LongCountAsync(cancellationToken)),
+            ("oauth_authorization_codes", () => db.OAuthAuthorizationCodes.LongCountAsync(cancellationToken)),
+            ("oauth_access_tokens", () => db.OAuthAccessTokens.LongCountAsync(cancellationToken)),
+            ("scim_tokens", () => db.ScimTokens.LongCountAsync(cancellationToken)),
+            ("saml_connections", () => db.SamlConnections.LongCountAsync(cancellationToken)),
+            ("slack_workspaces", () => db.Set<SlackWorkspace>().LongCountAsync(cancellationToken)),
+            ("slack_channels", () => db.Set<SlackChannel>().LongCountAsync(cancellationToken)),
+            ("github_repo_links", () => db.Set<GitHubRepoLink>().LongCountAsync(cancellationToken)),
+            ("github_pull_request_links", () => db.Set<GitHubPullRequestLink>().LongCountAsync(cancellationToken)),
+            ("google_calendar_connections", () => db.GoogleCalendarConnections.LongCountAsync(cancellationToken)),
+            ("inbound_email_addresses", () => db.Set<InboundEmailAddress>().LongCountAsync(cancellationToken)),
+            ("webhook_endpoints", () => db.Set<WebhookEndpoint>().LongCountAsync(cancellationToken)),
+            ("webhook_deliveries", () => db.Set<WebhookDelivery>().LongCountAsync(cancellationToken)),
         };
 
-        foreach ((string key, string aggregate, Func<Task<long>> count) in tables)
+        foreach ((string key, Func<Task<long>> count) in tables)
         {
             try
             {
                 long rows = await count();
-                report.RecordTable(key, rows, aggregate);
+                report.RecordTable(key, rows);
             }
             catch
             {

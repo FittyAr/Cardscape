@@ -3,10 +3,7 @@ using Cardscape.Application.Boards.DTOs;
 using Cardscape.Application.Boards.Queries;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Boards;
@@ -22,7 +19,7 @@ public static class BoardEndpoints
         group.MapGet("/starred", async (IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(new ListStarredBoardsQuery(), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardSummaryDto[]>();
 
         group.MapGet("/", async (Guid workspaceId, [FromQuery] bool? includeArchived, IMessageBus bus, CancellationToken ct) =>
@@ -34,13 +31,13 @@ public static class BoardEndpoints
             // landing).
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardSummaryDto>>>(
                 new ListBoardsForWorkspaceQuery(workspaceId, includeArchived ?? false), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardSummaryDto[]>();
 
         group.MapGet("/{boardId:guid}", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new GetBoardQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardDto>();
 
         // BETA-A3-R2-001 — see
@@ -57,7 +54,7 @@ public static class BoardEndpoints
         group.MapDelete("/{boardId:guid}", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new DeleteBoardCommand(boardId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/", async (CreateBoardRequestBody body, IMessageBus bus, CancellationToken ct) =>
@@ -72,56 +69,56 @@ public static class BoardEndpoints
         group.MapPost("/{boardId:guid}/rename", async (Guid boardId, RenameRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new RenameBoardCommand(boardId, body.Name), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardDto>();
 
         group.MapPost("/{boardId:guid}/description", async (Guid boardId, DescriptionRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardDescriptionCommand(boardId, body.Description), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardDto>();
 
         group.MapPost("/{boardId:guid}/visibility", async (Guid boardId, VisibilityRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardVisibilityCommand(boardId, body.Visibility), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardDto>();
 
         // Board background colour (palette name, "none" or null clears it).
         group.MapPost("/{boardId:guid}/color", async (Guid boardId, ColorRequest body, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardColorCommand(boardId, body.Color), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardDto>();
 
         group.MapDelete("/{boardId:guid}/color", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new ChangeBoardColorCommand(boardId, null), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardDto>();
 
         group.MapPost("/{boardId:guid}/archive", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new ArchiveBoardCommand(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardDto>();
 
         group.MapPost("/{boardId:guid}/unarchive", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new UnarchiveBoardCommand(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardDto>();
 
         group.MapPost("/{boardId:guid}/star", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new StarBoardCommand(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardDto>();
 
         group.MapDelete("/{boardId:guid}/star", async (Guid boardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result<BoardDto>>(new UnstarBoardCommand(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardDto>();
 
         // BETA-5-#12 — see test-results/BETA-TEST-REPORT.md.
@@ -140,7 +137,7 @@ public static class BoardEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new AddBoardMemberCommand(boardId, body.UserId, body.Role), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         // BETA-8-API-#1 - see test-results/r8/r8-report.md.
@@ -159,7 +156,7 @@ public static class BoardEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardMemberDto>>>(
                 new ListBoardMembersQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardMemberDto[]>();
 
         // Export the board as a ZIP archive (board.json + attachments).
@@ -222,5 +219,4 @@ public static class BoardEndpoints
     public sealed record VisibilityRequest(BoardVisibility Visibility);
     public sealed record ColorRequest(string? Color);
     public sealed record AddBoardMemberBody(Guid UserId, BoardMemberRole Role);
-
 }

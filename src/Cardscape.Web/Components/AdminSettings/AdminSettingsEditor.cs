@@ -35,10 +35,7 @@ public sealed class AdminSettingsEditor(IAdminSettingsApiClient api, InstanceSet
     /// <summary>Marks the stored AI key for removal on the next save.</summary>
     public void ClearAiApiKey()
     {
-        if (Draft is not null)
-        {
-            Draft.Ai.ApiKey = string.Empty;
-        }
+        Draft?.Ai.ApiKey = string.Empty;
     }
 
     /// <returns>The error message, or null on success.</returns>

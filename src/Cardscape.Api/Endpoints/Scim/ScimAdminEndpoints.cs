@@ -1,10 +1,7 @@
 using Cardscape.Api.Filters;
 using Cardscape.Application.Scim;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Scim;
@@ -26,7 +23,7 @@ public static class ScimAdminEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<ScimTokenDto>>>(
                 new ListScimTokensQuery(workspaceId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<ScimTokenDto>>(StatusCodes.Status200OK);
 
         group.MapPost("/tokens", async (
@@ -48,12 +45,11 @@ public static class ScimAdminEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new RevokeScimTokenCommand(workspaceId, tokenId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }
 
     public sealed record IssueScimTokenBody(string Name);
-
 }

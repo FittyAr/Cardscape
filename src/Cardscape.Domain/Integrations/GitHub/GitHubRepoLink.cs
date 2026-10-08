@@ -70,50 +70,20 @@ public sealed class GitHubRepoLink : AggregateRoot<GitHubRepoLinkId>
                 "GitHub repo full name must look like 'owner/name'."));
         }
 
-        if (events is null)
+        Result<string> subscription = GitHubEventTypes.Catalog.ToSubscription(events);
+        if (subscription.IsFailure)
         {
-            return Result.Failure<GitHubRepoLink>(DomainError.Validation(
-                "github.events_required", "At least one event type is required."));
-        }
-
-        HashSet<string> normalised = new(StringComparer.OrdinalIgnoreCase);
-        foreach (string e in events)
-        {
-            if (string.IsNullOrWhiteSpace(e))
-            {
-                continue;
-            }
-
-            string trimmed = e.Trim().ToLowerInvariant();
-            if (!GitHubEventTypes.IsKnown(trimmed))
-            {
-                return Result.Failure<GitHubRepoLink>(DomainError.Validation(
-                    "github.event_unknown",
-                    $"Unknown GitHub event type '{e}'. Allowed: "
-                    + string.Join(", ", GitHubEventTypes.All)));
-            }
-
-            normalised.Add(trimmed);
-        }
-
-        if (normalised.Count == 0)
-        {
-            return Result.Failure<GitHubRepoLink>(DomainError.Validation(
-                "github.events_required", "At least one event type is required."));
+            return Result.Failure<GitHubRepoLink>(subscription.Error);
         }
 
         return Result.Success(new GitHubRepoLink(
             id, boardId, repoFullName.Trim().ToLowerInvariant(),
-            string.Join(",", normalised.OrderBy(s => s, StringComparer.Ordinal)),
+            subscription.Value,
             at));
     }
 
     public bool SubscribesTo(string eventType) =>
-        !string.IsNullOrWhiteSpace(eventType)
-        && !string.IsNullOrEmpty(Events)
-        && Events
-            .Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Any(e => string.Equals(e, eventType, StringComparison.OrdinalIgnoreCase));
+        EventCatalog.Includes(Events, eventType);
 
     public void Deactivate(DateTimeOffset at)
     {

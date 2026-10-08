@@ -32,10 +32,10 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<SlackWorkspaceDto>>(
                 new ConnectSlackWorkspaceCommand(workspaceId, teamId, teamName, botToken), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -54,10 +54,10 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<IReadOnlyList<SlackChannelDto>>>(
                 new ListSlackChannelsForBoardQuery(workspaceId, boardId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -75,10 +75,10 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result>(
                 new UnlinkSlackChannelCommand(workspaceId, channelId), ct);
-            EnsureUnit(result);
+            result.OrThrow();
             __mcpSpan.MarkSuccess();
             return "OK";
         }
@@ -99,10 +99,10 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<IReadOnlyList<GitHubPullRequestDto>>>(
                 new ListGitHubPullRequestsQuery(boardId, repoFullName, state), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -121,10 +121,10 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: boardId, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<IReadOnlyList<GitHubIssueDto>>>(
                 new ListGitHubIssuesQuery(boardId, repoFullName, state), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -143,10 +143,10 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<GitHubPullRequestLinkDto>>(
                 new LinkGitHubPullRequestCommand(cardId, repoFullName, pullRequestNumber), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -165,10 +165,10 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: cardId);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<GitHubIssueDto>>(
                 new CreateGitHubIssueFromCardCommand(cardId, repoFullName, title, body), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -189,10 +189,10 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated(McpToolGuards.AlternateHint);
             var result = await bus.InvokeAsync<Result<IReadOnlyList<InboundEmailAddressDto>>>(
                 new ListInboundEmailAddressesQuery(workspaceId), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -204,34 +204,4 @@ public sealed class IntegrationsTools(IMessageBus bus, ICurrentUser currentUser)
     }
 
     // ── helpers ──────────────────────────────────────────────
-
-    private void RequireAuth()
-    {
-        if (!currentUser.IsAuthenticated)
-        {
-            throw new UnauthorizedAccessException(
-                "MCP tool call rejected: no authenticated principal. "
-                + "Pass the API token as an Authorization: Bearer header to the MCP HTTP endpoint.");
-        }
-    }
-
-    private static T Ensure<T>(Result<T> result)
-    {
-        if (result.IsFailure)
-        {
-            throw new InvalidOperationException(
-                $"{result.Error.Code}: {result.Error.Message}");
-        }
-
-        return result.Value!;
-    }
-
-    private static void EnsureUnit(Result result)
-    {
-        if (result.IsFailure)
-        {
-            throw new InvalidOperationException(
-                $"{result.Error.Code}: {result.Error.Message}");
-        }
-    }
 }

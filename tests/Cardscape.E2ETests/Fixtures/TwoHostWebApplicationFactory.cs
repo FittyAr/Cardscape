@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -43,8 +41,6 @@ public sealed class TwoHostWebApplicationFactory : IAsyncLifetime
     public ApiHostFactory Api { get; } = new();
     public McpHostFactory Mcp { get; } = new();
 
-    private RecordingSink? _apiRecordingSink;
-
     /// <summary>
     /// The API's cross-process HTTP call recording sink.
     /// The recording handler in the API factory writes
@@ -53,7 +49,7 @@ public sealed class TwoHostWebApplicationFactory : IAsyncLifetime
     /// hit the MCP (and not just observe a missing event
     /// on the MCP side).
     /// </summary>
-    public RecordingSink RecordingSink => _apiRecordingSink ??= Api.Services.GetRequiredService<RecordingSink>();
+    public RecordingSink RecordingSink { get => field ??= Api.Services.GetRequiredService<RecordingSink>(); private set; }
 
     public ValueTask InitializeAsync()
     {
@@ -75,7 +71,7 @@ public sealed class TwoHostWebApplicationFactory : IAsyncLifetime
         HttpClient mcpClient = Mcp.CreateClient();
         dispatcher.Configure(sink, mcpClient);
 
-        _apiRecordingSink = sink;
+        RecordingSink = sink;
         return ValueTask.CompletedTask;
     }
 
@@ -297,8 +293,8 @@ public sealed class McpHostFactory : WebApplicationFactory<Cardscape.Mcp.Program
 /// </summary>
 public sealed class RecordingSink
 {
-    private readonly List<RecordedCall> _calls = new();
-    private readonly object _gate = new();
+    private readonly List<RecordedCall> _calls = [];
+    private readonly Lock _gate = new();
 
     public void Record(RecordedCall call)
     {

@@ -3,7 +3,7 @@ using Cardscape.Domain.Members;
 
 namespace Cardscape.UnitTests.Domain.ValueObjects;
 
-public class DisplayNameTests
+public sealed class DisplayNameTests
 {
     [Theory]
     [InlineData("Alice")]

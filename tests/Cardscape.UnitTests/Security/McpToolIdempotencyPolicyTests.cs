@@ -4,7 +4,6 @@ using Cardscape.Application.Idempotency;
 using Cardscape.Domain.Members;
 using Cardscape.Mcp.Idempotency;
 using Cardscape.Tests.Common.Fakes;
-using FluentAssertions;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 

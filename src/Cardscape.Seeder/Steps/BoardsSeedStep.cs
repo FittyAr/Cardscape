@@ -61,8 +61,7 @@ internal sealed class BoardsSeedStep : SeedStepBase
             owner.Id.Value,
             createdAt).Value;
         board.ChangeColor(blueprint.Color, createdAt);
-        context.Db.Boards.Add(board);
-        context.Boards.Add(board);
+        context.Track(context.Boards, board);
         context.RecordActivity(board, null, owner, ActivityKind.BoardCreated, createdAt, new { name = blueprint.Name });
 
         // The first teammate co-administers the board; the rest are members.
@@ -85,7 +84,6 @@ internal sealed class BoardsSeedStep : SeedStepBase
         }
 
         BoardStar star = board.Stars.First(s => s.UserId == userId);
-        context.Db.BoardStars.Add(star);
-        context.BoardStars.Add(star);
+        context.Track(context.BoardStars, star);
     }
 }

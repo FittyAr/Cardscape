@@ -50,22 +50,6 @@ public sealed record CardSummaryLabelDto(Guid Id, string Name, string Color);
 /// <summary>Card assignee with the display name used for avatar initials.</summary>
 public sealed record CardSummaryMemberDto(Guid UserId, string DisplayName);
 
-/// <summary>
-/// Per-card snooze projection. Mirrors the Application-layer
-/// <c>CardSnoozeDto</c>. <see cref="IsSnoozed"/> is derived from
-/// <see cref="Until"/> vs. <see cref="Now"/> so a stale row
-/// reads as not-snoozed without the caller doing the math.
-/// </summary>
-public sealed record CardSnoozeDto(
-    Guid CardId,
-    DateTimeOffset Until,
-    Guid SnoozedBy,
-    DateTimeOffset SnoozedAt,
-    DateTimeOffset Now)
-{
-    public bool IsSnoozed => Until > Now;
-}
-
 public sealed record CreateCardRequestDto(Guid ListId, string Title, string? Description);
 
 

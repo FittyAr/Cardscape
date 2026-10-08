@@ -5,8 +5,6 @@ using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Security;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 
 namespace Cardscape.Api.Middleware;
 

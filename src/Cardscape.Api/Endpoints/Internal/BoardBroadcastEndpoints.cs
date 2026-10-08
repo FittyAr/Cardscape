@@ -5,9 +5,7 @@ using System.Text.Json;
 using Cardscape.Api.Hubs;
 using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Realtime;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
+using Cardscape.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cardscape.Api.Endpoints.Internal;
@@ -18,7 +16,7 @@ namespace Cardscape.Api.Endpoints.Internal;
 /// Wolverine domain-event handlers would have produced. The MCP
 /// runs in a separate process and has its own Wolverine bus, so
 /// its handlers do not trigger the API's
-/// <see cref="BoardNotifier"/> directly. Instead the MCP
+/// <see cref="IBoardNotifier"/> directly. Instead the MCP
 /// HTTP-calls this endpoint with the board id (or a list id / card
 /// id that the API resolves to a board), the SignalR method name,
 /// and the typed payload. The API dispatches the call to
@@ -32,7 +30,6 @@ namespace Cardscape.Api.Endpoints.Internal;
 /// </summary>
 public static class BoardBroadcastEndpoints
 {
-    public const string SecretHeader = "X-Internal-Secret";
 
     /// <summary>Hard cap on the request body. A real
     /// broadcast payload is a small typed record; 64 KB
@@ -41,10 +38,7 @@ public static class BoardBroadcastEndpoints
     /// (28.6 MB).</summary>
     private const int MaxBodyBytes = 64 * 1024;
 
-    private static readonly JsonSerializerOptions PayloadOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNameCaseInsensitive = true
-    };
+    private static readonly JsonSerializerOptions PayloadOptions = JsonSerializerOptions.Web;
 
     private delegate Task<bool> BroadcastHandler(
         IBoardNotifier notifier,
@@ -98,7 +92,7 @@ public static class BoardBroadcastEndpoints
 
             // Constant-time compare so a timing oracle
             // can't leak the secret byte-by-byte.
-            string? provided = http.Request.Headers[SecretHeader];
+            string? provided = http.Request.Headers[InternalSecret.HeaderName];
             if (string.IsNullOrEmpty(provided)
                 || !CryptographicOperations.FixedTimeEquals(
                     Encoding.UTF8.GetBytes(provided),

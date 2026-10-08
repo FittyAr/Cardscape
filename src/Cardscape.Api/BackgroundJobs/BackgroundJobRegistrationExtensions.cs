@@ -1,6 +1,4 @@
 using Cardscape.Infrastructure.BackgroundJobs;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace Cardscape.Api.BackgroundJobs;
 

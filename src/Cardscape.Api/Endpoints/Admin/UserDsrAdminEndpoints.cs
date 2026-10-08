@@ -1,11 +1,6 @@
-using Cardscape.Api.Extensions;
-using Cardscape.Application.Authentication.Commands;
 using Cardscape.Application.Users.Commands;
 using Cardscape.Application.Users.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 using AdminOnlyPolicy = Cardscape.Api.Extensions.AdminOnlyPolicy;
 
@@ -130,5 +125,4 @@ public static class UserDsrAdminEndpoints
 
         return app;
     }
-
 }

@@ -14,7 +14,7 @@ public sealed class ChecklistRepository(CardscapeDbContext db)
     public async Task<int> CountForCardAsync(Guid cardId, CancellationToken ct = default)
     {
         var typedCardId = new CardId(cardId);
-        return await Db.Set<Checklist>()
+        return await Set
             .CountAsync(checklist => checklist.CardId == typedCardId && !checklist.IsDeleted, ct);
     }
 
@@ -30,7 +30,7 @@ public sealed class ChecklistRepository(CardscapeDbContext db)
         // has more than a couple of checklists, so summing per card in
         // memory is cheaper than a provider-specific GroupBy translation.
         HashSet<CardId> wanted = [.. cardIds.Select(id => new CardId(id))];
-        var rows = await Db.Set<Checklist>()
+        var rows = await Set
             .AsNoTracking()
             .Where(checklist => wanted.Contains(checklist.CardId) && !checklist.IsDeleted)
             .Select(checklist => new
@@ -52,17 +52,10 @@ public sealed class ChecklistRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<Checklist>> ListForCardAsync(
         Guid cardId, CancellationToken ct = default)
     {
-        IQueryable<Checklist> query = Db.Set<Checklist>()
+        IQueryable<Checklist> query = Set
             .AsNoTracking()
             .Where(checklist => checklist.CardId == new CardId(cardId) && !checklist.IsDeleted);
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderBy(checklist => checklist.CreatedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, checklist => checklist.CreatedAt, ct: ct);
     }
 }
 
@@ -72,7 +65,7 @@ public sealed class ChecklistItemRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<ChecklistItem>> ListForChecklistAsync(
         Guid checklistId, CancellationToken ct = default)
     {
-        return await Db.Set<ChecklistItem>()
+        return await Set
             .AsNoTracking()
             .Where(item => item.ChecklistId == new ChecklistId(checklistId))
             .OrderBy(item => item.Position)

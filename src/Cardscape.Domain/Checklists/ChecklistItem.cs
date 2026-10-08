@@ -1,4 +1,3 @@
-using Cardscape.Domain.Checklists.Events;
 using Cardscape.Domain.Common;
 
 namespace Cardscape.Domain.Checklists;
@@ -37,7 +36,7 @@ public sealed class ChecklistItem : Entity<ChecklistItemId>
         new(ChecklistItemId.New(), checklistId, text, position, at);
 
     /// <summary>Marks the item as done.</summary>
-    public void Check(DateTimeOffset at)
+    internal void Check(DateTimeOffset at)
     {
         if (IsCompleted)
         {
@@ -49,7 +48,7 @@ public sealed class ChecklistItem : Entity<ChecklistItemId>
     }
 
     /// <summary>Marks the item as not done.</summary>
-    public void Uncheck(DateTimeOffset at)
+    internal void Uncheck(DateTimeOffset at)
     {
         if (!IsCompleted)
         {
@@ -60,20 +59,14 @@ public sealed class ChecklistItem : Entity<ChecklistItemId>
         UpdatedAt = at;
     }
 
-    public void UpdateText(ChecklistItemText newText, DateTimeOffset at)
+    internal void UpdateText(ChecklistItemText newText, DateTimeOffset at)
     {
-        if (newText.Value == Text.Value)
+        if (newText == Text)
         {
             return;
         }
 
         Text = newText;
-        UpdatedAt = at;
-    }
-
-    public void AssignTo(Guid userId, DateTimeOffset at)
-    {
-        AssignedTo = userId;
         UpdatedAt = at;
     }
 }

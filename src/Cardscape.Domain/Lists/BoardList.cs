@@ -2,7 +2,6 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists.Errors;
 using Cardscape.Domain.Lists.Events;
-using static Cardscape.Domain.Lists.Errors.ListErrors;
 
 namespace Cardscape.Domain.Lists;
 
@@ -61,7 +60,7 @@ public sealed class BoardList : AggregateRoot<BoardListId>
             return Result.Failure(ListErrors.Archived);
         }
 
-        if (newName.Value == Name.Value)
+        if (newName == Name)
         {
             return Result.Success();
         }

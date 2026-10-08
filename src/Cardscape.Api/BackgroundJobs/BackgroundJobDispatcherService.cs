@@ -2,9 +2,6 @@ using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.BackgroundJobs;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Wolverine;
 
 namespace Cardscape.Api.BackgroundJobs;
@@ -30,14 +27,9 @@ public sealed class BackgroundJobDispatcherService(
     ILogger<BackgroundJobDispatcherService> logger,
     BackgroundJobDispatcherOptions options) : BackgroundService
 {
-    private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
-    private readonly IClock _clock = clock;
-    private readonly ILogger<BackgroundJobDispatcherService> _logger = logger;
-    private readonly BackgroundJobDispatcherOptions _options = options;
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.BackgroundJobDispatcherStarting(_options.PollInterval, _options.BatchSize);
+        logger.BackgroundJobDispatcherStarting(options.PollInterval, options.BatchSize);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -47,15 +39,15 @@ public sealed class BackgroundJobDispatcherService(
                 // IBackgroundJobStore and IMessageBus are properly
                 // disposed and Entity Framework's per-request DbContext
                 // lifetime is honored.
-                await using AsyncServiceScope tickScope = _scopeFactory.CreateAsyncScope();
+                await using AsyncServiceScope tickScope = scopeFactory.CreateAsyncScope();
                 IBackgroundJobStore store = tickScope.ServiceProvider
                     .GetRequiredService<IBackgroundJobStore>();
                 IMessageBus bus = tickScope.ServiceProvider
                     .GetRequiredService<IMessageBus>();
 
-                DateTimeOffset now = _clock.UtcNow;
+                DateTimeOffset now = clock.UtcNow;
                 IReadOnlyList<Domain.BackgroundJobs.BackgroundJob> batch =
-                    await store.ClaimBatchAsync(_options.BatchSize, now, stoppingToken);
+                    await store.ClaimBatchAsync(options.BatchSize, now, stoppingToken);
 
                 foreach (Domain.BackgroundJobs.BackgroundJob job in batch)
                 {
@@ -70,7 +62,7 @@ public sealed class BackgroundJobDispatcherService(
 
                 if (batch.Count > 0)
                 {
-                    _logger.BackgroundJobsDispatched(batch.Count);
+                    logger.BackgroundJobsDispatched(batch.Count);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -79,12 +71,12 @@ public sealed class BackgroundJobDispatcherService(
             }
             catch (Exception ex)
             {
-                _logger.BackgroundJobDispatcherLoopFailed(ex);
+                logger.BackgroundJobDispatcherLoopFailed(ex);
             }
 
             try
             {
-                await Task.Delay(_options.PollInterval, stoppingToken);
+                await Task.Delay(options.PollInterval, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -92,7 +84,7 @@ public sealed class BackgroundJobDispatcherService(
             }
         }
 
-        _logger.BackgroundJobDispatcherStopping();
+        logger.BackgroundJobDispatcherStopping();
     }
 }
 

@@ -2,7 +2,7 @@ using Cardscape.Domain.Boards;
 
 namespace Cardscape.UnitTests.Boards;
 
-public class BoardExtensionTests
+public sealed class BoardExtensionTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);
 

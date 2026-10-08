@@ -1,5 +1,4 @@
 using Cardscape.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Cardscape.Api.Observability;

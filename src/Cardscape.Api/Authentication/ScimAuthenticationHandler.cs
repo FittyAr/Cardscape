@@ -3,8 +3,8 @@ using System.Text.Encodings.Web;
 using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Cardscape.Api.Authentication;
@@ -32,19 +32,13 @@ public sealed class ScimAuthenticationHandler(
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        if (!Request.Headers.TryGetValue("Authorization", out var authHeader))
+        string? token = BearerAuthorization.Credential(Request.Headers.Authorization.ToString());
+        if (token is null)
         {
             return AuthenticateResult.NoResult();
         }
 
-        string header = authHeader.ToString();
-        if (!header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-        {
-            return AuthenticateResult.NoResult();
-        }
-
-        string token = header["Bearer ".Length..].Trim();
-        if (string.IsNullOrEmpty(token))
+        if (token.Length == 0)
         {
             return AuthenticateResult.Fail("Empty bearer token.");
         }

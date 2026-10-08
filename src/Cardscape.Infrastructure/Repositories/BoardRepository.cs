@@ -4,15 +4,13 @@ using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-
-
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class BoardRepository(CardscapeDbContext db) : RepositoryBase<Board, BoardId>(db), IBoardRepository
 {
     public async Task<IReadOnlyList<Board>> ListForWorkspaceAsync(WorkspaceId workspaceId, CancellationToken ct = default)
     {
-        return await Db.Set<Board>()
+        return await Set
             .AsNoTracking()
             .Include(b => b.Stars)
             .Where(b => b.WorkspaceId == workspaceId && !b.IsDeleted)
@@ -29,8 +27,8 @@ public sealed class BoardRepository(CardscapeDbContext db) : RepositoryBase<Boar
             return [];
         }
 
-        HashSet<WorkspaceId> wanted = new(workspaceIds);
-        return await Db.Set<Board>()
+        HashSet<WorkspaceId> wanted = [.. workspaceIds];
+        return await Set
             .AsNoTracking()
             .Where(board => !board.IsDeleted && wanted.Contains(board.WorkspaceId))
             .Select(board => board.Id)
@@ -39,7 +37,7 @@ public sealed class BoardRepository(CardscapeDbContext db) : RepositoryBase<Boar
 
     public async Task<IReadOnlyList<Board>> ListStarredByUserAsync(Guid userId, CancellationToken ct = default)
     {
-        return await Db.Set<Board>()
+        return await Set
             .AsNoTracking()
             .Include(b => b.Stars)
             .Where(b => !b.IsDeleted && b.Stars.Any(s => s.UserId == userId))
@@ -52,7 +50,7 @@ public sealed class BoardRepository(CardscapeDbContext db) : RepositoryBase<Boar
         // EF Core 10 + HasConversion: EF.Property<Guid>(b, "Id") trips
         // the converter pipeline (InvalidCastException: Object must
         // implement IConvertible). b.Id == id is the safe form.
-        return await Db.Set<Board>()
+        return await Set
             .Include(b => b.Members)
             .Include(b => b.Stars)
             .FirstOrDefaultAsync(b => b.Id == id, ct);

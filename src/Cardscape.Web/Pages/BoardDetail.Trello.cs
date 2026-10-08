@@ -9,7 +9,7 @@ namespace Cardscape.Web.Pages;
 
 // Trello-parity features of the board page: card filters, archived
 // items, inline renames, list drag-to-reorder and quick complete.
-public partial class BoardDetail
+public sealed partial class BoardDetail
 {
     [Inject] private ILabelsApiClient LabelsApi { get; set; } = default!;
 
@@ -134,7 +134,7 @@ public partial class BoardDetail
 
     private async Task OnCompleteKeyDownAsync(KeyboardEventArgs e, CardSummaryDto card)
     {
-        if (e.Key is "Enter" or " ")
+        if (e.IsActivation)
         {
             await ToggleCardCompleteAsync(card);
         }
@@ -179,11 +179,7 @@ public partial class BoardDetail
 
     private async Task DeleteArchivedCardAsync(CardSummaryDto card)
     {
-        bool? confirmed = await DialogService.Confirm(
-            L["BoardDeleteCardConfirm", card.Title],
-            L["ActionDelete"],
-            new ConfirmOptions { OkButtonText = L["ActionDelete"], CancelButtonText = L["ActionCancel"] });
-        if (confirmed != true)
+        if (!await DialogService.ConfirmDeleteAsync(L, L["BoardDeleteCardConfirm", card.Title], L["ActionDelete"]))
         {
             return;
         }
@@ -258,11 +254,11 @@ public partial class BoardDetail
 
     private async Task OnListRenameKeyDownAsync(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter")
+        if (e.IsEnter)
         {
             await CommitListRenameAsync();
         }
-        else if (e.Key == "Escape")
+        else if (e.IsEscape)
         {
             _renamingListId = null;
         }
@@ -303,11 +299,11 @@ public partial class BoardDetail
 
     private async Task OnBoardRenameKeyDownAsync(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter")
+        if (e.IsEnter)
         {
             await CommitBoardRenameAsync();
         }
-        else if (e.Key == "Escape")
+        else if (e.IsEscape)
         {
             _renamingBoard = false;
         }
@@ -315,7 +311,7 @@ public partial class BoardDetail
 
     private void OnBoardTitleKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter")
+        if (e.IsEnter)
         {
             StartRenamingBoard();
         }
@@ -323,7 +319,7 @@ public partial class BoardDetail
 
     private void OnListTitleKeyDown(KeyboardEventArgs e, BoardListDto list)
     {
-        if (e.Key == "Enter")
+        if (e.IsEnter)
         {
             StartRenamingList(list);
         }
@@ -383,7 +379,7 @@ public partial class BoardDetail
     private async Task SetBoardColorAsync(string? colorName)
     {
         ApiResult<BoardDto> result = await BoardsApi.SetColorAsync(BoardId, colorName);
-        if (result.IsSuccess && result.Value is not null)
+        if (result.HasValue)
         {
             _board = result.Value;
         }
@@ -391,7 +387,7 @@ public partial class BoardDetail
 
     private static async Task OnSwatchKeyAsync(KeyboardEventArgs e, Func<Task> action)
     {
-        if (e.Key is "Enter" or " ")
+        if (e.IsActivation)
         {
             await action();
         }

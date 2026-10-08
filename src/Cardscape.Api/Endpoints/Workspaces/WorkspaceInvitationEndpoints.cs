@@ -4,9 +4,6 @@ using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Application.Workspaces.Queries;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Workspaces;
@@ -44,7 +41,7 @@ public static class WorkspaceInvitationEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
                 new ListWorkspaceInvitationsQuery(workspaceId, includeTerminal), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<WorkspaceInvitationDto>>(StatusCodes.Status200OK);
 
         wsGroup.MapPost("/", async (
@@ -69,7 +66,7 @@ public static class WorkspaceInvitationEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new RevokeWorkspaceInvitationCommand(invitationId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         var inboxGroup = app.MapGroup("/api/invitations")
@@ -80,7 +77,7 @@ public static class WorkspaceInvitationEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
                 new ListPendingInvitationsForUserQuery(), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<WorkspaceInvitationDto>>(StatusCodes.Status200OK);
 
         inboxGroup.MapPost("/accept", async (
@@ -90,7 +87,7 @@ public static class WorkspaceInvitationEndpoints
         {
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
                 new AcceptWorkspaceInvitationCommand(body.Token), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<WorkspaceDto>(StatusCodes.Status200OK);
 
         return app;
@@ -102,5 +99,4 @@ public static class WorkspaceInvitationEndpoints
         TimeSpan? Lifetime = null);
 
     public sealed record AcceptWorkspaceInvitationBody(string Token);
-
 }

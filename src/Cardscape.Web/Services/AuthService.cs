@@ -1,5 +1,4 @@
-using System.Net.Http;
-using System.Net.Http.Json;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Cardscape.Web.Shared;
 
@@ -25,6 +24,10 @@ public readonly record struct ApiResult<T>(
     int StatusCode = 0,
     LoginChallenge? Challenge = null)
 {
+    /// <summary>True when the call succeeded and returned a value.</summary>
+    [MemberNotNullWhen(true, nameof(Value))]
+    public bool HasValue => IsSuccess && Value is not null;
+
     public static ApiResult<T> Ok(T value) => new(true, value, null, 200, null);
     public static ApiResult<T> Fail(string error, int statusCode = 0) =>
         new(false, default, error, statusCode, null);
@@ -180,7 +183,7 @@ public sealed class AuthService(
         // the endpoint group. We try them in order — the first
         // that matches and yields a non-empty message wins. See
         // ApiDtos.cs for the shape catalog and the endpoint list.
-        string? body = null;
+        string body;
         try
         {
             body = await response.Content.ReadAsStringAsync(ct);

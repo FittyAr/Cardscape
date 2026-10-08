@@ -29,7 +29,7 @@ public sealed class InvitationService(
         TimeSpan? lifetime,
         CancellationToken ct)
     {
-        var (cleartext, hashed, prefix) = GenerateToken();
+        var (cleartext, hashed, prefix) = SecureToken.Generate(InvitationToken.CleartextByteLength, InvitationToken.PrefixLength);
 
         var creation = WorkspaceInvitation.Issue(
             workspaceId: workspaceId,
@@ -62,7 +62,7 @@ public sealed class InvitationService(
                 "Invitation token is required."));
         }
 
-        var hashed = HashToken(cleartextToken);
+        var hashed = SecureToken.HashHex(cleartextToken);
         var invitation = await repository.FindByTokenHashAsync(hashed, ct);
         if (invitation is null)
         {
@@ -70,25 +70,10 @@ public sealed class InvitationService(
                 "workspaces.invitation.not_found", "Invitation was not found."));
         }
 
-        if (!invitation.IsActive(now))
+        Result redeemable = invitation.EnsureRedeemable(now);
+        if (redeemable.IsFailure)
         {
-            // Distinguish revoked / accepted / expired for a
-            // slightly nicer error message.
-            if (invitation.AcceptedAt is not null)
-            {
-                return Result.Failure<WorkspaceInvitationValidation>(DomainError.Conflict(
-                    "workspaces.invitation.already_accepted",
-                    "Invitation has already been accepted."));
-            }
-
-            if (invitation.RevokedAt is not null)
-            {
-                return Result.Failure<WorkspaceInvitationValidation>(DomainError.Conflict(
-                    "workspaces.invitation.revoked", "Invitation has been revoked."));
-            }
-
-            return Result.Failure<WorkspaceInvitationValidation>(DomainError.Forbidden(
-                "workspaces.invitation.expired", "Invitation has expired."));
+            return Result.Failure<WorkspaceInvitationValidation>(redeemable.Error);
         }
 
         return Result.Success(new WorkspaceInvitationValidation(
@@ -96,28 +81,5 @@ public sealed class InvitationService(
             invitation.WorkspaceId,
             invitation.Role,
             invitation.Email));
-    }
-
-    private static (string cleartext, string hashed, string prefix) GenerateToken()
-    {
-        Span<byte> bytes = stackalloc byte[InvitationToken.CleartextByteLength];
-        RandomNumberGenerator.Fill(bytes);
-        var cleartext = Base64UrlEncode(bytes);
-        var hashed = HashToken(cleartext);
-        var prefix = cleartext[..Math.Min(InvitationToken.PrefixLength, cleartext.Length)];
-        return (cleartext, hashed, prefix);
-    }
-
-    private static string HashToken(string cleartext)
-    {
-        Span<byte> hash = stackalloc byte[32];
-        SHA256.HashData(Encoding.UTF8.GetBytes(cleartext), hash);
-        return Convert.ToHexString(hash).ToLowerInvariant();
-    }
-
-    private static string Base64UrlEncode(ReadOnlySpan<byte> bytes)
-    {
-        var b64 = Convert.ToBase64String(bytes);
-        return b64.TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 }

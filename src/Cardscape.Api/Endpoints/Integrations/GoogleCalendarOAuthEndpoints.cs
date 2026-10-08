@@ -1,16 +1,11 @@
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Integrations.GoogleCalendar;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Configuration;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Integrations;
@@ -277,7 +272,6 @@ public static class GoogleCalendarOAuthEndpoints
                 "Google returned invalid JSON."));
         }
     }
-
 }
 
 internal sealed record GoogleCalendarOAuthState(Guid UserId, Guid WorkspaceId, string ReturnUrl);

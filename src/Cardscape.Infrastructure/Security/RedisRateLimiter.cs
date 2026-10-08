@@ -1,7 +1,9 @@
 using System.Globalization;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Infrastructure.Configuration;
 using Cardscape.Infrastructure.Logging;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace Cardscape.Infrastructure.Security;
@@ -25,12 +27,14 @@ namespace Cardscape.Infrastructure.Security;
 /// elsewhere; the rate limiter is the right place to be
 /// permissive.
 /// </summary>
-public sealed class RedisRateLimiter : IRateLimiter
+public sealed class RedisRateLimiter(
+    IConnectionMultiplexer redis,
+    IOptions<InfrastructureOptions> options,
+    ILogger<RedisRateLimiter> logger) : IRateLimiter
 {
-    private readonly IConnectionMultiplexer _redis;
-    private readonly string _keyPrefix;
-    private readonly int _database;
-    private readonly ILogger<RedisRateLimiter> _logger;
+    private readonly IConnectionMultiplexer _redis = redis;
+    private readonly string _keyPrefix = options.Value.RateLimiter.KeyPrefix;
+    private readonly int _database = options.Value.Redis.Database;
 
     /// <summary>
     /// Atomic refill + consume. The script stores the bucket
@@ -42,48 +46,37 @@ public sealed class RedisRateLimiter : IRateLimiter
     ///   <item><c>configuredBurst</c>: int, burst cap</item>
     ///   <item><c>configuredRate</c>: int, requests / hour</item>
     /// </list>
+    /// The configuration fields are written by
+    /// <see cref="Configure"/>; the script only reads them. A
+    /// bucket with no configuration, or a rate of 0, is treated
+    /// as disabled (every request allowed), matching the
+    /// in-memory <see cref="RateLimiter"/>.
     /// Returns a 3-element array: {allowed (0/1), remaining
     /// tokens (float), retry-after (seconds, 0 when allowed)}.
     /// </summary>
-    private static readonly LuaScript RefillAndConsumeScript = LuaScript.Prepare(@"
-local key = KEYS[1]
+    private static readonly LuaScript RefillAndConsumeScript = LuaScript.Prepare("""
+local key = @key
 local now = tonumber(@now)
-local argBurst = tonumber(@burst)
-local argRate = tonumber(@rate)
 
 local data = redis.call('HMGET', key, 'tokens', 'lastRefill', 'configuredBurst', 'configuredRate')
 local tokens = tonumber(data[1])
 local lastRefill = tonumber(data[2])
-local configuredBurst = tonumber(data[3])
-local configuredRate = tonumber(data[4])
+local configuredBurst = tonumber(data[3]) or 0
+local configuredRate = tonumber(data[4]) or 0
 
--- First time we see this bucket: seed it.
-if tokens == nil then
-  configuredBurst = argBurst
-  configuredRate = argRate
+-- Rate disabled (or never configured): allow and short-circuit.
+if configuredRate <= 0 then
+  return {1, tostring(configuredBurst), 0}
+end
+
+if configuredBurst < 1 then
+  configuredBurst = 1
+end
+
+-- First request against a configured bucket: start full.
+if tokens == nil or lastRefill == nil then
   tokens = configuredBurst
   lastRefill = now
-end
-
--- Pick up runtime configuration changes (Configure call).
--- We only overwrite the configured values; the running
--- tokens balance is preserved so a PATCH to the rate limit
--- does not silently reset the bucket.
-if argBurst ~= configuredBurst or argRate ~= configuredRate then
-  configuredBurst = argBurst
-  configuredRate = argRate
-  if configuredBurst <= 0 then
-    configuredBurst = 0
-  end
-  if configuredRate == 0 then
-    -- Rate disabled: pin the bucket full and short-circuit.
-    tokens = configuredBurst
-  end
-end
-
-if configuredRate == 0 then
-  redis.call('HSET', key, 'tokens', tostring(tokens), 'lastRefill', tostring(now), 'configuredBurst', tostring(configuredBurst), 'configuredRate', tostring(configuredRate))
-  return {1, tostring(configuredBurst), 0}
 end
 
 local elapsed = now - lastRefill
@@ -93,51 +86,26 @@ tokens = math.min(configuredBurst, tokens + elapsed * tokensPerSecond)
 
 if tokens >= 1.0 then
   tokens = tokens - 1.0
-  redis.call('HSET', key, 'tokens', tostring(tokens), 'lastRefill', tostring(now), 'configuredBurst', tostring(configuredBurst), 'configuredRate', tostring(configuredRate))
+  redis.call('HSET', key, 'tokens', tostring(tokens), 'lastRefill', tostring(now))
   return {1, tostring(tokens), 0}
 else
   local missing = 1.0 - tokens
-  local retryAfter = 1
-  if tokensPerSecond > 0 then
-    retryAfter = math.ceil(missing / tokensPerSecond)
-    if retryAfter < 1 then retryAfter = 1 end
-  end
-  redis.call('HSET', key, 'tokens', tostring(tokens), 'lastRefill', tostring(now), 'configuredBurst', tostring(configuredBurst), 'configuredRate', tostring(configuredRate))
+  local retryAfter = math.ceil(missing / tokensPerSecond)
+  if retryAfter < 1 then retryAfter = 1 end
+  redis.call('HSET', key, 'tokens', tostring(tokens), 'lastRefill', tostring(now))
   return {0, tostring(tokens), retryAfter}
 end
-");
+""");
 
-    public RedisRateLimiter(
-        IConnectionMultiplexer redis,
-        Infrastructure.Configuration.RedisOptions options,
-        Infrastructure.Configuration.RateLimiterOptions limiterOptions,
-        ILogger<RedisRateLimiter> logger)
-    {
-        _redis = redis;
-        _keyPrefix = limiterOptions.KeyPrefix;
-        _database = options.Database;
-        _logger = logger;
-    }
-
-    public RateLimitDecision TryAcquire(Guid tokenId, DateTimeOffset at)
-    {
-        // Configuration is read from the hash itself; we pass
-        // placeholder values (0/0) that the script will
-        // override with whatever is stored.
-        return ExecuteScript(tokenId, at, rateLimitPerHour: 0, burstSize: 0);
-    }
+    public RateLimitDecision TryAcquire(Guid tokenId, DateTimeOffset at) => ExecuteScript(tokenId, at);
 
     public void Configure(Guid tokenId, int rateLimitPerHour, int burstSize)
     {
-        // The script reads the configuredBurst / configuredRate
-        // off the hash and updates them when they differ from
-        // the call. We trigger an update by calling the script
-        // with sentinel values (1, 1) when no bucket exists
-        // yet, and with the new values when it does. The token
-        // is also consumed (rate-limit middleware calls
-        // Configure on every request), but a single token is
-        // cheap and the alternative — a separate config-only
-        // script — duplicates the state machine.
+        // Configuration lives in the bucket hash; TryAcquire's
+        // script reads it on every call. The running token
+        // balance is left alone so a PATCH to the rate limit
+        // does not silently reset the bucket (the script clamps
+        // it to the new burst on the next refill).
         try
         {
             IDatabase db = _redis.GetDatabase(_database);
@@ -145,15 +113,15 @@ end
             // A minimal write-only update: HSET the configured
             // values, leave the rest of the bucket alone. The
             // next TryAcquire picks them up.
-            db.HashSet(key, new HashEntry[]
-            {
+            db.HashSet(key,
+            [
                 new("configuredRate", rateLimitPerHour),
                 new("configuredBurst", burstSize)
-            });
+            ]);
         }
         catch (Exception ex)
         {
-            _logger.RedisRateLimitConfigureFailed(ex, tokenId);
+            logger.RedisRateLimitConfigureFailed(ex, tokenId);
         }
     }
 
@@ -216,7 +184,7 @@ end
         }
         catch (Exception ex)
         {
-            _logger.RedisRateLimitStatusFailed(ex, tokenId);
+            logger.RedisRateLimitStatusFailed(ex, tokenId);
             return null;
         }
     }
@@ -240,8 +208,7 @@ end
         return 0;
     }
 
-    private RateLimitDecision ExecuteScript(
-        Guid tokenId, DateTimeOffset at, int rateLimitPerHour, int burstSize)
+    private RateLimitDecision ExecuteScript(Guid tokenId, DateTimeOffset at)
     {
         try
         {
@@ -252,21 +219,19 @@ end
                 new
                 {
                     key = (RedisKey)key,
-                    now = at.ToUnixTimeSeconds(),
-                    burst = burstSize,
-                    rate = rateLimitPerHour
+                    now = at.ToUnixTimeSeconds()
                 });
 
             if (result.IsNull)
             {
-                _logger.RedisRateLimitScriptReturnedNull(tokenId);
+                logger.RedisRateLimitScriptReturnedNull(tokenId);
                 return new RateLimitDecision(Allowed: true, RetryAfter: 0);
             }
 
             RedisResult[] arr = (RedisResult[])result!;
             if (arr.Length < 3)
             {
-                _logger.RedisRateLimitScriptShapeInvalid(tokenId);
+                logger.RedisRateLimitScriptShapeInvalid(tokenId);
                 return new RateLimitDecision(Allowed: true, RetryAfter: 0);
             }
 
@@ -281,7 +246,7 @@ end
             // Fail open: rate limiting is a soft guard. Logging
             // is loud enough that operators see the regression
             // in their dashboards.
-            _logger.RedisRateLimitAcquireFailed(ex, tokenId);
+            logger.RedisRateLimitAcquireFailed(ex, tokenId);
             return new RateLimitDecision(Allowed: true, RetryAfter: 0);
         }
     }

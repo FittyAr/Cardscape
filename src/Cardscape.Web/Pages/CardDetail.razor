@@ -75,7 +75,7 @@ else
                 {
                     <h1 class="cs-card-detail-title" title="@L["CardEditTitle"]" tabindex="0"
                         @onclick="@StartEditingTitle"
-                        @onkeydown="@(e => { if (e.Key == "Enter") StartEditingTitle(); })">@_card.Title</h1>
+                        @onkeydown="@(e => { if (e.IsEnter) StartEditingTitle(); })">@_card.Title</h1>
                 }
                 <div class="cs-card-detail-chips">
                     @if (_card.IsCompleted)
@@ -199,7 +199,7 @@ else
                         <div class="cs-card-description @(string.IsNullOrWhiteSpace(_card.Description) ? "is-empty" : null)"
                              role="button" tabindex="0" title="@L["DescriptionEdit"]"
                              @onclick="@StartEditingDescription"
-                             @onkeydown="@(e => { if (e.Key == "Enter") StartEditingDescription(); })">
+                             @onkeydown="@(e => { if (e.IsEnter) StartEditingDescription(); })">
                             @(string.IsNullOrWhiteSpace(_card.Description) ? L["DescriptionEmpty"] : _card.Description)
                         </div>
                         <div class="cs-row">

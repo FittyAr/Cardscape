@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Net.Http.Headers;
 using Cardscape.Web;
 using Cardscape.Web.Logging;
@@ -8,9 +7,6 @@ using Cardscape.Web.Services.Api;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Logging;
 using Radzen;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -219,6 +215,7 @@ builder.Services.AddScoped<ISearchApiClient, SearchApiClient>();
 // the client fronts the multipart upload, list, download and
 // delete endpoints.
 builder.Services.AddScoped<IAttachmentsApiClient, AttachmentsApiClient>();
+builder.Services.AddScoped<IImportsApiClient, ImportsApiClient>();
 
 builder.Services.AddScoped<SetupApiClient>();
 builder.Services.AddScoped<IAdminSettingsApiClient, AdminSettingsApiClient>();

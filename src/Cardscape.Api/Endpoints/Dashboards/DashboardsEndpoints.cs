@@ -2,10 +2,7 @@ using Cardscape.Application.Dashboards.Commands;
 using Cardscape.Application.Dashboards.DTOs;
 using Cardscape.Application.Dashboards.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Dashboards;
@@ -22,7 +19,7 @@ public static class DashboardsEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<DashcardDto>>>(
                 new ListDashcardsForBoardQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<DashcardDto>>(StatusCodes.Status200OK);
 
         group.MapPost("/", async ([FromBody] CreateDashcardRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -39,16 +36,15 @@ public static class DashboardsEndpoints
         {
             var result = await bus.InvokeAsync<Result<DashcardDto>>(
                 new UpdateDashcardConfigCommand(dashcardId, body.ConfigurationJson), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<DashcardDto>(StatusCodes.Status200OK);
 
         group.MapDelete("/{dashcardId:guid}", async (Guid dashcardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new DeleteDashcardCommand(dashcardId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }
-
 }

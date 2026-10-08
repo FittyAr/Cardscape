@@ -68,7 +68,7 @@ public sealed class CardRecurrence : Entity<CardRecurrenceId>
     public Result Update(
         int newIntervalDays, DateTimeOffset newNextOccurrenceAt, DateTimeOffset at)
     {
-        if (newIntervalDays < 1 || newIntervalDays > 365)
+        if (newIntervalDays is < 1 or > 365)
         {
             return Result.Failure(DomainError.Validation(
                 "recurrence.interval_invalid",

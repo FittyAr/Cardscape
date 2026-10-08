@@ -5,9 +5,7 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Members;
 using Wolverine;
-using static Cardscape.Domain.Members.Errors.UserErrors;
 
 namespace Cardscape.Application.Authentication.ExternalLogins;
 
@@ -63,9 +61,6 @@ public static class ResolveExternalLoginCommandHandler
         var access = tokens.IssueAccessToken(user, ["user"]);
         return Result.Success(new AuthResponse(
             access,
-            new UserSummary(
-                user.Id.Value,
-                user.Email.Value,
-                user.DisplayName.Value)));
+            UserSummary.From(user)));
     }
 }

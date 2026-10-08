@@ -1,9 +1,4 @@
 using Cardscape.Application.Abstractions.Authentication;
-using Cardscape.Domain.Integrations.GitHub;
-using Cardscape.Domain.Integrations.GoogleCalendar;
-using Cardscape.Domain.Integrations.InboundEmail;
-using Cardscape.Domain.Integrations.OAuthApps;
-using Cardscape.Domain.Integrations.Slack;
 using Cardscape.Seeder.Persistence;
 using Cardscape.Seeder.Reporting;
 
@@ -116,8 +111,7 @@ internal sealed class IntegrationsSeedStep(ISecretProtector secretProtector) : S
             if (gcal.IsSuccess)
             {
                 gcal.Value.RecordSyncSuccess(now.AddDays(-1));
-                context.Db.GoogleCalendarConnections.Add(gcal.Value);
-                context.GoogleCalendarConnections.Add(gcal.Value);
+                context.Track(context.GoogleCalendarConnections, gcal.Value);
             }
         }
 
@@ -164,8 +158,7 @@ internal sealed class IntegrationsSeedStep(ISecretProtector secretProtector) : S
             now);
         if (oa.IsSuccess)
         {
-            context.Db.OAuthApps.Add(oa.Value);
-            context.OAuthApps.Add(oa.Value);
+            context.Track(context.OAuthApps, oa.Value);
 
             // One auth code and one access token per OAuth
             // app, so the API has at least one of each in the
@@ -183,8 +176,7 @@ internal sealed class IntegrationsSeedStep(ISecretProtector secretProtector) : S
                 now);
             if (code.IsSuccess)
             {
-                context.Db.OAuthAuthorizationCodes.Add(code.Value);
-                context.OAuthAuthorizationCodes.Add(code.Value);
+                context.Track(context.OAuthAuthorizationCodes, code.Value);
             }
 
             string accessTokenPlaintext = Generators.PasswordGenerator.RandomUrlSafeToken(32);
@@ -199,8 +191,7 @@ internal sealed class IntegrationsSeedStep(ISecretProtector secretProtector) : S
                 now);
             if (access.IsSuccess)
             {
-                context.Db.OAuthAccessTokens.Add(access.Value);
-                context.OAuthAccessTokens.Add(access.Value);
+                context.Track(context.OAuthAccessTokens, access.Value);
             }
         }
 

@@ -1,7 +1,3 @@
-using System.Security.Cryptography;
-using System.Text.Json;
-using Cardscape.Application.Abstractions;
-using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Common;

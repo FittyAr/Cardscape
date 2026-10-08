@@ -29,12 +29,12 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<WorkspaceInvitationIssuanceDto>>(
                 new IssueWorkspaceInvitationCommand(
                     workspaceId, email, (WorkspaceRole)role, Lifetime: null),
                 ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -53,10 +53,10 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
                 new ListWorkspaceInvitationsQuery(workspaceId, includeTerminal), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -74,10 +74,10 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result>(
                 new RevokeWorkspaceInvitationCommand(invitationId), ct);
-            Ensure(result);
+            result.OrThrow();
             __mcpSpan.MarkSuccess();
             return "revoked";
         }
@@ -96,10 +96,10 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<IReadOnlyList<WorkspaceInvitationDto>>>(
                 new ListPendingInvitationsForUserQuery(), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -117,10 +117,10 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
         __mcpSpan.SetContext(userId: currentUser.Id?.Value.ToString(), boardId: null, cardId: null);
         try
         {
-            RequireAuth();
+            currentUser.RequireAuthenticated();
             var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
                 new AcceptWorkspaceInvitationCommand(token), ct);
-            var value = Ensure(result);
+            var value = result.OrThrow();
             __mcpSpan.MarkSuccess();
             return value;
         }
@@ -128,36 +128,6 @@ public sealed class WorkspaceInvitationsTools(IMessageBus bus, ICurrentUser curr
         {
             __mcpSpan.MarkFailure(ex.GetType().Name, ex.Message);
             throw;
-        }
-    }
-
-    private void RequireAuth()
-    {
-        if (!currentUser.IsAuthenticated)
-        {
-            throw new UnauthorizedAccessException(
-                "MCP tool call rejected: no authenticated principal. "
-                + "Pass a Bearer JWT or API token in the Authorization header.");
-        }
-    }
-
-    private static T Ensure<T>(Result<T> result)
-    {
-        if (result.IsFailure)
-        {
-            throw new InvalidOperationException(
-                $"{result.Error.Code}: {result.Error.Message}");
-        }
-
-        return result.Value!;
-    }
-
-    private static void Ensure(Result result)
-    {
-        if (result.IsFailure)
-        {
-            throw new InvalidOperationException(
-                $"{result.Error.Code}: {result.Error.Message}");
         }
     }
 }

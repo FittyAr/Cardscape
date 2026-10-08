@@ -1,9 +1,5 @@
 using Cardscape.Api.Authentication;
-using Cardscape.Api.Extensions;
 using Cardscape.Api.Realtime;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 
 namespace Cardscape.Api.Endpoints.Admin;
 

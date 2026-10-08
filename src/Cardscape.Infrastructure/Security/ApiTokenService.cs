@@ -44,7 +44,7 @@ public sealed class ApiTokenService(
             throw new InvalidOperationException(scopesResult.Error.Message);
         }
 
-        var (cleartext, hashed, prefix) = GenerateSecret();
+        var (cleartext, hashed, prefix) = SecureToken.Generate(ApiToken.SecretByteLength, ApiToken.SecretPrefixLength);
 
         var creation = ApiToken.Create(
             userId,
@@ -84,7 +84,7 @@ public sealed class ApiTokenService(
                 "auth.required", "Bearer secret is required."));
         }
 
-        var hashed = HashSecret(cleartextSecret);
+        var hashed = SecureToken.HashHex(cleartextSecret);
         var token = await repository.FindByHashedSecretAsync(hashed, ct);
         if (token is null)
         {
@@ -165,7 +165,7 @@ public sealed class ApiTokenService(
         CancellationToken ct)
     {
         var token = await repository.GetByIdAsync(tokenId, ct);
-        if (token is null || token.UserId.Value != userId.Value)
+        if (token is null || !token.IsOwnedBy(userId))
         {
             return Result.Failure(DomainError.NotFound(
                 "security.api_token.not_found", "API token was not found."));
@@ -193,7 +193,7 @@ public sealed class ApiTokenService(
         CancellationToken ct)
     {
         var token = await repository.GetByIdAsync(tokenId, ct);
-        if (token is null || token.UserId.Value != userId.Value)
+        if (token is null || !token.IsOwnedBy(userId))
         {
             return Result.Failure<ApiTokenRateLimitStatus>(DomainError.NotFound(
                 "security.api_token.not_found", "API token was not found."));
@@ -214,28 +214,5 @@ public sealed class ApiTokenService(
             BurstSize: token.BurstSize,
             AvailableTokens: available,
             At: at));
-    }
-
-    private static (string cleartext, string hashed, string prefix) GenerateSecret()
-    {
-        Span<byte> bytes = stackalloc byte[ApiToken.SecretByteLength];
-        RandomNumberGenerator.Fill(bytes);
-        var cleartext = Base64UrlEncode(bytes);
-        var hashed = HashSecret(cleartext);
-        var prefix = cleartext[..Math.Min(ApiToken.SecretPrefixLength, cleartext.Length)];
-        return (cleartext, hashed, prefix);
-    }
-
-    private static string HashSecret(string cleartext)
-    {
-        Span<byte> hash = stackalloc byte[32];
-        SHA256.HashData(Encoding.UTF8.GetBytes(cleartext), hash);
-        return Convert.ToHexString(hash).ToLowerInvariant();
-    }
-
-    private static string Base64UrlEncode(ReadOnlySpan<byte> bytes)
-    {
-        var b64 = Convert.ToBase64String(bytes);
-        return b64.TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 }

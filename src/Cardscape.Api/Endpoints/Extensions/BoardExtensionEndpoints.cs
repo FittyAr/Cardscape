@@ -1,9 +1,6 @@
 using Cardscape.Application.Extensions;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Extensions;
@@ -25,7 +22,7 @@ public static class BoardExtensionEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BoardExtensionDto>>>(
                 new ListBoardExtensionsQuery(boardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardExtensionDto[]>();
 
         group.MapPost("/", async (
@@ -51,7 +48,7 @@ public static class BoardExtensionEndpoints
             }
             var result = await bus.InvokeAsync<Result>(
                 new DisableBoardExtensionCommand(boardId, (int)parsedKind), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         // BETA-9-#3 — see test-results/r9/r9-report.md.
@@ -87,7 +84,7 @@ public static class BoardExtensionEndpoints
 
             var disable = await bus.InvokeAsync<Result>(
                 new DisableBoardExtensionCommand(boardId, (int)row.Kind), ct);
-            return disable.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(disable.Error);
+            return disable.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPut("/{kind}/config", async (
@@ -103,7 +100,7 @@ public static class BoardExtensionEndpoints
             }
             var result = await bus.InvokeAsync<Result<BoardExtensionDto>>(
                 new UpdateBoardExtensionConfigCommand(boardId, (int)parsedKind, body.ConfigJson), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<BoardExtensionDto>();
 
         return app;
@@ -125,5 +122,4 @@ public static class BoardExtensionEndpoints
     private static IResult InvalidKind(string kind) => ApiProblemResults.BadRequest(
         "extensions.kind_invalid",
         $"Unknown extension kind '{kind}'. Valid values: {string.Join(", ", Enum.GetValues<ExtensionKind>().Select(ToRouteValue))}.");
-
 }

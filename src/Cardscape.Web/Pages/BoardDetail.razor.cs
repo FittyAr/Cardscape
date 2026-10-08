@@ -2,12 +2,11 @@ using Cardscape.Web.Services;
 using Cardscape.Web.Services.Api;
 using Cardscape.Web.Shared;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Radzen;
 
 namespace Cardscape.Web.Pages;
 
-public partial class BoardDetail
+public sealed partial class BoardDetail
 {
     [Parameter] public Guid BoardId { get; set; }
 
@@ -26,7 +25,7 @@ public partial class BoardDetail
     private BoardDto? _board;
     private WorkspaceDto? _workspace;
     private IReadOnlyList<BoardListDto>? _lists;
-    private Dictionary<Guid, IReadOnlyList<CardSummaryDto>> _cardsByList = new();
+    private Dictionary<Guid, IReadOnlyList<CardSummaryDto>> _cardsByList = [];
     private bool _showAddList;
     private bool _addingList;
     private readonly AddListModel _addListModel = new();
@@ -230,11 +229,11 @@ public partial class BoardDetail
         // for the component's lifetime.
         ApiResult<IReadOnlyList<CardSummaryDto>> cardsResult = await CardsApi.ListForBoardAsync(
             BoardId, includeArchived: false, includeSnoozed: _showSnoozed);
-        Dictionary<Guid, IReadOnlyList<CardSummaryDto>> next = new();
-        if (cardsResult.IsSuccess && cardsResult.Value is not null)
+        Dictionary<Guid, IReadOnlyList<CardSummaryDto>> next = [];
+        if (cardsResult.HasValue)
         {
             HashSet<Guid> seenIds = [];
-            Dictionary<Guid, List<CardSummaryDto>> grouped = new();
+            Dictionary<Guid, List<CardSummaryDto>> grouped = [];
             foreach (CardSummaryDto card in cardsResult.Value)
             {
                 if (!seenIds.Add(card.Id))

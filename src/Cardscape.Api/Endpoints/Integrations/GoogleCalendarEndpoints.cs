@@ -1,9 +1,5 @@
-using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Integrations.GoogleCalendar;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Integrations;
@@ -61,10 +57,9 @@ public static class GoogleCalendarEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new RevokeGoogleCalendarConnectionCommand(), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }
-
 }

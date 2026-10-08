@@ -3,9 +3,6 @@ using Cardscape.Application.Notifications.Commands;
 using Cardscape.Application.Notifications.DTOs;
 using Cardscape.Application.Notifications.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Notifications;
@@ -41,7 +38,7 @@ public static class NotificationEndpoints
             int effectiveSkip = OffsetPagination.NormalizeSkip(skip);
             var result = await bus.InvokeAsync<Result<IReadOnlyList<NotificationDto>>>(
                 new ListNotificationsQuery(unreadOnly ?? false, effectiveSkip, effectiveTake), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<NotificationDto[]>();
 
         group.MapGet("/unread-count", async (IMessageBus bus, CancellationToken ct) =>
@@ -63,18 +60,17 @@ public static class NotificationEndpoints
         group.MapPost("/mark-all-read", async (IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new MarkAllNotificationsReadCommand(), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/{notificationId:guid}/read", async (Guid notificationId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(new MarkNotificationReadCommand(notificationId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }
-
 }
 
 /// <summary>Response shape for <c>GET /api/notifications/unread-count</c>.</summary>

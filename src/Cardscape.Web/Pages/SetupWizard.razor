@@ -130,7 +130,7 @@
         try
         {
             ApiResult<SetupStatusDto> statusResult = await SetupApi.GetStatusAsync();
-            if (statusResult.IsSuccess && statusResult.Value is not null)
+            if (statusResult.HasValue)
             {
                 _databaseProvider = statusResult.Value.DatabaseProvider;
                 if (statusResult.Value.IsInitialized)

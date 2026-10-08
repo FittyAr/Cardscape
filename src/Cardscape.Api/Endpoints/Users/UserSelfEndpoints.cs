@@ -1,10 +1,6 @@
-using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Users.Commands;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Users;
@@ -50,5 +46,4 @@ public static class UserSelfEndpoints
 
         return app;
     }
-
 }

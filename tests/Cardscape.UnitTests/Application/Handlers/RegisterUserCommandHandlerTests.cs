@@ -1,11 +1,9 @@
 using Cardscape.Application.Authentication.Commands;
-using Cardscape.Application.Authentication.DTOs;
-using Cardscape.Domain.Common;
 using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Application.Handlers;
 
-public class RegisterUserCommandHandlerTests
+public sealed class RegisterUserCommandHandlerTests
 {
     [Fact]
     public async Task Handle_WithValidData_PersistsUserAndReturnsAuthResponse()

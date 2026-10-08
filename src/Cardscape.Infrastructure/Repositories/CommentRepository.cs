@@ -12,7 +12,7 @@ public sealed class CommentRepository(CardscapeDbContext db) : RepositoryBase<Co
 {
     public async Task<int> CountForCardAsync(CardId cardId, CancellationToken ct = default)
     {
-        return await Db.Set<Comment>()
+        return await Set
             .CountAsync(comment => comment.CardId == cardId && !comment.IsDeleted, ct);
     }
 
@@ -25,7 +25,7 @@ public sealed class CommentRepository(CardscapeDbContext db) : RepositoryBase<Co
         }
 
         HashSet<CardId> wanted = [.. cardIds.Select(id => new CardId(id))];
-        var rows = await Db.Set<Comment>()
+        var rows = await Set
             .AsNoTracking()
             .Where(comment => wanted.Contains(comment.CardId) && !comment.IsDeleted)
             .GroupBy(comment => comment.CardId)
@@ -37,16 +37,9 @@ public sealed class CommentRepository(CardscapeDbContext db) : RepositoryBase<Co
 
     public async Task<IReadOnlyList<Comment>> ListForCardAsync(CardId cardId, CancellationToken ct = default)
     {
-        IQueryable<Comment> query = Db.Set<Comment>()
+        IQueryable<Comment> query = Set
             .AsNoTracking()
             .Where(comment => comment.CardId == cardId && !comment.IsDeleted);
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderBy(comment => comment.CreatedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, comment => comment.CreatedAt, ct: ct);
     }
 }

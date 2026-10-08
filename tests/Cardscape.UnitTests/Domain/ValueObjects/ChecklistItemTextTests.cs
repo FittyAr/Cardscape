@@ -2,7 +2,7 @@ using Cardscape.Domain.Checklists;
 
 namespace Cardscape.UnitTests.Domain.ValueObjects;
 
-public class ChecklistItemTextTests
+public sealed class ChecklistItemTextTests
 {
     [Theory]
     [InlineData("")]

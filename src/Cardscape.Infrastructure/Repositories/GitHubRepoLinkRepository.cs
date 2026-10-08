@@ -15,17 +15,10 @@ public sealed class GitHubRepoLinkRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<GitHubRepoLink>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {
-        IQueryable<GitHubRepoLink> query = Db.Set<GitHubRepoLink>()
+        IQueryable<GitHubRepoLink> query = Set
             .AsNoTracking()
             .Where(link => link.BoardId == boardId && !link.IsDeleted);
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderBy(link => link.CreatedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, link => link.CreatedAt, ct: ct);
     }
 
     public async Task<GitHubRepoLink?> FindForBoardAndRepoAsync(
@@ -37,7 +30,7 @@ public sealed class GitHubRepoLinkRepository(CardscapeDbContext db)
         }
 
         var needle = repoFullName.Trim().ToLowerInvariant();
-        return await Db.Set<GitHubRepoLink>()
+        return await Set
             .FirstOrDefaultAsync(link =>
                 link.BoardId == boardId
                 && !link.IsDeleted
@@ -52,16 +45,9 @@ public sealed class GitHubPullRequestLinkRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<GitHubPullRequestLink>> ListForCardAsync(
         CardId cardId, CancellationToken ct = default)
     {
-        IQueryable<GitHubPullRequestLink> query = Db.Set<GitHubPullRequestLink>()
+        IQueryable<GitHubPullRequestLink> query = Set
             .AsNoTracking()
             .Where(link => link.CardId == cardId && !link.IsDeleted);
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderBy(link => link.CreatedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, link => link.CreatedAt, ct: ct);
     }
 }

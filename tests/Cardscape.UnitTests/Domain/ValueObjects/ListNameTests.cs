@@ -1,9 +1,8 @@
-using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
 
 namespace Cardscape.UnitTests.Domain.ValueObjects;
 
-public class ListNameTests
+public sealed class ListNameTests
 {
     [Theory]
     [InlineData("To Do")]

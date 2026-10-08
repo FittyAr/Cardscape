@@ -112,7 +112,7 @@ else if (notifications is not null)
             await Task.WhenAll(countTask, listTask);
 
             ApiResult<UnreadCountResponse> count = await countTask;
-            if (count.IsSuccess && count.Value is not null)
+            if (count.HasValue)
             {
                 unreadCount = count.Value.Count;
             }
@@ -122,7 +122,7 @@ else if (notifications is not null)
             }
 
             ApiResult<IReadOnlyList<NotificationDto>> list = await listTask;
-            if (list.IsSuccess && list.Value is not null)
+            if (list.HasValue)
             {
                 notifications = list.Value;
             }

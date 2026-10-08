@@ -10,7 +10,6 @@ using Cardscape.Mcp.Authorization;
 using Cardscape.Mcp.Idempotency;
 using Cardscape.Mcp.Realtime;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 

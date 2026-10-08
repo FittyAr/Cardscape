@@ -1,7 +1,5 @@
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Members.Errors;
 using Cardscape.Domain.Members.Events;
-using static Cardscape.Domain.Members.Errors.UserErrors;
 
 namespace Cardscape.Domain.Members;
 
@@ -99,6 +97,9 @@ public sealed class User : AggregateRoot<UserId>
         IsActive = true;
     }
 
+    private static readonly DomainError IdRequired = DomainError.Validation(
+        "members.user.id_required", "User id is required.");
+
     /// <summary>
     /// Factory: register a new user. Email and display name are
     /// validated by the value objects; the password is already
@@ -114,9 +115,7 @@ public sealed class User : AggregateRoot<UserId>
     {
         if (id.Value == Guid.Empty)
         {
-            return Result.Failure<User>(DomainError.Validation(
-                "members.user.id_required",
-                "User id is required."));
+            return Result.Failure<User>(IdRequired);
         }
 
         var user = new User(id, email, displayName, passwordHash)
@@ -142,9 +141,7 @@ public sealed class User : AggregateRoot<UserId>
     {
         if (id.Value == Guid.Empty)
         {
-            return Result.Failure<User>(DomainError.Validation(
-                "members.user.id_required",
-                "User id is required."));
+            return Result.Failure<User>(IdRequired);
         }
 
         // The placeholder hash is a fixed, non-empty value
@@ -176,7 +173,7 @@ public sealed class User : AggregateRoot<UserId>
     /// <summary>Updates the display name and avatar URL.</summary>
     public Result UpdateProfile(DisplayName newDisplayName, string? newAvatarUrl, DateTimeOffset at)
     {
-        if (newDisplayName.Value == DisplayName.Value
+        if (newDisplayName == DisplayName
             && string.Equals(newAvatarUrl, AvatarUrl, StringComparison.Ordinal))
         {
             return Result.Success();

@@ -1,4 +1,3 @@
-using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Realtime;
 
 namespace Cardscape.Mcp.Realtime;

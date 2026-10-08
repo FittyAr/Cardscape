@@ -35,7 +35,7 @@ using ThemeServiceAlias = Radzen.ThemeService;
 
 namespace Cardscape.UnitTests.Theming;
 
-public class UserPreferencesServiceSetAsyncTests
+public sealed class UserPreferencesServiceSetAsyncTests
 {
     private static readonly Guid AnyUserId = new("92d0ee1e-2778-4eb0-b741-59c94b08f071");
 
@@ -57,7 +57,6 @@ public class UserPreferencesServiceSetAsyncTests
         new(
             api: api,
             themeService: NewThemeService(),
-            auth: new StubAuthProvider(AnyUserId),
             log: NullLogger<UserPreferencesService>.Instance);
 
     [Fact]
@@ -183,28 +182,6 @@ public class UserPreferencesServiceSetAsyncTests
         await sut.SetAsync("not-a-real-theme", "Light");
 
         api.VerifyNoOtherCalls();
-    }
-
-    /// <summary>Minimum-viable
-    /// <see cref="AuthenticationStateProvider"/> that
-    /// reports the test user as authenticated. The
-    /// service only checks for "is the user signed in
-    /// at all" before talking to the server; this
-    /// stub is enough for the SetAsync paths above.</summary>
-    private sealed class StubAuthProvider : AuthenticationStateProvider
-    {
-        private readonly Task<AuthenticationState> _state;
-
-        public StubAuthProvider(Guid userId)
-        {
-            var identity = new ClaimsIdentity(
-                new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) },
-                authenticationType: "test");
-            _state = Task.FromResult(new AuthenticationState(
-                new ClaimsPrincipal(identity)));
-        }
-
-        public override Task<AuthenticationState> GetAuthenticationStateAsync() => _state;
     }
 
     /// <summary>Empty <see cref="IServiceProvider"/> used

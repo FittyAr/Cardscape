@@ -9,7 +9,6 @@ using Cardscape.Domain.Members;
 using Cardscape.E2ETests.Fixtures;
 using Cardscape.Infrastructure.Persistence;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using ModelContextProtocol.Client;
@@ -43,11 +42,8 @@ namespace Cardscape.E2ETests;
 /// API really hit the MCP really recorded the event.
 /// </summary>
 [Collection(E2E.Name)]
-public sealed class McpSubscriptionsCrossProcessTests
+public sealed class McpSubscriptionsCrossProcessTests(TwoHostWebApplicationFactory factory)
 {
-    private readonly TwoHostWebApplicationFactory _factory;
-    public McpSubscriptionsCrossProcessTests(TwoHostWebApplicationFactory factory) => _factory = factory;
-
     [Fact]
     public void Both_Hosts_Boot_And_Bind_To_The_Expected_Ports()
     {
@@ -57,13 +53,13 @@ public sealed class McpSubscriptionsCrossProcessTests
         // the actual bound address (which is the env-var
         // value when Kestrel honours it, or the random
         // ephemeral port the host fell back to).
-        _factory.Api.ServerAddress.Should().EndWith($":{TwoHostWebApplicationFactory.ApiPort}",
+        factory.Api.ServerAddress.Should().EndWith($":{TwoHostWebApplicationFactory.ApiPort}",
             $"the API host must bind to the fixture's fixed port {TwoHostWebApplicationFactory.ApiPort}; " +
-            $"actual: {_factory.Api.ServerAddress}");
-        _factory.Mcp.ServerAddress.Should().EndWith($":{TwoHostWebApplicationFactory.McpPort}",
+            $"actual: {factory.Api.ServerAddress}");
+        factory.Mcp.ServerAddress.Should().EndWith($":{TwoHostWebApplicationFactory.McpPort}",
             $"the MCP host must bind to the fixture's fixed port {TwoHostWebApplicationFactory.McpPort}; " +
-            $"actual: {_factory.Mcp.ServerAddress}");
-        _factory.Api.ServerAddress.Should().NotBe(_factory.Mcp.ServerAddress);
+            $"actual: {factory.Mcp.ServerAddress}");
+        factory.Api.ServerAddress.Should().NotBe(factory.Mcp.ServerAddress);
     }
 
     [Fact]
@@ -73,7 +69,7 @@ public sealed class McpSubscriptionsCrossProcessTests
         // in-memory HttpClient bound to the MCP host's
         // pipeline (no real socket needed). This proves
         // the MCP is hosting the request pipeline.
-        HttpClient mcpClient = _factory.Mcp.CreateClient();
+        HttpClient mcpClient = factory.Mcp.CreateClient();
         HttpResponseMessage resp = await mcpClient.GetAsync(
             "health/live", TestContext.Current.CancellationToken);
         resp.IsSuccessStatusCode.Should().BeTrue();
@@ -82,13 +78,13 @@ public sealed class McpSubscriptionsCrossProcessTests
     [Fact]
     public async Task Mcp_Readiness_Endpoint_Verifies_Database_Connectivity()
     {
-        await using (AsyncServiceScope scope = _factory.Mcp.Services.CreateAsyncScope())
+        await using (AsyncServiceScope scope = factory.Mcp.Services.CreateAsyncScope())
         {
             CardscapeDbContext db = scope.ServiceProvider.GetRequiredService<CardscapeDbContext>();
             await db.Database.EnsureCreatedAsync(TestContext.Current.CancellationToken);
         }
 
-        HttpClient mcpClient = _factory.Mcp.CreateClient();
+        HttpClient mcpClient = factory.Mcp.CreateClient();
 
         HttpResponseMessage response = await mcpClient.GetAsync(
             "health/ready", TestContext.Current.CancellationToken);
@@ -99,7 +95,7 @@ public sealed class McpSubscriptionsCrossProcessTests
     [Fact]
     public async Task Mcp_StreamableHttp_Endpoint_Rejects_Anonymous_Protocol_Requests()
     {
-        HttpClient mcpClient = _factory.Mcp.CreateClient();
+        HttpClient mcpClient = factory.Mcp.CreateClient();
         using var request = new HttpRequestMessage(HttpMethod.Post, "mcp")
         {
             Content = new StringContent(
@@ -119,7 +115,7 @@ public sealed class McpSubscriptionsCrossProcessTests
     public async Task Mcp_StreamableHttp_Propagates_ApiToken_Identity_Into_Tools()
     {
         ApiTokenIssuance token;
-        using (IServiceScope scope = _factory.Mcp.Services.CreateScope())
+        using (IServiceScope scope = factory.Mcp.Services.CreateScope())
         {
             CardscapeDbContext db = scope.ServiceProvider.GetRequiredService<CardscapeDbContext>();
             await db.Database.EnsureCreatedAsync(TestContext.Current.CancellationToken);
@@ -142,7 +138,7 @@ public sealed class McpSubscriptionsCrossProcessTests
                 TestContext.Current.CancellationToken);
         }
 
-        HttpClient httpClient = _factory.Mcp.CreateClient();
+        HttpClient httpClient = factory.Mcp.CreateClient();
         var transport = new HttpClientTransport(
             new HttpClientTransportOptions
             {
@@ -177,7 +173,7 @@ public sealed class McpSubscriptionsCrossProcessTests
         // the API HTTP-calls the MCP directly. The MCP
         // returns 202 (Accepted) on a valid board event
         // and 401 on a missing secret.
-        HttpClient mcpClient = _factory.Mcp.CreateClient();
+        HttpClient mcpClient = factory.Mcp.CreateClient();
 
         var payload = new
         {
@@ -228,7 +224,7 @@ public sealed class McpSubscriptionsCrossProcessTests
         // Snapshot the MCP event log BEFORE the mutation
         // so we can assert the delta is at least 1.
         int beforeCount = await CountBroadcastEventsForBoardAsync(boardId);
-        int beforeCalls = _factory.RecordingSink.Snapshot().Count;
+        int beforeCalls = factory.RecordingSink.Snapshot().Count;
 
         Guid cardId = await CreateCardAsync(apiClient, listId, "e2e-card");
 
@@ -240,7 +236,7 @@ public sealed class McpSubscriptionsCrossProcessTests
         for (int i = 0; i < 50; i++)
         {
             afterCount = await CountBroadcastEventsForBoardAsync(boardId);
-            afterCalls = _factory.RecordingSink.Snapshot().Count;
+            afterCalls = factory.RecordingSink.Snapshot().Count;
             if (afterCount > beforeCount || afterCalls > beforeCalls)
             {
                 found = true;
@@ -251,7 +247,7 @@ public sealed class McpSubscriptionsCrossProcessTests
 
         if (!found)
         {
-            var allCalls = _factory.RecordingSink.Snapshot()
+            var allCalls = factory.RecordingSink.Snapshot()
                 .Select(c => $"{c.Method} {c.Uri} -> {c.StatusCode?.ToString(CultureInfo.InvariantCulture) ?? c.Failure}")
                 .ToList();
             throw new Xunit.Sdk.XunitException(
@@ -266,7 +262,7 @@ public sealed class McpSubscriptionsCrossProcessTests
 
     private async Task<HttpClient> CreateAuthenticatedApiClientAsync()
     {
-        HttpClient client = _factory.Api.CreateClient();
+        HttpClient client = factory.Api.CreateClient();
         var register = new
         {
             email = $"e2e-{Guid.NewGuid():N}@cardscape.local",
@@ -335,7 +331,7 @@ public sealed class McpSubscriptionsCrossProcessTests
 
     private async Task<int> CountBroadcastEventsForBoardAsync(Guid boardId)
     {
-        HttpClient mcpClient = _factory.Mcp.CreateClient();
+        HttpClient mcpClient = factory.Mcp.CreateClient();
         using var req = new HttpRequestMessage(HttpMethod.Get, "api/internal/board-event/subscriptions");
         req.Headers.Add("X-Internal-Secret", TwoHostWebApplicationFactory.SharedSecret);
         HttpResponseMessage resp = await mcpClient.SendAsync(

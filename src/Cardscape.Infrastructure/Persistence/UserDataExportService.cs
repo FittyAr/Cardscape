@@ -93,23 +93,8 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
         IQueryable<Domain.Activities.Activity> activityQuery = db.Activities
             .AsNoTracking()
             .Where(activity => activity.ActorId == uid);
-        List<Domain.Activities.Activity> userActivities;
-        if (!db.Database.IsSqlite())
-        {
-            userActivities = await activityQuery
-                .OrderByDescending(activity => activity.OccurredAt)
-                .Take(1_000)
-                .ToListAsync(ct);
-        }
-        else
-        {
-            userActivities = await activityQuery.ToListAsync(ct);
-            userActivities.Sort((left, right) => right.OccurredAt.CompareTo(left.OccurredAt));
-            if (userActivities.Count > 1_000)
-            {
-                userActivities.RemoveRange(1_000, userActivities.Count - 1_000);
-            }
-        }
+        List<Domain.Activities.Activity> userActivities = await activityQuery.ToListOrderedAsync(
+            db, activity => activity.OccurredAt, descending: true, take: 1_000, ct: ct);
         var activities = userActivities
             .Select(a => new UserExportActivityDto(
                 a.Id.Value,
@@ -141,9 +126,7 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
                 a.Id.Value,
                 a.Name,
                 a.ClientId,
-                SecretPrefix: a.ClientSecretHash.Length >= 8
-                    ? a.ClientSecretHash[..8]
-                    : a.ClientSecretHash,
+                SecretPrefix: a.ClientSecretPrefix,
                 a.AllowedScopes,
                 a.CreatedAt,
                 a.IsRevoked))
@@ -186,7 +169,7 @@ public sealed class UserDataExportService(CardscapeDbContext db, IClock clock) :
             AuthoredCards: cards,
             AuthoredComments: comments,
             ActivityFeedEntries: activities,
-            AuditLogEntries: Array.Empty<UserExportAuditDto>(),
+            AuditLogEntries: [],
             ApiTokens: apiTokens,
             OAuthApps: oauthApps,
             Integrations: integrations,

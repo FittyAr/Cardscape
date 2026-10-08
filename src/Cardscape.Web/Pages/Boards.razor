@@ -182,12 +182,7 @@ else
     private string TileMeta(BoardSummaryDto board) =>
         $"{VisibilityLabel(board.Visibility)} · {board.CreatedAt.LocalDateTime.ToString("d")}";
 
-    private string VisibilityLabel(BoardVisibility visibility) => visibility switch
-    {
-        BoardVisibility.Private => L["BoardsVisibilityPrivate"],
-        BoardVisibility.Workspace => L["BoardsVisibilityWorkspace"],
-        _ => L["BoardsVisibilityPublic"],
-    };
+    private string VisibilityLabel(BoardVisibility visibility) => L[visibility.LabelKey];
 
     private sealed class CreateModel
     {

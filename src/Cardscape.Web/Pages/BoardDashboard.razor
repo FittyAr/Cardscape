@@ -111,7 +111,7 @@ else if (dashcards is not null)
     private string? loadError;
     private readonly CreateModel createModel = new();
 
-    private record KindOption(DashcardKind Kind, string Label);
+    private sealed record KindOption(DashcardKind Kind, string Label);
 
     private readonly IReadOnlyList<KindOption> availableKinds = new[]
     {
@@ -133,7 +133,7 @@ else if (dashcards is not null)
             await Task.WhenAll(boardTask, dashTask);
 
             var boardRes = await boardTask;
-            if (boardRes.IsSuccess && boardRes.Value is not null)
+            if (boardRes.HasValue)
             {
                 board = boardRes.Value;
                 var wsRes = await WorkspacesApi.GetAsync(board.WorkspaceId);
@@ -144,7 +144,7 @@ else if (dashcards is not null)
             }
 
             var result = await dashTask;
-            if (result.IsSuccess && result.Value is not null)
+            if (result.HasValue)
             {
                 dashcards = result.Value;
                 return;

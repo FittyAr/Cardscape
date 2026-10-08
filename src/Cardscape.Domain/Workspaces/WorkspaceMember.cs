@@ -41,7 +41,7 @@ public sealed class WorkspaceMember : Entity<WorkspaceMemberId>
         new(WorkspaceMemberId.New(), workspaceId, userId, role, joinedAt);
 
     /// <summary>Promotes or demotes the member. Cannot be invoked on the workspace owner.</summary>
-    public Result ChangeRole(WorkspaceRole newRole, bool isOwner)
+    internal Result ChangeRole(WorkspaceRole newRole, bool isOwner)
     {
         if (isOwner && newRole != WorkspaceRole.Admin)
         {

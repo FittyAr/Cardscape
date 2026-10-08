@@ -1,10 +1,8 @@
-using System.Net.Http.Json;
 using System.Text.Json;
 using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Realtime;
+using Cardscape.Infrastructure.Configuration;
 using Cardscape.Mcp.Logging;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace Cardscape.Mcp.Realtime;
 
@@ -14,51 +12,37 @@ namespace Cardscape.Mcp.Realtime;
 /// endpoint with the matching <c>X-Internal-Secret</c> header
 /// for service-to-service auth.
 /// </summary>
-public sealed class HttpBoardPushClient : IBoardPushClient
+public sealed class HttpBoardPushClient(
+    IHttpClientFactory factory,
+    IConfiguration config,
+    ILogger<HttpBoardPushClient> logger) : IBoardPushClient
 {
-    public const string SecretHeader = "X-Internal-Secret";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNameCaseInsensitive = true
-    };
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerOptions.Web;
 
-    private readonly HttpClient _http;
-    private readonly string? _secret;
-    private readonly ILogger<HttpBoardPushClient> _logger;
-
-    public HttpBoardPushClient(
-        IHttpClientFactory factory,
-        IConfiguration config,
-        ILogger<HttpBoardPushClient> logger)
-    {
-        _http = factory.CreateClient("Cardscape.Api");
-        _secret = config["Internal:Secret"]
-            ?? config["Cardscape:Internal:Secret"]
-            ?? Environment.GetEnvironmentVariable("CARDS_CAPE__INTERNAL__SECRET");
-        _logger = logger;
-    }
+    private readonly HttpClient _http = factory.CreateClient("Cardscape.Api");
+    private readonly string? _secret = config.OutboundInternalSecret;
 
     public Task PushCardCreatedAsync(CardEventPayload payload, CancellationToken ct = default) =>
-        PushAsync("CardCreated", boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
+        PushAsync(nameof(IBoardClient.CardCreated), boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
 
     public Task PushCardUpdatedAsync(CardEventPayload payload, CancellationToken ct = default) =>
-        PushAsync("CardUpdated", boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
+        PushAsync(nameof(IBoardClient.CardUpdated), boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
 
     public Task PushCardMovedAsync(CardMovedPayload payload, CancellationToken ct = default) =>
-        PushAsync("CardMoved", boardId: payload.BoardId, listId: null, cardId: payload.CardId, payload, ct);
+        PushAsync(nameof(IBoardClient.CardMoved), boardId: payload.BoardId, listId: null, cardId: payload.CardId, payload, ct);
 
     public Task PushCardCompletedAsync(CardEventPayload payload, CancellationToken ct = default) =>
-        PushAsync("CardCompleted", boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
+        PushAsync(nameof(IBoardClient.CardCompleted), boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
 
     public Task PushCardReopenedAsync(CardEventPayload payload, CancellationToken ct = default) =>
-        PushAsync("CardReopened", boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
+        PushAsync(nameof(IBoardClient.CardReopened), boardId: payload.BoardId, listId: null, cardId: null, payload, ct);
 
     public Task PushListCreatedAsync(ListEventPayload payload, CancellationToken ct = default) =>
-        PushAsync("ListCreated", boardId: payload.BoardId, listId: payload.ListId, cardId: null, payload, ct);
+        PushAsync(nameof(IBoardClient.ListCreated), boardId: payload.BoardId, listId: payload.ListId, cardId: null, payload, ct);
 
     public Task PushCommentAddedAsync(CommentEventPayload payload, CancellationToken ct = default) =>
-        PushAsync("CommentAdded", boardId: payload.BoardId, listId: null, cardId: payload.CardId, payload, ct);
+        PushAsync(nameof(IBoardClient.CommentAdded), boardId: payload.BoardId, listId: null, cardId: payload.CardId, payload, ct);
 
     private async Task PushAsync(
         string method,
@@ -70,14 +54,14 @@ public sealed class HttpBoardPushClient : IBoardPushClient
     {
         if (string.IsNullOrWhiteSpace(_secret))
         {
-            _logger.InternalSecretMissing();
+            logger.InternalSecretMissing();
             return;
         }
 
         try
         {
             using HttpRequestMessage request = new(HttpMethod.Post, "api/internal/broadcast/");
-            request.Headers.Add(SecretHeader, _secret);
+            request.Headers.Add(InternalSecret.HeaderName, _secret);
             request.Content = JsonContent.Create(new
             {
                 boardId,
@@ -90,7 +74,7 @@ public sealed class HttpBoardPushClient : IBoardPushClient
             using HttpResponseMessage response = await _http.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode)
             {
-                _logger.ApiBroadcastUnsuccessful(method, (int)response.StatusCode);
+                logger.ApiBroadcastUnsuccessful(method, (int)response.StatusCode);
             }
         }
         catch (Exception ex)
@@ -99,7 +83,7 @@ public sealed class HttpBoardPushClient : IBoardPushClient
             // succeeded in mutating the database, and the Web
             // client will pick up the new state on the next
             // refresh. We log and move on.
-            _logger.ApiBroadcastFailed(ex, method);
+            logger.ApiBroadcastFailed(ex, method);
         }
     }
 }

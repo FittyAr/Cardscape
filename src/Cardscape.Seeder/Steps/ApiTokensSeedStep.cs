@@ -57,8 +57,7 @@ internal sealed class ApiTokensSeedStep : SeedStepBase
             ApiTokenScopes.Create(scopes).Value,
             expiresAt,
             at).Value;
-        context.Db.ApiTokens.Add(token);
-        context.ApiTokens.Add(token);
+        context.Track(context.ApiTokens, token);
         return token;
     }
 }

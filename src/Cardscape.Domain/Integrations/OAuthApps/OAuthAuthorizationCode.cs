@@ -70,7 +70,7 @@ public sealed class OAuthAuthorizationCode : AggregateRoot<OAuthAuthorizationCod
                 "oauth.code_already_used", "Authorization code has already been used."));
         }
 
-        if (DateTimeOffset.UtcNow >= ExpiresAt)
+        if (at >= ExpiresAt)
         {
             return Result.Failure(DomainError.Validation(
                 "oauth.code_expired", "Authorization code has expired."));

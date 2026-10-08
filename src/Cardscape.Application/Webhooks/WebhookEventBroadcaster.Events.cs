@@ -44,7 +44,7 @@ public sealed partial class WebhookEventBroadcaster
             new
             {
                 cardId = resolved.Card.Id.Value,
-                fromListId = resolved.Card.ListId.Value,
+                fromListId = @event.PreviousListId.Value,
                 toListId = @event.NewListId.Value,
                 position = @event.NewPosition.Value
             },
@@ -96,7 +96,7 @@ public sealed partial class WebhookEventBroadcaster
         CardId cardId,
         CancellationToken ct)
     {
-        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
         ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
         IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
         Card? card = await cards.GetByIdAsync(cardId, ct);

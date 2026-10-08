@@ -1,6 +1,4 @@
 using Cardscape.Domain.Members;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 
 namespace Cardscape.Api.Logging;
 
@@ -65,9 +63,6 @@ internal static partial class ApiLogMessages
 
     [LoggerMessage(EventId = 4044, Level = LogLevel.Warning, Message = "Failed to parse inline IdP metadata.")]
     internal static partial void SamlInlineMetadataParsingFailed(this ILogger logger, Exception exception);
-
-    [LoggerMessage(EventId = 4045, Level = LogLevel.Information, Message = "SAML config not found for slug {Slug}.")]
-    internal static partial void SamlConfigurationNotFound(this ILogger logger, string slug);
 
     [LoggerMessage(EventId = 4050, Level = LogLevel.Information, Message = "Rate limit exceeded for API token {TokenId} on {Path}; Retry-After={RetryAfter}s")]
     internal static partial void ApiTokenRateLimitExceeded(this ILogger logger, Guid tokenId, PathString path, int retryAfter);

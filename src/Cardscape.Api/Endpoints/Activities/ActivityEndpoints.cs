@@ -1,8 +1,5 @@
 using Cardscape.Application.Activities.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Activities;
@@ -24,7 +21,7 @@ public static class ActivityEndpoints
         {
             var result = await bus.InvokeAsync<Result<ActivityPage>>(
                 new ListBoardActivitiesQuery(boardId, cursor, limit), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<ActivityPage>();
 
         var cardGroup = app.MapGroup("/api/cards/{cardId:guid}/activities")
@@ -40,10 +37,9 @@ public static class ActivityEndpoints
         {
             var result = await bus.InvokeAsync<Result<ActivityPage>>(
                 new ListCardActivitiesQuery(cardId, cursor, limit), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<ActivityPage>();
 
         return app;
     }
-
 }

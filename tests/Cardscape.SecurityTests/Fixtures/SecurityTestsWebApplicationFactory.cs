@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Xunit;
@@ -24,17 +23,16 @@ namespace Cardscape.SecurityTests.Fixtures;
 /// </summary>
 public sealed class SecurityTestsWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private string _connectionString = string.Empty;
     private string _storageRoot = string.Empty;
 
     public HttpClient CreateApiClient() => CreateClient();
 
-    public string ConnectionString => _connectionString;
+    public string ConnectionString { get; } = string.Empty;
 
     public SecurityTestsWebApplicationFactory()
     {
         string id = Guid.NewGuid().ToString("N");
-        _connectionString = $"Data Source={Path.Combine(Path.GetTempPath(), $"cardscape-sec-{id}.db")}";
+        ConnectionString = $"Data Source={Path.Combine(Path.GetTempPath(), $"cardscape-sec-{id}.db")}";
         _storageRoot = Path.Combine(
             Path.GetDirectoryName(typeof(Program).Assembly.Location)!,
             "sec-tmp",
@@ -50,7 +48,7 @@ public sealed class SecurityTestsWebApplicationFactory : WebApplicationFactory<P
         string? previousStorage = Environment.GetEnvironmentVariable("Storage__LocalRoot");
         string? previousEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
-        Environment.SetEnvironmentVariable("ConnectionStrings__Default", _connectionString);
+        Environment.SetEnvironmentVariable("ConnectionStrings__Default", ConnectionString);
         Environment.SetEnvironmentVariable("Database__Provider", "Sqlite");
         Environment.SetEnvironmentVariable("Jwt__SigningKey",
             "security-tests-signing-key-please-override-32+chars");
@@ -90,7 +88,7 @@ public sealed class SecurityTestsWebApplicationFactory : WebApplicationFactory<P
         base.Dispose(disposing);
         if (disposing)
         {
-            TryDelete(_connectionString.Replace("Data Source=", string.Empty));
+            TryDelete(ConnectionString.Replace("Data Source=", string.Empty));
             TryDeleteDir(_storageRoot);
         }
     }

@@ -12,24 +12,23 @@ using Cardscape.Domain.Members;
 using Cardscape.Domain.UserPreferences;
 using Cardscape.Domain.UserPreferences.Errors;
 using Cardscape.Domain.UserPreferences.Events;
-using FluentAssertions;
 using UserPreferencesAggregate = Cardscape.Domain.UserPreferences.UserPreferences;
 
 namespace Cardscape.UnitTests.UserPreferences;
 
-public class UserPreferencesTests
+public sealed class UserPreferencesTests
 {
     private static readonly UserId AnyUser = new(Guid.NewGuid());
     private static readonly DateTimeOffset Now = new(2026, 8, 8, 12, 0, 0, TimeSpan.Zero);
-    private static readonly IReadOnlyCollection<string> AllValidNames = new[]
-    {
+    private static readonly IReadOnlyCollection<string> AllValidNames =
+    [
         "default", "dark",
         "humanistic", "humanistic-dark",
         "material", "material-dark",
         "software", "software-dark",
         "standard", "standard-dark",
         "cardscape-classic", "cardscape-classic-dark",
-    };
+    ];
 
     [Fact]
     public void Create_WithDefaults_StoresDefaultsAndRaisesCreatedEvent()

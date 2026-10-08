@@ -54,7 +54,7 @@ public static class ListCardsForBoardQueryHandler
             cancellationToken);
         IReadOnlyList<CardSnooze> activeSnoozes = await snoozes.ListForBoardAsync(
             query.BoardId, now, cancellationToken);
-        HashSet<Guid> snoozedCardIds = new(activeSnoozes.Select(snooze => snooze.Id.Value));
+        HashSet<Guid> snoozedCardIds = [.. activeSnoozes.Select(snooze => snooze.Id.Value)];
         Dictionary<Guid, DateTimeOffset> snoozeUntil = activeSnoozes.ToDictionary(
             snooze => snooze.Id.Value,
             snooze => snooze.Until);

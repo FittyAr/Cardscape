@@ -14,23 +14,16 @@ public sealed class AttachmentRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<Attachment>> ListForCardAsync(Guid cardId, CancellationToken ct = default)
     {
         var typedCardId = new CardId(cardId);
-        IQueryable<Attachment> query = Db.Set<Attachment>()
+        IQueryable<Attachment> query = Set
             .AsNoTracking()
             .Where(attachment => attachment.CardId == typedCardId && !attachment.IsDeleted);
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderBy(attachment => attachment.CreatedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, attachment => attachment.CreatedAt, ct: ct);
     }
 
     public async Task<int> CountForCardAsync(Guid cardId, CancellationToken ct = default)
     {
         var typedCardId = new CardId(cardId);
-        return await Db.Set<Attachment>()
+        return await Set
             .CountAsync(attachment => attachment.CardId == typedCardId && !attachment.IsDeleted, ct);
     }
 
@@ -43,7 +36,7 @@ public sealed class AttachmentRepository(CardscapeDbContext db)
         }
 
         HashSet<CardId> wanted = [.. cardIds.Select(id => new CardId(id))];
-        var rows = await Db.Set<Attachment>()
+        var rows = await Set
             .AsNoTracking()
             .Where(attachment => wanted.Contains(attachment.CardId) && !attachment.IsDeleted)
             .GroupBy(attachment => attachment.CardId)

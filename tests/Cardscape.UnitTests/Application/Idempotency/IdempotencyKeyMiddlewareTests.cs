@@ -1,13 +1,11 @@
-using System.Text.Json;
 using Cardscape.Application.Idempotency;
 using Cardscape.Domain.Idempotency;
 using Cardscape.Domain.Members;
 using Cardscape.Tests.Common.Fakes;
-using FluentAssertions;
 
 namespace Cardscape.UnitTests.Application.Idempotency;
 
-public class IdempotencyKeyMiddlewareTests
+public sealed class IdempotencyKeyMiddlewareTests
 {
     private const string ValidKey = "valid-idempotency-key-123";
 

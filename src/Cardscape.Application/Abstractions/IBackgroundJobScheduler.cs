@@ -1,3 +1,4 @@
+using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Common;
 
 namespace Cardscape.Application.Abstractions;
@@ -23,6 +24,6 @@ public interface IBackgroundJobScheduler
         string type,
         object payload,
         DateTimeOffset? scheduledFor = null,
-        int maxAttempts = 5,
+        int maxAttempts = BackgroundJob.DefaultMaxAttempts,
         CancellationToken ct = default);
 }

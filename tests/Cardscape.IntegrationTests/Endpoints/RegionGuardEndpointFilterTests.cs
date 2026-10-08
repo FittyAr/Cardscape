@@ -45,7 +45,7 @@ namespace Cardscape.IntegrationTests.Endpoints;
 /// </para>
 /// </summary>
 [Collection(RegionGuardSerial.Name)]
-public class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicationFactory>
+public sealed class RegionGuardEndpointFilterTests : IClassFixture<CardscapeWebApplicationFactory>
 {
     private readonly CardscapeWebApplicationFactory _factory;
 

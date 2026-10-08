@@ -3,7 +3,7 @@ using Cardscape.Domain.Notifications;
 
 namespace Cardscape.UnitTests.Notifications;
 
-public class NotificationTests
+public sealed class NotificationTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);
 

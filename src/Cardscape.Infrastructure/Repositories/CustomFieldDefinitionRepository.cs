@@ -15,7 +15,7 @@ public sealed class CustomFieldDefinitionRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<CustomFieldDefinition>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {
-        return await Db.Set<CustomFieldDefinition>()
+        return await Set
             .AsNoTracking()
             .Where(definition => definition.BoardId == boardId)
             .OrderBy(definition => definition.Position)
@@ -30,7 +30,7 @@ public sealed class CustomFieldValueRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<CustomFieldValue>> ListForCardAsync(
         CardId cardId, CancellationToken ct = default)
     {
-        return await Db.Set<CustomFieldValue>()
+        return await Set
             .AsNoTracking()
             .Where(value => value.CardId == cardId)
             .ToListAsync(ct);
@@ -39,7 +39,7 @@ public sealed class CustomFieldValueRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<CustomFieldValue>> ListForFieldAsync(
         CustomFieldDefinitionId fieldId, CancellationToken ct = default)
     {
-        return await Db.Set<CustomFieldValue>()
+        return await Set
             .Where(value => value.FieldDefinitionId == fieldId)
             .ToListAsync(ct);
     }
@@ -47,7 +47,7 @@ public sealed class CustomFieldValueRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<CustomFieldValue>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {
-        return await Db.Set<CustomFieldValue>()
+        return await Set
             .Where(value => Db.Set<CustomFieldDefinition>().Any(definition =>
                 definition.Id == value.FieldDefinitionId
                 && definition.BoardId == boardId))
@@ -59,7 +59,7 @@ public sealed class CustomFieldValueRepository(CardscapeDbContext db)
         CardId cardId,
         CancellationToken ct = default)
     {
-        return await Db.Set<CustomFieldValue>().FirstOrDefaultAsync(value =>
+        return await Set.FirstOrDefaultAsync(value =>
             value.FieldDefinitionId == fieldId && value.CardId == cardId, ct);
     }
 }

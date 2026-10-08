@@ -102,7 +102,7 @@
         }
 
         ApiResult<SearchPageDto> result = await Search.SearchAsync(query, pageSize: 8, ct: ct);
-        if (result.IsSuccess && result.Value is not null)
+        if (result.HasValue)
         {
             results = result.Value.Items.ToList();
         }
@@ -117,7 +117,7 @@
 
     private void OnKeyDown(KeyboardEventArgs args)
     {
-        if (args.Key == "Escape")
+        if (args.IsEscape)
         {
             resultsVisible = false;
         }

@@ -1,8 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using FluentAssertions;
 using NetArchTest.Rules;
-using Xunit;
 using TestResult = NetArchTest.Rules.TestResult;
 
 namespace Cardscape.ArchitectureTests;
@@ -138,7 +136,6 @@ public sealed class ArchitectureTests
             .Which.DeclaringType.Should().Be(typeof(Cardscape.Application.Cards.CardscapeExtensions));
     }
 
-    private const string Domain = "Cardscape.Domain";
     private const string Application = "Cardscape.Application";
     private const string Infrastructure = "Cardscape.Infrastructure";
     private const string Api = "Cardscape.Api";
@@ -260,6 +257,58 @@ public sealed class ArchitectureTests
         violations.Should().BeEmpty(
             "functional and E2E behavior must be driven through HTTP/protocol boundaries, " +
             "not by resolving concrete API or MCP implementation types");
+    }
+
+    [Fact]
+    public void WebJsInteropCalls_TargetFunctionsDefinedInWwwroot()
+    {
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string webRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web");
+        Regex interopCall = new(
+            @"\b(?:JS|Js|js|JSRuntime)\.Invoke(?:Void)?Async(?:<[^>]+>)?\(\s*""(?<name>[^""]+)""",
+            RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1));
+        string scripts = string.Concat(
+            Directory.GetFiles(Path.Combine(webRoot, "wwwroot"), "*.js", SearchOption.AllDirectories)
+                .Select(File.ReadAllText));
+        string[] browserBuiltIns = ["localStorage.", "sessionStorage.", "console."];
+
+        string[] undefinedFunctions = Directory.GetFiles(webRoot, "*.*", SearchOption.AllDirectories)
+            .Where(file => file.EndsWith(".cs", StringComparison.Ordinal)
+                || file.EndsWith(".razor", StringComparison.Ordinal))
+            .Where(file => !file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .SelectMany(file => interopCall.Matches(File.ReadAllText(file)).Select(match => match.Groups["name"].Value))
+            .Where(name => !browserBuiltIns.Any(prefix => name.StartsWith(prefix, StringComparison.Ordinal)))
+            .Where(name => !scripts.Contains($"window.{name} =", StringComparison.Ordinal))
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        undefinedFunctions.Should().BeEmpty(
+            "every IJSRuntime call must name a function the Web client's wwwroot scripts assign on window");
+    }
+
+    [Fact]
+    public void WebComponents_DoNotInjectTheUnconfiguredHttpClient()
+    {
+        // Program.cs registers only named clients; the default
+        // HttpClient has no API base address and no bearer token.
+        DirectoryInfo repositoryRoot = FindRepositoryRoot();
+        string webRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web");
+        Regex rawHttpClientInjection = new(
+            @"^\s*@inject\s+(?:System\.Net\.Http\.)?HttpClient\s",
+            RegexOptions.CultureInvariant | RegexOptions.Multiline,
+            TimeSpan.FromSeconds(1));
+
+        string[] violations = Directory.GetFiles(webRoot, "*.razor", SearchOption.AllDirectories)
+            .Where(file => rawHttpClientInjection.IsMatch(File.ReadAllText(file)))
+            .Select(file => Path.GetRelativePath(repositoryRoot.FullName, file))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty(
+            "Web components must call the API through the typed clients built on the named \"Cardscape.Api\" client");
     }
 
     [Fact]
@@ -716,9 +765,9 @@ public sealed class ArchitectureTests
         ai.Split("CaptureAiOutcome(", StringSplitOptions.None).Length.Should().BeGreaterThanOrEqualTo(7);
         ai.Should().Contain("await Checklists.DeleteAsync(newChecklistId)",
             "a partially generated checklist must be compensated when any item fails");
-        ai.Should().Contain("if (result.IsSuccess && result.Value is not null)");
+        ai.Should().Contain("if (result.HasValue)");
         ai.IndexOf("_aiSuggestedOwners = _aiSuggestedOwners", StringComparison.Ordinal)
-            .Should().BeGreaterThan(ai.IndexOf("if (result.IsSuccess && result.Value is not null)", StringComparison.Ordinal));
+            .Should().BeGreaterThan(ai.IndexOf("if (result.HasValue)", StringComparison.Ordinal));
         ai.Should().NotContain("CreateAsync(CardId, \"AI suggestions\")");
     }
 

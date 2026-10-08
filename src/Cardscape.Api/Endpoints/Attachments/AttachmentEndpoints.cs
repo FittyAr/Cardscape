@@ -1,9 +1,5 @@
 using Cardscape.Application.Attachments;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Attachments;
@@ -20,7 +16,7 @@ public static class AttachmentEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<AttachmentDto>>>(
                 new ListCardAttachmentsQuery(cardId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<AttachmentDto>>(StatusCodes.Status200OK);
 
         // BUG-A5-002 — direct multipart upload. Bounded to
@@ -100,5 +96,4 @@ public static class AttachmentEndpoints
 
         return app;
     }
-
 }

@@ -3,7 +3,6 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Workspaces;
 using Wolverine;
 
 namespace Cardscape.Application.Workspaces.Commands;

@@ -145,7 +145,7 @@ public static class WebhookUrlValidator
     internal static bool IsMulticastIPv4(System.Net.IPAddress ip)
     {
         // 224.0.0.0/4
-        return ip.GetAddressBytes()[0] >= 224 && ip.GetAddressBytes()[0] <= 239;
+        return ip.GetAddressBytes()[0] is >= 224 and <= 239;
     }
 
     internal static bool IsPrivateIPv6(System.Net.IPAddress ip)

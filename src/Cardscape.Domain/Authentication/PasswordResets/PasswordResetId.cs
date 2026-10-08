@@ -1,5 +1,3 @@
-using Cardscape.Domain.Common;
-
 namespace Cardscape.Domain.Authentication.PasswordResets;
 
 public readonly record struct PasswordResetId(Guid Value)

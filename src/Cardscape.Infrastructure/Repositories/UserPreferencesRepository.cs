@@ -19,11 +19,11 @@ public sealed class UserPreferencesRepository(CardscapeDbContext db)
 {
     public async Task DeleteByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
-        UserPreferences? preferences = await Db.Set<UserPreferences>()
+        UserPreferences? preferences = await Set
             .FirstOrDefaultAsync(prefs => prefs.Id == new UserId(userId), ct);
         if (preferences is not null)
         {
-            Db.Set<UserPreferences>().Remove(preferences);
+            Set.Remove(preferences);
         }
     }
 }

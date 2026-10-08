@@ -3,7 +3,6 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Labels.DTOs;
 using Cardscape.Domain.Activities;
-using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
 using Wolverine;

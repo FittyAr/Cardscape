@@ -42,7 +42,7 @@ public static class ConfigureSamlConnectionCommandHandler
                 "saml.workspace_not_found", $"Workspace {command.WorkspaceId} was not found."));
         }
 
-        if (workspace.OwnerId != currentUser.Id.Value)
+        if (!workspace.IsOwnedBy(currentUser.Id.Value))
         {
             return Result.Failure<SamlConnectionDto>(DomainError.Forbidden(
                 "saml.not_owner", "Only the workspace owner can configure SAML."));

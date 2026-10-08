@@ -5,7 +5,6 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Domain.Authentication.Totp.Errors;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Members;
 using Wolverine;
 using static Cardscape.Domain.Members.Errors.UserErrors;
 
@@ -58,6 +57,6 @@ public static class ConsumePendingTotpLoginQueryHandler
         var access = tokens.IssueAccessToken(user, ["user"]);
         return Result.Success(new AuthResponse(
             AccessToken: access,
-            User: new UserSummary(user.Id.Value, user.Email.Value, user.DisplayName.Value)));
+            User: UserSummary.From(user)));
     }
 }

@@ -6,9 +6,7 @@ using Cardscape.Application.Lists.DTOs;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Lists;
 using Wolverine;
-using static Cardscape.Domain.Lists.Errors.ListErrors;
 
 namespace Cardscape.Application.Lists.Commands;
 
@@ -55,14 +53,7 @@ public static class ArchiveListCommandHandler
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new BoardListDto(
-            list.Id.Value,
-            list.BoardId.Value,
-            list.Name.Value,
-            list.Position.Value,
-            list.IsArchived,
-            list.CreatedAt,
-            0));
+        return Result.Success(BoardListDto.FromEntity(list));
     }
 }
 
@@ -97,13 +88,6 @@ public static class RestoreListCommandHandler
         list.Restore(clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new BoardListDto(
-            list.Id.Value,
-            list.BoardId.Value,
-            list.Name.Value,
-            list.Position.Value,
-            list.IsArchived,
-            list.CreatedAt,
-            0));
+        return Result.Success(BoardListDto.FromEntity(list));
     }
 }

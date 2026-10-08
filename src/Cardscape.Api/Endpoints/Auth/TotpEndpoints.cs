@@ -1,11 +1,7 @@
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Members;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 
 namespace Cardscape.Api.Endpoints.Auth;
 
@@ -133,7 +129,6 @@ public static class TotpEndpoints
 
         return app;
     }
-
 }
 
 /// <summary>Body for <c>POST /api/auth/2fa/verify</c>.</summary>

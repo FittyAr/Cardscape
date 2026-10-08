@@ -169,7 +169,7 @@
                     form.Name.Trim(),
                     scopes,
                     [form.RedirectUri.Trim()]));
-            if (result.IsSuccess && result.Value is not null)
+            if (result.HasValue)
             {
                 registration = result.Value;
                 form.Reset();
@@ -218,7 +218,7 @@
         try
         {
             ApiResult<IReadOnlyList<OAuthAppSummaryDto>> result = await OAuthApps.ListAsync();
-            apps = result.IsSuccess && result.Value is not null ? result.Value : [];
+            apps = result.HasValue ? result.Value : [];
         }
         finally
         {

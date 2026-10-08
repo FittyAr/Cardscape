@@ -1,8 +1,5 @@
 using Cardscape.Application.BackgroundJobs;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.BackgroundJobs;
@@ -19,10 +16,9 @@ public static class BackgroundJobEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<BackgroundJobSummaryDto>>>(
                 new ListDeadLetterBackgroundJobsQuery(skip ?? 0, take ?? 50), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<BackgroundJobSummaryDto>>(StatusCodes.Status200OK);
 
         return app;
     }
-
 }

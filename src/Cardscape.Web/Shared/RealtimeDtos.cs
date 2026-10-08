@@ -20,18 +20,6 @@ public sealed record CardMovedPayload(
     double NewPosition,
     DateTimeOffset At);
 
-public sealed record CardAssignedPayload(
-    Guid CardId,
-    Guid BoardId,
-    Guid UserId,
-    DateTimeOffset At);
-
-public sealed record CardLabelPayload(
-    Guid CardId,
-    Guid BoardId,
-    Guid LabelId,
-    DateTimeOffset At);
-
 public sealed record ListEventPayload(
     Guid ListId,
     Guid BoardId,
@@ -50,9 +38,4 @@ public sealed record LabelEventPayload(
     Guid BoardId,
     string Name,
     string Color,
-    DateTimeOffset At);
-
-public sealed record BoardEventPayload(
-    Guid BoardId,
-    string Name,
     DateTimeOffset At);

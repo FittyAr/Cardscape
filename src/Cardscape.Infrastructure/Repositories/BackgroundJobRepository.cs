@@ -13,7 +13,7 @@ public sealed class BackgroundJobRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<BackgroundJob>> ClaimBatchAsync(
         int batchSize, DateTimeOffset now, CancellationToken ct = default)
     {
-        IQueryable<BackgroundJob> pending = Db.Set<BackgroundJob>()
+        IQueryable<BackgroundJob> pending = Set
             .Where(job => job.Status == BackgroundJobStatus.Pending)
             .AsNoTracking();
 
@@ -42,7 +42,7 @@ public sealed class BackgroundJobRepository(CardscapeDbContext db)
         List<BackgroundJob> claimed = [];
         foreach (BackgroundJob job in due)
         {
-            int affected = await Db.Set<BackgroundJob>()
+            int affected = await Set
                 .Where(candidate =>
                     candidate.Id == job.Id
                     && candidate.Status == BackgroundJobStatus.Pending
@@ -93,20 +93,10 @@ public sealed class BackgroundJobRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<BackgroundJob>> ListDeadLetterAsync(
         int skip, int take, CancellationToken ct = default)
     {
-        IQueryable<BackgroundJob> deadLetters = Db.Set<BackgroundJob>()
+        IQueryable<BackgroundJob> deadLetters = Set
             .AsNoTracking()
             .Where(job => job.Status == BackgroundJobStatus.DeadLetter);
-        if (!Db.Database.IsSqlite())
-        {
-            return await deadLetters
-                .OrderByDescending(job => job.CompletedAt)
-                .Skip(skip)
-                .Take(take)
-                .ToListAsync(ct);
-        }
-
-        var rows = await deadLetters.ToListAsync(ct);
-        rows.Sort((left, right) => Nullable.Compare(right.CompletedAt, left.CompletedAt));
-        return rows.Skip(skip).Take(take).ToList();
+        return await deadLetters.ToListOrderedAsync(
+            Db, job => job.CompletedAt, descending: true, skip, take, ct);
     }
 }

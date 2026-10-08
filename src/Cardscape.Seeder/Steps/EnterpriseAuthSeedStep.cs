@@ -1,10 +1,3 @@
-using Cardscape.Domain.Authentication.ExternalLogins;
-using Cardscape.Domain.Authentication.PasswordResets;
-using Cardscape.Domain.Authentication.RevokedTokens;
-using Cardscape.Domain.Authentication.Saml;
-using Cardscape.Domain.Authentication.Scim;
-using Cardscape.Domain.Authentication.Totp;
-using Cardscape.Domain.Members;
 using Cardscape.Seeder.Persistence;
 using Cardscape.Seeder.Reporting;
 
@@ -28,13 +21,11 @@ internal sealed class EnterpriseAuthSeedStep : SeedStepBase
         // 1. SCIM: two tokens, one for production / one for
         //    the staging tenant that the QA team uses.
         (ScimToken prod, _) = ScimToken.Issue(ScimTokenId.New(), context.WorkspaceId, "Production IdP", now);
-        context.Db.ScimTokens.Add(prod);
-        context.ScimTokens.Add(prod);
+        context.Track(context.ScimTokens, prod);
 
         (ScimToken stg, _) = ScimToken.Issue(ScimTokenId.New(), context.WorkspaceId, "Staging IdP", now);
         stg.RecordUse(now.AddDays(-3));
-        context.Db.ScimTokens.Add(stg);
-        context.ScimTokens.Add(stg);
+        context.Track(context.ScimTokens, stg);
 
         // 2. SAML connection.
         Result<SamlConnection> saml = SamlConnection.Configure(
@@ -49,8 +40,7 @@ internal sealed class EnterpriseAuthSeedStep : SeedStepBase
             now);
         if (saml.IsSuccess)
         {
-            context.Db.SamlConnections.Add(saml.Value);
-            context.SamlConnections.Add(saml.Value);
+            context.Track(context.SamlConnections, saml.Value);
         }
 
         // 3. TOTP: enrolled for half the personas, with a
@@ -81,8 +71,7 @@ internal sealed class EnterpriseAuthSeedStep : SeedStepBase
                 user.Id, encryptedSecret, recoveryCodesHash, now);
             if (cred.IsSuccess)
             {
-                context.Db.TotpCredentials.Add(cred.Value);
-                context.TotpCredentials.Add(cred.Value);
+                context.Track(context.TotpCredentials, cred.Value);
                 enrolled++;
             }
         }
@@ -97,8 +86,7 @@ internal sealed class EnterpriseAuthSeedStep : SeedStepBase
                 user.Id, ExternalProvider.Google, subject, user.Email.Value, user.DisplayName.Value, now);
             if (google.IsSuccess)
             {
-                context.Db.ExternalLogins.Add(google.Value);
-                context.ExternalLogins.Add(google.Value);
+                context.Track(context.ExternalLogins, google.Value);
             }
 
             if (user.Id.Value == context.WorkspaceOwnerId)
@@ -108,8 +96,7 @@ internal sealed class EnterpriseAuthSeedStep : SeedStepBase
                     user.Id, ExternalProvider.Microsoft, msSubject, user.Email.Value, user.DisplayName.Value, now);
                 if (ms.IsSuccess)
                 {
-                    context.Db.ExternalLogins.Add(ms.Value);
-                    context.ExternalLogins.Add(ms.Value);
+                    context.Track(context.ExternalLogins, ms.Value);
                 }
             }
         }
@@ -124,8 +111,7 @@ internal sealed class EnterpriseAuthSeedStep : SeedStepBase
             "127.0.0.1");
         if (reset.IsSuccess)
         {
-            context.Db.PasswordResets.Add(reset.Value);
-            context.PasswordResets.Add(reset.Value);
+            context.Track(context.PasswordResets, reset.Value);
         }
 
         // 6. Revoked JWT: two rows, one freshly-revoked, one
@@ -143,8 +129,7 @@ internal sealed class EnterpriseAuthSeedStep : SeedStepBase
                 jti, user.Id, now.AddMinutes(-5), expiresAt, "Lost device");
             if (revoked.IsSuccess)
             {
-                context.Db.RevokedTokens.Add(revoked.Value);
-                context.RevokedTokens.Add(revoked.Value);
+                context.Track(context.RevokedTokens, revoked.Value);
             }
         }
 

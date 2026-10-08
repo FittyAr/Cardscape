@@ -4,7 +4,6 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Common;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Lists;
 using Wolverine;
 
 namespace Cardscape.Application.Cards;

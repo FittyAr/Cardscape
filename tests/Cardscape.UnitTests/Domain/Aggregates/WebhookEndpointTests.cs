@@ -4,7 +4,7 @@ using Cardscape.Domain.Webhooks;
 
 namespace Cardscape.UnitTests.Domain.Aggregates;
 
-public class WebhookEndpointTests
+public sealed class WebhookEndpointTests
 {
     private const string ValidProtectedSecret = "CfDJ8-example-protected-webhook-secret";
 

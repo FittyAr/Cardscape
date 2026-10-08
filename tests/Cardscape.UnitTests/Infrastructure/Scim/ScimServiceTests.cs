@@ -2,7 +2,6 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
-using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Scim;
 using Cardscape.Tests.Common.Fakes;
 using Moq;

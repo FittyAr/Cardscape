@@ -23,7 +23,7 @@ public sealed record LabelName : IValueObject
 
         var trimmed = input.Trim();
 
-        if (trimmed.Length < MinLength || trimmed.Length > MaxLength)
+        if (trimmed.Length is < MinLength or > MaxLength)
         {
             return Result.Failure<LabelName>(DomainError.Validation(
                 "labels.name.length",

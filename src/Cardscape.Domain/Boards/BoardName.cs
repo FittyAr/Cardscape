@@ -23,7 +23,7 @@ public sealed record BoardName : IValueObject
 
         var trimmed = input.Trim();
 
-        if (trimmed.Length < MinLength || trimmed.Length > MaxLength)
+        if (trimmed.Length is < MinLength or > MaxLength)
         {
             return Result.Failure<BoardName>(DomainError.Validation(
                 "boards.name.length",

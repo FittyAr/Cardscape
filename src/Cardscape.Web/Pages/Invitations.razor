@@ -54,7 +54,7 @@ else if (invitations is not null)
         try
         {
             ApiResult<IReadOnlyList<WorkspaceInvitationDto>> result = await InvitationsApi.ListPendingAsync();
-            if (result.IsSuccess && result.Value is not null)
+            if (result.HasValue)
             {
                 invitations = result.Value;
                 return;
@@ -69,11 +69,5 @@ else if (invitations is not null)
         }
     }
 
-    private string RoleName(WorkspaceRole role) => role switch
-    {
-        WorkspaceRole.Admin => L["WorkspaceRoleAdmin"],
-        WorkspaceRole.Member => L["WorkspaceRoleMember"],
-        WorkspaceRole.Observer => L["WorkspaceRoleObserver"],
-        _ => L["CommonUnknown"]
-    };
+    private string RoleName(WorkspaceRole role) => L[role.LabelKey];
 }

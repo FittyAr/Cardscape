@@ -15,7 +15,7 @@ public sealed class CardRepository(CardscapeDbContext db) : RepositoryBase<Card,
     public async Task<IReadOnlyList<Card>> ListForBoardAsync(BoardId boardId, bool includeArchived, CancellationToken ct = default)
     {
         IQueryable<Card> query =
-            from card in Db.Set<Card>().AsNoTracking()
+            from card in Set.AsNoTracking()
             join list in Db.Set<BoardList>().AsNoTracking() on card.ListId equals list.Id
             where list.BoardId == boardId
             select card;
@@ -29,7 +29,7 @@ public sealed class CardRepository(CardscapeDbContext db) : RepositoryBase<Card,
 
     public async Task<IReadOnlyList<Card>> ListForListAsync(BoardListId listId, bool includeArchived, CancellationToken ct = default)
     {
-        IQueryable<Card> query = Db.Set<Card>()
+        IQueryable<Card> query = Set
             .AsNoTracking()
             .Where(c => c.ListId == listId);
         if (!includeArchived)
@@ -113,7 +113,7 @@ public sealed class CardRepository(CardscapeDbContext db) : RepositoryBase<Card,
 
     public async Task<Card?> GetWithDetailsAsync(CardId id, CancellationToken ct = default)
     {
-        return await Db.Set<Card>()
+        return await Set
             .Include(c => c.Members)
             .Include(c => c.CardLabels)
             .FirstOrDefaultAsync(c => c.Id == id, ct);

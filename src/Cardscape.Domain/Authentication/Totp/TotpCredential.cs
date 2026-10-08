@@ -1,4 +1,3 @@
-using Cardscape.Domain.Authentication.Totp.Errors;
 using Cardscape.Domain.Authentication.Totp.Events;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
@@ -139,18 +138,35 @@ public sealed class TotpCredential : AggregateRoot<TotpCredentialId>
         }
     }
 
+    private const string UsedRecoveryCodeMarker = "used:";
+
+    /// <summary>Number of recovery codes that have not been redeemed yet.</summary>
+    public int RemainingRecoveryCodes => RecoveryCodeLines()
+        .Count(line => !line.StartsWith(UsedRecoveryCodeMarker, StringComparison.Ordinal));
+
     /// <summary>
-    /// Marks one of the recovery codes as consumed. The
-    /// application layer replaces the matching hash line
-    /// with a "used:&lt;epoch&gt;" marker before calling
-    /// this method. Returns the new (updated) recovery-codes
-    /// hash that must be persisted.
+    /// Redeems the recovery code whose hash is <paramref name="codeHash"/>:
+    /// its line is replaced with a <c>"used:&lt;epoch&gt;"</c> marker so the
+    /// code can never be used twice. Returns <c>false</c> when no unused
+    /// code matches.
     /// </summary>
-    public void RecordRecoveryCodeUsed(string updatedRecoveryCodesHash, DateTimeOffset at)
+    public bool TryConsumeRecoveryCode(string codeHash, DateTimeOffset at)
     {
-        RecoveryCodesHash = updatedRecoveryCodesHash;
+        List<string> lines = RecoveryCodeLines();
+        int matchIndex = lines.FindIndex(line => string.Equals(line, codeHash, StringComparison.Ordinal));
+        if (matchIndex < 0)
+        {
+            return false;
+        }
+
+        lines[matchIndex] = $"{UsedRecoveryCodeMarker}{at.ToUnixTimeSeconds()}";
+        RecoveryCodesHash = string.Join('\n', lines);
         UpdatedAt = at;
+        return true;
     }
+
+    private List<string> RecoveryCodeLines() =>
+        [.. RecoveryCodesHash.Split('\n', StringSplitOptions.RemoveEmptyEntries)];
 
     /// <summary>
     /// Disables the credential. Idempotent. The application

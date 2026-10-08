@@ -1,5 +1,4 @@
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Workspaces.Errors;
 using Cardscape.Domain.Workspaces.Events;
 using static Cardscape.Domain.Workspaces.Errors.WorkspaceErrors;
 
@@ -14,6 +13,9 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
 {
     public WorkspaceName Name { get; private set; } = null!;
     public Guid OwnerId { get; private set; }
+
+    /// <summary>True when <paramref name="userId"/> owns this workspace.</summary>
+    public bool IsOwnedBy(Guid userId) => userId == OwnerId;
     public bool IsArchived { get; private set; }
 
     /// <summary>Geographic data-residency region. When the
@@ -82,7 +84,7 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
             return Result.Failure(InsufficientPermissions);
         }
 
-        if (newName.Value == Name.Value)
+        if (newName == Name)
         {
             return Result.Success();
         }
@@ -161,7 +163,7 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
     /// <summary>Removes a member. The owner cannot be removed.</summary>
     public Result RemoveMember(Guid userId, DateTimeOffset at)
     {
-        if (userId == OwnerId)
+        if (IsOwnedBy(userId))
         {
             return Result.Failure(CannotRemoveOwner);
         }
@@ -187,7 +189,7 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
             return Result.Failure(NotMember);
         }
 
-        var changeResult = member.ChangeRole(newRole, isOwner: userId == OwnerId);
+        var changeResult = member.ChangeRole(newRole, isOwner: IsOwnedBy(userId));
         if (changeResult.IsFailure)
         {
             return changeResult;
@@ -209,7 +211,7 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
     /// <see cref="GuardRegion"/>.</summary>
     public Result SetRegion(Region newRegion, Guid actingUserId, DateTimeOffset at)
     {
-        if (actingUserId != OwnerId)
+        if (!IsOwnedBy(actingUserId))
         {
             return Result.Failure(CannotChangeRegion);
         }
@@ -238,7 +240,7 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
     /// </summary>
     public Result SetRequireTwoFactor(bool require, Guid actingUserId, DateTimeOffset at)
     {
-        if (actingUserId != OwnerId)
+        if (!IsOwnedBy(actingUserId))
         {
             return Result.Failure(InsufficientPermissions);
         }

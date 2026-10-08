@@ -13,7 +13,7 @@ public sealed class AutomationRuleRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<BoardAutomationRule>> ListForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {
-        return await Db.Set<BoardAutomationRule>()
+        return await Set
             .AsNoTracking()
             .Where(rule => rule.BoardId == boardId)
             .OrderBy(rule => rule.Position)
@@ -23,7 +23,7 @@ public sealed class AutomationRuleRepository(CardscapeDbContext db)
     public async Task<IReadOnlyList<BoardAutomationRule>> ListEnabledForBoardAsync(
         BoardId boardId, CancellationToken ct = default)
     {
-        return await Db.Set<BoardAutomationRule>()
+        return await Set
             .AsNoTracking()
             .Where(rule => rule.BoardId == boardId && rule.IsEnabled)
             .OrderBy(rule => rule.Position)

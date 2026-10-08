@@ -1,17 +1,13 @@
-using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Voting;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Lists;
 using Cardscape.Domain.Voting;
 using Cardscape.Tests.Common.Fakes;
-using FluentAssertions;
-using Xunit;
 
 namespace Cardscape.UnitTests.Voting;
 
-public class CardVoteTests
+public sealed class CardVoteTests
 {
     [Fact]
     public void Create_With_Empty_User_Fails()

@@ -3,9 +3,6 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
-using Cardscape.Domain.UserPreferences;
-using Cardscape.Domain.Workspaces;
-using Wolverine;
 
 namespace Cardscape.Application.Users.Commands;
 /// <summary>Sets or clears the system-admin role on a user.

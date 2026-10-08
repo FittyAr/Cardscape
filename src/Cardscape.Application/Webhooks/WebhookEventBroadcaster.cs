@@ -13,20 +13,11 @@ namespace Cardscape.Application.Webhooks;
 /// Core collaborators are resolved per outbox invocation because this
 /// broadcaster is registered as a singleton.
 /// </summary>
-public sealed partial class WebhookEventBroadcaster : IDomainEventBroadcaster
+public sealed partial class WebhookEventBroadcaster(
+    IServiceScopeFactory scopeFactory,
+    ILogger<WebhookEventBroadcaster> logger) : IDomainEventBroadcaster
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<WebhookEventBroadcaster> _logger;
-
-    public WebhookEventBroadcaster(
-        IServiceScopeFactory scopeFactory,
-        ILogger<WebhookEventBroadcaster> logger)
-    {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
-    }
 
     public Task BroadcastAsync(IDomainEvent domainEvent, CancellationToken ct = default) =>
         domainEvent switch

@@ -1,7 +1,6 @@
 using System.Net;
 using System.Text;
 using Cardscape.Domain.Integrations.Slack;
-using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Integrations;
 using Cardscape.Tests.Common.Fakes;
 

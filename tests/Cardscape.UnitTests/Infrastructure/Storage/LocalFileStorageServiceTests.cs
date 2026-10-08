@@ -51,25 +51,30 @@ public sealed class LocalFileStorageServiceTests
         Directory.GetFiles(directory.Path, "*", SearchOption.AllDirectories).Should().BeEmpty();
     }
 
-    private sealed class ControlledCopyStream : MemoryStream
+    [Fact]
+    public async Task SaveAsync_KeyEscapingIntoASiblingDirectoryWithTheSamePrefix_IsRejected()
     {
-        private readonly byte[] _bytes;
-        private readonly Action? _duringCopy;
-        private readonly bool _failAfterWrite;
-        private readonly bool _cancel;
+        using var directory = new TemporaryDirectory();
+        string root = Path.Combine(directory.Path, "storage");
+        var sut = new LocalFileStorageService(root);
 
-        public ControlledCopyStream(
-            byte[] bytes,
-            Action? duringCopy = null,
-            bool failAfterWrite = false,
-            bool cancel = false)
-            : base(bytes)
-        {
-            _bytes = bytes;
-            _duringCopy = duringCopy;
-            _failAfterWrite = failAfterWrite;
-            _cancel = cancel;
-        }
+        Func<Task> act = () => sut.SaveAsync(
+            "../storage2/escaped.txt", new MemoryStream([1]), "text/plain");
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        File.Exists(Path.Combine(directory.Path, "storage2", "escaped.txt")).Should().BeFalse();
+    }
+
+    private sealed class ControlledCopyStream(
+        byte[] bytes,
+        Action? duringCopy = null,
+        bool failAfterWrite = false,
+        bool cancel = false) : MemoryStream(bytes)
+    {
+        private readonly byte[] _bytes = bytes;
+        private readonly Action? _duringCopy = duringCopy;
+        private readonly bool _failAfterWrite = failAfterWrite;
+        private readonly bool _cancel = cancel;
 
         public override async Task CopyToAsync(
             Stream destination,

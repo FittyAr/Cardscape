@@ -3,10 +3,6 @@ using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.Setup.Commands;
 using Cardscape.Application.Setup.DTOs;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Configuration;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Setup;

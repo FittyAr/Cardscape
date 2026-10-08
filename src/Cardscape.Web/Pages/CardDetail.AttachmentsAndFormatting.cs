@@ -1,18 +1,12 @@
 using System.Globalization;
-using Cardscape.Web.Resources;
 using Cardscape.Web.Services;
-using Cardscape.Web.Services.Api;
 using Cardscape.Web.Shared;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 using Radzen;
-using Radzen.Blazor;
 
 namespace Cardscape.Web.Pages;
 
-public partial class CardDetail
+public sealed partial class CardDetail
 {
     private string FieldKindLabel(CustomFieldKind kind) => kind switch
     {
@@ -67,7 +61,7 @@ public partial class CardDetail
             ApiResult<AttachmentDto> result = await Attachments.UploadAsync(
                 CardId, stream, file.Name, file.ContentType ?? "application/octet-stream");
             CaptureCommandOutcome(result, L["CardChooseAttachment"]);
-            if (result.IsSuccess && result.Value is not null)
+            if (result.HasValue)
             {
                 _attachments = [.. (_attachments ?? []), result.Value];
                 _attachmentsError = null;
@@ -88,7 +82,7 @@ public partial class CardDetail
             return;
         }
         await JS.InvokeVoidAsync(
-            "downloadFromBytes",
+            "cardscape.downloadFromBytes",
             attachment.FileName,
             "application/octet-stream",
             Convert.ToBase64String(result.Value));

@@ -1,16 +1,19 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
+using Cardscape.Application.Abstractions.Security;
 using Cardscape.Infrastructure.Ai;
+using Cardscape.Infrastructure.Authentication;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Hosting;
 using Cardscape.Infrastructure.Security;
 using Cardscape.Tests.Common.Fakes;
-using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Moq;
+using StackExchange.Redis;
 
 namespace Cardscape.UnitTests.Hosting;
 
@@ -157,7 +160,25 @@ public sealed class InfrastructureOptionsValidationTests
         }
     }
 
-    private static IHost CreateHost(IReadOnlyDictionary<string, string?> overrides)
+    [Fact]
+    public void RedisBackends_ResolveFromTheContainer()
+    {
+        using IHost host = CreateHost(
+            new Dictionary<string, string?>
+            {
+                ["Cardscape:Infrastructure:Redis:ConnectionString"] = "localhost:6379",
+                ["Cardscape:Infrastructure:RateLimiter:Backend"] = "Redis",
+                ["Cardscape:Infrastructure:PendingTotpStore:Backend"] = "Redis"
+            },
+            services => services.AddSingleton(new Mock<IConnectionMultiplexer>().Object));
+
+        host.Services.GetRequiredService<IRateLimiter>().Should().BeOfType<RedisRateLimiter>();
+        host.Services.GetRequiredService<IPendingTotpLoginStore>().Should().BeOfType<RedisPendingTotpLoginStore>();
+    }
+
+    private static IHost CreateHost(
+        IReadOnlyDictionary<string, string?> overrides,
+        Action<IServiceCollection>? configureServices = null)
     {
         HostApplicationBuilder builder = Host.CreateApplicationBuilder();
         builder.Logging.ClearProviders();
@@ -175,6 +196,7 @@ public sealed class InfrastructureOptionsValidationTests
         builder.Configuration.AddInMemoryCollection(configuration);
         builder.Services.AddSingleton<IClock>(new FakeClock());
         builder.Services.AddCardscapeInfrastructure(builder.Configuration);
+        configureServices?.Invoke(builder.Services);
         return builder.Build();
     }
 }

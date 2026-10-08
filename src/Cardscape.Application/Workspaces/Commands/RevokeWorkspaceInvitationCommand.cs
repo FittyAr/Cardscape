@@ -36,7 +36,7 @@ public static class RevokeWorkspaceInvitationCommandHandler
 
         var workspace = await workspaces.GetWithMembersAsync(
             invitation.WorkspaceId, cancellationToken);
-        if (workspace is null || workspace.OwnerId != currentUser.Id.Value)
+        if (workspace is null || !workspace.IsOwnedBy(currentUser.Id.Value))
         {
             return Result.Failure(DomainError.Forbidden(
                 "workspaces.not_owner", "Only the workspace owner can revoke invitations."));

@@ -32,7 +32,7 @@ public static class ListWorkspaceInvitationsQueryHandler
                 "workspaces.not_found", "Workspace was not found."));
         }
 
-        if (workspace.OwnerId != currentUser.Id.Value)
+        if (!workspace.IsOwnedBy(currentUser.Id.Value))
         {
             return Result.Failure<IReadOnlyList<WorkspaceInvitationDto>>(DomainError.Forbidden(
                 "workspaces.not_owner", "Only the workspace owner can list invitations."));

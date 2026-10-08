@@ -4,8 +4,6 @@ using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-
-
 namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class SlackWorkspaceRepository(CardscapeDbContext db)
@@ -20,8 +18,8 @@ public sealed class SlackWorkspaceRepository(CardscapeDbContext db)
             return [];
         }
 
-        HashSet<SlackWorkspaceId> wanted = new(ids);
-        return await Db.Set<SlackWorkspace>()
+        HashSet<SlackWorkspaceId> wanted = [.. ids];
+        return await Set
             .Where(workspace => wanted.Contains(workspace.Id) && !workspace.IsDeleted)
             .ToListAsync(ct);
     }
@@ -29,14 +27,10 @@ public sealed class SlackWorkspaceRepository(CardscapeDbContext db)
     public async Task<SlackWorkspace?> FindForWorkspaceAsync(
         WorkspaceId workspaceId, CancellationToken ct = default)
     {
-        IQueryable<SlackWorkspace> query = Db.Set<SlackWorkspace>()
+        IQueryable<SlackWorkspace> query = Set
             .Where(workspace => workspace.WorkspaceId == workspaceId && !workspace.IsDeleted);
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderByDescending(workspace => workspace.CreatedAt).FirstOrDefaultAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        return rows.MaxBy(workspace => workspace.CreatedAt);
+        List<SlackWorkspace> newest = await query.ToListOrderedAsync(
+            Db, workspace => workspace.CreatedAt, descending: true, take: 1, ct: ct);
+        return newest.FirstOrDefault();
     }
 }

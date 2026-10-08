@@ -2,8 +2,6 @@ using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
-
-
 namespace Cardscape.Infrastructure.Repositories;
 
 /// <summary>Generic EF Core implementation of <see cref="IRepository{T, TId}"/>.</summary>
@@ -15,7 +13,7 @@ public abstract class RepositoryBase<TEntity, TId>(DbContext db) : IRepository<T
     protected DbSet<TEntity> Set => Db.Set<TEntity>();
 
     public virtual async Task<TEntity?> GetByIdAsync(TId id, CancellationToken ct = default) =>
-        await Set.FindAsync(new object?[] { id }, ct);
+        await Set.FindAsync([id], ct);
 
     public virtual async Task AddAsync(TEntity aggregate, CancellationToken ct = default) =>
         await Set.AddAsync(aggregate, ct);

@@ -5,7 +5,7 @@
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
 @using Microsoft.Extensions.Localization
-@inject HttpClient Http
+@inject IImportsApiClient ImportsApi
 @inject IWorkspacesApiClient WorkspacesApi
 @inject IStringLocalizer<SharedResource> L
 
@@ -228,49 +228,19 @@
 
     private async Task<ImportResultDto> PostImportAsync(bool previewOnly)
     {
-        using MultipartFormDataContent content = new();
-        using StreamContent fileContent = new(form.File!.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024));
-        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-        content.Add(fileContent, "file", form.File.Name);
-        content.Add(new StringContent(Id.ToString()), "targetWorkspaceId");
-        string action = previewOnly ? "preview" : "apply";
-        using HttpResponseMessage response = await Http.PostAsync(
-            $"api/imports/kanban/{action}", content, CancellationToken.None);
-        if (response.IsSuccessStatusCode)
+        await using Stream file = form.File!.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
+        ApiResult<ImportResultDto> result = await ImportsApi.ImportKanbanAsync(
+            Id, file, form.File.Name, previewOnly);
+        if (result.HasValue)
         {
-            return await response.Content.ReadFromJsonAsync<ImportResultDto>()
-                   ?? new ImportResultDto();
+            return result.Value;
         }
 
-        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
-        throw new InvalidOperationException(
-            $"{(int)response.StatusCode}: {body}");
+        throw new InvalidOperationException(result.Error ?? L["ImportFailed"]);
     }
 
     private sealed class ImportForm
     {
         public Radzen.FileInfo? File { get; set; }
-    }
-
-    private sealed class ImportResultDto
-    {
-        public IReadOnlyList<Guid> ImportedBoardIds { get; set; } = [];
-        public IReadOnlyList<Guid> ImportedListIds { get; set; } = [];
-        public IReadOnlyList<Guid> ImportedCardIds { get; set; } = [];
-        public IReadOnlyList<Guid> ImportedLabelIds { get; set; } = [];
-        public ImportPreviewDto? Preview { get; set; }
-    }
-
-    private sealed class ImportPreviewDto
-    {
-        public int BoardCount { get; set; }
-        public int ListCount { get; set; }
-        public int CardCount { get; set; }
-        public int LabelCount { get; set; }
-        public int MemberCount { get; set; }
-        public IReadOnlyList<string> SampleBoardNames { get; set; } = [];
-        public IReadOnlyList<string> SampleListNames { get; set; } = [];
-        public IReadOnlyList<string> SampleCardNames { get; set; } = [];
-        public bool WasApplied { get; set; }
     }
 }

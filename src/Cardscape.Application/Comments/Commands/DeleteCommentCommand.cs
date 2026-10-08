@@ -1,12 +1,10 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Application.Comments.DTOs;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Comments;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Members;
 using Wolverine;
 using static Cardscape.Domain.Comments.Errors.CommentErrors;
 

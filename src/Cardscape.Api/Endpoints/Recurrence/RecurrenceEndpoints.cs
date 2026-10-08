@@ -1,8 +1,5 @@
 using Cardscape.Application.Recurrence;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Recurrence;
@@ -46,19 +43,18 @@ public static class RecurrenceEndpoints
         {
             var result = await bus.InvokeAsync<Result<CardRecurrenceDto>>(
                 new SetCardRecurrenceCommand(cardId, body.IntervalDays, body.FirstOccurrenceAt), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<CardRecurrenceDto>();
 
         group.MapDelete("/", async (Guid cardId, IMessageBus bus, CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
                 new DeleteCardRecurrenceCommand(cardId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         return app;
     }
 
     public sealed record RecurrenceBody(int IntervalDays, DateTimeOffset FirstOccurrenceAt);
-
 }

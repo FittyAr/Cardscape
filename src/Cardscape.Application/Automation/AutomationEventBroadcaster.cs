@@ -2,7 +2,6 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.Logging;
-using Cardscape.Application.Realtime;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Cards.Events;
@@ -39,21 +38,13 @@ namespace Cardscape.Application.Automation;
 /// outbox delivery can complete before the scope is disposed.
 /// </para>
 /// </summary>
-public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
+public sealed class AutomationEventBroadcaster(
+    IServiceScopeFactory scopeFactory,
+    IClock clock,
+    ILogger<AutomationEventBroadcaster> logger) : IDomainEventBroadcaster
 {
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly IClock _clock;
-    private readonly ILogger<AutomationEventBroadcaster> _logger;
-
-    public AutomationEventBroadcaster(
-        IServiceScopeFactory scopeFactory,
-        IClock clock,
-        ILogger<AutomationEventBroadcaster> logger)
-    {
-        _scopeFactory = scopeFactory;
-        _clock = clock;
-        _logger = logger;
-    }
+    private readonly IClock _clock = clock;
+    private readonly ILogger<AutomationEventBroadcaster> _logger = logger;
 
     public Task BroadcastAsync(IDomainEvent domainEvent, CancellationToken ct = default) =>
         domainEvent switch
@@ -70,7 +61,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
             // automation broadcast" flag via AsyncLocal so
             // the self-trigger is dropped without having to
             // thread an actor id through every Card method.
-            var e when InAutomationBroadcast => Task.CompletedTask,
+            var _ when InAutomationBroadcast => Task.CompletedTask,
             CardCreated e => HandleCardCreatedAsync(e, ct),
             CardMoved e => HandleCardMoved(e, ct),
             CardCompleted e => HandleCardCompleted(e, ct),
@@ -150,7 +141,7 @@ public sealed class AutomationEventBroadcaster : IDomainEventBroadcaster
         AutomationBroadcastState.Value = true;
         try
         {
-            await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
+            await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
             ICardRepository cards = scope.ServiceProvider.GetRequiredService<ICardRepository>();
             IBoardListRepository lists = scope.ServiceProvider.GetRequiredService<IBoardListRepository>();
             IAutomationRuleRepository rules = scope.ServiceProvider.GetRequiredService<IAutomationRuleRepository>();

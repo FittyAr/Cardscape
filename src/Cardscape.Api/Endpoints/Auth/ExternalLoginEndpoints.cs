@@ -1,8 +1,6 @@
 using System.Security.Claims;
 using Cardscape.Api.Extensions;
 using Cardscape.Application.Abstractions;
-using Cardscape.Application.Abstractions.Authentication;
-using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.Authentication.ExternalLogins;
@@ -10,14 +8,6 @@ using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Domain.Authentication.ExternalLogins.Errors;
 using Cardscape.Domain.Common;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Configuration;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Auth;
@@ -44,10 +34,9 @@ namespace Cardscape.Api.Endpoints.Auth;
 /// <c>AppleClientSecretGenerator</c> (ES256-signed JWT
 /// regenerated per request) — the OIDC handler is only
 /// registered when the full <c>Authentication:Apple:*</c>
-/// configuration block is present; otherwise the
-/// <see cref="ExternalProviderExtensions.IsKnown"/>
-/// check on the <c>apple</c> provider keeps the start
-/// endpoint hidden when the provider is not configured.
+/// configuration block is present; otherwise the start endpoint's
+/// sign-in availability check keeps it hidden when the provider is
+/// not configured.
 /// </summary>
 public static class ExternalLoginEndpoints
 {
@@ -62,7 +51,7 @@ public static class ExternalLoginEndpoints
             CancellationToken ct) =>
         {
             ct.ThrowIfCancellationRequested();
-            if (!ExternalProviderExtensions.TryParse(provider, out var parsed))
+            if (!ExternalProvider.TryParse(provider, out var parsed))
             {
                 return DomainErrorResults.ToProblem(ExternalLoginErrors.UnknownProvider);
             }
@@ -83,7 +72,7 @@ public static class ExternalLoginEndpoints
                     ["cardscape.returnUrl"] = NormalizeReturnUrl(returnUrl)
                 }
             };
-            return Results.Challenge(properties, new[] { scheme });
+            return Results.Challenge(properties, [scheme]);
         }).Produces(StatusCodes.Status302Found);
 
         group.MapGet("/{provider}/callback", async (
@@ -95,7 +84,7 @@ public static class ExternalLoginEndpoints
             IConfiguration configuration,
             CancellationToken ct) =>
         {
-            if (!ExternalProviderExtensions.TryParse(provider, out var parsed))
+            if (!ExternalProvider.TryParse(provider, out var parsed))
             {
                 return DomainErrorResults.ToProblem(ExternalLoginErrors.UnknownProvider);
             }

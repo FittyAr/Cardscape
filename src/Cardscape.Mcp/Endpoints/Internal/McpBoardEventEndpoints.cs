@@ -1,7 +1,5 @@
+using Cardscape.Infrastructure.Configuration;
 using Cardscape.Mcp.Realtime;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 
 namespace Cardscape.Mcp.Endpoints.Internal;
 
@@ -28,7 +26,6 @@ namespace Cardscape.Mcp.Endpoints.Internal;
 /// </summary>
 public static class McpBoardEventEndpoints
 {
-    public const string SecretHeader = "X-Internal-Secret";
 
     public static IEndpointRouteBuilder MapMcpBoardEventEndpoints(this IEndpointRouteBuilder app)
     {
@@ -89,7 +86,7 @@ public static class McpBoardEventEndpoints
             return false;
         }
 
-        string? provided = http.Request.Headers[SecretHeader];
+        string? provided = http.Request.Headers[InternalSecret.HeaderName];
         return string.Equals(provided, expected, StringComparison.Ordinal);
     }
 

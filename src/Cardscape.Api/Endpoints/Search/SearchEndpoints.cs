@@ -1,9 +1,6 @@
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Application.Search;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Search;
@@ -50,10 +47,9 @@ public static class SearchEndpoints
                     Page: page ?? 1,
                     PageSize: pageSize ?? 20),
                 ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<SearchPageDto>();
 
         return app;
     }
-
 }

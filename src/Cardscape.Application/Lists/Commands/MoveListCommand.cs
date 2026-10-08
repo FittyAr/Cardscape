@@ -8,7 +8,6 @@ using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
 using Wolverine;
-using static Cardscape.Domain.Lists.Errors.ListErrors;
 
 namespace Cardscape.Application.Lists.Commands;
 
@@ -102,13 +101,6 @@ public static class MoveListCommandHandler
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new BoardListDto(
-            list.Id.Value,
-            list.BoardId.Value,
-            list.Name.Value,
-            list.Position.Value,
-            list.IsArchived,
-            list.CreatedAt,
-            0));
+        return Result.Success(BoardListDto.FromEntity(list));
     }
 }

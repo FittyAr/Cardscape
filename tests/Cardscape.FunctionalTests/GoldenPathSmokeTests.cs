@@ -3,8 +3,6 @@ using Cardscape.Application.Boards.DTOs;
 using Cardscape.Application.Cards.DTOs;
 using Cardscape.Application.Lists.DTOs;
 using Cardscape.Application.Workspaces.DTOs;
-using Cardscape.Domain.Boards;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Cardscape.FunctionalTests;
 
@@ -19,16 +17,12 @@ namespace Cardscape.FunctionalTests;
 /// client would: it never reaches into the database directly,
 /// it only talks to the API through the in-process test server.
 /// </summary>
-public sealed class GoldenPathSmokeTests : IClassFixture<CardscapeWebApplicationFactory>
+public sealed class GoldenPathSmokeTests(CardscapeWebApplicationFactory factory) : IClassFixture<CardscapeWebApplicationFactory>
 {
-    private readonly CardscapeWebApplicationFactory _factory;
-
-    public GoldenPathSmokeTests(CardscapeWebApplicationFactory factory) => _factory = factory;
-
     [Fact]
     public async Task GoldenPath_RegisterCreateWorkspaceBoardListCard_MoveAndArchive_AllSucceed()
     {
-        using HttpClient client = _factory.CreateApiClient();
+        using HttpClient client = factory.CreateApiClient();
 
         // ── 1. Register ───────────────────────────────────────
         string suffix = Guid.NewGuid().ToString("N")[..8];

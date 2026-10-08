@@ -3,7 +3,6 @@ using Cardscape.Application.Abstractions.Integrations;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Cards.Commands;
 using Cardscape.Application.Cards.DTOs;
-using Cardscape.Application.Common;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Integrations.InboundEmail;
 using Wolverine;

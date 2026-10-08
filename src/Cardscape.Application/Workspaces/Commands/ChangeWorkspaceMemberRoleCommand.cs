@@ -35,7 +35,7 @@ public static class ChangeWorkspaceMemberRoleCommandHandler
             return Result.Failure<WorkspaceDto>(NotFound);
         }
 
-        if (workspace.OwnerId != currentUser.Id.Value)
+        if (!workspace.IsOwnedBy(currentUser.Id.Value))
         {
             return Result.Failure<WorkspaceDto>(InsufficientPermissions);
         }

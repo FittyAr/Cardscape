@@ -1,3 +1,4 @@
+using System.Buffers.Text;
 using System.Security.Cryptography;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
@@ -55,11 +56,7 @@ public sealed class ScimToken : AggregateRoot<ScimTokenId>
         // The prefix is the first 8 characters — used in the
         // audit log so an admin can identify "which token
         // was used" without ever storing the full secret.
-        byte[] bytes = RandomNumberGenerator.GetBytes(32);
-        string plaintext = Convert.ToBase64String(bytes)
-            .Replace('+', '-')
-            .Replace('/', '_')
-            .TrimEnd('=');
+        string plaintext = Base64Url.EncodeToString(RandomNumberGenerator.GetBytes(32));
         string prefix = plaintext[..8];
         string hash = HashPlaintext(plaintext);
 

@@ -23,7 +23,7 @@ public sealed record CommentBody : IValueObject
 
         var trimmed = input.Trim();
 
-        if (trimmed.Length < MinLength || trimmed.Length > MaxLength)
+        if (trimmed.Length is < MinLength or > MaxLength)
         {
             return Result.Failure<CommentBody>(DomainError.Validation(
                 "comments.body.length",

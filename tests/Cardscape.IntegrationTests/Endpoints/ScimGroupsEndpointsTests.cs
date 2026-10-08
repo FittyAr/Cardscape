@@ -19,7 +19,7 @@ namespace Cardscape.IntegrationTests.Endpoints;
 /// non-conformant; these two tests close the gap).
 /// </summary>
 [Collection(CardscapeApi.Name)]
-public class ScimGroupsEndpointsTests
+public sealed class ScimGroupsEndpointsTests
 {
     private readonly CardscapeWebApplicationFactory _factory;
 

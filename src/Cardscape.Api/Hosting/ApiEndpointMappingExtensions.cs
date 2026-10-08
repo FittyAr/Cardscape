@@ -1,4 +1,3 @@
-using Cardscape.Api.BackgroundJobs;
 using Cardscape.Api.Endpoints.Activities;
 using Cardscape.Api.Endpoints.Admin;
 using Cardscape.Api.Endpoints.Ai;
@@ -32,20 +31,8 @@ using Cardscape.Api.Endpoints.Users;
 using Cardscape.Api.Endpoints.Voting;
 using Cardscape.Api.Endpoints.Webhooks;
 using Cardscape.Api.Endpoints.Workspaces;
-using Cardscape.Api.Extensions;
 using Cardscape.Api.Hubs;
-using Cardscape.Api.Middleware;
-using Cardscape.Api.OpenApi;
-using Cardscape.Api.Realtime;
-using Cardscape.Application.Abstractions.Realtime;
-using Cardscape.Application.DependencyInjection;
-using Cardscape.Application.Realtime;
-using Cardscape.Infrastructure.DependencyInjection;
-using Cardscape.Infrastructure.Logging;
-using Cardscape.Infrastructure.Persistence;
-using Cardscape.Seeder.DependencyInjection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 namespace Cardscape.Api.Hosting;

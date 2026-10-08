@@ -22,6 +22,18 @@ window.cardscape.hideErrorUi = function () {
     element.style.display = 'none';
 };
 
+// copyText: puts `text` on the clipboard. Resolves to false instead of
+// throwing when the browser refuses (insecure context, denied permission),
+// so callers can leave the value visible for manual copying.
+window.cardscape.copyText = async function (text) {
+    try {
+        await navigator.clipboard.writeText(text ?? '');
+        return true;
+    } catch {
+        return false;
+    }
+};
+
 // downloadTextFile: writes `content` to a file and triggers
 // a browser download. The MIME type is passed through so
 // the same helper serves CSV (text/csv) and JSON

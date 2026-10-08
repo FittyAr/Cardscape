@@ -1,7 +1,6 @@
 using System.Text;
 using Cardscape.Api.Authentication;
-using Cardscape.Application.Abstractions.Authentication;
-using Cardscape.Infrastructure.Authentication;
+using Cardscape.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Cardscape.Api.Extensions;
@@ -13,10 +12,7 @@ public static partial class ServiceCollectionExtensions
         services.AddHttpClient(SamlAuthenticationHandler.MetadataHttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromSeconds(10);
-        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-            AllowAutoRedirect = false
-        });
+        }).WithoutAutoRedirect();
     }
 
     private static string ResolveJwtSigningKey(IConfiguration configuration)

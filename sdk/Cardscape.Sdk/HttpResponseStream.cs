@@ -1,5 +1,3 @@
-using System.Net.Http;
-
 namespace Cardscape.Sdk;
 
 internal sealed class HttpResponseStream(Stream content, HttpResponseMessage response) : Stream

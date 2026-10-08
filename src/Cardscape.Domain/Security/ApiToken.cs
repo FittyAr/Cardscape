@@ -34,6 +34,9 @@ public sealed class ApiToken : AggregateRoot<ApiTokenId>
     /// <summary>Owner of the token.</summary>
     public UserId UserId { get; private set; } = null!;
 
+    /// <summary>True when the token was issued to <paramref name="userId"/>.</summary>
+    public bool IsOwnedBy(UserId userId) => UserId == userId;
+
     /// <summary>Human-readable label (e.g. "Cursor on laptop").</summary>
     public ApiTokenName Name { get; private set; } = null!;
 

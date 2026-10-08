@@ -85,7 +85,7 @@
     protected override async Task OnInitializedAsync()
     {
         var result = await SlackApi.GetAsync(WorkspaceId);
-        if (result.IsSuccess && result.Value is not null)
+        if (result.HasValue)
         {
             workspace = result.Value;
         }

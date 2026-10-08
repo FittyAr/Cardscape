@@ -60,15 +60,6 @@
 
     [Parameter] public RenderFragment? Actions { get; set; }
 
-    private async Task CopyAsync(string value)
-    {
-        try
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", value);
-        }
-        catch (JSException)
-        {
-            // Clipboard denied (insecure context); the value stays selectable on screen.
-        }
-    }
+    // Clipboard may be refused (insecure context); the value stays selectable on screen.
+    private async Task CopyAsync(string value) => await JS.InvokeAsync<bool>("cardscape.copyText", value);
 }

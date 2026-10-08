@@ -1,4 +1,5 @@
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -24,28 +25,21 @@ public sealed class WorkspaceInvitationRepository(CardscapeDbContext db)
             return null;
         }
 
-        return await Db.Set<WorkspaceInvitation>()
+        return await Set
             .FirstOrDefaultAsync(i => i.TokenHash == tokenHash, ct);
     }
 
     public async Task<IReadOnlyList<WorkspaceInvitation>> ListForWorkspaceAsync(
         Guid workspaceId, bool includeTerminal, CancellationToken ct = default)
     {
-        IQueryable<WorkspaceInvitation> query = Db.Set<WorkspaceInvitation>()
+        IQueryable<WorkspaceInvitation> query = Set
             .AsNoTracking()
             .Where(invitation => invitation.WorkspaceId == new WorkspaceId(workspaceId));
         if (!includeTerminal)
         {
             query = query.Where(invitation => invitation.AcceptedAt == null && invitation.RevokedAt == null);
         }
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderByDescending(invitation => invitation.InvitedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => b.InvitedAt.CompareTo(a.InvitedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, invitation => invitation.InvitedAt, descending: true, ct: ct);
     }
 
     public async Task<IReadOnlyList<WorkspaceInvitation>> ListPendingForEmailAsync(
@@ -56,20 +50,13 @@ public sealed class WorkspaceInvitationRepository(CardscapeDbContext db)
             return [];
         }
 
-        var normalized = email.Trim().ToLowerInvariant();
-        IQueryable<WorkspaceInvitation> query = Db.Set<WorkspaceInvitation>()
+        var normalized = EmailAddress.Normalize(email);
+        IQueryable<WorkspaceInvitation> query = Set
             .AsNoTracking()
             .Where(invitation =>
                 invitation.Email == normalized
                 && invitation.AcceptedAt == null
                 && invitation.RevokedAt == null);
-        if (!Db.Database.IsSqlite())
-        {
-            return await query.OrderByDescending(invitation => invitation.InvitedAt).ToListAsync(ct);
-        }
-
-        var rows = await query.ToListAsync(ct);
-        rows.Sort((a, b) => b.InvitedAt.CompareTo(a.InvitedAt));
-        return rows;
+        return await query.ToListOrderedAsync(Db, invitation => invitation.InvitedAt, descending: true, ct: ct);
     }
 }

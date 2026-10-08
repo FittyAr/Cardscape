@@ -21,21 +21,14 @@ namespace Cardscape.Infrastructure.Integrations;
 /// <c>{"ok": false, "error": "..."}</c>) is surfaced as a domain
 /// <see cref="ErrorType.External"/> failure.</para>
 /// </summary>
-public sealed class HttpSlackNotificationService : ISlackNotificationService
+public sealed class HttpSlackNotificationService(HttpClient http, ISecretProtector secrets) : ISlackNotificationService
 {
     private const string ChatPostMessagePath = "chat.postMessage";
     private const int MaxResponseBytes = 1024 * 1024;
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerOptions.Web;
 
-    private readonly HttpClient _http;
-    private readonly ISecretProtector _secrets;
-
-    public HttpSlackNotificationService(HttpClient http, ISecretProtector secrets)
-    {
-        _http = http;
-        _secrets = secrets;
-    }
+    private readonly HttpClient _http = http;
 
     public async Task<Result> SendAsync(
         SlackWorkspace workspace,
@@ -58,7 +51,7 @@ public sealed class HttpSlackNotificationService : ISlackNotificationService
         string botToken;
         try
         {
-            botToken = _secrets.Unprotect(workspace.ProtectedBotToken);
+            botToken = secrets.Unprotect(workspace.ProtectedBotToken);
         }
         catch (Exception)
         {

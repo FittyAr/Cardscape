@@ -11,21 +11,14 @@ public static class LoggingConstants
     // ── Property / log-event names ─────────────────────────────
     public const string ServiceProperty = "Service";
     public const string ApplicationProperty = "Application";
-    public const string SourceProperty = "Source";
 
-    // ── HTTP / endpoint surface ─────────────────────────────────
-    public const string InternalSecretHeader = "X-Internal-Secret";
     // ── Path layout ─────────────────────────────────────────────
-    /// <summary>yyyy/MM/dd sub-folder appended under the log root.</summary>
-    public const string LogPathDateFormat = "yyyy/MM/dd";
-
     /// <summary>Default on-disk root. Resolved against the app's content root.</summary>
     public const string DefaultLogsRoot = "logs";
 
     // ── File name suffixes (appended before the .log) ──────────
     public const string AppFileSuffix = "app";
     public const string ErrorFileSuffix = "errors";
-    public const string AuditFileSuffix = "audit";
 
     // ── Output templates ────────────────────────────────────────
     public const string ConsoleTemplate =

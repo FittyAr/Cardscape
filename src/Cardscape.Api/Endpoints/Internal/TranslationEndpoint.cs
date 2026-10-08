@@ -1,8 +1,4 @@
-using System.Globalization;
 using System.Xml.Linq;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 
 namespace Cardscape.Api.Endpoints.Internal;
 

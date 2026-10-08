@@ -6,10 +6,9 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Webhooks;
-using Cardscape.Domain.Common;
+using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Webhooks;
 using Cardscape.Infrastructure.Logging;
-using Cardscape.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -24,37 +23,23 @@ namespace Cardscape.Infrastructure.BackgroundJobs;
 /// transport error throws so the existing backoff path in
 /// <c>BackgroundJob.MarkFailed</c> retries us automatically (5s,
 /// 10s, 20s, 40s, 80s, then dead-letter).</summary>
-public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
+public sealed class WebhookDeliveryHandler(
+    IServiceScopeFactory scopes,
+    IHttpClientFactory httpClientFactory,
+    ISecretProtector secretProtector,
+    ILogger<WebhookDeliveryHandler> logger) : IBackgroundJobHandler
 {
     /// <summary>HTTP client timeout for a single delivery attempt.</summary>
     public static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
 
     public string Type => WebhookJobTypes.DeliverWebhook;
 
-    private static readonly JsonSerializerOptions LogJsonOptions = new(JsonSerializerDefaults.Web);
-
-    private readonly IServiceScopeFactory _scopes;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ISecretProtector _secretProtector;
-    private readonly ILogger<WebhookDeliveryHandler> _logger;
-
-    public WebhookDeliveryHandler(
-        IServiceScopeFactory scopes,
-        IHttpClientFactory httpClientFactory,
-        ISecretProtector secretProtector,
-        ILogger<WebhookDeliveryHandler> logger)
-    {
-        _scopes = scopes;
-        _httpClientFactory = httpClientFactory;
-        _secretProtector = secretProtector;
-        _logger = logger;
-    }
 
     public async Task HandleAsync(Guid jobId, JsonElement payload, CancellationToken ct)
     {
         Guid deliveryId = ReadGuid(payload, "deliveryId");
 
-        await using AsyncServiceScope scope = _scopes.CreateAsyncScope();
+        await using AsyncServiceScope scope = scopes.CreateAsyncScope();
         var deliveries = scope.ServiceProvider.GetRequiredService<IWebhookDeliveryRepository>();
         var endpoints = scope.ServiceProvider.GetRequiredService<IWebhookEndpointRepository>();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
@@ -64,14 +49,14 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
             new WebhookDeliveryId(deliveryId), ct);
         if (delivery is null)
         {
-            _logger.WebhookDeliveryNotFound(deliveryId);
+            logger.WebhookDeliveryNotFound(deliveryId);
             return;
         }
 
         WebhookEndpoint? endpoint = await endpoints.GetByIdAsync(delivery.EndpointId, ct);
         if (endpoint is null)
         {
-            _logger.WebhookEndpointNotFound(deliveryId);
+            logger.WebhookEndpointNotFound(deliveryId);
             delivery.MarkDeadLettered("Endpoint not found.", clock.UtcNow);
             await unitOfWork.SaveChangesAsync(ct);
             return;
@@ -124,7 +109,7 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
                     $"URL no longer resolves to a public address: {ssrfCheck.Error.Message}",
                     clock.UtcNow);
                 await unitOfWork.SaveChangesAsync(ct);
-                _logger.WebhookRejectedBySsrf(delivery.Id.Value, ssrfCheck.Error.Message);
+                logger.WebhookRejectedBySsrf(delivery.Id.Value, ssrfCheck.Error.Message);
                 return;
             }
         }
@@ -133,7 +118,7 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
         try
         {
             byte[] bodyBytes = Encoding.UTF8.GetBytes(delivery.PayloadJson);
-            string cleartextSecret = _secretProtector.Unprotect(endpoint.ProtectedSecret);
+            string cleartextSecret = secretProtector.Unprotect(endpoint.ProtectedSecret);
             string signature = SignBody(cleartextSecret, bodyBytes);
 
             using HttpRequestMessage request = new(HttpMethod.Post, endpoint.Url)
@@ -147,7 +132,7 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
             request.Headers.TryAddWithoutValidation("X-Cardscape-Event", delivery.EventType);
             request.Headers.TryAddWithoutValidation("X-Cardscape-Delivery", delivery.Id.Value.ToString());
 
-            HttpClient httpClient = _httpClientFactory.CreateClient(WebhookHttpClientName);
+            HttpClient httpClient = httpClientFactory.CreateClient(WebhookHttpClientName);
             using HttpResponseMessage response = await httpClient.SendAsync(
                 request, HttpCompletionOption.ResponseHeadersRead, ct);
 
@@ -155,9 +140,9 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
             {
                 delivery.MarkSuccess(now);
                 await unitOfWork.SaveChangesAsync(ct);
-                if (_logger.IsEnabled(LogLevel.Information))
+                if (logger.IsEnabled(LogLevel.Information))
                 {
-                    _logger.WebhookDelivered(
+                    logger.WebhookDelivered(
                         delivery.Id.Value, delivery.EventType, (int)response.StatusCode);
                 }
                 return;
@@ -177,7 +162,7 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
             // The BackgroundJob has its own Attempts counter; we
             // share the same 5-attempt cap so a delivery's audit
             // trail matches the underlying job's lifecycle.
-            bool willDeadLetter = delivery.AttemptCount + 1 >= BackgroundJobMaxAttempts;
+            bool willDeadLetter = delivery.AttemptCount + 1 >= BackgroundJob.DefaultMaxAttempts;
             string failureKind = ex.GetType().Name;
             string persistedFailure = $"Delivery failed ({failureKind}).";
             if (willDeadLetter)
@@ -190,16 +175,11 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
             }
 
             await unitOfWork.SaveChangesAsync(ct);
-            _logger.WebhookDeliveryAttemptFailed(
+            logger.WebhookDeliveryAttemptFailed(
                 delivery.Id.Value, delivery.AttemptCount, failureKind, willDeadLetter);
             throw;
         }
     }
-
-    /// <summary>Mirror of <c>BackgroundJob.MaxAttempts</c> default.
-    /// Kept in sync by convention; the BackgroundJob dispatcher
-    /// is the source of truth for the actual retry budget.</summary>
-    private const int BackgroundJobMaxAttempts = 5;
 
     /// <summary>HMAC-SHA256 of <paramref name="body"/> keyed by
     /// <paramref name="cleartextSecret"/>. Returned in the
@@ -210,7 +190,7 @@ public sealed class WebhookDeliveryHandler : IBackgroundJobHandler
         byte[] keyBytes = Encoding.UTF8.GetBytes(cleartextSecret);
         Span<byte> signature = stackalloc byte[32];
         HMACSHA256.HashData(keyBytes, body, signature);
-        return "sha256=" + Convert.ToHexString(signature).ToLowerInvariant();
+        return "sha256=" + Convert.ToHexStringLower(signature);
     }
 
     private static Guid ReadGuid(JsonElement payload, string name)

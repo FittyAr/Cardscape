@@ -3,7 +3,6 @@ using Cardscape.Domain.Cards.Events;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Labels;
 using Cardscape.Domain.Lists;
-using static Cardscape.Domain.Cards.Errors.CardErrors;
 
 namespace Cardscape.Domain.Cards;
 
@@ -77,7 +76,7 @@ public sealed class Card : AggregateRoot<CardId>
             return Result.Failure(CardErrors.Archived);
         }
 
-        if (newTitle.Value == Title.Value)
+        if (newTitle == Title)
         {
             return Result.Success();
         }
@@ -95,7 +94,7 @@ public sealed class Card : AggregateRoot<CardId>
             return Result.Failure(CardErrors.Archived);
         }
 
-        if (newDescription.Value == Description.Value)
+        if (newDescription == Description)
         {
             return Result.Success();
         }
@@ -113,17 +112,18 @@ public sealed class Card : AggregateRoot<CardId>
             return Result.Failure(CardErrors.Archived);
         }
 
-        var sameList = newListId.Value == ListId.Value;
+        var sameList = newListId == ListId;
         var samePosition = Math.Abs(newPosition.Value - Position.Value) < double.Epsilon;
         if (sameList && samePosition)
         {
             return Result.Success();
         }
 
+        BoardListId previousListId = ListId;
         ListId = newListId;
         Position = newPosition;
         UpdatedAt = at;
-        AddDomainEvent(new CardMoved(Id, newListId, newPosition, at));
+        AddDomainEvent(new CardMoved(Id, previousListId, newListId, newPosition, at));
         return Result.Success();
     }
 
@@ -270,7 +270,7 @@ public sealed class Card : AggregateRoot<CardId>
             return Result.Failure(CardErrors.Archived);
         }
 
-        if (_cardLabels.Any(cl => cl.LabelId.Value == cardLabel.LabelId.Value))
+        if (_cardLabels.Any(cl => cl.LabelId == cardLabel.LabelId))
         {
             return Result.Success();
         }
@@ -288,7 +288,7 @@ public sealed class Card : AggregateRoot<CardId>
             return Result.Failure(CardErrors.Archived);
         }
 
-        var link = _cardLabels.FirstOrDefault(cl => cl.LabelId.Value == labelId.Value);
+        var link = _cardLabels.FirstOrDefault(cl => cl.LabelId == labelId);
         if (link is null)
         {
             return Result.Success();

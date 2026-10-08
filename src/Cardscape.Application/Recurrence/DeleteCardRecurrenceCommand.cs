@@ -4,7 +4,6 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Lists;
 using Cardscape.Domain.Recurrence;
 using Wolverine;
 

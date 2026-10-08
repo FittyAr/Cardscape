@@ -1,10 +1,7 @@
 using Cardscape.Api.Filters;
 using Cardscape.Application.Saml;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Saml;
@@ -72,7 +69,7 @@ public static class SamlEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new DisableSamlConnectionCommand(workspaceId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         return app;
@@ -85,5 +82,4 @@ public static class SamlEndpoints
         string IdpMetadataUrl,
         string? IdpMetadataXml,
         string SpEntityId);
-
 }

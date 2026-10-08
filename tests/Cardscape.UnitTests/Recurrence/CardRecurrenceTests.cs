@@ -1,15 +1,11 @@
-using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Recurrence;
 using Cardscape.Domain.Cards;
-using Cardscape.Domain.Common;
 using Cardscape.Domain.Recurrence;
 using Cardscape.Tests.Common.Fakes;
-using FluentAssertions;
-using Xunit;
 
 namespace Cardscape.UnitTests.Recurrence;
 
-public class CardRecurrenceTests
+public sealed class CardRecurrenceTests
 {
     [Fact]
     public void Create_With_Zero_Interval_Fails()

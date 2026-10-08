@@ -23,7 +23,7 @@ namespace Cardscape.IntegrationTests.Endpoints;
 /// to the IdP's SingleSignOnService URL).
 /// </summary>
 [Collection(CardscapeApi.Name)]
-public class SamlEndpointsTests
+public sealed class SamlEndpointsTests
 {
     private readonly CardscapeWebApplicationFactory _factory;
 

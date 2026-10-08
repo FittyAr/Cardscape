@@ -34,13 +34,12 @@ internal sealed class CardBodySchemasTransformer : IOpenApiDocumentTransformer
     {
         document.Components ??= new OpenApiComponents();
         document.Components.Schemas ??= new Dictionary<string, IOpenApiSchema>(StringComparer.Ordinal);
-
-        if (document.Components.Schemas.TryGetValue("MoveBody", out IOpenApiSchema? existingMove))
+        if (document.Components.Schemas.TryGetValue("MoveBody", out _))
         {
             document.Components.Schemas["MoveBody"] = BuildMoveBodySchema();
         }
 
-        if (document.Components.Schemas.TryGetValue("RenameBody", out IOpenApiSchema? existingRename))
+        if (document.Components.Schemas.TryGetValue("RenameBody", out _))
         {
             document.Components.Schemas["RenameBody"] = BuildRenameBodySchema();
         }

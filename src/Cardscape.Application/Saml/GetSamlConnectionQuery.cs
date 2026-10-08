@@ -1,9 +1,6 @@
-using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Domain.Authentication.Saml;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Webhooks;
 using Cardscape.Domain.Workspaces;
 using Wolverine;
 
@@ -33,7 +30,7 @@ public static class GetSamlConnectionQueryHandler
                 "saml.workspace_not_found", $"Workspace {query.WorkspaceId} was not found."));
         }
 
-        if (workspace.OwnerId != currentUser.Id.Value)
+        if (!workspace.IsOwnedBy(currentUser.Id.Value))
         {
             return Result.Failure<SamlConnectionDto?>(DomainError.Forbidden(
                 "saml.not_owner", "Only the workspace owner can view SAML configuration."));

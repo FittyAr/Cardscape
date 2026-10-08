@@ -99,8 +99,7 @@ internal sealed class CardStoriesSeedStep : SeedStepBase
                 NextPosition(backlog),
                 creator.Id.Value,
                 at).Value;
-            context.Db.Cards.Add(card);
-            context.Cards.Add(card);
+            context.Track(context.Cards, card);
             Record(card, creator, ActivityKind.CardCreated, at, new { title });
             return card;
         }
@@ -196,8 +195,7 @@ internal sealed class CardStoriesSeedStep : SeedStepBase
             {
                 CardSnooze snooze = CardSnooze.Create(
                     card.Id, context.Now.AddDays(_timeline.Next(2, 10)), _members[0].Id.Value, context.Now.AddDays(-1)).Value;
-                context.Db.CardSnoozes.Add(snooze);
-                context.CardSnoozes.Add(snooze);
+                context.Track(context.CardSnoozes, snooze);
             }
         }
 

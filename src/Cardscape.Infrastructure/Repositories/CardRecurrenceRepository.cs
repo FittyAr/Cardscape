@@ -13,19 +13,19 @@ public sealed class CardRecurrenceRepository(CardscapeDbContext db)
 {
     public async Task<bool> ExistsForCardAsync(CardId cardId, CancellationToken ct = default)
     {
-        return await Db.Set<CardRecurrence>().AnyAsync(recurrence => recurrence.CardId == cardId, ct);
+        return await Set.AnyAsync(recurrence => recurrence.CardId == cardId, ct);
     }
 
     public async Task<CardRecurrence?> GetForCardAsync(CardId cardId, CancellationToken ct = default)
     {
-        return await Db.Set<CardRecurrence>()
+        return await Set
             .FirstOrDefaultAsync(recurrence => recurrence.CardId == cardId, ct);
     }
 
     public async Task<IReadOnlyList<CardRecurrence>> ListDueAsync(
         DateTimeOffset now, int limit, CancellationToken ct = default)
     {
-        IQueryable<CardRecurrence> active = Db.Set<CardRecurrence>().Where(recurrence => recurrence.IsActive);
+        IQueryable<CardRecurrence> active = Set.Where(recurrence => recurrence.IsActive);
         if (!Db.Database.IsSqlite())
         {
             return await active

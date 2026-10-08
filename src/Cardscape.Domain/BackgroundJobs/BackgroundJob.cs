@@ -30,8 +30,11 @@ public sealed class BackgroundJob : AggregateRoot<BackgroundJobId>
     /// <summary>How many times a worker has started this job (including the current one).</summary>
     public int Attempts { get; private set; }
 
+    /// <summary>Retry budget a job gets unless the scheduler asks for another.</summary>
+    public const int DefaultMaxAttempts = 5;
+
     /// <summary>Cap on attempts before the job is dead-lettered.</summary>
-    public int MaxAttempts { get; private set; } = 5;
+    public int MaxAttempts { get; private set; } = DefaultMaxAttempts;
 
     /// <summary>UTC time the most recent attempt started; <c>null</c> until the first claim.</summary>
     public DateTimeOffset? StartedAt { get; private set; }

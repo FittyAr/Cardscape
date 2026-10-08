@@ -1,4 +1,6 @@
+using System.Buffers.Text;
 using System.Text;
+using Cardscape.Application.Common;
 
 namespace Cardscape.Application.Activities.Queries;
 
@@ -13,8 +15,8 @@ namespace Cardscape.Application.Activities.Queries;
 /// </summary>
 public static class ActivityCursor
 {
-    public const int DefaultLimit = 50;
-    public const int MaxLimit = 200;
+    public const int DefaultLimit = OffsetPagination.DefaultTake;
+    public const int MaxLimit = OffsetPagination.MaxTake;
 
     public static string Encode(DateTimeOffset occurredAt, Guid id)
     {
@@ -66,21 +68,9 @@ public static class ActivityCursor
     /// <summary>Clamp a user-supplied limit to the allowed range
     /// (<see cref="DefaultLimit"/> default, <see cref="MaxLimit"/>
     /// cap).</summary>
-    public static int ClampLimit(int? limit)
-    {
-        if (limit is null || limit <= 0)
-        {
-            return DefaultLimit;
-        }
+    public static int ClampLimit(int? limit) => OffsetPagination.NormalizeTake(limit);
 
-        return limit > MaxLimit ? MaxLimit : limit.Value;
-    }
-
-    private static string Base64UrlEncode(byte[] bytes) =>
-        Convert.ToBase64String(bytes)
-            .Replace('+', '-')
-            .Replace('/', '_')
-            .TrimEnd('=');
+    private static string Base64UrlEncode(byte[] bytes) => Base64Url.EncodeToString(bytes);
 
     private static byte[] Base64UrlDecode(string s)
     {

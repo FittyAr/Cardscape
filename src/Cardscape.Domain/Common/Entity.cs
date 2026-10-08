@@ -23,7 +23,7 @@ public abstract class Entity<TId>
     /// token. The persistence interceptor only advances the token when a
     /// mutation has not already done so in the domain.
     /// </summary>
-    public void StampChanged(Guid? by, DateTimeOffset at)
+    protected void StampChanged(Guid? by, DateTimeOffset at)
     {
         UpdatedAt = at;
         UpdatedBy = by;
@@ -52,19 +52,12 @@ public abstract class Entity<TId>
     /// Stamps the entity as created right now by the given user.
     /// Called by repositories or handlers right before insertion.
     /// </summary>
-    public void StampCreated(Guid? by, DateTimeOffset at)
+    protected void StampCreated(Guid? by, DateTimeOffset at)
     {
         CreatedAt = at;
         CreatedBy = by;
         UpdatedAt = null;
         UpdatedBy = null;
-    }
-
-    /// <summary>Stamps the entity as last modified right now by the given user.</summary>
-    public void StampUpdated(Guid? by, DateTimeOffset at)
-    {
-        UpdatedAt = at;
-        UpdatedBy = by;
     }
 
     public override bool Equals(object? obj) =>

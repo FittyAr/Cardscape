@@ -1,22 +1,16 @@
-using System.Net.Http;
-
 namespace Cardscape.Sdk;
 
 /// <summary>Provides operations for cards and their workflow state.</summary>
-public sealed class CardsClient
+/// <remarks>Initializes a new instance of the <see cref="CardsClient"/> class.</remarks>
+/// <param name="parent">The client that supplies transport and serialization.</param>
+public sealed class CardsClient(CardscapeClient parent)
 {
-    private readonly CardscapeClient _parent;
-
-    /// <summary>Initializes a new instance of the <see cref="CardsClient"/> class.</summary>
-    /// <param name="parent">The client that supplies transport and serialization.</param>
-    public CardsClient(CardscapeClient parent) => _parent = parent;
-
     /// <summary>Lists the cards in a board.</summary>
     /// <param name="boardId">The board identifier.</param>
     /// <param name="ct">The token used to cancel the operation.</param>
     /// <returns>The ordered cards in the list.</returns>
     public Task<IReadOnlyList<CardSummaryDto>> ListAsync(Guid boardId, CancellationToken ct = default) =>
-        _parent.SendAsync<IReadOnlyList<CardSummaryDto>>(
+        parent.SendAsync<IReadOnlyList<CardSummaryDto>>(
             new HttpRequestMessage(HttpMethod.Get, $"api/cards?boardId={boardId}"), ct);
 
     /// <summary>Gets a card by identifier.</summary>
@@ -24,7 +18,7 @@ public sealed class CardsClient
     /// <param name="ct">The token used to cancel the operation.</param>
     /// <returns>The requested card.</returns>
     public Task<CardDto> GetAsync(Guid cardId, CancellationToken ct = default) =>
-        _parent.SendAsync<CardDto>(new HttpRequestMessage(HttpMethod.Get, $"api/cards/{cardId}"), ct);
+        parent.SendAsync<CardDto>(new HttpRequestMessage(HttpMethod.Get, $"api/cards/{cardId}"), ct);
 
     /// <summary>Creates a card.</summary>
     /// <param name="body">The card creation values.</param>
@@ -32,8 +26,8 @@ public sealed class CardsClient
     /// <returns>The created card.</returns>
     public Task<CardDto> CreateAsync(CreateCardRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Post, "api/cards/") { Content = _parent.CreateJsonContent(body) };
-        return _parent.SendAsync<CardDto>(req, ct);
+        HttpRequestMessage req = new(HttpMethod.Post, "api/cards/") { Content = parent.CreateJsonContent(body) };
+        return parent.SendAsync<CardDto>(req, ct);
     }
 
     /// <summary>Moves a card to a list and ordering position.</summary>
@@ -43,8 +37,8 @@ public sealed class CardsClient
     /// <returns>The moved card.</returns>
     public Task<CardDto> MoveAsync(Guid cardId, MoveCardRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Post, $"api/cards/{cardId}/move") { Content = _parent.CreateJsonContent(body) };
-        return _parent.SendAsync<CardDto>(req, ct);
+        HttpRequestMessage req = new(HttpMethod.Post, $"api/cards/{cardId}/move") { Content = parent.CreateJsonContent(body) };
+        return parent.SendAsync<CardDto>(req, ct);
     }
 
     /// <summary>Marks a card as completed.</summary>
@@ -52,28 +46,28 @@ public sealed class CardsClient
     /// <param name="ct">The token used to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     public Task CompleteAsync(Guid cardId, CancellationToken ct = default) =>
-        _parent.SendAsync<object>(new HttpRequestMessage(HttpMethod.Post, $"api/cards/{cardId}/complete"), ct);
+        parent.SendAsync<object>(new HttpRequestMessage(HttpMethod.Post, $"api/cards/{cardId}/complete"), ct);
 
     /// <summary>Marks a completed card as open.</summary>
     /// <param name="cardId">The card identifier.</param>
     /// <param name="ct">The token used to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     public Task ReopenAsync(Guid cardId, CancellationToken ct = default) =>
-        _parent.SendAsync<object>(new HttpRequestMessage(HttpMethod.Post, $"api/cards/{cardId}/reopen"), ct);
+        parent.SendAsync<object>(new HttpRequestMessage(HttpMethod.Post, $"api/cards/{cardId}/reopen"), ct);
 
     /// <summary>Archives a card.</summary>
     /// <param name="cardId">The card identifier.</param>
     /// <param name="ct">The token used to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     public Task ArchiveAsync(Guid cardId, CancellationToken ct = default) =>
-        _parent.SendAsync<object>(new HttpRequestMessage(HttpMethod.Post, $"api/cards/{cardId}/archive"), ct);
+        parent.SendAsync<object>(new HttpRequestMessage(HttpMethod.Post, $"api/cards/{cardId}/archive"), ct);
 
     /// <summary>Restores an archived card.</summary>
     /// <param name="cardId">The card identifier.</param>
     /// <param name="ct">The token used to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     public Task RestoreAsync(Guid cardId, CancellationToken ct = default) =>
-        _parent.SendAsync<object>(new HttpRequestMessage(HttpMethod.Post, $"api/cards/{cardId}/restore"), ct);
+        parent.SendAsync<object>(new HttpRequestMessage(HttpMethod.Post, $"api/cards/{cardId}/restore"), ct);
 
     /// <summary>Assigns a user to a card.</summary>
     /// <param name="cardId">The card identifier.</param>
@@ -82,7 +76,7 @@ public sealed class CardsClient
     /// <returns>A task that represents the asynchronous operation.</returns>
     public Task AssignAsync(Guid cardId, Guid userId, CancellationToken ct = default)
     {
-        return _parent.SendAsync<object>(
+        return parent.SendAsync<object>(
             new HttpRequestMessage(HttpMethod.Post, $"api/cards/{cardId}/assign/{userId}"), ct);
     }
 
@@ -93,7 +87,7 @@ public sealed class CardsClient
     /// <returns>A task that represents the asynchronous operation.</returns>
     public Task AttachLabelAsync(Guid cardId, Guid labelId, CancellationToken ct = default)
     {
-        return _parent.SendAsync<object>(
+        return parent.SendAsync<object>(
             new HttpRequestMessage(HttpMethod.Post, $"api/cards/{cardId}/labels/{labelId}"), ct);
     }
 
@@ -104,7 +98,7 @@ public sealed class CardsClient
     /// <returns>The new card.</returns>
     public Task<CardDto> CopyAsync(Guid cardId, CopyCardRequest body, CancellationToken ct = default)
     {
-        HttpRequestMessage req = new(HttpMethod.Post, $"api/cards/{cardId}/copy") { Content = _parent.CreateJsonContent(body) };
-        return _parent.SendAsync<CardDto>(req, ct);
+        HttpRequestMessage req = new(HttpMethod.Post, $"api/cards/{cardId}/copy") { Content = parent.CreateJsonContent(body) };
+        return parent.SendAsync<CardDto>(req, ct);
     }
 }

@@ -1,10 +1,9 @@
 using System.Text.Json;
 using Cardscape.Domain.Boards;
-using Cardscape.Tests.Common.Fakes;
 
 namespace Cardscape.UnitTests.Boards;
 
-public class CustomFieldDefinitionTests
+public sealed class CustomFieldDefinitionTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);
 
@@ -58,7 +57,7 @@ public class CustomFieldDefinitionTests
     {
         var result = CustomFieldDefinition.Create(
             BoardId.New(), "Severity", CustomFieldKind.Dropdown,
-            new[] { "Low", "low", "High" }, position: 0, at: Now);
+            ["Low", "low", "High"], position: 0, at: Now);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("custom_fields.dropdown_options_duplicate");
@@ -69,7 +68,7 @@ public class CustomFieldDefinitionTests
     {
         var result = CustomFieldDefinition.Create(
             BoardId.New(), "Severity", CustomFieldKind.Dropdown,
-            new[] { "Low", "Medium", "High" }, position: 0, at: Now);
+            ["Low", "Medium", "High"], position: 0, at: Now);
 
         result.IsSuccess.Should().BeTrue();
         string[]? options = JsonSerializer.Deserialize<string[]>(result.Value.OptionsJson);

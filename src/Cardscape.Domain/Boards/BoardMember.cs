@@ -33,6 +33,4 @@ public sealed class BoardMember : Entity<BoardMemberId>
         BoardMemberRole role,
         DateTimeOffset joinedAt) =>
         new(BoardMemberId.New(), boardId, userId, role, joinedAt);
-
-    internal void SetRole(BoardMemberRole role) => Role = role;
 }

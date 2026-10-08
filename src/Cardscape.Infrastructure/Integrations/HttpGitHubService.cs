@@ -23,7 +23,7 @@ public sealed class HttpGitHubService : IGitHubService
     private const string GitHubApiBase = "https://api.github.com";
     private const int MaxResponseBytes = 1024 * 1024;
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerOptions.Web;
 
     private readonly HttpClient _http;
     private readonly string? _token;
@@ -161,7 +161,7 @@ public sealed class HttpGitHubService : IGitHubService
                         State: i.State,
                         Url: i.HtmlUrl,
                         Labels: i.Labels?.Select(l => l.Name ?? string.Empty).ToList()
-                                 ?? new List<string>(),
+                                 ?? [],
                         CreatedAt: i.CreatedAt))
                 .ToList());
         }
@@ -211,7 +211,7 @@ public sealed class HttpGitHubService : IGitHubService
                 State: created.State,
                 Url: created.HtmlUrl,
                 Labels: created.Labels?.Select(l => l.Name ?? string.Empty).ToList()
-                         ?? new List<string>(),
+                         ?? [],
                 CreatedAt: created.CreatedAt));
         }
         catch (HttpRequestException)

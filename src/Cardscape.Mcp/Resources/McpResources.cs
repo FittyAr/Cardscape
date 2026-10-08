@@ -31,7 +31,7 @@ namespace Cardscape.Mcp.Resources;
 [McpServerResourceType]
 public sealed class McpResources(IMessageBus bus)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerOptions.Web;
 
     [McpServerResource(Name = "workspace", UriTemplate = "workspace://{workspaceId}")]
     public async Task<string> GetWorkspaceAsync(Uri uri, CancellationToken ct = default)

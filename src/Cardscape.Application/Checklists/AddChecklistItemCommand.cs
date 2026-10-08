@@ -4,7 +4,6 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Activities;
 using Cardscape.Domain.Checklists;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Lists;
 using Wolverine;
 
 namespace Cardscape.Application.Checklists;

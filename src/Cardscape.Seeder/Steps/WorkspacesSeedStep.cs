@@ -60,8 +60,7 @@ internal sealed class WorkspacesSeedStep : SeedStepBase
     {
         Workspace workspace = Workspace.Create(
             WorkspaceId.New(), WorkspaceName.Create(name).Value, owner.Id.Value, region, at).Value;
-        context.Db.Workspaces.Add(workspace);
-        context.Workspaces.Add(workspace);
+        context.Track(context.Workspaces, workspace);
         context.WorkspaceMembers.AddRange(workspace.Members);
         return workspace;
     }
@@ -110,8 +109,7 @@ internal sealed class WorkspacesSeedStep : SeedStepBase
             PasswordGenerator.Prefix(token, 10),
             at,
             lifetime: TimeSpan.FromDays(7)).Value;
-        context.Db.WorkspaceInvitations.Add(invitation);
-        context.WorkspaceInvitations.Add(invitation);
+        context.Track(context.WorkspaceInvitations, invitation);
         return invitation;
     }
 }

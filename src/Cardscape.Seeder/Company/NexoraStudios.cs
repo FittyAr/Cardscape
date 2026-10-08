@@ -103,8 +103,8 @@ public static class NexoraStudios
     public static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> CardTitlesByBoard =
         new Dictionary<string, IReadOnlyList<string>>
         {
-            ["Engineering"] = new List<string>
-            {
+            ["Engineering"] =
+            [
                 "Migrate auth pipeline to OAuth refresh tokens",
                 "Investigate EF Core slow query on /api/cards",
                 "Add OpenTelemetry traces to BackgroundJobDispatcher",
@@ -117,9 +117,9 @@ public static class NexoraStudios
                 "Bump .NET runtime to 10.0.4",
                 "Document the new /api/internal/translate endpoint",
                 "Triage P1 from last week's release",
-            },
-            ["Product Discovery"] = new List<string>
-            {
+            ],
+            ["Product Discovery"] =
+            [
                 "User interviews: Kanban switchers (round 4)",
                 "Pricing experiment: free tier up to 5 seats",
                 "Prototype: AI auto-summarise card thread",
@@ -130,9 +130,9 @@ public static class NexoraStudios
                 "User research: dark mode priority",
                 "Competitor teardown: Linear / Height",
                 "Roadmap workshop with Customer Council",
-            },
-            ["Design System"] = new List<string>
-            {
+            ],
+            ["Design System"] =
+            [
                 "Audit the Radzen theme tokens",
                 "Design tokens: spacing scale revamp",
                 "Component: empty-state pattern",
@@ -142,9 +142,9 @@ public static class NexoraStudios
                 "Migrate the old corporate palette to Radzen standard",
                 "Design QA: home page hero section",
                 "Component spec: data grid column resizing",
-            },
-            ["Marketing"] = new List<string>
-            {
+            ],
+            ["Marketing"] =
+            [
                 "Q3 campaign: 'Switch from Kanban in a weekend'",
                 "Blog post: building a kanban MCP for AI agents",
                 "Newsletter: open source retrospective",
@@ -153,9 +153,9 @@ public static class NexoraStudios
                 "Co-marketing with GitHub for the MCP launch",
                 "Case study: Cardscape at Nexora",
                 "SEO: long-tail keywords round 2",
-            },
-            ["Operations"] = new List<string>
-            {
+            ],
+            ["Operations"] =
+            [
                 "Renew the AWS contract for FY26",
                 "Annual privacy policy review",
                 "Onboard the new DevOps contractor",
@@ -164,24 +164,24 @@ public static class NexoraStudios
                 "Quarterly tax filing prep",
                 "Vendor security review: Sentry",
                 "Office lease renewal decision",
-            },
-            ["Offsite 2025"] = new List<string>
-            {
+            ],
+            ["Offsite 2025"] =
+            [
                 "Book the Lisbon venue",
                 "Flights and visas for the team",
                 "Agenda: strategy day",
                 "Retro on the offsite budget",
-            },
-            ["Hackathon 2026"] = new List<string>
-            {
+            ],
+            ["Hackathon 2026"] =
+            [
                 "Voice notes on cards",
                 "Board heatmap of stale cards",
                 "Slash commands in the card composer",
                 "Offline mode for the mobile web",
                 "Auto-tagging with embeddings",
-            },
-            ["Customer Support"] = new List<string>
-            {
+            ],
+            ["Customer Support"] =
+            [
                 "Escalation: SSO loop for Okta + SAML",
                 "Help-centre article: Webhook signing",
                 "Top-10 tickets of the month",
@@ -190,7 +190,7 @@ public static class NexoraStudios
                 "Triage new SCIM token rotation flow",
                 "Refresh the FAQ for the new AI features",
                 "Pilot: in-app chat for paying tier",
-            },
+            ],
         };
 
     /// <summary>Comment templates per card-index-in-board. Used so
@@ -214,8 +214,8 @@ public static class NexoraStudios
         ("Launch checklist", ["Copy approved", "Assets ready", "Stakeholders notified", "Metrics dashboard live"]),
     ];
 
-    public static readonly IReadOnlyList<string> CommentBodies = new List<string>
-    {
+    public static readonly IReadOnlyList<string> CommentBodies =
+    [
         "Picked this up — I think we can use the same helper we wrote for the boards endpoint. Let me draft a PR by EOD.",
         "Heads up: there's an existing ticket (#188) that touches the same code path. Might be worth merging first.",
         "Loving the scope here. Can we add a quick test for the empty-state path before merging?",
@@ -226,7 +226,7 @@ public static class NexoraStudios
         "Bumping priority. We have two enterprise prospects waiting on this exact feature.",
         "Pairing on this with the new hire tomorrow morning. Will sync back to the board afterwards.",
         "Closing as duplicate — see the older thread. The fix shipped in 1.0.0.",
-    };
+    ];
 }
 
 /// <summary>Optional board extensions a blueprint switches on.</summary>

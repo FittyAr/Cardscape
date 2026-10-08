@@ -1,6 +1,6 @@
-using System.Net.Http.Json;
 using System.Text.Json;
 using Cardscape.Api.Logging;
+using Cardscape.Infrastructure.Configuration;
 
 namespace Cardscape.Api.Realtime;
 
@@ -15,34 +15,19 @@ namespace Cardscape.Api.Realtime;
 /// database — AI clients can re-fetch the resource on
 /// their next poll if they miss the push.
 /// </summary>
-public sealed class HttpMcpResourceNotifier
+public sealed class HttpMcpResourceNotifier(
+    IHttpClientFactory factory,
+    IConfiguration config,
+    ILogger<HttpMcpResourceNotifier> logger)
 {
-    public const string SecretHeader = "X-Internal-Secret";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNameCaseInsensitive = true
-    };
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerOptions.Web;
 
-    private readonly HttpClient _http;
-    private readonly string? _secret;
-    private readonly string? _baseUrl;
-    private readonly ILogger<HttpMcpResourceNotifier> _logger;
-
-    public HttpMcpResourceNotifier(
-        IHttpClientFactory factory,
-        IConfiguration config,
-        ILogger<HttpMcpResourceNotifier> logger)
-    {
-        _http = factory.CreateClient("Cardscape.Mcp");
-        _secret = config["Internal:Secret"]
-            ?? config["Cardscape:Internal:Secret"]
-            ?? Environment.GetEnvironmentVariable("CARDS_CAPE__INTERNAL__SECRET");
-        _baseUrl = config["Cardscape:Mcp:BaseUrl"]
+    private readonly HttpClient _http = factory.CreateClient("Cardscape.Mcp");
+    private readonly string? _secret = config.OutboundInternalSecret;
+    private readonly string? _baseUrl = config["Cardscape:Mcp:BaseUrl"]
             ?? config["Mcp:BaseUrl"]
             ?? Environment.GetEnvironmentVariable("CARDS_CAPE__MCP__BASEURL");
-        _logger = logger;
-    }
 
     public async Task NotifyAsync(Guid boardId, CancellationToken ct = default)
     {
@@ -53,13 +38,13 @@ public sealed class HttpMcpResourceNotifier
 
         if (string.IsNullOrWhiteSpace(_baseUrl))
         {
-            _logger.McpResourceBaseUrlMissing();
+            logger.McpResourceBaseUrlMissing();
             return;
         }
 
         if (string.IsNullOrWhiteSpace(_secret))
         {
-            _logger.McpResourceSecretMissing();
+            logger.McpResourceSecretMissing();
             return;
         }
 
@@ -68,7 +53,7 @@ public sealed class HttpMcpResourceNotifier
             using HttpRequestMessage request = new(
                 HttpMethod.Post,
                 new Uri(new Uri(_baseUrl, UriKind.Absolute), "api/internal/board-event/"));
-            request.Headers.Add(SecretHeader, _secret);
+            request.Headers.Add(InternalSecret.HeaderName, _secret);
             request.Content = JsonContent.Create(new { boardId }, options: JsonOptions);
 
             using HttpResponseMessage response = await _http.SendAsync(request, ct);
@@ -80,7 +65,7 @@ public sealed class HttpMcpResourceNotifier
         }
         catch (Exception ex)
         {
-            _logger.McpBoardEventNotificationFailed(ex, boardId);
+            logger.McpBoardEventNotificationFailed(ex, boardId);
             throw;
         }
     }

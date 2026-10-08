@@ -6,10 +6,7 @@ using Cardscape.Application.Integrations.InboundEmail.Commands;
 using Cardscape.Application.Integrations.InboundEmail.DTOs;
 using Cardscape.Application.Integrations.InboundEmail.Queries;
 using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.Integrations;
@@ -35,7 +32,7 @@ public static class IntegrationsEndpoints
                 new LinkGitHubRepoCommand(
                     body.BoardId, body.RepoFullName, body.Events),
                 ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         // BETA-2-#11 — see test-results/BETA-TEST-REPORT.md.
@@ -66,7 +63,7 @@ public static class IntegrationsEndpoints
 
             var result = await bus.InvokeAsync<Result<IReadOnlyList<GitHubPullRequestDto>>>(
                 new ListGitHubPullRequestsQuery(boardId, repoFullName, state ?? "open"), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<GitHubPullRequestDto>>(StatusCodes.Status200OK);
 
         group.MapPost("/pulls/link", async ([FromBody] LinkGitHubPullRequestRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -84,7 +81,7 @@ public static class IntegrationsEndpoints
             var result = await bus.InvokeAsync<Result<GitHubIssueDto>>(
                 new CreateGitHubIssueFromCardCommand(
                     body.CardId, body.RepoFullName, body.Title, body.Body), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<GitHubIssueDto>(StatusCodes.Status200OK);
 
         return app;
@@ -105,7 +102,7 @@ public static class IntegrationsEndpoints
         {
             var result = await bus.InvokeAsync<Result<IReadOnlyList<InboundEmailAddressDto>>>(
                 new ListInboundEmailAddressesQuery(workspaceId), ct);
-            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+            return result.ToOk();
         }).Produces<IReadOnlyList<InboundEmailAddressDto>>(StatusCodes.Status200OK);
 
         authed.MapPost("/addresses", async ([FromBody] RegisterInboundEmailAddressRequest body, IMessageBus bus, CancellationToken ct) =>
@@ -122,7 +119,7 @@ public static class IntegrationsEndpoints
         {
             var result = await bus.InvokeAsync<Result>(
                 new UnregisterInboundEmailAddressCommand(addressId), ct);
-            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+            return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
         // Public webhook surface — no authorization at the
@@ -251,9 +248,9 @@ public static class IntegrationsEndpoints
                 headers[header.Key] = header.Value.ToString();
             }
 
-            string provider = (http.Request.Query["provider"].ToString()
-                ?? headers.GetValueOrDefault("X-Inbound-Provider", string.Empty)
-                ?? "sendgrid").ToLowerInvariant();
+            string provider = ResolveInboundEmailProvider(
+                http.Request.Query["provider"].ToString(),
+                headers.GetValueOrDefault("X-Inbound-Provider"));
 
             string messageHash = Convert.ToHexString(
                 System.Security.Cryptography.SHA256.HashData(
@@ -301,6 +298,19 @@ public static class IntegrationsEndpoints
         return app;
     }
 
+    /// <summary>
+    /// Picks the inbound-email provider: the <c>?provider=</c> query
+    /// value, else the <c>X-Inbound-Provider</c> header, else SendGrid.
+    /// Blank values count as absent.
+    /// </summary>
+    internal static string ResolveInboundEmailProvider(string? queryValue, string? headerValue)
+    {
+        string provider = !string.IsNullOrWhiteSpace(queryValue) ? queryValue
+            : !string.IsNullOrWhiteSpace(headerValue) ? headerValue
+            : "sendgrid";
+        return provider.Trim().ToLowerInvariant();
+    }
+
     public sealed record LinkGitHubRepoRequest(
         Guid BoardId, string RepoFullName, IReadOnlyList<string> Events);
     public sealed record LinkGitHubPullRequestRequest(
@@ -311,5 +321,4 @@ public static class IntegrationsEndpoints
         Guid WorkspaceId, string EmailAddress, Guid TargetListId, string Label);
     public sealed record InboundEmailResult(Guid CardId);
     public sealed record InboundEmailPendingResult(string Status);
-
 }

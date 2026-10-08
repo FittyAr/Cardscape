@@ -48,19 +48,16 @@ public sealed class UserPreferencesService
 
     private readonly IUserPreferencesApiClient _api;
     private readonly ThemeService _themeService;
-    private readonly AuthenticationStateProvider _auth;
     private readonly ILogger<UserPreferencesService> _log;
     private bool _systemPreferenceKnown;
 
     public UserPreferencesService(
         IUserPreferencesApiClient api,
         ThemeService themeService,
-        AuthenticationStateProvider auth,
         ILogger<UserPreferencesService> log)
     {
         _api = api;
         _themeService = themeService;
-        _auth = auth;
         _log = log;
 
         string? initialTheme = _themeService.Theme;
@@ -270,7 +267,7 @@ public sealed class UserPreferencesService
                     // 404 → no row yet. Create it with the
                     // current local state, then apply.
                     var create = await _api.CreateDefaultAsync();
-                    if (create.IsSuccess && create.Value is not null)
+                    if (create.HasValue)
                     {
                         await ApplyServerPreferencesAsync(create.Value);
                     }
@@ -371,18 +368,7 @@ public sealed class UserPreferencesService
         }
     }
 
-    private async Task NotifyChangedAsync()
-    {
-        if (Changed is null)
-        {
-            return;
-        }
-
-        foreach (Func<Task> handler in Changed.GetInvocationList().Cast<Func<Task>>())
-        {
-            await handler();
-        }
-    }
+    private Task NotifyChangedAsync() => Changed.InvokeSequentiallyAsync();
 
     /// <summary>Pick the matching sibling of a theme name
     /// for the given <c>prefersDark</c> value. For Light

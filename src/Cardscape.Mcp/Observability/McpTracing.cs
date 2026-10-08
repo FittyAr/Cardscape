@@ -57,12 +57,12 @@ public static class McpTracing
         services.AddOpenTelemetry()
             .ConfigureResource(rb => rb
                 .AddService(serviceName: serviceName, serviceVersion: "1.0.0")
-                .AddAttributes(new KeyValuePair<string, object>[]
-                {
+                .AddAttributes(
+                [
                     new("deployment.environment",
                         Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-                            ?? "Production")
-                }))
+                            ?? "Production"),
+                ]))
             .WithTracing(tb =>
             {
                 tb.AddSource(ActivitySourceName)

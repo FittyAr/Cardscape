@@ -1,6 +1,5 @@
 using Cardscape.Application.Integrations.GitHub.DTOs;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Integrations.GitHub;
 
 namespace Cardscape.Application.Abstractions.Integrations;
 

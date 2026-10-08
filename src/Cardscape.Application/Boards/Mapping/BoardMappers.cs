@@ -14,6 +14,6 @@ namespace Cardscape.Application.Boards.Mapping;
 /// mapping; there's no runtime reflection and no startup cost.
 /// </summary>
 [Mapper]
-public partial class BoardMappers
+public sealed partial class BoardMappers
 {
 }

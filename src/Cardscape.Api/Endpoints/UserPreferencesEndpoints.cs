@@ -3,9 +3,6 @@ using Cardscape.Application.UserPreferences.DTOs;
 using Cardscape.Application.UserPreferences.Queries;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.UserPreferences;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Wolverine;
 
 namespace Cardscape.Api.Endpoints.UserPreferences;
@@ -102,5 +99,4 @@ public static class UserPreferencesEndpoints
     /// Either or both fields may be null; null means "leave
     /// unchanged".</summary>
     public sealed record UpdatePreferencesBody(string? ThemeName, string? Mode);
-
 }

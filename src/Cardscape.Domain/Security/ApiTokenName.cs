@@ -23,7 +23,7 @@ public sealed record ApiTokenName : IValueObject
 
         var trimmed = input.Trim();
 
-        if (trimmed.Length < MinLength || trimmed.Length > MaxLength)
+        if (trimmed.Length is < MinLength or > MaxLength)
         {
             return Result.Failure<ApiTokenName>(DomainError.Validation(
                 "security.api_token.name_length",

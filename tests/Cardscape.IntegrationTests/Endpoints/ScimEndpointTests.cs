@@ -21,7 +21,7 @@ namespace Cardscape.IntegrationTests.Endpoints;
 /// table.
 /// </summary>
 [Collection(CardscapeApi.Name)]
-public class ScimEndpointTests
+public sealed class ScimEndpointTests
 {
     private readonly CardscapeWebApplicationFactory _factory;
 

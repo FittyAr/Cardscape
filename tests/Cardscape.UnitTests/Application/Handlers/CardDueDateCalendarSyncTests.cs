@@ -10,7 +10,7 @@ namespace Cardscape.UnitTests.Application.Handlers;
 /// <summary>
 /// G8 — push path tests for <see cref="CardDueDateCalendarSync"/>.
 /// </summary>
-public class CardDueDateCalendarSyncTests
+public sealed class CardDueDateCalendarSyncTests
 {
     [Fact]
     public async Task Handle_SetDueDate_ForConnectedUser_PushesAndRecordsSuccess()

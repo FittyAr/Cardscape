@@ -108,7 +108,7 @@
     private async Task ReloadAsync()
     {
         var result = await EmailApi.ListAddressesAsync(WorkspaceId);
-        if (result.IsSuccess && result.Value is not null)
+        if (result.HasValue)
         {
             addresses = result.Value;
             loadError = null;

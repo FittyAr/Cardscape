@@ -24,10 +24,4 @@ public static class CardPalette
         new("black", "#344563"),
         new("gray", "#b3bac5"),
     ];
-
-    /// <summary>Palette name for a stored hex value, or null when it is not a palette colour.</summary>
-    public static string? NameOf(string? hex) =>
-        hex is null
-            ? null
-            : All.FirstOrDefault(swatch => string.Equals(swatch.Hex, hex, StringComparison.OrdinalIgnoreCase))?.Name;
 }

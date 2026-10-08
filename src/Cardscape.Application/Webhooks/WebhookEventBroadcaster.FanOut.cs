@@ -17,7 +17,7 @@ public sealed partial class WebhookEventBroadcaster
         object data,
         CancellationToken ct)
     {
-        await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
         IWebhookEndpointRepository endpoints = scope.ServiceProvider.GetRequiredService<IWebhookEndpointRepository>();
         IWebhookDeliveryRepository deliveries = scope.ServiceProvider.GetRequiredService<IWebhookDeliveryRepository>();
         IBackgroundJobScheduler scheduler = scope.ServiceProvider.GetRequiredService<IBackgroundJobScheduler>();
@@ -71,9 +71,9 @@ public sealed partial class WebhookEventBroadcaster
             }
         }
 
-        if (_logger.IsEnabled(LogLevel.Debug))
+        if (logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.WebhookDeliveriesQueued(targets.Count, eventType, boardId);
+            logger.WebhookDeliveriesQueued(targets.Count, eventType, boardId);
         }
     }
 }

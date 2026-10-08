@@ -27,11 +27,9 @@ namespace Cardscape.Tests.Common.Fakes;
 
 /// <summary>Deterministic clock. Pin the time in tests so the asserted
 /// values don't drift with the wall clock.</summary>
-public sealed class FakeClock : IClock
+public sealed class FakeClock(DateTimeOffset? start = null) : IClock
 {
-    public FakeClock(DateTimeOffset? start = null) => UtcNow = start ?? new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-
-    public DateTimeOffset UtcNow { get; set; }
+    public DateTimeOffset UtcNow { get; set; } = start ?? new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
     public void Advance(TimeSpan by) => UtcNow = UtcNow.Add(by);
 }
@@ -80,7 +78,6 @@ public sealed class FakeTokenService : ITokenService
         AccessTokensIssued.Add((user, roles));
         return Convert.ToBase64String(user.Id.Value.ToByteArray());
     }
-
 }
 
 /// <summary>Settable current user. The handler reads from this in
@@ -92,7 +89,7 @@ public sealed class FakeCurrentUser : ICurrentUser
     public string? Email { get; set; }
     public string? DisplayName { get; set; }
     public IReadOnlyCollection<string> Roles { get; set; } = [];
-    public Dictionary<string, string> ExtraClaims { get; } = new();
+    public Dictionary<string, string> ExtraClaims { get; } = [];
 
     public string? FindFirst(string claimType) =>
         ExtraClaims.TryGetValue(claimType, out string? value) ? value : null;
@@ -112,7 +109,7 @@ public sealed class FakeCurrentUser : ICurrentUser
 /// <summary>Generic in-memory implementation of <see cref="IRepository{T, TId}"/>.
 /// Backed by a <see cref="Dictionary{TKey, TValue}"/>; safe for
 /// single-threaded tests.</summary>
-public class InMemoryRepositoryBase<T, TId> : IRepository<T, TId>
+public abstract class InMemoryRepositoryBase<T, TId> : IRepository<T, TId>
     where T : Entity<TId>
     where TId : notnull
 {
@@ -146,7 +143,7 @@ public sealed class InMemoryUserRepository : InMemoryRepositoryBase<User, UserId
     public Task<IReadOnlyList<User>> ListByIdsAsync(
         IReadOnlyList<UserId> ids, CancellationToken ct = default)
     {
-        HashSet<UserId> idSet = new(ids);
+        HashSet<UserId> idSet = [.. ids];
         IReadOnlyList<User> matches = Store.Values
             .Where(u => idSet.Contains(u.Id))
             .ToList();
@@ -183,7 +180,6 @@ public sealed class InMemoryUserRepository : InMemoryRepositoryBase<User, UserId
         Task.FromResult(Store.Count > 0);
 }
 
-
 /// <summary>In-memory <see cref="IWorkspaceRepository"/>.</summary>
 public sealed class InMemoryWorkspaceRepository : InMemoryRepositoryBase<Workspace, WorkspaceId>, IWorkspaceRepository
 {
@@ -199,7 +195,7 @@ public sealed class InMemoryWorkspaceRepository : InMemoryRepositoryBase<Workspa
         IReadOnlyList<WorkspaceId> ids,
         CancellationToken ct = default)
     {
-        HashSet<WorkspaceId> wanted = new(ids);
+        HashSet<WorkspaceId> wanted = [.. ids];
         IReadOnlyList<Workspace> rows = Store.Values
             .Where(workspace => wanted.Contains(workspace.Id))
             .ToList();
@@ -231,7 +227,7 @@ public sealed class InMemoryBoardRepository : InMemoryRepositoryBase<Board, Boar
         IReadOnlyList<WorkspaceId> workspaceIds,
         CancellationToken ct = default)
     {
-        HashSet<WorkspaceId> wanted = new(workspaceIds);
+        HashSet<WorkspaceId> wanted = [.. workspaceIds];
         IReadOnlyList<BoardId> rows = Store.Values
             .Where(board => !board.IsDeleted && wanted.Contains(board.WorkspaceId))
             .Select(board => board.Id)
@@ -547,7 +543,6 @@ public sealed class InMemoryActivityRepository
     }
 }
 
-
 public sealed class InMemoryCardVoteRepository
     : InMemoryRepositoryBase<CardVote, CardVoteId>, ICardVoteRepository
 {
@@ -595,7 +590,6 @@ public sealed class InMemoryCardVoteRepository
     }
 }
 
-
 public sealed class InMemoryChecklistRepository
     : InMemoryRepositoryBase<Checklist, ChecklistId>, IChecklistRepository
 {
@@ -629,7 +623,6 @@ public sealed class InMemoryChecklistItemRepository
             Store.Values.Where(i => i.ChecklistId.Value == checklistId)
                 .OrderBy(i => i.Position.Value).ToList());
 }
-
 
 public sealed class InMemoryCardRecurrenceRepository
     : InMemoryRepositoryBase<CardRecurrence, CardRecurrenceId>, ICardRecurrenceRepository
@@ -683,7 +676,7 @@ public sealed class InMemoryTotpCredentialRepository
 public sealed class InMemoryIdempotencyKeyStore : IIdempotencyKeyStore
 {
     private readonly Dictionary<(UserId, string), IdempotencyKey> _store = [];
-    private readonly object _gate = new();
+    private readonly Lock _gate = new();
 
     public int Count { get { lock (_gate) return _store.Count; } }
 
@@ -890,17 +883,11 @@ public sealed class FakeTotpService(
 
         string submittedHash = Convert.ToHexString(
             SHA256.HashData(Encoding.UTF8.GetBytes(code.Trim()))).ToLowerInvariant();
-        var lines = credential.RecoveryCodesHash
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .ToList();
-        int matchIndex = lines.FindIndex(l => string.Equals(l, submittedHash, StringComparison.Ordinal));
-        if (matchIndex < 0)
+        if (!credential.TryConsumeRecoveryCode(submittedHash, clock.UtcNow))
         {
             return Result.Failure(TotpErrors.InvalidRecoveryCode);
         }
 
-        lines[matchIndex] = $"used:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-        credential.RecordRecoveryCodeUsed(string.Join('\n', lines), clock.UtcNow);
         await unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
@@ -941,9 +928,7 @@ public sealed class FakeTotpService(
             return new TotpStatus(false, true, null, 0);
         }
 
-        int remaining = credential.RecoveryCodesHash
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Count(l => !l.StartsWith("used:", StringComparison.Ordinal));
+        int remaining = credential.RemainingRecoveryCodes;
         return new TotpStatus(true, false, credential.ConfirmedAt, remaining);
     }
 }

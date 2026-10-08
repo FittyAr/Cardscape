@@ -8,7 +8,6 @@ using Cardscape.Domain.Comments;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Wolverine;
-using static Cardscape.Domain.Comments.Errors.CommentErrors;
 
 namespace Cardscape.Application.Comments.Commands;
 

@@ -28,7 +28,7 @@ public sealed record SubjectId : IValueObject
         }
 
         var trimmed = input.Trim();
-        if (trimmed.Length < MinLength || trimmed.Length > MaxLength)
+        if (trimmed.Length is < MinLength or > MaxLength)
         {
             return Result.Failure<SubjectId>(DomainError.Validation(
                 "auth.external.subject_length",

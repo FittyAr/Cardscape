@@ -252,10 +252,7 @@
 
     private async Task DeleteAsync(CustomFieldDefinitionDto field)
     {
-        bool? ok = await DialogService.Confirm(
-            L["CustomFieldsDeleteConfirm", field.Name],
-            L["CustomFieldsDeleteTitle"], new ConfirmOptions { OkButtonText = L["ActionDelete"], CancelButtonText = L["ActionCancel"] });
-        if (ok != true)
+        if (!await DialogService.ConfirmDeleteAsync(L, L["CustomFieldsDeleteConfirm", field.Name], L["CustomFieldsDeleteTitle"]))
         {
             return;
         }

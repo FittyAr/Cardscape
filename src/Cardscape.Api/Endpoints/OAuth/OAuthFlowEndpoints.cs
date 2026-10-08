@@ -1,13 +1,8 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Application.Common;
-using Cardscape.Domain.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
+using Cardscape.Infrastructure.Security;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
-using Wolverine;
 
 namespace Cardscape.Api.Endpoints.OAuth;
 
@@ -264,16 +259,8 @@ public static class OAuthFlowEndpoints
         return app;
     }
 
-    private static string? ExtractBearer(HttpContext http)
-    {
-        string? header = http.Request.Headers.Authorization.ToString();
-        if (string.IsNullOrWhiteSpace(header) || !header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-
-        return header[7..].Trim();
-    }
+    private static string? ExtractBearer(HttpContext http) =>
+        BearerAuthorization.Credential(http.Request.Headers.Authorization.ToString());
 
     /// <summary>
     /// Resolve the <c>client_id</c> + <c>client_secret</c>

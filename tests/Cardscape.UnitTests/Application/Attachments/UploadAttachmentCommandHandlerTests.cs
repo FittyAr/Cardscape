@@ -10,7 +10,6 @@ using Cardscape.Domain.Cards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
 using Cardscape.Domain.Members;
-using Cardscape.Domain.Workspaces;
 using Cardscape.Tests.Common.Fakes;
 using Moq;
 
@@ -20,8 +19,8 @@ public sealed class UploadAttachmentCommandHandlerTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 30, 12, 0, 0, TimeSpan.Zero);
 
-    public static TheoryData<string> BlockedMimeTypes => new()
-    {
+    public static TheoryData<string> BlockedMimeTypes =>
+    [
         "application/x-msdownload", "application/x-msdos-program", "application/x-exe",
         "application/exe", "application/x-dosexec", "application/x-winexe",
         "application/x-apple-diskimage", "application/vnd.microsoft.portable-executable",
@@ -34,7 +33,7 @@ public sealed class UploadAttachmentCommandHandlerTests
         "application/x-perl", "application/x-python", "application/x-httpd-php",
         "text/x-server-parsed-html", "application/x-httpd-cgi",
         "application/x-shockwave-flash", "application/java-archive", "application/java-vm"
-    };
+    ];
 
     [Fact]
     public async Task Handle_ValidUpload_PersistsBlobAndMetadataWithSanitizedName()

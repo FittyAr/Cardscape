@@ -1,7 +1,6 @@
 using Cardscape.Seeder.Company;
 using Cardscape.Seeder.Persistence;
 using Cardscape.Seeder.Reporting;
-using Cardscape.Seeder.Simulation;
 
 namespace Cardscape.Seeder.Steps;
 
@@ -93,8 +92,7 @@ internal sealed class BoardSetupSeedStep : SeedStepBase
     {
         BoardList list = BoardList.Create(
             BoardListId.New(), board.Id, ListName.Create(name).Value, Position.From(position), owner.Id.Value, at).Value;
-        context.Db.Lists.Add(list);
-        context.Lists.Add(list);
+        context.Track(context.Lists, list);
         context.RecordActivity(board, null, owner, ActivityKind.ListCreated, at, new { listId = list.Id.Value, name });
         return list;
     }
@@ -104,8 +102,7 @@ internal sealed class BoardSetupSeedStep : SeedStepBase
         foreach ((string name, Color color) in StandardLabels)
         {
             Label label = Label.Create(LabelId.New(), board.Id, LabelName.Create(name).Value, color, owner.Id.Value, at).Value;
-            context.Db.Labels.Add(label);
-            context.Labels.Add(label);
+            context.Track(context.Labels, label);
             context.RecordActivity(board, null, owner, ActivityKind.LabelCreated, at, new { labelId = label.Id.Value, name });
         }
     }
@@ -145,16 +142,14 @@ internal sealed class BoardSetupSeedStep : SeedStepBase
         {
             CustomFieldDefinition definition = CustomFieldDefinition.Create(
                 board.Id, fields[i].Name, fields[i].Kind, fields[i].Options, i, at).Value;
-            context.Db.CustomFieldDefinitions.Add(definition);
-            context.CustomFieldDefinitions.Add(definition);
+            context.Track(context.CustomFieldDefinitions, definition);
         }
     }
 
     private static void Enable(SeedContext context, Board board, ExtensionKind kind, string configJson, DateTimeOffset at)
     {
         BoardExtension extension = BoardExtension.Enable(board.Id, kind, configJson, at).Value;
-        context.Db.BoardExtensions.Add(extension);
-        context.BoardExtensions.Add(extension);
+        context.Track(context.BoardExtensions, extension);
     }
 
     private static void PlantDashcards(SeedContext context, Board board, User owner, DateTimeOffset at, bool all)

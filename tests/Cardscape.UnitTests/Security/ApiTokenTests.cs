@@ -1,10 +1,9 @@
-using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Security;
 
 namespace Cardscape.UnitTests.Security;
 
-public class ApiTokenTests
+public sealed class ApiTokenTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 1, 0, 0, 0, TimeSpan.Zero);
 
@@ -13,7 +12,7 @@ public class ApiTokenTests
     {
         var userId = UserId.New();
         var name = ApiTokenName.Create("laptop").Value;
-        var scopes = ApiTokenScopes.Create(new[] { "read", "write" }).Value;
+        var scopes = ApiTokenScopes.Create(["read", "write"]).Value;
 
         var result = ApiToken.Create(userId, name, "deadbeef", "abcd1234", scopes, expiresAt: null, at: Now);
 
@@ -29,7 +28,7 @@ public class ApiTokenTests
     {
         var userId = UserId.New();
         var name = ApiTokenName.Create("x").Value;
-        var scopes = ApiTokenScopes.Create(new[] { "read" }).Value;
+        var scopes = ApiTokenScopes.Create(["read"]).Value;
 
         var token = ApiToken.Create(userId, name, "h", "p", scopes, null, Now).Value;
         token.Revoke(Guid.NewGuid(), "rotated", Now.AddMinutes(5));
@@ -42,7 +41,7 @@ public class ApiTokenTests
     {
         var userId = UserId.New();
         var name = ApiTokenName.Create("x").Value;
-        var scopes = ApiTokenScopes.Create(new[] { "read" }).Value;
+        var scopes = ApiTokenScopes.Create(["read"]).Value;
 
         var token = ApiToken.Create(userId, name, "h", "p", scopes, expiresAt: Now.AddMinutes(10), at: Now).Value;
 
@@ -55,7 +54,7 @@ public class ApiTokenTests
     {
         var userId = UserId.New();
         var name = ApiTokenName.Create("x").Value;
-        var scopes = ApiTokenScopes.Create(new[] { "read" }).Value;
+        var scopes = ApiTokenScopes.Create(["read"]).Value;
 
         var token = ApiToken.Create(userId, name, "h", "p", scopes, null, Now).Value;
         token.Revoke(Guid.NewGuid(), "left the company", Now.AddHours(1));
@@ -69,7 +68,7 @@ public class ApiTokenTests
     {
         var userId = UserId.New();
         var name = ApiTokenName.Create("x").Value;
-        var scopes = ApiTokenScopes.Create(new[] { "read" }).Value;
+        var scopes = ApiTokenScopes.Create(["read"]).Value;
 
         var token = ApiToken.Create(userId, name, "h", "p", scopes, null, Now).Value;
         token.Revoke(Guid.NewGuid(), null, Now).IsSuccess.Should().BeTrue();
@@ -84,7 +83,7 @@ public class ApiTokenTests
     {
         var userId = UserId.New();
         var name = ApiTokenName.Create("x").Value;
-        var scopes = ApiTokenScopes.Create(new[] { "read" }).Value;
+        var scopes = ApiTokenScopes.Create(["read"]).Value;
 
         var result = ApiToken.Create(userId, name, "", "p", scopes, null, Now);
 
@@ -96,7 +95,7 @@ public class ApiTokenTests
     {
         var userId = UserId.New();
         var name = ApiTokenName.Create("x").Value;
-        var scopes = ApiTokenScopes.Create(new[] { "read" }).Value;
+        var scopes = ApiTokenScopes.Create(["read"]).Value;
 
         var result = ApiToken.Create(userId, name, "h", "p", scopes, Now.AddSeconds(-1), Now);
 

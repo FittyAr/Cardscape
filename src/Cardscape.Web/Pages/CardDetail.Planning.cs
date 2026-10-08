@@ -1,19 +1,10 @@
-using System.Text.Json;
-using Cardscape.Web.Resources;
 using Cardscape.Web.Services;
-using Cardscape.Web.Services.Api;
 using Cardscape.Web.Shared;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.Extensions.Localization;
-using Microsoft.JSInterop;
 using Radzen;
-using Radzen.Blazor;
 
 namespace Cardscape.Web.Pages;
 
-public partial class CardDetail
+public sealed partial class CardDetail
 {
     private async Task SaveRecurrenceAsync()
     {
@@ -38,7 +29,7 @@ public partial class CardDetail
     // leaving the keyboard.
     private async Task OnCreateChecklistKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
     {
-        if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
+        if (e.IsEnter)
         {
             await CreateChecklistAsync();
         }
@@ -46,7 +37,7 @@ public partial class CardDetail
 
     private async Task OnAddItemKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, Guid checklistId)
     {
-        if (string.Equals(e.Key, "Enter", StringComparison.Ordinal))
+        if (e.IsEnter)
         {
             await AddItemAsync(checklistId);
         }
@@ -73,7 +64,7 @@ public partial class CardDetail
         // re-renders without a full GET.
         ApiResult<ChecklistItemDto> result = await Checklists.AddItemAsync(checklistId, _newChecklistItemText);
         CaptureCommandOutcome(result, L["BoardAddItem"]);
-        if (result.IsSuccess && result.Value is not null && _checklists is not null)
+        if (result.HasValue && _checklists is not null)
         {
             _checklists = _checklists
                 .Select(c => c.Id != checklistId

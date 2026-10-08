@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace Cardscape.Web.Logging;
 
 internal static partial class WebLogMessages
