@@ -102,6 +102,45 @@ public sealed record AccessSettings
 {
     public bool AllowPublicRegistration { get; set; } = true;
 
+    /// <summary>
+    /// Email domains allowed to sign up on their own (public registration
+    /// and first sign-in with an external provider), one per line or comma
+    /// separated, e.g. <c>nexora.example</c>; subdomains match too. Empty
+    /// allows every domain. Invitations and administrators bypass it: an
+    /// explicit invitation is a decision, not a self-service sign-up.
+    /// Stored as text so the settings record keeps value equality.
+    /// </summary>
+    [MaxLength(2000)]
+    public string AllowedEmailDomains { get; set; } = string.Empty;
+
+    /// <summary>The normalized entries of <see cref="AllowedEmailDomains"/>.</summary>
+    public IReadOnlyList<string> AllowedDomainList() =>
+        AllowedEmailDomains
+            .Split([',', ';', '\n', '\r', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(domain => domain.TrimStart('@', '.').ToLowerInvariant())
+            .Where(domain => domain.Contains('.', StringComparison.Ordinal))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+    /// <summary>True when the list is empty, or the address's domain is (a subdomain of) a listed one.</summary>
+    public bool IsEmailDomainAllowed(string email)
+    {
+        IReadOnlyList<string> allowed = AllowedDomainList();
+        if (allowed.Count == 0)
+        {
+            return true;
+        }
+
+        int at = email.LastIndexOf('@');
+        if (at < 0 || at == email.Length - 1)
+        {
+            return false;
+        }
+
+        string domain = email[(at + 1)..].Trim().ToLowerInvariant();
+        return allowed.Any(entry => domain == entry || domain.EndsWith("." + entry, StringComparison.Ordinal));
+    }
+
     /// <summary>Only effective when the provider's credentials are configured on the server.</summary>
     public bool GoogleSignInEnabled { get; set; }
 

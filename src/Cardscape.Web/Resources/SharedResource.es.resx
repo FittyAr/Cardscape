@@ -1108,4 +1108,7 @@
   <data name="MembersTransferOwnershipConfirm" xml:space="preserve"><value>¿Hacer a {0} propietario de {1}? El propietario actual sigue en el workspace como Admin; solo el nuevo propietario (o un administrador de la instancia) puede volver a transferir la propiedad.</value></data>
   <data name="AdminUsersOwnsWorkspaces" xml:space="preserve"><value>Esta cuenta es propietaria de workspaces que otros miembros siguen usando: {0}. Primero transfiere la propiedad de cada uno a otro miembro (Workspace › Miembros).</value></data>
   <data name="AdminUsersOwnsWorkspacesUnknown" xml:space="preserve"><value>uno o más workspaces</value></data>
+  <data name="SettingsAllowedDomains" xml:space="preserve"><value>Dominios de correo permitidos</value></data>
+  <data name="SettingsAllowedDomainsHelp" xml:space="preserve"><value>Uno por línea (incluye subdominios). Vacío permite todos. Se aplica al registro público y al primer ingreso con Google, Microsoft o Apple; las invitaciones y las cuentas que crea un administrador no se limitan.</value></data>
+  <data name="RegisterAllowedDomains" xml:space="preserve"><value>El registro está abierto para direcciones de: {0}</value></data>
 </root>

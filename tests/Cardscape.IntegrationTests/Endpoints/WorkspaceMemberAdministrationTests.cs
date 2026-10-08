@@ -144,6 +144,38 @@ public sealed class WorkspaceMemberAdministrationTests(CardscapeWebApplicationFa
         (await MembersAsync(owner.Client, ws.Id)).Should().Contain(m => m.UserId == invitee.Id && m.Role == WorkspaceRole.Observer);
     }
 
+    [Fact]
+    public async Task PublicRegistration_HonoursTheAllowedDomains_ButInvitationsBypassThem()
+    {
+        CancellationToken ct = TestContext.Current.CancellationToken;
+        using WebApplicationFactory<Program> host = factory.WithWebHostBuilder(_ => { });
+        Account owner = await RegisterAsync(host, "owner");
+        WorkspaceDto ws = await CreateWorkspaceAsync(owner.Client, "Domains");
+        await using (AsyncServiceScope scope = host.Services.CreateAsyncScope())
+        {
+            ISystemSettingsService settings = scope.ServiceProvider.GetRequiredService<ISystemSettingsService>();
+            SystemSettings current = await settings.GetAsync(ct);
+            current.Access.AllowedEmailDomains = "nexora.example";
+            (await settings.UpdateAsync(current, "tests", ct)).IsSuccess.Should().BeTrue();
+        }
+
+        HttpClient anonymous = host.CreateClient();
+        HttpResponseMessage outside = await anonymous.PostAsJsonAsync(
+            "api/auth/register", new RegisterRequest(NewEmail("outsider"), "Outsider", Password), ct);
+        outside.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await outside.Content.ReadAsStringAsync(ct)).Should().Contain("Auth.EmailDomainNotAllowed");
+
+        (await anonymous.PostAsJsonAsync(
+                "api/auth/register", new RegisterRequest($"ada-{Guid.NewGuid():N}@nexora.example", "Ada", Password), ct))
+            .StatusCode.Should().Be(HttpStatusCode.Created);
+
+        string guestEmail = NewEmail("guest");
+        string token = await InviteAsync(owner.Client, ws.Id, guestEmail, "member");
+        (await anonymous.PostAsJsonAsync(
+                "api/auth/register", new RegisterRequest(guestEmail, "Guest", Password, token), ct))
+            .StatusCode.Should().Be(HttpStatusCode.Created, "an explicit invitation is not limited by the domain list");
+    }
+
     // ── helpers ────────────────────────────────────────────────
 
     internal sealed record Account(HttpClient Client, Guid Id, string Email);

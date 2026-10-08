@@ -1108,4 +1108,7 @@
   <data name="MembersTransferOwnershipConfirm" xml:space="preserve"><value>Make {0} the owner of {1}? The current owner stays in the workspace as an Admin; only the new owner (or an instance administrator) can transfer ownership again.</value></data>
   <data name="AdminUsersOwnsWorkspaces" xml:space="preserve"><value>This account owns workspaces that other members still use: {0}. Transfer ownership of each one to another member first (Workspace › Members).</value></data>
   <data name="AdminUsersOwnsWorkspacesUnknown" xml:space="preserve"><value>one or more workspaces</value></data>
+  <data name="SettingsAllowedDomains" xml:space="preserve"><value>Allowed email domains</value></data>
+  <data name="SettingsAllowedDomainsHelp" xml:space="preserve"><value>One per line (subdomains included). Empty allows every domain. Applies to public sign-up and the first sign-in with Google, Microsoft or Apple; invitations and accounts created by an administrator are not limited.</value></data>
+  <data name="RegisterAllowedDomains" xml:space="preserve"><value>Sign-up is open to addresses at: {0}</value></data>
 </root>

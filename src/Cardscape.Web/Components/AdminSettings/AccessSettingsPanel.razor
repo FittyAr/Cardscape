@@ -6,6 +6,11 @@
     <SettingsCard Title="@L["SettingsRegistrationTitle"]">
         <SettingToggle Name="AllowPublicRegistration" @bind-Value="Model.AllowPublicRegistration"
                        Label="@L["SettingsAllowPublicRegistration"]" Help="@L["SettingsAllowPublicRegistrationHelp"]" />
+        <RadzenFormField Text="@L["SettingsAllowedDomains"]" Component="AllowedEmailDomains" Style="width:100%">
+            <RadzenTextArea @bind-Value="Model.AllowedEmailDomains" Name="AllowedEmailDomains" Rows="3"
+                            Placeholder="empresa.com&#10;otra.org" MaxLength="2000" Style="width:100%" />
+        </RadzenFormField>
+        <RadzenText Text="@L["SettingsAllowedDomainsHelp"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-m-0" />
     </SettingsCard>
 
     <SettingsCard Title="@L["SettingsSignInProvidersTitle"]" Description="@L["SettingsSignInProvidersDescription"]">

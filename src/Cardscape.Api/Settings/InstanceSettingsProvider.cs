@@ -43,6 +43,7 @@ public sealed class InstanceSettingsProvider(
             Announcement: notices is { AnnouncementEnabled: true, AnnouncementMessage: { } message } ? message : null,
             AnnouncementSeverity: notices.AnnouncementSeverity,
             MaintenanceMessage: notices.MaintenanceEnabled ? notices.MaintenanceMessage ?? string.Empty : null,
-            AiEnabled: current.Ai.Enabled);
+            AiEnabled: current.Ai.Enabled,
+            AllowedEmailDomains: current.Access.AllowedDomainList());
     }
 }

@@ -38,10 +38,16 @@ public static class AuthEndpoints
                 result = await bus.InvokeAsync<Result<AuthResponse>>(new RegisterInvitedUserCommand(
                     request.Email, request.DisplayName, request.Password, request.InvitationToken), ct);
             }
-            else if (!(await settingsService.GetAsync(ct)).Access.AllowPublicRegistration)
+            else if ((await settingsService.GetAsync(ct)).Access is var access && !access.AllowPublicRegistration)
             {
                 return DomainErrorResults.ToProblem(
                     DomainError.Forbidden("Auth.RegistrationClosed", "Public registration is currently disabled by the administrator."));
+            }
+            else if (!access.IsEmailDomainAllowed(request.Email))
+            {
+                return DomainErrorResults.ToProblem(DomainError.Forbidden(
+                    "Auth.EmailDomainNotAllowed",
+                    "Sign-up is limited to the email domains chosen by the administrator."));
             }
             else
             {

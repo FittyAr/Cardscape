@@ -8,6 +8,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.Extensions.Localization
 @inject AuthService Auth
+@inject InstanceSettingsState Instance
 @inject CultureSwitcher Culture
 @inject IInvitationsApiClient InvitationsApi
 @inject NavigationManager Nav
@@ -27,6 +28,11 @@
         <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" AllowClose="false" ShowIcon="true">
             @L["RegisterInvitedTo", invitation.WorkspaceName, invitation.Email]
         </RadzenAlert>
+    }
+    else if (Instance.Current.AllowedEmailDomains is { Count: > 0 } domains)
+    {
+        <RadzenText Text="@L["RegisterAllowedDomains", string.Join(", ", domains)]" TextStyle="TextStyle.Caption"
+                    class="rz-color-text-secondary rz-m-0" />
     }
     else if (invitationError is not null)
     {
@@ -121,6 +127,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await Instance.GetAsync();
         AuthenticationState state = await AuthState.GetAuthenticationStateAsync();
         if (state.User.Identity?.IsAuthenticated == true)
         {

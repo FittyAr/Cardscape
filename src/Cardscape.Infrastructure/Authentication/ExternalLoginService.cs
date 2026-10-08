@@ -1,6 +1,7 @@
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Settings;
+using Cardscape.Contracts.Settings;
 using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
@@ -143,7 +144,8 @@ public sealed class ExternalLoginService(
 
     private async Task<bool> MayProvisionAsync(string email, DateTimeOffset at, CancellationToken ct)
     {
-        if ((await settings.GetAsync(ct)).Access.AllowPublicRegistration)
+        AccessSettings access = (await settings.GetAsync(ct)).Access;
+        if (access.AllowPublicRegistration && access.IsEmailDomainAllowed(email))
         {
             return true;
         }
