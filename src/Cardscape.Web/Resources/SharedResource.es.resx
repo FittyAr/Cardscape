@@ -1111,4 +1111,23 @@
   <data name="SettingsAllowedDomains" xml:space="preserve"><value>Dominios de correo permitidos</value></data>
   <data name="SettingsAllowedDomainsHelp" xml:space="preserve"><value>Uno por línea (incluye subdominios). Vacío permite todos. Se aplica al registro público y al primer ingreso con Google, Microsoft o Apple; las invitaciones y las cuentas que crea un administrador no se limitan.</value></data>
   <data name="RegisterAllowedDomains" xml:space="preserve"><value>El registro está abierto para direcciones de: {0}</value></data>
+  <data name="BoardMembersTitle" xml:space="preserve"><value>Miembros del tablero</value></data>
+  <data name="BoardMembersButton" xml:space="preserve"><value>Miembros</value></data>
+  <data name="BoardMembersButtonAria" xml:space="preserve"><value>Miembros del tablero ({0})</value></data>
+  <data name="BoardMembersLoading" xml:space="preserve"><value>Cargando miembros…</value></data>
+  <data name="BoardMembersYou" xml:space="preserve"><value>Tú</value></data>
+  <data name="BoardMembersChangeRoleAria" xml:space="preserve"><value>Rol de {0} en el tablero</value></data>
+  <data name="BoardMembersRemove" xml:space="preserve"><value>Quitar del tablero</value></data>
+  <data name="BoardMembersRemoveAria" xml:space="preserve"><value>Quitar a {0} del tablero</value></data>
+  <data name="BoardMembersRemoveConfirm" xml:space="preserve"><value>¿Quitar a {0} de “{1}”? Conserva su acceso al workspace.</value></data>
+  <data name="BoardMembersLastAdminHint" xml:space="preserve"><value>Un tablero necesita al menos un administrador. Primero haz administrador a otra persona.</value></data>
+  <data name="BoardMembersAddHeading" xml:space="preserve"><value>Agregar un miembro del workspace</value></data>
+  <data name="BoardMembersPickPerson" xml:space="preserve"><value>Elige un miembro del workspace</value></data>
+  <data name="BoardMembersAdd" xml:space="preserve"><value>Agregar al tablero</value></data>
+  <data name="BoardMembersNoCandidates" xml:space="preserve"><value>Todos los miembros del workspace ya están en este tablero.</value></data>
+  <data name="BoardMembersLeave" xml:space="preserve"><value>Abandonar tablero</value></data>
+  <data name="BoardMembersLeaveConfirm" xml:space="preserve"><value>¿Abandonar “{0}”? Pierdes el acceso hasta que alguien vuelva a agregarte.</value></data>
+  <data name="BoardRoleAdmin" xml:space="preserve"><value>Administrador</value></data>
+  <data name="BoardRoleMember" xml:space="preserve"><value>Miembro</value></data>
+  <data name="BoardRoleObserver" xml:space="preserve"><value>Observador</value></data>
 </root>

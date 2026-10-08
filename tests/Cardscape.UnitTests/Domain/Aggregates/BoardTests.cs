@@ -260,14 +260,105 @@ public sealed class BoardTests
     }
 
     [Fact]
-    public void RemoveMember_OfNonExisting_ReturnsNotMemberFailure()
+    public void RemoveMember_OfNonExisting_ReturnsMemberNotFoundFailure()
     {
         var board = NewBoard();
 
         var result = board.RemoveMember(Guid.NewGuid(), At);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be(BoardErrors.NotMember.Code);
+        result.Error.Code.Should().Be("boards.members.not_found");
+    }
+
+    [Fact]
+    public void RemoveMember_OfLastAdmin_UsesTheBoardMembersErrorCode()
+    {
+        var board = NewBoard();
+        board.AddMember(Guid.NewGuid(), BoardMemberRole.Member, At);
+
+        var result = board.RemoveMember(board.Members.First().UserId, At);
+
+        result.Error.Code.Should().Be("boards.members.last_admin");
+        board.Members.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void ChangeMemberRole_PromotesMemberAndRaisesEvent()
+    {
+        var board = NewBoard();
+        var userId = Guid.NewGuid();
+        board.AddMember(userId, BoardMemberRole.Observer, At);
+        board.ClearDomainEvents();
+
+        var result = board.ChangeMemberRole(userId, BoardMemberRole.Admin, At);
+
+        result.IsSuccess.Should().BeTrue();
+        board.IsAdmin(userId).Should().BeTrue();
+        board.DomainEvents.Should().ContainSingle()
+            .Which.Should().BeOfType<BoardMemberRoleChanged>()
+            .Which.Role.Should().Be(BoardMemberRole.Admin);
+    }
+
+    [Fact]
+    public void ChangeMemberRole_DemotingTheLastAdmin_IsRefused()
+    {
+        var board = NewBoard();
+        var creatorId = board.Members.First().UserId;
+        board.AddMember(Guid.NewGuid(), BoardMemberRole.Member, At);
+
+        var result = board.ChangeMemberRole(creatorId, BoardMemberRole.Member, At);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be(BoardErrors.LastAdmin.Code);
+        board.IsAdmin(creatorId).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ChangeMemberRole_DemotingAnAdminWhenAnotherRemains_Succeeds()
+    {
+        var board = NewBoard();
+        var creatorId = board.Members.First().UserId;
+        board.AddMember(Guid.NewGuid(), BoardMemberRole.Admin, At);
+
+        var result = board.ChangeMemberRole(creatorId, BoardMemberRole.Observer, At);
+
+        result.IsSuccess.Should().BeTrue();
+        board.Members.Single(m => m.UserId == creatorId).Role.Should().Be(BoardMemberRole.Observer);
+    }
+
+    [Fact]
+    public void ChangeMemberRole_ToTheSameRole_IsANoOp()
+    {
+        var board = NewBoard();
+        var creatorId = board.Members.First().UserId;
+        board.ClearDomainEvents();
+
+        var result = board.ChangeMemberRole(creatorId, BoardMemberRole.Admin, At);
+
+        result.IsSuccess.Should().BeTrue();
+        board.DomainEvents.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ChangeMemberRole_OfNonMember_ReturnsMemberNotFound()
+    {
+        var board = NewBoard();
+
+        var result = board.ChangeMemberRole(Guid.NewGuid(), BoardMemberRole.Member, At);
+
+        result.Error.Code.Should().Be(BoardErrors.MemberNotFound.Code);
+    }
+
+    [Fact]
+    public void ChangeMemberRole_WithUndefinedRole_IsRefused()
+    {
+        var board = NewBoard();
+        var userId = Guid.NewGuid();
+        board.AddMember(userId, BoardMemberRole.Member, At);
+
+        var result = board.ChangeMemberRole(userId, (BoardMemberRole)42, At);
+
+        result.Error.Code.Should().Be(BoardErrors.InvalidMemberRole.Code);
     }
 
     [Fact]

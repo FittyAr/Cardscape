@@ -4,27 +4,23 @@ using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Boards;
 using Cardscape.Domain.Boards.Errors;
 using Cardscape.Domain.Common;
-using Cardscape.Domain.Members;
 using Wolverine;
 
 namespace Cardscape.Application.Boards.Commands;
 
 /// <summary>
-/// Adds a member of the board's workspace to the board with the given
-/// role. Only people who can manage the board's roster (board Admins,
-/// the workspace owner / workspace Admins, active instance admins)
-/// may add members; the added user must already belong to the
-/// board's workspace.
+/// Changes a board member's role. Only board-roster managers may do
+/// it, and the aggregate keeps at least one board Admin.
 /// </summary>
-public sealed record AddBoardMemberCommand(
+public sealed record ChangeBoardMemberRoleCommand(
     Guid BoardId,
     Guid UserId,
     BoardMemberRole Role) : IMessage;
 
-public static class AddBoardMemberCommandHandler
+public static class ChangeBoardMemberRoleCommandHandler
 {
     public static async Task<Result> HandleAsync(
-        AddBoardMemberCommand command,
+        ChangeBoardMemberRoleCommand command,
         IBoardRepository boards,
         IWorkspaceRepository workspaces,
         IUserRepository users,
@@ -51,22 +47,10 @@ public static class AddBoardMemberCommandHandler
             return Result.Failure(BoardErrors.Forbidden);
         }
 
-        var user = await users.GetByIdAsync(new UserId(command.UserId), cancellationToken);
-        if (user is null || user.IsDeleted)
+        var changeResult = board.ChangeMemberRole(command.UserId, command.Role, clock.UtcNow);
+        if (changeResult.IsFailure)
         {
-            return Result.Failure(DomainError.NotFound(
-                "users.not_found", "User was not found."));
-        }
-
-        if (workspace is null || !workspace.HasMember(command.UserId))
-        {
-            return Result.Failure(BoardErrors.MemberNotInWorkspace);
-        }
-
-        var addResult = board.AddMember(command.UserId, command.Role, clock.UtcNow);
-        if (addResult.IsFailure)
-        {
-            return Result.Failure(addResult.Error);
+            return changeResult;
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

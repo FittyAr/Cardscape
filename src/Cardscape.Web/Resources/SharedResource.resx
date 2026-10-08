@@ -1111,4 +1111,23 @@
   <data name="SettingsAllowedDomains" xml:space="preserve"><value>Allowed email domains</value></data>
   <data name="SettingsAllowedDomainsHelp" xml:space="preserve"><value>One per line (subdomains included). Empty allows every domain. Applies to public sign-up and the first sign-in with Google, Microsoft or Apple; invitations and accounts created by an administrator are not limited.</value></data>
   <data name="RegisterAllowedDomains" xml:space="preserve"><value>Sign-up is open to addresses at: {0}</value></data>
+  <data name="BoardMembersTitle" xml:space="preserve"><value>Board members</value></data>
+  <data name="BoardMembersButton" xml:space="preserve"><value>Members</value></data>
+  <data name="BoardMembersButtonAria" xml:space="preserve"><value>Board members ({0})</value></data>
+  <data name="BoardMembersLoading" xml:space="preserve"><value>Loading members…</value></data>
+  <data name="BoardMembersYou" xml:space="preserve"><value>You</value></data>
+  <data name="BoardMembersChangeRoleAria" xml:space="preserve"><value>Board role for {0}</value></data>
+  <data name="BoardMembersRemove" xml:space="preserve"><value>Remove from board</value></data>
+  <data name="BoardMembersRemoveAria" xml:space="preserve"><value>Remove {0} from the board</value></data>
+  <data name="BoardMembersRemoveConfirm" xml:space="preserve"><value>Remove {0} from “{1}”? They keep their workspace access.</value></data>
+  <data name="BoardMembersLastAdminHint" xml:space="preserve"><value>A board needs at least one admin. Make someone else an admin first.</value></data>
+  <data name="BoardMembersAddHeading" xml:space="preserve"><value>Add a workspace member</value></data>
+  <data name="BoardMembersPickPerson" xml:space="preserve"><value>Choose a workspace member</value></data>
+  <data name="BoardMembersAdd" xml:space="preserve"><value>Add to board</value></data>
+  <data name="BoardMembersNoCandidates" xml:space="preserve"><value>Everyone in the workspace is already on this board.</value></data>
+  <data name="BoardMembersLeave" xml:space="preserve"><value>Leave board</value></data>
+  <data name="BoardMembersLeaveConfirm" xml:space="preserve"><value>Leave “{0}”? You lose access to it until someone adds you again.</value></data>
+  <data name="BoardRoleAdmin" xml:space="preserve"><value>Admin</value></data>
+  <data name="BoardRoleMember" xml:space="preserve"><value>Member</value></data>
+  <data name="BoardRoleObserver" xml:space="preserve"><value>Observer</value></data>
 </root>

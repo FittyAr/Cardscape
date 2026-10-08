@@ -688,3 +688,24 @@ select:focus-visible,
     color: var(--rz-on-success);
     text-decoration: line-through;
 }
+
+/* ── Board members dialog ──────────────────────────────── */
+.cs-board-member {
+    padding: 0.375rem 0;
+    border-bottom: 1px solid var(--cs-border);
+}
+
+.cs-board-member-identity {
+    flex: 1 1 12rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.cs-board-member-role {
+    width: 10rem;
+}
+
+.cs-board-members-pick {
+    flex: 1 1 14rem;
+    min-width: 12rem;
+}

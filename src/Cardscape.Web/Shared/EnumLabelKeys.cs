@@ -14,6 +14,17 @@ public static class EnumLabelKeys
         };
     }
 
+    extension(BoardMemberRole role)
+    {
+        public string LabelKey => role switch
+        {
+            BoardMemberRole.Admin => "BoardRoleAdmin",
+            BoardMemberRole.Member => "BoardRoleMember",
+            BoardMemberRole.Observer => "BoardRoleObserver",
+            _ => "CommonUnknown",
+        };
+    }
+
     extension(BoardVisibility visibility)
     {
         public string LabelKey => visibility switch

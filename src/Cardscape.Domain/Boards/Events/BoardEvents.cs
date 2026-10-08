@@ -57,6 +57,13 @@ public sealed record BoardMemberRemoved(
     Guid UserId,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
 
+/// <summary>Raised when a board member's role changes.</summary>
+public sealed record BoardMemberRoleChanged(
+    BoardId BoardId,
+    Guid UserId,
+    BoardMemberRole Role,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
 /// <summary>Raised when a board is starred by a user.</summary>
 public sealed record BoardStarred(
     BoardId BoardId,

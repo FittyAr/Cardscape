@@ -25,5 +25,11 @@ public sealed record BoardSummaryDto(
 public sealed record BoardMemberDto(
     Guid UserId,
     string? DisplayName,
+    string? Email,
     BoardMemberRole Role,
     DateTimeOffset JoinedAt);
+
+/// <summary>What the caller may do with a board's roster.</summary>
+public sealed record BoardMemberAccessDto(
+    bool CanManageMembers,
+    BoardMemberRole? Role);

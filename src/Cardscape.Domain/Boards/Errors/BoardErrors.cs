@@ -20,5 +20,15 @@ public static class BoardErrors
         DomainError.Forbidden("boards.forbidden", "You do not have permission to perform this action.");
 
     public static readonly DomainError LastAdmin =
-        DomainError.Conflict("boards.last_admin", "The board must have at least one admin.");
+        DomainError.Conflict("boards.members.last_admin", "The board must have at least one admin.");
+
+    public static readonly DomainError MemberNotFound =
+        DomainError.NotFound("boards.members.not_found", "The user is not a member of this board.");
+
+    public static readonly DomainError MemberNotInWorkspace =
+        DomainError.Validation("boards.members.not_in_workspace",
+            "Only members of the board's workspace can be added to the board.");
+
+    public static readonly DomainError InvalidMemberRole =
+        DomainError.Validation("boards.members.invalid_role", "The board role is not valid.");
 }

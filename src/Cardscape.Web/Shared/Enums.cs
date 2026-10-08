@@ -48,6 +48,14 @@ public enum BoardVisibility
     Public = 2
 }
 
+// src/Cardscape.Domain/Boards/BoardMemberRole.cs
+public enum BoardMemberRole
+{
+    Admin = 0,
+    Member = 1,
+    Observer = 2
+}
+
 // ── Board extensions ──────────────────────────────────────
 public enum BoardExtensionKind
 {
