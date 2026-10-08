@@ -106,6 +106,26 @@
     gap: 0.25rem;
 }
 
+/* Members button: overlapping initials avatars, then the label. */
+.cs-board-member-stack {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-end: 0.375rem;
+}
+
+.cs-board-member-stack .cs-avatar {
+    box-shadow: 0 0 0 2px var(--rz-base-background-color);
+}
+
+.cs-board-member-stack .cs-avatar + .cs-avatar {
+    margin-inline-start: -0.5rem;
+}
+
+.cs-board-member-stack .cs-avatar--more {
+    background: var(--cs-surface-sunken);
+    color: var(--rz-text-color);
+}
+
 /* Icon-only overflow menus ("…") on the board bar and columns. */
 .cs-board-bar-actions ::deep .rz-menu,
 .cs-board-page ::deep .cs-column-menu {

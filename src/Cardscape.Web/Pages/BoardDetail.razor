@@ -67,6 +67,21 @@ else
                 }
             </div>
             <div class="cs-board-bar-actions">
+                <RadzenButton ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" class="cs-board-members-button"
+                              title="@L["BoardMembersTitle"]" aria-label="@L["BoardMembersButtonAria", MemberCount]"
+                              Click="@OpenMembersAsync">
+                    <span class="cs-board-member-stack" aria-hidden="true">
+                        @foreach (BoardMemberDto member in MemberAvatars)
+                        {
+                            <span class="cs-avatar cs-avatar--sm" title="@MemberName(member)">@UserInitials.From(MemberName(member))</span>
+                        }
+                        @if (MemberOverflow > 0)
+                        {
+                            <span class="cs-avatar cs-avatar--sm cs-avatar--more">+@MemberOverflow</span>
+                        }
+                    </span>
+                    <span>@L["BoardMembersButton"]</span>
+                </RadzenButton>
                 <RadzenButton Text="@(IsFiltering ? L["BoardFilterActive", ActiveFilterCount] : L["BoardFilter"])" Icon="filter_list"
                               ButtonStyle="@(IsFiltering ? ButtonStyle.Primary : ButtonStyle.Base)"
                               Variant="@(IsFiltering ? Variant.Flat : Variant.Text)"

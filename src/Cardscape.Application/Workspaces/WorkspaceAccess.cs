@@ -20,7 +20,7 @@ internal static class WorkspaceAccess
         Workspace workspace, UserId caller, IUserRepository users, CancellationToken cancellation) =>
         workspace.HasMember(caller.Value) || await IsInstanceAdminAsync(caller, users, cancellation);
 
-    private static async Task<bool> IsInstanceAdminAsync(
+    public static async Task<bool> IsInstanceAdminAsync(
         UserId caller, IUserRepository users, CancellationToken cancellation)
     {
         User? user = await users.GetByIdAsync(caller, cancellation);

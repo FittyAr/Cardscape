@@ -18,6 +18,13 @@ public interface IBoardsApiClient
     Task<ApiResult<BoardDto>> UnstarAsync(Guid boardId, CancellationToken ct = default);
     Task<ApiResult<BoardDto>> ArchiveAsync(Guid boardId, CancellationToken ct = default);
     Task<ApiResult<BoardDto>> UnarchiveAsync(Guid boardId, CancellationToken ct = default);
+    Task<ApiResult<IReadOnlyList<BoardMemberDto>>> ListMembersAsync(Guid boardId, CancellationToken ct = default);
+    /// <summary>Whether the caller can manage the roster, and their own board role.</summary>
+    Task<ApiResult<BoardMemberAccessDto>> GetMemberAccessAsync(Guid boardId, CancellationToken ct = default);
+    Task<ApiResult> AddMemberAsync(Guid boardId, Guid userId, BoardMemberRole role, CancellationToken ct = default);
+    Task<ApiResult> ChangeMemberRoleAsync(Guid boardId, Guid userId, BoardMemberRole role, CancellationToken ct = default);
+    /// <summary>Removes a member; with the caller's own id this leaves the board.</summary>
+    Task<ApiResult> RemoveMemberAsync(Guid boardId, Guid userId, CancellationToken ct = default);
 }
 
 public sealed class BoardsApiClient(IHttpClientFactory http) : ApiClientBase(http), IBoardsApiClient
@@ -106,5 +113,41 @@ public sealed class BoardsApiClient(IHttpClientFactory http) : ApiClientBase(htt
             ? await CreateClient().DeleteAsync($"api/boards/{boardId}/color", ct)
             : await CreateClient().PostAsJsonAsync($"api/boards/{boardId}/color", new { color = colorName }, JsonOptions, ct);
         return await ReadAsync<BoardDto>(response, ct);
+    }
+
+    public async Task<ApiResult<IReadOnlyList<BoardMemberDto>>> ListMembersAsync(
+        Guid boardId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().GetAsync($"api/boards/{boardId}/members", ct);
+        return await ReadAsync<IReadOnlyList<BoardMemberDto>>(response, ct);
+    }
+
+    public async Task<ApiResult<BoardMemberAccessDto>> GetMemberAccessAsync(
+        Guid boardId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().GetAsync($"api/boards/{boardId}/members/access", ct);
+        return await ReadAsync<BoardMemberAccessDto>(response, ct);
+    }
+
+    public async Task<ApiResult> AddMemberAsync(
+        Guid boardId, Guid userId, BoardMemberRole role, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
+            $"api/boards/{boardId}/members", new AddBoardMemberRequestDto(userId, role), JsonOptions, ct);
+        return await ReadAsync(response, ct);
+    }
+
+    public async Task<ApiResult> ChangeMemberRoleAsync(
+        Guid boardId, Guid userId, BoardMemberRole role, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PatchAsJsonAsync(
+            $"api/boards/{boardId}/members/{userId}", new ChangeBoardMemberRoleRequestDto(role), JsonOptions, ct);
+        return await ReadAsync(response, ct);
+    }
+
+    public async Task<ApiResult> RemoveMemberAsync(Guid boardId, Guid userId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().DeleteAsync($"api/boards/{boardId}/members/{userId}", ct);
+        return await ReadAsync(response, ct);
     }
 }

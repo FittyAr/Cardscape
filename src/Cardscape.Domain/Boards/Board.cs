@@ -174,6 +174,11 @@ public sealed class Board : AggregateRoot<BoardId>
             return Result.Failure(BoardErrors.Archived);
         }
 
+        if (!Enum.IsDefined(role))
+        {
+            return Result.Failure(BoardErrors.InvalidMemberRole);
+        }
+
         if (_members.Any(m => m.UserId == userId))
         {
             return Result.Failure(BoardErrors.AlreadyMember);
@@ -185,16 +190,16 @@ public sealed class Board : AggregateRoot<BoardId>
         return Result.Success();
     }
 
+    /// <summary>Removes a member. The last board Admin cannot be removed.</summary>
     public Result RemoveMember(Guid userId, DateTimeOffset at)
     {
         var member = _members.FirstOrDefault(m => m.UserId == userId);
         if (member is null)
         {
-            return Result.Failure(BoardErrors.NotMember);
+            return Result.Failure(BoardErrors.MemberNotFound);
         }
 
-        if (member.Role == BoardMemberRole.Admin
-            && _members.Count(m => m.Role == BoardMemberRole.Admin) == 1)
+        if (IsLastAdmin(member))
         {
             return Result.Failure(BoardErrors.LastAdmin);
         }
@@ -204,6 +209,44 @@ public sealed class Board : AggregateRoot<BoardId>
         AddDomainEvent(new BoardMemberRemoved(Id, userId, at));
         return Result.Success();
     }
+
+    /// <summary>Changes a member's role. The last board Admin cannot be demoted.</summary>
+    public Result ChangeMemberRole(Guid userId, BoardMemberRole role, DateTimeOffset at)
+    {
+        if (!Enum.IsDefined(role))
+        {
+            return Result.Failure(BoardErrors.InvalidMemberRole);
+        }
+
+        var member = _members.FirstOrDefault(m => m.UserId == userId);
+        if (member is null)
+        {
+            return Result.Failure(BoardErrors.MemberNotFound);
+        }
+
+        if (member.Role == role)
+        {
+            return Result.Success();
+        }
+
+        if (IsLastAdmin(member))
+        {
+            return Result.Failure(BoardErrors.LastAdmin);
+        }
+
+        member.ChangeRole(role, at);
+        UpdatedAt = at;
+        AddDomainEvent(new BoardMemberRoleChanged(Id, userId, role, at));
+        return Result.Success();
+    }
+
+    /// <summary>True if <paramref name="userId"/> is an Admin of this board.</summary>
+    public bool IsAdmin(Guid userId) =>
+        _members.Any(m => m.UserId == userId && m.Role == BoardMemberRole.Admin);
+
+    private bool IsLastAdmin(BoardMember member) =>
+        member.Role == BoardMemberRole.Admin
+        && _members.Count(m => m.Role == BoardMemberRole.Admin) == 1;
 
     public Result Star(Guid userId, DateTimeOffset at)
     {

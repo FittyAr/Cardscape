@@ -87,9 +87,10 @@ public sealed partial class BoardDetail
             _showArchived = false;
             _renamingListId = null;
             _renamingBoard = false;
+            _boardMembers = null;
         }
 
-        await Task.WhenAll(ReloadListsAndCardsAsync(), ReloadAgingModeAsync(), ReloadLabelsAsync());
+        await Task.WhenAll(ReloadListsAndCardsAsync(), ReloadAgingModeAsync(), ReloadLabelsAsync(), ReloadBoardMembersAsync());
 
         if (_lastSubscribedBoardId != BoardId)
         {

@@ -159,6 +159,44 @@ public static class BoardEndpoints
             return result.ToOk();
         }).Produces<BoardMemberDto[]>();
 
+        // What the caller may do with the roster (drives the members panel).
+        group.MapGet("/{boardId:guid}/members/access", async (
+            Guid boardId,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<BoardMemberAccessDto>>(
+                new GetBoardMemberAccessQuery(boardId), ct);
+            return result.ToOk();
+        }).Produces<BoardMemberAccessDto>();
+
+        // Board Admins, workspace managers and instance admins change
+        // roles; the last board Admin cannot be demoted.
+        group.MapPatch("/{boardId:guid}/members/{userId:guid}", async (
+            Guid boardId,
+            Guid userId,
+            ChangeBoardMemberRoleBody body,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result>(
+                new ChangeBoardMemberRoleCommand(boardId, userId, body.Role), ct);
+            return result.ToNoContent();
+        }).Produces(StatusCodes.Status204NoContent);
+
+        // Managers remove anyone; any member may remove themselves
+        // (leave). The last board Admin cannot be removed.
+        group.MapDelete("/{boardId:guid}/members/{userId:guid}", async (
+            Guid boardId,
+            Guid userId,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result>(
+                new RemoveBoardMemberCommand(boardId, userId), ct);
+            return result.ToNoContent();
+        }).Produces(StatusCodes.Status204NoContent);
+
         // Export the board as a ZIP archive (board.json + attachments).
         group.MapGet("/{boardId:guid}/export", async (
             Guid boardId,
@@ -219,4 +257,6 @@ public static class BoardEndpoints
     public sealed record VisibilityRequest(BoardVisibility Visibility);
     public sealed record ColorRequest(string? Color);
     public sealed record AddBoardMemberBody(Guid UserId, BoardMemberRole Role);
+
+    public sealed record ChangeBoardMemberRoleBody(BoardMemberRole Role);
 }

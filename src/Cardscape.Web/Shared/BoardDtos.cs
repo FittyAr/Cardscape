@@ -26,3 +26,17 @@ public sealed record CreateBoardRequestDto(
     string Name,
     string? Description,
     BoardVisibility Visibility);
+
+// ── Board members ───────────────────────────────────────
+public sealed record BoardMemberDto(
+    Guid UserId,
+    string? DisplayName,
+    string? Email,
+    BoardMemberRole Role,
+    DateTimeOffset JoinedAt);
+
+public sealed record BoardMemberAccessDto(bool CanManageMembers, BoardMemberRole? Role);
+
+public sealed record AddBoardMemberRequestDto(Guid UserId, BoardMemberRole Role);
+
+public sealed record ChangeBoardMemberRoleRequestDto(BoardMemberRole Role);

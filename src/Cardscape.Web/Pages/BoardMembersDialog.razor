@@ -1,0 +1,341 @@
+@* Board members panel, opened from the board header. Lists the
+   roster (name, email, role); people who can manage the board
+   (board Admins, workspace owner / Admins, instance admins) change
+   roles, remove members and add workspace members; anyone can leave.
+   The API enforces every rule; the controls are only hidden here.
+   Closes with BoardMembersDialog.Left when the caller left the board,
+   or true when the roster changed. *@
+
+@using System.Security.Claims
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Localization
+@using Radzen
+@using Radzen.Blazor
+@inject IBoardsApiClient BoardsApi
+@inject IWorkspacesApiClient WorkspacesApi
+@inject AuthenticationStateProvider AuthState
+@inject DialogService Dialog
+@inject IStringLocalizer<SharedResource> L
+
+<RadzenStack Gap="1rem" class="cs-board-members">
+    @if (_error is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">@_error</RadzenAlert>
+    }
+
+    @if (_loadError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">@_loadError</RadzenAlert>
+    }
+    else if (_members is null)
+    {
+        <LoadingState Size="LoadingSize.Section" Text="@L["BoardMembersLoading"]" />
+    }
+    else
+    {
+        <RadzenStack Gap="0.5rem" role="list" aria-label="@L["BoardMembersTitle"]">
+            @foreach (BoardMemberDto member in _members)
+            {
+                bool isMe = member.UserId == _currentUserId;
+                bool isLastAdmin = IsLastAdmin(member);
+                string name = DisplayNameOf(member);
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem"
+                             Wrap="FlexWrap.Wrap" class="cs-board-member" role="listitem">
+                    <span class="cs-avatar cs-avatar--sm" aria-hidden="true">@UserInitials.From(name)</span>
+                    <RadzenStack Gap="0" class="cs-board-member-identity">
+                        <RadzenText TextStyle="TextStyle.Body1" class="rz-m-0">
+                            @name
+                            @if (isMe)
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L["BoardMembersYou"]" class="rz-ms-1" />
+                            }
+                        </RadzenText>
+                        @if (!string.IsNullOrWhiteSpace(member.Email))
+                        {
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0 rz-color-text-secondary">@member.Email</RadzenText>
+                        }
+                    </RadzenStack>
+                    @if (_canManage && !isLastAdmin)
+                    {
+                        <RadzenDropDown TValue="BoardMemberRole" Value="@member.Role" Data="@Roles"
+                                        TextProperty="Label" ValueProperty="Value"
+                                        Disabled="@(_pendingUserId is not null)"
+                                        aria-label="@L["BoardMembersChangeRoleAria", name]"
+                                        Change="@(value => ChangeRoleAsync(member, (BoardMemberRole)value))"
+                                        class="cs-board-member-role" />
+                        <RadzenButton Icon="person_remove" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small"
+                                      Disabled="@(_pendingUserId is not null)"
+                                      title="@L["BoardMembersRemove"]" aria-label="@L["BoardMembersRemoveAria", name]"
+                                      Click="@(() => RemoveAsync(member))" />
+                    }
+                    else
+                    {
+                        <RadzenBadge BadgeStyle="@(member.Role == BoardMemberRole.Admin ? BadgeStyle.Primary : BadgeStyle.Light)"
+                                     Text="@L[member.Role.LabelKey]"
+                                     title="@(isLastAdmin ? L["BoardMembersLastAdminHint"] : null)" />
+                    }
+                </RadzenStack>
+            }
+        </RadzenStack>
+
+        @if (_canManage)
+        {
+            <RadzenStack Gap="0.5rem" class="cs-board-members-add">
+                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H3" Text="@L["BoardMembersAddHeading"]" class="rz-m-0" />
+                @if (_candidatesError is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">@_candidatesError</RadzenAlert>
+                }
+                else if (_candidates is null)
+                {
+                    <LoadingState Size="LoadingSize.Inline" />
+                }
+                else if (_candidates.Count == 0)
+                {
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0 rz-color-text-secondary" Text="@L["BoardMembersNoCandidates"]" />
+                }
+                else
+                {
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                        <RadzenDropDown TValue="Guid?" @bind-Value="_newMemberId" Data="@_candidates"
+                                        TextProperty="Label" ValueProperty="Value"
+                                        AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        Placeholder="@L["BoardMembersPickPerson"]"
+                                        aria-label="@L["BoardMembersPickPerson"]"
+                                        class="cs-board-members-pick" />
+                        <RadzenDropDown TValue="BoardMemberRole" @bind-Value="_newMemberRole" Data="@Roles"
+                                        TextProperty="Label" ValueProperty="Value"
+                                        aria-label="@L["MembersRole"]"
+                                        class="cs-board-member-role" />
+                        <RadzenButton Text="@L["BoardMembersAdd"]" Icon="person_add" ButtonStyle="ButtonStyle.Primary"
+                                      Disabled="@(_newMemberId is null || _pendingUserId is not null)"
+                                      IsBusy="@(_pendingUserId is not null && _pendingUserId == _newMemberId)"
+                                      Click="@AddAsync" />
+                    </RadzenStack>
+                }
+            </RadzenStack>
+        }
+    }
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+        @if (_myRole is not null)
+        {
+            <RadzenButton Text="@L["BoardMembersLeave"]" Icon="logout" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined"
+                          Disabled="@(_pendingUserId is not null || IsMeLastAdmin)"
+                          title="@(IsMeLastAdmin ? L["BoardMembersLastAdminHint"] : null)"
+                          Click="@LeaveAsync" />
+        }
+        else
+        {
+            <span></span>
+        }
+        <RadzenButton Text="@L["ActionClose"]" ButtonStyle="ButtonStyle.Light" Click="@Close" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    /// <summary>Dialog result when the caller left the board.</summary>
+    public const string Left = "left";
+
+    [Parameter] public Guid BoardId { get; set; }
+    [Parameter] public Guid WorkspaceId { get; set; }
+    [Parameter] public string BoardName { get; set; } = string.Empty;
+
+    private IReadOnlyList<BoardMemberDto>? _members;
+    private IReadOnlyList<CandidateOption>? _candidates;
+    private IReadOnlyList<WorkspaceMemberDto>? _workspaceMembers;
+    private string? _loadError;
+    private string? _candidatesError;
+    private string? _error;
+    private bool _canManage;
+    private BoardMemberRole? _myRole;
+    private Guid _currentUserId;
+    private Guid? _pendingUserId;
+    private Guid? _newMemberId;
+    private BoardMemberRole _newMemberRole = BoardMemberRole.Member;
+    private bool _changed;
+
+    private sealed record RoleOption(BoardMemberRole Value, string Label);
+    private sealed record CandidateOption(Guid? Value, string Label);
+
+    private IReadOnlyList<RoleOption> Roles =>
+    [
+        new(BoardMemberRole.Admin, L["BoardRoleAdmin"]),
+        new(BoardMemberRole.Member, L["BoardRoleMember"]),
+        new(BoardMemberRole.Observer, L["BoardRoleObserver"])
+    ];
+
+    private bool IsMeLastAdmin =>
+        _members?.FirstOrDefault(m => m.UserId == _currentUserId) is { } me && IsLastAdmin(me);
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState auth = await AuthState.GetAuthenticationStateAsync();
+        _ = Guid.TryParse(auth.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out _currentUserId);
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        Task<ApiResult<BoardMemberAccessDto>> accessTask = BoardsApi.GetMemberAccessAsync(BoardId);
+        Task<ApiResult<IReadOnlyList<BoardMemberDto>>> membersTask = BoardsApi.ListMembersAsync(BoardId);
+        await Task.WhenAll(accessTask, membersTask);
+
+        ApiResult<BoardMemberAccessDto> access = await accessTask;
+        ApiResult<IReadOnlyList<BoardMemberDto>> members = await membersTask;
+        if (!access.HasValue || !members.HasValue)
+        {
+            _loadError = access.Error ?? members.Error;
+            return;
+        }
+
+        _loadError = null;
+        _canManage = access.Value.CanManageMembers;
+        _myRole = access.Value.Role;
+        _members = members.Value;
+
+        if (_canManage)
+        {
+            if (_workspaceMembers is null)
+            {
+                ApiResult<IReadOnlyList<WorkspaceMemberDto>> ws = await WorkspacesApi.ListMembersAsync(WorkspaceId);
+                if (ws.HasValue)
+                {
+                    _workspaceMembers = ws.Value;
+                    _candidatesError = null;
+                }
+                else
+                {
+                    _candidatesError = ws.Error;
+                }
+            }
+
+            RebuildCandidates();
+        }
+    }
+
+    private void RebuildCandidates()
+    {
+        if (_workspaceMembers is null || _members is null)
+        {
+            return;
+        }
+
+        HashSet<Guid> onBoard = _members.Select(m => m.UserId).ToHashSet();
+        _candidates = _workspaceMembers
+            .Where(m => !onBoard.Contains(m.UserId))
+            .OrderBy(m => m.DisplayName, StringComparer.CurrentCultureIgnoreCase)
+            .Select(m => new CandidateOption(m.UserId, $"{m.DisplayName} ({m.Email})"))
+            .ToList();
+        if (_newMemberId is not null && _candidates.All(c => c.Value != _newMemberId))
+        {
+            _newMemberId = null;
+        }
+    }
+
+    private bool IsLastAdmin(BoardMemberDto member) =>
+        member.Role == BoardMemberRole.Admin
+        && _members?.Count(m => m.Role == BoardMemberRole.Admin) == 1;
+
+    private string DisplayNameOf(BoardMemberDto member) =>
+        string.IsNullOrWhiteSpace(member.DisplayName) ? member.Email ?? L["CommonUnknown"] : member.DisplayName;
+
+    private async Task ChangeRoleAsync(BoardMemberDto member, BoardMemberRole role)
+    {
+        if (role == member.Role)
+        {
+            return;
+        }
+
+        await RunAsync(member.UserId, () => BoardsApi.ChangeMemberRoleAsync(BoardId, member.UserId, role));
+    }
+
+    private async Task RemoveAsync(BoardMemberDto member)
+    {
+        bool confirmed = await Dialog.Confirm(
+            L["BoardMembersRemoveConfirm", DisplayNameOf(member), BoardName],
+            L["BoardMembersRemove"],
+            new ConfirmOptions { OkButtonText = L["BoardMembersRemove"], CancelButtonText = L["ActionCancel"] }) ?? false;
+        if (!confirmed)
+        {
+            return;
+        }
+
+        await RunAsync(member.UserId, () => BoardsApi.RemoveMemberAsync(BoardId, member.UserId));
+    }
+
+    private async Task AddAsync()
+    {
+        if (_newMemberId is not Guid userId)
+        {
+            return;
+        }
+
+        bool added = await RunAsync(userId, () => BoardsApi.AddMemberAsync(BoardId, userId, _newMemberRole));
+        if (added)
+        {
+            _newMemberId = null;
+            _newMemberRole = BoardMemberRole.Member;
+        }
+    }
+
+    private async Task LeaveAsync()
+    {
+        bool confirmed = await Dialog.Confirm(
+            L["BoardMembersLeaveConfirm", BoardName],
+            L["BoardMembersLeave"],
+            new ConfirmOptions { OkButtonText = L["BoardMembersLeave"], CancelButtonText = L["ActionCancel"] }) ?? false;
+        if (!confirmed)
+        {
+            return;
+        }
+
+        _pendingUserId = _currentUserId;
+        _error = null;
+        try
+        {
+            ApiResult result = await BoardsApi.RemoveMemberAsync(BoardId, _currentUserId);
+            if (!result.IsSuccess)
+            {
+                _error = result.Error;
+                return;
+            }
+
+            Dialog.Close(Left);
+        }
+        finally
+        {
+            _pendingUserId = null;
+        }
+    }
+
+    private async Task<bool> RunAsync(Guid userId, Func<Task<ApiResult>> action)
+    {
+        _pendingUserId = userId;
+        _error = null;
+        try
+        {
+            ApiResult result = await action();
+            if (!result.IsSuccess)
+            {
+                _error = result.Error;
+            }
+            else
+            {
+                _changed = true;
+            }
+
+            await ReloadAsync();
+            return result.IsSuccess;
+        }
+        finally
+        {
+            _pendingUserId = null;
+        }
+    }
+
+    private void Close() => Dialog.Close(_changed);
+}
