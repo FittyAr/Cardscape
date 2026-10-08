@@ -222,7 +222,7 @@ public sealed class WorkspaceGuestTests(CardscapeWebApplicationFactory factory)
     }
 
     [Fact]
-    public async Task BoardMemberAccess_OffersGuestInvitesToWorkspaceManagersOnly()
+    public async Task BoardMemberAccess_OffersGuestInvitesToWhoeverManagesTheBoard()
     {
         CancellationToken ct = TestContext.Current.CancellationToken;
         Setup s = await SeedAsync("Guest access");
@@ -233,9 +233,13 @@ public sealed class WorkspaceGuestTests(CardscapeWebApplicationFactory factory)
         BoardMemberAccessDto boardAdmin = (await s.Member.Client.GetFromJsonAsync<BoardMemberAccessDto>(
             $"api/boards/{memberBoard}/members/access", TestJson.Options, ct))!;
 
+        BoardMemberAccessDto guest = (await s.Guest.Client.GetFromJsonAsync<BoardMemberAccessDto>(
+            $"api/boards/{s.SharedBoard}/members/access", TestJson.Options, ct))!;
+
         owner.CanInviteGuests.Should().BeTrue();
         boardAdmin.CanManageMembers.Should().BeTrue();
-        boardAdmin.CanInviteGuests.Should().BeFalse();
+        boardAdmin.CanInviteGuests.Should().BeTrue("a board Admin may invite guests to their board");
+        guest.CanInviteGuests.Should().BeFalse();
     }
 
     // ── helpers ────────────────────────────────────────────────

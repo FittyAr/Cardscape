@@ -17,7 +17,9 @@ public sealed record WorkspaceInvitationDto(
     DateTimeOffset InvitedAt,
     DateTimeOffset ExpiresAt,
     string TokenPrefix,
-    string? InvitedByName = null);
+    string? InvitedByName = null,
+    Guid? BoardId = null,
+    string? BoardName = null);
 
 public sealed record WorkspaceInvitationIssuanceDto(
     Guid Id,
@@ -30,7 +32,9 @@ public sealed record IssueWorkspaceInvitationRequestDto(
     string Email,
     WorkspaceRole Role,
     TimeSpan? Lifetime = null,
-    string? Language = null);
+    string? Language = null,
+    Guid? BoardId = null,
+    BoardMemberRole? BoardRole = null);
 
 public sealed record AcceptWorkspaceInvitationRequestDto(string Token);
 
@@ -41,4 +45,5 @@ public sealed record WorkspaceInvitationPreviewDto(
     string Email,
     WorkspaceRole Role,
     DateTimeOffset ExpiresAt,
-    bool AccountExists);
+    bool AccountExists,
+    string? BoardName = null);

@@ -228,10 +228,10 @@ public sealed class WorkspaceMemberAdministrationTests(CardscapeWebApplicationFa
         return (await response.Content.ReadFromJsonAsync<WorkspaceDto>(TestJson.Options, TestContext.Current.CancellationToken))!;
     }
 
-    private static async Task<IReadOnlyList<MemberRow>> MembersAsync(HttpClient client, Guid workspaceId) =>
+    internal static async Task<IReadOnlyList<MemberRow>> MembersAsync(HttpClient client, Guid workspaceId) =>
         (await client.GetFromJsonAsync<MemberRow[]>($"api/workspaces/{workspaceId}/members", TestJson.Options, TestContext.Current.CancellationToken))!;
 
-    private sealed record MemberRow(Guid UserId, string Email, string DisplayName, WorkspaceRole Role, DateTimeOffset JoinedAt);
+    internal sealed record MemberRow(Guid UserId, string Email, string DisplayName, WorkspaceRole Role, DateTimeOffset JoinedAt);
 
     internal static async Task SetPublicRegistrationAsync(WebApplicationFactory<Program> host, bool allow)
     {

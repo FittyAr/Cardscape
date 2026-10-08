@@ -225,7 +225,7 @@ public sealed class WorkspaceGuestHandlerTests
     }
 
     [Fact]
-    public async Task BoardMemberAccess_LetsWorkspaceManagersInviteGuests()
+    public async Task BoardMemberAccess_LetsWhoeverManagesTheBoardInviteGuests()
     {
         Scenario s = await SeedAsync();
         s.SharedBoard.AddMember(s.Member.Id.Value, BoardMemberRole.Admin, s.Ctx.Clock.UtcNow);
@@ -244,7 +244,7 @@ public sealed class WorkspaceGuestHandlerTests
 
         owner.Value.CanInviteGuests.Should().BeTrue();
         boardAdmin.Value.CanManageMembers.Should().BeTrue();
-        boardAdmin.Value.CanInviteGuests.Should().BeFalse("only workspace managers issue workspace invitations");
+        boardAdmin.Value.CanInviteGuests.Should().BeTrue("a board Admin may invite guests to their board");
         roster.Value.Single(m => m.UserId == s.Guest.Id.Value).IsWorkspaceGuest.Should().BeTrue();
         roster.Value.Single(m => m.UserId == s.Owner.Id.Value).IsWorkspaceGuest.Should().BeFalse();
     }

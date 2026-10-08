@@ -16,6 +16,7 @@ public static class ListWorkspaceInvitationsQueryHandler
         IWorkspaceInvitationRepository repository,
         IWorkspaceRepository workspaces,
         IUserRepository users,
+        IBoardRepository boards,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -42,6 +43,7 @@ public static class ListWorkspaceInvitationsQueryHandler
         var rows = await repository.ListForWorkspaceAsync(
             query.WorkspaceId, query.IncludeTerminal, cancellationToken);
         IReadOnlyDictionary<Guid, string> inviters = await InviterNames.ResolveAsync(rows, users, cancellationToken);
+        IReadOnlyDictionary<Guid, string> boardNames = await InvitationBoardNames.ResolveAsync(rows, boards, cancellationToken);
 
         List<WorkspaceInvitationDto> dtos = rows
             .Select(invitation => new WorkspaceInvitationDto(
@@ -54,7 +56,9 @@ public static class ListWorkspaceInvitationsQueryHandler
                 invitation.InvitedAt,
                 invitation.ExpiresAt,
                 invitation.TokenPrefix,
-                inviters.GetValueOrDefault(invitation.InvitedBy)))
+                inviters.GetValueOrDefault(invitation.InvitedBy),
+                invitation.BoardId,
+                invitation.BoardId is { } boardId ? boardNames.GetValueOrDefault(boardId) : null))
             .ToList();
 
         return Result.Success<IReadOnlyList<WorkspaceInvitationDto>>(dtos);

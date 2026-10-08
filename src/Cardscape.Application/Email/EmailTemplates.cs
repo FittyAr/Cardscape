@@ -30,7 +30,8 @@ public static class EmailTemplates
         string workspaceName,
         WorkspaceRole role,
         string acceptUrl,
-        DateTimeOffset expiresAt)
+        DateTimeOffset expiresAt,
+        string? boardName = null)
     {
         bool es = language == "es";
         CultureInfo culture = CultureInfo.GetCultureInfo(es ? "es" : "en");
@@ -40,9 +41,13 @@ public static class EmailTemplates
         string subject = es
             ? $"{inviterName} te invitó a «{workspaceName}» en {instanceTitle}"
             : $"{inviterName} invited you to \"{workspaceName}\" on {instanceTitle}";
-        string intro = es
-            ? $"{inviterName} te invitó a unirte al espacio de trabajo «{workspaceName}» en {instanceTitle} como {roleName}."
-            : $"{inviterName} invited you to join the workspace \"{workspaceName}\" on {instanceTitle} as {roleName}.";
+        string intro = boardName is null
+            ? es
+                ? $"{inviterName} te invitó a unirte al espacio de trabajo «{workspaceName}» en {instanceTitle} como {roleName}."
+                : $"{inviterName} invited you to join the workspace \"{workspaceName}\" on {instanceTitle} as {roleName}."
+            : es
+                ? $"{inviterName} te invitó al tablero «{boardName}» del espacio «{workspaceName}» en {instanceTitle} como {roleName}."
+                : $"{inviterName} invited you to the board \"{boardName}\" in the workspace \"{workspaceName}\" on {instanceTitle} as {roleName}.";
         string action = es ? "Aceptar la invitación" : "Accept the invitation";
         string expiry = es
             ? $"La invitación vence el {expires}. Si no tenés cuenta, vas a poder crearla con esta dirección de correo."

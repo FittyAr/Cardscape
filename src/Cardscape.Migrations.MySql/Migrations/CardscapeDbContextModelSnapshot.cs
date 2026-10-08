@@ -2510,6 +2510,12 @@ namespace Cardscape.Migrations.MySql.Migrations
                     b.Property<Guid?>("AcceptedBy")
                         .HasColumnType("char(36)");
 
+                    b.Property<Guid?>("BoardId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int?>("BoardRole")
+                        .HasColumnType("int");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetime");
 
@@ -2568,6 +2574,8 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BoardId");
 
                     b.HasIndex("TokenHash")
                         .IsUnique();

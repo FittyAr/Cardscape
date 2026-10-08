@@ -197,6 +197,7 @@ public sealed class InvitationEmailHandlerTests
             new IssueWorkspaceInvitationCommand(workspace.Id.Value, email, role, Language: language),
             _invitations,
             _ctx.Workspaces,
+            _ctx.Boards,
             _ctx.Users,
             _ctx.Settings,
             _ctx.CurrentUser,

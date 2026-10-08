@@ -2508,6 +2508,12 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("AcceptedBy")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("BoardId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("BoardRole")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -2566,6 +2572,8 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BoardId");
 
                     b.HasIndex("TokenHash")
                         .IsUnique();

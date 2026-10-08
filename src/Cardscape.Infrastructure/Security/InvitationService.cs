@@ -3,6 +3,7 @@ using System.Text;
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
 
@@ -27,6 +28,8 @@ public sealed class InvitationService(
         WorkspaceRole role,
         Guid invitedBy,
         TimeSpan? lifetime,
+        Guid? boardId,
+        BoardMemberRole? boardRole,
         CancellationToken ct)
     {
         var (cleartext, hashed, prefix) = SecureToken.Generate(InvitationToken.CleartextByteLength, InvitationToken.PrefixLength);
@@ -39,11 +42,13 @@ public sealed class InvitationService(
             tokenHash: hashed,
             tokenPrefix: prefix,
             at: clock.UtcNow,
-            lifetime: lifetime);
+            lifetime: lifetime,
+            boardId: boardId,
+            boardRole: boardRole);
 
         if (creation.IsFailure)
         {
-            throw new InvalidOperationException(creation.Error.Message);
+            return WorkspaceInvitationIssuance.Refused(creation.Error);
         }
 
         await repository.AddAsync(creation.Value, ct);

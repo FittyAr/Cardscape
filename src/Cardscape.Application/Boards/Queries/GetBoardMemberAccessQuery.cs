@@ -50,8 +50,10 @@ public static class GetBoardMemberAccessQueryHandler
                 "boards.forbidden", "You are not a member of this board."));
         }
 
-        bool canInviteGuests = workspace is { IsDeleted: false }
-            && await WorkspaceAccess.CanManageMembersAsync(workspace, currentUser.Id, users, cancellationToken);
+        // Whoever manages the board's roster may invite guests to it by
+        // email (the invitation joins them to the workspace as Guest and
+        // to this board in one step).
+        bool canInviteGuests = canManage && workspace is { IsDeleted: false };
         return Result.Success(new BoardMemberAccessDto(canManage, role, canInviteGuests));
     }
 }

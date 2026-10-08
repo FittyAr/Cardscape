@@ -141,6 +141,9 @@
                         <RadzenTextBox @bind-Value="_guestEmail" Placeholder="@L["MembersEmail"]"
                                        aria-label="@L["BoardMembersInviteGuestEmailAria"]"
                                        class="cs-board-members-pick" />
+                        <RadzenDropDown TValue="BoardMemberRole" @bind-Value="_guestBoardRole" Data="@GuestRoles"
+                                        TextProperty="Label" ValueProperty="Value"
+                                        aria-label="@L["BoardMembersInviteGuestRoleAria"]" Style="width: 9rem;" />
                         <RadzenButton Text="@L["BoardMembersInviteGuest"]" Icon="forward_to_inbox" ButtonStyle="ButtonStyle.Secondary"
                                       Disabled="@_invitingGuest"
                                       IsBusy="@_invitingGuest"
@@ -231,6 +234,15 @@
         new(BoardMemberRole.Member, L["BoardRoleMember"]),
         new(BoardMemberRole.Observer, L["BoardRoleObserver"])
     ];
+
+    // Guests are board Members at most.
+    private IReadOnlyList<RoleOption> GuestRoles =>
+    [
+        new(BoardMemberRole.Member, L["BoardRoleMember"]),
+        new(BoardMemberRole.Observer, L["BoardRoleObserver"])
+    ];
+
+    private BoardMemberRole _guestBoardRole = BoardMemberRole.Member;
 
     private bool IsMeLastAdmin =>
         _members?.FirstOrDefault(m => m.UserId == _currentUserId) is { } me && IsLastAdmin(me);
@@ -326,7 +338,8 @@
         try
         {
             ApiResult<WorkspaceInvitationIssuanceDto> result = await InvitationsApi.IssueAsync(
-                WorkspaceId, email, WorkspaceRole.Guest, lifetime: null);
+                WorkspaceId, email, WorkspaceRole.Guest, lifetime: null,
+                boardId: BoardId, boardRole: _guestBoardRole);
             if (!result.IsSuccess)
             {
                 _error = result.Error;

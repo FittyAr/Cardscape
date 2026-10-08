@@ -6,7 +6,7 @@
 @using Cardscape.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject IInvitationsApiClient InvitationsApi
-@inject InstanceSettingsState Instance
+@inject IEmailVerificationApiClient Verification
 @inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
 
@@ -35,7 +35,8 @@ else if (invitations is not null)
             <RadzenCard>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
                     <RadzenStack Gap="0.25rem">
-                        <RadzenText Text="@inv.WorkspaceName" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                        <RadzenText Text="@(inv.BoardName is { } board ? $"{inv.WorkspaceName} › {board}" : inv.WorkspaceName)"
+                                    TextStyle="TextStyle.H5" TagName="TagName.H3" />
                         <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
                             @L["InvitationsMetadata", RoleName(inv.Role), inv.InvitedBy == Guid.Empty ? L["InvitationsSystem"] : inv.InvitedByName ?? inv.InvitedBy.ToString(), inv.ExpiresAt.LocalDateTime.ToString("d")]
                         </RadzenText>
@@ -72,14 +73,19 @@ else if (invitations is not null)
 
     // The server only accepts from the inbox (without the link's token)
     // while public registration is closed; see AcceptWorkspaceInvitationByIdCommand.
-    private bool CanAcceptFromInbox => !Instance.Current.AllowPublicRegistration;
+    // The server lets a verified address accept without the link (the
+    // link's token is the other proof of owning the address).
+    private bool CanAcceptFromInbox => emailVerified;
+
+    private bool emailVerified;
 
     protected override async Task OnInitializedAsync()
     {
         loading = true;
         try
         {
-            await Instance.GetAsync();
+            ApiResult<EmailVerificationStatusDto> verification = await Verification.GetStatusAsync();
+            emailVerified = verification.HasValue && verification.Value.IsVerified;
             ApiResult<IReadOnlyList<WorkspaceInvitationDto>> result = await InvitationsApi.ListPendingAsync();
             if (result.HasValue)
             {

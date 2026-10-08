@@ -3,10 +3,12 @@ using Cardscape.Application.Abstractions.Email;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Settings;
+using Cardscape.Application.Boards;
 using Cardscape.Application.Email;
 using Cardscape.Application.Settings;
 using Cardscape.Contracts.Email;
 using Cardscape.Contracts.Settings;
+using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
 using Wolverine;
@@ -22,12 +24,16 @@ namespace Cardscape.Application.Workspaces.Commands;
 /// The server only ever persists the SHA-256 hash + 10-char prefix.
 /// </summary>
 /// <param name="Language">The inviter's UI language, used for the email; the instance default otherwise.</param>
+/// <param name="BoardId">Optional board the invitee also joins on acceptance ("invite to this board").
+/// Board Admins who do not manage the workspace may use it, but only to invite guests.</param>
 public sealed record IssueWorkspaceInvitationCommand(
     Guid WorkspaceId,
     string Email,
     WorkspaceRole Role,
     TimeSpan? Lifetime = null,
-    string? Language = null) : IMessage;
+    string? Language = null,
+    Guid? BoardId = null,
+    BoardMemberRole? BoardRole = null) : IMessage;
 
 public static class IssueWorkspaceInvitationCommandHandler
 {
@@ -35,6 +41,7 @@ public static class IssueWorkspaceInvitationCommandHandler
         IssueWorkspaceInvitationCommand command,
         IInvitationService invitations,
         IWorkspaceRepository workspaces,
+        IBoardRepository boards,
         IUserRepository users,
         ISystemSettingsService settings,
         ICurrentUser currentUser,
@@ -69,7 +76,24 @@ public static class IssueWorkspaceInvitationCommandHandler
                 "workspaces.not_found", "Workspace was not found."));
         }
 
-        if (!await WorkspaceAccess.CanManageMembersAsync(workspace, currentUser.Id, users, cancellationToken))
+        Board? board = null;
+        if (command.BoardId is { } boardId)
+        {
+            board = await boards.GetWithMembersAsync(new BoardId(boardId), cancellationToken);
+            if (board is null || board.IsDeleted || board.WorkspaceId != workspace.Id)
+            {
+                return Result.Failure<WorkspaceInvitationIssuanceDto>(DomainError.NotFound(
+                    "boards.not_found", "The board was not found in this workspace."));
+            }
+        }
+
+        bool managesWorkspace = await WorkspaceAccess.CanManageMembersAsync(workspace, currentUser.Id, users, cancellationToken);
+        // A board Admin may bring people to their board, but only as
+        // workspace guests: anything wider is the workspace managers' call.
+        bool invitesGuestToOwnBoard = board is not null
+            && command.Role == WorkspaceRole.Guest
+            && await BoardMemberAccess.CanManageMembersAsync(board, workspace, currentUser.Id, users, cancellationToken);
+        if (!managesWorkspace && !invitesGuestToOwnBoard)
         {
             return Result.Failure<WorkspaceInvitationIssuanceDto>(DomainError.Forbidden(
                 "workspaces.not_manager", "Only the workspace owner or an admin can issue invitations."));
@@ -83,12 +107,18 @@ public static class IssueWorkspaceInvitationCommandHandler
             command.Role,
             currentUser.Id.Value,
             lifetime,
+            board?.Id.Value,
+            board is null ? null : command.BoardRole,
             cancellationToken);
+        if (issuance.Error is { } issueError)
+        {
+            return Result.Failure<WorkspaceInvitationIssuanceDto>(issueError);
+        }
 
         string? acceptUrl = await links.BuildAsync(
             $"invitations/accept?token={Uri.EscapeDataString(issuance.CleartextToken)}", cancellationToken);
         EmailDeliveryStatus emailStatus = await EmailInviteeAsync(
-            command, instance, workspace.Name.Value, acceptUrl, clock.UtcNow + lifetime,
+            command, instance, workspace.Name.Value, board?.Name.Value, acceptUrl, clock.UtcNow + lifetime,
             currentUser, emailSender, cancellationToken);
 
         return Result.Success(new WorkspaceInvitationIssuanceDto(
@@ -105,6 +135,7 @@ public static class IssueWorkspaceInvitationCommandHandler
         IssueWorkspaceInvitationCommand command,
         SystemSettings instance,
         string workspaceName,
+        string? boardName,
         string? acceptUrl,
         DateTimeOffset expiresAt,
         ICurrentUser currentUser,
@@ -129,7 +160,8 @@ public static class IssueWorkspaceInvitationCommandHandler
             workspaceName,
             command.Role,
             acceptUrl,
-            expiresAt);
+            expiresAt,
+            boardName);
         Result sent = await emailSender.SendAsync(email, cancellationToken);
         return sent.IsSuccess ? EmailDeliveryStatus.Sent : EmailDeliveryStatus.Failed;
     }

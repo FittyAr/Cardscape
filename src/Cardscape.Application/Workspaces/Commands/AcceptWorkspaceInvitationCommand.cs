@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Workspaces.DTOs;
+using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces;
@@ -35,6 +36,7 @@ public static class AcceptWorkspaceInvitationCommandHandler
         IInvitationService invitations,
         IWorkspaceInvitationRepository repository,
         IWorkspaceRepository workspaces,
+        IBoardRepository boards,
         IUserRepository users,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
@@ -78,13 +80,14 @@ public static class AcceptWorkspaceInvitationCommandHandler
         }
 
         return await RedeemAsync(
-            invitation, currentUser.Id.Value, currentUser.Email, workspaces, unitOfWork, clock, cancellationToken);
+            invitation, currentUser.Id.Value, currentUser.Email, workspaces, boards, unitOfWork, clock, cancellationToken);
     }
 
     public static async Task<Result<WorkspaceDto>> HandleAsync(
         AcceptWorkspaceInvitationByIdCommand command,
         IWorkspaceInvitationRepository repository,
         IWorkspaceRepository workspaces,
+        IBoardRepository boards,
         IUserRepository users,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
@@ -114,7 +117,7 @@ public static class AcceptWorkspaceInvitationCommandHandler
         }
 
         return await RedeemAsync(
-            invitation, currentUser.Id.Value, currentUser.Email, workspaces, unitOfWork, clock, cancellationToken);
+            invitation, currentUser.Id.Value, currentUser.Email, workspaces, boards, unitOfWork, clock, cancellationToken);
     }
 
     /// <summary>
@@ -128,6 +131,7 @@ public static class AcceptWorkspaceInvitationCommandHandler
         Guid userId,
         string? userEmail,
         IWorkspaceRepository workspaces,
+        IBoardRepository boards,
         IUnitOfWork unitOfWork,
         IClock clock,
         CancellationToken cancellationToken)
@@ -160,6 +164,27 @@ public static class AcceptWorkspaceInvitationCommandHandler
             if (addResult.IsFailure)
             {
                 return Result.Failure<WorkspaceDto>(addResult.Error);
+            }
+        }
+
+        // "Invite to this board": join the board too. A board deleted or
+        // moved away since the invitation was sent is skipped; the
+        // workspace membership still stands.
+        if (invitation.BoardId is { } boardId
+            && await boards.GetWithMembersAsync(new BoardId(boardId), cancellationToken) is { IsDeleted: false } board
+            && board.WorkspaceId == workspace.Id
+            && !board.IsMember(userId))
+        {
+            BoardMemberRole boardRole = invitation.BoardRole ?? BoardMemberRole.Member;
+            if (workspace.IsGuest(userId) && boardRole == BoardMemberRole.Admin)
+            {
+                boardRole = BoardMemberRole.Member;
+            }
+
+            var joinBoard = board.AddMember(userId, boardRole, clock.UtcNow);
+            if (joinBoard.IsFailure)
+            {
+                return Result.Failure<WorkspaceDto>(joinBoard.Error);
             }
         }
 

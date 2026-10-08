@@ -193,6 +193,10 @@
                     <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="Role" Title="@L["MembersRole"]">
                         <Template Context="inv">
                             @RoleName(inv.Role)
+                            @if (inv.BoardName is { } board)
+                            {
+                                <span class="cs-muted"> @L["MembersInvitationToBoard", board]</span>
+                            }
                         </Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="ExpiresAt" Title="@L["MembersExpires"]">

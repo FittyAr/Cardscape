@@ -83,7 +83,7 @@
   <data name="InvitationsEmpty" xml:space="preserve"><value>You have no pending invitations. Workspace owners will email you a link when one is waiting.</value></data>
   <data name="InvitationsMetadata" xml:space="preserve"><value>Role: {0} · Invited by {1} · Expires {2}</value></data>
   <data name="InvitationsSystem" xml:space="preserve"><value>system</value></data>
-  <data name="InvitationsAcceptHint" xml:space="preserve"><value>To accept an invitation, open the single-use link the workspace owner or an admin shared with you. It is bound to your account's email.</value></data>
+  <data name="InvitationsAcceptHint" xml:space="preserve"><value>To accept an invitation, open the single-use link you received, or confirm your email address first.</value></data>
   <data name="InvitationAcceptTitle" xml:space="preserve"><value>Accept invitation</value></data>
   <data name="InvitationMissingToken" xml:space="preserve"><value>The invitation link is missing its token. Open the link you were sent.</value></data>
   <data name="InvitationAccepting" xml:space="preserve"><value>Accepting…</value></data>
@@ -1159,7 +1159,7 @@
   <data name="MembersMakeGuest" xml:space="preserve"><value>Make guest</value></data>
   <data name="MembersMakeGuestConfirm" xml:space="preserve"><value>Make {0} a guest? They keep only the boards they are on, lose access to workspace-visible boards, and any board admin role becomes member.</value></data>
   <data name="BoardMembersInviteGuestHeading" xml:space="preserve"><value>Invite a guest by email</value></data>
-  <data name="BoardMembersInviteGuestHint" xml:space="preserve"><value>The person joins the workspace as a guest and only sees the boards they are added to. Once they accept, add them to this board from the list above.</value></data>
+  <data name="BoardMembersInviteGuestHint" xml:space="preserve"><value>The person joins the workspace as a guest and this board as soon as they accept. Guests only see the boards they are added to.</value></data>
   <data name="BoardMembersInviteGuestEmailAria" xml:space="preserve"><value>Email address of the guest to invite</value></data>
   <data name="BoardMembersInviteGuest" xml:space="preserve"><value>Invite as guest</value></data>
   <data name="BoardMembersGuestInvitedEmailed" xml:space="preserve"><value>Invitation emailed to {0}. Once they accept, add them to this board from the list above.</value></data>
@@ -1211,4 +1211,7 @@
   <data name="AuditBoardMemberAdded" xml:space="preserve"><value>{0} added {1} to the board {3} as {5}</value></data>
   <data name="AuditBoardMemberRoleChanged" xml:space="preserve"><value>{0} changed the role of {1} from {4} to {5} on the board {3}</value></data>
   <data name="AuditBoardMemberRemoved" xml:space="preserve"><value>{0} removed {1} from the board {3}</value></data>
+  <data name="BoardMembersInviteGuestRoleAria" xml:space="preserve"><value>Board role for the guest</value></data>
+  <data name="MembersInvitationToBoard" xml:space="preserve"><value>and the board {0}</value></data>
+  <data name="RegisterInvitedToBoard" xml:space="preserve"><value>You were invited to the board {0} in {1}. Create your account with {2} to join.</value></data>
 </root>

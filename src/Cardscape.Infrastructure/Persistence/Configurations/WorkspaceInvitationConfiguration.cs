@@ -45,6 +45,11 @@ public sealed class WorkspaceInvitationConfiguration : IEntityTypeConfiguration<
         builder.Property(i => i.RevokedAt);
         builder.Property(i => i.RevokedBy);
 
+        // Optional "invite to this board": the board joined on acceptance.
+        builder.Property(i => i.BoardId);
+        builder.Property(i => i.BoardRole).HasConversion<int?>();
+        builder.HasIndex(i => i.BoardId);
+
         builder.Property(i => i.CreatedAt).IsRequired();
         builder.Property(i => i.UpdatedAt);
         builder.Property(i => i.CreatedBy);

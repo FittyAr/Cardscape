@@ -26,7 +26,9 @@
     @if (invitation is not null)
     {
         <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" AllowClose="false" ShowIcon="true">
-            @L["RegisterInvitedTo", invitation.WorkspaceName, invitation.Email]
+            @(invitation.BoardName is { } board
+                ? L["RegisterInvitedToBoard", board, invitation.WorkspaceName, invitation.Email]
+                : L["RegisterInvitedTo", invitation.WorkspaceName, invitation.Email])
         </RadzenAlert>
     }
     else if (Instance.Current.AllowedEmailDomains is { Count: > 0 } domains)

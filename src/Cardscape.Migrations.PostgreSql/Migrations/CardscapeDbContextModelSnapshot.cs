@@ -2513,6 +2513,12 @@ namespace Cardscape.Migrations.PostgreSql.Migrations
                     b.Property<Guid?>("AcceptedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("BoardId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("BoardRole")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -2571,6 +2577,8 @@ namespace Cardscape.Migrations.PostgreSql.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BoardId");
 
                     b.HasIndex("TokenHash")
                         .IsUnique();

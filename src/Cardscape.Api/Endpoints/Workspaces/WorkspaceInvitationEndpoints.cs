@@ -2,6 +2,7 @@ using Cardscape.Api.Filters;
 using Cardscape.Application.Workspaces.Commands;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Application.Workspaces.Queries;
+using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
 using Wolverine;
@@ -53,7 +54,7 @@ public static class WorkspaceInvitationEndpoints
         {
             var result = await bus.InvokeAsync<Result<WorkspaceInvitationIssuanceDto>>(
                 new IssueWorkspaceInvitationCommand(
-                    workspaceId, body.Email, body.Role, body.Lifetime, body.Language), ct);
+                    workspaceId, body.Email, body.Role, body.Lifetime, body.Language, body.BoardId, body.BoardRole), ct);
             return result.IsSuccess
                 ? Results.Created($"/api/workspaces/{workspaceId}/invitations/{result.Value.Id}", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
@@ -125,7 +126,9 @@ public static class WorkspaceInvitationEndpoints
         string Email,
         WorkspaceRole Role,
         TimeSpan? Lifetime = null,
-        string? Language = null);
+        string? Language = null,
+        Guid? BoardId = null,
+        BoardMemberRole? BoardRole = null);
 
     public sealed record AcceptWorkspaceInvitationBody(string Token);
 }

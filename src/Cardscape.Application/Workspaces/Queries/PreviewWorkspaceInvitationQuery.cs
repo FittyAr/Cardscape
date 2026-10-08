@@ -22,7 +22,8 @@ public sealed record WorkspaceInvitationPreviewDto(
     string Email,
     WorkspaceRole Role,
     DateTimeOffset ExpiresAt,
-    bool AccountExists);
+    bool AccountExists,
+    string? BoardName = null);
 
 public static class PreviewWorkspaceInvitationQueryHandler
 {
@@ -31,6 +32,7 @@ public static class PreviewWorkspaceInvitationQueryHandler
         IInvitationService invitations,
         IWorkspaceInvitationRepository repository,
         IWorkspaceRepository workspaces,
+        IBoardRepository boards,
         IUserRepository users,
         IClock clock,
         CancellationToken cancellationToken)
@@ -56,6 +58,7 @@ public static class PreviewWorkspaceInvitationQueryHandler
             invitation.Email,
             invitation.Role,
             invitation.ExpiresAt,
-            accountExists));
+            accountExists,
+            (await InvitationBoardNames.ResolveAsync([invitation], boards, cancellationToken)).Values.FirstOrDefault()));
     }
 }

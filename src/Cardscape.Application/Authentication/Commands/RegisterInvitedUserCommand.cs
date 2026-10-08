@@ -29,6 +29,7 @@ public static class RegisterInvitedUserCommandHandler
         IInvitationService invitations,
         IWorkspaceInvitationRepository invitationRepository,
         IWorkspaceRepository workspaces,
+        IBoardRepository boards,
         IUserRepository users,
         IPasswordHasher hasher,
         IUnitOfWork unitOfWork,
@@ -74,7 +75,7 @@ public static class RegisterInvitedUserCommandHandler
         // Saves the user, the membership and the accepted invitation
         // together; if the workspace is gone nothing is written.
         var joined = await AcceptWorkspaceInvitationCommandHandler.RedeemAsync(
-            invitation, user.Id.Value, user.Email.Value, workspaces, unitOfWork, clock, cancellationToken);
+            invitation, user.Id.Value, user.Email.Value, workspaces, boards, unitOfWork, clock, cancellationToken);
         if (joined.IsFailure)
         {
             users.Remove(user);

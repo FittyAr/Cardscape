@@ -83,7 +83,7 @@
   <data name="InvitationsEmpty" xml:space="preserve"><value>No tenés invitaciones pendientes. El propietario del workspace te enviará un enlace por email cuando haya una.</value></data>
   <data name="InvitationsMetadata" xml:space="preserve"><value>Rol: {0} · Invitación de {1} · Vence {2}</value></data>
   <data name="InvitationsSystem" xml:space="preserve"><value>sistema</value></data>
-  <data name="InvitationsAcceptHint" xml:space="preserve"><value>Para aceptar una invitación, abrí el enlace de un solo uso que te compartió el propietario o un admin del workspace. Está vinculado al email de tu cuenta.</value></data>
+  <data name="InvitationsAcceptHint" xml:space="preserve"><value>Para aceptar una invitación, abrí el enlace de un solo uso que recibiste, o confirmá antes tu dirección de correo.</value></data>
   <data name="InvitationAcceptTitle" xml:space="preserve"><value>Aceptar invitación</value></data>
   <data name="InvitationMissingToken" xml:space="preserve"><value>Al enlace de invitación le falta el token. Abrí el enlace que te enviaron.</value></data>
   <data name="InvitationAccepting" xml:space="preserve"><value>Aceptando…</value></data>
@@ -1159,7 +1159,7 @@
   <data name="MembersMakeGuest" xml:space="preserve"><value>Convertir en invitado</value></data>
   <data name="MembersMakeGuestConfirm" xml:space="preserve"><value>¿Convertir a {0} en invitado? Conserva solo los tableros en los que está, pierde el acceso a los tableros visibles para el workspace y cualquier rol de administrador de tablero pasa a miembro.</value></data>
   <data name="BoardMembersInviteGuestHeading" xml:space="preserve"><value>Invitar a un invitado por correo</value></data>
-  <data name="BoardMembersInviteGuestHint" xml:space="preserve"><value>La persona se une al workspace como invitado y solo ve los tableros a los que se la agrega. Cuando acepte, agrégala a este tablero desde la lista de arriba.</value></data>
+  <data name="BoardMembersInviteGuestHint" xml:space="preserve"><value>La persona entra al workspace como invitado y a este tablero apenas acepta. Los invitados solo ven los tableros a los que se los suma.</value></data>
   <data name="BoardMembersInviteGuestEmailAria" xml:space="preserve"><value>Correo de la persona a invitar como invitado</value></data>
   <data name="BoardMembersInviteGuest" xml:space="preserve"><value>Invitar como invitado</value></data>
   <data name="BoardMembersGuestInvitedEmailed" xml:space="preserve"><value>Invitación enviada a {0}. Cuando acepte, agrégala a este tablero desde la lista de arriba.</value></data>
@@ -1211,4 +1211,7 @@
   <data name="AuditBoardMemberAdded" xml:space="preserve"><value>{0} agregó a {1} al tablero {3} como {5}</value></data>
   <data name="AuditBoardMemberRoleChanged" xml:space="preserve"><value>{0} cambió el rol de {1} de {4} a {5} en el tablero {3}</value></data>
   <data name="AuditBoardMemberRemoved" xml:space="preserve"><value>{0} quitó a {1} del tablero {3}</value></data>
+  <data name="BoardMembersInviteGuestRoleAria" xml:space="preserve"><value>Rol del invitado en el tablero</value></data>
+  <data name="MembersInvitationToBoard" xml:space="preserve"><value>y el tablero {0}</value></data>
+  <data name="RegisterInvitedToBoard" xml:space="preserve"><value>Te invitaron al tablero {0} de {1}. Creá tu cuenta con {2} para unirte.</value></data>
 </root>

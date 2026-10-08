@@ -1,3 +1,5 @@
+using Cardscape.Domain.Boards;
+using Cardscape.Domain.Boards.Errors;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces.Events;
@@ -33,6 +35,12 @@ public sealed class WorkspaceInvitation : AggregateRoot<WorkspaceInvitationId>
 
     public DateTimeOffset? AcceptedAt { get; private set; }
     public Guid? AcceptedBy { get; private set; }
+
+    /// <summary>Optional board the invitee joins together with the
+    /// workspace (Trello's "invite to this board"), with <see cref="BoardRole"/>.</summary>
+    public Guid? BoardId { get; private set; }
+
+    public BoardMemberRole? BoardRole { get; private set; }
 
     public DateTimeOffset? RevokedAt { get; private set; }
     public Guid? RevokedBy { get; private set; }
@@ -76,7 +84,9 @@ public sealed class WorkspaceInvitation : AggregateRoot<WorkspaceInvitationId>
         string tokenHash,
         string tokenPrefix,
         DateTimeOffset at,
-        TimeSpan? lifetime = null)
+        TimeSpan? lifetime = null,
+        Guid? boardId = null,
+        BoardMemberRole? boardRole = null)
     {
         if (string.IsNullOrWhiteSpace(email))
         {
@@ -99,6 +109,25 @@ public sealed class WorkspaceInvitation : AggregateRoot<WorkspaceInvitationId>
                 $"Token prefix must be 1..{InvitationToken.PrefixLength} chars."));
         }
 
+        if (boardId is null && boardRole is not null)
+        {
+            return Result.Failure<WorkspaceInvitation>(DomainError.Validation(
+                "workspaces.invitation.board_role_without_board",
+                "A board role needs a board."));
+        }
+
+        BoardMemberRole? effectiveBoardRole = boardId is null ? null : boardRole ?? BoardMemberRole.Member;
+        if (effectiveBoardRole is { } requested && !Enum.IsDefined(requested))
+        {
+            return Result.Failure<WorkspaceInvitation>(BoardErrors.InvalidMemberRole);
+        }
+
+        // A guest can be a board Member at most, as when added directly.
+        if (role == WorkspaceRole.Guest && effectiveBoardRole == BoardMemberRole.Admin)
+        {
+            return Result.Failure<WorkspaceInvitation>(BoardErrors.GuestCannotBeAdmin);
+        }
+
         TimeSpan ttl = lifetime ?? TimeSpan.FromDays(DefaultExpiryDays);
         if (ttl <= TimeSpan.Zero || ttl.TotalDays > MaxExpiryDays)
         {
@@ -116,7 +145,11 @@ public sealed class WorkspaceInvitation : AggregateRoot<WorkspaceInvitationId>
             tokenHash: tokenHash,
             tokenPrefix: tokenPrefix,
             invitedAt: at,
-            expiresAt: at.Add(ttl));
+            expiresAt: at.Add(ttl))
+        {
+            BoardId = boardId,
+            BoardRole = effectiveBoardRole,
+        };
 
         invitation.AddDomainEvent(new WorkspaceInvitationIssued(
             invitation.Id, workspaceId, email, at));

@@ -16,6 +16,7 @@ public static class ListPendingInvitationsForUserQueryHandler
         IWorkspaceInvitationRepository repository,
         IWorkspaceRepository workspaces,
         IUserRepository users,
+        IBoardRepository boards,
         ICurrentUser currentUser,
         IClock clock,
         CancellationToken cancellationToken)
@@ -38,6 +39,7 @@ public static class ListPendingInvitationsForUserQueryHandler
             .ToDictionary(workspace => workspace.Id);
 
         IReadOnlyDictionary<Guid, string> inviters = await InviterNames.ResolveAsync(active, users, cancellationToken);
+        IReadOnlyDictionary<Guid, string> boardNames = await InvitationBoardNames.ResolveAsync(active, boards, cancellationToken);
 
         List<WorkspaceInvitationDto> dtos = active
             .Select(invitation => new WorkspaceInvitationDto(
@@ -50,7 +52,9 @@ public static class ListPendingInvitationsForUserQueryHandler
                 invitation.InvitedAt,
                 invitation.ExpiresAt,
                 invitation.TokenPrefix,
-                inviters.GetValueOrDefault(invitation.InvitedBy)))
+                inviters.GetValueOrDefault(invitation.InvitedBy),
+                invitation.BoardId,
+                invitation.BoardId is { } boardId ? boardNames.GetValueOrDefault(boardId) : null))
             .ToList();
 
         return Result.Success<IReadOnlyList<WorkspaceInvitationDto>>(dtos);

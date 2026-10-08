@@ -1,3 +1,4 @@
+using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
 
@@ -24,6 +25,8 @@ public interface IInvitationService
         WorkspaceRole role,
         Guid invitedBy,
         TimeSpan? lifetime,
+        Guid? boardId,
+        BoardMemberRole? boardRole,
         CancellationToken ct);
 
     /// <summary>
@@ -39,7 +42,13 @@ public interface IInvitationService
 
 public sealed record WorkspaceInvitationIssuance(
     WorkspaceInvitationId Id,
-    string CleartextToken);
+    string CleartextToken,
+    DomainError? Error = null)
+{
+    /// <summary>The aggregate refused the invitation (e.g. a guest as board Admin).</summary>
+    public static WorkspaceInvitationIssuance Refused(DomainError error) =>
+        new(new WorkspaceInvitationId(Guid.Empty), string.Empty, error);
+}
 
 public sealed record WorkspaceInvitationValidation(
     WorkspaceInvitationId InvitationId,

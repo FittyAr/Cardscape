@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Cardscape.Application.Abstractions.Email;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Contracts.Settings;
+using Cardscape.Domain.Boards;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Workspaces;
 
@@ -65,7 +66,8 @@ public sealed class FakeInvitationService : IInvitationService
     public List<(WorkspaceId WorkspaceId, string Email, WorkspaceRole Role, TimeSpan? Lifetime)> Issued { get; } = [];
 
     public Task<WorkspaceInvitationIssuance> IssueAsync(
-        WorkspaceId workspaceId, string email, WorkspaceRole role, Guid invitedBy, TimeSpan? lifetime, CancellationToken ct)
+        WorkspaceId workspaceId, string email, WorkspaceRole role, Guid invitedBy, TimeSpan? lifetime,
+        Guid? boardId, BoardMemberRole? boardRole, CancellationToken ct)
     {
         Issued.Add((workspaceId, email, role, lifetime));
         return Task.FromResult(new WorkspaceInvitationIssuance(

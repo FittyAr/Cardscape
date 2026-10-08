@@ -17,7 +17,8 @@ public interface IInvitationsApiClient
         Guid workspaceId, bool includeTerminal, CancellationToken ct = default);
 
     Task<ApiResult<WorkspaceInvitationIssuanceDto>> IssueAsync(
-        Guid workspaceId, string email, WorkspaceRole role, TimeSpan? lifetime, CancellationToken ct = default);
+        Guid workspaceId, string email, WorkspaceRole role, TimeSpan? lifetime,
+        Guid? boardId = null, BoardMemberRole? boardRole = null, CancellationToken ct = default);
 
     Task<ApiResult> RevokeAsync(Guid workspaceId, Guid invitationId, CancellationToken ct = default);
 }
@@ -65,12 +66,13 @@ public sealed class InvitationsApiClient(IHttpClientFactory http)
     }
 
     public async Task<ApiResult<WorkspaceInvitationIssuanceDto>> IssueAsync(
-        Guid workspaceId, string email, WorkspaceRole role, TimeSpan? lifetime, CancellationToken ct = default)
+        Guid workspaceId, string email, WorkspaceRole role, TimeSpan? lifetime,
+        Guid? boardId = null, BoardMemberRole? boardRole = null, CancellationToken ct = default)
     {
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             $"api/workspaces/{workspaceId}/invitations/",
             new IssueWorkspaceInvitationRequestDto(
-                email, role, lifetime, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName),
+                email, role, lifetime, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, boardId, boardRole),
             JsonOptions,
             ct);
         return await ReadAsync<WorkspaceInvitationIssuanceDto>(response, ct);
