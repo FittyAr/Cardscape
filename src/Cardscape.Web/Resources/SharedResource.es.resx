@@ -192,8 +192,15 @@
   <data name="AutomationWhen" xml:space="preserve"><value>Cuando</value></data>
   <data name="AutomationTriggerList" xml:space="preserve"><value>ID de lista</value></data>
   <data name="AutomationThen" xml:space="preserve"><value>Entonces</value></data>
-  <data name="AutomationArgument" xml:space="preserve"><value>Argumento (ID de lista, ID de usuario o fecha ISO)</value></data>
   <data name="AutomationEmpty" xml:space="preserve"><value>Todavía no hay reglas de automatización. Creá una para comenzar.</value></data>
+  <data name="AutomationPickList" xml:space="preserve"><value>Elegí una lista</value></data>
+  <data name="AutomationPickMember" xml:space="preserve"><value>Elegí una persona</value></data>
+  <data name="AutomationTargetList" xml:space="preserve"><value>Mover a la lista</value></data>
+  <data name="AutomationTargetMember" xml:space="preserve"><value>Asignar a</value></data>
+  <data name="AutomationTargetDue" xml:space="preserve"><value>Fecha de vencimiento</value></data>
+  <data name="AutomationUnknownList" xml:space="preserve"><value>una lista eliminada</value></data>
+  <data name="AutomationUnknownMember" xml:space="preserve"><value>un ex miembro</value></data>
+  <data name="AutomationIncomplete" xml:space="preserve"><value>Completá todos los campos de la regla.</value></data>
   <data name="AutomationList" xml:space="preserve"><value>lista</value></data>
   <data name="AutomationDo" xml:space="preserve"><value>Hacer:</value></data>
   <data name="AutomationDisable" xml:space="preserve"><value>Deshabilitar</value></data>
@@ -333,8 +340,18 @@
   <data name="DashboardAddCard" xml:space="preserve"><value>Agregar dashcard</value></data>
   <data name="DashboardKind" xml:space="preserve"><value>Tipo</value></data>
   <data name="DashboardTitle_Label" xml:space="preserve"><value>Título</value></data>
-  <data name="DashboardConfig" xml:space="preserve"><value>Configuración (JSON)</value></data>
   <data name="DashboardEmpty" xml:space="preserve"><value>Este tablero no tiene dashcards todavía.</value></data>
+  <data name="DashboardKindOverdue" xml:space="preserve"><value>Tarjetas vencidas</value></data>
+  <data name="DashboardKindDueSoon" xml:space="preserve"><value>Vencen en los próximos 7 días</value></data>
+  <data name="DashboardKindByList" xml:space="preserve"><value>Tarjetas por lista</value></data>
+  <data name="DashboardKindByMember" xml:space="preserve"><value>Tarjetas por persona</value></data>
+  <data name="DashboardKindByLabel" xml:space="preserve"><value>Tarjetas por etiqueta</value></data>
+  <data name="DashboardUnassigned" xml:space="preserve"><value>Sin asignar</value></data>
+  <data name="DashboardNoLabel" xml:space="preserve"><value>Sin etiqueta</value></data>
+  <data name="DashboardNothingDue" xml:space="preserve"><value>Nada pendiente acá.</value></data>
+  <data name="DashboardMoreCards" xml:space="preserve"><value>y {0} más</value></data>
+  <data name="DashboardOpenCards" xml:space="preserve"><value>{0} tarjetas abiertas</value></data>
+  <data name="DashboardNoOpenCards" xml:space="preserve"><value>No hay tarjetas abiertas en este tablero.</value></data>
   <data name="IntegrationsTitle" xml:space="preserve"><value>Integraciones</value></data>
   <data name="IntegrationsBlurb" xml:space="preserve"><value>Conectá Cardscape con las herramientas de tu equipo.</value></data>
   <data name="SlackBlurb" xml:space="preserve"><value>Mandá eventos de tarjetas a canales de Slack.</value></data>

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Resources;
 using System.Text.Json;
 using Cardscape.Web.Logging;
 using Microsoft.Extensions.Localization;
@@ -133,10 +134,40 @@ public sealed class HttpBackedStringLocalizer<TResource>(StringLocalizer<TResour
         // returns the raw value (caller formats), so the fallback must
         // also return raw when no args were supplied, otherwise the two
         // paths disagree.
-        return arguments is null
-            ? _fallback[name]
-            : _fallback[name, arguments];
+        return FromResources(name, arguments);
     }
+
+    // The embedded .resx lookup must use the culture the user picked, not
+    // CultureInfo.CurrentUICulture: WebAssembly loads the satellite
+    // assembly for the browser language, and the render thread keeps the
+    // browser culture (setting CurrentUICulture inside an async call does
+    // not flow back to it). With a Spanish browser and English picked,
+    // the dictionary above is empty for "en" and the ambient lookup
+    // returned the Spanish satellite strings ("Bienvenido a Cardscape").
+    private LocalizedString FromResources(string name, object[]? arguments)
+    {
+        string? value = Resources.GetString(name, CultureInfo.GetCultureInfo(_switcher.CurrentCulture));
+        if (value is null)
+        {
+            return arguments is null ? _fallback[name] : _fallback[name, arguments];
+        }
+
+        if (arguments is not null && arguments.Length > 0)
+        {
+            try
+            {
+                value = string.Format(CultureInfo.CurrentCulture, value, arguments);
+            }
+            catch (FormatException)
+            {
+                // Keep the unformatted text, as the dictionary path does.
+            }
+        }
+
+        return new LocalizedString(name, value, resourceNotFound: false);
+    }
+
+    private static readonly ResourceManager Resources = new(typeof(TResource));
 }
 
 /// <summary>

@@ -6,6 +6,9 @@
 @using Cardscape.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject IAutomationApiClient AutomationClient
+@inject IBoardsApiClient BoardsApi
+@inject IListsApiClient ListsApi
+@inject IWorkspacesApiClient WorkspacesApi
 @inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@L["AutomationTitle"] @L["PageTitleSuffix"]</PageTitle>
@@ -36,8 +39,9 @@
                 @if (newRule.Trigger == AutomationTrigger.CardCreatedInList)
                 {
                     <LabeledField Text="@L["AutomationTriggerList"]" Component="rule-trigger-list">
-                        <RadzenTextBox @bind-Value="newRule.TriggerListIdText" Name="rule-trigger-list"
-                                       Style="width:100%" />
+                        <RadzenDropDown @bind-Value="newRule.TriggerListId" Data="@lists"
+                                        TextProperty="Name" ValueProperty="Id" Name="rule-trigger-list"
+                                        Placeholder="@L["AutomationPickList"]" Style="width:100%" />
                     </LabeledField>
                 }
 
@@ -47,10 +51,29 @@
                                     Name="rule-action" Style="width:100%" />
                 </LabeledField>
 
-                <LabeledField Text="@L["AutomationArgument"]" Component="rule-arg">
-                    <RadzenTextBox @bind-Value="newRule.ActionArgument" Name="rule-arg"
-                                   Style="width:100%" />
-                </LabeledField>
+                @switch (newRule.Action)
+                {
+                    case AutomationAction.MoveCardToList:
+                        <LabeledField Text="@L["AutomationTargetList"]" Component="rule-arg-list">
+                            <RadzenDropDown @bind-Value="newRule.TargetListId" Data="@lists"
+                                            TextProperty="Name" ValueProperty="Id" Name="rule-arg-list"
+                                            Placeholder="@L["AutomationPickList"]" Style="width:100%" />
+                        </LabeledField>
+                        break;
+                    case AutomationAction.AssignUser:
+                        <LabeledField Text="@L["AutomationTargetMember"]" Component="rule-arg-member">
+                            <RadzenDropDown @bind-Value="newRule.TargetUserId" Data="@members"
+                                            TextProperty="DisplayName" ValueProperty="UserId" Name="rule-arg-member"
+                                            Placeholder="@L["AutomationPickMember"]" AllowFiltering="true" Style="width:100%" />
+                        </LabeledField>
+                        break;
+                    case AutomationAction.SetDueDate:
+                        <LabeledField Text="@L["AutomationTargetDue"]" Component="rule-arg-due">
+                            <RadzenDatePicker @bind-Value="newRule.DueDate" Name="rule-arg-due" ShowTime="true"
+                                              DateFormat="g" Style="width:100%" />
+                        </LabeledField>
+                        break;
+                }
 
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
                     <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
@@ -91,12 +114,12 @@
                                 @L["AutomationWhen"] <em>@TriggerName(rule.Trigger)</em>
                                 @if (rule.Trigger == AutomationTrigger.CardCreatedInList)
                                 {
-                                    <text> (@L["AutomationList"] @rule.TriggerListId)</text>
+                                    <text> (@L["AutomationList"] @ListName(rule.TriggerListId))</text>
                                 }
                                 · @L["AutomationDo"] <em>@ActionName(rule.Action)</em>
                                 @if (!string.IsNullOrEmpty(rule.ActionArgument))
                                 {
-                                    <text> → @rule.ActionArgument</text>
+                                    <text> → @ArgumentLabel(rule)</text>
                                 }
                             </RadzenText>
                         </RadzenStack>
@@ -131,6 +154,8 @@
     private string? error;
     private string? loadError;
     private readonly NewRuleModel newRule = new();
+    private IReadOnlyList<BoardListDto> lists = [];
+    private IReadOnlyList<WorkspaceMemberDto> members = [];
 
     private IReadOnlyList<TriggerOption> TriggerOptions =>
     [
@@ -162,7 +187,9 @@
         loadError = null;
         try
         {
-            ApiResult<IReadOnlyList<BoardAutomationRuleDto>> result = await AutomationClient.ListRulesAsync(BoardId);
+            Task<ApiResult<IReadOnlyList<BoardAutomationRuleDto>>> rulesTask = AutomationClient.ListRulesAsync(BoardId);
+            await LoadReferenceDataAsync();
+            ApiResult<IReadOnlyList<BoardAutomationRuleDto>> result = await rulesTask;
             if (result.HasValue)
             {
                 rules = result.Value;
@@ -178,11 +205,58 @@
         }
     }
 
+    // Lists and workspace members turn the ids stored on a rule (trigger
+    // list, target list, assignee) into names, and feed the pickers.
+    private async Task LoadReferenceDataAsync()
+    {
+        if (lists.Count > 0)
+        {
+            return;
+        }
+
+        Task<ApiResult<IReadOnlyList<BoardListDto>>> listsTask = ListsApi.ListForBoardAsync(BoardId);
+        ApiResult<BoardDto> board = await BoardsApi.GetAsync(BoardId);
+        if (board.HasValue)
+        {
+            ApiResult<IReadOnlyList<WorkspaceMemberDto>> memberResult = await WorkspacesApi.ListMembersAsync(board.Value.WorkspaceId);
+            members = memberResult.HasValue
+                ? memberResult.Value.OrderBy(m => m.DisplayName, StringComparer.CurrentCultureIgnoreCase).ToList()
+                : [];
+        }
+
+        ApiResult<IReadOnlyList<BoardListDto>> listResult = await listsTask;
+        lists = listResult.HasValue ? listResult.Value.OrderBy(l => l.Position).ToList() : [];
+    }
+
+    private string ListName(Guid? listId) =>
+        lists.FirstOrDefault(l => l.Id == listId)?.Name ?? L["AutomationUnknownList"];
+
+    private string ArgumentLabel(BoardAutomationRuleDto rule) => rule.Action switch
+    {
+        AutomationAction.MoveCardToList when Guid.TryParse(rule.ActionArgument, out Guid listId) => ListName(listId),
+        AutomationAction.AssignUser when Guid.TryParse(rule.ActionArgument, out Guid userId) =>
+            members.FirstOrDefault(m => m.UserId == userId)?.DisplayName ?? L["AutomationUnknownMember"],
+        AutomationAction.SetDueDate when DateTimeOffset.TryParse(
+            rule.ActionArgument, System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None, out DateTimeOffset due) => due.LocalDateTime.ToString("g"),
+        _ => rule.ActionArgument ?? string.Empty
+    };
+
+    private string? NewRuleArgument() => newRule.Action switch
+    {
+        AutomationAction.MoveCardToList => newRule.TargetListId?.ToString(),
+        AutomationAction.AssignUser => newRule.TargetUserId?.ToString(),
+        AutomationAction.SetDueDate => newRule.DueDate is { } due
+            ? new DateTimeOffset(due).ToString("o", System.Globalization.CultureInfo.InvariantCulture)
+            : null,
+        _ => null
+    };
+
     private void OnTriggerChanged()
     {
         if (newRule.Trigger != AutomationTrigger.CardCreatedInList)
         {
-            newRule.TriggerListIdText = string.Empty;
+            newRule.TriggerListId = null;
         }
     }
 
@@ -192,10 +266,13 @@
         error = null;
         try
         {
-            Guid? triggerListId = null;
-            if (newRule.Trigger == AutomationTrigger.CardCreatedInList && Guid.TryParse(newRule.TriggerListIdText, out var tlid))
+            Guid? triggerListId = newRule.Trigger == AutomationTrigger.CardCreatedInList ? newRule.TriggerListId : null;
+            string? argument = NewRuleArgument();
+            if ((newRule.Trigger == AutomationTrigger.CardCreatedInList && triggerListId is null)
+                || (newRule.Action != AutomationAction.MarkComplete && argument is null))
             {
-                triggerListId = tlid;
+                error = L["AutomationIncomplete"];
+                return;
             }
 
             var body = new CreateRuleRequestDto(
@@ -203,7 +280,7 @@
                 newRule.Trigger,
                 triggerListId,
                 newRule.Action,
-                string.IsNullOrWhiteSpace(newRule.ActionArgument) ? null : newRule.ActionArgument,
+                argument,
                 Position: 0);
 
             ApiResult<BoardAutomationRuleDto> result = await AutomationClient.CreateRuleAsync(BoardId, body);
@@ -215,8 +292,10 @@
 
             showCreate = false;
             newRule.Name = string.Empty;
-            newRule.ActionArgument = string.Empty;
-            newRule.TriggerListIdText = string.Empty;
+            newRule.TriggerListId = null;
+            newRule.TargetListId = null;
+            newRule.TargetUserId = null;
+            newRule.DueDate = null;
             await ReloadAsync();
         }
         finally
@@ -274,9 +353,11 @@
     {
         public string Name { get; set; } = string.Empty;
         public AutomationTrigger Trigger { get; set; } = AutomationTrigger.CardCompleted;
-        public string TriggerListIdText { get; set; } = string.Empty;
+        public Guid? TriggerListId { get; set; }
         public AutomationAction Action { get; set; } = AutomationAction.MarkComplete;
-        public string ActionArgument { get; set; } = string.Empty;
+        public Guid? TargetListId { get; set; }
+        public Guid? TargetUserId { get; set; }
+        public DateTime? DueDate { get; set; }
     }
 
     private sealed record TriggerOption(AutomationTrigger Value, string Label);

@@ -192,8 +192,15 @@
   <data name="AutomationWhen" xml:space="preserve"><value>When</value></data>
   <data name="AutomationTriggerList" xml:space="preserve"><value>List ID</value></data>
   <data name="AutomationThen" xml:space="preserve"><value>Then</value></data>
-  <data name="AutomationArgument" xml:space="preserve"><value>Argument (list ID, user ID, or ISO date)</value></data>
   <data name="AutomationEmpty" xml:space="preserve"><value>No automation rules yet. Create one to get started.</value></data>
+  <data name="AutomationPickList" xml:space="preserve"><value>Choose a list</value></data>
+  <data name="AutomationPickMember" xml:space="preserve"><value>Choose a person</value></data>
+  <data name="AutomationTargetList" xml:space="preserve"><value>Move to list</value></data>
+  <data name="AutomationTargetMember" xml:space="preserve"><value>Assign to</value></data>
+  <data name="AutomationTargetDue" xml:space="preserve"><value>Due date</value></data>
+  <data name="AutomationUnknownList" xml:space="preserve"><value>a deleted list</value></data>
+  <data name="AutomationUnknownMember" xml:space="preserve"><value>a former member</value></data>
+  <data name="AutomationIncomplete" xml:space="preserve"><value>Complete every field of the rule.</value></data>
   <data name="AutomationList" xml:space="preserve"><value>list</value></data>
   <data name="AutomationDo" xml:space="preserve"><value>Do:</value></data>
   <data name="AutomationDisable" xml:space="preserve"><value>Disable</value></data>
@@ -333,8 +340,18 @@
   <data name="DashboardAddCard" xml:space="preserve"><value>Add dashcard</value></data>
   <data name="DashboardKind" xml:space="preserve"><value>Kind</value></data>
   <data name="DashboardTitle_Label" xml:space="preserve"><value>Title</value></data>
-  <data name="DashboardConfig" xml:space="preserve"><value>Configuration (JSON)</value></data>
   <data name="DashboardEmpty" xml:space="preserve"><value>This board has no dashcards yet.</value></data>
+  <data name="DashboardKindOverdue" xml:space="preserve"><value>Overdue cards</value></data>
+  <data name="DashboardKindDueSoon" xml:space="preserve"><value>Due in the next 7 days</value></data>
+  <data name="DashboardKindByList" xml:space="preserve"><value>Cards per list</value></data>
+  <data name="DashboardKindByMember" xml:space="preserve"><value>Cards per person</value></data>
+  <data name="DashboardKindByLabel" xml:space="preserve"><value>Cards per label</value></data>
+  <data name="DashboardUnassigned" xml:space="preserve"><value>Unassigned</value></data>
+  <data name="DashboardNoLabel" xml:space="preserve"><value>No label</value></data>
+  <data name="DashboardNothingDue" xml:space="preserve"><value>Nothing pending here.</value></data>
+  <data name="DashboardMoreCards" xml:space="preserve"><value>and {0} more</value></data>
+  <data name="DashboardOpenCards" xml:space="preserve"><value>{0} open cards</value></data>
+  <data name="DashboardNoOpenCards" xml:space="preserve"><value>No open cards on this board.</value></data>
   <data name="IntegrationsTitle" xml:space="preserve"><value>Integrations</value></data>
   <data name="IntegrationsBlurb" xml:space="preserve"><value>Connect Cardscape to your team's tools.</value></data>
   <data name="SlackBlurb" xml:space="preserve"><value>Push card events to Slack channels.</value></data>

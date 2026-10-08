@@ -1,0 +1,142 @@
+/* Board dashboard widgets. Colours come from the theme tokens; label
+   swatches use the label's own colour through --cs-label-color. */
+
+.cs-dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+    gap: 1rem;
+}
+
+.cs-dash-grid ::deep .cs-dash-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.cs-dash-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.cs-dash-card-icon {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--rz-border-radius);
+    background: var(--rz-primary-lighter);
+    color: var(--rz-primary);
+}
+
+.cs-dash-card-heading {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cs-dash-figure {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--rz-text-title-color);
+}
+
+.cs-dash-figure-alert {
+    color: var(--rz-danger);
+}
+
+.cs-dash-cards,
+.cs-dash-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cs-dash-cards li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.cs-dash-cards a {
+    overflow: hidden;
+    color: var(--rz-text-color);
+    font-size: 0.875rem;
+    text-decoration: none;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.cs-dash-cards a:hover {
+    color: var(--rz-primary);
+    text-decoration: underline;
+}
+
+.cs-dash-bars li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.25rem 0.75rem;
+    align-items: center;
+}
+
+.cs-dash-bar-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.cs-dash-bar-count {
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.cs-dash-bar-track {
+    grid-column: 1 / -1;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--cs-surface-sunken);
+}
+
+.cs-dash-bar-fill {
+    display: block;
+    width: var(--cs-dash-share, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background: var(--rz-primary);
+    transition: width var(--cs-normal, 200ms);
+}
+
+.cs-dash-bar-muted .cs-dash-bar-label,
+.cs-dash-bar-muted .cs-dash-bar-count {
+    color: var(--rz-text-secondary-color);
+}
+
+.cs-dash-bar-muted .cs-dash-bar-fill {
+    background: var(--cs-border-strong);
+}
+
+.cs-dash-swatch {
+    flex: none;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 3px;
+    background: var(--cs-label-color, var(--rz-primary));
+}

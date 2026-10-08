@@ -7,6 +7,8 @@
 @using Microsoft.Extensions.Localization
 @inject IDashboardsApiClient DashboardsApi
 @inject IBoardsApiClient BoardsApi
+@inject ICardsApiClient CardsApi
+@inject IListsApiClient ListsApi
 @inject IWorkspacesApiClient WorkspacesApi
 @inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
@@ -38,14 +40,12 @@
     <RadzenCard Class="rz-mb-4">
         <RadzenStack Gap="0.5rem">
             <LabeledField Text="@L["DashboardKind"]" Component="d-kind">
-                <RadzenDropDown @bind-Value="createModel.Kind" Data="@availableKinds"
+                <RadzenDropDown @bind-Value="createModel.Kind" Data="@KindOptions"
                                 TextProperty="Label" ValueProperty="Kind" Name="d-kind" Style="width:100%" />
             </LabeledField>
             <LabeledField Text="@L["DashboardTitle_Label"]" Component="d-title">
-                <RadzenTextBox @bind-Value="createModel.Title" Name="d-title" Style="width:100%" />
-            </LabeledField>
-            <LabeledField Text="@L["DashboardConfig"]" Component="d-cfg">
-                <RadzenTextArea @bind-Value="createModel.ConfigurationJson" Name="d-cfg" Style="width:100%; height:6rem" />
+                <RadzenTextBox @bind-Value="createModel.Title" Name="d-title" Style="width:100%"
+                               Placeholder="@KindLabel(createModel.Kind)" />
             </LabeledField>
             <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.End"
                          Gap="0.5rem" Class="rz-mt-3">
@@ -73,24 +73,85 @@ else if (dashcards is { Count: 0 })
 }
 else if (dashcards is not null)
 {
-    <RadzenRow Gap="1rem">
+    @* The API stores only each widget's kind and title; the numbers are
+       computed here from the board's cards (Shared/DashcardMetrics.cs). *@
+    <div class="cs-dash-grid">
         @foreach (DashcardDto d in dashcards)
         {
-            <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
-                <RadzenCard Variant="@Variant.Outlined">
-                    <RadzenStack Gap="0.5rem">
-                        <RadzenText Text="@d.Title" TextStyle="@TextStyle.H6" TagName="@TagName.H3" />
-                        <RadzenText Text="@KindLabel(d.Kind)" TextStyle="@TextStyle.Caption"
-                                    class="rz-color-text-secondary" />
-                        <RadzenText Text="@d.ConfigurationJson" TextStyle="@TextStyle.Body2"
-                                    class="rz-color-text-secondary" />
-                        <RadzenButton Text="@L["ActionDelete"]" ButtonStyle="@ButtonStyle.Danger"
-                                      Size="@ButtonSize.Small" Click="@(() => DeleteAsync(d.Id))" />
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenColumn>
+            DashcardResult metric = DashcardMetrics.Compute(d.Kind, cards, lists, now, UnassignedLabel(d.Kind));
+            <RadzenCard Variant="@Variant.Outlined" class="cs-dash-card">
+                <div class="cs-dash-card-header">
+                    <span class="cs-dash-card-icon" aria-hidden="true"><RadzenIcon Icon="@KindIcon(d.Kind)" /></span>
+                    <div class="cs-dash-card-heading">
+                        <RadzenText Text="@d.Title" TextStyle="@TextStyle.Subtitle1" TagName="@TagName.H3" class="rz-m-0" />
+                        @if (!string.Equals(d.Title, KindLabel(d.Kind), StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            <span class="cs-muted">@KindLabel(d.Kind)</span>
+                        }
+                    </div>
+                    <RadzenButton Icon="delete" ButtonStyle="@ButtonStyle.Base" Variant="@Variant.Text" Size="@ButtonSize.Small"
+                                  aria-label="@L["ActionDelete"]" title="@L["ActionDelete"]" Click="@(() => DeleteAsync(d.Id))" />
+                </div>
+
+                @if (d.Kind is DashcardKind.OverdueCount or DashcardKind.DueThisWeek)
+                {
+                    <div class="cs-dash-figure @(d.Kind == DashcardKind.OverdueCount && metric.Total > 0 ? "cs-dash-figure-alert" : null)">
+                        @metric.Total
+                    </div>
+                    @if (metric.Cards.Count == 0)
+                    {
+                        <span class="cs-muted">@L["DashboardNothingDue"]</span>
+                    }
+                    else
+                    {
+                        <ul class="cs-dash-cards">
+                            @foreach (CardSummaryDto card in metric.Cards)
+                            {
+                                <li>
+                                    <a href="@($"cards/{card.Id}")">@card.Title</a>
+                                    <span class="cs-muted">@card.DueDate?.LocalDateTime.ToString("d")</span>
+                                </li>
+                            }
+                        </ul>
+                        @if (metric.Total > metric.Cards.Count)
+                        {
+                            <span class="cs-muted">@L["DashboardMoreCards", metric.Total - metric.Cards.Count]</span>
+                        }
+                    }
+                }
+                else
+                {
+                    <span class="cs-muted">@L["DashboardOpenCards", metric.Total]</span>
+                    @if (metric.Total == 0)
+                    {
+                        <span class="cs-muted">@L["DashboardNoOpenCards"]</span>
+                    }
+                    else
+                    {
+                        int max = Math.Max(1, metric.Buckets.Max(bucket => bucket.Count));
+                        <ul class="cs-dash-bars">
+                            @foreach (DashcardBucket bucket in metric.Buckets)
+                            {
+                                <li class="@(bucket.IsUnassigned ? "cs-dash-bar-muted" : null)">
+                                    <span class="cs-dash-bar-label">
+                                        @if (bucket.Color is { } color)
+                                        {
+                                            <span class="cs-dash-swatch" style="--cs-label-color: @color" aria-hidden="true"></span>
+                                        }
+                                        @bucket.Label
+                                    </span>
+                                    <span class="cs-dash-bar-count">@bucket.Count</span>
+                                    <span class="cs-dash-bar-track" aria-hidden="true">
+                                        <span class="cs-dash-bar-fill" style="--cs-dash-share: @Share(bucket.Count, max)"></span>
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                }
+            </RadzenCard>
         }
-    </RadzenRow>
+    </div>
 }
 
 @if (error is not null)
@@ -111,16 +172,14 @@ else if (dashcards is not null)
     private string? loadError;
     private readonly CreateModel createModel = new();
 
+    private IReadOnlyList<CardSummaryDto> cards = [];
+    private IReadOnlyList<BoardListDto> lists = [];
+    private DateTimeOffset now = DateTimeOffset.Now;
+
     private sealed record KindOption(DashcardKind Kind, string Label);
 
-    private readonly IReadOnlyList<KindOption> availableKinds = new[]
-    {
-        new KindOption(DashcardKind.OverdueCount, "OverdueCount"),
-        new KindOption(DashcardKind.ByMember, "ByMember"),
-        new KindOption(DashcardKind.ByLabel, "ByLabel"),
-        new KindOption(DashcardKind.ByList, "ByList"),
-        new KindOption(DashcardKind.DueThisWeek, "DueThisWeek")
-    };
+    private IReadOnlyList<KindOption> KindOptions =>
+        Enum.GetValues<DashcardKind>().Select(kind => new KindOption(kind, KindLabel(kind))).ToList();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -129,8 +188,15 @@ else if (dashcards is not null)
         {
             var boardTask = BoardsApi.GetAsync(BoardId);
             var dashTask = DashboardsApi.ListAsync(BoardId);
+            var cardsTask = CardsApi.ListForBoardAsync(BoardId);
+            var listsTask = ListsApi.ListForBoardAsync(BoardId);
 
-            await Task.WhenAll(boardTask, dashTask);
+            await Task.WhenAll(boardTask, dashTask, cardsTask, listsTask);
+            now = DateTimeOffset.Now;
+            ApiResult<IReadOnlyList<CardSummaryDto>> cardsRes = await cardsTask;
+            ApiResult<IReadOnlyList<BoardListDto>> listsRes = await listsTask;
+            cards = cardsRes.HasValue ? cardsRes.Value : [];
+            lists = listsRes.HasValue ? listsRes.Value : [];
 
             var boardRes = await boardTask;
             if (boardRes.HasValue)
@@ -167,7 +233,8 @@ else if (dashcards is not null)
         {
             var result = await DashboardsApi.CreateAsync(new CreateDashcardRequest(
                 BoardId, createModel.Kind,
-                createModel.Title, createModel.ConfigurationJson, dashcards?.Count ?? 0));
+                string.IsNullOrWhiteSpace(createModel.Title) ? KindLabel(createModel.Kind) : createModel.Title.Trim(),
+                "{}", dashcards?.Count ?? 0));
             if (!result.IsSuccess)
             {
                 error = result.Error;
@@ -176,7 +243,6 @@ else if (dashcards is not null)
 
             dashcards = [.. (dashcards ?? []), result.Value!];
             createModel.Title = string.Empty;
-            createModel.ConfigurationJson = string.Empty;
             showCreate = false;
         }
         finally
@@ -198,18 +264,33 @@ else if (dashcards is not null)
 
     private string KindLabel(DashcardKind kind) => kind switch
     {
-        DashcardKind.OverdueCount => "OverdueCount",
-        DashcardKind.ByMember => "ByMember",
-        DashcardKind.ByLabel => "ByLabel",
-        DashcardKind.ByList => "ByList",
-        DashcardKind.DueThisWeek => "DueThisWeek",
-        _ => "Unknown"
+        DashcardKind.OverdueCount => L["DashboardKindOverdue"],
+        DashcardKind.DueThisWeek => L["DashboardKindDueSoon"],
+        DashcardKind.ByList => L["DashboardKindByList"],
+        DashcardKind.ByMember => L["DashboardKindByMember"],
+        DashcardKind.ByLabel => L["DashboardKindByLabel"],
+        _ => L["CommonUnknown"]
     };
+
+    private static string KindIcon(DashcardKind kind) => kind switch
+    {
+        DashcardKind.OverdueCount => "alarm",
+        DashcardKind.DueThisWeek => "event_upcoming",
+        DashcardKind.ByList => "view_column",
+        DashcardKind.ByMember => "group",
+        DashcardKind.ByLabel => "sell",
+        _ => "insights"
+    };
+
+    private string UnassignedLabel(DashcardKind kind) =>
+        kind == DashcardKind.ByLabel ? L["DashboardNoLabel"] : L["DashboardUnassigned"];
+
+    private static string Share(int count, int max) =>
+        (100.0 * count / max).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + "%";
 
     private sealed class CreateModel
     {
         public DashcardKind Kind { get; set; } = DashcardKind.OverdueCount;
         public string Title { get; set; } = string.Empty;
-        public string ConfigurationJson { get; set; } = "{}";
     }
 }
