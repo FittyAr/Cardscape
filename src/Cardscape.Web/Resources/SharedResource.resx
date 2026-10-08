@@ -955,4 +955,41 @@
   <data name="SeederCopyEmail" xml:space="preserve"><value>Copy e-mail</value></data>
   <data name="SeederCopyPassword" xml:space="preserve"><value>Copy password</value></data>
   <data name="SeederDemoSharedPassword" xml:space="preserve"><value>Every seeded person (e.g. linus.pauling@nexora.example) uses the same password, so you can explore the app from different roles.</value></data>
+  <data name="NavUsers" xml:space="preserve"><value>Users</value></data>
+  <data name="AdminUsersTitle" xml:space="preserve"><value>Users</value></data>
+  <data name="AdminUsersSubtitle" xml:space="preserve"><value>Everyone with an account on this instance</value></data>
+  <data name="AdminUsersSearch" xml:space="preserve"><value>Search</value></data>
+  <data name="AdminUsersSearchPlaceholder" xml:space="preserve"><value>Name or email</value></data>
+  <data name="AdminUsersStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="AdminUsersFilterAll" xml:space="preserve"><value>All</value></data>
+  <data name="AdminUsersFilterActive" xml:space="preserve"><value>Active</value></data>
+  <data name="AdminUsersFilterDeactivated" xml:space="preserve"><value>Deactivated</value></data>
+  <data name="AdminUsersFilterDeleted" xml:space="preserve"><value>Deleted</value></data>
+  <data name="AdminUsersEmpty" xml:space="preserve"><value>No users match these filters.</value></data>
+  <data name="AdminUsersYou" xml:space="preserve"><value>You</value></data>
+  <data name="AdminUsersCreated" xml:space="preserve"><value>Created</value></data>
+  <data name="AdminUsersLastLogin" xml:space="preserve"><value>Last sign-in</value></data>
+  <data name="AdminUsersNever" xml:space="preserve"><value>Never</value></data>
+  <data name="AdminUsersActions" xml:space="preserve"><value>Actions</value></data>
+  <data name="AdminUsersBadgeAdmin" xml:space="preserve"><value>Admin</value></data>
+  <data name="AdminUsersBadgeActive" xml:space="preserve"><value>Active</value></data>
+  <data name="AdminUsersBadgeDeactivated" xml:space="preserve"><value>Deactivated</value></data>
+  <data name="AdminUsersBadgeDeleted" xml:space="preserve"><value>Deleted</value></data>
+  <data name="AdminUsersBadgeAnonymised" xml:space="preserve"><value>Anonymised</value></data>
+  <data name="AdminUsersBadgeRestricted" xml:space="preserve"><value>Restricted</value></data>
+  <data name="AdminUsersGrantAdmin" xml:space="preserve"><value>Make admin</value></data>
+  <data name="AdminUsersRevokeAdmin" xml:space="preserve"><value>Remove admin</value></data>
+  <data name="AdminUsersDeactivate" xml:space="preserve"><value>Deactivate</value></data>
+  <data name="AdminUsersReactivate" xml:space="preserve"><value>Reactivate</value></data>
+  <data name="AdminUsersDelete" xml:space="preserve"><value>Delete user</value></data>
+  <data name="AdminUsersRestore" xml:space="preserve"><value>Restore user</value></data>
+  <data name="AdminUsersGrantAdminConfirm" xml:space="preserve"><value>Give {0} full administration of this instance?</value></data>
+  <data name="AdminUsersRevokeAdminConfirm" xml:space="preserve"><value>Remove administrator rights from {0}? The change applies on their next request.</value></data>
+  <data name="AdminUsersDeactivateConfirm" xml:space="preserve"><value>Deactivate {0}? They are signed out and cannot sign in until reactivated. Their memberships are kept.</value></data>
+  <data name="AdminUsersReactivateConfirm" xml:space="preserve"><value>Reactivate {0}? They will be able to sign in again.</value></data>
+  <data name="AdminUsersDeleteConfirm" xml:space="preserve"><value>Delete {0}? They are signed out, removed from workspaces they don't own, and permanently erased after a 30-day grace period. You can restore them until then.</value></data>
+  <data name="AdminUsersRestoreConfirm" xml:space="preserve"><value>Restore {0}? They can sign in again, but must be re-invited to workspaces.</value></data>
+  <data name="AdminUsersActionDone" xml:space="preserve"><value>Done.</value></data>
+  <data name="AdminUsersActionFailed" xml:space="preserve"><value>The action failed.</value></data>
+  <data name="AdminUsersLoadFailed" xml:space="preserve"><value>Could not load users.</value></data>
 </root>

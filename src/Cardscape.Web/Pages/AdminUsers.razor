@@ -1,0 +1,252 @@
+@page "/admin/users"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
+@using System.Security.Claims
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Localization
+@inject IAdminUsersApiClient UsersApi
+@inject DialogService DialogService
+@inject NotificationService Notifications
+@inject AuthenticationStateProvider AuthState
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["AdminUsersTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["AdminUsersTitle"]" Subtitle="@L["AdminUsersSubtitle"]" />
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.75rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+        <RadzenFormField Text="@L["AdminUsersSearch"]" Style="flex: 1 1 18rem;">
+            <RadzenTextBox @bind-Value="search" Change="@(_ => ReloadFromFirstPageAsync())"
+                           Placeholder="@L["AdminUsersSearchPlaceholder"]"
+                           aria-label="@L["AdminUsersSearch"]" Style="width:100%" />
+        </RadzenFormField>
+        <RadzenFormField Text="@L["AdminUsersStatus"]" Style="flex: 0 1 14rem;">
+            <RadzenDropDown TValue="UserStatusFilter" @bind-Value="status" Data="@StatusOptions"
+                            TextProperty="Label" ValueProperty="Value"
+                            Change="@(_ => ReloadFromFirstPageAsync())"
+                            aria-label="@L["AdminUsersStatus"]" Style="width:100%" />
+        </RadzenFormField>
+    </RadzenStack>
+
+    @if (error is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@error</RadzenAlert>
+    }
+
+    <RadzenDataGrid @ref="grid" TItem="AdminUserDto" Data="@users" Count="@total" LoadData="@LoadAsync"
+                    IsLoading="@loading" AllowPaging="true" PageSize="@PageSize" PagerHorizontalAlign="HorizontalAlign.Left"
+                    EmptyText="@L["AdminUsersEmpty"]">
+        <Columns>
+            <RadzenDataGridColumn TItem="AdminUserDto" Property="DisplayName" Title="@L["MembersName"]" Sortable="false">
+                <Template Context="u">
+                    <RadzenStack Gap="0">
+                        <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Span">
+                            @u.DisplayName
+                            @if (u.Id == currentUserId)
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L["AdminUsersYou"]" class="rz-ms-1" />
+                            }
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" TagName="TagName.Span" class="rz-color-text-secondary">@u.Email</RadzenText>
+                    </RadzenStack>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersStatus"]" Sortable="false" Width="16rem">
+                <Template Context="u">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" Wrap="FlexWrap.Wrap">
+                        @if (u.IsAdmin)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Primary" Text="@L["AdminUsersBadgeAdmin"]" />
+                        }
+                        <RadzenBadge BadgeStyle="@StateStyle(u)" Text="@StateLabel(u)" />
+                        @if (u.IsRestricted)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@L["AdminUsersBadgeRestricted"]" />
+                        }
+                    </RadzenStack>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersCreated"]" Sortable="false" Width="9rem">
+                <Template Context="u">@u.CreatedAt.LocalDateTime.ToString("d")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersLastLogin"]" Sortable="false" Width="11rem">
+                <Template Context="u">
+                    @if (u.LastLoginAt is { } lastLogin)
+                    {
+                        @lastLogin.LocalDateTime.ToString("g")
+                    }
+                    else
+                    {
+                        <span class="rz-color-text-secondary">@L["AdminUsersNever"]</span>
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersActions"]" Sortable="false" Width="11rem" TextAlign="TextAlign.End">
+                <Template Context="u">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" JustifyContent="JustifyContent.End">
+                        @if (u.IsDeleted || u.IsAnonymised)
+                        {
+                            @if (!u.IsAnonymised)
+                            {
+                                <RadzenButton Icon="restore_from_trash" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                              title="@L["AdminUsersRestore"]" aria-label="@L["AdminUsersRestore"]"
+                                              Click="@(() => RestoreAsync(u))" />
+                            }
+                        }
+                        else
+                        {
+                            <RadzenButton Icon="@(u.IsAdmin ? "remove_moderator" : "add_moderator")"
+                                          ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                          title="@(u.IsAdmin ? L["AdminUsersRevokeAdmin"] : L["AdminUsersGrantAdmin"])"
+                                          aria-label="@(u.IsAdmin ? L["AdminUsersRevokeAdmin"] : L["AdminUsersGrantAdmin"])"
+                                          Click="@(() => ToggleAdminAsync(u))" />
+                            @if (u.Id != currentUserId)
+                            {
+                                <RadzenButton Icon="@(u.IsActive ? "person_off" : "person_check")"
+                                              ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                              title="@(u.IsActive ? L["AdminUsersDeactivate"] : L["AdminUsersReactivate"])"
+                                              aria-label="@(u.IsActive ? L["AdminUsersDeactivate"] : L["AdminUsersReactivate"])"
+                                              Click="@(() => ToggleActiveAsync(u))" />
+                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small"
+                                              title="@L["AdminUsersDelete"]" aria-label="@L["AdminUsersDelete"]"
+                                              Click="@(() => DeleteAsync(u))" />
+                            }
+                        }
+                    </RadzenStack>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</RadzenStack>
+
+@code {
+    private const int PageSize = 25;
+
+    private RadzenDataGrid<AdminUserDto>? grid;
+    private IReadOnlyList<AdminUserDto> users = [];
+    private int total;
+    private int page;
+    private bool loading;
+    private string? error;
+    private string? search;
+    private UserStatusFilter status = UserStatusFilter.All;
+    private Guid? currentUserId;
+
+    private IReadOnlyList<StatusOption> StatusOptions =>
+    [
+        new(UserStatusFilter.All, L["AdminUsersFilterAll"]),
+        new(UserStatusFilter.Active, L["AdminUsersFilterActive"]),
+        new(UserStatusFilter.Deactivated, L["AdminUsersFilterDeactivated"]),
+        new(UserStatusFilter.Deleted, L["AdminUsersFilterDeleted"])
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState auth = await AuthState.GetAuthenticationStateAsync();
+        currentUserId = Guid.TryParse(auth.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out Guid id) ? id : null;
+    }
+
+    private async Task LoadAsync(LoadDataArgs args)
+    {
+        page = (args.Skip ?? 0) / PageSize;
+        await FetchAsync();
+    }
+
+    private async Task ReloadFromFirstPageAsync()
+    {
+        page = 0;
+        if (grid is not null)
+        {
+            // Resets the pager; FirstPage triggers LoadData.
+            await grid.FirstPage(forceReload: true);
+            return;
+        }
+
+        await FetchAsync();
+    }
+
+    private async Task FetchAsync()
+    {
+        loading = true;
+        try
+        {
+            ApiResult<AdminUserPageDto> result = await UsersApi.ListAsync(search, status, page, PageSize);
+            if (result.HasValue)
+            {
+                users = result.Value.Items;
+                total = result.Value.Total;
+                error = null;
+                return;
+            }
+
+            error = result.Error ?? L["AdminUsersLoadFailed"];
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private Task ToggleAdminAsync(AdminUserDto user) => user.IsAdmin
+        ? RunAsync(L["AdminUsersRevokeAdmin"], L["AdminUsersRevokeAdminConfirm", user.DisplayName],
+            () => UsersApi.SetAdminAsync(user.Id, false))
+        : RunAsync(L["AdminUsersGrantAdmin"], L["AdminUsersGrantAdminConfirm", user.DisplayName],
+            () => UsersApi.SetAdminAsync(user.Id, true));
+
+    private Task ToggleActiveAsync(AdminUserDto user) => user.IsActive
+        ? RunAsync(L["AdminUsersDeactivate"], L["AdminUsersDeactivateConfirm", user.DisplayName],
+            () => UsersApi.SetActiveAsync(user.Id, false))
+        : RunAsync(L["AdminUsersReactivate"], L["AdminUsersReactivateConfirm", user.DisplayName],
+            () => UsersApi.SetActiveAsync(user.Id, true));
+
+    private Task DeleteAsync(AdminUserDto user) =>
+        RunAsync(L["AdminUsersDelete"], L["AdminUsersDeleteConfirm", user.DisplayName],
+            () => UsersApi.SoftDeleteAsync(user.Id));
+
+    private Task RestoreAsync(AdminUserDto user) =>
+        RunAsync(L["AdminUsersRestore"], L["AdminUsersRestoreConfirm", user.DisplayName],
+            () => UsersApi.RestoreAsync(user.Id));
+
+    private async Task RunAsync(string title, string message, Func<Task<ApiResult>> action)
+    {
+        bool confirmed = await DialogService.Confirm(
+            message,
+            title,
+            new ConfirmOptions { OkButtonText = title, CancelButtonText = L["ActionCancel"] }) ?? false;
+        if (!confirmed)
+        {
+            return;
+        }
+
+        ApiResult result = await action();
+        if (!result.IsSuccess)
+        {
+            Notifications.Notify(NotificationSeverity.Error, title, result.Error ?? L["AdminUsersActionFailed"]);
+            return;
+        }
+
+        Notifications.Notify(NotificationSeverity.Success, title, L["AdminUsersActionDone"]);
+        await FetchAsync();
+    }
+
+    private string StateLabel(AdminUserDto user) => user switch
+    {
+        { IsAnonymised: true } => L["AdminUsersBadgeAnonymised"],
+        { IsDeleted: true } => L["AdminUsersBadgeDeleted"],
+        { IsActive: false } => L["AdminUsersBadgeDeactivated"],
+        _ => L["AdminUsersBadgeActive"]
+    };
+
+    private static BadgeStyle StateStyle(AdminUserDto user) => user switch
+    {
+        { IsDeleted: true } or { IsAnonymised: true } => BadgeStyle.Danger,
+        { IsActive: false } => BadgeStyle.Secondary,
+        _ => BadgeStyle.Success
+    };
+
+    private sealed record StatusOption(UserStatusFilter Value, string Label);
+}

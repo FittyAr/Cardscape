@@ -13,8 +13,9 @@ namespace Cardscape.Api.Endpoints.Admin;
 /// secret the API uses for the reverse direction).
 ///
 /// Gated by the <see cref="McpSubscriptionsAdminPolicy"/>:
-/// the handler reads the <c>is_admin</c> claim embedded in
-/// the JWT at mint time (no per-request DB lookup). The
+/// the same <c>AdminOnlyAuthorizationHandler</c> as the rest of
+/// the admin surface (live <c>users.IsAdmin</c> lookup unless
+/// <c>CacheAdminClaim</c> is enabled). The
 /// subscription event log discloses the per-URI session
 /// ids of every connected AI client, which is sensitive
 /// operational metadata — non-admin users (even

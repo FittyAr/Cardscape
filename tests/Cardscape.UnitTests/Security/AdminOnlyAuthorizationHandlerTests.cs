@@ -15,9 +15,9 @@ namespace Cardscape.UnitTests.Security;
 /// <c>docs/operations/06-configurable-subsystems.md#admin-authorization</c>:
 ///
 /// <list type="bullet">
-///   <item><c>CacheAdminClaim = true</c> (default): trust the
+///   <item><c>CacheAdminClaim = true</c>: trust the
 ///         required claim and fail closed when it is absent.</item>
-///   <item><c>CacheAdminClaim = false</c>: never trust the
+///   <item><c>CacheAdminClaim = false</c> (default): never trust the
 ///         claim, always read <c>users.IsAdmin</c> from the
 ///         database.</item>
 /// </list>
@@ -148,6 +148,34 @@ public sealed class AdminOnlyAuthorizationHandlerTests
         await handler.HandleAsync(context);
 
         context.HasSucceeded.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("deactivated")]
+    [InlineData("deleted")]
+    public async Task CacheDisabled_AdminLockedOut_DoesNotSucceed(string state)
+    {
+        var users = new InMemoryUserRepository();
+        Guid userId = Guid.NewGuid();
+        User user = BuildUser(userId, isAdmin: true);
+        if (state == "deactivated")
+        {
+            user.Deactivate(DateTimeOffset.UtcNow);
+        }
+        else
+        {
+            user.SoftDelete(DateTimeOffset.UtcNow);
+        }
+        await users.AddAsync(user, TestContext.Current.CancellationToken);
+        var handler = BuildHandler(users, cacheEnabled: false);
+
+        AuthorizationHandlerContext context = BuildContext(
+            userId, claimValue: "true", otherClaims: []);
+
+        await handler.HandleAsync(context);
+
+        context.HasSucceeded.Should().BeFalse(
+            "a locked-out administrator must lose admin access on the next request.");
     }
 
     [Fact]

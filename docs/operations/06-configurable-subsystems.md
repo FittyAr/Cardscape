@@ -52,7 +52,7 @@ the WASM client does not share configuration with the API host.
 ## Admin authorization
 
 **Key**: `Cardscape:Api:AdminAuthorization:CacheAdminClaim`
-**Default**: `true`
+**Default**: `false`
 **Applies to**: the API host only (the MCP server uses API-token
 bearer, not the `AdminOnly` policy).
 
@@ -62,7 +62,7 @@ subscription snapshot) gate on the `is_admin` claim that
 `JwtTokenService` embeds in the access token at mint time. Two
 operator postures are supported:
 
-### `CacheAdminClaim = true` (default)
+### `CacheAdminClaim = true`
 
 The handler reads the `is_admin` claim out of the JWT and trusts
 it as a snapshot of the user's admin status at login. **No
@@ -75,10 +75,9 @@ until the affected user's access token expires — by default, 60
 minutes. The user can also trigger the change by logging out and
 back in.
 
-This is the recommended posture for almost every deployment: the
-DB cost on every admin check is non-trivial, and an admin
-revocation that takes an hour to propagate is acceptable for
-almost every real-world incident. Pair it with a short
+Opt in only when the admin surface is hot enough for the per-request
+row seek to matter and an admin revocation that takes up to one token
+lifetime to propagate is acceptable. Pair it with a short
 `Jwt:AccessTokenMinutes` (e.g. 15) if you want faster
 propagation without paying the per-request DB cost.
 The value is validated at startup and must be between 5 and
@@ -86,10 +85,14 @@ The value is validated at startup and must be between 5 and
 host separately requires an HMAC signing key containing at least
 32 UTF-8 bytes; non-API hosts are not forced to receive that secret.
 
-### `CacheAdminClaim = false`
+### `CacheAdminClaim = false` (default)
 
 The handler **always** reads `users.IsAdmin` from the database.
-Admin revocations take effect on the very next request. The cost
+Admin revocations take effect on the very next request, and a
+deactivated, soft-deleted or anonymised administrator loses admin
+access immediately. This is the default because the instance Users
+page (`/admin/users`) lets an administrator revoke admin or lock a
+user out, and the result must be immediate. The cost
 is one indexed row seek per `/api/admin/*` request; on a small
 admin surface this is invisible, on a hot path with many admins
 it adds up.

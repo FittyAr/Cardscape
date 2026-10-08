@@ -49,6 +49,9 @@ internal static partial class ApiLogMessages
     [LoggerMessage(EventId = 4033, Level = LogLevel.Error, Message = "Failed to look up revocation for jti={Jti}; failing closed.")]
     internal static partial void JwtRevocationLookupFailed(this ILogger logger, Exception exception, string jti);
 
+    [LoggerMessage(EventId = 4034, Level = LogLevel.Information, Message = "Rejecting JWT for locked-out user {UserId} (deactivated or deleted)")]
+    internal static partial void LockedOutUserJwtRejected(this ILogger logger, Guid userId);
+
     [LoggerMessage(EventId = 4040, Level = LogLevel.Error, Message = "SAML handler error for {Slug}/{Action}")]
     internal static partial void SamlHandlerFailed(this ILogger logger, Exception exception, string slug, string action);
 

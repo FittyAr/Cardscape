@@ -31,6 +31,18 @@ public interface IUserRepository : IRepository<User, UserId>
         int take,
         CancellationToken ct = default);
 
+    /// <summary>
+    /// Lists every user in the requested lifecycle bucket for the
+    /// instance administration page. Text search and paging are applied
+    /// by the caller: the name and email columns are value-converted, so
+    /// a provider-neutral LIKE is not available, and a self-hosted user
+    /// table is small enough to filter in memory.
+    /// </summary>
+    Task<IReadOnlyList<User>> ListForAdministrationAsync(UserStatusFilter status, CancellationToken ct = default);
+
+    /// <summary>Counts the active, non-deleted instance administrators.</summary>
+    Task<int> CountActiveAdminsAsync(CancellationToken ct = default);
+
     /// <summary>Returns true if any user exists in the system.</summary>
     Task<bool> AnyAsync(CancellationToken ct = default);
 
@@ -40,3 +52,18 @@ public interface IUserRepository : IRepository<User, UserId>
     Task<IReadOnlyList<WorkspaceMember>> ListWorkspaceMembersAsync(WorkspaceId workspaceId, CancellationToken ct = default);
 }
 
+/// <summary>Lifecycle bucket used by the instance users page.</summary>
+public enum UserStatusFilter
+{
+    /// <summary>Every user, regardless of state.</summary>
+    All = 0,
+
+    /// <summary>Users who can sign in.</summary>
+    Active = 1,
+
+    /// <summary>Users switched off by an administrator or SCIM but not deleted.</summary>
+    Deactivated = 2,
+
+    /// <summary>Soft-deleted (grace period) or anonymised users.</summary>
+    Deleted = 3
+}
