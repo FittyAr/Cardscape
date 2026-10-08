@@ -34,6 +34,8 @@ public sealed partial class ScimService
             return Result.Failure<ScimUserResponse>(userResult.Error);
         }
 
+        // Provisioned by the workspace's identity provider, which owns the address.
+        userResult.Value.MarkEmailVerified(clock.UtcNow);
         await _users.AddAsync(userResult.Value, ct);
         var workspace = await workspaces.GetByIdAsync(new WorkspaceId(workspaceId), ct);
         if (workspace is null)

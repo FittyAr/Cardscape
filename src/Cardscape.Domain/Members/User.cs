@@ -1,4 +1,5 @@
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Members.Errors;
 using Cardscape.Domain.Members.Events;
 
 namespace Cardscape.Domain.Members;
@@ -80,6 +81,21 @@ public sealed class User : AggregateRoot<UserId>
     /// regular self-service registration flow does
     /// not set it.</summary>
     public bool IsAdmin { get; private set; }
+
+    /// <summary>When the user proved they own <see cref="Email"/> (a
+    /// verification link, an invitation link, an external identity provider
+    /// or the operator who ran setup); <c>null</c> while unverified.</summary>
+    public DateTimeOffset? EmailVerifiedAt { get; private set; }
+
+    /// <summary>SHA-256 of the pending verification token; the cleartext is
+    /// only ever in the email. One pending token per user: issuing a new one
+    /// replaces it.</summary>
+    public string? EmailVerificationTokenHash { get; private set; }
+
+    /// <summary>Deadline of <see cref="EmailVerificationTokenHash"/>.</summary>
+    public DateTimeOffset? EmailVerificationExpiresAt { get; private set; }
+
+    public bool IsEmailVerified => EmailVerifiedAt is not null;
 
     // EF Core.
     private User() { }
@@ -344,5 +360,68 @@ public sealed class User : AggregateRoot<UserId>
         AddDomainEvent(isAdmin
             ? (DomainEventBase)new UserGrantedAdmin(Id, at)
             : new UserRevokedAdmin(Id, at));
+    }
+
+    // ── Email verification ───────────────────────────────────
+
+    /// <summary>Marks the email as verified without a token, for flows that
+    /// already prove ownership (invitation link, external provider, SCIM,
+    /// setup). Idempotent; clears any pending token.</summary>
+    public void MarkEmailVerified(DateTimeOffset at)
+    {
+        EmailVerificationTokenHash = null;
+        EmailVerificationExpiresAt = null;
+        if (EmailVerifiedAt is not null)
+        {
+            return;
+        }
+
+        EmailVerifiedAt = at;
+        UpdatedAt = at;
+        AddDomainEvent(new UserEmailVerified(Id, Email, at));
+    }
+
+    /// <summary>Stores a new pending verification token (its hash), replacing
+    /// any earlier one.</summary>
+    public Result IssueEmailVerification(string tokenHash, DateTimeOffset at, TimeSpan lifetime)
+    {
+        if (IsEmailVerified)
+        {
+            return Result.Failure(UserErrors.EmailAlreadyVerified);
+        }
+
+        if (string.IsNullOrWhiteSpace(tokenHash) || lifetime <= TimeSpan.Zero)
+        {
+            return Result.Failure(UserErrors.EmailVerificationInvalid);
+        }
+
+        EmailVerificationTokenHash = tokenHash;
+        EmailVerificationExpiresAt = at + lifetime;
+        UpdatedAt = at;
+        return Result.Success();
+    }
+
+    /// <summary>Consumes the pending token: verifies the email when the hash
+    /// matches and the token has not expired.</summary>
+    public Result VerifyEmail(string tokenHash, DateTimeOffset at)
+    {
+        if (IsEmailVerified)
+        {
+            return Result.Success();
+        }
+
+        if (EmailVerificationTokenHash is null
+            || !string.Equals(EmailVerificationTokenHash, tokenHash, StringComparison.Ordinal))
+        {
+            return Result.Failure(UserErrors.EmailVerificationInvalid);
+        }
+
+        if (EmailVerificationExpiresAt is not { } expiresAt || at >= expiresAt)
+        {
+            return Result.Failure(UserErrors.EmailVerificationExpired);
+        }
+
+        MarkEmailVerified(at);
+        return Result.Success();
     }
 }

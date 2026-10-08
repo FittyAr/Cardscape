@@ -1,4 +1,5 @@
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Authentication.Commands;
 using Cardscape.Application.Users.Commands;
 using Cardscape.Application.Users.Queries;
 using Cardscape.Domain.Common;
@@ -157,6 +158,16 @@ public static class UserDsrAdminEndpoints
         {
             Result result = await bus.InvokeAsync<Result>(
                 new SetUserAdminCommand(userId, false), ct);
+            return result.IsSuccess
+                ? Results.NoContent()
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces(StatusCodes.Status204NoContent);
+
+        // The administrator confirmed the address by other means.
+        group.MapPost("/{userId:guid}/verify-email", async Task<IResult> (
+            Guid userId, IMessageBus bus, CancellationToken ct) =>
+        {
+            Result result = await bus.InvokeAsync<Result>(new MarkEmailVerifiedByAdminCommand(userId), ct);
             return result.IsSuccess
                 ? Results.NoContent()
                 : DomainErrorResults.ToProblem(result.Error);

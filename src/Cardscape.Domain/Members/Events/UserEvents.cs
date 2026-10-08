@@ -79,3 +79,10 @@ public sealed record UserGrantedAdmin(
 public sealed record UserRevokedAdmin(
     UserId UserId,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
+/// <summary>Raised when a user's email address is verified (link,
+/// invitation, external provider, SCIM or setup).</summary>
+public sealed record UserEmailVerified(
+    UserId UserId,
+    EmailAddress Email,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);

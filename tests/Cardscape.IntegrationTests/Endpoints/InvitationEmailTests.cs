@@ -52,6 +52,7 @@ public sealed partial class InvitationEmailTests(CardscapeWebApplicationFactory 
             Account owner = await RegisterAsync(host, "owner");
             WorkspaceDto ws = await CreateWorkspaceAsync(owner.Client, "Launch team");
             Account invitee = await RegisterAsync(host, "invitee");
+            sender.Clear(); // the sign-ups' verification emails
 
             Issued issued = await IssueAsync(owner.Client, ws.Id, invitee.Email, language: "en");
 
@@ -157,6 +158,7 @@ public sealed partial class InvitationEmailTests(CardscapeWebApplicationFactory 
         {
             await ConfigureSmtpAsync(host);
             Account user = await RegisterAsync(host, "forgetful");
+            sender.Clear(); // the sign-up's verification email
             HttpClient anonymous = host.CreateClient();
 
             (await anonymous.PostAsJsonAsync("api/auth/forgot-password", new { email = NewEmail("nobody") }, Ct))
@@ -173,6 +175,42 @@ public sealed partial class InvitationEmailTests(CardscapeWebApplicationFactory 
             sender.Sent.Should().ContainSingle("no email goes to an address without an account");
         }
     }
+
+    [Fact]
+    public async Task Registration_WithSmtp_EmailsAVerificationLink_ThatVerifiesTheAccountOnce()
+    {
+        (WebApplicationFactory<Program> host, RecordingEmailSender sender) = CreateHost();
+        using (host)
+        {
+            await ConfigureSmtpAsync(host, publicBaseUrl: "https://boards.example.test/");
+            Account user = await RegisterAsync(host, "newcomer");
+            HttpClient anonymous = host.CreateClient();
+
+            OutboundEmail email = (await sender.WaitForAsync(user.Email))!;
+            email.Should().NotBeNull();
+            string token = Uri.UnescapeDataString(VerifyTokenInLink().Match(email.TextBody).Groups[1].Value);
+            token.Should().NotBeEmpty();
+            (await VerifiedAsync(user.Client)).Should().BeFalse();
+
+            (await anonymous.PostAsJsonAsync("api/auth/verify-email", new { token }, Ct))
+                .StatusCode.Should().Be(HttpStatusCode.NoContent);
+            (await VerifiedAsync(user.Client)).Should().BeTrue();
+
+            (await anonymous.PostAsJsonAsync("api/auth/verify-email", new { token = "not-a-token" }, Ct))
+                .IsSuccessStatusCode.Should().BeFalse();
+            (await user.Client.PostAsJsonAsync("api/auth/verification/resend", new { }, Ct))
+                .StatusCode.Should().Be(HttpStatusCode.Conflict, "the address is already verified");
+        }
+    }
+
+    private static async Task<bool> VerifiedAsync(HttpClient client)
+    {
+        using JsonDocument doc = JsonDocument.Parse(await client.GetStringAsync("api/auth/verification", Ct));
+        return doc.RootElement.GetProperty("isVerified").GetBoolean();
+    }
+
+    [GeneratedRegex(@"verify-email\?token=([^\s""]+)")]
+    private static partial Regex VerifyTokenInLink();
 
     private (WebApplicationFactory<Program> Host, RecordingEmailSender Sender) CreateHost()
     {

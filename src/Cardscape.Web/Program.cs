@@ -199,6 +199,7 @@ builder.Services.AddScoped<IWebhooksApiClient, WebhooksApiClient>();
 builder.Services.AddScoped<IEmailIntegrationApiClient, EmailIntegrationApiClient>();
 builder.Services.AddScoped<IMcpSubscriptionsApiClient, McpSubscriptionsApiClient>();
 builder.Services.AddScoped<IAdminUsersApiClient, AdminUsersApiClient>();
+builder.Services.AddScoped<IEmailVerificationApiClient, EmailVerificationApiClient>();
 // Seeder admin surface — the page lives in
 // Cardscape.Web (this project), the JSON endpoints it
 // polls live in Cardscape.Api. The page itself is

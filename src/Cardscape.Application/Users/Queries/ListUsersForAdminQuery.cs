@@ -25,7 +25,8 @@ public sealed record AdminUserDto(
     bool IsAnonymised,
     bool IsRestricted,
     DateTimeOffset CreatedAt,
-    DateTimeOffset? LastLoginAt);
+    DateTimeOffset? LastLoginAt,
+    bool IsEmailVerified = true);
 
 /// <summary>A page of <see cref="AdminUserDto"/> rows plus the filtered total.</summary>
 public sealed record AdminUserPageDto(IReadOnlyList<AdminUserDto> Items, int Total);
@@ -71,5 +72,6 @@ public static class ListUsersForAdminQueryHandler
         user.IsAnonymised,
         user.IsRestricted,
         user.CreatedAt,
-        user.LastLoginAt);
+        user.LastLoginAt,
+        user.IsEmailVerified);
 }

@@ -19,6 +19,7 @@ public sealed record AdminUserDto(
     bool IsAnonymised,
     bool IsRestricted,
     DateTimeOffset CreatedAt,
-    DateTimeOffset? LastLoginAt);
+    DateTimeOffset? LastLoginAt,
+    bool IsEmailVerified = true);
 
 public sealed record AdminUserPageDto(IReadOnlyList<AdminUserDto> Items, int Total);

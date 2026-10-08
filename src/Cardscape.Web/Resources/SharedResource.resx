@@ -1090,4 +1090,17 @@
   <data name="DashboardChipLabel" xml:space="preserve"><value>Label: {0}</value></data>
   <data name="DashboardChipMember" xml:space="preserve"><value>Person: {0}</value></data>
   <data name="DashboardChipDeleted" xml:space="preserve"><value>deleted</value></data>
+  <data name="VerifyEmailTitle" xml:space="preserve"><value>Confirm your email</value></data>
+  <data name="VerifyEmailWorking" xml:space="preserve"><value>Confirming your email…</value></data>
+  <data name="VerifyEmailDone" xml:space="preserve"><value>Your email address is confirmed. Thanks!</value></data>
+  <data name="VerifyEmailExpired" xml:space="preserve"><value>This link has expired.</value></data>
+  <data name="VerifyEmailInvalid" xml:space="preserve"><value>This link is not valid, or it was already used.</value></data>
+  <data name="VerifyEmailResendHint" xml:space="preserve"><value>Sign in and use "Send the link again" in the banner at the top to get a new one.</value></data>
+  <data name="VerifyEmailContinue" xml:space="preserve"><value>Go to Cardscape</value></data>
+  <data name="VerifyBannerText" xml:space="preserve"><value>Confirm your email address ({0}): we sent you a link.</value></data>
+  <data name="VerifyBannerSent" xml:space="preserve"><value>We sent a new link to {0}.</value></data>
+  <data name="VerifyBannerResend" xml:space="preserve"><value>Send the link again</value></data>
+  <data name="AdminUsersBadgeUnverified" xml:space="preserve"><value>Email not verified</value></data>
+  <data name="AdminUsersVerifyEmail" xml:space="preserve"><value>Mark email as verified</value></data>
+  <data name="AdminUsersVerifyEmailConfirm" xml:space="preserve"><value>Mark {1} as verified for {0}? Do this only if you confirmed the address belongs to them.</value></data>
 </root>

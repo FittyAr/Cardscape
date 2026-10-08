@@ -67,6 +67,8 @@ public static class RegisterInvitedUserCommandHandler
         }
 
         var user = userResult.Value;
+        // The invitation was mailed to this address and its token came back.
+        user.MarkEmailVerified(clock.UtcNow);
         await users.AddAsync(user, cancellationToken);
 
         // Saves the user, the membership and the accepted invitation

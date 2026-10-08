@@ -118,7 +118,7 @@ public sealed class WorkspaceMemberAdministrationTests(CardscapeWebApplicationFa
     }
 
     [Fact]
-    public async Task InboxAccept_RequiresClosedRegistration()
+    public async Task InboxAccept_RequiresAVerifiedEmail()
     {
         CancellationToken ct = TestContext.Current.CancellationToken;
         using WebApplicationFactory<Program> host = factory.WithWebHostBuilder(_ => { });
@@ -129,12 +129,13 @@ public sealed class WorkspaceMemberAdministrationTests(CardscapeWebApplicationFa
         await InviteAsync(owner.Client, ws.Id, invitee.Email, "observer");
         Guid invitationId = await PendingInvitationIdAsync(invitee.Client, ws.Id);
 
-        // Open registration: anyone may own an unverified address, so
-        // the token from the link is still required.
+        // A self-registered address is unproven: the link (its token) is
+        // still required.
         (await invitee.Client.PostAsync($"api/invitations/{invitationId}/accept", null, ct))
             .StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
-        await SetPublicRegistrationAsync(host, allow: false);
+        await host.Services.MarkEmailVerifiedAsync(invitee.Email, ct);
+        await host.Services.MarkEmailVerifiedAsync(stranger.Email, ct);
         (await stranger.Client.PostAsync($"api/invitations/{invitationId}/accept", null, ct))
             .StatusCode.Should().Be(HttpStatusCode.Forbidden, "the invitation is bound to another email");
 

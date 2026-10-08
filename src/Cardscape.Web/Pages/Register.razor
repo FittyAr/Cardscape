@@ -8,6 +8,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.Extensions.Localization
 @inject AuthService Auth
+@inject CultureSwitcher Culture
 @inject IInvitationsApiClient InvitationsApi
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthState
@@ -161,7 +162,8 @@
             // An invited user is joined to the workspace on registration.
             s_afterRegister = invitation is null ? "/" : $"workspaces/{invitation.WorkspaceId}";
             ApiResult<UserSummaryDto> result = await Auth.RegisterAsync(
-                model.Email, model.DisplayName, model.Password, invitation is null ? null : InvitationToken);
+                model.Email, model.DisplayName, model.Password, invitation is null ? null : InvitationToken,
+                Culture.CurrentCulture);
             if (!result.IsSuccess)
             {
                 s_afterRegister = "/";

@@ -1,0 +1,67 @@
+@page "/verify-email"
+@layout EmptyLayout
+@inherits Cardscape.Web.Shared.CultureReactiveComponentBase
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IEmailVerificationApiClient Verification
+@inject IStringLocalizer<SharedResource> L
+
+@* Landing page of the verification email. Anonymous on purpose: the token
+   is the proof, so the link works on a device that is not signed in. *@
+
+<PageTitle>@L["VerifyEmailTitle"] @L["PageTitleSuffix"]</PageTitle>
+
+@if (_state == State.Working)
+{
+    <LoadingState Text="@L["VerifyEmailWorking"]" />
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        <RadzenText Text="@L["VerifyEmailTitle"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
+        @if (_state == State.Done)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Success" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false"
+                         Icon="mark_email_read" class="rz-m-0">
+                @L["VerifyEmailDone"]
+            </RadzenAlert>
+        }
+        else
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false"
+                         Icon="link_off" class="rz-m-0">
+                @(_state == State.Expired ? L["VerifyEmailExpired"] : L["VerifyEmailInvalid"])
+            </RadzenAlert>
+            <RadzenText Text="@L["VerifyEmailResendHint"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary rz-m-0" />
+        }
+        <RadzenLink Path="" Text="@L["VerifyEmailContinue"]" Icon="arrow_forward" />
+    </RadzenStack>
+}
+
+@code {
+    private enum State
+    {
+        Working,
+        Done,
+        Expired,
+        Invalid,
+    }
+
+    [SupplyParameterFromQuery(Name = "token")] public string? Token { get; set; }
+
+    private State _state = State.Working;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Token))
+        {
+            _state = State.Invalid;
+            return;
+        }
+
+        ApiResult result = await Verification.VerifyAsync(Token);
+        _state = result.IsSuccess
+            ? State.Done
+            : result.Error?.Contains("expired", StringComparison.OrdinalIgnoreCase) == true ? State.Expired : State.Invalid;
+    }
+}

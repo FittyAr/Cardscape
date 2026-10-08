@@ -95,6 +95,8 @@ public sealed class ExternalLoginService(
                 return Result.Failure<ExternalLoginResolution>(newUser.Error);
             }
 
+            // The identity provider vouches for the address.
+            newUser.Value.MarkEmailVerified(at);
             await users.AddAsync(newUser.Value, ct);
 
             var newLinkResult = ExternalLogin.Link(

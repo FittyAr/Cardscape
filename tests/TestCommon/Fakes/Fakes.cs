@@ -140,6 +140,9 @@ public sealed class InMemoryUserRepository : InMemoryRepositoryBase<User, UserId
             string.Equals(u.Email.Value, normalized, StringComparison.OrdinalIgnoreCase)));
     }
 
+    public Task<User?> FindByEmailVerificationTokenHashAsync(string tokenHash, CancellationToken ct = default) =>
+        Task.FromResult(Store.Values.FirstOrDefault(u => u.EmailVerificationTokenHash == tokenHash));
+
     public Task<IReadOnlyList<User>> ListByIdsAsync(
         IReadOnlyList<UserId> ids, CancellationToken ct = default)
     {

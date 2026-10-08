@@ -8,6 +8,11 @@ namespace Cardscape.Infrastructure.Repositories;
 
 public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User, UserId>(db), IUserRepository
 {
+    public async Task<User?> FindByEmailVerificationTokenHashAsync(string tokenHash, CancellationToken ct = default) =>
+        string.IsNullOrWhiteSpace(tokenHash)
+            ? null
+            : await Set.FirstOrDefaultAsync(user => user.EmailVerificationTokenHash == tokenHash, ct);
+
     public async Task<User?> FindByEmailAsync(string email, CancellationToken ct = default)
     {
         var normalized = EmailAddress.Normalize(email);

@@ -1,0 +1,48 @@
+@using Cardscape.Web.Resources
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Microsoft.Extensions.Localization
+@inject IEmailVerificationApiClient Verification
+@inject CultureSwitcher Culture
+@inject IStringLocalizer<SharedResource> L
+
+@* Asks a signed-in user with an unverified address to confirm it. Only
+   shown when the instance can send email; otherwise there is no way to
+   verify and the banner would be noise. Dismissible for the session. *@
+
+@if (_status is { IsVerified: false, CanSendEmail: true } status && !_dismissed)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="true"
+                 Close="@(() => _dismissed = true)" Icon="mark_email_unread" class="rz-m-0 rz-mb-3">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween"
+                     Gap="0.75rem" Wrap="FlexWrap.Wrap">
+            <span>@(_sent ? L["VerifyBannerSent", status.Email] : L["VerifyBannerText", status.Email])</span>
+            @if (!_sent)
+            {
+                <RadzenButton Text="@L["VerifyBannerResend"]" Icon="send" ButtonStyle="ButtonStyle.Info" Variant="Variant.Text"
+                              Size="ButtonSize.Small" IsBusy="@_busy" Click="@ResendAsync" />
+            }
+        </RadzenStack>
+    </RadzenAlert>
+}
+
+@code {
+    private EmailVerificationStatusDto? _status;
+    private bool _dismissed;
+    private bool _sent;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ApiResult<EmailVerificationStatusDto> result = await Verification.GetStatusAsync();
+        _status = result.HasValue ? result.Value : null;
+    }
+
+    private async Task ResendAsync()
+    {
+        _busy = true;
+        ApiResult result = await Verification.ResendAsync(Culture.CurrentCulture);
+        _busy = false;
+        _sent = result.IsSuccess;
+    }
+}

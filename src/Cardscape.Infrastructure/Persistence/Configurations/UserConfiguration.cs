@@ -34,6 +34,11 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.IsRestricted).IsRequired();
         builder.Property(x => x.RestrictedAt);
         builder.Property(x => x.IsAdmin).IsRequired();
+        builder.Property(x => x.EmailVerifiedAt);
+        builder.Property(x => x.EmailVerificationTokenHash).HasMaxLength(128);
+        builder.Property(x => x.EmailVerificationExpiresAt);
+        builder.HasIndex(x => x.EmailVerificationTokenHash);
+        builder.Ignore(x => x.IsEmailVerified);
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt);
         builder.Property(x => x.CreatedBy);

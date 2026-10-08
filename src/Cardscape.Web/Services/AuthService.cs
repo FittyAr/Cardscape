@@ -74,12 +74,13 @@ public sealed class AuthService(
     AuthStateProvider stateProvider)
 {
     public async Task<ApiResult<UserSummaryDto>> RegisterAsync(
-        string email, string displayName, string password, string? invitationToken = null, CancellationToken ct = default)
+        string email, string displayName, string password, string? invitationToken = null,
+        string? language = null, CancellationToken ct = default)
     {
         HttpClient http = httpClientFactory.CreateClient("Cardscape.Api");
         HttpResponseMessage response = await http.PostAsJsonAsync(
             "api/auth/register",
-            new RegisterRequestDto(email, displayName, password, invitationToken),
+            new RegisterRequestDto(email, displayName, password, invitationToken, language),
             ct);
         return await ParseAuthAsync(response, ct);
     }

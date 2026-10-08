@@ -20,6 +20,9 @@ public sealed class RecordingEmailSender : IEmailSender
 
     public IReadOnlyList<OutboundEmail> Sent => [.. _sent];
 
+    /// <summary>Forgets what was sent so far (e.g. the verification emails of a test's own sign-ups).</summary>
+    public void Clear() => _sent.Clear();
+
     public Task<Result> SendAsync(OutboundEmail email, CancellationToken ct)
     {
         if (Fail)

@@ -11,6 +11,7 @@ public interface IAdminUsersApiClient
     Task<ApiResult> SetActiveAsync(Guid userId, bool isActive, CancellationToken ct = default);
     Task<ApiResult> SoftDeleteAsync(Guid userId, CancellationToken ct = default);
     Task<ApiResult> RestoreAsync(Guid userId, CancellationToken ct = default);
+    Task<ApiResult> MarkEmailVerifiedAsync(Guid userId, CancellationToken ct = default);
 }
 
 public sealed class AdminUsersApiClient(IHttpClientFactory http) : ApiClientBase(http), IAdminUsersApiClient
@@ -39,6 +40,9 @@ public sealed class AdminUsersApiClient(IHttpClientFactory http) : ApiClientBase
         HttpResponseMessage response = await CreateClient().DeleteAsync($"api/admin/users/{userId}", ct);
         return await ReadAsync(response, ct);
     }
+
+    public Task<ApiResult> MarkEmailVerifiedAsync(Guid userId, CancellationToken ct = default) =>
+        PostAsync($"api/admin/users/{userId}/verify-email", ct);
 
     public Task<ApiResult> RestoreAsync(Guid userId, CancellationToken ct = default) =>
         PostAsync($"api/admin/users/{userId}/restore", ct);

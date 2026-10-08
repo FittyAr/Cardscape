@@ -1942,6 +1942,16 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("varchar(254)");
 
+                    b.Property<DateTimeOffset?>("EmailVerificationExpiresAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("EmailVerificationTokenHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<DateTimeOffset?>("EmailVerifiedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
@@ -1984,6 +1994,8 @@ namespace Cardscape.Migrations.MariaDb.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("EmailVerificationTokenHash");
 
                     b.ToTable("users", (string)null);
                 });

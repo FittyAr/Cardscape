@@ -67,6 +67,10 @@
                         {
                             <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@L["AdminUsersBadgeRestricted"]" />
                         }
+                        @if (!u.IsEmailVerified)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L["AdminUsersBadgeUnverified"]" />
+                        }
                     </RadzenStack>
                 </Template>
             </RadzenDataGridColumn>
@@ -85,7 +89,7 @@
                     }
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersActions"]" Sortable="false" Width="9rem" TextAlign="TextAlign.End">
+            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersActions"]" Sortable="false" Width="11rem" TextAlign="TextAlign.End">
                 <Template Context="u">
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" JustifyContent="JustifyContent.End">
                         @if (u.IsDeleted || u.IsAnonymised)
@@ -99,6 +103,12 @@
                         }
                         else
                         {
+                            @if (!u.IsEmailVerified)
+                            {
+                                <RadzenButton Icon="mark_email_read" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                              title="@L["AdminUsersVerifyEmail"]" aria-label="@L["AdminUsersVerifyEmail"]"
+                                              Click="@(() => VerifyEmailAsync(u))" />
+                            }
                             <RadzenButton Icon="@(u.IsAdmin ? "remove_moderator" : "add_moderator")"
                                           ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
                                           title="@(u.IsAdmin ? L["AdminUsersRevokeAdmin"] : L["AdminUsersGrantAdmin"])"
@@ -208,6 +218,10 @@
     private Task DeleteAsync(AdminUserDto user) =>
         RunAsync(L["AdminUsersDelete"], L["AdminUsersDeleteConfirm", user.DisplayName],
             () => UsersApi.SoftDeleteAsync(user.Id));
+
+    private Task VerifyEmailAsync(AdminUserDto user) =>
+        RunAsync(L["AdminUsersVerifyEmail"], L["AdminUsersVerifyEmailConfirm", user.DisplayName, user.Email],
+            () => UsersApi.MarkEmailVerifiedAsync(user.Id));
 
     private Task RestoreAsync(AdminUserDto user) =>
         RunAsync(L["AdminUsersRestore"], L["AdminUsersRestoreConfirm", user.DisplayName],

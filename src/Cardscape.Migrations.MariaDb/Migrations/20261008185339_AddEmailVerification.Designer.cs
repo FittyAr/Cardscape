@@ -3,21 +3,27 @@ using System;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Cardscape.Migrations.MySql.Migrations
+namespace Cardscape.Migrations.MariaDb.Migrations
 {
     [DbContext(typeof(CardscapeDbContext))]
-    partial class CardscapeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261008185339_AddEmailVerification")]
+    partial class AddEmailVerification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
             modelBuilder.Entity("Cardscape.Domain.Activities.Activity", b =>
                 {
@@ -34,7 +40,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -46,7 +52,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("OccurredAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("PayloadJson")
                         .IsRequired()
@@ -59,7 +65,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -84,7 +90,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -117,7 +123,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(1024)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -140,7 +146,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -157,7 +163,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("LastUsedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("Provider")
                         .HasColumnType("int");
@@ -174,7 +180,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(256)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -198,19 +204,19 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("IssuedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("RequestedFromIp")
                         .HasMaxLength(64)
@@ -228,13 +234,13 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(128)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("UsedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("char(36)");
@@ -255,7 +261,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -273,7 +279,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<DateTimeOffset>("RevokedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -282,10 +288,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset>("TokenExpiresAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -311,7 +317,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -358,7 +364,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(512)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -383,7 +389,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -395,7 +401,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("LastUsedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -403,7 +409,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -422,7 +428,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(16)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -441,10 +447,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("ConfirmedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -472,7 +478,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -497,10 +503,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -525,10 +531,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset>("ScheduledFor")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTimeOffset?>("StartedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -539,7 +545,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -565,7 +571,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(7)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -593,7 +599,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -627,7 +633,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -659,7 +665,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -685,7 +691,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -706,7 +712,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -729,7 +735,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -744,10 +750,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset>("StarredAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -772,7 +778,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -802,7 +808,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -824,7 +830,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -842,7 +848,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -873,7 +879,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(7)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -883,7 +889,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTimeOffset?>("DueDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsArchived")
                         .HasColumnType("tinyint(1)");
@@ -912,7 +918,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(500)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -932,7 +938,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -953,7 +959,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -970,7 +976,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -979,7 +985,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("MirroredAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("MirroredBy")
                         .HasColumnType("char(36)");
@@ -1000,7 +1006,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1021,7 +1027,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1036,16 +1042,16 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset>("SnoozedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("SnoozedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("Until")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1064,7 +1070,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1084,7 +1090,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1113,7 +1119,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1128,7 +1134,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1155,7 +1161,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(8192)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1181,7 +1187,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(120)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1199,13 +1205,13 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
@@ -1239,7 +1245,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1265,7 +1271,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1292,7 +1298,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1316,7 +1322,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1340,7 +1346,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1367,7 +1373,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(256)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1397,10 +1403,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(1024)");
 
                     b.Property<DateTimeOffset?>("LastSyncErrorAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTimeOffset?>("LastSyncedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -1409,7 +1415,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1439,7 +1445,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1467,7 +1473,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1494,22 +1500,22 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("RefreshedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -1527,7 +1533,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(64)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1576,7 +1582,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(8)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1606,7 +1612,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1637,13 +1643,13 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(64)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsConsumed")
                         .HasColumnType("tinyint(1)");
@@ -1667,7 +1673,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1709,7 +1715,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1731,7 +1737,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1758,7 +1764,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1767,7 +1773,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("LastUsedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("ProtectedBotToken")
                         .IsRequired()
@@ -1791,7 +1797,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1821,7 +1827,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(7)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1841,7 +1847,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1862,7 +1868,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1894,7 +1900,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1914,20 +1920,20 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("AnonymisedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("AvatarUrl")
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
@@ -1940,14 +1946,14 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(254)");
 
                     b.Property<DateTimeOffset?>("EmailVerificationExpiresAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("EmailVerificationTokenHash")
                         .HasMaxLength(128)
                         .HasColumnType("varchar(128)");
 
                     b.Property<DateTimeOffset?>("EmailVerifiedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
@@ -1965,7 +1971,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("LastLoginAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1973,7 +1979,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(512)");
 
                     b.Property<DateTimeOffset?>("RestrictedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -1982,7 +1988,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2003,7 +2009,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2022,7 +2028,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTimeOffset?>("ReadAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -2031,7 +2037,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2057,7 +2063,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2072,7 +2078,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("NextOccurrenceAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -2081,7 +2087,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2105,13 +2111,13 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(50);
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("ExpiresAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("HashedSecret")
                         .IsRequired()
@@ -2122,7 +2128,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("LastUsedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -2135,7 +2141,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(1000);
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("RevokedBy")
                         .HasColumnType("char(36)");
@@ -2160,7 +2166,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(8)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2184,7 +2190,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2209,7 +2215,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue("default");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2228,7 +2234,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2243,7 +2249,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2252,7 +2258,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("VotedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
@@ -2273,7 +2279,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2290,7 +2296,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("LastAttemptAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("LastError")
                         .HasColumnType("longtext");
@@ -2309,7 +2315,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2338,7 +2344,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2362,7 +2368,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2385,7 +2391,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2419,7 +2425,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2437,13 +2443,13 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("AcceptedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("AcceptedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2454,10 +2460,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(320)");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTimeOffset>("InvitedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("InvitedBy")
                         .HasColumnType("char(36)");
@@ -2466,7 +2472,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("RevokedBy")
                         .HasColumnType("char(36)");
@@ -2491,7 +2497,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("varchar(10)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2518,10 +2524,10 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<long>("LeaseExpiresAtUtcTicks")
                         .HasColumnType("bigint");
@@ -2618,7 +2624,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                                 .HasColumnType("char(36)");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<Guid?>("CreatedBy")
                                 .HasColumnType("char(36)");
@@ -2627,7 +2633,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                                 .HasColumnType("tinyint(1)");
 
                             b1.Property<DateTimeOffset>("JoinedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<int>("Role")
                                 .HasColumnType("int");
@@ -2639,7 +2645,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                                 .HasDefaultValue(0u);
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<Guid?>("UpdatedBy")
                                 .HasColumnType("char(36)");
@@ -2678,13 +2684,13 @@ namespace Cardscape.Migrations.MySql.Migrations
                                 .HasColumnType("char(36)");
 
                             b1.Property<DateTimeOffset>("AssignedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<Guid>("CardId")
                                 .HasColumnType("char(36)");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<Guid?>("CreatedBy")
                                 .HasColumnType("char(36)");
@@ -2699,7 +2705,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                                 .HasDefaultValue(0u);
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<Guid?>("UpdatedBy")
                                 .HasColumnType("char(36)");
@@ -2727,7 +2733,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                                 .HasColumnType("char(36)");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<Guid?>("CreatedBy")
                                 .HasColumnType("char(36)");
@@ -2745,7 +2751,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                                 .HasDefaultValue(0u);
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<Guid?>("UpdatedBy")
                                 .HasColumnType("char(36)");
@@ -2780,7 +2786,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                                 .HasColumnType("char(36)");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<Guid?>("CreatedBy")
                                 .HasColumnType("char(36)");
@@ -2806,7 +2812,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                                 .HasColumnType("varchar(500)");
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<Guid?>("UpdatedBy")
                                 .HasColumnType("char(36)");
@@ -2832,7 +2838,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                                 .HasColumnType("char(36)");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<Guid?>("CreatedBy")
                                 .HasColumnType("char(36)");
@@ -2841,7 +2847,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                                 .HasColumnType("tinyint(1)");
 
                             b1.Property<DateTimeOffset>("JoinedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<int>("Role")
                                 .HasColumnType("int");
@@ -2853,7 +2859,7 @@ namespace Cardscape.Migrations.MySql.Migrations
                                 .HasDefaultValue(0u);
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("datetime");
+                                .HasColumnType("datetime(6)");
 
                             b1.Property<Guid?>("UpdatedBy")
                                 .HasColumnType("char(36)");

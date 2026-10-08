@@ -81,6 +81,34 @@ public static class EmailTemplates
         return Compose(to, subject, instanceTitle, [intro], action, resetUrl, [expiry, ignore]);
     }
 
+    public static OutboundEmail EmailVerification(
+        string to,
+        string language,
+        string instanceTitle,
+        string displayName,
+        string verifyUrl,
+        TimeSpan lifetime)
+    {
+        bool es = language == "es";
+        int hours = Math.Max(1, (int)Math.Round(lifetime.TotalHours));
+
+        string subject = es
+            ? $"Confirmá tu correo en {instanceTitle}"
+            : $"Confirm your email on {instanceTitle}";
+        string intro = es
+            ? $"Hola {displayName}: confirmá que esta dirección es tuya para terminar de configurar tu cuenta de {instanceTitle}."
+            : $"Hi {displayName}, confirm this address is yours to finish setting up your {instanceTitle} account.";
+        string action = es ? "Confirmar mi correo" : "Confirm my email";
+        string expiry = es
+            ? $"El enlace vence en {hours} horas. Desde tu cuenta podés pedir uno nuevo."
+            : $"The link expires in {hours} hours. You can request a new one from your account.";
+        string ignore = es
+            ? "Si no creaste una cuenta, ignorá este correo."
+            : "If you didn't create an account, ignore this email.";
+
+        return Compose(to, subject, instanceTitle, [intro], action, verifyUrl, [expiry, ignore]);
+    }
+
     public static OutboundEmail Test(string to, string language, string instanceTitle)
     {
         bool es = language == "es";

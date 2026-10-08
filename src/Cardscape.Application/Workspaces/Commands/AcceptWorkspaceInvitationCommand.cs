@@ -1,9 +1,9 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
-using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Application.Workspaces.DTOs;
 using Cardscape.Domain.Common;
+using Cardscape.Domain.Members;
 using Cardscape.Domain.Workspaces;
 using Wolverine;
 
@@ -21,13 +21,10 @@ public sealed record AcceptWorkspaceInvitationCommand(string Token) : IMessage;
 
 /// <summary>
 /// Redeem a pending invitation from the signed-in user's inbox,
-/// without the token. The account email must match the
-/// invitation. Because Cardscape does not verify email ownership,
-/// this is only allowed while public registration is closed: then
-/// every account was created by an administrator, an invitation
-/// token, or an identity provider, so the account email is
-/// trustworthy. With open registration anyone could sign up under
-/// someone else's address, so the token (the link) stays required.
+/// without the token. The account email must match the invitation
+/// and must be verified: otherwise anyone could sign up under someone
+/// else's address and pick up their invitations, so an unverified
+/// account still needs the link (whose token proves the address).
 /// </summary>
 public sealed record AcceptWorkspaceInvitationByIdCommand(Guid InvitationId) : IMessage;
 
@@ -38,6 +35,7 @@ public static class AcceptWorkspaceInvitationCommandHandler
         IInvitationService invitations,
         IWorkspaceInvitationRepository repository,
         IWorkspaceRepository workspaces,
+        IUserRepository users,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -70,6 +68,15 @@ public static class AcceptWorkspaceInvitationCommandHandler
                 "workspaces.invitation.not_found", "Invitation was not found."));
         }
 
+        // The token was mailed to the invited address: redeeming it with a
+        // matching account proves the account owns that address. Saved by
+        // RedeemAsync together with the membership.
+        if (string.Equals(currentUser.Email, invitation.Email, StringComparison.OrdinalIgnoreCase)
+            && await users.GetByIdAsync(new UserId(currentUser.Id.Value), cancellationToken) is { } user)
+        {
+            user.MarkEmailVerified(clock.UtcNow);
+        }
+
         return await RedeemAsync(
             invitation, currentUser.Id.Value, currentUser.Email, workspaces, unitOfWork, clock, cancellationToken);
     }
@@ -78,7 +85,7 @@ public static class AcceptWorkspaceInvitationCommandHandler
         AcceptWorkspaceInvitationByIdCommand command,
         IWorkspaceInvitationRepository repository,
         IWorkspaceRepository workspaces,
-        ISystemSettingsService settings,
+        IUserRepository users,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -90,11 +97,12 @@ public static class AcceptWorkspaceInvitationCommandHandler
                 "auth.required", "Authentication is required."));
         }
 
-        if ((await settings.GetAsync(cancellationToken)).Access.AllowPublicRegistration)
+        User? user = await users.GetByIdAsync(new UserId(currentUser.Id.Value), cancellationToken);
+        if (user is not { IsEmailVerified: true })
         {
             return Result.Failure<WorkspaceDto>(DomainError.Forbidden(
                 "workspaces.invitation.link_required",
-                "Open the invitation link you received to accept this invitation."));
+                "Verify your email address, or open the invitation link you received, to accept this invitation."));
         }
 
         var invitation = await repository.GetByIdAsync(

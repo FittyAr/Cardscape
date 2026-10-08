@@ -47,12 +47,61 @@ public static class AuthEndpoints
             {
                 result = await bus.InvokeAsync<Result<AuthResponse>>(new RegisterUserCommand(
                     request.Email, request.DisplayName, request.Password), ct);
+
+                // Self-registered addresses are unproven: mail the
+                // verification link. Best effort; the account works either way.
+                if (result.IsSuccess)
+                {
+                    await bus.InvokeAsync<Result<EmailVerificationIssued>>(new SendEmailVerificationCommand(
+                        result.Value.User.Id, request.Language), ct);
+                }
             }
 
             return result.IsSuccess
                 ? Results.Created("/api/auth/me", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
         }).Produces<AuthResponse>(StatusCodes.Status201Created);
+
+        group.MapPost("/verify-email", async (VerifyEmailRequest request, IMessageBus bus, CancellationToken ct) =>
+        {
+            Result result = await bus.InvokeAsync<Result>(new VerifyEmailCommand(request.Token), ct);
+            return result.IsSuccess ? Results.NoContent() : DomainErrorResults.ToProblem(result.Error);
+        })
+        .AllowAnonymous()
+        .Produces(StatusCodes.Status204NoContent);
+
+        group.MapGet("/verification", async (ICurrentUser currentUser, IMessageBus bus, CancellationToken ct) =>
+        {
+            if (currentUser.Id is null)
+            {
+                return Results.Unauthorized();
+            }
+
+            Result<EmailVerificationStatus> result = await bus.InvokeAsync<Result<EmailVerificationStatus>>(
+                new EmailVerificationStatusQuery(currentUser.Id.Value), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+        })
+        .RequireAuthorization()
+        .Produces<EmailVerificationStatus>();
+
+        group.MapPost("/verification/resend", async (
+            ResendVerificationRequest? request,
+            ICurrentUser currentUser,
+            IHostEnvironment environment,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            if (currentUser.Id is null)
+            {
+                return Results.Unauthorized();
+            }
+
+            Result<EmailVerificationIssued> result = await bus.InvokeAsync<Result<EmailVerificationIssued>>(
+                new SendEmailVerificationCommand(currentUser.Id.Value, request?.Language, environment.IsDevelopment()), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+        })
+        .RequireAuthorization()
+        .Produces<EmailVerificationIssued>();
 
         group.MapPost("/login", async (LoginRequest request, IMessageBus bus, CancellationToken ct) =>
         {
@@ -174,6 +223,10 @@ public static class AuthEndpoints
 /// <summary>Body for <c>POST /api/auth/forgot-password</c>.</summary>
 /// <param name="Language">UI language for the reset email (<c>en</c>/<c>es</c>); the instance default otherwise.</param>
 public sealed record ForgotPasswordRequest(string Email, string? Language = null);
+
+public sealed record VerifyEmailRequest(string Token);
+
+public sealed record ResendVerificationRequest(string? Language = null);
 
 /// <summary>Body for <c>POST /api/auth/reset-password</c>.</summary>
 public sealed record ResetPasswordRequest(string Token, string NewPassword);

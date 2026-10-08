@@ -1942,6 +1942,16 @@ namespace Cardscape.Migrations.PostgreSql.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)");
 
+                    b.Property<DateTimeOffset?>("EmailVerificationExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EmailVerificationTokenHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset?>("EmailVerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -1984,6 +1994,8 @@ namespace Cardscape.Migrations.PostgreSql.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("EmailVerificationTokenHash");
 
                     b.ToTable("users", (string)null);
                 });

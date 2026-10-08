@@ -1937,6 +1937,16 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset?>("EmailVerificationExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailVerificationTokenHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("EmailVerifiedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
@@ -1979,6 +1989,8 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("EmailVerificationTokenHash");
 
                     b.ToTable("users", (string)null);
                 });

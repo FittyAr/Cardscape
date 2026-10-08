@@ -1090,4 +1090,17 @@
   <data name="DashboardChipLabel" xml:space="preserve"><value>Etiqueta: {0}</value></data>
   <data name="DashboardChipMember" xml:space="preserve"><value>Persona: {0}</value></data>
   <data name="DashboardChipDeleted" xml:space="preserve"><value>eliminada</value></data>
+  <data name="VerifyEmailTitle" xml:space="preserve"><value>Confirmá tu correo</value></data>
+  <data name="VerifyEmailWorking" xml:space="preserve"><value>Confirmando tu correo…</value></data>
+  <data name="VerifyEmailDone" xml:space="preserve"><value>Tu dirección de correo quedó confirmada. ¡Gracias!</value></data>
+  <data name="VerifyEmailExpired" xml:space="preserve"><value>Este enlace venció.</value></data>
+  <data name="VerifyEmailInvalid" xml:space="preserve"><value>Este enlace no es válido o ya se usó.</value></data>
+  <data name="VerifyEmailResendHint" xml:space="preserve"><value>Iniciá sesión y usá «Reenviar el enlace» en el aviso de arriba para recibir uno nuevo.</value></data>
+  <data name="VerifyEmailContinue" xml:space="preserve"><value>Ir a Cardscape</value></data>
+  <data name="VerifyBannerText" xml:space="preserve"><value>Confirmá tu dirección de correo ({0}): te enviamos un enlace.</value></data>
+  <data name="VerifyBannerSent" xml:space="preserve"><value>Te enviamos un enlace nuevo a {0}.</value></data>
+  <data name="VerifyBannerResend" xml:space="preserve"><value>Reenviar el enlace</value></data>
+  <data name="AdminUsersBadgeUnverified" xml:space="preserve"><value>Correo sin verificar</value></data>
+  <data name="AdminUsersVerifyEmail" xml:space="preserve"><value>Marcar el correo como verificado</value></data>
+  <data name="AdminUsersVerifyEmailConfirm" xml:space="preserve"><value>¿Marcar {1} como verificado para {0}? Hacelo solo si confirmaste que la dirección es suya.</value></data>
 </root>

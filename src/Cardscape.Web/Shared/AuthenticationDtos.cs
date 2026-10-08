@@ -1,7 +1,11 @@
 namespace Cardscape.Web.Shared;
 
 // ── Auth ────────────────────────────────────────────────
-public sealed record RegisterRequestDto(string Email, string DisplayName, string Password, string? InvitationToken = null);
+public sealed record RegisterRequestDto(
+    string Email, string DisplayName, string Password, string? InvitationToken = null, string? Language = null);
+
+/// <summary>Mirror of the API's EmailVerificationStatus (GET /api/auth/verification).</summary>
+public sealed record EmailVerificationStatusDto(bool IsVerified, bool CanSendEmail, string Email);
 
 public sealed record LoginRequestDto(string Email, string Password);
 

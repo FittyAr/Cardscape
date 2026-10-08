@@ -32,4 +32,20 @@ public static class TestUserAdministration
         user.SetAdmin(true, clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
+
+    public static async Task MarkEmailVerifiedAsync(
+        this IServiceProvider services,
+        string email,
+        CancellationToken cancellationToken = default)
+    {
+        await using AsyncServiceScope scope = services.CreateAsyncScope();
+        IUserRepository users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        IClock clock = scope.ServiceProvider.GetRequiredService<IClock>();
+
+        User user = await users.FindByEmailAsync(email, cancellationToken)
+            ?? throw new InvalidOperationException($"Test user '{email}' was not found.");
+        user.MarkEmailVerified(clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
 }
