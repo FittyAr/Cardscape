@@ -7,6 +7,7 @@
 @using Cardscape.Web.Shared
 @using Microsoft.Extensions.Localization
 @inject SetupApiClient SetupApi
+@inject SetupStatusState SetupStatus
 @inject AuthService Auth
 @inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
@@ -126,11 +127,13 @@
     {
         try
         {
-            ApiResult<SetupStatusDto> statusResult = await SetupApi.GetStatusAsync();
-            if (statusResult.HasValue)
+            // Usually already cached by the router gate in App.razor, so
+            // the form renders without a loader in between.
+            SetupStatusDto? status = await SetupStatus.GetAsync();
+            if (status is not null)
             {
-                _databaseProvider = statusResult.Value.DatabaseProvider;
-                if (statusResult.Value.IsInitialized)
+                _databaseProvider = status.DatabaseProvider;
+                if (status.IsInitialized)
                 {
                     _alreadyInitialized = true;
                     Nav.NavigateTo("/login", forceLoad: true);
@@ -184,6 +187,7 @@
                 return;
             }
 
+            SetupStatus.MarkInitialized();
             if (result.Value?.AccessToken is not null)
             {
                 await Auth.SetSessionAsync(result.Value.AccessToken, result.Value.User);

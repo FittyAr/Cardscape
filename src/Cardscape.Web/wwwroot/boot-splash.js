@@ -113,9 +113,23 @@
                     resolve(links);
                     return;
                 }
-                requestAnimationFrame(function () { look(left - 1); });
+                nextFrame(function () { look(left - 1); });
             })(attempts);
         });
+    }
+
+    // requestAnimationFrame never fires in a background tab; fall
+    // back to a timer so a tab opened behind others still boots.
+    function nextFrame(callback) {
+        var done = false;
+        function run() {
+            if (!done) {
+                done = true;
+                callback();
+            }
+        }
+        requestAnimationFrame(run);
+        setTimeout(run, 50);
     }
 
     var completed = false;
@@ -144,8 +158,8 @@
         Promise.race([sheets, timeout]).then(function () {
             // Two frames: let the browser apply the theme before
             // the overlay starts to fade.
-            requestAnimationFrame(function () {
-                requestAnimationFrame(function () {
+            nextFrame(function () {
+                nextFrame(function () {
                     splash.classList.add('cs-boot-done');
                     setTimeout(function () {
                         if (splash.parentNode) {

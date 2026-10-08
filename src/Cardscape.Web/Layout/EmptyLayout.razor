@@ -71,6 +71,7 @@
     // receives a fresh @Body and renders the page with the
     // current dictionary.
     private string? _bodyKey;
+    private string? _mountedCulture;
 
     protected override void OnInitialized()
     {
@@ -81,7 +82,8 @@
         // so we seed with a "default" key; InitializeAsync
         // may replace it with the saved culture once JS
         // interop is available.
-        _bodyKey = $"body-default-{Guid.NewGuid():N}";
+        _mountedCulture = Culture.CurrentCulture;
+        _bodyKey = $"body-{_mountedCulture}-{Guid.NewGuid():N}";
         Culture.Changed += OnCultureChangedAsync;
     }
 
@@ -95,7 +97,15 @@
             // a different language in a previous session — see
             // BETA-8-I18N-#4 in test-results/r8/A8-settings.md.
             await Culture.InitializeAsync();
-            _bodyKey = $"body-{Culture.CurrentCulture}-{Guid.NewGuid():N}";
+            // App.razor's router gate usually loaded the culture before
+            // the first render; remount the page only if it changed,
+            // otherwise the freshly shown screen would flicker.
+            if (Culture.CurrentCulture != _mountedCulture)
+            {
+                _mountedCulture = Culture.CurrentCulture;
+                _bodyKey = $"body-{_mountedCulture}-{Guid.NewGuid():N}";
+                StateHasChanged();
+            }
         }
     }
 
@@ -112,7 +122,8 @@
         // destroys the old CultureReactiveBody and mounts a new
         // one, which in turn re-invokes the @Body RenderFragment
         // with the now-Spanish dictionary.
-        _bodyKey = $"body-{Culture.CurrentCulture}-{Guid.NewGuid():N}";
+        _mountedCulture = Culture.CurrentCulture;
+        _bodyKey = $"body-{_mountedCulture}-{Guid.NewGuid():N}";
         return InvokeAsync(StateHasChanged);
     }
 }

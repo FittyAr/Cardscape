@@ -12,115 +12,104 @@
 @inject InstanceSettingsState Instance
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthState
-@inject Cardscape.Web.Services.Api.SetupApiClient SetupApi
 @inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@L["AuthSignIn"] @L["PageTitleSuffix"]</PageTitle>
 
-@if (checkingSetup)
-{
-    @* Fresh installs are sent to /setup; hold a loader instead of
-       flashing this form while the status check is in flight. *@
-    <LoadingState />
-}
-else
-{
-    <RadzenStack Gap="1.5rem">
-        @if (challenge is null)
+<RadzenStack Gap="1.5rem">
+    @if (challenge is null)
+    {
+        <RadzenText Text="@L["AuthSignInTitle"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
+        <RadzenText Text="@L["AuthSignInSubtitle"]" TextStyle="TextStyle.Body1" />
+
+        @if (HasExternalProviders)
         {
-            <RadzenText Text="@L["AuthSignInTitle"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
-            <RadzenText Text="@L["AuthSignInSubtitle"]" TextStyle="TextStyle.Body1" />
+            <ExternalSignInButtons Settings="@_instance" ReturnUrl="@LocalReturnUrl.Normalize(ReturnUrl)" />
 
-            @if (HasExternalProviders)
-            {
-                <ExternalSignInButtons Settings="@_instance" ReturnUrl="@LocalReturnUrl.Normalize(ReturnUrl)" />
-
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Class="rz-my-2">
-                    <RadzenStack Class="rz-grow-1 rz-border-bottom" />
-                    <RadzenText Text="@L["AuthOr"]" TextStyle="TextStyle.Caption" />
-                    <RadzenStack Class="rz-grow-1 rz-border-bottom" />
-                </RadzenStack>
-            }
-
-            <RadzenTemplateForm TItem="LoginModel" Data="@model" Submit="@HandleSubmitAsync">
-                <RadzenStack Gap="1rem">
-                    <RadzenFormField Text="@L["AuthEmail"]" Component="email">
-                        <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%"
-                                       autocomplete="email" Placeholder="you@company.com" />
-                    </RadzenFormField>
-                    <RadzenRequiredValidator Component="email" Text="@L["AuthEmailRequired"]" />
-                    <RadzenEmailValidator Component="email" Text="@L["ValidationEmail"]" />
-                    <RadzenFormField Text="@L["AuthPassword"]" Component="password">
-                        <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%"
-                                        autocomplete="current-password" />
-                    </RadzenFormField>
-                    <RadzenRequiredValidator Component="password" Text="@L["ValidationRequired"]" />
-                    @if (error is not null)
-                    {
-                        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" Size="AlertSize.Small" AllowClose="false">
-                            @error
-                        </RadzenAlert>
-                    }
-                    <RadzenButton ButtonType="ButtonType.Submit"
-                                  Text="@L["AuthSignIn"]"
-                                  ButtonStyle="ButtonStyle.Primary"
-                                  Size="ButtonSize.Large"
-                                  IsBusy="@busy"
-                                  BusyText="@L["AuthSigningIn"]" />
-                </RadzenStack>
-            </RadzenTemplateForm>
-        }
-        else
-        {
-            <RadzenText Text="@L["Login_TotpCode_Label"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
-            <RadzenText Text="@L["Login_TotpCode_Required"]" TextStyle="TextStyle.Body1" />
-
-            <RadzenTemplateForm TItem="TotpModel" Data="@totpModel" Submit="@HandleTotpSubmitAsync">
-                <RadzenStack Gap="1rem">
-                    <RadzenFormField Text="@L["Login_TotpCode_Label"]" Component="totp">
-                        <RadzenTextBox @bind-Value="totpModel.Code" Name="totp"
-                                       Style="width:100%; letter-spacing: 0.35em; font-variant-numeric: tabular-nums;"
-                                       autocomplete="one-time-code"
-                                       inputmode="numeric" maxlength="6"
-                                       Placeholder="••••••" />
-                    </RadzenFormField>
-                    <RadzenRequiredValidator Component="totp" Text="@L["Login_TotpCode_Required"]" />
-                    @if (error is not null)
-                    {
-                        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" Size="AlertSize.Small" AllowClose="false">
-                            @error
-                        </RadzenAlert>
-                    }
-                    <RadzenButton ButtonType="ButtonType.Submit"
-                                  Text="@L["AuthSignIn"]"
-                                  ButtonStyle="ButtonStyle.Primary"
-                                  Size="ButtonSize.Large"
-                                  IsBusy="@busy"
-                                  BusyText="@L["AuthSigningIn"]" />
-                    <RadzenButton Text="@L["AuthBackToSignIn"]"
-                                  ButtonStyle="ButtonStyle.Light"
-                                  Size="ButtonSize.Small"
-                                  Click="@ResetTotp" />
-                </RadzenStack>
-            </RadzenTemplateForm>
-        }
-
-        @if (_instance.AllowPublicRegistration)
-        {
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" Class="rz-mt-2">
-                <RadzenText Text="@L["AuthNoAccount"]" />
-                <RadzenLink Path="register" Text="@L["AuthCreateOne"]" />
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Class="rz-my-2">
+                <RadzenStack Class="rz-grow-1 rz-border-bottom" />
+                <RadzenText Text="@L["AuthOr"]" TextStyle="TextStyle.Caption" />
+                <RadzenStack Class="rz-grow-1 rz-border-bottom" />
             </RadzenStack>
         }
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" JustifyContent="JustifyContent.Center">
-            <RadzenLink Path="forgot-password" Text="@L["AuthForgotPassword"]" />
+
+        <RadzenTemplateForm TItem="LoginModel" Data="@model" Submit="@HandleSubmitAsync">
+            <RadzenStack Gap="1rem">
+                <RadzenFormField Text="@L["AuthEmail"]" Component="email">
+                    <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%"
+                                   autocomplete="email" Placeholder="you@company.com" />
+                </RadzenFormField>
+                <RadzenRequiredValidator Component="email" Text="@L["AuthEmailRequired"]" />
+                <RadzenEmailValidator Component="email" Text="@L["ValidationEmail"]" />
+                <RadzenFormField Text="@L["AuthPassword"]" Component="password">
+                    <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%"
+                                    autocomplete="current-password" />
+                </RadzenFormField>
+                <RadzenRequiredValidator Component="password" Text="@L["ValidationRequired"]" />
+                @if (error is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" Size="AlertSize.Small" AllowClose="false">
+                        @error
+                    </RadzenAlert>
+                }
+                <RadzenButton ButtonType="ButtonType.Submit"
+                              Text="@L["AuthSignIn"]"
+                              ButtonStyle="ButtonStyle.Primary"
+                              Size="ButtonSize.Large"
+                              IsBusy="@busy"
+                              BusyText="@L["AuthSigningIn"]" />
+            </RadzenStack>
+        </RadzenTemplateForm>
+    }
+    else
+    {
+        <RadzenText Text="@L["Login_TotpCode_Label"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
+        <RadzenText Text="@L["Login_TotpCode_Required"]" TextStyle="TextStyle.Body1" />
+
+        <RadzenTemplateForm TItem="TotpModel" Data="@totpModel" Submit="@HandleTotpSubmitAsync">
+            <RadzenStack Gap="1rem">
+                <RadzenFormField Text="@L["Login_TotpCode_Label"]" Component="totp">
+                    <RadzenTextBox @bind-Value="totpModel.Code" Name="totp"
+                                   Style="width:100%; letter-spacing: 0.35em; font-variant-numeric: tabular-nums;"
+                                   autocomplete="one-time-code"
+                                   inputmode="numeric" maxlength="6"
+                                   Placeholder="••••••" />
+                </RadzenFormField>
+                <RadzenRequiredValidator Component="totp" Text="@L["Login_TotpCode_Required"]" />
+                @if (error is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" Size="AlertSize.Small" AllowClose="false">
+                        @error
+                    </RadzenAlert>
+                }
+                <RadzenButton ButtonType="ButtonType.Submit"
+                              Text="@L["AuthSignIn"]"
+                              ButtonStyle="ButtonStyle.Primary"
+                              Size="ButtonSize.Large"
+                              IsBusy="@busy"
+                              BusyText="@L["AuthSigningIn"]" />
+                <RadzenButton Text="@L["AuthBackToSignIn"]"
+                              ButtonStyle="ButtonStyle.Light"
+                              Size="ButtonSize.Small"
+                              Click="@ResetTotp" />
+            </RadzenStack>
+        </RadzenTemplateForm>
+    }
+
+    @if (_instance.AllowPublicRegistration)
+    {
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" Class="rz-mt-2">
+            <RadzenText Text="@L["AuthNoAccount"]" />
+            <RadzenLink Path="register" Text="@L["AuthCreateOne"]" />
         </RadzenStack>
+    }
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" JustifyContent="JustifyContent.Center">
+        <RadzenLink Path="forgot-password" Text="@L["AuthForgotPassword"]" />
     </RadzenStack>
-}
+</RadzenStack>
 
 @code {
     private readonly LoginModel model = new();
-    private bool checkingSetup = true;
     private readonly TotpModel totpModel = new();
     private PublicInstanceSettings _instance => Instance.Current;
     private bool busy;
@@ -133,22 +122,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            var status = await SetupApi.GetStatusAsync();
-            if (status.HasValue && !status.Value.IsInitialized)
-            {
-                Nav.NavigateTo("/setup");
-                return;
-            }
-        }
-        catch
-        {
-            // Ignore error and proceed to login
-        }
-
-        checkingSetup = false;
-
         await Instance.GetAsync();
 
         AuthenticationState state = await AuthState.GetAuthenticationStateAsync();

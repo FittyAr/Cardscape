@@ -218,6 +218,9 @@ builder.Services.AddScoped<IAttachmentsApiClient, AttachmentsApiClient>();
 builder.Services.AddScoped<IImportsApiClient, ImportsApiClient>();
 
 builder.Services.AddScoped<SetupApiClient>();
+// Scoped like SetupApiClient (one scope per tab in WebAssembly): the
+// router gate and the setup wizard share one cached status.
+builder.Services.AddScoped<SetupStatusState>();
 builder.Services.AddScoped<IAdminSettingsApiClient, AdminSettingsApiClient>();
 // Transient: one editing session per page instance. The layout can remount
 // the page (culture change); a shared editor would let an older load replace

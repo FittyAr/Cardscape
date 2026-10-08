@@ -7,6 +7,8 @@
 @implements IDisposable
 @inject NavigationManager Nav
 @inject UserPreferencesService UserPreferences
+@inject SetupStatusState SetupStatus
+@inject CultureSwitcher Culture
 @inject ILogger<App> Logger
 
 <!--
@@ -48,7 +50,18 @@
                    Change="@OnSystemDarkChangedAsync" />
 
 <CascadingAuthenticationState>
-    <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+    @*
+      OnNavigateAsync runs before a route renders: a fresh install is
+      sent to /setup right there, so the sign-in / register screens
+      never flash on their way to the wizard. On the first navigation
+      the boot splash is still up and only fades once the gate has
+      picked the route that will actually be shown.
+    *@
+    <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)"
+            OnNavigateAsync="@GateOnSetupAsync">
+        <Navigating>
+            <LoadingState Size="LoadingSize.Page" />
+        </Navigating>
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                 <Authorizing>
@@ -141,15 +154,47 @@
     private Task OnSystemDarkChangedAsync(bool prefersDark) =>
         UserPreferences.NotifySystemDarkChangedAsync(prefersDark);
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private bool _bootCompleted;
+
+    private async Task GateOnSetupAsync(NavigationContext context)
     {
-        if (!firstRender)
+        try
+        {
+            // While the boot splash is still up, also load the saved
+            // language, so the first screen does not render in English
+            // and then re-mount in Spanish. Both calls are cached.
+            Task<SetupStatusDto?> status = SetupStatus.GetAsync();
+            await Task.WhenAll(status, Culture.InitializeAsync());
+
+            if (!IsSetupPath(context.Path) && status.Result is { IsInitialized: false })
+            {
+                // The router renders the new location straight after
+                // this callback returns, so the requested page never
+                // shows on its way to the wizard.
+                Nav.NavigateTo("setup", replace: true);
+            }
+        }
+        finally
+        {
+            await CompleteBootAsync();
+        }
+    }
+
+    private static bool IsSetupPath(string path) =>
+        path.TrimStart('/').Split('?', '#')[0].Equals("setup", StringComparison.OrdinalIgnoreCase);
+
+    private async Task CompleteBootAsync()
+    {
+        if (_bootCompleted)
         {
             return;
         }
 
-        // Fade the boot splash (wwwroot/index.html) out now that the
-        // first render and the <RadzenTheme> stylesheet are in place.
+        _bootCompleted = true;
+
+        // Fade the boot splash (wwwroot/index.html) out. The JS side
+        // waits for the <RadzenTheme> stylesheet and two frames, by
+        // which time the route chosen above has rendered.
         try
         {
             await Js.InvokeVoidAsync("cardscape.bootComplete");

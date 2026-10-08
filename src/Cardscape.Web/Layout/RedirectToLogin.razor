@@ -1,11 +1,9 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Authorization
-@using Cardscape.Web.Services.Api
 
 @code {
     [Inject] private NavigationManager Nav { get; set; } = default!;
     [Inject] private AuthenticationStateProvider Auth { get; set; } = default!;
-    [Inject] private SetupApiClient SetupApi { get; set; } = default!;
 
     // BUG-A6-008 — see test-results/beta/reports/A6-views.md.
     //
@@ -46,20 +44,6 @@
         _ = await Auth.GetAuthenticationStateAsync();
 
         redirected = true;
-        try
-        {
-            var status = await SetupApi.GetStatusAsync();
-            if (status.HasValue && !status.Value.IsInitialized)
-            {
-                Nav.NavigateTo("setup");
-                return;
-            }
-        }
-        catch
-        {
-            // Fallback: proceed to login
-        }
-
         string returnUrl = Nav.Uri;
         Nav.NavigateTo(
             $"login?returnUrl={Uri.EscapeDataString(Nav.ToBaseRelativePath(returnUrl))}",
