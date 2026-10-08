@@ -739,6 +739,12 @@
   <data name="CardSendComment" xml:space="preserve"><value>Comment</value></data>
   <data name="SearchPlaceholder" xml:space="preserve"><value>Search cards, comments…</value></data>
   <data name="SearchNoResults" xml:space="preserve"><value>No matches.</value></data>
+  <data name="SearchKindCard" xml:space="preserve"><value>Card</value></data>
+  <data name="SearchKindComment" xml:space="preserve"><value>Comment</value></data>
+  <data name="SearchKindChecklist" xml:space="preserve"><value>Checklist</value></data>
+  <data name="SearchKindLabel" xml:space="preserve"><value>Label</value></data>
+  <data name="SearchKindActivity" xml:space="preserve"><value>Activity</value></data>
+  <data name="SearchResultsLabel" xml:space="preserve"><value>Search results</value></data>
   <data name="NavSeeder" xml:space="preserve"><value>Database Seeder</value></data>
   <data name="SeederTitle" xml:space="preserve"><value>Database Seeder</value></data>
   <data name="SeederSubtitle" xml:space="preserve"><value>Seed and maintain demo/development dataset</value></data>

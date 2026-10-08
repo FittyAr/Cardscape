@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Cardscape.Application.Abstractions.Search;
 using Cardscape.Domain.Boards;
@@ -122,7 +123,7 @@ public sealed partial class DatabaseSearchService(CardscapeDbContext db) : ISear
                 .ToListAsync(ct);
             candidates.AddRange(activities.Select(activity => new SearchHit(
                 activity.Id.Value.ToString(), SearchHitKind.Activity,
-                activity.Kind.ToString(), Truncate(activity.PayloadJson, 200),
+                activity.Kind.ToString(), Truncate(DescribePayload(activity.PayloadJson), 200),
                 activity.BoardId.Value, activity.CardId,
                 $"/boards/{activity.BoardId.Value}/activity", 0)));
         }
@@ -131,6 +132,9 @@ public sealed partial class DatabaseSearchService(CardscapeDbContext db) : ISear
             .Select(hit => Score(hit, tokens))
             .Where(hit => hit.Score > 0)
             .OrderByDescending(hit => hit.Score)
+            // On a tie the thing itself beats its history: a card ranks
+            // above the "card created" activity that mentions it.
+            .ThenBy(hit => hit.Kind)
             .ThenBy(hit => hit.Title, StringComparer.OrdinalIgnoreCase)
             .ToList();
         int effectivePage = Math.Max(page, 1);
@@ -150,6 +154,50 @@ public sealed partial class DatabaseSearchService(CardscapeDbContext db) : ISear
 
     private static HashSet<string> Tokenize(string text) =>
         new(Tokenizer().Matches(StripDiacritics(text)).Select(match => match.Value), StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The human-readable part of an activity payload — titles, list and
+    /// label names, file names — joined with " · ". Identifiers and
+    /// positions and timestamps are left out, so the snippet never shows raw JSON and a
+    /// GUID fragment does not match every activity. Mirrors
+    /// <c>ActivityPresentation.Describe</c> in the Web client.
+    /// </summary>
+    private static string DescribePayload(string payloadJson)
+    {
+        if (string.IsNullOrWhiteSpace(payloadJson))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(payloadJson);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return string.Empty;
+            }
+
+            return string.Join(" · ", document.RootElement.EnumerateObject()
+                .Where(property => !IsTechnicalPayloadKey(property.Name))
+                .Select(property => property.Value.ValueKind switch
+                {
+                    // Timestamps read as noise in a one-line snippet.
+                    JsonValueKind.String when property.Value.TryGetDateTimeOffset(out _) => string.Empty,
+                    JsonValueKind.String => property.Value.GetString() ?? string.Empty,
+                    JsonValueKind.Number => property.Value.ToString(),
+                    _ => string.Empty,
+                })
+                .Where(value => value.Length > 0));
+        }
+        catch (JsonException)
+        {
+            return string.Empty;
+        }
+    }
+
+    private static bool IsTechnicalPayloadKey(string key) =>
+        key.EndsWith("Id", StringComparison.Ordinal)
+        || key is "position" or "action" or "copiedFrom" or "mirroredFrom";
 
     private static string Truncate(string text, int max) =>
         text.Length <= max ? text : text[..max] + "…";

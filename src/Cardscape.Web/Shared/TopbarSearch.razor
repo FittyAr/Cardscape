@@ -1,4 +1,3 @@
-@using System.Text.Json
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Resources
@@ -18,37 +17,36 @@
                    Placeholder="@(Placeholder ?? L["SearchPlaceholder"])"
                    aria-label="@L["SearchAriaLabel"]"
                    class="topbar-search-input" />
+    @* The panel floats over the page (scoped CSS: position absolute),
+       so opening it never resizes the topbar. *@
     @if (resultsVisible && results is not null && results.Count > 0)
     {
-        <RadzenCard Variant="@Variant.Outlined"
-                    class="rz-position-absolute"
-                    Style="top: 38px; left: 0; right: 0; z-index: 1000; max-height: 360px; overflow-y: auto; min-width: 320px;">
-            <RadzenStack Gap="0.25rem">
-                @foreach (SearchHitDto hit in results)
-                {
-                    <a class="topbar-search-result" href="@hit.Url" @onclick="@(() => NavigateTo(hit))" @onclick:preventDefault="true">
-                        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem" Class="rz-p-2">
-                            <RadzenBadge Text="@KindLabel(hit.Kind)" BadgeStyle="@BadgeStyle.Info" />
-                            <RadzenStack Gap="0">
-                                <RadzenText Text="@hit.Title" TextStyle="@TextStyle.Body2" />
-                                @if (!string.IsNullOrWhiteSpace(hit.Snippet))
-                                {
-                                    <RadzenText Text="@hit.Snippet" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary" />
-                                }
-                            </RadzenStack>
-                        </RadzenStack>
-                    </a>
-                }
-            </RadzenStack>
-        </RadzenCard>
+        <div class="topbar-search-panel" role="listbox" aria-label="@L["SearchResultsLabel"]">
+            @foreach (SearchHitDto hit in results)
+            {
+                <a class="topbar-search-result" href="@hit.Url" role="option"
+                   @onclick="@(() => NavigateTo(hit))" @onclick:preventDefault="true">
+                    <span class="topbar-search-result-icon" aria-hidden="true">
+                        <RadzenIcon Icon="@KindIcon(hit.Kind)" />
+                    </span>
+                    <span class="topbar-search-result-body">
+                        <span class="topbar-search-result-title">@TitleFor(hit)</span>
+                        @if (SnippetFor(hit) is { } snippet)
+                        {
+                            <span class="topbar-search-result-snippet">@snippet</span>
+                        }
+                    </span>
+                    <span class="topbar-search-result-kind">@KindLabel(hit.Kind)</span>
+                </a>
+            }
+        </div>
     }
     else if (resultsVisible && results is not null && results.Count == 0 && !string.IsNullOrWhiteSpace(query) && searched)
     {
-        <RadzenCard Variant="@Variant.Outlined"
-                    class="rz-position-absolute"
-                    Style="top: 38px; left: 0; right: 0; z-index: 1000; min-width: 320px;">
-            <RadzenText Text="@L["SearchNoResults"]" TextStyle="@TextStyle.Body2" class="rz-color-text-secondary rz-p-2" />
-        </RadzenCard>
+        <div class="topbar-search-panel topbar-search-empty" role="status">
+            <RadzenIcon Icon="search_off" />
+            <span>@L["SearchNoResults"]</span>
+        </div>
     }
 </div>
 
@@ -160,13 +158,43 @@
         Nav.NavigateTo(url);
     }
 
-    private static string KindLabel(string kind) => kind switch
+    private string KindLabel(string kind) => kind switch
     {
-        "card" => "Card",
-        "comment" => "Comment",
-        "checklistItem" => "Checklist",
+        "card" => L["SearchKindCard"],
+        "comment" => L["SearchKindComment"],
+        "checklistItem" => L["SearchKindChecklist"],
+        "label" => L["SearchKindLabel"],
+        "activity" => L["SearchKindActivity"],
         _ => kind
     };
+
+    private static string KindIcon(string kind) => kind switch
+    {
+        "card" => "sticky_note_2",
+        "comment" => "chat_bubble",
+        "checklistItem" => "checklist",
+        "label" => "sell",
+        "activity" => "history",
+        _ => "search"
+    };
+
+    // Activity hits carry the event kind ("CardCreated") as their title;
+    // show the same localized label the activity feed uses.
+    private string TitleFor(SearchHitDto hit) =>
+        hit.Kind == "activity" && Enum.TryParse(hit.Title, out ActivityKind activity)
+            ? L[ActivityPresentation.LabelKey(activity)]
+            : hit.Title;
+
+    // Labels and whole checklists come with a technical placeholder
+    // snippet ("Label · #hex", "Checklist"); the kind chip already
+    // says what they are.
+    private static string? SnippetFor(SearchHitDto hit) =>
+        string.IsNullOrWhiteSpace(hit.Snippet)
+        || hit.Kind == "label"
+        || (hit.Kind == "checklistItem" && hit.Snippet == "Checklist")
+        || hit.Snippet == hit.Title
+            ? null
+            : hit.Snippet;
 
     public void Dispose()
     {
