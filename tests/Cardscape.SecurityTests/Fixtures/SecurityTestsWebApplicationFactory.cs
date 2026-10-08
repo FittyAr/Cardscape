@@ -47,6 +47,7 @@ public sealed class SecurityTestsWebApplicationFactory : WebApplicationFactory<P
         string? previousJwt = Environment.GetEnvironmentVariable("Jwt__SigningKey");
         string? previousStorage = Environment.GetEnvironmentVariable("Storage__LocalRoot");
         string? previousEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        string? previousDataRoot = Environment.GetEnvironmentVariable("Cardscape__DataRoot");
 
         Environment.SetEnvironmentVariable("ConnectionStrings__Default", ConnectionString);
         Environment.SetEnvironmentVariable("Database__Provider", "Sqlite");
@@ -54,6 +55,12 @@ public sealed class SecurityTestsWebApplicationFactory : WebApplicationFactory<P
             "security-tests-signing-key-please-override-32+chars");
         Environment.SetEnvironmentVariable("Storage__LocalRoot", _storageRoot);
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+        // SystemSettingsService reads system_settings.json from
+        // Cardscape:DataRoot (default: <cwd>/Data, i.e. the test bin
+        // folder). Isolate it so a developer's local settings (e.g.
+        // public registration closed) cannot change the outcome.
+        Environment.SetEnvironmentVariable("Cardscape__DataRoot",
+            Path.Combine(_storageRoot, $"data-{Guid.NewGuid():N}"));
 
         try
         {
@@ -66,6 +73,7 @@ public sealed class SecurityTestsWebApplicationFactory : WebApplicationFactory<P
             Environment.SetEnvironmentVariable("Jwt__SigningKey", previousJwt);
             Environment.SetEnvironmentVariable("Storage__LocalRoot", previousStorage);
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", previousEnv);
+            Environment.SetEnvironmentVariable("Cardscape__DataRoot", previousDataRoot);
         }
     }
 

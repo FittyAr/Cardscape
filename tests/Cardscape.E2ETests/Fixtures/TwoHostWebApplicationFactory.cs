@@ -122,6 +122,7 @@ public sealed class ApiHostFactory : WebApplicationFactory<Cardscape.Api.Program
         string? previousUrls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
         string? previousMcpUrl = Environment.GetEnvironmentVariable("Cardscape__Mcp__BaseUrl");
         string? previousSecret = Environment.GetEnvironmentVariable("Internal__Secret");
+        string? previousDataRoot = Environment.GetEnvironmentVariable("Cardscape__DataRoot");
 
         string id = Guid.NewGuid().ToString("N");
         _connectionString = $"Data Source={Path.Combine(Path.GetTempPath(), $"cardscape-e2e-api-{id}.db")}";
@@ -136,6 +137,7 @@ public sealed class ApiHostFactory : WebApplicationFactory<Cardscape.Api.Program
         Environment.SetEnvironmentVariable("Jwt__SigningKey",
             "e2e-tests-signing-key-please-override-32+chars");
         Environment.SetEnvironmentVariable("Storage__LocalRoot", _storageRoot);
+        Environment.SetEnvironmentVariable("Cardscape__DataRoot", Path.Combine(_storageRoot, "data"));
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         Environment.SetEnvironmentVariable("ASPNETCORE_URLS", $"http://127.0.0.1:{_port}");
         Environment.SetEnvironmentVariable("Cardscape__Mcp__BaseUrl",
@@ -187,6 +189,7 @@ public sealed class ApiHostFactory : WebApplicationFactory<Cardscape.Api.Program
             Environment.SetEnvironmentVariable("ASPNETCORE_URLS", previousUrls);
             Environment.SetEnvironmentVariable("Cardscape__Mcp__BaseUrl", previousMcpUrl);
             Environment.SetEnvironmentVariable("Internal__Secret", previousSecret);
+            Environment.SetEnvironmentVariable("Cardscape__DataRoot", previousDataRoot);
         }
     }
 }
@@ -225,6 +228,7 @@ public sealed class McpHostFactory : WebApplicationFactory<Cardscape.Mcp.Program
         string? previousApiUrl = Environment.GetEnvironmentVariable("Cardscape__Api__BaseAddress");
         string? previousSecret = Environment.GetEnvironmentVariable("Cardscape__Internal__Secret");
         string? previousMcpSec = Environment.GetEnvironmentVariable("Internal__Secret");
+        string? previousDataRoot = Environment.GetEnvironmentVariable("Cardscape__DataRoot");
 
         string id = Guid.NewGuid().ToString("N");
         _connectionString = $"Data Source={Path.Combine(Path.GetTempPath(), $"cardscape-e2e-mcp-{id}.db")}";
@@ -237,6 +241,7 @@ public sealed class McpHostFactory : WebApplicationFactory<Cardscape.Mcp.Program
         Environment.SetEnvironmentVariable("ConnectionStrings__Default", _connectionString);
         Environment.SetEnvironmentVariable("Database__Provider", "Sqlite");
         Environment.SetEnvironmentVariable("Storage__LocalRoot", _storageRoot);
+        Environment.SetEnvironmentVariable("Cardscape__DataRoot", Path.Combine(_storageRoot, "data"));
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         Environment.SetEnvironmentVariable("ASPNETCORE_URLS", $"http://127.0.0.1:{_port}");
         Environment.SetEnvironmentVariable("Cardscape__Api__BaseAddress", ApiBaseAddress);
@@ -281,6 +286,7 @@ public sealed class McpHostFactory : WebApplicationFactory<Cardscape.Mcp.Program
             Environment.SetEnvironmentVariable("Cardscape__Api__BaseAddress", previousApiUrl);
             Environment.SetEnvironmentVariable("Cardscape__Internal__Secret", previousSecret);
             Environment.SetEnvironmentVariable("Internal__Secret", previousMcpSec);
+            Environment.SetEnvironmentVariable("Cardscape__DataRoot", previousDataRoot);
         }
     }
 }
