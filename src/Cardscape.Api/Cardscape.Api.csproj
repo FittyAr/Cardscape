@@ -80,6 +80,18 @@
 
   <ItemGroup>
     <!--
+      Data/ is the dev app's runtime folder (SQLite files and
+      system_settings.json, git-ignored). The Web SDK globs **/*.json
+      as Content, so without this a local system_settings.json was
+      copied into the API output and every referencing project's bin
+      (test suites included), leaking a developer's settings.
+    -->
+    <Content Remove="Data\**" />
+    <None Remove="Data\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
       SQLite migrations remain in Infrastructure. PostgreSQL and MySQL
       use their provider-specific migration assemblies referenced above.
     -->
