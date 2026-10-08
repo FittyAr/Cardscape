@@ -70,6 +70,12 @@ public sealed class KanbanImportService(
             return Result.Failure<ImportResult>(NotMember);
         }
 
+        // Importing creates boards, which workspace guests cannot do.
+        if (workspace.IsGuest(currentUser.Id.Value))
+        {
+            return Result.Failure<ImportResult>(Domain.Workspaces.Errors.WorkspaceErrors.GuestNotAllowed);
+        }
+
         Result<KanbanBoard[]> archive = await KanbanArchiveReader.ReadAsync(json, ct);
         if (archive.IsFailure)
         {

@@ -95,10 +95,13 @@
                                     <BoardTile BoardId="board.Id" Name="@board.Name" IsStarred="board.IsStarred" />
                                 }
                             }
-                            <a class="cs-board-tile cs-board-tile--new" href="@($"workspaces/{workspace.Id}?create=1")">
-                                <RadzenIcon Icon="add" />
-                                <span>@L["BoardsNew"]</span>
-                            </a>
+                            @if (!workspace.CallerIsGuest)
+                            {
+                                <a class="cs-board-tile cs-board-tile--new" href="@($"workspaces/{workspace.Id}?create=1")">
+                                    <RadzenIcon Icon="add" />
+                                    <span>@L["BoardsNew"]</span>
+                                </a>
+                            }
                         </div>
                     </section>
                 }

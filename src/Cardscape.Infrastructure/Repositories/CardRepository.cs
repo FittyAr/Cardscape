@@ -89,7 +89,11 @@ public sealed class CardRepository(CardscapeDbContext db) : RepositoryBase<Card,
             && !workspace.IsDeleted
             && (boardId != null
                 ? board.Id == boardId
-                : workspace.Members.Any(member => member.UserId == userId))
+                // Full members see every board of their workspaces;
+                // guests only the boards they were explicitly added to.
+                : workspace.Members.Any(member => member.UserId == userId
+                    && (member.Role != WorkspaceRole.Guest
+                        || board.Members.Any(boardMember => boardMember.UserId == userId))))
         select new CalendarCandidate { Card = card, List = list, Board = board };
 
     private static CalendarCardReadModel ToReadModel(Card card, BoardList list, Board board) => new(

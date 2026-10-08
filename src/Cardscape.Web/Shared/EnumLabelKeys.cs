@@ -10,6 +10,7 @@ public static class EnumLabelKeys
             WorkspaceRole.Admin => "WorkspaceRoleAdmin",
             WorkspaceRole.Member => "WorkspaceRoleMember",
             WorkspaceRole.Observer => "WorkspaceRoleObserver",
+            WorkspaceRole.Guest => "WorkspaceRoleGuest",
             _ => "CommonUnknown",
         };
     }

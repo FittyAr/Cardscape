@@ -257,6 +257,19 @@ public sealed class InMemoryBoardRepository : InMemoryRepositoryBase<Board, Boar
         return Task.FromResult(rows);
     }
 
+    public Task<IReadOnlyList<BoardId>> ListIdsForMemberAsync(
+        IReadOnlyList<WorkspaceId> workspaceIds,
+        Guid userId,
+        CancellationToken ct = default)
+    {
+        HashSet<WorkspaceId> wanted = [.. workspaceIds];
+        IReadOnlyList<BoardId> rows = Store.Values
+            .Where(board => !board.IsDeleted && wanted.Contains(board.WorkspaceId) && board.IsMember(userId))
+            .Select(board => board.Id)
+            .ToList();
+        return Task.FromResult(rows);
+    }
+
     public Task<IReadOnlyList<Board>> ListStarredByUserAsync(Guid userId, CancellationToken ct = default)
     {
         IReadOnlyList<Board> rows = Store.Values

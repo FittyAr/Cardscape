@@ -1130,4 +1130,19 @@
   <data name="BoardRoleAdmin" xml:space="preserve"><value>Administrador</value></data>
   <data name="BoardRoleMember" xml:space="preserve"><value>Miembro</value></data>
   <data name="BoardRoleObserver" xml:space="preserve"><value>Observador</value></data>
+  <data name="WorkspaceRoleGuest" xml:space="preserve"><value>Invitado</value></data>
+  <data name="WorkspaceGuestHint" xml:space="preserve"><value>Los invitados solo ven los tableros a los que fueron agregados.</value></data>
+  <data name="WorkspaceGuestBoardsNotice" xml:space="preserve"><value>Eres invitado en este workspace: solo ves los tableros a los que te agregaron.</value></data>
+  <data name="MembersGuestRosterNotice" xml:space="preserve"><value>Como invitado solo ves a las personas de los tableros que compartes.</value></data>
+  <data name="MembersGuestInviteHint" xml:space="preserve"><value>Los invitados solo ven los tableros a los que se los agrega y como máximo pueden ser miembros de un tablero. Agrégalos a cada tablero desde su panel de Miembros.</value></data>
+  <data name="MembersMakeGuest" xml:space="preserve"><value>Convertir en invitado</value></data>
+  <data name="MembersMakeGuestConfirm" xml:space="preserve"><value>¿Convertir a {0} en invitado? Conserva solo los tableros en los que está, pierde el acceso a los tableros visibles para el workspace y cualquier rol de administrador de tablero pasa a miembro.</value></data>
+  <data name="BoardMembersInviteGuestHeading" xml:space="preserve"><value>Invitar a un invitado por correo</value></data>
+  <data name="BoardMembersInviteGuestHint" xml:space="preserve"><value>La persona se une al workspace como invitado y solo ve los tableros a los que se la agrega. Cuando acepte, agrégala a este tablero desde la lista de arriba.</value></data>
+  <data name="BoardMembersInviteGuestEmailAria" xml:space="preserve"><value>Correo de la persona a invitar como invitado</value></data>
+  <data name="BoardMembersInviteGuest" xml:space="preserve"><value>Invitar como invitado</value></data>
+  <data name="BoardMembersGuestInvitedEmailed" xml:space="preserve"><value>Invitación enviada a {0}. Cuando acepte, agrégala a este tablero desde la lista de arriba.</value></data>
+  <data name="BoardMembersGuestInvitedShareLink" xml:space="preserve"><value>Invitación creada para {0}. Comparte este enlace; cuando acepte, agrégala a este tablero desde la lista de arriba.</value></data>
+  <data name="BoardMembersInviteAnotherGuest" xml:space="preserve"><value>Invitar a otra persona</value></data>
+  <data name="BoardMembersGuestCandidate" xml:space="preserve"><value>{0} ({1}) · Invitado</value></data>
 </root>

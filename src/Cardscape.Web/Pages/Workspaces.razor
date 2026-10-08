@@ -88,9 +88,13 @@ else
                     <span class="cs-workspace-card-meta">
                         @L["HomeWorkspaceMembers", ws.MemberCount] · @ws.CreatedAt.LocalDateTime.ToString("d")
                     </span>
-                    @if ((dataResidencyEnabled && ws.Region != Region.Unspecified) || ws.IsArchived)
+                    @if ((dataResidencyEnabled && ws.Region != Region.Unspecified) || ws.IsArchived || ws.CallerIsGuest)
                     {
                         <span class="cs-row rz-mt-1">
+                            @if (ws.CallerIsGuest)
+                            {
+                                <RadzenBadge Text="@L["WorkspaceRoleGuest"]" BadgeStyle="BadgeStyle.Secondary" title="@L["WorkspaceGuestHint"]" />
+                            }
                             @if (dataResidencyEnabled && ws.Region != Region.Unspecified)
                             {
                                 <RadzenBadge Text="@RegionLabel(ws.Region)" BadgeStyle="BadgeStyle.Info" />

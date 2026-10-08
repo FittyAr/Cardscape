@@ -33,9 +33,10 @@ public sealed record BoardMemberDto(
     string? DisplayName,
     string? Email,
     BoardMemberRole Role,
-    DateTimeOffset JoinedAt);
+    DateTimeOffset JoinedAt,
+    bool IsWorkspaceGuest = false);
 
-public sealed record BoardMemberAccessDto(bool CanManageMembers, BoardMemberRole? Role);
+public sealed record BoardMemberAccessDto(bool CanManageMembers, BoardMemberRole? Role, bool CanInviteGuests = false);
 
 public sealed record AddBoardMemberRequestDto(Guid UserId, BoardMemberRole Role);
 

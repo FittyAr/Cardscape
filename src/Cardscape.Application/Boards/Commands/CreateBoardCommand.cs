@@ -53,6 +53,12 @@ public static class CreateBoardCommandHandler
             return Result.Failure<BoardDto>(NotMember);
         }
 
+        // Guests only work on the boards they were added to.
+        if (workspace.IsGuest(currentUser.Id.Value))
+        {
+            return Result.Failure<BoardDto>(Domain.Workspaces.Errors.WorkspaceErrors.GuestNotAllowed);
+        }
+
         var nameResult = BoardName.Create(command.Name);
         if (nameResult.IsFailure)
         {

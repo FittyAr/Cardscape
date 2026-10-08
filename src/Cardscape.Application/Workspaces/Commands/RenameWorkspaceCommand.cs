@@ -38,6 +38,11 @@ public static class RenameWorkspaceCommandHandler
             return Result.Failure<WorkspaceDto>(NotMember);
         }
 
+        if (workspace.IsGuest(currentUser.Id.Value))
+        {
+            return Result.Failure<WorkspaceDto>(GuestNotAllowed);
+        }
+
         var nameResult = WorkspaceName.Create(command.NewName);
         if (nameResult.IsFailure)
         {

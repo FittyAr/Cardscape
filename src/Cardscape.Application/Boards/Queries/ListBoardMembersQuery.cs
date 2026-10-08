@@ -36,10 +36,11 @@ public static class ListBoardMembersQueryHandler
         // Board members read the roster; so do the people who can
         // manage it without being on the board (workspace managers,
         // instance admins).
+        var workspace = await BoardMemberAccess.LoadWorkspaceAsync(board, workspaces, cancellationToken);
         if (!board.IsMember(currentUser.Id.Value)
             && !await BoardMemberAccess.CanManageMembersAsync(
                 board,
-                await BoardMemberAccess.LoadWorkspaceAsync(board, workspaces, cancellationToken),
+                workspace,
                 currentUser.Id,
                 users,
                 cancellationToken))
@@ -68,7 +69,8 @@ public static class ListBoardMembersQueryHandler
                     user?.DisplayName.Value ?? string.Empty,
                     user?.Email.Value,
                     m.Role,
-                    m.JoinedAt);
+                    m.JoinedAt,
+                    workspace?.IsGuest(m.UserId) == true);
             })
             .ToList();
 

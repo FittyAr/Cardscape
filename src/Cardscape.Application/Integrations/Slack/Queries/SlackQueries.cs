@@ -77,7 +77,7 @@ public static class GetSlackWorkspaceForWorkspaceQueryHandler
                 "workspaces.not_found", "Workspace was not found."));
         }
 
-        if (!workspace.HasMember(currentUser.Id.Value))
+        if (!workspace.HasFullMembership(currentUser.Id.Value))
         {
             return Result.Failure<SlackWorkspaceDto?>(DomainError.Forbidden(
                 "workspaces.forbidden", "You are not a member of this workspace."));

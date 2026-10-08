@@ -51,4 +51,19 @@ public static class WorkspaceErrors
         DomainError.Conflict(
             "workspaces.ownership.same_owner",
             "This user already owns the workspace.");
+
+    /// <summary>Returned when a workspace guest tries something only full
+    /// members may do (create or import boards, rename the workspace,
+    /// manage workspace integrations).</summary>
+    public static readonly DomainError GuestNotAllowed =
+        DomainError.Forbidden(
+            "workspaces.guest_forbidden",
+            "Workspace guests can only work on the boards they were added to.");
+
+    /// <summary>Returned when turning a member into a guest would leave a
+    /// board without an admin: guests cannot be board admins.</summary>
+    public static DomainError GuestWouldOrphanBoard(string boardName) =>
+        DomainError.Conflict(
+            "workspaces.guest_last_board_admin",
+            $"This person is the only admin of the board \"{boardName}\". Make someone else a board admin before turning them into a guest.");
 }
