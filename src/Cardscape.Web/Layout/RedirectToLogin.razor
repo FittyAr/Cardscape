@@ -51,7 +51,7 @@
             var status = await SetupApi.GetStatusAsync();
             if (status.HasValue && !status.Value.IsInitialized)
             {
-                Nav.NavigateTo("setup", forceLoad: true);
+                Nav.NavigateTo("setup");
                 return;
             }
         }

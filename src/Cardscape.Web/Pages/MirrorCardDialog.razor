@@ -26,7 +26,7 @@
 
     @if (loading)
     {
-        <RadzenText Text="@L["Loading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+        <LoadingState Size="LoadingSize.Section" />
     }
     else if (loadError is not null)
     {

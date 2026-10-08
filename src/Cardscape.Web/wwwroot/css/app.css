@@ -25,11 +25,15 @@
     --cs-page-max-width: 1280px;
 }
 
+/* Until <RadzenTheme> has loaded the theme stylesheet the --rz-*
+   tokens are undefined; fall back to the boot palette that
+   boot-splash.js resolved from the saved theme, so the page is
+   never painted white under a dark theme. */
 html,
 body {
-    font-family: var(--rz-text-font-family);
-    background: var(--rz-body-background-color);
-    color: var(--rz-text-color);
+    font-family: var(--rz-text-font-family, 'Barlow', system-ui, sans-serif);
+    background: var(--rz-body-background-color, var(--cs-boot-bg, #f6f8fa));
+    color: var(--rz-text-color, var(--cs-boot-text, #1f2328));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -461,48 +465,127 @@ h1, h2, h3,
     border-radius: 999px;
 }
 
-/* ── Blazor WASM boot spinner (index.html) ─────────────── */
+/* ── Boot splash (index.html + boot-splash.js) ────────────
+   Shown while the WebAssembly runtime downloads. Colours come
+   from the --cs-boot-* palette boot-splash.js sets from the
+   saved theme before the first paint; once the theme stylesheet
+   is loaded the --rz-* tokens take over seamlessly. The glyph
+   and motion mirror Shared/LoadingState.razor. */
 
-.loading-progress {
+.cs-boot {
+    --cs-boot-accent: var(--rz-primary, var(--cs-boot-primary, #0f766e));
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(60rem 40rem at 50% 38%,
+            color-mix(in srgb, var(--cs-boot-accent) 9%, transparent),
+            transparent 70%),
+        var(--rz-body-background-color, var(--cs-boot-bg, #f6f8fa));
+    transition: opacity 360ms cubic-bezier(0.2, 0, 0, 1), visibility 0s linear 360ms;
+}
+
+.cs-boot.cs-boot-done {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.cs-boot-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 8vh;
+    /* A quick load never shows the splash content at all. */
+    animation: cs-boot-in 420ms cubic-bezier(0.2, 0, 0, 1) 180ms both;
+}
+
+.cs-boot-done .cs-boot-content {
+    transform: scale(0.97);
+    transition: transform 360ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.cs-boot-glyph {
+    width: 3.5rem;
+    height: 3.5rem;
+    overflow: visible;
+}
+
+.cs-boot-card {
+    fill: var(--cs-boot-accent);
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: cs-boot-deal 1.6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.cs-boot-card-back { opacity: 0.35; }
+.cs-boot-card-middle { opacity: 0.6; animation-delay: 120ms; }
+.cs-boot-card-front { animation-delay: 240ms; }
+
+.cs-boot-track {
+    position: relative;
+    width: 9rem;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--cs-boot-accent) 16%, transparent);
+}
+
+/* Blazor publishes the download progress as
+   --blazor-load-percentage on <html>; a sheen runs over the
+   filled part so the bar keeps moving while the runtime
+   initialises after the last byte arrives. */
+.cs-boot-progress {
     position: absolute;
-    display: block;
-    width: 5rem;
-    height: 5rem;
-    inset: 30vh 0 auto 0;
-    margin: 0 auto;
+    inset: 0 auto 0 0;
+    width: max(12%, var(--blazor-load-percentage, 0%));
+    border-radius: inherit;
+    background: var(--cs-boot-accent);
+    overflow: hidden;
+    transition: width 240ms cubic-bezier(0.2, 0, 0, 1);
 }
 
-.loading-progress circle {
-    fill: none;
-    stroke: #d0d7de;
-    stroke-width: 0.4rem;
-    transform-origin: 50% 50%;
-    transform: rotate(-90deg);
-}
-
-.loading-progress circle:last-child {
-    stroke: #0f766e;
-    stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
-    transition: stroke-dasharray 0.05s ease-in-out;
-}
-
-.loading-progress-text {
+.cs-boot-progress::after {
+    content: "";
     position: absolute;
-    text-align: center;
-    font-weight: 600;
-    font-size: 0.8125rem;
-    color: #57606a;
-    inset: calc(30vh + 1.9rem) 0 auto 0;
+    inset: 0;
+    background: linear-gradient(90deg, transparent,
+        color-mix(in srgb, var(--rz-base-background-color, var(--cs-boot-surface, #ffffff)) 55%, transparent),
+        transparent);
+    animation: cs-boot-sheen 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 
-.loading-progress-text:after {
-    content: var(--blazor-load-percentage-text, "Loading");
+@keyframes cs-boot-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
 }
 
-@media (prefers-color-scheme: dark) {
-    .loading-progress circle { stroke: #30363d; }
-    .loading-progress circle:last-child { stroke: #2dd4bf; }
-    .loading-progress-text { color: #8b949e; }
+@keyframes cs-boot-deal {
+    0%, 55%, 100% { transform: translateY(0); }
+    25% { transform: translateY(-14%); }
+}
+
+@keyframes cs-boot-sheen {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cs-boot,
+    .cs-boot-content,
+    .cs-boot-done .cs-boot-content {
+        animation-duration: 1ms;
+        transition-duration: 1ms;
+        transform: none;
+    }
+
+    .cs-boot-card,
+    .cs-boot-progress::after {
+        animation: none;
+    }
 }
 
 /* ── Blazor error UI ───────────────────────────────────── */

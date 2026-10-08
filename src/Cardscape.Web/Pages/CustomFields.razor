@@ -22,7 +22,7 @@
 
     @if (rows is null)
     {
-        <RadzenText Text="@L["CommonLoading"]" />
+        <LoadingState Size="LoadingSize.Section" />
     }
     else if (rows.Count == 0 && !showCreate)
     {

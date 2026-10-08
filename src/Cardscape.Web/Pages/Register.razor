@@ -14,80 +14,90 @@
 
 <PageTitle>@L["AuthCreateAccount"] @L["PageTitleSuffix"]</PageTitle>
 
-<RadzenStack Gap="1rem">
-    <RadzenStack Gap="0.25rem">
-        <RadzenText Text="@L["AuthCreateAccountTitle"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
-        <RadzenText Text="@L["AuthCreateAccountSubtitle"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
-    </RadzenStack>
-
-    <RadzenTemplateForm TItem="RegisterModel" Data="@model" Submit="@HandleSubmitAsync">
-        <RadzenStack Gap="1rem">
-            <RadzenFormField Text="@L["AuthDisplayName"]" Component="displayName">
-                <RadzenTextBox @bind-Value="model.DisplayName" Name="displayName" Style="width:100%"
-                               autocomplete="name" Placeholder="@L["AuthDisplayNamePlaceholder"]" />
-            </RadzenFormField>
-            <RadzenRequiredValidator Component="displayName" Text="@L["ValidationRequired"]" />
-
-            <RadzenFormField Text="@L["AuthEmail"]" Component="email">
-                <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%"
-                               autocomplete="email" Placeholder="you@company.com" />
-            </RadzenFormField>
-            <RadzenRequiredValidator Component="email" Text="@L["AuthEmailRequired"]" />
-            <RadzenEmailValidator Component="email" Text="@L["ValidationEmail"]" />
-
-            <RadzenFormField Text="@L["AuthPassword"]" Component="password">
-                <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%"
-                                autocomplete="new-password" />
-                <RadzenText Text="@L["AuthPasswordHint"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
-            </RadzenFormField>
-            <RadzenRequiredValidator Component="password" Text="@L["ValidationRequired"]" />
-
-            @* BUG-A8-012 — see test-results/beta/reports/A8-settings.md.
-               The form previously only collected the password
-               once, so a typo at signup time would silently
-               ship an unrecoverable password to the API. The
-               confirm field is matched against the password
-               client-side before the request goes out; the
-               server already enforces its own length and
-               dictionary checks on the single value, this is
-               a UX safety net only. *@
-            <RadzenFormField Text="@L["AuthConfirmPassword"]" Component="confirmPassword">
-                <RadzenPassword @bind-Value="model.ConfirmPassword" Name="confirmPassword" Style="width:100%"
-                                autocomplete="new-password" />
-                @if (!string.IsNullOrEmpty(model.ConfirmPassword) && model.Password != model.ConfirmPassword)
-                {
-                    <RadzenText Text="@L["AuthPasswordsDoNotMatch"]" TextStyle="TextStyle.Caption"
-                                Style="color: var(--rz-danger);" />
-                }
-            </RadzenFormField>
-            <RadzenRequiredValidator Component="confirmPassword" Text="@L["ValidationRequired"]" />
-
-            @if (error is not null)
-            {
-                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
-                    @error
-                </RadzenAlert>
-            }
-
-            <RadzenButton ButtonType="@ButtonType.Submit"
-                          Text="@L["AuthCreateAccount"]"
-                          ButtonStyle="@ButtonStyle.Primary"
-                          Size="@ButtonSize.Large"
-                          IsBusy="@busy"
-                          BusyText="@L["AuthCreating"]"
-                          Disabled="@(!CanSubmit())"
-                          Style="width:100%" />
+@if (checkingSetup)
+{
+    @* Fresh installs are sent to /setup; hold a loader instead of
+       flashing this form while the status check is in flight. *@
+    <LoadingState />
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        <RadzenStack Gap="0.25rem">
+            <RadzenText Text="@L["AuthCreateAccountTitle"]" TextStyle="TextStyle.H4" TagName="TagName.H1" />
+            <RadzenText Text="@L["AuthCreateAccountSubtitle"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
         </RadzenStack>
-    </RadzenTemplateForm>
 
-    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" JustifyContent="JustifyContent.Center" class="rz-mt-2">
-        <RadzenText Text="@L["AuthAlreadyAccount"]" />
-        <RadzenLink Path="login" Text="@L["AuthSignIn"]" />
+        <RadzenTemplateForm TItem="RegisterModel" Data="@model" Submit="@HandleSubmitAsync">
+            <RadzenStack Gap="1rem">
+                <RadzenFormField Text="@L["AuthDisplayName"]" Component="displayName">
+                    <RadzenTextBox @bind-Value="model.DisplayName" Name="displayName" Style="width:100%"
+                                   autocomplete="name" Placeholder="@L["AuthDisplayNamePlaceholder"]" />
+                </RadzenFormField>
+                <RadzenRequiredValidator Component="displayName" Text="@L["ValidationRequired"]" />
+
+                <RadzenFormField Text="@L["AuthEmail"]" Component="email">
+                    <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%"
+                                   autocomplete="email" Placeholder="you@company.com" />
+                </RadzenFormField>
+                <RadzenRequiredValidator Component="email" Text="@L["AuthEmailRequired"]" />
+                <RadzenEmailValidator Component="email" Text="@L["ValidationEmail"]" />
+
+                <RadzenFormField Text="@L["AuthPassword"]" Component="password">
+                    <RadzenPassword @bind-Value="model.Password" Name="password" Style="width:100%"
+                                    autocomplete="new-password" />
+                    <RadzenText Text="@L["AuthPasswordHint"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
+                </RadzenFormField>
+                <RadzenRequiredValidator Component="password" Text="@L["ValidationRequired"]" />
+
+                @* BUG-A8-012 — see test-results/beta/reports/A8-settings.md.
+                   The form previously only collected the password
+                   once, so a typo at signup time would silently
+                   ship an unrecoverable password to the API. The
+                   confirm field is matched against the password
+                   client-side before the request goes out; the
+                   server already enforces its own length and
+                   dictionary checks on the single value, this is
+                   a UX safety net only. *@
+                <RadzenFormField Text="@L["AuthConfirmPassword"]" Component="confirmPassword">
+                    <RadzenPassword @bind-Value="model.ConfirmPassword" Name="confirmPassword" Style="width:100%"
+                                    autocomplete="new-password" />
+                    @if (!string.IsNullOrEmpty(model.ConfirmPassword) && model.Password != model.ConfirmPassword)
+                    {
+                        <RadzenText Text="@L["AuthPasswordsDoNotMatch"]" TextStyle="TextStyle.Caption"
+                                    Style="color: var(--rz-danger);" />
+                    }
+                </RadzenFormField>
+                <RadzenRequiredValidator Component="confirmPassword" Text="@L["ValidationRequired"]" />
+
+                @if (error is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">
+                        @error
+                    </RadzenAlert>
+                }
+
+                <RadzenButton ButtonType="@ButtonType.Submit"
+                              Text="@L["AuthCreateAccount"]"
+                              ButtonStyle="@ButtonStyle.Primary"
+                              Size="@ButtonSize.Large"
+                              IsBusy="@busy"
+                              BusyText="@L["AuthCreating"]"
+                              Disabled="@(!CanSubmit())"
+                              Style="width:100%" />
+            </RadzenStack>
+        </RadzenTemplateForm>
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" JustifyContent="JustifyContent.Center" class="rz-mt-2">
+            <RadzenText Text="@L["AuthAlreadyAccount"]" />
+            <RadzenLink Path="login" Text="@L["AuthSignIn"]" />
+        </RadzenStack>
     </RadzenStack>
-</RadzenStack>
+}
 
 @code {
     private readonly RegisterModel model = new();
+    private bool checkingSetup = true;
     private bool busy;
     private string? error;
 
@@ -98,7 +108,7 @@
             var status = await SetupApi.GetStatusAsync();
             if (status.HasValue && !status.Value.IsInitialized)
             {
-                Nav.NavigateTo("/setup", forceLoad: true);
+                Nav.NavigateTo("/setup");
                 return;
             }
         }
@@ -106,6 +116,8 @@
         {
             // Ignore error and proceed
         }
+
+        checkingSetup = false;
 
         AuthenticationState state = await AuthState.GetAuthenticationStateAsync();
         if (state.User.Identity?.IsAuthenticated == true)

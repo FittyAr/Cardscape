@@ -4,20 +4,22 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
     <title>Cardscape</title>
     <base href="/" />
     <link rel="stylesheet" href="css/barlow.css" />
     <!--
+        Boot splash theming: runs before the first paint and paints
+        the splash with the user's saved theme (CardscapeTheme cookie)
+        so a cold load never flashes a white page. Must stay a
+        blocking script ahead of the stylesheets.
+    -->
+    <script src="boot-splash.js"></script>
+    <!--
         BETA-9-#6 — see test-results/r9/r9-report.md. wwwroot/css/app.css
         carries the `display: none` rule for #blazor-error-ui plus the
-        .loading-progress spinner styling. Without this <link>, the
-        framework's red error banner is visible on every page load
-        (the default <div> `display: block` wins because the override
-        never reaches the cascade) and the WASM boot spinner renders
-        without its rotation animation. The file was orphaned when
-        the Radzen migration dropped the per-page `cs-*` rules in
-        favour of Radzen primitives, but the framework's two template
-        elements still need the styles.
+        boot splash (#cs-boot) styling. Without this <link>, the
+        framework's red error banner is visible on every page load.
     -->
     <link rel="stylesheet" href="css/app.css" />
     <!-- Bundle of every component-scoped *.razor.css file. Without
@@ -26,19 +28,32 @@
     <link rel="stylesheet" href="Cardscape.Web.styles.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="manifest" href="manifest.webmanifest" />
-    <meta name="theme-color" content="#0f766e" />
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
     <script src="cardscape-helpers.js"></script>
 </head>
 
 <body>
-    <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+    <!--
+        Boot splash: sits above #app until App.razor reports that the
+        first render and the theme stylesheet are in place
+        (cardscape.bootComplete in boot-splash.js), then fades out.
+        The glyph matches Shared/LoadingState.razor so the hand-off
+        to a page-level loader reads as one continuous screen.
+    -->
+    <div id="cs-boot" class="cs-boot" role="status" aria-live="polite" aria-busy="true" aria-label="Loading Cardscape…">
+        <div class="cs-boot-content">
+            <svg class="cs-boot-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <rect class="cs-boot-card cs-boot-card-back" x="9" y="2" width="12" height="15" rx="2.5" />
+                <rect class="cs-boot-card cs-boot-card-middle" x="6" y="4.5" width="12" height="15" rx="2.5" />
+                <rect class="cs-boot-card cs-boot-card-front" x="3" y="7" width="12" height="15" rx="2.5" />
+            </svg>
+            <div class="cs-boot-track" aria-hidden="true">
+                <div class="cs-boot-progress"></div>
+            </div>
+        </div>
     </div>
+
+    <div id="app"></div>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.

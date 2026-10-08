@@ -18,8 +18,7 @@
 {
     <RadzenStack Gap="1rem" AlignItems="@AlignItems.Center">
         <RadzenText Text="@L["AuthOauthWorking"]" TextStyle="@TextStyle.H4" TagName="@TagName.H1" />
-        <RadzenText Text="@L["AuthOauthHoldOn"]" TextStyle="@TextStyle.Body1" />
-        <RadzenProgressBarCircular Mode="@ProgressBarMode.Indeterminate" Size="@ProgressBarCircularSize.Medium" />
+        <LoadingState Text="@L["AuthOauthHoldOn"]" />
     </RadzenStack>
 }
 else

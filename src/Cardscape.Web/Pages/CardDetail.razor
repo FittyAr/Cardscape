@@ -222,7 +222,7 @@ else
                     }
                     else if (_checklists is null)
                     {
-                        <span class="cs-muted">@L["CardLoadingChecklists"]</span>
+                        <LoadingState Size="LoadingSize.Inline" Text="@L["CardLoadingChecklists"]" />
                     }
                     else
                     {
@@ -291,7 +291,7 @@ else
                     }
                     else if (_attachments is null)
                     {
-                        <span class="cs-muted">@L["ActionLoading"]</span>
+                        <LoadingState Size="LoadingSize.Inline" />
                     }
                     else if (_attachments.Count == 0)
                     {
@@ -362,7 +362,7 @@ else
                     }
                     else if (_comments is null)
                     {
-                        <span class="cs-muted">@L["CardLoadingComments"]</span>
+                        <LoadingState Size="LoadingSize.Inline" Text="@L["CardLoadingComments"]" />
                     }
                     else
                     {
@@ -431,7 +431,7 @@ else
                     }
                     else if (_recentActivity is null)
                     {
-                        <span class="cs-muted">@L["ActivityLoading"]</span>
+                        <LoadingState Size="LoadingSize.Inline" Text="@L["ActivityLoading"]" />
                     }
                     else if (_recentActivity.Count == 0)
                     {

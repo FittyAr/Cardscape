@@ -19,7 +19,7 @@
 
     @if (loading)
     {
-        <RadzenText Text="@L["ActionLoading"]" TextStyle="TextStyle.Body1" />
+        <LoadingState Size="LoadingSize.Section" />
     }
     else if (status is null || !status.IsEnrolled)
     {

@@ -13,7 +13,7 @@
 
     @if (connection is null)
     {
-        <RadzenText Text="@L["ActionLoading"]" />
+        <LoadingState Size="LoadingSize.Section" />
     }
     else if (connection.Id == Guid.Empty)
     {

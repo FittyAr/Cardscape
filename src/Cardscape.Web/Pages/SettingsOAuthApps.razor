@@ -91,7 +91,7 @@
             <RadzenText Text="@L["OAuthAppsYourApps"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
             @if (loading)
             {
-                <RadzenText Text="@L["CommonLoading"]" />
+                <LoadingState Size="LoadingSize.Inline" />
             }
             else if (apps.Count == 0)
             {

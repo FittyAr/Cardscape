@@ -1,0 +1,45 @@
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+
+@*
+  LoadingState — the one loading indicator of the app. Three
+  stacked cards (the brand glyph) drawn with the theme's primary
+  token, so every theme — light or dark, Cardscape or Radzen —
+  gets a loader in its own colours instead of a bare spinner.
+
+  It fades in after a short delay (CSS only), so fast loads never
+  flash an indicator, and it honours prefers-reduced-motion. The
+  boot splash in wwwroot/index.html draws the same glyph, so the
+  hand-off from "WASM is booting" to "the page is fetching data"
+  looks like one continuous screen.
+
+  Size:
+    Page    — fills the content area (route-level loads).
+    Section — a padded block inside a card or panel.
+    Inline  — glyph and text on one line (small panels, lists).
+*@
+
+<div class="cs-loading cs-loading-@Size.ToString().ToLowerInvariant() @Class"
+     role="status" aria-live="polite" aria-busy="true">
+    <svg class="cs-loading-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect class="cs-loading-card cs-loading-card-back" x="9" y="2" width="12" height="15" rx="2.5" />
+        <rect class="cs-loading-card cs-loading-card-middle" x="6" y="4.5" width="12" height="15" rx="2.5" />
+        <rect class="cs-loading-card cs-loading-card-front" x="3" y="7" width="12" height="15" rx="2.5" />
+    </svg>
+    @if (Size == LoadingSize.Page)
+    {
+        <span class="cs-loading-track" aria-hidden="true"><span class="cs-loading-sheen"></span></span>
+    }
+    <span class="cs-loading-text">@(Text ?? L["Loading"])</span>
+</div>
+
+@code {
+    /// <summary>Message under (or beside) the glyph. Defaults to
+    /// the localized "Loading…".</summary>
+    [Parameter] public string? Text { get; set; }
+
+    [Parameter] public LoadingSize Size { get; set; } = LoadingSize.Section;
+
+    [Parameter] public string? Class { get; set; }
+}

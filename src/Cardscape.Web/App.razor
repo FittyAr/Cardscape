@@ -51,6 +51,9 @@
     <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <Authorizing>
+                    <LoadingState Size="LoadingSize.Page" />
+                </Authorizing>
                 <NotAuthorized>
                     @* If the user is not signed in, bounce to /login and keep the original URL. *@
                     <RedirectToLogin />
@@ -137,6 +140,25 @@
     /// Dark ignores the OS preference).</summary>
     private Task OnSystemDarkChangedAsync(bool prefersDark) =>
         UserPreferences.NotifySystemDarkChangedAsync(prefersDark);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        // Fade the boot splash (wwwroot/index.html) out now that the
+        // first render and the <RadzenTheme> stylesheet are in place.
+        try
+        {
+            await Js.InvokeVoidAsync("cardscape.bootComplete");
+        }
+        catch (JSException)
+        {
+            // boot-splash.js missing (stale cache): nothing to fade.
+        }
+    }
 
     private Task OnUserPreferencesChangedAsync() => InvokeAsync(StateHasChanged);
 

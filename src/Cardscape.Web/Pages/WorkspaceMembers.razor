@@ -77,7 +77,7 @@
     }
     else if (members is null)
     {
-        <RadzenText Text="@L["ActionLoading"]" />
+        <LoadingState Size="LoadingSize.Section" />
     }
     else if (members.Count == 0)
     {
@@ -106,7 +106,7 @@
     }
     else if (invitations is null)
     {
-        <RadzenText Text="@L["ActionLoading"]" />
+        <LoadingState Size="LoadingSize.Section" />
     }
     else if (invitations.Count == 0)
     {

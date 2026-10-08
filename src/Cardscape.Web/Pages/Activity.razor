@@ -43,7 +43,7 @@
 
 @if (loading && items is null)
 {
-    <RadzenText Text="@L["ActivityLoading"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
+    <LoadingState Size="LoadingSize.Page" Text="@L["ActivityLoading"]" />
 }
 else if (items is null || items.Count == 0)
 {

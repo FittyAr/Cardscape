@@ -14,7 +14,7 @@
 
     @if (workspace is null)
     {
-        <RadzenText Text="@L["ActionLoading"]" />
+        <LoadingState Size="LoadingSize.Section" />
     }
     else if (workspace.Id == Guid.Empty)
     {

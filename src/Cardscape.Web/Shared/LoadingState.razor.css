@@ -1,0 +1,120 @@
+/* LoadingState — themed loader. Every colour comes from the
+   active Radzen theme tokens, so it reads in all 12 themes. */
+
+.cs-loading {
+    --cs-loading-glyph-size: 2.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.875rem;
+    padding: 2rem 1rem;
+    color: var(--rz-text-secondary-color);
+    text-align: center;
+    animation: cs-loading-in 320ms var(--cs-ease-out, ease-out) 160ms both;
+}
+
+.cs-loading-page {
+    --cs-loading-glyph-size: 3rem;
+    min-height: 45vh;
+    gap: 1.125rem;
+}
+
+.cs-loading-inline {
+    --cs-loading-glyph-size: 1.25rem;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.625rem;
+    padding: 0.5rem 0;
+    text-align: start;
+    animation-delay: 80ms;
+}
+
+.cs-loading-glyph {
+    width: var(--cs-loading-glyph-size);
+    height: var(--cs-loading-glyph-size);
+    overflow: visible;
+}
+
+.cs-loading-card {
+    fill: var(--rz-primary);
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: cs-loading-deal 1.6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.cs-loading-card-back {
+    opacity: 0.35;
+}
+
+.cs-loading-card-middle {
+    opacity: 0.6;
+    animation-delay: 120ms;
+}
+
+.cs-loading-card-front {
+    animation-delay: 240ms;
+}
+
+.cs-loading-track {
+    position: relative;
+    width: 7.5rem;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--rz-primary) 16%, transparent);
+}
+
+.cs-loading-sheen {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 40%;
+    border-radius: inherit;
+    background: var(--rz-primary);
+    animation: cs-loading-sweep 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+.cs-loading-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+.cs-loading-inline .cs-loading-text {
+    font-size: 0.8125rem;
+}
+
+@keyframes cs-loading-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes cs-loading-deal {
+    0%, 55%, 100% { transform: translateY(0); }
+    25% { transform: translateY(-14%); }
+}
+
+@keyframes cs-loading-sweep {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(250%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cs-loading {
+        animation-duration: 1ms;
+    }
+
+    .cs-loading-card {
+        animation: cs-loading-pulse 2s ease-in-out infinite;
+        animation-delay: 0ms;
+    }
+
+    .cs-loading-sheen {
+        width: 100%;
+        animation: cs-loading-pulse 2s ease-in-out infinite;
+    }
+}
+
+@keyframes cs-loading-pulse {
+    50% { filter: opacity(0.55); }
+}

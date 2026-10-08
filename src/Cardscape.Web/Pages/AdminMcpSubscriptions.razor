@@ -19,9 +19,7 @@
 
     @if (_loading && _snapshot is null)
     {
-        <RadzenCard>
-            <RadzenText TextStyle="TextStyle.Body1">@L["CommonLoading"]</RadzenText>
-        </RadzenCard>
+        <LoadingState Size="LoadingSize.Page" />
     }
     else if (_error is not null)
     {

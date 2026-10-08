@@ -12,7 +12,7 @@
 
 @if (IsLoading)
 {
-    <RadzenProgressBarCircular ShowValue="false" Mode="@ProgressBarMode.Indeterminate" />
+    <LoadingState Size="LoadingSize.Page" />
 }
 else if (Error is not null)
 {
