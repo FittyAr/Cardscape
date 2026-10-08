@@ -101,6 +101,7 @@ internal static class ApiEndpointMappingExtensions
         app.MapAiEndpoints();
         app.MapMcpSubscriptionsAdminEndpoints();
         app.MapUserDsrAdminEndpoints();
+        app.MapAuditLogEndpoints();
         app.MapUserSelfEndpoints();
 
         // ── Seeder (JSON surface only) ──────────────────────────────

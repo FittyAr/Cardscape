@@ -2,6 +2,7 @@ using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Domain.BackgroundJobs;
 using Cardscape.Domain.Notifications;
 using Cardscape.Infrastructure.Persistence;
+using Cardscape.Infrastructure.Persistence.Audit;
 using Cardscape.Infrastructure.Persistence.Interceptors;
 using Cardscape.Infrastructure.Persistence.Outbox;
 using Cardscape.Tests.Common.Fakes;
@@ -88,6 +89,7 @@ public sealed class CardscapeDbContextModelTests
         var interceptor = new DomainEventsInterceptor(
             [],
             processor,
+            new AuditTrailWriter(services),
             clock,
             NullLogger<DomainEventsInterceptor>.Instance);
         var options = new DbContextOptionsBuilder<CardscapeDbContext>()

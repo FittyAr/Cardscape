@@ -102,6 +102,10 @@ public sealed class User : AggregateRoot<UserId>
     /// them reach the sign-in and change-password endpoints.</summary>
     public bool MustChangePassword { get; private set; }
 
+    /// <summary>Display name an anonymised account keeps; the audit log
+    /// scrubs the person's earlier name snapshots to this value too.</summary>
+    public const string AnonymisedDisplayName = "Anonymised user";
+
     // EF Core.
     private User() { }
 
@@ -217,6 +221,11 @@ public sealed class User : AggregateRoot<UserId>
         AddDomainEvent(new UserPasswordChanged(Id, at));
     }
 
+    /// <summary>Records that an administrator created this account (the
+    /// audit log names who). Call right after <see cref="Register"/>.</summary>
+    public void MarkCreatedByAdmin(DateTimeOffset at) =>
+        AddDomainEvent(new UserCreatedByAdmin(Id, at));
+
     /// <summary>An administrator sets a temporary password; the user must
     /// replace it on their next request.</summary>
     public void ResetPasswordByAdmin(PasswordHash temporaryHash, DateTimeOffset at)
@@ -322,7 +331,7 @@ public sealed class User : AggregateRoot<UserId>
         }
 
         Email = EmailAddress.Create($"anonymised-{Id.Value:N}@anonymised.local").Value;
-        DisplayName = DisplayName.Create("Anonymised user").Value;
+        DisplayName = DisplayName.Create(AnonymisedDisplayName).Value;
         PasswordHash = PasswordHash.FromHashed("ANONYMISED::" + Guid.NewGuid().ToString("N")).Value;
         AvatarUrl = null;
         IsAnonymised = true;

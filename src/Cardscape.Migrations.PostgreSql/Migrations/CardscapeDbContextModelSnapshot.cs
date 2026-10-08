@@ -137,6 +137,71 @@ namespace Cardscape.Migrations.PostgreSql.Migrations
                     b.ToTable("attachments", (string)null);
                 });
 
+            modelBuilder.Entity("Cardscape.Domain.Audit.AuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ActorName")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BoardId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BoardName")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<long>("OccurredAtUtcTicks")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("TargetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TargetName")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("WorkspaceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("WorkspaceName")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("OccurredAtUtcTicks");
+
+                    b.HasIndex("TargetId");
+
+                    b.HasIndex("WorkspaceId", "OccurredAtUtcTicks");
+
+                    b.ToTable("audit_entries", (string)null);
+                });
+
             modelBuilder.Entity("Cardscape.Domain.Authentication.ExternalLogins.ExternalLogin", b =>
                 {
                     b.Property<Guid>("Id")

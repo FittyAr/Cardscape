@@ -1151,4 +1151,49 @@
   <data name="AdminAccountTemporaryPassword" xml:space="preserve"><value>Temporary password for {0}:</value></data>
   <data name="AdminAccountTemporaryPasswordAria" xml:space="preserve"><value>Temporary password</value></data>
   <data name="AdminAccountTemporaryPasswordHint" xml:space="preserve"><value>It is shown only now. They will be asked to replace it when they sign in.</value></data>
+  <data name="NavAuditLog" xml:space="preserve"><value>Audit log</value></data>
+  <data name="AuditTitle" xml:space="preserve"><value>Audit log</value></data>
+  <data name="AuditSubtitle" xml:space="preserve"><value>Who created, invited, changed roles or deactivated someone, and when.</value></data>
+  <data name="AuditWorkspaceTitle" xml:space="preserve"><value>Membership activity</value></data>
+  <data name="AuditColumnWhen" xml:space="preserve"><value>When</value></data>
+  <data name="AuditColumnWho" xml:space="preserve"><value>Who</value></data>
+  <data name="AuditColumnWhat" xml:space="preserve"><value>What</value></data>
+  <data name="AuditFilterSearch" xml:space="preserve"><value>Search names</value></data>
+  <data name="AuditFilterSearchPlaceholder" xml:space="preserve"><value>Person, workspace or board</value></data>
+  <data name="AuditFilterArea" xml:space="preserve"><value>Area</value></data>
+  <data name="AuditFilterFrom" xml:space="preserve"><value>From</value></data>
+  <data name="AuditFilterTo" xml:space="preserve"><value>To</value></data>
+  <data name="AuditClearFilters" xml:space="preserve"><value>Clear filters</value></data>
+  <data name="AuditAreaAll" xml:space="preserve"><value>All</value></data>
+  <data name="AuditAreaUsers" xml:space="preserve"><value>Accounts</value></data>
+  <data name="AuditAreaWorkspaces" xml:space="preserve"><value>Workspaces</value></data>
+  <data name="AuditAreaBoards" xml:space="preserve"><value>Boards</value></data>
+  <data name="AuditEmpty" xml:space="preserve"><value>No entries match these filters.</value></data>
+  <data name="AuditLoadFailed" xml:space="preserve"><value>The audit log could not be loaded.</value></data>
+  <data name="AuditActorSystem" xml:space="preserve"><value>System</value></data>
+  <data name="AuditActorScim" xml:space="preserve"><value>SCIM provisioning</value></data>
+  <data name="AuditUnknownAction" xml:space="preserve"><value>{0}: {7} ({1})</value></data>
+  <data name="AuditUserRegistered" xml:space="preserve"><value>{1} signed up</value></data>
+  <data name="AuditUserCreatedByAdmin" xml:space="preserve"><value>{0} created the account of {1}</value></data>
+  <data name="AuditUserAdminGranted" xml:space="preserve"><value>{0} made {1} an instance administrator</value></data>
+  <data name="AuditUserAdminRevoked" xml:space="preserve"><value>{0} removed the instance administrator role from {1}</value></data>
+  <data name="AuditUserDeactivated" xml:space="preserve"><value>{0} deactivated {1}</value></data>
+  <data name="AuditUserReactivated" xml:space="preserve"><value>{0} reactivated {1}</value></data>
+  <data name="AuditUserDeleted" xml:space="preserve"><value>{0} deleted the account of {1}</value></data>
+  <data name="AuditUserRestored" xml:space="preserve"><value>{0} restored the account of {1}</value></data>
+  <data name="AuditUserAnonymised" xml:space="preserve"><value>{0} anonymised the account of {1}</value></data>
+  <data name="AuditUserRestricted" xml:space="preserve"><value>{0} restricted {1}</value></data>
+  <data name="AuditUserUnrestricted" xml:space="preserve"><value>{0} lifted the restriction on {1}</value></data>
+  <data name="AuditUserEmailVerified" xml:space="preserve"><value>{0} verified the email address of {1}</value></data>
+  <data name="AuditUserPasswordResetByAdmin" xml:space="preserve"><value>{0} reset the password of {1}</value></data>
+  <data name="AuditWorkspaceMemberAdded" xml:space="preserve"><value>{0} added {1} to {2} as {5}</value></data>
+  <data name="AuditWorkspaceMemberRoleChanged" xml:space="preserve"><value>{0} changed the role of {1} from {4} to {5} in {2}</value></data>
+  <data name="AuditWorkspaceMemberRemoved" xml:space="preserve"><value>{0} removed {1} from {2}</value></data>
+  <data name="AuditWorkspaceInvitationIssued" xml:space="preserve"><value>{0} invited {1} to {2} as {5}</value></data>
+  <data name="AuditWorkspaceInvitationRevoked" xml:space="preserve"><value>{0} revoked the invitation of {1} to {2}</value></data>
+  <data name="AuditWorkspaceInvitationAccepted" xml:space="preserve"><value>{1} accepted the invitation and joined {2} as {5}</value></data>
+  <data name="AuditWorkspaceOwnershipTransferred" xml:space="preserve"><value>{0} transferred the ownership of {2} from {6} to {1}</value></data>
+  <data name="AuditBoardMemberAdded" xml:space="preserve"><value>{0} added {1} to the board {3} as {5}</value></data>
+  <data name="AuditBoardMemberRoleChanged" xml:space="preserve"><value>{0} changed the role of {1} from {4} to {5} on the board {3}</value></data>
+  <data name="AuditBoardMemberRemoved" xml:space="preserve"><value>{0} removed {1} from the board {3}</value></data>
 </root>

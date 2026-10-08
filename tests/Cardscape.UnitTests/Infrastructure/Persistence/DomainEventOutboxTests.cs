@@ -5,6 +5,7 @@ using Cardscape.Domain.Cards.Events;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Lists;
 using Cardscape.Infrastructure.Persistence;
+using Cardscape.Infrastructure.Persistence.Audit;
 using Cardscape.Infrastructure.Persistence.Interceptors;
 using Cardscape.Infrastructure.Persistence.Outbox;
 using Cardscape.Tests.Common.Fakes;
@@ -229,6 +230,7 @@ public sealed class DomainEventOutboxTests
             var interceptor = new DomainEventsInterceptor(
                 [Successful, Controllable],
                 Processor,
+                new AuditTrailWriter(_services),
                 Clock,
                 NullLogger<DomainEventsInterceptor>.Instance);
             var options = new DbContextOptionsBuilder<CardscapeDbContext>()

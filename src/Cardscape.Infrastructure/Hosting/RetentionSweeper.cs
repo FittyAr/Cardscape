@@ -22,10 +22,10 @@ namespace Cardscape.Infrastructure.Hosting;
 ///         entries older than 365 days are removed
 ///         (the default retention; configurable via
 ///         <c>Cardscape:Retention:ActivityDays</c>).</item>
-///   <item><b>Audit log purge</b> — audit entries older
-///         than 730 days are removed (the default
-///         retention; configurable via
-///         <c>Cardscape:Retention:AuditDays</c>).</item>
+///   <item><b>Administration audit log</b> — the
+///         <c>audit_entries</c> table is kept
+///         indefinitely and is not purged here (see
+///         step 4); anonymisation scrubs names in it.</item>
 /// </list>
 ///
 /// The sweeper is a periodic <see cref="BackgroundService"/>
@@ -210,14 +210,16 @@ public sealed class RetentionSweeper(
             }
         }
 
-        // 4. The audit log entries live in the Serilog
-        // file destination (rolling daily, 30-day
-        // retention via the Serilog file sink config).
-        // A future v1.3.0 PR can move the audit log
-        // into a dedicated table and purge it here. The
-        // configuration is exposed
-        // (Cardscape:Retention:AuditDays) so the wiring
-        // is in place when the table is added.
+        // 4. The administration audit log (audit_entries)
+        // is kept indefinitely on purpose: who granted
+        // admin rights or removed a member must stay
+        // answerable. Anonymising a user (step 1) scrubs
+        // their name from it in the same save. The
+        // Cardscape:Retention:AuditDays option (default
+        // 730) is still bound but deliberately NOT wired
+        // to a purge; wiring it would make the default
+        // finite. Request logs live in the Serilog file
+        // sink with its own rolling retention.
         _ = _auditRetentionDays;
     }
 

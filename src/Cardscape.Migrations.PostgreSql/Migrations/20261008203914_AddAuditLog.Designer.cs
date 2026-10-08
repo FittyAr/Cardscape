@@ -3,64 +3,72 @@ using System;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Cardscape.Infrastructure.Persistence.Migrations
+namespace Cardscape.Migrations.PostgreSql.Migrations
 {
     [DbContext(typeof(CardscapeDbContext))]
-    partial class CardscapeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261008203914_AddAuditLog")]
+    partial class AddAuditLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Cardscape.Domain.Activities.Activity", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("ActorId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("BoardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("CardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("OccurredAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PayloadJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -76,52 +84,52 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Attachments.Attachment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("CardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(512)");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("MimeType")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(256)");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<long>("SizeBytes")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("StorageKey")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(1024)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UploaderId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -135,54 +143,54 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Audit.AuditEntry", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Action")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("ActorName")
                         .IsRequired()
                         .HasMaxLength(320)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(320)");
 
                     b.Property<Guid?>("ActorUserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("BoardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("BoardName")
                         .HasMaxLength(320)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(320)");
 
                     b.Property<string>("Details")
                         .HasMaxLength(2048)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<long>("OccurredAtUtcTicks")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<Guid?>("TargetId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("TargetName")
                         .IsRequired()
                         .HasMaxLength(320)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(320)");
 
                     b.Property<string>("TargetType")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(32)");
 
                     b.Property<Guid?>("WorkspaceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("WorkspaceName")
                         .HasMaxLength(320)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(320)");
 
                     b.HasKey("Id");
 
@@ -200,50 +208,50 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Authentication.ExternalLogins.ExternalLogin", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("DisplayName")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(320)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(320)");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset>("LastUsedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Provider")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -258,49 +266,49 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Authentication.PasswordResets.PasswordReset", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset>("IssuedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("RequestedFromIp")
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(128)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("UsedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -315,46 +323,46 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Authentication.RevokedTokens.RevokedToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Jti")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTimeOffset>("RevokedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset>("TokenExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -371,63 +379,63 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Authentication.Saml.SamlConnection", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("IdpEntityId")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(512)");
 
                     b.Property<string>("IdpMetadataUrl")
                         .IsRequired()
                         .HasMaxLength(2048)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<string>("IdpMetadataXml")
                         .HasMaxLength(8192)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(8192)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(80)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(80)");
 
                     b.Property<string>("SpEntityId")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(512)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -443,55 +451,55 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Authentication.Scim.ScimToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsRevoked")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastUsedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(512)");
 
                     b.Property<string>("TokenPrefix")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(16)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -501,47 +509,47 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Authentication.Totp.TotpCredential", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("ConfirmedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("EncryptedSecret")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<long>("LastUsedCounter")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("bigint")
                         .HasDefaultValue(0L);
 
                     b.Property<string>("RecoveryCodesHash")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -554,58 +562,58 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.BackgroundJobs.BackgroundJob", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Attempts")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("LastError")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("MaxAttempts")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("PayloadJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset>("ScheduledFor")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("StartedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -621,51 +629,51 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Boards.Board", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Color")
                         .HasMaxLength(7)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(7)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<bool>("IsArchived")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Visibility")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -677,55 +685,55 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Boards.BoardAutomationRule", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Action")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("ActionArgument")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<Guid>("BoardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsEnabled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(120)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(120)");
 
                     b.Property<int>("Position")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<int>("Trigger")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<Guid?>("TriggerListId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -739,40 +747,40 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Boards.BoardExtension", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("BoardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("ConfigJson")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsEnabled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -786,37 +794,37 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("BoardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset>("StarredAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -829,46 +837,46 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Boards.CustomFieldDefinition", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("BoardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(120)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(120)");
 
                     b.Property<string>("OptionsJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("Position")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -881,38 +889,38 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Boards.CustomFieldValue", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("CardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("FieldDefinitionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("ValueJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -929,56 +937,56 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Cards.Card", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("CoverColor")
                         .HasMaxLength(7)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(7)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset?>("DueDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsArchived")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsCompleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("ListId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<double>("Position")
-                        .HasColumnType("REAL");
+                        .HasColumnType("double precision");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(500)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -992,34 +1000,34 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Cards.CardAgingSettings", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Mode")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<int>("StaleAfterDays")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1030,43 +1038,43 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset>("MirroredAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("MirroredBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("MirroredCardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<Guid>("SourceCardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("TargetListId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1081,37 +1089,37 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Cards.CardSnooze", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset>("SnoozedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("SnoozedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("Until")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1121,36 +1129,36 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Checklists.Checklist", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("CardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1162,39 +1170,39 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Comments.Comment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("AuthorId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Body")
                         .IsRequired()
                         .HasMaxLength(8000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(8000)");
 
                     b.Property<Guid>("CardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1208,46 +1216,46 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Dashboards.Dashcard", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("BoardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("ConfigurationJson")
                         .HasMaxLength(8192)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(8192)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("Position")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(120)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(120)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1259,53 +1267,53 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Idempotency.IdempotencyKey", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<Guid>("OwnerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("RequestHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("ResponseJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("ResponseStatusCode")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasDefaultValue(200);
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1322,43 +1330,43 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Integrations.GitHub.GitHubPullRequestLink", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("CardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("PullRequestNumber")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("PullRequestUrl")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("RepoFullName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1370,43 +1378,43 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Integrations.GitHub.GitHubRepoLink", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("Active")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("BoardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Events")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("RepoFullName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1422,66 +1430,66 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Integrations.GoogleCalendar.GoogleCalendarConnection", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("CalendarId")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("EncryptedRefreshToken")
                         .IsRequired()
                         .HasMaxLength(2048)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<string>("EventMappingsJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("GoogleEmail")
                         .IsRequired()
                         .HasMaxLength(320)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(320)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("LastSyncError")
                         .HasMaxLength(1024)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(1024)");
 
                     b.Property<DateTimeOffset?>("LastSyncErrorAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("LastSyncedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1496,47 +1504,47 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Integrations.InboundEmail.InboundEmailAddress", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("Active")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("EmailAddress")
                         .IsRequired()
                         .HasMaxLength(320)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(320)");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<Guid>("TargetListId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1551,52 +1559,52 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Integrations.OAuthApps.OAuthAccessToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("AppId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("RefreshedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("Scopes")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1617,62 +1625,62 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Integrations.OAuthApps.OAuthApp", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("AllowedScopes")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClientId")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("ClientSecretHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("ClientSecretPrefix")
                         .IsRequired()
                         .HasMaxLength(8)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(8)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsRevoked")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<Guid>("OwnerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("RedirectUris")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1689,54 +1697,54 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Integrations.OAuthApps.OAuthAuthorizationCode", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("AppId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("CodeHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsConsumed")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("RedirectUri")
                         .IsRequired()
                         .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(2000)");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("Scopes")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1753,51 +1761,51 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Integrations.Slack.SlackChannel", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("Active")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("BoardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("ChannelId")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("ChannelName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Events")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<Guid>("SlackWorkspaceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1815,52 +1823,52 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Integrations.Slack.SlackWorkspace", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("Active")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastUsedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ProtectedBotToken")
                         .IsRequired()
                         .HasMaxLength(2048)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(2048)");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("TeamId")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("TeamName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1873,41 +1881,41 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Labels.Label", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("BoardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Color")
                         .IsRequired()
                         .HasMaxLength(7)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(7)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(50)");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1919,48 +1927,48 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Lists.BoardList", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("BoardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsArchived")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int?>("MaxCardsHard")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int?>("MaxCardsSoft")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<double>("Position")
-                        .HasColumnType("REAL");
+                        .HasColumnType("double precision");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -1974,84 +1982,84 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Members.User", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("AnonymisedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("AvatarUrl")
                         .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(80)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(80)");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(254)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(254)");
 
                     b.Property<DateTimeOffset?>("EmailVerificationExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("EmailVerificationTokenHash")
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(128)");
 
                     b.Property<DateTimeOffset?>("EmailVerifiedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsAdmin")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsAnonymised")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsRestricted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastLoginAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("MustChangePassword")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(512)");
 
                     b.Property<DateTimeOffset?>("RestrictedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -2066,44 +2074,44 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Notifications.Notification", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsRead")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("PayloadJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset?>("ReadAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -2117,40 +2125,40 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Recurrence.CardRecurrence", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("CardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("IntervalDays")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset>("NextOccurrenceAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -2163,76 +2171,76 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Security.ApiToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("BurstSize")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasDefaultValue(50);
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("ExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("HashedSecret")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastUsedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(80)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(80)");
 
                     b.Property<int>("RateLimitPerHour")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasDefaultValue(1000);
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("RevokedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("RevokedReason")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("Scopes")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("SecretPrefix")
                         .IsRequired()
                         .HasMaxLength(8)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(8)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -2247,38 +2255,38 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.UserPreferences.UserPreferences", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Mode")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("ThemeName")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(50)")
                         .HasDefaultValue("default");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -2288,37 +2296,37 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Voting.CardVote", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("CardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("VotedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -2333,52 +2341,52 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Webhooks.WebhookDelivery", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("AttemptCount")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("EndpointId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("EventType")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastAttemptAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("LastError")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PayloadJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -2395,48 +2403,48 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Webhooks.WebhookEndpoint", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("Active")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("BoardId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Events")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("ProtectedSecret")
                         .IsRequired()
                         .HasMaxLength(2048)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(2048)");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Url")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(500)");
 
                     b.HasKey("Id");
 
@@ -2448,47 +2456,47 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Workspaces.Workspace", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsArchived")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("OwnerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Region")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<bool>("RequireTwoFactor")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -2500,70 +2508,70 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Cardscape.Domain.Workspaces.WorkspaceInvitation", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("AcceptedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("AcceptedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(320)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(320)");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("InvitedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("InvitedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("RevokedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Role")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("TokenPrefix")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(10)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -2581,29 +2589,29 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("LeaseExpiresAtUtcTicks")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("MessageHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<Guid?>("ResourceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.HasKey("Id");
 
@@ -2619,52 +2627,52 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Attempts")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("BroadcasterType")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(512)");
 
                     b.Property<long>("CreatedAtUtcTicks")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("EventType")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(512)");
 
                     b.Property<string>("LastError")
                         .HasMaxLength(2048)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<Guid?>("LockId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<long?>("LockedUntilUtcTicks")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<long>("NextAttemptAtUtcTicks")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<long>("OccurredAtUtcTicks")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("PayloadJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<long?>("ProcessedAtUtcTicks")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<long>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0u);
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
 
                     b.HasKey("Id");
 
@@ -2678,40 +2686,40 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.OwnsMany("Cardscape.Domain.Boards.BoardMember", "Members", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<Guid>("BoardId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<Guid?>("CreatedBy")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<bool>("IsDeleted")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("boolean");
 
                             b1.Property<DateTimeOffset>("JoinedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<int>("Role")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("integer");
 
-                            b1.Property<uint>("RowVersion")
+                            b1.Property<long>("RowVersion")
                                 .IsConcurrencyToken()
                                 .ValueGeneratedOnAdd()
-                                .HasColumnType("INTEGER")
-                                .HasDefaultValue(0u);
+                                .HasColumnType("bigint")
+                                .HasDefaultValue(0L);
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<Guid?>("UpdatedBy")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<Guid>("UserId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.HasKey("Id");
 
@@ -2741,37 +2749,37 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.OwnsMany("Cardscape.Domain.Cards.CardMember", "Members", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<DateTimeOffset>("AssignedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<Guid>("CardId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<Guid?>("CreatedBy")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<bool>("IsDeleted")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("boolean");
 
-                            b1.Property<uint>("RowVersion")
+                            b1.Property<long>("RowVersion")
                                 .IsConcurrencyToken()
                                 .ValueGeneratedOnAdd()
-                                .HasColumnType("INTEGER")
-                                .HasDefaultValue(0u);
+                                .HasColumnType("bigint")
+                                .HasDefaultValue(0L);
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<Guid?>("UpdatedBy")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<Guid>("UserId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.HasKey("Id");
 
@@ -2787,34 +2795,34 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.OwnsMany("Cardscape.Domain.Labels.CardLabel", "CardLabels", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<Guid>("CardId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<Guid?>("CreatedBy")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<bool>("IsDeleted")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("boolean");
 
                             b1.Property<Guid>("LabelId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
-                            b1.Property<uint>("RowVersion")
+                            b1.Property<long>("RowVersion")
                                 .IsConcurrencyToken()
                                 .ValueGeneratedOnAdd()
-                                .HasColumnType("INTEGER")
-                                .HasDefaultValue(0u);
+                                .HasColumnType("bigint")
+                                .HasDefaultValue(0L);
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<Guid?>("UpdatedBy")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.HasKey("Id");
 
@@ -2837,45 +2845,45 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.OwnsMany("Cardscape.Domain.Checklists.ChecklistItem", "Items", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<Guid?>("AssignedTo")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<Guid>("ChecklistId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<Guid?>("CreatedBy")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<bool>("IsCompleted")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("boolean");
 
                             b1.Property<bool>("IsDeleted")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("boolean");
 
                             b1.Property<double>("Position")
-                                .HasColumnType("REAL");
+                                .HasColumnType("double precision");
 
-                            b1.Property<uint>("RowVersion")
+                            b1.Property<long>("RowVersion")
                                 .IsConcurrencyToken()
                                 .ValueGeneratedOnAdd()
-                                .HasColumnType("INTEGER")
-                                .HasDefaultValue(0u);
+                                .HasColumnType("bigint")
+                                .HasDefaultValue(0L);
 
                             b1.Property<string>("Text")
                                 .IsRequired()
                                 .HasMaxLength(500)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("character varying(500)");
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<Guid?>("UpdatedBy")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.HasKey("Id");
 
@@ -2895,40 +2903,40 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.OwnsMany("Cardscape.Domain.Workspaces.WorkspaceMember", "Members", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<Guid?>("CreatedBy")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<bool>("IsDeleted")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("boolean");
 
                             b1.Property<DateTimeOffset>("JoinedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<int>("Role")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("integer");
 
-                            b1.Property<uint>("RowVersion")
+                            b1.Property<long>("RowVersion")
                                 .IsConcurrencyToken()
                                 .ValueGeneratedOnAdd()
-                                .HasColumnType("INTEGER")
-                                .HasDefaultValue(0u);
+                                .HasColumnType("bigint")
+                                .HasDefaultValue(0L);
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<Guid?>("UpdatedBy")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<Guid>("UserId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<Guid>("WorkspaceId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.HasKey("Id");
 

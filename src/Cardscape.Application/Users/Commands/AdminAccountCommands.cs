@@ -86,6 +86,7 @@ public static class AdminAccountCommandHandler
         }
 
         User user = created.Value;
+        user.MarkCreatedByAdmin(clock.UtcNow);
         // The administrator vouches for the address they typed, and the
         // temporary password must be replaced on the first sign-in.
         user.MarkEmailVerified(clock.UtcNow);

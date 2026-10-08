@@ -69,6 +69,7 @@ public sealed class CardscapeDbContext(DbContextOptions<CardscapeDbContext> opti
     public DbSet<Attachment> Attachments => Set<Attachment>();
 
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
+    public DbSet<Domain.Audit.AuditEntry> AuditEntries => Set<Domain.Audit.AuditEntry>();
     // BETA-5-#1 — see test-results/BETA-TEST-REPORT.md. Exposed as a
     // standalone DbSet (not via OwnsMany) so the star-toggle path
     // can issue a direct INSERT/DELETE on board_stars without going
