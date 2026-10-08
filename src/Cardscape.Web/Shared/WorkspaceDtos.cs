@@ -23,3 +23,4 @@ public sealed record SetWorkspaceRegionRequestDto(Region Region);
 public sealed record SetWorkspaceRequireTwoFactorRequestDto(bool Require);
 public sealed record AddWorkspaceMemberRequestDto(Guid UserId, WorkspaceRole Role);
 public sealed record ChangeWorkspaceMemberRoleRequestDto(WorkspaceRole Role);
+public sealed record TransferWorkspaceOwnershipRequestDto(Guid UserId);

@@ -19,6 +19,8 @@ public interface IWorkspacesApiClient
         Guid workspaceId, Guid userId, WorkspaceRole role, CancellationToken ct = default);
     Task<ApiResult<WorkspaceDto>> RemoveMemberAsync(
         Guid workspaceId, Guid userId, CancellationToken ct = default);
+    Task<ApiResult<WorkspaceDto>> TransferOwnershipAsync(
+        Guid workspaceId, Guid newOwnerId, CancellationToken ct = default);
 }
 
 public sealed class WorkspacesApiClient(IHttpClientFactory http) : ApiClientBase(http), IWorkspacesApiClient
@@ -130,6 +132,17 @@ public sealed class WorkspacesApiClient(IHttpClientFactory http) : ApiClientBase
     {
         HttpResponseMessage response = await CreateClient().DeleteAsync(
             $"api/workspaces/{workspaceId}/members/{userId}", ct);
+        return await ReadAsync<WorkspaceDto>(response, ct);
+    }
+
+    public async Task<ApiResult<WorkspaceDto>> TransferOwnershipAsync(
+        Guid workspaceId, Guid newOwnerId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
+            $"api/workspaces/{workspaceId}/transfer-ownership",
+            new TransferWorkspaceOwnershipRequestDto(newOwnerId),
+            JsonOptions,
+            ct);
         return await ReadAsync<WorkspaceDto>(response, ct);
     }
 }

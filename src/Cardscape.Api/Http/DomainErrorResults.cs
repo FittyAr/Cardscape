@@ -20,13 +20,22 @@ internal static class DomainErrorResults
             _ => throw new ArgumentOutOfRangeException(nameof(error), error.Type, "Unknown domain error type.")
         };
 
+        var extensions = new Dictionary<string, object?>
+        {
+            ["code"] = error.Code
+        };
+        if (error.Details is not null)
+        {
+            foreach ((string key, object? value) in error.Details)
+            {
+                extensions.TryAdd(key, value);
+            }
+        }
+
         return Results.Problem(
             detail: error.Message,
             statusCode: status,
             title: title,
-            extensions: new Dictionary<string, object?>
-            {
-                ["code"] = error.Code
-            });
+            extensions: extensions);
     }
 }

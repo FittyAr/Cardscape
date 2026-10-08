@@ -10,7 +10,9 @@ namespace Cardscape.Application.Users.Commands;
 /// Admin-only: deactivates (<c>IsActive = false</c>) or reactivates a
 /// user account. A deactivated user cannot sign in but keeps their
 /// memberships, unlike a soft-delete. Administrators cannot deactivate
-/// themselves, and the last active administrator cannot be deactivated.
+/// themselves, the last active administrator cannot be deactivated, and
+/// neither can the owner of a workspace other active members still use
+/// (see <see cref="WorkspaceOwnershipGuard"/>).
 /// </summary>
 public sealed record SetUserActiveCommand(Guid UserId, bool IsActive);
 
@@ -19,6 +21,7 @@ public static class SetUserActiveCommandHandler
     public static async Task<Result> HandleAsync(
         SetUserActiveCommand command,
         IUserRepository users,
+        IWorkspaceRepository workspaces,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -61,6 +64,13 @@ public static class SetUserActiveCommandHandler
             if (guard.IsFailure)
             {
                 return guard;
+            }
+
+            Result ownership = await WorkspaceOwnershipGuard.EnsureNoSharedOwnedWorkspacesAsync(
+                user, workspaces, users, cancellation);
+            if (ownership.IsFailure)
+            {
+                return ownership;
             }
 
             user.Deactivate(clock.UtcNow);

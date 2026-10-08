@@ -71,3 +71,15 @@ public sealed record WorkspaceTwoFactorRequirementChanged(
     bool Required,
     Guid ActingUserId,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
+/// <summary>Raised when ownership of a workspace moves to another
+/// member. The previous owner stays a member with the
+/// <see cref="WorkspaceRole.Admin"/> role. <c>ActorId</c> is the user
+/// who performed the transfer (the previous owner or an instance
+/// administrator), when known.</summary>
+public sealed record WorkspaceOwnershipTransferred(
+    WorkspaceId WorkspaceId,
+    Guid PreviousOwnerId,
+    Guid NewOwnerId,
+    Guid? ActorId,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);

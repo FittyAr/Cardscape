@@ -7,7 +7,8 @@ namespace Cardscape.Domain.Workspaces;
 /// <summary>
 /// A workspace is the top-level container for boards, members, and
 /// (eventually) integrations. Every workspace has exactly one
-/// owner (the user that created it).
+/// owner: the user that created it, until ownership is handed to
+/// another member with <see cref="TransferOwnership"/>.
 /// </summary>
 public sealed class Workspace : AggregateRoot<WorkspaceId>
 {
@@ -197,6 +198,38 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
 
         UpdatedAt = at;
         AddDomainEvent(new WorkspaceMemberRoleChanged(Id, userId, newRole, at));
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Hands ownership of the workspace to <paramref name="newOwnerId"/>,
+    /// who must already be a member. The new owner is promoted to
+    /// <see cref="WorkspaceRole.Admin"/>; the previous owner stays a
+    /// member with the Admin role, so nobody loses access. Who may
+    /// call this (the owner or an instance administrator) is decided
+    /// by the application layer; <paramref name="actorId"/> is
+    /// recorded on the domain event for the audit trail.
+    /// </summary>
+    public Result TransferOwnership(Guid newOwnerId, Guid? actorId, DateTimeOffset at)
+    {
+        if (IsOwnedBy(newOwnerId))
+        {
+            return Result.Failure(OwnershipSameOwner);
+        }
+
+        var newOwner = _members.FirstOrDefault(m => m.UserId == newOwnerId);
+        if (newOwner is null)
+        {
+            return Result.Failure(OwnershipTargetNotMember);
+        }
+
+        Guid previousOwnerId = OwnerId;
+        newOwner.ChangeRole(WorkspaceRole.Admin, isOwner: true);
+        _members.FirstOrDefault(m => m.UserId == previousOwnerId)?.ChangeRole(WorkspaceRole.Admin, isOwner: false);
+
+        OwnerId = newOwnerId;
+        UpdatedAt = at;
+        AddDomainEvent(new WorkspaceOwnershipTransferred(Id, previousOwnerId, newOwnerId, actorId, at));
         return Result.Success();
     }
 

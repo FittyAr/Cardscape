@@ -20,6 +20,13 @@ internal static class WorkspaceAccess
         Workspace workspace, UserId caller, IUserRepository users, CancellationToken cancellation) =>
         workspace.HasMember(caller.Value) || await IsInstanceAdminAsync(caller, users, cancellation);
 
+    /// <summary>Only the current owner or an active instance
+    /// administrator may hand a workspace to someone else; workspace
+    /// Admins who are not the owner may not.</summary>
+    public static async Task<bool> CanTransferOwnershipAsync(
+        Workspace workspace, UserId caller, IUserRepository users, CancellationToken cancellation) =>
+        workspace.IsOwnedBy(caller.Value) || await IsInstanceAdminAsync(caller, users, cancellation);
+
     private static async Task<bool> IsInstanceAdminAsync(
         UserId caller, IUserRepository users, CancellationToken cancellation)
     {

@@ -1090,4 +1090,9 @@
   <data name="DashboardChipLabel" xml:space="preserve"><value>Label: {0}</value></data>
   <data name="DashboardChipMember" xml:space="preserve"><value>Person: {0}</value></data>
   <data name="DashboardChipDeleted" xml:space="preserve"><value>deleted</value></data>
+  <data name="MembersTransferOwnership" xml:space="preserve"><value>Transfer ownership</value></data>
+  <data name="MembersTransferOwnershipAria" xml:space="preserve"><value>Make {0} the owner of the workspace</value></data>
+  <data name="MembersTransferOwnershipConfirm" xml:space="preserve"><value>Make {0} the owner of {1}? The current owner stays in the workspace as an Admin; only the new owner (or an instance administrator) can transfer ownership again.</value></data>
+  <data name="AdminUsersOwnsWorkspaces" xml:space="preserve"><value>This account owns workspaces that other members still use: {0}. Transfer ownership of each one to another member first (Workspace › Members).</value></data>
+  <data name="AdminUsersOwnsWorkspacesUnknown" xml:space="preserve"><value>one or more workspaces</value></data>
 </root>

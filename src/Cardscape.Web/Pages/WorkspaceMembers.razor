@@ -129,8 +129,15 @@
                 </RadzenDataGridColumn>
                 @if (canManage)
                 {
-                    <RadzenDataGridColumn TItem="WorkspaceMemberDto" Title="" Sortable="false" Filterable="false" Width="6rem" TextAlign="TextAlign.End">
+                    <RadzenDataGridColumn TItem="WorkspaceMemberDto" Title="" Sortable="false" Filterable="false" Width="8rem" TextAlign="TextAlign.End">
                         <Template Context="m">
+                            @if (!IsOwner(m) && canTransferOwnership)
+                            {
+                                <RadzenButton Icon="key" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Text" Size="ButtonSize.Small"
+                                              Disabled="@(pendingUserId is not null)"
+                                              title="@L["MembersTransferOwnership"]" aria-label="@L["MembersTransferOwnershipAria", m.DisplayName]"
+                                              Click="@(() => TransferOwnershipAsync(m))" />
+                            }
                             @if (!IsOwner(m))
                             {
                                 <RadzenButton Icon="person_remove" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small"
@@ -205,6 +212,7 @@
     private EmailDeliveryStatus issuedEmailStatus;
     private bool linkCopied;
     private bool canManage;
+    private bool canTransferOwnership;
     private Guid? pendingUserId;
     private readonly InviteModel inviteModel = new();
 
@@ -246,6 +254,7 @@
             : membersResult.Error ?? L["WorkspaceMembersLoadFailed"];
 
         canManage = await ComputeCanManageAsync();
+        canTransferOwnership = await ComputeCanTransferOwnershipAsync();
         if (!canManage)
         {
             // Members and observers see the roster only; the server
@@ -344,6 +353,20 @@
             || members?.Any(m => m.UserId == userId && m.Role == WorkspaceRole.Admin) == true;
     }
 
+    // Mirrors the server rule for TransferWorkspaceOwnershipCommand:
+    // only the owner or an instance admin, not other workspace Admins.
+    private async Task<bool> ComputeCanTransferOwnershipAsync()
+    {
+        AuthenticationState auth = await AuthState.GetAuthenticationStateAsync();
+        if (auth.User.FindFirst("is_admin")?.Value == "true")
+        {
+            return true;
+        }
+
+        return Guid.TryParse(auth.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out Guid userId)
+            && workspace?.OwnerId == userId;
+    }
+
     private AlertStyle EmailStatusStyle => issuedEmailStatus switch
     {
         EmailDeliveryStatus.Sent => AlertStyle.Success,
@@ -401,6 +424,36 @@
         try
         {
             ApiResult<WorkspaceDto> result = await WorkspacesApi.RemoveMemberAsync(WorkspaceId, member.UserId);
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+                return;
+            }
+
+            await ReloadAsync();
+        }
+        finally
+        {
+            pendingUserId = null;
+        }
+    }
+
+    private async Task TransferOwnershipAsync(WorkspaceMemberDto member)
+    {
+        bool confirmed = await DialogService.Confirm(
+            L["MembersTransferOwnershipConfirm", member.DisplayName, workspace?.Name ?? string.Empty],
+            L["MembersTransferOwnership"],
+            new ConfirmOptions { OkButtonText = L["MembersTransferOwnership"], CancelButtonText = L["ActionCancel"] }) ?? false;
+        if (!confirmed)
+        {
+            return;
+        }
+
+        pendingUserId = member.UserId;
+        error = null;
+        try
+        {
+            ApiResult<WorkspaceDto> result = await WorkspacesApi.TransferOwnershipAsync(WorkspaceId, member.UserId);
             if (!result.IsSuccess)
             {
                 error = result.Error;
