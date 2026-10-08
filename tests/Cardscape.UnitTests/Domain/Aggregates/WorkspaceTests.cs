@@ -411,4 +411,24 @@ public sealed class WorkspaceTests
         workspace.IsDeleted.Should().BeTrue();
         workspace.DomainEvents.OfType<WorkspaceDeleted>().Should().HaveCount(1);
     }
+
+    [Fact]
+    public void CanManageMembers_OwnerAndAdmins_ButNotMembersObserversOrStrangers()
+    {
+        var ownerId = Guid.NewGuid();
+        var workspace = NewWorkspace(ownerId);
+        Guid admin = Guid.NewGuid(), member = Guid.NewGuid(), observer = Guid.NewGuid();
+        workspace.AddMember(admin, WorkspaceRole.Admin, At);
+        workspace.AddMember(member, WorkspaceRole.Member, At);
+        workspace.AddMember(observer, WorkspaceRole.Observer, At);
+
+        workspace.CanManageMembers(ownerId).Should().BeTrue();
+        workspace.CanManageMembers(admin).Should().BeTrue();
+        workspace.CanManageMembers(member).Should().BeFalse();
+        workspace.CanManageMembers(observer).Should().BeFalse();
+        workspace.CanManageMembers(Guid.NewGuid()).Should().BeFalse();
+
+        workspace.ChangeMemberRole(admin, WorkspaceRole.Member, At).IsSuccess.Should().BeTrue();
+        workspace.CanManageMembers(admin).Should().BeFalse("a demoted admin loses management at once");
+    }
 }

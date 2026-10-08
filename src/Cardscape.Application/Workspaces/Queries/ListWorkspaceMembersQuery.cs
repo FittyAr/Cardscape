@@ -32,7 +32,7 @@ public static class ListWorkspaceMembersQueryHandler
             return Result.Failure<IReadOnlyList<WorkspaceMemberDto>>(NotFound);
         }
 
-        if (!workspace.HasMember(currentUser.Id.Value))
+        if (!await WorkspaceAccess.CanViewAsync(workspace, currentUser.Id, users, cancellationToken))
         {
             return Result.Failure<IReadOnlyList<WorkspaceMemberDto>>(NotMember);
         }

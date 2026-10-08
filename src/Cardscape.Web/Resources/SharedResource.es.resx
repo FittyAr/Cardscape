@@ -83,9 +83,9 @@
   <data name="InvitationsEmpty" xml:space="preserve"><value>No tenés invitaciones pendientes. El propietario del workspace te enviará un enlace por email cuando haya una.</value></data>
   <data name="InvitationsMetadata" xml:space="preserve"><value>Rol: {0} · Invitación de {1} · Vence {2}</value></data>
   <data name="InvitationsSystem" xml:space="preserve"><value>sistema</value></data>
-  <data name="InvitationsAcceptHint" xml:space="preserve"><value>Para aceptar una invitación, seguí el enlace de un solo uso que te envió el propietario. Está vinculado al email de tu cuenta.</value></data>
+  <data name="InvitationsAcceptHint" xml:space="preserve"><value>Para aceptar una invitación, abrí el enlace de un solo uso que te compartió el propietario o un admin del workspace. Está vinculado al email de tu cuenta.</value></data>
   <data name="InvitationAcceptTitle" xml:space="preserve"><value>Aceptar invitación</value></data>
-  <data name="InvitationMissingToken" xml:space="preserve"><value>Al enlace de invitación le falta el token. Abrí el enlace que te envió el propietario del workspace.</value></data>
+  <data name="InvitationMissingToken" xml:space="preserve"><value>Al enlace de invitación le falta el token. Abrí el enlace que te enviaron.</value></data>
   <data name="InvitationAccepting" xml:space="preserve"><value>Aceptando…</value></data>
   <data name="InvitationAccepted" xml:space="preserve"><value>Ahora sos miembro de {0}.</value></data>
   <data name="InvitationOpenWorkspace" xml:space="preserve"><value>Abrir workspace</value></data>
@@ -992,4 +992,16 @@
   <data name="AdminUsersActionDone" xml:space="preserve"><value>Listo.</value></data>
   <data name="AdminUsersActionFailed" xml:space="preserve"><value>La acción falló.</value></data>
   <data name="AdminUsersLoadFailed" xml:space="preserve"><value>No se pudieron cargar los usuarios.</value></data>
+  <data name="MembersOwner" xml:space="preserve"><value>Propietario</value></data>
+  <data name="MembersRemove" xml:space="preserve"><value>Quitar del workspace</value></data>
+  <data name="MembersRemoveAria" xml:space="preserve"><value>Quitar a {0} del workspace</value></data>
+  <data name="MembersRemoveConfirm" xml:space="preserve"><value>¿Quitar a {0} de {1}? Pierde el acceso a sus tableros hasta que lo vuelvan a invitar.</value></data>
+  <data name="MembersChangeRoleAria" xml:space="preserve"><value>Rol de {0}</value></data>
+  <data name="MembersInvitationLink" xml:space="preserve"><value>Enlace de invitación</value></data>
+  <data name="MembersInvitationLinkHint" xml:space="preserve"><value>Con este enlace se puede entrar con el email invitado, aunque el registro público esté cerrado. Se muestra una sola vez.</value></data>
+  <data name="MembersInvitationCopyLink" xml:space="preserve"><value>Copiar enlace</value></data>
+  <data name="MembersInvitationLinkCopied" xml:space="preserve"><value>Copiado</value></data>
+  <data name="InvitationsAccept" xml:space="preserve"><value>Aceptar</value></data>
+  <data name="InvitationsAcceptAria" xml:space="preserve"><value>Aceptar la invitación a {0}</value></data>
+  <data name="RegisterInvitedTo" xml:space="preserve"><value>Te invitaron a {0}. Creá tu cuenta con {1} para unirte.</value></data>
 </root>

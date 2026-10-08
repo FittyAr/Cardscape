@@ -1,13 +1,18 @@
 @page "/invitations/accept"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
 @using Cardscape.Web.Resources
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.Extensions.Localization
 @inject IInvitationsApiClient InvitationsApi
+@inject AuthenticationStateProvider AuthState
 @inject Microsoft.AspNetCore.Components.NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
+
+@* Anonymous on purpose: a signed-out invitee is sent to sign in
+   (existing account) or to register with the token (new account),
+   and comes back here or lands in the workspace afterwards. *@
 
 <PageTitle>@L["InvitationAcceptTitle"] @L["PageTitleSuffix"]</PageTitle>
 
@@ -22,7 +27,7 @@
     }
     else if (busy)
     {
-        <RadzenText Text="@L["InvitationAccepting"]" />
+        <LoadingState Size="LoadingSize.Section" Text="@L["InvitationAccepting"]" />
     }
     else if (accepted is not null)
     {
@@ -67,6 +72,13 @@
         busy = true;
         try
         {
+            AuthenticationState state = await AuthState.GetAuthenticationStateAsync();
+            if (state.User.Identity?.IsAuthenticated != true)
+            {
+                await RouteSignedOutInviteeAsync(Token);
+                return;
+            }
+
             ApiResult<WorkspaceDto> result = await InvitationsApi.AcceptAsync(Token);
             if (result.IsSuccess)
             {
@@ -80,6 +92,27 @@
         finally
         {
             busy = false;
+        }
+    }
+
+    private async Task RouteSignedOutInviteeAsync(string token)
+    {
+        ApiResult<WorkspaceInvitationPreviewDto> preview = await InvitationsApi.PreviewAsync(token);
+        if (!preview.HasValue)
+        {
+            error = preview.Error ?? L["InvitationAcceptFailed"];
+            return;
+        }
+
+        string escaped = Uri.EscapeDataString(token);
+        if (preview.Value.AccountExists)
+        {
+            string returnUrl = Uri.EscapeDataString($"invitations/accept?token={escaped}");
+            Nav.NavigateTo($"login?returnUrl={returnUrl}");
+        }
+        else
+        {
+            Nav.NavigateTo($"register?invitation={escaped}");
         }
     }
 }

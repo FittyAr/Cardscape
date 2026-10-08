@@ -27,3 +27,12 @@ public sealed record IssueWorkspaceInvitationRequestDto(
     TimeSpan? Lifetime = null);
 
 public sealed record AcceptWorkspaceInvitationRequestDto(string Token);
+
+/// <summary>What the accept page learns about an invitation before sign-in.</summary>
+public sealed record WorkspaceInvitationPreviewDto(
+    Guid WorkspaceId,
+    string WorkspaceName,
+    string Email,
+    WorkspaceRole Role,
+    DateTimeOffset ExpiresAt,
+    bool AccountExists);

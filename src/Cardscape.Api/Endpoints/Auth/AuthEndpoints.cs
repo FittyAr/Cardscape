@@ -30,14 +30,25 @@ public static class AuthEndpoints
             ISystemSettingsService settingsService,
             CancellationToken ct) =>
         {
-            if (!(await settingsService.GetAsync(ct)).Access.AllowPublicRegistration)
+            Result<AuthResponse> result;
+            if (!string.IsNullOrWhiteSpace(request.InvitationToken))
+            {
+                // An invitation link is its own authorisation: invited
+                // people can join an invite-only instance.
+                result = await bus.InvokeAsync<Result<AuthResponse>>(new RegisterInvitedUserCommand(
+                    request.Email, request.DisplayName, request.Password, request.InvitationToken), ct);
+            }
+            else if (!(await settingsService.GetAsync(ct)).Access.AllowPublicRegistration)
             {
                 return DomainErrorResults.ToProblem(
                     DomainError.Forbidden("Auth.RegistrationClosed", "Public registration is currently disabled by the administrator."));
             }
+            else
+            {
+                result = await bus.InvokeAsync<Result<AuthResponse>>(new RegisterUserCommand(
+                    request.Email, request.DisplayName, request.Password), ct);
+            }
 
-            var result = await bus.InvokeAsync<Result<AuthResponse>>(new RegisterUserCommand(
-                request.Email, request.DisplayName, request.Password), ct);
             return result.IsSuccess
                 ? Results.Created("/api/auth/me", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);

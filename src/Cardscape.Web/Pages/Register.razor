@@ -3,10 +3,12 @@
 @inherits Cardscape.Web.Shared.CultureReactiveComponentBase
 @using Cardscape.Web.Resources
 @using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.Extensions.Localization
 @inject AuthService Auth
+@inject IInvitationsApiClient InvitationsApi
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthState
 @inject IStringLocalizer<SharedResource> L
@@ -19,6 +21,19 @@
         <RadzenText Text="@L["AuthCreateAccountSubtitle"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary" />
     </RadzenStack>
 
+    @if (invitation is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" AllowClose="false" ShowIcon="true">
+            @L["RegisterInvitedTo", invitation.WorkspaceName, invitation.Email]
+        </RadzenAlert>
+    }
+    else if (invitationError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" AllowClose="false">
+            @invitationError
+        </RadzenAlert>
+    }
+
     <RadzenTemplateForm TItem="RegisterModel" Data="@model" Submit="@HandleSubmitAsync">
         <RadzenStack Gap="1rem">
             <RadzenFormField Text="@L["AuthDisplayName"]" Component="displayName">
@@ -29,7 +44,8 @@
 
             <RadzenFormField Text="@L["AuthEmail"]" Component="email">
                 <RadzenTextBox @bind-Value="model.Email" Name="email" Style="width:100%"
-                               autocomplete="email" Placeholder="you@company.com" />
+                               autocomplete="email" Placeholder="you@company.com"
+                               ReadOnly="@(invitation is not null)" />
             </RadzenFormField>
             <RadzenRequiredValidator Component="email" Text="@L["AuthEmailRequired"]" />
             <RadzenEmailValidator Component="email" Text="@L["ValidationEmail"]" />
@@ -89,6 +105,12 @@
     private readonly RegisterModel model = new();
     private bool busy;
     private string? error;
+    private WorkspaceInvitationPreviewDto? invitation;
+    private string? invitationError;
+
+    /// <summary>Cleartext token from an invitation link; registering
+    /// with it works even when public registration is closed.</summary>
+    [SupplyParameterFromQuery(Name = "invitation")] public string? InvitationToken { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -96,6 +118,21 @@
         if (state.User.Identity?.IsAuthenticated == true)
         {
             Nav.NavigateTo("/", forceLoad: true);
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(InvitationToken))
+        {
+            ApiResult<WorkspaceInvitationPreviewDto> preview = await InvitationsApi.PreviewAsync(InvitationToken);
+            if (preview.HasValue)
+            {
+                invitation = preview.Value;
+                model.Email = invitation.Email;
+            }
+            else
+            {
+                invitationError = preview.Error ?? L["InvitationAcceptFailed"];
+            }
         }
     }
 
@@ -114,14 +151,15 @@
         try
         {
             ApiResult<UserSummaryDto> result = await Auth.RegisterAsync(
-                model.Email, model.DisplayName, model.Password);
+                model.Email, model.DisplayName, model.Password, invitation is null ? null : InvitationToken);
             if (!result.IsSuccess)
             {
                 error = result.Error;
                 return;
             }
 
-            Nav.NavigateTo("/", forceLoad: true);
+            // An invited user was joined to the workspace on registration.
+            Nav.NavigateTo(invitation is null ? "/" : $"workspaces/{invitation.WorkspaceId}", forceLoad: true);
         }
         finally
         {

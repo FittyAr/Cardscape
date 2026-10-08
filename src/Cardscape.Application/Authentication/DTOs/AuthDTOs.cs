@@ -3,7 +3,10 @@ using Cardscape.Domain.Members;
 namespace Cardscape.Application.Authentication.DTOs;
 
 /// <summary>Payload for registering a new user.</summary>
-public sealed record RegisterRequest(string Email, string DisplayName, string Password);
+/// <summary>Payload for creating an account. <paramref name="InvitationToken"/>
+/// registers through a workspace invitation link (allowed even when public
+/// registration is closed) and joins the workspace.</summary>
+public sealed record RegisterRequest(string Email, string DisplayName, string Password, string? InvitationToken = null);
 
 /// <summary>Payload for signing in.</summary>
 public sealed record LoginRequest(string Email, string Password);

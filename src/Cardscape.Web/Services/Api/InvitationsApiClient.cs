@@ -6,6 +6,11 @@ public interface IInvitationsApiClient
 {
     Task<ApiResult<IReadOnlyList<WorkspaceInvitationDto>>> ListPendingAsync(CancellationToken ct = default);
     Task<ApiResult<WorkspaceDto>> AcceptAsync(string token, CancellationToken ct = default);
+    Task<ApiResult<WorkspaceDto>> AcceptByIdAsync(Guid invitationId, CancellationToken ct = default);
+    Task<ApiResult<WorkspaceInvitationPreviewDto>> PreviewAsync(string token, CancellationToken ct = default);
+
+    /// <summary>The link an invitee opens to accept: <c>{base}/invitations/accept?token=…</c>.</summary>
+    string BuildAcceptLink(string baseUri, string token);
 
     Task<ApiResult<IReadOnlyList<WorkspaceInvitationDto>>> ListForWorkspaceAsync(
         Guid workspaceId, bool includeTerminal, CancellationToken ct = default);
@@ -32,6 +37,23 @@ public sealed class InvitationsApiClient(IHttpClientFactory http)
             "api/invitations/accept", new AcceptWorkspaceInvitationRequestDto(token), JsonOptions, ct);
         return await ReadAsync<WorkspaceDto>(response, ct);
     }
+
+    public async Task<ApiResult<WorkspaceDto>> AcceptByIdAsync(Guid invitationId, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsync(
+            $"api/invitations/{invitationId}/accept", content: null, ct);
+        return await ReadAsync<WorkspaceDto>(response, ct);
+    }
+
+    public async Task<ApiResult<WorkspaceInvitationPreviewDto>> PreviewAsync(string token, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
+            "api/invitations/preview", new AcceptWorkspaceInvitationRequestDto(token), JsonOptions, ct);
+        return await ReadAsync<WorkspaceInvitationPreviewDto>(response, ct);
+    }
+
+    public string BuildAcceptLink(string baseUri, string token) =>
+        $"{baseUri.TrimEnd('/')}/invitations/accept?token={Uri.EscapeDataString(token)}";
 
     public async Task<ApiResult<IReadOnlyList<WorkspaceInvitationDto>>> ListForWorkspaceAsync(
         Guid workspaceId, bool includeTerminal, CancellationToken ct = default)

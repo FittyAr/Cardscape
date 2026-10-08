@@ -83,9 +83,9 @@
   <data name="InvitationsEmpty" xml:space="preserve"><value>You have no pending invitations. Workspace owners will email you a link when one is waiting.</value></data>
   <data name="InvitationsMetadata" xml:space="preserve"><value>Role: {0} · Invited by {1} · Expires {2}</value></data>
   <data name="InvitationsSystem" xml:space="preserve"><value>system</value></data>
-  <data name="InvitationsAcceptHint" xml:space="preserve"><value>To accept an invitation, follow the single-use link the owner emailed you. It is bound to your account's email.</value></data>
+  <data name="InvitationsAcceptHint" xml:space="preserve"><value>To accept an invitation, open the single-use link the workspace owner or an admin shared with you. It is bound to your account's email.</value></data>
   <data name="InvitationAcceptTitle" xml:space="preserve"><value>Accept invitation</value></data>
-  <data name="InvitationMissingToken" xml:space="preserve"><value>The invitation link is missing its token. Open the link the workspace owner sent you.</value></data>
+  <data name="InvitationMissingToken" xml:space="preserve"><value>The invitation link is missing its token. Open the link you were sent.</value></data>
   <data name="InvitationAccepting" xml:space="preserve"><value>Accepting…</value></data>
   <data name="InvitationAccepted" xml:space="preserve"><value>You are now a member of {0}.</value></data>
   <data name="InvitationOpenWorkspace" xml:space="preserve"><value>Open workspace</value></data>
@@ -992,4 +992,16 @@
   <data name="AdminUsersActionDone" xml:space="preserve"><value>Done.</value></data>
   <data name="AdminUsersActionFailed" xml:space="preserve"><value>The action failed.</value></data>
   <data name="AdminUsersLoadFailed" xml:space="preserve"><value>Could not load users.</value></data>
+  <data name="MembersOwner" xml:space="preserve"><value>Owner</value></data>
+  <data name="MembersRemove" xml:space="preserve"><value>Remove from workspace</value></data>
+  <data name="MembersRemoveAria" xml:space="preserve"><value>Remove {0} from the workspace</value></data>
+  <data name="MembersRemoveConfirm" xml:space="preserve"><value>Remove {0} from {1}? They lose access to its boards unless they are invited again.</value></data>
+  <data name="MembersChangeRoleAria" xml:space="preserve"><value>Role of {0}</value></data>
+  <data name="MembersInvitationLink" xml:space="preserve"><value>Invitation link</value></data>
+  <data name="MembersInvitationLinkHint" xml:space="preserve"><value>Anyone with this link can join as the invited email, even when public registration is closed. It is shown only once.</value></data>
+  <data name="MembersInvitationCopyLink" xml:space="preserve"><value>Copy link</value></data>
+  <data name="MembersInvitationLinkCopied" xml:space="preserve"><value>Copied</value></data>
+  <data name="InvitationsAccept" xml:space="preserve"><value>Accept</value></data>
+  <data name="InvitationsAcceptAria" xml:space="preserve"><value>Accept the invitation to {0}</value></data>
+  <data name="RegisterInvitedTo" xml:space="preserve"><value>You were invited to {0}. Create your account with {1} to join.</value></data>
 </root>

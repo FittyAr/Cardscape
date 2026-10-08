@@ -14,7 +14,8 @@ namespace Cardscape.Api.Endpoints.Workspaces;
 /// <c>DELETE /api/workspaces/{id}/invitations/{invId}</c>) sit on
 /// the workspace group; the invitee-facing paths
 /// (<c>GET /api/invitations/pending</c>,
-/// <c>POST /api/invitations/accept</c>) sit on their own group
+/// <c>POST /api/invitations/accept</c>,
+/// <c>POST /api/invitations/{id}/accept</c>) sit on their own group
 /// because the URL scope is the current user, not a workspace.
 /// </summary>
 public static class WorkspaceInvitationEndpoints
@@ -65,7 +66,7 @@ public static class WorkspaceInvitationEndpoints
             CancellationToken ct) =>
         {
             var result = await bus.InvokeAsync<Result>(
-                new RevokeWorkspaceInvitationCommand(invitationId), ct);
+                new RevokeWorkspaceInvitationCommand(invitationId, workspaceId), ct);
             return result.ToNoContent();
         }).Produces(StatusCodes.Status204NoContent);
 
@@ -89,6 +90,32 @@ public static class WorkspaceInvitationEndpoints
                 new AcceptWorkspaceInvitationCommand(body.Token), ct);
             return result.ToOk();
         }).Produces<WorkspaceDto>(StatusCodes.Status200OK);
+
+        inboxGroup.MapPost("/{invitationId:guid}/accept", async (
+            Guid invitationId,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
+                new AcceptWorkspaceInvitationByIdCommand(invitationId), ct);
+            return result.ToOk();
+        }).Produces<WorkspaceDto>(StatusCodes.Status200OK);
+
+        // Anonymous: the accept page uses it to route a signed-out
+        // invitee to sign-in or registration. POST keeps the token
+        // out of access logs and query strings.
+        app.MapPost("/api/invitations/preview", async (
+            AcceptWorkspaceInvitationBody body,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<WorkspaceInvitationPreviewDto>>(
+                new PreviewWorkspaceInvitationQuery(body.Token), ct);
+            return result.ToOk();
+        })
+        .AllowAnonymous()
+        .WithTags("Workspace invitations")
+        .Produces<WorkspaceInvitationPreviewDto>(StatusCodes.Status200OK);
 
         return app;
     }

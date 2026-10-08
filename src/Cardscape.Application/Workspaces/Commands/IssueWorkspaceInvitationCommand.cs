@@ -9,7 +9,7 @@ using Wolverine;
 namespace Cardscape.Application.Workspaces.Commands;
 
 /// <summary>
-/// Owner-only: mint a new invitation to a workspace. The cleartext
+/// Owner, workspace Admin or instance admin: mint a new invitation to a workspace. The cleartext
 /// token is returned exactly once in <see cref="WorkspaceInvitationIssuanceDto"/>
 /// so the owner can deliver it through their chosen channel.
 /// The server only ever persists the SHA-256 hash + 10-char prefix.
@@ -26,6 +26,7 @@ public static class IssueWorkspaceInvitationCommandHandler
         IssueWorkspaceInvitationCommand command,
         IInvitationService invitations,
         IWorkspaceRepository workspaces,
+        IUserRepository users,
         ISystemSettingsService settings,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
@@ -56,12 +57,10 @@ public static class IssueWorkspaceInvitationCommandHandler
                 "workspaces.not_found", "Workspace was not found."));
         }
 
-        // Only the workspace owner can issue invitations. A broader
-        // role system lands in v0.5.
-        if (!workspace.IsOwnedBy(currentUser.Id.Value))
+        if (!await WorkspaceAccess.CanManageMembersAsync(workspace, currentUser.Id, users, cancellationToken))
         {
             return Result.Failure<WorkspaceInvitationIssuanceDto>(DomainError.Forbidden(
-                "workspaces.not_owner", "Only the workspace owner can issue invitations."));
+                "workspaces.not_manager", "Only the workspace owner or an admin can issue invitations."));
         }
 
         var issuance = await invitations.IssueAsync(
