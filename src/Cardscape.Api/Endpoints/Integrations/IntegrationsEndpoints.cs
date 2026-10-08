@@ -248,9 +248,9 @@ public static class IntegrationsEndpoints
                 headers[header.Key] = header.Value.ToString();
             }
 
-            string provider = (http.Request.Query["provider"].ToString()
-                ?? headers.GetValueOrDefault("X-Inbound-Provider", string.Empty)
-                ?? "sendgrid").ToLowerInvariant();
+            string provider = ResolveInboundEmailProvider(
+                http.Request.Query["provider"].ToString(),
+                headers.GetValueOrDefault("X-Inbound-Provider"));
 
             string messageHash = Convert.ToHexString(
                 System.Security.Cryptography.SHA256.HashData(
@@ -296,6 +296,19 @@ public static class IntegrationsEndpoints
             .Produces<InboundEmailPendingResult>(StatusCodes.Status202Accepted);
 
         return app;
+    }
+
+    /// <summary>
+    /// Picks the inbound-email provider: the <c>?provider=</c> query
+    /// value, else the <c>X-Inbound-Provider</c> header, else SendGrid.
+    /// Blank values count as absent.
+    /// </summary>
+    internal static string ResolveInboundEmailProvider(string? queryValue, string? headerValue)
+    {
+        string provider = !string.IsNullOrWhiteSpace(queryValue) ? queryValue
+            : !string.IsNullOrWhiteSpace(headerValue) ? headerValue
+            : "sendgrid";
+        return provider.Trim().ToLowerInvariant();
     }
 
     public sealed record LinkGitHubRepoRequest(
