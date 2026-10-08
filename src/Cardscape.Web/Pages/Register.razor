@@ -108,6 +108,12 @@
     private WorkspaceInvitationPreviewDto? invitation;
     private string? invitationError;
 
+    // Where to go after signing up. Static on purpose: signing in can
+    // change the culture, and EmptyLayout then remounts this page; the
+    // remounted instance sees an authenticated user and must head to
+    // the same place (Login does the same through its ReturnUrl).
+    private static string s_afterRegister = "/";
+
     /// <summary>Cleartext token from an invitation link; registering
     /// with it works even when public registration is closed.</summary>
     [SupplyParameterFromQuery(Name = "invitation")] public string? InvitationToken { get; set; }
@@ -117,9 +123,11 @@
         AuthenticationState state = await AuthState.GetAuthenticationStateAsync();
         if (state.User.Identity?.IsAuthenticated == true)
         {
-            Nav.NavigateTo("/", forceLoad: true);
+            Nav.NavigateTo(s_afterRegister, forceLoad: true);
             return;
         }
+
+        s_afterRegister = "/";
 
         if (!string.IsNullOrWhiteSpace(InvitationToken))
         {
@@ -150,16 +158,18 @@
         error = null;
         try
         {
+            // An invited user is joined to the workspace on registration.
+            s_afterRegister = invitation is null ? "/" : $"workspaces/{invitation.WorkspaceId}";
             ApiResult<UserSummaryDto> result = await Auth.RegisterAsync(
                 model.Email, model.DisplayName, model.Password, invitation is null ? null : InvitationToken);
             if (!result.IsSuccess)
             {
+                s_afterRegister = "/";
                 error = result.Error;
                 return;
             }
 
-            // An invited user was joined to the workspace on registration.
-            Nav.NavigateTo(invitation is null ? "/" : $"workspaces/{invitation.WorkspaceId}", forceLoad: true);
+            Nav.NavigateTo(s_afterRegister, forceLoad: true);
         }
         finally
         {

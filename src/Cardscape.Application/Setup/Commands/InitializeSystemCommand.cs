@@ -87,6 +87,8 @@ public static class InitializeSystemCommandHandler
 
         User adminUser = userResult.Value;
         adminUser.SetAdmin(true, clock.UtcNow);
+        // Setup signs the administrator in; the Users page shows it.
+        adminUser.RecordLogin(clock.UtcNow);
         await users.AddAsync(adminUser, cancellationToken);
 
         // 5. Create the initial workspace.

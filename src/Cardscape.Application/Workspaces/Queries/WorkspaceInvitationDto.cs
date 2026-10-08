@@ -11,4 +11,5 @@ public sealed record WorkspaceInvitationDto(
     Guid InvitedBy,
     DateTimeOffset InvitedAt,
     DateTimeOffset ExpiresAt,
-    string TokenPrefix);
+    string TokenPrefix,
+    string? InvitedByName = null);

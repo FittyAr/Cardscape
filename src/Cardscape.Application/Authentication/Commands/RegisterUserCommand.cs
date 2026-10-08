@@ -99,11 +99,20 @@ public static class RegisterUserCommandHandler
         }
 
         var hash = hasher.Hash(command.Password);
-        return User.Register(
+        var user = User.Register(
             UserId.New(),
             emailResult.Value,
             displayNameResult.Value,
             hash,
             clock.UtcNow);
+
+        // Registering signs the user in; the admin Users page reads
+        // LastLoginAt, so a fresh account must not show "never".
+        if (user.IsSuccess)
+        {
+            user.Value.RecordLogin(clock.UtcNow);
+        }
+
+        return user;
     }
 }

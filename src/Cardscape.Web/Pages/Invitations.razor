@@ -37,7 +37,7 @@ else if (invitations is not null)
                     <RadzenStack Gap="0.25rem">
                         <RadzenText Text="@inv.WorkspaceName" TextStyle="TextStyle.H5" TagName="TagName.H3" />
                         <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
-                            @L["InvitationsMetadata", RoleName(inv.Role), inv.InvitedBy == Guid.Empty ? L["InvitationsSystem"] : inv.InvitedBy.ToString(), inv.ExpiresAt.LocalDateTime.ToString("d")]
+                            @L["InvitationsMetadata", RoleName(inv.Role), inv.InvitedBy == Guid.Empty ? L["InvitationsSystem"] : inv.InvitedByName ?? inv.InvitedBy.ToString(), inv.ExpiresAt.LocalDateTime.ToString("d")]
                         </RadzenText>
                     </RadzenStack>
                     @if (CanAcceptFromInbox)

@@ -41,6 +41,8 @@ public static class ListWorkspaceInvitationsQueryHandler
 
         var rows = await repository.ListForWorkspaceAsync(
             query.WorkspaceId, query.IncludeTerminal, cancellationToken);
+        IReadOnlyDictionary<Guid, string> inviters = await InviterNames.ResolveAsync(rows, users, cancellationToken);
+
         List<WorkspaceInvitationDto> dtos = rows
             .Select(invitation => new WorkspaceInvitationDto(
                 invitation.Id.Value,
@@ -51,7 +53,8 @@ public static class ListWorkspaceInvitationsQueryHandler
                 invitation.InvitedBy,
                 invitation.InvitedAt,
                 invitation.ExpiresAt,
-                invitation.TokenPrefix))
+                invitation.TokenPrefix,
+                inviters.GetValueOrDefault(invitation.InvitedBy)))
             .ToList();
 
         return Result.Success<IReadOnlyList<WorkspaceInvitationDto>>(dtos);

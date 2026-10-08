@@ -41,7 +41,7 @@
                     IsLoading="@loading" AllowPaging="true" PageSize="@PageSize" PagerHorizontalAlign="HorizontalAlign.Left"
                     EmptyText="@L["AdminUsersEmpty"]">
         <Columns>
-            <RadzenDataGridColumn TItem="AdminUserDto" Property="DisplayName" Title="@L["MembersName"]" Sortable="false">
+            <RadzenDataGridColumn TItem="AdminUserDto" Property="DisplayName" Title="@L["MembersName"]" Sortable="false" MinWidth="14rem">
                 <Template Context="u">
                     <RadzenStack Gap="0">
                         <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Span">
@@ -55,7 +55,7 @@
                     </RadzenStack>
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersStatus"]" Sortable="false" Width="16rem">
+            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersStatus"]" Sortable="false" Width="13rem">
                 <Template Context="u">
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" Wrap="FlexWrap.Wrap">
                         @if (u.IsAdmin)
@@ -70,10 +70,10 @@
                     </RadzenStack>
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersCreated"]" Sortable="false" Width="9rem">
+            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersCreated"]" Sortable="false" Width="8rem">
                 <Template Context="u">@u.CreatedAt.LocalDateTime.ToString("d")</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersLastLogin"]" Sortable="false" Width="11rem">
+            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersLastLogin"]" Sortable="false" Width="10rem">
                 <Template Context="u">
                     @if (u.LastLoginAt is { } lastLogin)
                     {
@@ -85,7 +85,7 @@
                     }
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersActions"]" Sortable="false" Width="11rem" TextAlign="TextAlign.End">
+            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersActions"]" Sortable="false" Width="9rem" TextAlign="TextAlign.End">
                 <Template Context="u">
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" JustifyContent="JustifyContent.End">
                         @if (u.IsDeleted || u.IsAnonymised)
@@ -127,7 +127,9 @@
     private const int PageSize = 25;
 
     private RadzenDataGrid<AdminUserDto>? grid;
-    private IReadOnlyList<AdminUserDto> users = [];
+    // Null until the first load: RadzenDataGrid only calls LoadData on
+    // its first render when Data is null.
+    private IReadOnlyList<AdminUserDto>? users;
     private int total;
     private int page;
     private bool loading;

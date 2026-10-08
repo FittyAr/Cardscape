@@ -46,7 +46,7 @@ public sealed class AdminUsersEndpointTests(CardscapeWebApplicationFactory facto
         row.Email.Should().Be(targetEmail);
         row.IsActive.Should().BeTrue();
         row.IsAdmin.Should().BeFalse();
-        row.LastLoginAt.Should().BeNull();
+        row.LastLoginAt.Should().NotBeNull("registering signs the user in");
 
         (await admin.PostAsync($"api/admin/users/{targetId}/deactivate", null, ct))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
