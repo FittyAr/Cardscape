@@ -3,24 +3,24 @@ using System;
 using Cardscape.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Cardscape.Migrations.MariaDb.Migrations
+namespace Cardscape.Migrations.MySql.Migrations
 {
     [DbContext(typeof(CardscapeDbContext))]
-    partial class CardscapeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261008194554_AddMustChangePassword")]
+    partial class AddMustChangePassword
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
-
-            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
             modelBuilder.Entity("Cardscape.Domain.Activities.Activity", b =>
                 {
@@ -37,7 +37,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -49,7 +49,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("OccurredAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("PayloadJson")
                         .IsRequired()
@@ -62,7 +62,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -87,7 +87,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -120,7 +120,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(1024)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -143,7 +143,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -160,7 +160,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("LastUsedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<int>("Provider")
                         .HasColumnType("int");
@@ -177,7 +177,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(256)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -201,19 +201,19 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("IssuedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("RequestedFromIp")
                         .HasMaxLength(64)
@@ -231,13 +231,13 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(128)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("UsedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("char(36)");
@@ -258,7 +258,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -276,7 +276,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<DateTimeOffset>("RevokedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -285,10 +285,10 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset>("TokenExpiresAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -314,7 +314,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -361,7 +361,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(512)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -386,7 +386,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -398,7 +398,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("LastUsedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -406,7 +406,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -425,7 +425,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(16)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -444,10 +444,10 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("ConfirmedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -475,7 +475,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -500,10 +500,10 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -528,10 +528,10 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset>("ScheduledFor")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<DateTimeOffset?>("StartedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -542,7 +542,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -568,7 +568,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(7)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -596,7 +596,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -630,7 +630,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -662,7 +662,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -688,7 +688,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -709,7 +709,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -732,7 +732,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -747,10 +747,10 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset>("StarredAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -775,7 +775,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -805,7 +805,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -827,7 +827,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -845,7 +845,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -876,7 +876,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(7)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -886,7 +886,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTimeOffset?>("DueDate")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<bool>("IsArchived")
                         .HasColumnType("tinyint(1)");
@@ -915,7 +915,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(500)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -935,7 +935,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -956,7 +956,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -973,7 +973,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -982,7 +982,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("MirroredAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid>("MirroredBy")
                         .HasColumnType("char(36)");
@@ -1003,7 +1003,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1024,7 +1024,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1039,16 +1039,16 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset>("SnoozedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid>("SnoozedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("Until")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1067,7 +1067,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1087,7 +1087,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1116,7 +1116,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1131,7 +1131,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1158,7 +1158,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(8192)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1184,7 +1184,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(120)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1202,13 +1202,13 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
@@ -1242,7 +1242,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1268,7 +1268,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1295,7 +1295,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1319,7 +1319,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1343,7 +1343,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1370,7 +1370,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(256)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1400,10 +1400,10 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(1024)");
 
                     b.Property<DateTimeOffset?>("LastSyncErrorAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<DateTimeOffset?>("LastSyncedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -1412,7 +1412,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1442,7 +1442,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1470,7 +1470,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1497,22 +1497,22 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("RefreshedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -1530,7 +1530,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(64)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1579,7 +1579,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(8)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1609,7 +1609,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1640,13 +1640,13 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(64)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<bool>("IsConsumed")
                         .HasColumnType("tinyint(1)");
@@ -1670,7 +1670,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1712,7 +1712,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1734,7 +1734,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1761,7 +1761,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1770,7 +1770,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("LastUsedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("ProtectedBotToken")
                         .IsRequired()
@@ -1794,7 +1794,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1824,7 +1824,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(7)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1844,7 +1844,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1865,7 +1865,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -1897,7 +1897,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -1917,20 +1917,20 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("AnonymisedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("AvatarUrl")
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
@@ -1943,14 +1943,14 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(254)");
 
                     b.Property<DateTimeOffset?>("EmailVerificationExpiresAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("EmailVerificationTokenHash")
                         .HasMaxLength(128)
                         .HasColumnType("varchar(128)");
 
                     b.Property<DateTimeOffset?>("EmailVerifiedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
@@ -1968,7 +1968,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("LastLoginAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<bool>("MustChangePassword")
                         .HasColumnType("tinyint(1)");
@@ -1979,7 +1979,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(512)");
 
                     b.Property<DateTimeOffset?>("RestrictedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -1988,7 +1988,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2009,7 +2009,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2028,7 +2028,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTimeOffset?>("ReadAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -2037,7 +2037,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2063,7 +2063,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2078,7 +2078,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("NextOccurrenceAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -2087,7 +2087,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2111,13 +2111,13 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(50);
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("ExpiresAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("HashedSecret")
                         .IsRequired()
@@ -2128,7 +2128,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("LastUsedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -2141,7 +2141,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(1000);
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("RevokedBy")
                         .HasColumnType("char(36)");
@@ -2166,7 +2166,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(8)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2190,7 +2190,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2215,7 +2215,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue("default");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2234,7 +2234,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2249,7 +2249,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2258,7 +2258,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("VotedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.HasKey("Id");
 
@@ -2279,7 +2279,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2296,7 +2296,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("LastAttemptAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("LastError")
                         .HasColumnType("longtext");
@@ -2315,7 +2315,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2344,7 +2344,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2368,7 +2368,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2391,7 +2391,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2425,7 +2425,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasDefaultValue(0u);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2443,13 +2443,13 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("AcceptedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("AcceptedBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("char(36)");
@@ -2460,10 +2460,10 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(320)");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<DateTimeOffset>("InvitedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid>("InvitedBy")
                         .HasColumnType("char(36)");
@@ -2472,7 +2472,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("RevokedBy")
                         .HasColumnType("char(36)");
@@ -2497,7 +2497,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("varchar(10)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("char(36)");
@@ -2524,10 +2524,10 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime");
 
                     b.Property<long>("LeaseExpiresAtUtcTicks")
                         .HasColumnType("bigint");
@@ -2624,7 +2624,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                                 .HasColumnType("char(36)");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<Guid?>("CreatedBy")
                                 .HasColumnType("char(36)");
@@ -2633,7 +2633,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                                 .HasColumnType("tinyint(1)");
 
                             b1.Property<DateTimeOffset>("JoinedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<int>("Role")
                                 .HasColumnType("int");
@@ -2645,7 +2645,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                                 .HasDefaultValue(0u);
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<Guid?>("UpdatedBy")
                                 .HasColumnType("char(36)");
@@ -2684,13 +2684,13 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                                 .HasColumnType("char(36)");
 
                             b1.Property<DateTimeOffset>("AssignedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<Guid>("CardId")
                                 .HasColumnType("char(36)");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<Guid?>("CreatedBy")
                                 .HasColumnType("char(36)");
@@ -2705,7 +2705,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                                 .HasDefaultValue(0u);
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<Guid?>("UpdatedBy")
                                 .HasColumnType("char(36)");
@@ -2733,7 +2733,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                                 .HasColumnType("char(36)");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<Guid?>("CreatedBy")
                                 .HasColumnType("char(36)");
@@ -2751,7 +2751,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                                 .HasDefaultValue(0u);
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<Guid?>("UpdatedBy")
                                 .HasColumnType("char(36)");
@@ -2786,7 +2786,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                                 .HasColumnType("char(36)");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<Guid?>("CreatedBy")
                                 .HasColumnType("char(36)");
@@ -2812,7 +2812,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                                 .HasColumnType("varchar(500)");
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<Guid?>("UpdatedBy")
                                 .HasColumnType("char(36)");
@@ -2838,7 +2838,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                                 .HasColumnType("char(36)");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<Guid?>("CreatedBy")
                                 .HasColumnType("char(36)");
@@ -2847,7 +2847,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                                 .HasColumnType("tinyint(1)");
 
                             b1.Property<DateTimeOffset>("JoinedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<int>("Role")
                                 .HasColumnType("int");
@@ -2859,7 +2859,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                                 .HasDefaultValue(0u);
 
                             b1.Property<DateTimeOffset?>("UpdatedAt")
-                                .HasColumnType("datetime(6)");
+                                .HasColumnType("datetime");
 
                             b1.Property<Guid?>("UpdatedBy")
                                 .HasColumnType("char(36)");

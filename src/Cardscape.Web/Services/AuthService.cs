@@ -71,7 +71,8 @@ internal static class AuthServiceJson
 public sealed class AuthService(
     IHttpClientFactory httpClientFactory,
     TokenStore tokens,
-    AuthStateProvider stateProvider)
+    AuthStateProvider stateProvider,
+    PasswordChangeGate passwordChange)
 {
     public async Task<ApiResult<UserSummaryDto>> RegisterAsync(
         string email, string displayName, string password, string? invitationToken = null,
@@ -162,6 +163,11 @@ public sealed class AuthService(
             }
 
             await tokens.SetAsync(payload.AccessToken, payload.User);
+            if (payload.MustChangePassword)
+            {
+                passwordChange.Require();
+            }
+
             stateProvider.Notify();
             return ApiResult<UserSummaryDto>.Ok(payload.User);
         }

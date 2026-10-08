@@ -163,6 +163,24 @@ public static class UserDsrAdminEndpoints
                 : DomainErrorResults.ToProblem(result.Error);
         }).Produces(StatusCodes.Status204NoContent);
 
+        group.MapPost("/", async Task<IResult> (
+            CreateUserRequest request, IMessageBus bus, CancellationToken ct) =>
+        {
+            Result<AdminAccountResult> result = await bus.InvokeAsync<Result<AdminAccountResult>>(
+                new CreateUserByAdminCommand(request.Email, request.DisplayName, request.IsAdmin, request.Language), ct);
+            return result.IsSuccess
+                ? Results.Created($"/api/admin/users/{result.Value.UserId}", result.Value)
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces<AdminAccountResult>(StatusCodes.Status201Created);
+
+        group.MapPost("/{userId:guid}/reset-password", async Task<IResult> (
+            Guid userId, ResetPasswordByAdminRequest? request, IMessageBus bus, CancellationToken ct) =>
+        {
+            Result<AdminAccountResult> result = await bus.InvokeAsync<Result<AdminAccountResult>>(
+                new ResetUserPasswordByAdminCommand(userId, request?.Language), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+        }).Produces<AdminAccountResult>(StatusCodes.Status200OK);
+
         // The administrator confirmed the address by other means.
         group.MapPost("/{userId:guid}/verify-email", async Task<IResult> (
             Guid userId, IMessageBus bus, CancellationToken ct) =>
@@ -176,3 +194,7 @@ public static class UserDsrAdminEndpoints
         return app;
     }
 }
+
+public sealed record CreateUserRequest(string Email, string DisplayName, bool IsAdmin = false, string? Language = null);
+
+public sealed record ResetPasswordByAdminRequest(string? Language = null);

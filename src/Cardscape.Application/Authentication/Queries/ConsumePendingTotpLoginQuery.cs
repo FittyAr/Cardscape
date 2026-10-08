@@ -57,6 +57,7 @@ public static class ConsumePendingTotpLoginQueryHandler
         var access = tokens.IssueAccessToken(user, ["user"]);
         return Result.Success(new AuthResponse(
             AccessToken: access,
-            User: UserSummary.From(user)));
+            User: UserSummary.From(user),
+            MustChangePassword: user.MustChangePassword));
     }
 }

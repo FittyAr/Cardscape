@@ -1,4 +1,5 @@
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.Users.Commands;
 using Cardscape.Domain.Common;
 using Wolverine;
@@ -26,6 +27,26 @@ public static class UserSelfEndpoints
         // runs the same SoftDeleteUserCommand the admin path uses,
         // so the rest of the lifecycle (30-day grace period, the
         // retention sweeper, the PII clear) is identical.
+        // Choose a new password: the regular change, and the way out of a
+        // temporary password set by an administrator. Returns a fresh token.
+        group.MapPost("/me/password", async Task<IResult> (
+            ChangePasswordRequest request,
+            ICurrentUser currentUser,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            if (currentUser.Id is null)
+            {
+                return Results.Unauthorized();
+            }
+
+            Result<AuthResponse> result = await bus.InvokeAsync<Result<AuthResponse>>(
+                new ChangeOwnPasswordCommand(currentUser.Id.Value, request.CurrentPassword, request.NewPassword), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : DomainErrorResults.ToProblem(result.Error);
+        })
+        .RequireAuthorization()
+        .Produces<AuthResponse>();
+
         group.MapDelete("/me", async Task<IResult> (
             ICurrentUser currentUser,
             IMessageBus bus,
@@ -47,3 +68,5 @@ public static class UserSelfEndpoints
         return app;
     }
 }
+
+public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);

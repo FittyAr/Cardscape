@@ -18,7 +18,7 @@ namespace Cardscape.IntegrationTests.Endpoints;
 [Collection(CardscapeApi.Name)]
 public sealed class WorkspaceMemberAdministrationTests(CardscapeWebApplicationFactory factory)
 {
-    private const string Password = "Password123!";
+    internal const string Password = "Password123!";
 
     [Fact]
     public async Task WorkspaceAdmin_ManagesMembersAndInvitations_ButNotTheOwner()

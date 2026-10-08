@@ -10,6 +10,7 @@ namespace Cardscape.Web.Services;
 public sealed class AuthTokenHandler(
     TokenStore tokens,
     AuthStateProvider stateProvider,
+    PasswordChangeGate passwordChange,
     ILogger<AuthTokenHandler> logger) : DelegatingHandler
 {
     protected override async Task<HttpResponseMessage> SendAsync(
@@ -19,7 +20,7 @@ public sealed class AuthTokenHandler(
         // unnecessary localStorage read on /login and /register.
         if (request.RequestUri is null ||
             !request.RequestUri.AbsolutePath.Contains("/api/", StringComparison.OrdinalIgnoreCase) ||
-            request.RequestUri.AbsolutePath.Contains("/api/auth/", StringComparison.OrdinalIgnoreCase))
+            IsAnonymousAuthEndpoint(request.RequestUri.AbsolutePath))
         {
             return await base.SendAsync(request, cancellationToken);
         }
@@ -34,6 +35,12 @@ public sealed class AuthTokenHandler(
         }
 
         HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Forbidden
+            && response.Headers.Contains(PasswordChangeGate.HeaderName))
+        {
+            passwordChange.Require();
+        }
 
         // BETA-AUTH-401: when the API rejects the token (401), the
         // local token is stale or belongs to a deleted user. Clear it
@@ -66,4 +73,17 @@ public sealed class AuthTokenHandler(
 
         return response;
     }
+
+    // The sign-in endpoints run before there is a session. Other
+    // /api/auth/* endpoints (me, verification, 2fa) need the token, so
+    // only these are skipped.
+    private static readonly string[] AnonymousAuthPaths =
+    [
+        "/api/auth/login", "/api/auth/register", "/api/auth/forgot-password",
+        "/api/auth/reset-password", "/api/auth/verify-email", "/api/auth/config",
+    ];
+
+    private static bool IsAnonymousAuthEndpoint(string path) =>
+        AnonymousAuthPaths.Any(anonymous => path.EndsWith(anonymous, StringComparison.OrdinalIgnoreCase)
+            || path.Contains(anonymous + "/", StringComparison.OrdinalIgnoreCase));
 }

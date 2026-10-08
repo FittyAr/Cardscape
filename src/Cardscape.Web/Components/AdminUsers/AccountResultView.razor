@@ -1,0 +1,30 @@
+@using Cardscape.Contracts.Email
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+
+@* What an administrator needs after creating an account or resetting a
+   password: either "we emailed them a link", or the temporary password to
+   hand over — shown once, never stored in the browser. *@
+
+@if (Result.TemporaryPassword is { } password)
+{
+    <RadzenAlert AlertStyle="@(Result.EmailStatus == EmailDeliveryStatus.Failed ? AlertStyle.Warning : AlertStyle.Info)"
+                 Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
+        @(Result.EmailStatus == EmailDeliveryStatus.Failed ? L["AdminAccountEmailFailed"] : L["AdminAccountNoEmail"])
+    </RadzenAlert>
+    <RadzenText Text="@L["AdminAccountTemporaryPassword", Result.Email]" TextStyle="TextStyle.Body2" class="rz-m-0" />
+    <SecretBox Secret="@password" AriaLabel="@L["AdminAccountTemporaryPasswordAria"]" />
+    <RadzenText Text="@L["AdminAccountTemporaryPasswordHint"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-m-0" />
+}
+else
+{
+    <RadzenAlert AlertStyle="AlertStyle.Success" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false"
+                 Icon="mark_email_read" class="rz-m-0">
+        @L["AdminAccountEmailSent", Result.Email]
+    </RadzenAlert>
+}
+
+@code {
+    [Parameter, EditorRequired] public AdminAccountResultDto Result { get; set; } = default!;
+}

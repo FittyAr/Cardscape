@@ -97,6 +97,11 @@ public sealed class User : AggregateRoot<UserId>
 
     public bool IsEmailVerified => EmailVerifiedAt is not null;
 
+    /// <summary>Set when an administrator created the account or reset its
+    /// password: until the user picks their own password the API only lets
+    /// them reach the sign-in and change-password endpoints.</summary>
+    public bool MustChangePassword { get; private set; }
+
     // EF Core.
     private User() { }
 
@@ -202,12 +207,24 @@ public sealed class User : AggregateRoot<UserId>
         return Result.Success();
     }
 
-    /// <summary>Replaces the stored password hash.</summary>
+    /// <summary>Replaces the stored password hash (the user chose it, so any
+    /// pending forced change is satisfied).</summary>
     public void ChangePassword(PasswordHash newHash, DateTimeOffset at)
     {
         PasswordHash = newHash;
+        MustChangePassword = false;
         UpdatedAt = at;
         AddDomainEvent(new UserPasswordChanged(Id, at));
+    }
+
+    /// <summary>An administrator sets a temporary password; the user must
+    /// replace it on their next request.</summary>
+    public void ResetPasswordByAdmin(PasswordHash temporaryHash, DateTimeOffset at)
+    {
+        PasswordHash = temporaryHash;
+        MustChangePassword = true;
+        UpdatedAt = at;
+        AddDomainEvent(new UserPasswordResetByAdmin(Id, at));
     }
 
     /// <summary>Deactivates the account. The user can no longer sign in.</summary>

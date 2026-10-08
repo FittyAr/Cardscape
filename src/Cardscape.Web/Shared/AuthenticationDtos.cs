@@ -24,4 +24,5 @@ public sealed record AuthResponseDto(
     string? AccessToken,
     UserSummaryDto User,
     bool RequiresTotp = false,
-    string? PendingTotpToken = null);
+    string? PendingTotpToken = null,
+    bool MustChangePassword = false);

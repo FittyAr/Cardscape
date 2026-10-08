@@ -1130,4 +1130,25 @@
   <data name="BoardRoleAdmin" xml:space="preserve"><value>Administrador</value></data>
   <data name="BoardRoleMember" xml:space="preserve"><value>Miembro</value></data>
   <data name="BoardRoleObserver" xml:space="preserve"><value>Observador</value></data>
+  <data name="ChangePasswordTitle" xml:space="preserve"><value>Cambiá tu contraseña</value></data>
+  <data name="ChangePasswordIntro" xml:space="preserve"><value>Elegí una contraseña nueva para tu cuenta.</value></data>
+  <data name="ChangePasswordRequiredIntro" xml:space="preserve"><value>Un administrador te asignó una contraseña temporal. Elegí la tuya para continuar.</value></data>
+  <data name="ChangePasswordTemporary" xml:space="preserve"><value>Contraseña temporal</value></data>
+  <data name="ChangePasswordCurrent" xml:space="preserve"><value>Contraseña actual</value></data>
+  <data name="ChangePasswordNew" xml:space="preserve"><value>Contraseña nueva</value></data>
+  <data name="ChangePasswordSubmit" xml:space="preserve"><value>Guardar mi contraseña</value></data>
+  <data name="ChangePasswordSaving" xml:space="preserve"><value>Guardando…</value></data>
+  <data name="ChangePasswordFailed" xml:space="preserve"><value>No se pudo cambiar la contraseña.</value></data>
+  <data name="AdminCreateUser" xml:space="preserve"><value>Nuevo usuario</value></data>
+  <data name="AdminCreateUserBlurb" xml:space="preserve"><value>La cuenta recibe una contraseña temporal que hay que cambiar en el primer ingreso. Si el correo está configurado, la persona recibe un enlace para elegir su contraseña.</value></data>
+  <data name="AdminCreateUserAdmin" xml:space="preserve"><value>Administrador de la instancia</value></data>
+  <data name="AdminCreateUserSubmit" xml:space="preserve"><value>Crear usuario</value></data>
+  <data name="AdminUsersResetPassword" xml:space="preserve"><value>Restablecer contraseña</value></data>
+  <data name="AdminUsersResetPasswordConfirm" xml:space="preserve"><value>¿Restablecer la contraseña de {0}? Su contraseña actual deja de funcionar y tiene que elegir una nueva.</value></data>
+  <data name="AdminAccountEmailSent" xml:space="preserve"><value>Le enviamos a {0} un enlace para elegir su contraseña.</value></data>
+  <data name="AdminAccountNoEmail" xml:space="preserve"><value>El correo no está configurado: compartí vos la contraseña temporal.</value></data>
+  <data name="AdminAccountEmailFailed" xml:space="preserve"><value>No se pudo enviar el correo. Compartí vos la contraseña temporal.</value></data>
+  <data name="AdminAccountTemporaryPassword" xml:space="preserve"><value>Contraseña temporal de {0}:</value></data>
+  <data name="AdminAccountTemporaryPasswordAria" xml:space="preserve"><value>Contraseña temporal</value></data>
+  <data name="AdminAccountTemporaryPasswordHint" xml:space="preserve"><value>Se muestra solo ahora. Al ingresar se le va a pedir que la reemplace.</value></data>
 </root>

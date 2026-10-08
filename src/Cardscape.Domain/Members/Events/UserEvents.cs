@@ -86,3 +86,9 @@ public sealed record UserEmailVerified(
     UserId UserId,
     EmailAddress Email,
     DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);
+
+/// <summary>Raised when an administrator sets a temporary password
+/// (account creation or reset); the user must change it.</summary>
+public sealed record UserPasswordResetByAdmin(
+    UserId UserId,
+    DateTimeOffset OccurredAt) : DomainEventBase(OccurredAt);

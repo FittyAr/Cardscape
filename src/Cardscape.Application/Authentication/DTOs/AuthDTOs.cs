@@ -25,7 +25,8 @@ public sealed record AuthResponse(
     string? AccessToken,
     UserSummary User,
     bool RequiresTotp = false,
-    string? PendingTotpToken = null);
+    string? PendingTotpToken = null,
+    bool MustChangePassword = false);
 
 /// <summary>Compact user projection returned alongside auth responses.</summary>
 public sealed record UserSummary(Guid Id, string Email, string DisplayName)

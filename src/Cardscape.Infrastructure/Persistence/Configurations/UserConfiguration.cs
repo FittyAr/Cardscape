@@ -39,6 +39,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.EmailVerificationExpiresAt);
         builder.HasIndex(x => x.EmailVerificationTokenHash);
         builder.Ignore(x => x.IsEmailVerified);
+        builder.Property(x => x.MustChangePassword).IsRequired();
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt);
         builder.Property(x => x.CreatedBy);

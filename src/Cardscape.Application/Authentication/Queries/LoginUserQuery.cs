@@ -104,7 +104,8 @@ public static class LoginUserQueryHandler
         var access = tokens.IssueAccessToken(user, ["user"]);
         return new AuthResponse(
             AccessToken: access,
-            User: UserSummary.From(user));
+            User: UserSummary.From(user),
+            MustChangePassword: user.MustChangePassword);
     }
 
     private static AuthResponse BuildChallenge(User user, string pendingToken) =>

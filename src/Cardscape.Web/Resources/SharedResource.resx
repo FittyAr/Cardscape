@@ -1130,4 +1130,25 @@
   <data name="BoardRoleAdmin" xml:space="preserve"><value>Admin</value></data>
   <data name="BoardRoleMember" xml:space="preserve"><value>Member</value></data>
   <data name="BoardRoleObserver" xml:space="preserve"><value>Observer</value></data>
+  <data name="ChangePasswordTitle" xml:space="preserve"><value>Change your password</value></data>
+  <data name="ChangePasswordIntro" xml:space="preserve"><value>Pick a new password for your account.</value></data>
+  <data name="ChangePasswordRequiredIntro" xml:space="preserve"><value>An administrator set a temporary password for you. Choose your own to continue.</value></data>
+  <data name="ChangePasswordTemporary" xml:space="preserve"><value>Temporary password</value></data>
+  <data name="ChangePasswordCurrent" xml:space="preserve"><value>Current password</value></data>
+  <data name="ChangePasswordNew" xml:space="preserve"><value>New password</value></data>
+  <data name="ChangePasswordSubmit" xml:space="preserve"><value>Save my password</value></data>
+  <data name="ChangePasswordSaving" xml:space="preserve"><value>Saving…</value></data>
+  <data name="ChangePasswordFailed" xml:space="preserve"><value>Could not change the password.</value></data>
+  <data name="AdminCreateUser" xml:space="preserve"><value>New user</value></data>
+  <data name="AdminCreateUserBlurb" xml:space="preserve"><value>The account gets a temporary password that must be changed on first sign-in. If email is configured, the person receives a link to choose their own password.</value></data>
+  <data name="AdminCreateUserAdmin" xml:space="preserve"><value>Instance administrator</value></data>
+  <data name="AdminCreateUserSubmit" xml:space="preserve"><value>Create user</value></data>
+  <data name="AdminUsersResetPassword" xml:space="preserve"><value>Reset password</value></data>
+  <data name="AdminUsersResetPasswordConfirm" xml:space="preserve"><value>Reset the password of {0}? Their current password stops working and they must choose a new one.</value></data>
+  <data name="AdminAccountEmailSent" xml:space="preserve"><value>We emailed {0} a link to choose their password.</value></data>
+  <data name="AdminAccountNoEmail" xml:space="preserve"><value>Email is not configured, so share the temporary password yourself.</value></data>
+  <data name="AdminAccountEmailFailed" xml:space="preserve"><value>The email could not be sent. Share the temporary password yourself.</value></data>
+  <data name="AdminAccountTemporaryPassword" xml:space="preserve"><value>Temporary password for {0}:</value></data>
+  <data name="AdminAccountTemporaryPasswordAria" xml:space="preserve"><value>Temporary password</value></data>
+  <data name="AdminAccountTemporaryPasswordHint" xml:space="preserve"><value>It is shown only now. They will be asked to replace it when they sign in.</value></data>
 </root>

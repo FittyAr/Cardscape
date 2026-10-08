@@ -9,6 +9,7 @@
 @using Microsoft.Extensions.Localization
 @inject IAdminUsersApiClient UsersApi
 @inject DialogService DialogService
+@inject CultureSwitcher Culture
 @inject NotificationService Notifications
 @inject AuthenticationStateProvider AuthState
 @inject IStringLocalizer<SharedResource> L
@@ -16,7 +17,12 @@
 <PageTitle>@L["AdminUsersTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
-    <PageHeader Title="@L["AdminUsersTitle"]" Subtitle="@L["AdminUsersSubtitle"]" />
+    <PageHeader Title="@L["AdminUsersTitle"]" Subtitle="@L["AdminUsersSubtitle"]">
+        <Actions>
+            <RadzenButton Text="@L["AdminCreateUser"]" Icon="person_add" ButtonStyle="ButtonStyle.Primary"
+                          Click="@OpenCreateAsync" />
+        </Actions>
+    </PageHeader>
 
     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.75rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
         <RadzenFormField Text="@L["AdminUsersSearch"]" Style="flex: 1 1 18rem;">
@@ -89,7 +95,7 @@
                     }
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersActions"]" Sortable="false" Width="11rem" TextAlign="TextAlign.End">
+            <RadzenDataGridColumn TItem="AdminUserDto" Title="@L["AdminUsersActions"]" Sortable="false" Width="13rem" TextAlign="TextAlign.End">
                 <Template Context="u">
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" JustifyContent="JustifyContent.End">
                         @if (u.IsDeleted || u.IsAnonymised)
@@ -109,6 +115,9 @@
                                               title="@L["AdminUsersVerifyEmail"]" aria-label="@L["AdminUsersVerifyEmail"]"
                                               Click="@(() => VerifyEmailAsync(u))" />
                             }
+                            <RadzenButton Icon="lock_reset" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
+                                          title="@L["AdminUsersResetPassword"]" aria-label="@L["AdminUsersResetPassword"]"
+                                          Click="@(() => ResetPasswordAsync(u))" />
                             <RadzenButton Icon="@(u.IsAdmin ? "remove_moderator" : "add_moderator")"
                                           ButtonStyle="ButtonStyle.Base" Variant="Variant.Text" Size="ButtonSize.Small"
                                           title="@(u.IsAdmin ? L["AdminUsersRevokeAdmin"] : L["AdminUsersGrantAdmin"])"
@@ -218,6 +227,41 @@
     private Task DeleteAsync(AdminUserDto user) =>
         RunAsync(L["AdminUsersDelete"], L["AdminUsersDeleteConfirm", user.DisplayName],
             () => UsersApi.SoftDeleteAsync(user.Id));
+
+    private async Task OpenCreateAsync()
+    {
+        object? created = await DialogService.OpenAsync<AdminCreateUserDialog>(
+            L["AdminCreateUser"], new Dictionary<string, object?>(),
+            new DialogOptions { Width = "480px", Height = "auto" });
+        if (created is true)
+        {
+            await FetchAsync();
+        }
+    }
+
+    private async Task ResetPasswordAsync(AdminUserDto user)
+    {
+        bool confirmed = await DialogService.Confirm(
+            L["AdminUsersResetPasswordConfirm", user.DisplayName],
+            L["AdminUsersResetPassword"],
+            new ConfirmOptions { OkButtonText = L["AdminUsersResetPassword"], CancelButtonText = L["ActionCancel"] }) ?? false;
+        if (!confirmed)
+        {
+            return;
+        }
+
+        ApiResult<AdminAccountResultDto> result = await UsersApi.ResetPasswordAsync(user.Id, Culture.CurrentCulture);
+        if (!result.HasValue)
+        {
+            Notifications.Notify(NotificationSeverity.Error, L["AdminUsersResetPassword"], result.Error ?? L["AdminUsersActionFailed"]);
+            return;
+        }
+
+        await DialogService.OpenAsync<AdminAccountResultDialog>(
+            L["AdminUsersResetPassword"],
+            new Dictionary<string, object?> { { nameof(AdminAccountResultDialog.Result), result.Value } },
+            new DialogOptions { Width = "480px", Height = "auto" });
+    }
 
     private Task VerifyEmailAsync(AdminUserDto user) =>
         RunAsync(L["AdminUsersVerifyEmail"], L["AdminUsersVerifyEmailConfirm", user.DisplayName, user.Email],

@@ -1,0 +1,91 @@
+@using Cardscape.Web.Components.AdminUsers
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IAdminUsersApiClient UsersApi
+@inject CultureSwitcher Culture
+@inject DialogService Dialog
+@inject IStringLocalizer<SharedResource> L
+
+@* Admin > Users > New user. The account gets a temporary password that must
+   be replaced on first sign-in; with SMTP the person is emailed a link to
+   choose their password instead. Closes with true when a user was created. *@
+
+@if (result is null)
+{
+    <RadzenTemplateForm TItem="NewUserModel" Data="@model" Submit="@CreateAsync">
+        <RadzenStack Gap="1rem">
+            <RadzenText Text="@L["AdminCreateUserBlurb"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary rz-m-0" />
+            <RadzenFormField Text="@L["AuthEmail"]" Component="new-user-email">
+                <RadzenTextBox @bind-Value="model.Email" Name="new-user-email" Style="width:100%" autocomplete="off" />
+            </RadzenFormField>
+            <RadzenRequiredValidator Component="new-user-email" Text="@L["AuthEmailRequired"]" />
+            <RadzenEmailValidator Component="new-user-email" Text="@L["ValidationEmail"]" />
+
+            <RadzenFormField Text="@L["AuthDisplayName"]" Component="new-user-name">
+                <RadzenTextBox @bind-Value="model.DisplayName" Name="new-user-name" Style="width:100%" autocomplete="off" />
+            </RadzenFormField>
+            <RadzenRequiredValidator Component="new-user-name" Text="@L["ValidationRequired"]" />
+
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenSwitch @bind-Value="model.IsAdmin" Name="new-user-admin" aria-label="@L["AdminCreateUserAdmin"]" />
+                <RadzenLabel Text="@L["AdminCreateUserAdmin"]" Component="new-user-admin" />
+            </RadzenStack>
+
+            @if (error is not null)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" class="rz-m-0">@error</RadzenAlert>
+            }
+
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialog.Close(false))" />
+                <RadzenButton ButtonType="ButtonType.Submit" Text="@L["AdminCreateUserSubmit"]" Icon="person_add"
+                              ButtonStyle="ButtonStyle.Primary" IsBusy="@busy" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenTemplateForm>
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        <AccountResultView Result="@result" />
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <RadzenButton Text="@L["ActionClose"]" ButtonStyle="ButtonStyle.Primary" Click="@(() => Dialog.Close(true))" />
+        </RadzenStack>
+    </RadzenStack>
+}
+
+@code {
+    private sealed class NewUserModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public bool IsAdmin { get; set; }
+    }
+
+    private readonly NewUserModel model = new();
+    private AdminAccountResultDto? result;
+    private bool busy;
+    private string? error;
+
+    private async Task CreateAsync()
+    {
+        busy = true;
+        error = null;
+        try
+        {
+            ApiResult<AdminAccountResultDto> created = await UsersApi.CreateAsync(
+                model.Email.Trim(), model.DisplayName.Trim(), model.IsAdmin, Culture.CurrentCulture);
+            if (!created.HasValue)
+            {
+                error = created.Error ?? L["AdminUsersActionFailed"];
+                return;
+            }
+
+            result = created.Value;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

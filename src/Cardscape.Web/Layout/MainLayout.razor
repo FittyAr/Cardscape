@@ -9,6 +9,7 @@
 @inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
 @inject CultureSwitcher Culture
+@inject PasswordChangeGate PasswordChange
 
 @*
   BETA-3-UI-#14 — see test-results/BETA-TEST-REPORT.md.
@@ -155,6 +156,17 @@
         _mountedCulture = Culture.CurrentCulture;
         _bodyKey = $"body-{_mountedCulture}-{Guid.NewGuid():N}";
         Culture.Changed += OnCultureChangedAsync;
+        PasswordChange.Changed += OnPasswordChangeRequired;
+        OnPasswordChangeRequired();
+    }
+
+    // An account with a temporary password may only change it.
+    private void OnPasswordChangeRequired()
+    {
+        if (PasswordChange.Required)
+        {
+            _ = InvokeAsync(() => Nav.NavigateTo("change-password"));
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -193,6 +205,7 @@
     public void Dispose()
     {
         Culture.Changed -= OnCultureChangedAsync;
+        PasswordChange.Changed -= OnPasswordChangeRequired;
     }
 
     void ToggleSidebar() => sidebarExpanded = !sidebarExpanded;

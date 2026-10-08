@@ -1967,6 +1967,9 @@ namespace Cardscape.Migrations.MySql.Migrations
                     b.Property<DateTimeOffset?>("LastLoginAt")
                         .HasColumnType("datetime");
 
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(512)

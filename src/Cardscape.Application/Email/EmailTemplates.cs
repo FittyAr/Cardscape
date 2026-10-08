@@ -109,6 +109,31 @@ public static class EmailTemplates
         return Compose(to, subject, instanceTitle, [intro], action, verifyUrl, [expiry, ignore]);
     }
 
+    public static OutboundEmail AccountCreated(
+        string to,
+        string language,
+        string instanceTitle,
+        string displayName,
+        string choosePasswordUrl,
+        TimeSpan lifetime)
+    {
+        bool es = language == "es";
+        int hours = Math.Max(1, (int)Math.Round(lifetime.TotalHours));
+
+        string subject = es
+            ? $"Tu cuenta de {instanceTitle} está lista"
+            : $"Your {instanceTitle} account is ready";
+        string intro = es
+            ? $"Hola {displayName}: un administrador te creó una cuenta en {instanceTitle} con esta dirección de correo."
+            : $"Hi {displayName}, an administrator created a {instanceTitle} account for you with this email address.";
+        string action = es ? "Elegir mi contraseña" : "Choose my password";
+        string expiry = es
+            ? $"El enlace vence en {hours} horas. Si vence, pedí uno nuevo con «¿Olvidaste tu contraseña?»."
+            : $"The link expires in {hours} hours. If it does, request a new one with \"Forgot your password?\".";
+
+        return Compose(to, subject, instanceTitle, [intro], action, choosePasswordUrl, [expiry]);
+    }
+
     public static OutboundEmail Test(string to, string language, string instanceTitle)
     {
         bool es = language == "es";

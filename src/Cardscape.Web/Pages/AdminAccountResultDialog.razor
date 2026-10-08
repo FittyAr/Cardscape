@@ -1,0 +1,18 @@
+@using Cardscape.Web.Components.AdminUsers
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject DialogService Dialog
+@inject IStringLocalizer<SharedResource> L
+
+@* Shows the outcome of a password reset done by an administrator. *@
+
+<RadzenStack Gap="1rem">
+    <AccountResultView Result="@Result" />
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+        <RadzenButton Text="@L["ActionClose"]" ButtonStyle="ButtonStyle.Primary" Click="@(() => Dialog.Close(true))" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter, EditorRequired] public AdminAccountResultDto Result { get; set; } = default!;
+}

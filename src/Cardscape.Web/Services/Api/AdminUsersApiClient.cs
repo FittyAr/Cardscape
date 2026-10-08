@@ -30,6 +30,9 @@ public interface IAdminUsersApiClient
     Task<AdminUserActionResult> SoftDeleteAsync(Guid userId, CancellationToken ct = default);
     Task<AdminUserActionResult> RestoreAsync(Guid userId, CancellationToken ct = default);
     Task<AdminUserActionResult> MarkEmailVerifiedAsync(Guid userId, CancellationToken ct = default);
+    Task<ApiResult<AdminAccountResultDto>> CreateAsync(
+        string email, string displayName, bool isAdmin, string? language, CancellationToken ct = default);
+    Task<ApiResult<AdminAccountResultDto>> ResetPasswordAsync(Guid userId, string? language, CancellationToken ct = default);
 }
 
 public sealed class AdminUsersApiClient(IHttpClientFactory http) : ApiClientBase(http), IAdminUsersApiClient
@@ -57,6 +60,22 @@ public sealed class AdminUsersApiClient(IHttpClientFactory http) : ApiClientBase
     {
         HttpResponseMessage response = await CreateClient().DeleteAsync($"api/admin/users/{userId}", ct);
         return await ReadActionAsync(response, ct);
+    }
+
+    public async Task<ApiResult<AdminAccountResultDto>> CreateAsync(
+        string email, string displayName, bool isAdmin, string? language, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
+            "api/admin/users/", new { email, displayName, isAdmin, language }, JsonOptions, ct);
+        return await ReadAsync<AdminAccountResultDto>(response, ct);
+    }
+
+    public async Task<ApiResult<AdminAccountResultDto>> ResetPasswordAsync(
+        Guid userId, string? language, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
+            $"api/admin/users/{userId}/reset-password", new { language }, JsonOptions, ct);
+        return await ReadAsync<AdminAccountResultDto>(response, ct);
     }
 
     public Task<AdminUserActionResult> MarkEmailVerifiedAsync(Guid userId, CancellationToken ct = default) =>

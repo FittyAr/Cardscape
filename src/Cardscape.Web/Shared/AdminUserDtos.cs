@@ -23,3 +23,11 @@ public sealed record AdminUserDto(
     bool IsEmailVerified = true);
 
 public sealed record AdminUserPageDto(IReadOnlyList<AdminUserDto> Items, int Total);
+
+/// <summary>Mirror of the API's AdminAccountResult (create user / reset password).
+/// <see cref="TemporaryPassword"/> is set only when the user could not be emailed a link.</summary>
+public sealed record AdminAccountResultDto(
+    Guid UserId,
+    string Email,
+    Cardscape.Contracts.Email.EmailDeliveryStatus EmailStatus,
+    string? TemporaryPassword);

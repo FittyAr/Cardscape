@@ -87,6 +87,12 @@ public sealed class JwtRevocationValidator(
                     logger.LockedOutUserJwtRejected(userId);
                     context.Fail("The account has been deactivated.");
                 }
+                else if (user is { MustChangePassword: true } && context.Principal?.Identity is ClaimsIdentity identity)
+                {
+                    // Read here, per request, so an admin reset also gates
+                    // sessions that are already open.
+                    identity.AddClaim(new Claim(Middleware.PasswordChangeRequiredMiddleware.ClaimType, "true"));
+                }
             }
         }
         catch (Exception ex)
