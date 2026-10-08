@@ -17,6 +17,10 @@ public sealed class AdminSettingsEditor(IAdminSettingsApiClient api, InstanceSet
 
     public bool IsLoaded => Draft is not null;
 
+    /// <summary>Whether the seeder is enabled on the server (saved state;
+    /// toggling the draft does not reach its endpoints until saved).</summary>
+    public bool SeederEnabled => _saved?.Seeder.Enabled == true;
+
     /// <summary>True when the draft differs from what the server has (a typed AI key counts).</summary>
     public bool HasChanges =>
         Draft is not null && _saved is not null

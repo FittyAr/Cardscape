@@ -1,12 +1,24 @@
-@* The demo-data seeder switch; the runs themselves live on the Seeder page. *@
+@* The demo-data seeder settings. The on/off switch is shown in the System
+   tab (it must stay reachable while the Seeder tab is hidden); the default
+   wipe behaviour is shown above the console in the Seeder tab. *@
 
-<SettingsCard Title="@L["SettingsSeederTitle"]" Description="@L["SettingsSeederDescription"]">
-    <SettingToggle Name="SeederEnabled" @bind-Value="Model.Enabled" Label="@L["SettingsSeederEnabled"]" />
-    <SettingToggle Name="WipeBeforeSeed" @bind-Value="Model.WipeBeforeSeed" Disabled="@(!Model.Enabled)"
-                   Label="@L["SettingsSeederWipe"]" Help="@L["SettingsSeederWipeHelp"]" />
-    <RadzenLink Path="admin/seeder" Text="@L["SettingsSeederOpen"]" Icon="arrow_forward" />
+<SettingsCard Title="@L["SettingsSeederTitle"]" Description="@(ShowEnableSwitch ? L["SettingsSeederDescription"].Value : null)">
+    @if (ShowEnableSwitch)
+    {
+        <SettingToggle Name="SeederEnabled" @bind-Value="Model.Enabled" Label="@L["SettingsSeederEnabled"]"
+                       Help="@L["SettingsSeederEnabledHelp"]" />
+    }
+    @if (ShowWipeDefault)
+    {
+        <SettingToggle Name="WipeBeforeSeed" @bind-Value="Model.WipeBeforeSeed"
+                       Label="@L["SettingsSeederWipe"]" Help="@L["SettingsSeederWipeHelp"]" />
+    }
 </SettingsCard>
 
 @code {
     [Parameter, EditorRequired] public SeederSettings Model { get; set; } = default!;
+
+    [Parameter] public bool ShowEnableSwitch { get; set; } = true;
+
+    [Parameter] public bool ShowWipeDefault { get; set; } = true;
 }

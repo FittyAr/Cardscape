@@ -2,12 +2,14 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
 @inherits Cardscape.Web.Shared.CultureReactiveComponentBase
 @using Cardscape.Contracts.Settings
+@using Cardscape.Web.Components.Seeder
 @using Cardscape.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject AdminSettingsEditor Editor
 @inject NotificationService Notify
 @inject DialogService Dialogs
 @inject IStringLocalizer<SharedResource> L
+@inject NavigationManager Nav
 
 <PageTitle>@L["NavSystemSettings"] @L["PageTitleSuffix"]</PageTitle>
 
@@ -26,7 +28,7 @@ else
     <RadzenTemplateForm TItem="SystemSettings" Data="@draft" Submit="@SaveAsync">
         <FormChangeListener Changed="@StateHasChanged" />
         <RadzenStack Gap="1rem">
-            <RadzenTabs RenderMode="TabRenderMode.Client">
+            <RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex="_selectedTab">
                 <Tabs>
                     <RadzenTabsItem Text="@L["SettingsTabGeneral"]" Icon="tune">
                         <GeneralSettingsPanel Model="@draft.General" />
@@ -43,11 +45,21 @@ else
                     <RadzenTabsItem Text="@L["SettingsTabAi"]" Icon="auto_awesome">
                         <AiSettingsPanel Model="@draft.Ai" HasUnsavedChanges="@Editor.HasChanges" />
                     </RadzenTabsItem>
-                    <RadzenTabsItem Text="@L["SettingsTabSeeder"]" Icon="database">
-                        <SeederSettingsPanel Model="@draft.Seeder" />
-                    </RadzenTabsItem>
+                    @* Only while the seeder is enabled on the server (the saved
+                       value, not the draft): its endpoints answer 404 otherwise.
+                       The on/off switch itself lives in the System tab. *@
+                    @if (Editor.SeederEnabled)
+                    {
+                        <RadzenTabsItem Text="@L["SettingsTabSeeder"]" Icon="database">
+                            <SeederSettingsPanel Model="@draft.Seeder" ShowEnableSwitch="false" />
+                            <SeederConsole />
+                        </RadzenTabsItem>
+                    }
                     <RadzenTabsItem Text="@L["SettingsTabSystem"]" Icon="monitor_heart">
-                        <SystemInfoPanel />
+                        <RadzenStack Gap="1rem">
+                            <SeederSettingsPanel Model="@draft.Seeder" ShowWipeDefault="false" />
+                            <SystemInfoPanel />
+                        </RadzenStack>
                     </RadzenTabsItem>
                 </Tabs>
             </RadzenTabs>
@@ -70,10 +82,23 @@ else
 }
 
 @code {
+    // Tab order, used to open a tab from ?tab=… (old /admin/seeder links).
+    private const int SeederTabIndex = 5;
+
+    [SupplyParameterFromQuery(Name = "tab")] public string? Tab { get; set; }
+
     private string? _loadError;
     private bool _busy;
+    private int _selectedTab;
 
-    protected override async Task OnInitializedAsync() => _loadError = await Editor.LoadAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        _loadError = await Editor.LoadAsync();
+        if (string.Equals(Tab, "seeder", StringComparison.OrdinalIgnoreCase) && Editor.SeederEnabled)
+        {
+            _selectedTab = SeederTabIndex;
+        }
+    }
 
     private Task SaveAsync() => RunAsync(Editor.SaveAsync, L["SettingsSaved"]);
 

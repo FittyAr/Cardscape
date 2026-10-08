@@ -745,9 +745,7 @@
   <data name="SearchKindLabel" xml:space="preserve"><value>Label</value></data>
   <data name="SearchKindActivity" xml:space="preserve"><value>Activity</value></data>
   <data name="SearchResultsLabel" xml:space="preserve"><value>Search results</value></data>
-  <data name="NavSeeder" xml:space="preserve"><value>Database Seeder</value></data>
   <data name="SeederTitle" xml:space="preserve"><value>Database Seeder</value></data>
-  <data name="SeederSubtitle" xml:space="preserve"><value>Seed and maintain demo/development dataset</value></data>
   <data name="SeederRun" xml:space="preserve"><value>Run Seeder</value></data>
   <data name="SeederForceReseed" xml:space="preserve"><value>Force Re-seed</value></data>
   <data name="SeederWipe" xml:space="preserve"><value>Wipe Database</value></data>
@@ -768,8 +766,6 @@
   <data name="SeederWipeConfirmTitle" xml:space="preserve"><value>Destructive action</value></data>
   <data name="SeederAlreadyRunning" xml:space="preserve"><value>A Seeder operation is already running.</value></data>
   <data name="SeederDisabled" xml:space="preserve"><value>The seeder is disabled in system configuration.</value></data>
-  <data name="SeederDisabledAlert" xml:space="preserve"><value>The database seeder is currently disabled. You can enable it in System Configuration.</value></data>
-  <data name="SeederGoToSettings" xml:space="preserve"><value>Go to System Configuration</value></data>
   <data name="WorkspacesSubtitle" xml:space="preserve"><value>Team and organization workspaces that group your boards and projects.</value></data>
   <data name="BoardsSubtitle" xml:space="preserve"><value>Kanban boards and projects to manage workflows with lists and cards.</value></data>
   <data name="HierarchyGuideTitle" xml:space="preserve"><value>Cardscape Structure: How your work is organized</value></data>
@@ -848,7 +844,7 @@
   <data name="SettingsTabNotices" xml:space="preserve"><value>Notices</value></data>
   <data name="SettingsTabLimits" xml:space="preserve"><value>Limits</value></data>
   <data name="SettingsTabAi" xml:space="preserve"><value>AI assistant</value></data>
-  <data name="SettingsTabSeeder" xml:space="preserve"><value>Demo data</value></data>
+  <data name="SettingsTabSeeder" xml:space="preserve"><value>Seeder</value></data>
   <data name="SettingsTabSystem" xml:space="preserve"><value>System</value></data>
   <data name="SettingsBrandingTitle" xml:space="preserve"><value>Branding</value></data>
   <data name="SettingsBrandingDescription" xml:space="preserve"><value>How this instance presents itself in the header, the sign-in page and the home page.</value></data>
@@ -904,9 +900,9 @@
   <data name="SettingsSeederTitle" xml:space="preserve"><value>Demo data seeder</value></data>
   <data name="SettingsSeederDescription" xml:space="preserve"><value>Fills the database with a realistic demo company. Meant for development and demos, never for production data.</value></data>
   <data name="SettingsSeederEnabled" xml:space="preserve"><value>Enable the seeder</value></data>
+  <data name="SettingsSeederEnabledHelp" xml:space="preserve"><value>Shows the Seeder tab, from which demo data can be loaded or wiped. Save to apply.</value></data>
   <data name="SettingsSeederWipe" xml:space="preserve"><value>Wipe the database before seeding by default</value></data>
   <data name="SettingsSeederWipeHelp" xml:space="preserve"><value>Deletes every row, including users, before planting the demo data.</value></data>
-  <data name="SettingsSeederOpen" xml:space="preserve"><value>Open the seeder</value></data>
   <data name="SettingsDiagnosticsTitle" xml:space="preserve"><value>Diagnostics</value></data>
   <data name="SettingsRefresh" xml:space="preserve"><value>Refresh</value></data>
   <data name="SettingsDiagVersion" xml:space="preserve"><value>Version</value></data>

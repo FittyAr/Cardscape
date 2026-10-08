@@ -745,9 +745,7 @@
   <data name="SearchKindLabel" xml:space="preserve"><value>Etiqueta</value></data>
   <data name="SearchKindActivity" xml:space="preserve"><value>Actividad</value></data>
   <data name="SearchResultsLabel" xml:space="preserve"><value>Resultados de búsqueda</value></data>
-  <data name="NavSeeder" xml:space="preserve"><value>Seeder de Datos</value></data>
   <data name="SeederTitle" xml:space="preserve"><value>Seeder de Datos</value></data>
-  <data name="SeederSubtitle" xml:space="preserve"><value>Población y mantenimiento de datos de prueba y desarrollo</value></data>
   <data name="SeederRun" xml:space="preserve"><value>Ejecutar Seeder</value></data>
   <data name="SeederForceReseed" xml:space="preserve"><value>Forzar Re-sembrado</value></data>
   <data name="SeederWipe" xml:space="preserve"><value>Limpiar Base de Datos</value></data>
@@ -768,8 +766,6 @@
   <data name="SeederWipeConfirmTitle" xml:space="preserve"><value>Acción destructiva</value></data>
   <data name="SeederAlreadyRunning" xml:space="preserve"><value>Ya hay una operación de seeder en ejecución.</value></data>
   <data name="SeederDisabled" xml:space="preserve"><value>El seeder está deshabilitado en la configuración del sistema.</value></data>
-  <data name="SeederDisabledAlert" xml:space="preserve"><value>El seeder de datos está deshabilitado en el sistema. Puede habilitarlo en la Configuración del Sistema.</value></data>
-  <data name="SeederGoToSettings" xml:space="preserve"><value>Ir a Configuración del Sistema</value></data>
   <data name="WorkspacesSubtitle" xml:space="preserve"><value>Espacios de trabajo de equipos u organizaciones que agrupan tus tableros y proyectos.</value></data>
   <data name="BoardsSubtitle" xml:space="preserve"><value>Tableros Kanban y proyectos para gestionar flujos de trabajo con listas y tarjetas.</value></data>
   <data name="HierarchyGuideTitle" xml:space="preserve"><value>Estructura de Cardscape: Cómo se organiza tu trabajo</value></data>
@@ -848,7 +844,7 @@
   <data name="SettingsTabNotices" xml:space="preserve"><value>Avisos</value></data>
   <data name="SettingsTabLimits" xml:space="preserve"><value>Límites</value></data>
   <data name="SettingsTabAi" xml:space="preserve"><value>Asistente IA</value></data>
-  <data name="SettingsTabSeeder" xml:space="preserve"><value>Datos de demo</value></data>
+  <data name="SettingsTabSeeder" xml:space="preserve"><value>Seeder</value></data>
   <data name="SettingsTabSystem" xml:space="preserve"><value>Sistema</value></data>
   <data name="SettingsBrandingTitle" xml:space="preserve"><value>Marca</value></data>
   <data name="SettingsBrandingDescription" xml:space="preserve"><value>Cómo se presenta esta instancia en la cabecera, el inicio de sesión y la página de inicio.</value></data>
@@ -904,9 +900,9 @@
   <data name="SettingsSeederTitle" xml:space="preserve"><value>Generador de datos de demo</value></data>
   <data name="SettingsSeederDescription" xml:space="preserve"><value>Llena la base con una empresa de demo realista. Para desarrollo y demos, nunca con datos de producción.</value></data>
   <data name="SettingsSeederEnabled" xml:space="preserve"><value>Activar el generador</value></data>
+  <data name="SettingsSeederEnabledHelp" xml:space="preserve"><value>Muestra la pestaña Seeder, desde donde se cargan o borran los datos de demo. Guardá para aplicar.</value></data>
   <data name="SettingsSeederWipe" xml:space="preserve"><value>Borrar la base antes de generar, por defecto</value></data>
   <data name="SettingsSeederWipeHelp" xml:space="preserve"><value>Elimina todas las filas, incluidos los usuarios, antes de cargar los datos de demo.</value></data>
-  <data name="SettingsSeederOpen" xml:space="preserve"><value>Abrir el generador</value></data>
   <data name="SettingsDiagnosticsTitle" xml:space="preserve"><value>Diagnóstico</value></data>
   <data name="SettingsRefresh" xml:space="preserve"><value>Actualizar</value></data>
   <data name="SettingsDiagVersion" xml:space="preserve"><value>Versión</value></data>
