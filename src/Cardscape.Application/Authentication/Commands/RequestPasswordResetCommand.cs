@@ -1,5 +1,9 @@
 using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Email;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Abstractions.Settings;
+using Cardscape.Application.Email;
+using Cardscape.Contracts.Settings;
 using Cardscape.Domain.Authentication.PasswordResets;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
@@ -7,10 +11,17 @@ using Wolverine;
 
 namespace Cardscape.Application.Authentication.Commands;
 
+/// <summary>
+/// Issues a password-reset token for an existing account and, when
+/// outbound email is configured, emails the reset link to it. The
+/// response never says whether the account exists.
+/// </summary>
+/// <param name="Language">The requester's UI language, used for the email; the instance default otherwise.</param>
 public sealed record RequestPasswordResetCommand(
     string Email,
     string? Ip,
-    bool IncludeTokenInResponse) : IMessage;
+    bool IncludeTokenInResponse,
+    string? Language = null) : IMessage;
 
 public sealed record PasswordResetRequestResult(
     string MaskedEmail,
@@ -30,6 +41,9 @@ public static class RequestPasswordResetCommandHandler
         IPasswordResetRepository resets,
         IClock clock,
         IUnitOfWork unitOfWork,
+        ISystemSettingsService settings,
+        IEmailSender emailSender,
+        IPublicLinkBuilder links,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(command.Email))
@@ -59,6 +73,23 @@ public static class RequestPasswordResetCommandHandler
 
         await resets.AddAsync(issue.Value, ct);
         await unitOfWork.SaveChangesAsync(ct);
+
+        SystemSettings instance = await settings.GetAsync(ct);
+        if (instance.Email.CanSend()
+            && await links.BuildAsync($"reset-password?token={Uri.EscapeDataString(cleartextToken)}", ct) is { } resetUrl)
+        {
+            OutboundEmail email = EmailTemplates.PasswordReset(
+                user.Email.Value,
+                EmailTemplates.ResolveLanguage(command.Language, instance.General.DefaultLanguage),
+                instance.General.InstanceTitle,
+                resetUrl,
+                TokenLifetime);
+
+            // Not awaited: an SMTP round trip only for existing accounts would
+            // let response times reveal which emails are registered. Failures
+            // are logged by the sender and never change the response.
+            _ = Task.Run(() => emailSender.SendAsync(email, CancellationToken.None), CancellationToken.None);
+        }
 
         return Result.Success(new PasswordResetRequestResult(
             MaskEmail(command.Email),

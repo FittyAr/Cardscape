@@ -72,7 +72,7 @@ public static class AuthEndpoints
         {
             string? ip = http.Connection.RemoteIpAddress?.ToString();
             var result = await bus.InvokeAsync<Result<PasswordResetRequestResult>>(
-                new RequestPasswordResetCommand(request.Email, ip, environment.IsDevelopment()), ct);
+                new RequestPasswordResetCommand(request.Email, ip, environment.IsDevelopment(), request.Language), ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
@@ -172,7 +172,8 @@ public static class AuthEndpoints
 }
 
 /// <summary>Body for <c>POST /api/auth/forgot-password</c>.</summary>
-public sealed record ForgotPasswordRequest(string Email);
+/// <param name="Language">UI language for the reset email (<c>en</c>/<c>es</c>); the instance default otherwise.</param>
+public sealed record ForgotPasswordRequest(string Email, string? Language = null);
 
 /// <summary>Body for <c>POST /api/auth/reset-password</c>.</summary>
 public sealed record ResetPasswordRequest(string Token, string NewPassword);

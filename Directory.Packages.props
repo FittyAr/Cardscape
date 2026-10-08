@@ -112,6 +112,8 @@
     <!-- 2FA / TOTP (OtpNet RFC 6238 + ASP.NET Core Data Protection for at-rest secret encryption). -->
     <PackageVersion Include="Otp.NET" Version="1.4.1" />
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="10.0.12" />
+    <!-- Outbound email (invitations, password resets) over SMTP. -->
+    <PackageVersion Include="MailKit" Version="4.18.0" />
     <!-- SAML 2.0 SSO (Sustainsys.Saml2 — formerly Kentor.AuthServices). -->
     <PackageVersion Include="Sustainsys.Saml2.AspNetCore2" Version="2.11.0" />
     <!-- Tests. -->

@@ -1,6 +1,7 @@
 @page "/workspaces/{WorkspaceId:guid}/members"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using System.Security.Claims
+@using Cardscape.Contracts.Email
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Microsoft.AspNetCore.Components.Authorization
@@ -50,15 +51,18 @@
                     <RadzenCard Variant="Variant.Outlined" Class="rz-mt-3">
                         <RadzenStack Gap="0.5rem">
                             <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H3" Text="@L["MembersInvitationCreated"]" />
-                            <RadzenText Text="@L["MembersInvitationSendTo", inviteModel.Email]" TextStyle="TextStyle.Body2" />
+                            <RadzenAlert AlertStyle="@EmailStatusStyle" Variant="Variant.Flat" Shade="Shade.Lighter"
+                                         AllowClose="false" class="rz-m-0">
+                                @EmailStatusText
+                            </RadzenAlert>
                             <SecretBox Secret="@issuedLink" AriaLabel="@L["MembersInvitationLink"]" />
                             <RadzenText Text="@L["MembersInvitationLinkHint"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
                             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
                                 <RadzenButton Text="@(linkCopied ? L["MembersInvitationLinkCopied"] : L["MembersInvitationCopyLink"])"
                                               Icon="@(linkCopied ? "check" : "content_copy")"
                                               ButtonStyle="ButtonStyle.Secondary" Click="@CopyLinkAsync" />
-                                <RadzenButton Text="@L["MembersInvitationSent"]" ButtonStyle="ButtonStyle.Primary"
-                                              Click="@DismissIssuedToken" />
+                                <RadzenButton Text="@(issuedEmailStatus == EmailDeliveryStatus.Sent ? L["MembersInvitationDone"] : L["MembersInvitationSent"])"
+                                              ButtonStyle="ButtonStyle.Primary" Click="@DismissIssuedToken" />
                             </RadzenStack>
                         </RadzenStack>
                     </RadzenCard>
@@ -198,6 +202,7 @@
     private string? membersError;
     private string? invitationsError;
     private string? issuedLink;
+    private EmailDeliveryStatus issuedEmailStatus;
     private bool linkCopied;
     private bool canManage;
     private Guid? pendingUserId;
@@ -278,7 +283,10 @@
                 return;
             }
 
-            issuedLink = InvitationsApi.BuildAcceptLink(Nav.BaseUri, result.Value!.CleartextToken);
+            // Prefer the link the server emailed, so both copies match.
+            WorkspaceInvitationIssuanceDto issued = result.Value!;
+            issuedLink = issued.AcceptUrl ?? InvitationsApi.BuildAcceptLink(Nav.BaseUri, issued.CleartextToken);
+            issuedEmailStatus = issued.EmailStatus;
             linkCopied = false;
             await ReloadAsync();
             // The DataGrid is data-bound to `invitations`; an
@@ -335,6 +343,20 @@
         return workspace?.OwnerId == userId
             || members?.Any(m => m.UserId == userId && m.Role == WorkspaceRole.Admin) == true;
     }
+
+    private AlertStyle EmailStatusStyle => issuedEmailStatus switch
+    {
+        EmailDeliveryStatus.Sent => AlertStyle.Success,
+        EmailDeliveryStatus.Failed => AlertStyle.Warning,
+        _ => AlertStyle.Info,
+    };
+
+    private string EmailStatusText => issuedEmailStatus switch
+    {
+        EmailDeliveryStatus.Sent => L["MembersInvitationEmailed", inviteModel.Email],
+        EmailDeliveryStatus.Failed => L["MembersInvitationEmailFailed", inviteModel.Email],
+        _ => L["MembersInvitationEmailOff", inviteModel.Email],
+    };
 
     private bool IsOwner(WorkspaceMemberDto member) => workspace?.OwnerId == member.UserId;
 

@@ -32,3 +32,6 @@ public sealed record SystemDiagnostics(
 
 /// <summary>Result of probing the configured AI endpoint.</summary>
 public sealed record AiConnectionTestResult(bool Success, string Message);
+
+/// <summary>Result of sending a test email with the saved SMTP settings.</summary>
+public sealed record EmailTestResult(bool Success, string Message);

@@ -16,6 +16,9 @@ public interface IAdminSettingsApiClient
     Task<ApiResult<SystemDiagnostics>> GetDiagnosticsAsync(CancellationToken ct = default);
 
     Task<ApiResult<AiConnectionTestResult>> TestAiAsync(CancellationToken ct = default);
+
+    /// <summary>Emails the signed-in administrator using the saved SMTP settings.</summary>
+    Task<ApiResult<EmailTestResult>> TestEmailAsync(string language, CancellationToken ct = default);
 }
 
 public sealed class AdminSettingsApiClient(IHttpClientFactory httpClientFactory)
@@ -40,4 +43,8 @@ public sealed class AdminSettingsApiClient(IHttpClientFactory httpClientFactory)
 
     public async Task<ApiResult<AiConnectionTestResult>> TestAiAsync(CancellationToken ct = default) =>
         await ReadAsync<AiConnectionTestResult>(await CreateClient().PostAsync($"{Route}/test-ai", null, ct), ct);
+
+    public async Task<ApiResult<EmailTestResult>> TestEmailAsync(string language, CancellationToken ct = default) =>
+        await ReadAsync<EmailTestResult>(
+            await CreateClient().PostAsync($"{Route}/test-email?language={Uri.EscapeDataString(language)}", null, ct), ct);
 }

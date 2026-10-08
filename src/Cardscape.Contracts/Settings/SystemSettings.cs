@@ -26,6 +26,8 @@ public sealed record SystemSettings
 
     public AiSettings Ai { get; set; } = new();
 
+    public EmailSettings Email { get; set; } = new();
+
     public SeederSettings Seeder { get; set; } = new();
 
     /// <summary>Deep copy, so an editor can change a draft without touching the saved snapshot.</summary>
@@ -36,6 +38,7 @@ public sealed record SystemSettings
         Notices = Notices with { },
         Limits = Limits with { },
         Ai = Ai with { },
+        Email = Email with { },
         Seeder = Seeder with { },
     };
 
@@ -62,6 +65,7 @@ public sealed record SystemSettings
         (nameof(Notices), Notices),
         (nameof(Limits), Limits),
         (nameof(Ai), Ai),
+        (nameof(Email), Email),
         (nameof(Seeder), Seeder),
     ];
 }
@@ -164,6 +168,89 @@ public sealed record AiSettings
 
     [Range(64, 32_768)]
     public int MaxTokens { get; set; } = 1024;
+}
+
+/// <summary>
+/// Outbound SMTP server for invitation and password-reset emails. While it
+/// is off (or incomplete) nothing is sent and invitation links are only
+/// shown to the inviter, who delivers them by hand.
+/// </summary>
+public sealed record EmailSettings : IValidatableObject
+{
+    public bool Enabled { get; set; }
+
+    [StringLength(253)]
+    public string? Host { get; set; }
+
+    [Range(1, 65_535)]
+    public int Port { get; set; } = 587;
+
+    public SmtpSecurity Security { get; set; } = SmtpSecurity.StartTls;
+
+    /// <summary>Optional; leave empty for relays that accept mail without signing in.</summary>
+    [StringLength(254)]
+    public string? Username { get; set; }
+
+    /// <summary>
+    /// Write-only, like <see cref="AiSettings.ApiKey"/>: <c>null</c> keeps the
+    /// stored password, an empty string removes it, anything else replaces it.
+    /// </summary>
+    [StringLength(1024)]
+    public string? Password { get; set; }
+
+    /// <summary>Read-only. Whether a password is stored on the server.</summary>
+    public bool HasPassword { get; set; }
+
+    [EmailAddress, StringLength(254)]
+    public string? FromAddress { get; set; }
+
+    /// <summary>Display name of the sender; the instance title when empty.</summary>
+    [StringLength(120)]
+    public string? FromName { get; set; }
+
+    /// <summary>
+    /// Public address of this instance, used to build the links inside
+    /// emails (e.g. <c>https://boards.example.com</c>). When empty the
+    /// address the request arrived on is used, which is wrong behind a
+    /// proxy that rewrites the host.
+    /// </summary>
+    [Url, StringLength(2048)]
+    public string? PublicBaseUrl { get; set; }
+
+    /// <summary>Whether enough is set to attempt delivery.</summary>
+    public bool CanSend() =>
+        Enabled && !string.IsNullOrWhiteSpace(Host) && !string.IsNullOrWhiteSpace(FromAddress);
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (!Enabled)
+        {
+            yield break;
+        }
+
+        if (string.IsNullOrWhiteSpace(Host))
+        {
+            yield return new ValidationResult("The SMTP host is required to send email.", [nameof(Host)]);
+        }
+
+        if (string.IsNullOrWhiteSpace(FromAddress))
+        {
+            yield return new ValidationResult("The sender address is required to send email.", [nameof(FromAddress)]);
+        }
+    }
+}
+
+/// <summary>How the SMTP connection is secured.</summary>
+public enum SmtpSecurity
+{
+    /// <summary>Plain connection (local relays only).</summary>
+    None = 0,
+
+    /// <summary>Upgrade with STARTTLS, usually on port 587.</summary>
+    StartTls = 1,
+
+    /// <summary>TLS from the first byte, usually on port 465.</summary>
+    SslOnConnect = 2,
 }
 
 /// <summary>Development-only demo data loader (see the Seeder page).</summary>

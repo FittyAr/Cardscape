@@ -1,3 +1,5 @@
+using Cardscape.Contracts.Email;
+
 namespace Cardscape.Web.Shared;
 
 // ── Workspace invitations (v0.5) ──────────────────────────
@@ -20,12 +22,15 @@ public sealed record WorkspaceInvitationDto(
 public sealed record WorkspaceInvitationIssuanceDto(
     Guid Id,
     Guid WorkspaceId,
-    string CleartextToken);
+    string CleartextToken,
+    string? AcceptUrl = null,
+    EmailDeliveryStatus EmailStatus = EmailDeliveryStatus.NotConfigured);
 
 public sealed record IssueWorkspaceInvitationRequestDto(
     string Email,
     WorkspaceRole Role,
-    TimeSpan? Lifetime = null);
+    TimeSpan? Lifetime = null,
+    string? Language = null);
 
 public sealed record AcceptWorkspaceInvitationRequestDto(string Token);
 

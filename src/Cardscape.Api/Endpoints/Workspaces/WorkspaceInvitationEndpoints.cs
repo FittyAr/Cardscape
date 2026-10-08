@@ -53,7 +53,7 @@ public static class WorkspaceInvitationEndpoints
         {
             var result = await bus.InvokeAsync<Result<WorkspaceInvitationIssuanceDto>>(
                 new IssueWorkspaceInvitationCommand(
-                    workspaceId, body.Email, body.Role, body.Lifetime), ct);
+                    workspaceId, body.Email, body.Role, body.Lifetime, body.Language), ct);
             return result.IsSuccess
                 ? Results.Created($"/api/workspaces/{workspaceId}/invitations/{result.Value.Id}", result.Value)
                 : DomainErrorResults.ToProblem(result.Error);
@@ -120,10 +120,12 @@ public static class WorkspaceInvitationEndpoints
         return app;
     }
 
+    /// <param name="Language">The inviter's UI language (<c>en</c>/<c>es</c>) for the invitation email.</param>
     public sealed record IssueWorkspaceInvitationBody(
         string Email,
         WorkspaceRole Role,
-        TimeSpan? Lifetime = null);
+        TimeSpan? Lifetime = null,
+        string? Language = null);
 
     public sealed record AcceptWorkspaceInvitationBody(string Token);
 }

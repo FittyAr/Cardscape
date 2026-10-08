@@ -1,3 +1,4 @@
+using System.Globalization;
 using Cardscape.Web.Shared;
 
 namespace Cardscape.Web.Services.Api;
@@ -68,7 +69,8 @@ public sealed class InvitationsApiClient(IHttpClientFactory http)
     {
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             $"api/workspaces/{workspaceId}/invitations/",
-            new IssueWorkspaceInvitationRequestDto(email, role, lifetime),
+            new IssueWorkspaceInvitationRequestDto(
+                email, role, lifetime, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName),
             JsonOptions,
             ct);
         return await ReadAsync<WorkspaceInvitationIssuanceDto>(response, ct);

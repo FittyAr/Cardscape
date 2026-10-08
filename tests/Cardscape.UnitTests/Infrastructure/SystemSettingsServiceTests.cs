@@ -108,6 +108,58 @@ public sealed class SystemSettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task SmtpPassword_IsEncryptedAtRest_NeverReturned_AndSurvivesAReload()
+    {
+        CancellationToken ct = TestContext.Current.CancellationToken;
+        using (SystemSettingsService service = CreateService())
+        {
+            SystemSettings settings = await service.GetAsync(ct);
+            settings.Email.Enabled = true;
+            settings.Email.Host = " smtp.example.test ";
+            settings.Email.FromAddress = "boards@example.test";
+            settings.Email.Password = " pass phrase ";
+
+            SystemSettings saved = (await service.UpdateAsync(settings, "admin", ct)).Value;
+
+            saved.Email.Host.Should().Be("smtp.example.test");
+            saved.Email.Password.Should().BeNull();
+            saved.Email.HasPassword.Should().BeTrue();
+            (await File.ReadAllTextAsync(SettingsFile, ct)).Should().NotContain("pass phrase");
+        }
+
+        using SystemSettingsService reloaded = CreateService();
+        (await reloaded.GetAsync(ct)).Email.HasPassword.Should().BeTrue();
+        (await reloaded.GetSmtpPasswordAsync(ct)).Should().Be(" pass phrase ", "passwords are not trimmed");
+    }
+
+    [Fact]
+    public async Task EmailDefaults_ComeFromTheSmtpStartupConfiguration()
+    {
+        using SystemSettingsService service = CreateService(new()
+        {
+            ["Smtp:Host"] = "mail.internal",
+            ["Smtp:Port"] = "2525",
+            ["Smtp:Username"] = "mailer",
+            ["Smtp:Password"] = "from-env",
+            ["Smtp:From"] = "noreply@example.test",
+        });
+        CancellationToken ct = TestContext.Current.CancellationToken;
+
+        EmailSettings email = (await service.GetAsync(ct)).Email;
+
+        email.Should().BeEquivalentTo(new
+        {
+            Enabled = true,
+            Host = "mail.internal",
+            Port = 2525,
+            Username = "mailer",
+            FromAddress = "noreply@example.test",
+            HasPassword = false,
+        });
+        (await service.GetSmtpPasswordAsync(ct)).Should().Be("from-env");
+    }
+
+    [Fact]
     public async Task ResetAsync_RestoresDefaults_AndDropsTheKey()
     {
         using SystemSettingsService service = CreateService();

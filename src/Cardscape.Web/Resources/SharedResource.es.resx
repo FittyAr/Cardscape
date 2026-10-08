@@ -222,7 +222,6 @@
   <data name="MembersEmail" xml:space="preserve"><value>Email</value></data>
   <data name="MembersRole" xml:space="preserve"><value>Rol</value></data>
   <data name="MembersInvitationCreated" xml:space="preserve"><value>Invitación creada</value></data>
-  <data name="MembersInvitationSendTo" xml:space="preserve"><value>Enviá este enlace de un solo uso a {0}.</value></data>
   <data name="MembersInvitationSent" xml:space="preserve"><value>Ya lo envié</value></data>
   <data name="MembersSend" xml:space="preserve"><value>Enviar</value></data>
   <data name="MembersCurrent" xml:space="preserve"><value>Miembros actuales</value></data>
@@ -844,6 +843,7 @@
   <data name="SettingsTabNotices" xml:space="preserve"><value>Avisos</value></data>
   <data name="SettingsTabLimits" xml:space="preserve"><value>Límites</value></data>
   <data name="SettingsTabAi" xml:space="preserve"><value>Asistente IA</value></data>
+  <data name="SettingsTabEmail" xml:space="preserve"><value>Correo</value></data>
   <data name="SettingsTabSeeder" xml:space="preserve"><value>Seeder</value></data>
   <data name="SettingsTabSystem" xml:space="preserve"><value>Sistema</value></data>
   <data name="SettingsBrandingTitle" xml:space="preserve"><value>Marca</value></data>
@@ -897,6 +897,34 @@
   <data name="SettingsAiMaxTokens" xml:space="preserve"><value>Máximo de tokens por respuesta</value></data>
   <data name="SettingsAiTest" xml:space="preserve"><value>Probar conexión</value></data>
   <data name="SettingsAiTestSaveFirst" xml:space="preserve"><value>Guardá los cambios primero; la prueba usa la configuración guardada.</value></data>
+  <data name="SettingsEmailTitle" xml:space="preserve"><value>Correo saliente (SMTP)</value></data>
+  <data name="SettingsEmailDescription" xml:space="preserve"><value>Se usa para enviar por correo las invitaciones a espacios de trabajo y los enlaces para restablecer la contraseña. Mientras esté apagado, quien invita ve el enlace y lo comparte a mano.</value></data>
+  <data name="SettingsEmailEnabled" xml:space="preserve"><value>Enviar correos</value></data>
+  <data name="SettingsEmailEnabledHelp" xml:space="preserve"><value>Requiere el servidor SMTP y la dirección del remitente.</value></data>
+  <data name="SettingsEmailHost" xml:space="preserve"><value>Servidor SMTP</value></data>
+  <data name="SettingsEmailPort" xml:space="preserve"><value>Puerto</value></data>
+  <data name="SettingsEmailSecurity" xml:space="preserve"><value>Seguridad de la conexión</value></data>
+  <data name="SettingsEmailSecurityStartTls" xml:space="preserve"><value>STARTTLS (normalmente puerto 587)</value></data>
+  <data name="SettingsEmailSecuritySsl" xml:space="preserve"><value>SSL/TLS (normalmente puerto 465)</value></data>
+  <data name="SettingsEmailSecurityNone" xml:space="preserve"><value>Ninguna (solo servidores locales)</value></data>
+  <data name="SettingsEmailUsername" xml:space="preserve"><value>Usuario</value></data>
+  <data name="SettingsEmailUsernameHelp" xml:space="preserve"><value>Dejalo vacío si el servidor no pide iniciar sesión.</value></data>
+  <data name="SettingsEmailPassword" xml:space="preserve"><value>Contraseña</value></data>
+  <data name="SettingsEmailRemovePassword" xml:space="preserve"><value>Quitar contraseña</value></data>
+  <data name="SettingsEmailPasswordKept" xml:space="preserve"><value>Hay una contraseña guardada y cifrada. Escribí una nueva para reemplazarla.</value></data>
+  <data name="SettingsEmailPasswordOptional" xml:space="preserve"><value>Solo hace falta si indicás un usuario.</value></data>
+  <data name="SettingsEmailPasswordWillBeReplaced" xml:space="preserve"><value>La contraseña guardada se va a reemplazar al guardar.</value></data>
+  <data name="SettingsEmailPasswordWillBeRemoved" xml:space="preserve"><value>La contraseña guardada se va a quitar al guardar.</value></data>
+  <data name="SettingsEmailFromAddress" xml:space="preserve"><value>Dirección del remitente</value></data>
+  <data name="SettingsEmailFromName" xml:space="preserve"><value>Nombre del remitente</value></data>
+  <data name="SettingsEmailPublicBaseUrl" xml:space="preserve"><value>Dirección pública de este sitio</value></data>
+  <data name="SettingsEmailPublicBaseUrlHelp" xml:space="preserve"><value>Se usa en los enlaces de los correos. Dejala vacía para usar la dirección por la que llegó la solicitud; completala si Cardscape está detrás de un proxy.</value></data>
+  <data name="SettingsEmailTest" xml:space="preserve"><value>Enviar correo de prueba</value></data>
+  <data name="SettingsEmailTestHint" xml:space="preserve"><value>Envía un mensaje a tu propia dirección con la configuración guardada.</value></data>
+  <data name="SettingsEmailTestSaveFirst" xml:space="preserve"><value>Guardá los cambios primero; la prueba usa la configuración guardada.</value></data>
+  <data name="SettingsEmailTestNeedsConfig" xml:space="preserve"><value>Activá el envío e indicá el servidor y el remitente para probarlo.</value></data>
+  <data name="SettingsEmailTestSent" xml:space="preserve"><value>Correo de prueba enviado a {0}. Revisá la bandeja de entrada (y la de spam).</value></data>
+  <data name="SettingsEmailTestFailed" xml:space="preserve"><value>No se pudo enviar el correo: {0}</value></data>
   <data name="SettingsSeederTitle" xml:space="preserve"><value>Generador de datos de demo</value></data>
   <data name="SettingsSeederDescription" xml:space="preserve"><value>Llena la base con una empresa de demo realista. Para desarrollo y demos, nunca con datos de producción.</value></data>
   <data name="SettingsSeederEnabled" xml:space="preserve"><value>Activar el generador</value></data>
@@ -997,6 +1025,10 @@
   <data name="MembersInvitationLinkHint" xml:space="preserve"><value>Con este enlace se puede entrar con el email invitado, aunque el registro público esté cerrado. Se muestra una sola vez.</value></data>
   <data name="MembersInvitationCopyLink" xml:space="preserve"><value>Copiar enlace</value></data>
   <data name="MembersInvitationLinkCopied" xml:space="preserve"><value>Copiado</value></data>
+  <data name="MembersInvitationEmailed" xml:space="preserve"><value>Enviamos la invitación por correo a {0}. También podés compartir este enlace.</value></data>
+  <data name="MembersInvitationEmailOff" xml:space="preserve"><value>El correo no está configurado en este sitio: enviale vos este enlace de un solo uso a {0}.</value></data>
+  <data name="MembersInvitationEmailFailed" xml:space="preserve"><value>No se pudo enviar el correo a {0}. Enviale vos este enlace de un solo uso.</value></data>
+  <data name="MembersInvitationDone" xml:space="preserve"><value>Listo</value></data>
   <data name="InvitationsAccept" xml:space="preserve"><value>Aceptar</value></data>
   <data name="InvitationsAcceptAria" xml:space="preserve"><value>Aceptar la invitación a {0}</value></data>
   <data name="RegisterInvitedTo" xml:space="preserve"><value>Te invitaron a {0}. Creá tu cuenta con {1} para unirte.</value></data>

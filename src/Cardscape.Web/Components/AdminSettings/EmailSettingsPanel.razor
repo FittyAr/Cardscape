@@ -1,0 +1,151 @@
+@using System.Globalization
+@using Cardscape.Web.Services.Api
+@inject IAdminSettingsApiClient Api
+
+@* Outbound SMTP for invitation and password-reset emails. While it is off,
+   invitation links are only shown to the inviter. *@
+
+<SettingsCard Title="@L["SettingsEmailTitle"]" Description="@L["SettingsEmailDescription"]">
+    <SettingToggle Name="EmailEnabled" @bind-Value="Model.Enabled" Label="@L["SettingsEmailEnabled"]" Help="@L["SettingsEmailEnabledHelp"]" />
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeMD="8">
+            <RadzenFormField Text="@L["SettingsEmailHost"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenTextBox Name="Host" @bind-Value="Model.Host" MaxLength="253" Placeholder="smtp.example.com" Disabled="@(!Model.Enabled)" />
+                </ChildContent>
+                <Helper>
+                    <RadzenDataAnnotationValidator Component="Host" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenFormField Text="@L["SettingsEmailPort"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenNumeric TValue="int" Name="Port" @bind-Value="Model.Port" Min="1" Max="65535" Disabled="@(!Model.Enabled)" />
+                </ChildContent>
+                <Helper>
+                    <RadzenDataAnnotationValidator Component="Port" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenFormField Text="@L["SettingsEmailSecurity"]" Style="width: 100%;">
+                <RadzenDropDown TValue="SmtpSecurity" Name="Security" @bind-Value="Model.Security" Data="@SecurityOptions"
+                                TextProperty="Label" ValueProperty="Value" Disabled="@(!Model.Enabled)" />
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenFormField Text="@L["SettingsEmailUsername"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenTextBox Name="Username" @bind-Value="Model.Username" MaxLength="254" Disabled="@(!Model.Enabled)" />
+                </ChildContent>
+                <Helper>
+                    <RadzenText Text="@L["SettingsEmailUsernameHelp"]" TextStyle="TextStyle.Caption" class="rz-m-0" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="8">
+            <RadzenFormField Text="@L["SettingsEmailPassword"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenPassword Name="SmtpPassword" @bind-Value="Model.Password" Disabled="@(!Model.Enabled)"
+                                    Placeholder="@(Model.HasPassword ? L["SettingsSecretStored"] : L["SettingsSecretNotSet"])" />
+                </ChildContent>
+                <Helper>
+                    <RadzenText Text="@PasswordStatus" TextStyle="TextStyle.Caption" class="rz-m-0" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="4" class="rz-display-flex rz-align-items-center">
+            <RadzenButton Text="@L["SettingsEmailRemovePassword"]" Icon="key_off" ButtonStyle="ButtonStyle.Light"
+                          Disabled="@(!Model.HasPassword || Model.Password == string.Empty)" Click="@(() => Model.Password = string.Empty)" />
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenFormField Text="@L["SettingsEmailFromAddress"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenTextBox Name="FromAddress" @bind-Value="Model.FromAddress" MaxLength="254" Placeholder="boards@example.com" Disabled="@(!Model.Enabled)" />
+                </ChildContent>
+                <Helper>
+                    <RadzenDataAnnotationValidator Component="FromAddress" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenFormField Text="@L["SettingsEmailFromName"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenTextBox Name="FromName" @bind-Value="Model.FromName" MaxLength="120" Placeholder="@InstanceTitle" Disabled="@(!Model.Enabled)" />
+                </ChildContent>
+                <Helper>
+                    <RadzenDataAnnotationValidator Component="FromName" />
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="@L["SettingsEmailPublicBaseUrl"]" Style="width: 100%;">
+                <ChildContent>
+                    <RadzenTextBox Name="PublicBaseUrl" @bind-Value="Model.PublicBaseUrl" MaxLength="2048" Placeholder="https://boards.example.com" />
+                </ChildContent>
+                <Helper>
+                    <RadzenStack Gap="0">
+                        <RadzenDataAnnotationValidator Component="PublicBaseUrl" />
+                        <RadzenText Text="@L["SettingsEmailPublicBaseUrlHelp"]" TextStyle="TextStyle.Caption" class="rz-m-0" />
+                    </RadzenStack>
+                </Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+        <RadzenButton Text="@L["SettingsEmailTest"]" Icon="forward_to_inbox" ButtonStyle="ButtonStyle.Secondary"
+                      IsBusy="@_testing" Disabled="@(HasUnsavedChanges || !Model.CanSend())" Click="@TestAsync" />
+        <RadzenText Text="@TestHint" TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-m-0" />
+    </RadzenStack>
+    @if (_testResult is { } result)
+    {
+        <RadzenAlert AlertStyle="@(result.Success ? AlertStyle.Success : AlertStyle.Danger)" Variant="Variant.Flat"
+                     Shade="Shade.Lighter" AllowClose="false">
+            @(result.Success ? L["SettingsEmailTestSent", result.Message] : L["SettingsEmailTestFailed", result.Message])
+        </RadzenAlert>
+    }
+</SettingsCard>
+
+@code {
+    private bool _testing;
+    private EmailTestResult? _testResult;
+
+    [Parameter, EditorRequired] public EmailSettings Model { get; set; } = default!;
+
+    /// <summary>Default sender name, shown as the placeholder of the sender name.</summary>
+    [Parameter] public string? InstanceTitle { get; set; }
+
+    /// <summary>The test runs against the saved settings, so it is offered only when nothing is pending.</summary>
+    [Parameter] public bool HasUnsavedChanges { get; set; }
+
+    private IReadOnlyList<SecurityOption> SecurityOptions =>
+    [
+        new(SmtpSecurity.StartTls, L["SettingsEmailSecurityStartTls"]),
+        new(SmtpSecurity.SslOnConnect, L["SettingsEmailSecuritySsl"]),
+        new(SmtpSecurity.None, L["SettingsEmailSecurityNone"]),
+    ];
+
+    private string PasswordStatus => Model.Password switch
+    {
+        "" => L["SettingsEmailPasswordWillBeRemoved"],
+        { Length: > 0 } => L["SettingsEmailPasswordWillBeReplaced"],
+        _ => Model.HasPassword ? L["SettingsEmailPasswordKept"] : L["SettingsEmailPasswordOptional"],
+    };
+
+    private string TestHint =>
+        HasUnsavedChanges ? L["SettingsEmailTestSaveFirst"]
+        : Model.CanSend() ? L["SettingsEmailTestHint"]
+        : L["SettingsEmailTestNeedsConfig"];
+
+    private async Task TestAsync()
+    {
+        _testing = true;
+        ApiResult<EmailTestResult> result = await Api.TestEmailAsync(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+        _testResult = result.Value ?? new EmailTestResult(false, result.Error ?? string.Empty);
+        _testing = false;
+    }
+
+    private sealed record SecurityOption(SmtpSecurity Value, string Label);
+}
