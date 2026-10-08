@@ -220,11 +220,21 @@ sections:
 | `Jwt__SigningKey` | `Jwt` | (required) | 32+ random bytes; never reuse the development value |
 | `Cardscape__DataProtection__KeyDirectory` | `Cardscape:DataProtection` | `/app/DataProtectionKeys` in Compose | must be persistent |
 | `Otel__EndpointUrl` | `Otel` | (none) | OTLP endpoint, e.g. `http://otel-collector:4317` |
-| `Smtp__Host` | `Smtp` | (none) | for outbound email |
+| `Smtp__Host` | `Smtp` | (none) | default for outbound email (see below) |
 | `Smtp__Port` | `Smtp` | `587` | |
 | `Smtp__Username` | `Smtp` | (none) | |
-| `Smtp__Password` | `Smtp` | (none) | |
+| `Smtp__Password` | `Smtp` | (none) | used while no password is stored in System settings |
 | `Smtp__From` | `Smtp` | (none) | e.g. `noreply@cardscape.example.com` |
+
+Outbound email (workspace invitations and password-reset links) is
+configured at runtime in **System settings → Email**: SMTP host, port,
+STARTTLS or SSL/TLS, credentials, sender and the public address used in
+links. The password is encrypted with Data Protection and never returned
+by the API; **Send test email** mails the signed-in administrator with the
+saved settings. The `Smtp__*` variables only seed those settings until an
+administrator saves them. Without SMTP, invitations still work: the
+inviter sees the link and shares it by hand, and the UI says whether the
+email went out.
 
 The full list is in
 [`docs/architecture/00-overview.md`](../architecture/00-overview.md)

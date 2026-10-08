@@ -176,6 +176,25 @@ public sealed class InMemoryUserRepository : InMemoryRepositoryBase<User, UserId
         return Task.FromResult(empty);
     }
 
+    public Task<IReadOnlyList<User>> ListForAdministrationAsync(
+        UserStatusFilter status, CancellationToken ct = default)
+    {
+        IReadOnlyList<User> rows = Store.Values
+            .Where(user => status switch
+            {
+                UserStatusFilter.Active => user.IsActive && !user.IsDeleted && !user.IsAnonymised,
+                UserStatusFilter.Deactivated => !user.IsActive && !user.IsDeleted && !user.IsAnonymised,
+                UserStatusFilter.Deleted => user.IsDeleted || user.IsAnonymised,
+                _ => true
+            })
+            .ToList();
+        return Task.FromResult(rows);
+    }
+
+    public Task<int> CountActiveAdminsAsync(CancellationToken ct = default) =>
+        Task.FromResult(Store.Values.Count(user =>
+            user.IsAdmin && user.IsActive && !user.IsDeleted && !user.IsAnonymised));
+
     public Task<bool> AnyAsync(CancellationToken ct = default) =>
         Task.FromResult(Store.Count > 0);
 }

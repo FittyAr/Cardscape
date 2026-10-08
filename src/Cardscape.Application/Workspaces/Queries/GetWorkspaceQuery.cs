@@ -15,6 +15,7 @@ public static class GetWorkspaceQueryHandler
     public static async Task<Result<WorkspaceDto>> HandleAsync(
         GetWorkspaceQuery query,
         IWorkspaceRepository workspaces,
+        IUserRepository users,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -30,7 +31,7 @@ public static class GetWorkspaceQueryHandler
             return Result.Failure<WorkspaceDto>(NotFound);
         }
 
-        if (!workspace.HasMember(currentUser.Id.Value))
+        if (!await WorkspaceAccess.CanViewAsync(workspace, currentUser.Id, users, cancellationToken))
         {
             return Result.Failure<WorkspaceDto>(NotMember);
         }

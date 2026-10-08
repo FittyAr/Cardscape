@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions.Authentication;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Domain.Authentication.ExternalLogins;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Members;
@@ -12,11 +13,16 @@ namespace Cardscape.Infrastructure.Authentication;
 /// none exists, falls back to email matching and (when the
 /// email is new) provisions a brand-new user with no
 /// password. The new user can later set a password from
-/// the Web UI's "Account security" page.
+/// the Web UI's "Account security" page. Provisioning honours
+/// <c>AllowPublicRegistration</c>: when registration is closed
+/// only an email with a pending workspace invitation gets an
+/// account (the invitee then accepts it from their inbox).
 /// </summary>
 public sealed class ExternalLoginService(
     IExternalLoginRepository links,
     IUserRepository users,
+    IWorkspaceInvitationRepository invitations,
+    ISystemSettingsService settings,
     IUnitOfWork unitOfWork) : IExternalLoginService
 {
     public async Task<Result<ExternalLoginResolution>> ResolveAsync(
@@ -63,7 +69,15 @@ public sealed class ExternalLoginService(
         var userByEmail = await users.FindByEmailAsync(emailResult.Value.Value, ct);
         if (userByEmail is null)
         {
-            // 2a) Brand-new user.
+            // 2a) Brand-new user — only when the instance accepts
+            // sign-ups, or this email was invited.
+            if (!await MayProvisionAsync(emailResult.Value.Value, at, ct))
+            {
+                return Result.Failure<ExternalLoginResolution>(DomainError.Forbidden(
+                    "Auth.RegistrationClosed",
+                    "Public registration is currently disabled by the administrator."));
+            }
+
             var displayNameResult = DisplayName.Create(
                 string.IsNullOrWhiteSpace(displayName) ? emailResult.Value.Value : displayName);
             if (displayNameResult.IsFailure)
@@ -123,6 +137,17 @@ public sealed class ExternalLoginService(
         return Result.Success(new ExternalLoginResolution(
             userByEmail.Id, linkResult.Value.Id, IsNewUser: false,
             userByEmail.Email.Value, userByEmail.DisplayName.Value));
+    }
+
+    private async Task<bool> MayProvisionAsync(string email, DateTimeOffset at, CancellationToken ct)
+    {
+        if ((await settings.GetAsync(ct)).Access.AllowPublicRegistration)
+        {
+            return true;
+        }
+
+        var pending = await invitations.ListPendingForEmailAsync(email, ct);
+        return pending.Any(invitation => invitation.IsActive(at));
     }
 
     public async Task<IReadOnlyList<ExternalLoginSummary>> ListForUserAsync(

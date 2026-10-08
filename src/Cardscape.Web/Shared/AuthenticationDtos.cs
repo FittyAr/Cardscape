@@ -1,7 +1,7 @@
 namespace Cardscape.Web.Shared;
 
 // ── Auth ────────────────────────────────────────────────
-public sealed record RegisterRequestDto(string Email, string DisplayName, string Password);
+public sealed record RegisterRequestDto(string Email, string DisplayName, string Password, string? InvitationToken = null);
 
 public sealed record LoginRequestDto(string Email, string Password);
 

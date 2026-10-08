@@ -104,6 +104,23 @@ public sealed class UserRepository(CardscapeDbContext db) : RepositoryBase<User,
         return workspace.Members.ToList();
     }
 
+    public async Task<IReadOnlyList<User>> ListForAdministrationAsync(
+        UserStatusFilter status, CancellationToken ct = default)
+    {
+        IQueryable<User> query = status switch
+        {
+            UserStatusFilter.Active => Set.Where(user => user.IsActive && !user.IsDeleted && !user.IsAnonymised),
+            UserStatusFilter.Deactivated => Set.Where(user => !user.IsActive && !user.IsDeleted && !user.IsAnonymised),
+            UserStatusFilter.Deleted => Set.Where(user => user.IsDeleted || user.IsAnonymised),
+            _ => Set
+        };
+
+        return await query.AsNoTracking().ToListAsync(ct);
+    }
+
+    public async Task<int> CountActiveAdminsAsync(CancellationToken ct = default) =>
+        await Set.CountAsync(user => user.IsAdmin && user.IsActive && !user.IsDeleted && !user.IsAnonymised, ct);
+
     public async Task<bool> AnyAsync(CancellationToken ct = default) =>
         await Set.AnyAsync(ct);
 }

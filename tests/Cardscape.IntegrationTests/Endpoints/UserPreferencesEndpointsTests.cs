@@ -3,7 +3,10 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Cardscape.Application.Authentication.DTOs;
 using Cardscape.Application.UserPreferences.DTOs;
+using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Domain.Members;
 using Cardscape.IntegrationTests.Fixtures;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Cardscape.IntegrationTests.Endpoints;
 
@@ -178,18 +181,17 @@ public sealed class UserPreferencesEndpointsTests
     }
 
     [Fact]
-    public async Task Get_AfterSoftDelete_Returns200WithNullBody()
+    public async Task SoftDelete_DropsThePreferencesRow_AndLocksTheTokenOut()
     {
         // The UserPreferences row is dropped by the
         // SoftDeleteUserCommandHandler as part of the
         // GDPR cascade (docs/roadmap/06-plan-radzen-themes.md
-        // commit 2). After a DSR self-delete, the GET
-        // round-trips through 200/null again (same as
-        // a fresh user) — the cascade is the same from
-        // the API's perspective.
+        // commit 2). A soft-deleted user's still-valid JWT is
+        // rejected on the next request, so the cascade is
+        // checked in the repository rather than over HTTP.
         HttpClient client = await CreateAuthenticatedClientAsync();
         string email = $"prefs-del-{Guid.NewGuid():N}@cardscape.local";
-        await RegisterUserAsync(client, email);
+        Guid userId = await RegisterUserAsync(client, email);
 
         await client.PostAsync("api/users/me/preferences", content: null, TestContext.Current.CancellationToken);
         HttpResponseMessage beforeDelete = await client.GetAsync("api/users/me/preferences", TestContext.Current.CancellationToken);
@@ -199,11 +201,13 @@ public sealed class UserPreferencesEndpointsTests
         HttpResponseMessage dsr = await client.DeleteAsync("api/users/me/", TestContext.Current.CancellationToken);
         dsr.IsSuccessStatusCode.Should().BeTrue();
 
-        // The preferences row should be gone too.
         HttpResponseMessage afterDelete = await client.GetAsync("api/users/me/preferences", TestContext.Current.CancellationToken);
-        afterDelete.StatusCode.Should().Be(HttpStatusCode.OK);
-        string? body = await afterDelete.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        body.Should().BeEmpty();
+        afterDelete.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+
+        await using AsyncServiceScope scope = _factory.Services.CreateAsyncScope();
+        IUserPreferencesRepository preferences = scope.ServiceProvider.GetRequiredService<IUserPreferencesRepository>();
+        (await preferences.GetByIdAsync(new UserId(userId), TestContext.Current.CancellationToken))
+            .Should().BeNull("the preferences row is part of the soft-delete cascade");
     }
 
     private async Task<HttpClient> CreateAuthenticatedClientAsync()
@@ -214,12 +218,13 @@ public sealed class UserPreferencesEndpointsTests
         return client;
     }
 
-    private static async Task RegisterUserAsync(HttpClient client, string email)
+    private static async Task<Guid> RegisterUserAsync(HttpClient client, string email)
     {
         RegisterRequest register = new(email, "Prefs User", "Password123!");
         HttpResponseMessage r = await client.PostAsJsonAsync("api/auth/register", register);
         r.IsSuccessStatusCode.Should().BeTrue();
         AuthResponse auth = (await r.Content.ReadFromJsonAsync<AuthResponse>())!;
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        return auth.User.Id;
     }
 }

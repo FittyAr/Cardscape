@@ -15,6 +15,7 @@ public static class ListWorkspaceInvitationsQueryHandler
         ListWorkspaceInvitationsQuery query,
         IWorkspaceInvitationRepository repository,
         IWorkspaceRepository workspaces,
+        IUserRepository users,
         ICurrentUser currentUser,
         CancellationToken cancellationToken)
     {
@@ -32,14 +33,16 @@ public static class ListWorkspaceInvitationsQueryHandler
                 "workspaces.not_found", "Workspace was not found."));
         }
 
-        if (!workspace.IsOwnedBy(currentUser.Id.Value))
+        if (!await WorkspaceAccess.CanManageMembersAsync(workspace, currentUser.Id, users, cancellationToken))
         {
             return Result.Failure<IReadOnlyList<WorkspaceInvitationDto>>(DomainError.Forbidden(
-                "workspaces.not_owner", "Only the workspace owner can list invitations."));
+                "workspaces.not_manager", "Only the workspace owner or an admin can list invitations."));
         }
 
         var rows = await repository.ListForWorkspaceAsync(
             query.WorkspaceId, query.IncludeTerminal, cancellationToken);
+        IReadOnlyDictionary<Guid, string> inviters = await InviterNames.ResolveAsync(rows, users, cancellationToken);
+
         List<WorkspaceInvitationDto> dtos = rows
             .Select(invitation => new WorkspaceInvitationDto(
                 invitation.Id.Value,
@@ -50,7 +53,8 @@ public static class ListWorkspaceInvitationsQueryHandler
                 invitation.InvitedBy,
                 invitation.InvitedAt,
                 invitation.ExpiresAt,
-                invitation.TokenPrefix))
+                invitation.TokenPrefix,
+                inviters.GetValueOrDefault(invitation.InvitedBy)))
             .ToList();
 
         return Result.Success<IReadOnlyList<WorkspaceInvitationDto>>(dtos);

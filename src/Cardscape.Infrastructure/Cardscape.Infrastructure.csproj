@@ -33,6 +33,7 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="Otp.NET" />
+    <PackageReference Include="MailKit" />
   </ItemGroup>
 
   <!--

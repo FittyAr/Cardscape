@@ -38,6 +38,12 @@ public static class SoftDeleteUserCommandHandler
             return Result.Success();
         }
 
+        Result guard = await LastAdminGuard.EnsureNotLastAdminAsync(user, users, cancellation);
+        if (guard.IsFailure)
+        {
+            return guard;
+        }
+
         // BETA-7-#4 — see test-results/BETA-TEST-REPORT.md.
         // A soft-deleted user kept their workspace + board
         // memberships, so the members list still showed a

@@ -52,6 +52,17 @@ public static class SetUserAdminCommandHandler
                 "members.user.not_found", "User not found."));
         }
 
+        if (!command.IsAdmin)
+        {
+            // Covers self-demotion too: the caller is an active
+            // admin, so when they are the only one the count is 1.
+            Result guard = await LastAdminGuard.EnsureNotLastAdminAsync(user, users, cancellation);
+            if (guard.IsFailure)
+            {
+                return guard;
+            }
+        }
+
         user.SetAdmin(command.IsAdmin, clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellation);
         return Result.Success();

@@ -1,8 +1,10 @@
 using Cardscape.Api.Extensions;
 using Cardscape.Api.Settings;
 using Cardscape.Application.Abstractions;
+using Cardscape.Application.Abstractions.Email;
 using Cardscape.Application.Abstractions.Security;
 using Cardscape.Application.Abstractions.Settings;
+using Cardscape.Application.Email;
 using Cardscape.Contracts.Settings;
 using Cardscape.Domain.Common;
 
@@ -61,6 +63,36 @@ public static class AdminSettingsEndpoints
                 : new AiConnectionTestResult(false, reply.Error.Message));
         })
         .Produces<AiConnectionTestResult>();
+
+        // Sends a real message with the saved SMTP settings to the signed-in
+        // administrator, so a green result means invitations will go out.
+        group.MapPost("/test-email", async (
+            ISystemSettingsService settings,
+            IEmailSender emailSender,
+            ICurrentUser currentUser,
+            HttpContext http,
+            CancellationToken ct) =>
+        {
+            SystemSettings instance = await settings.GetAsync(ct);
+            if (!instance.Email.CanSend())
+            {
+                return Results.Ok(new EmailTestResult(false, "Outbound email is off or incomplete: enable it and set the host and sender, then save."));
+            }
+
+            if (string.IsNullOrWhiteSpace(currentUser.Email))
+            {
+                return Results.Ok(new EmailTestResult(false, "Your account has no email address to send the test to."));
+            }
+
+            string language = EmailTemplates.ResolveLanguage(
+                http.Request.Query["language"].ToString(), instance.General.DefaultLanguage);
+            Result sent = await emailSender.SendAsync(
+                EmailTemplates.Test(currentUser.Email, language, instance.General.InstanceTitle), ct);
+            return Results.Ok(sent.IsSuccess
+                ? new EmailTestResult(true, currentUser.Email)
+                : new EmailTestResult(false, sent.Error.Message));
+        })
+        .Produces<EmailTestResult>();
 
         return app;
     }

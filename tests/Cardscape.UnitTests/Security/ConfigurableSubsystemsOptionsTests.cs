@@ -25,13 +25,14 @@ namespace Cardscape.UnitTests.Security;
 public sealed class ConfigurableSubsystemsOptionsTests
 {
     [Fact]
-    public void AdminAuthorizationOptions_Default_IsCacheEnabled()
+    public void AdminAuthorizationOptions_Default_IsLiveLookup()
     {
         AdminAuthorizationOptions options = new();
 
-        options.CacheAdminClaim.Should().BeTrue(
-            "the default posture must be the cheap, cached path; " +
-            "the strict DB-lookup path is opt-in.");
+        options.CacheAdminClaim.Should().BeFalse(
+            "the default posture must be the live DB lookup so revoking admin " +
+            "or deactivating a user from the Users page is immediate; " +
+            "the cached-claim path is opt-in.");
     }
 
     [Fact]

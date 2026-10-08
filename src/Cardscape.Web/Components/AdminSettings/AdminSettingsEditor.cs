@@ -21,10 +21,10 @@ public sealed class AdminSettingsEditor(IAdminSettingsApiClient api, InstanceSet
     /// toggling the draft does not reach its endpoints until saved).</summary>
     public bool SeederEnabled => _saved?.Seeder.Enabled == true;
 
-    /// <summary>True when the draft differs from what the server has (a typed AI key counts).</summary>
+    /// <summary>True when the draft differs from what the server has (a typed AI key or SMTP password counts).</summary>
     public bool HasChanges =>
         Draft is not null && _saved is not null
-        && (!Draft.Equals(_saved) || !string.IsNullOrEmpty(Draft.Ai.ApiKey));
+        && (!Draft.Equals(_saved) || !string.IsNullOrEmpty(Draft.Ai.ApiKey) || !string.IsNullOrEmpty(Draft.Email.Password));
 
     public Task<string?> LoadAsync() => ApplyAsync(api.GetAsync(), refreshInstance: false);
 

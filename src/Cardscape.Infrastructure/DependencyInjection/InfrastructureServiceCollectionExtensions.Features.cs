@@ -1,5 +1,6 @@
 using Cardscape.Application.Abstractions;
 using Cardscape.Application.Abstractions.Calendar;
+using Cardscape.Application.Abstractions.Email;
 using Cardscape.Application.Abstractions.Import;
 using Cardscape.Application.Abstractions.Integrations;
 using Cardscape.Application.Abstractions.Persistence;
@@ -8,6 +9,7 @@ using Cardscape.Application.Abstractions.Storage;
 using Cardscape.Infrastructure.Ai;
 using Cardscape.Infrastructure.Calendar;
 using Cardscape.Infrastructure.Configuration;
+using Cardscape.Infrastructure.Email;
 using Cardscape.Infrastructure.Export;
 using Cardscape.Infrastructure.Import;
 using Cardscape.Infrastructure.Integrations;
@@ -53,6 +55,9 @@ public static partial class InfrastructureServiceCollectionExtensions
         {
             client.Timeout = TimeSpan.FromMinutes(5);
         }).WithoutAutoRedirect();
+
+        // SMTP settings live in the admin System settings and are read per send.
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
         string storageRoot = configuration["Storage:LocalRoot"]
             ?? Path.Combine(AppContext.BaseDirectory, "storage");

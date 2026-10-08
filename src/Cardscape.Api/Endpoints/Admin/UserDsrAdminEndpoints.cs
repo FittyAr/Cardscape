@@ -1,3 +1,4 @@
+using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Users.Commands;
 using Cardscape.Application.Users.Queries;
 using Cardscape.Domain.Common;
@@ -30,6 +31,11 @@ namespace Cardscape.Api.Endpoints.Admin;
 ///   <item><c>POST /api/admin/users/{id}/restrict</c> and
 ///         <c>POST /api/admin/users/{id}/unrestrict</c> —
 ///         right to restriction (Art. 18).</item>
+///   <item><c>GET /api/admin/users</c> — the instance user
+///         directory (search, status filter, paging).</item>
+///   <item><c>POST /api/admin/users/{id}/deactivate</c> and
+///         <c>POST /api/admin/users/{id}/reactivate</c> — switch
+///         sign-in off / on without deleting.</item>
 ///   <item><c>POST /api/admin/users/{id}/admin</c> and
 ///         <c>POST /api/admin/users/{id}/unadmin</c> —
 ///         grant / revoke the system-admin role.</item>
@@ -42,6 +48,39 @@ public static class UserDsrAdminEndpoints
         var group = app.MapGroup("/api/admin/users")
             .RequireAuthorization(AdminOnlyPolicy.Name)
             .WithTags("Admin.Dsr");
+
+        group.MapGet("/", async (
+            IMessageBus bus,
+            CancellationToken ct,
+            string? search = null,
+            UserStatusFilter status = UserStatusFilter.All,
+            int page = 0,
+            int pageSize = 25) =>
+        {
+            AdminUserPageDto result = await bus.InvokeAsync<AdminUserPageDto>(
+                new ListUsersForAdminQuery(search, status, page, pageSize), ct);
+            return Results.Ok(result);
+        }).Produces<AdminUserPageDto>(StatusCodes.Status200OK);
+
+        group.MapPost("/{userId:guid}/deactivate", async Task<IResult> (
+            Guid userId, IMessageBus bus, CancellationToken ct) =>
+        {
+            Result result = await bus.InvokeAsync<Result>(
+                new SetUserActiveCommand(userId, false), ct);
+            return result.IsSuccess
+                ? Results.NoContent()
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces(StatusCodes.Status204NoContent);
+
+        group.MapPost("/{userId:guid}/reactivate", async Task<IResult> (
+            Guid userId, IMessageBus bus, CancellationToken ct) =>
+        {
+            Result result = await bus.InvokeAsync<Result>(
+                new SetUserActiveCommand(userId, true), ct);
+            return result.IsSuccess
+                ? Results.NoContent()
+                : DomainErrorResults.ToProblem(result.Error);
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapGet("/{userId:guid}/export", async Task<IResult> (
             Guid userId, IMessageBus bus, CancellationToken ct) =>

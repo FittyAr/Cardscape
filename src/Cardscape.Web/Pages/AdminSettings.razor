@@ -45,6 +45,10 @@ else
                     <RadzenTabsItem Text="@L["SettingsTabAi"]" Icon="auto_awesome">
                         <AiSettingsPanel Model="@draft.Ai" HasUnsavedChanges="@Editor.HasChanges" />
                     </RadzenTabsItem>
+                    <RadzenTabsItem Text="@L["SettingsTabEmail"]" Icon="mail">
+                        <EmailSettingsPanel Model="@draft.Email" InstanceTitle="@draft.General.InstanceTitle"
+                                            HasUnsavedChanges="@Editor.HasChanges" />
+                    </RadzenTabsItem>
                     @* Only while the seeder is enabled on the server (the saved
                        value, not the draft): its endpoints answer 404 otherwise.
                        The on/off switch itself lives in the System tab. *@
@@ -83,7 +87,7 @@ else
 
 @code {
     // Tab order, used to open a tab from ?tab=… (old /admin/seeder links).
-    private const int SeederTabIndex = 5;
+    private const int SeederTabIndex = 6;
 
     [SupplyParameterFromQuery(Name = "tab")] public string? Tab { get; set; }
 

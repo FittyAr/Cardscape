@@ -64,6 +64,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<Cardscape.Api.Settings.InstanceSettingsProvider>();
         services.AddSingleton<Cardscape.Api.Settings.RuntimeConfigurationReport>();
         services.AddScoped<Cardscape.Api.Settings.SystemDiagnosticsProbe>();
+        services.AddScoped<Cardscape.Application.Abstractions.Email.IPublicLinkBuilder, Cardscape.Api.Settings.PublicLinkBuilder>();
 
         // CORS for the Blazor WASM client. The client
         // (http(s)://localhost:5206 / 7188 in dev) needs to be

@@ -1,3 +1,5 @@
+using Cardscape.Contracts.Email;
+
 namespace Cardscape.Web.Shared;
 
 // ── Workspace invitations (v0.5) ──────────────────────────
@@ -14,16 +16,29 @@ public sealed record WorkspaceInvitationDto(
     Guid InvitedBy,
     DateTimeOffset InvitedAt,
     DateTimeOffset ExpiresAt,
-    string TokenPrefix);
+    string TokenPrefix,
+    string? InvitedByName = null);
 
 public sealed record WorkspaceInvitationIssuanceDto(
     Guid Id,
     Guid WorkspaceId,
-    string CleartextToken);
+    string CleartextToken,
+    string? AcceptUrl = null,
+    EmailDeliveryStatus EmailStatus = EmailDeliveryStatus.NotConfigured);
 
 public sealed record IssueWorkspaceInvitationRequestDto(
     string Email,
     WorkspaceRole Role,
-    TimeSpan? Lifetime = null);
+    TimeSpan? Lifetime = null,
+    string? Language = null);
 
 public sealed record AcceptWorkspaceInvitationRequestDto(string Token);
+
+/// <summary>What the accept page learns about an invitation before sign-in.</summary>
+public sealed record WorkspaceInvitationPreviewDto(
+    Guid WorkspaceId,
+    string WorkspaceName,
+    string Email,
+    WorkspaceRole Role,
+    DateTimeOffset ExpiresAt,
+    bool AccountExists);

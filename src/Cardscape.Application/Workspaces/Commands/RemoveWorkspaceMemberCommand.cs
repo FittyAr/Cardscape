@@ -16,6 +16,7 @@ public static class RemoveWorkspaceMemberCommandHandler
     public static async Task<Result<WorkspaceDto>> HandleAsync(
         RemoveWorkspaceMemberCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
+        IUserRepository users,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -29,12 +30,12 @@ public static class RemoveWorkspaceMemberCommandHandler
 
         Workspace? workspace = await workspaces.GetByIdAsync(
             new WorkspaceId(command.WorkspaceId), cancellationToken);
-        if (workspace is null)
+        if (workspace is null || workspace.IsDeleted)
         {
             return Result.Failure<WorkspaceDto>(NotFound);
         }
 
-        if (!workspace.IsOwnedBy(currentUser.Id.Value))
+        if (!await WorkspaceAccess.CanManageMembersAsync(workspace, currentUser.Id, users, cancellationToken))
         {
             return Result.Failure<WorkspaceDto>(InsufficientPermissions);
         }

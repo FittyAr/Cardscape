@@ -7,7 +7,7 @@ using Wolverine;
 
 namespace Cardscape.Application.Workspaces.Commands;
 
-public sealed record RevokeWorkspaceInvitationCommand(Guid InvitationId) : IMessage;
+public sealed record RevokeWorkspaceInvitationCommand(Guid InvitationId, Guid? WorkspaceId = null) : IMessage;
 
 public static class RevokeWorkspaceInvitationCommandHandler
 {
@@ -15,6 +15,7 @@ public static class RevokeWorkspaceInvitationCommandHandler
         RevokeWorkspaceInvitationCommand command,
         IWorkspaceRepository workspaces,
         IWorkspaceInvitationRepository repository,
+        IUserRepository users,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -28,7 +29,10 @@ public static class RevokeWorkspaceInvitationCommandHandler
 
         var invitation = await repository.GetByIdAsync(
             new WorkspaceInvitationId(command.InvitationId), cancellationToken);
-        if (invitation is null)
+        // The route scopes the invitation to a workspace; an id from
+        // another workspace is reported as missing, not forbidden.
+        if (invitation is null
+            || (command.WorkspaceId is { } scope && invitation.WorkspaceId.Value != scope))
         {
             return Result.Failure(DomainError.NotFound(
                 "workspaces.invitation.not_found", "Invitation was not found."));
@@ -36,10 +40,11 @@ public static class RevokeWorkspaceInvitationCommandHandler
 
         var workspace = await workspaces.GetWithMembersAsync(
             invitation.WorkspaceId, cancellationToken);
-        if (workspace is null || !workspace.IsOwnedBy(currentUser.Id.Value))
+        if (workspace is null
+            || !await WorkspaceAccess.CanManageMembersAsync(workspace, currentUser.Id, users, cancellationToken))
         {
             return Result.Failure(DomainError.Forbidden(
-                "workspaces.not_owner", "Only the workspace owner can revoke invitations."));
+                "workspaces.not_manager", "Only the workspace owner or an admin can revoke invitations."));
         }
 
         var result = invitation.Revoke(currentUser.Id.Value, clock.UtcNow);

@@ -6,6 +6,8 @@
 @using Cardscape.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject IInvitationsApiClient InvitationsApi
+@inject InstanceSettingsState Instance
+@inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@L["InvitationsTitle"] @L["PageTitleSuffix"]</PageTitle>
@@ -31,28 +33,53 @@ else if (invitations is not null)
         @foreach (WorkspaceInvitationDto inv in invitations)
         {
             <RadzenCard>
-                <RadzenText Text="@inv.WorkspaceName" TextStyle="TextStyle.H5" TagName="TagName.H3" />
-                <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
-                    @L["InvitationsMetadata", RoleName(inv.Role), inv.InvitedBy == Guid.Empty ? L["InvitationsSystem"] : inv.InvitedBy.ToString(), inv.ExpiresAt.LocalDateTime.ToString("d")]
-                </RadzenText>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText Text="@inv.WorkspaceName" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                        <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                            @L["InvitationsMetadata", RoleName(inv.Role), inv.InvitedBy == Guid.Empty ? L["InvitationsSystem"] : inv.InvitedByName ?? inv.InvitedBy.ToString(), inv.ExpiresAt.LocalDateTime.ToString("d")]
+                        </RadzenText>
+                    </RadzenStack>
+                    @if (CanAcceptFromInbox)
+                    {
+                        <RadzenButton Text="@L["InvitationsAccept"]" Icon="check" ButtonStyle="ButtonStyle.Primary"
+                                      IsBusy="@(acceptingId == inv.Id)" Disabled="@(acceptingId is not null)"
+                                      aria-label="@L["InvitationsAcceptAria", inv.WorkspaceName]"
+                                      Click="@(() => AcceptAsync(inv))" />
+                    }
+                </RadzenStack>
             </RadzenCard>
         }
     </RadzenStack>
-    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary rz-mt-3">
-        @L["InvitationsAcceptHint"]
-    </RadzenText>
+    @if (acceptError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" class="rz-mt-3">@acceptError</RadzenAlert>
+    }
+    @if (!CanAcceptFromInbox)
+    {
+        <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary rz-mt-3">
+            @L["InvitationsAcceptHint"]
+        </RadzenText>
+    }
 }
 
 @code {
     private IReadOnlyList<WorkspaceInvitationDto>? invitations;
     private bool loading;
     private string? error;
+    private string? acceptError;
+    private Guid? acceptingId;
+
+    // The server only accepts from the inbox (without the link's token)
+    // while public registration is closed; see AcceptWorkspaceInvitationByIdCommand.
+    private bool CanAcceptFromInbox => !Instance.Current.AllowPublicRegistration;
 
     protected override async Task OnInitializedAsync()
     {
         loading = true;
         try
         {
+            await Instance.GetAsync();
             ApiResult<IReadOnlyList<WorkspaceInvitationDto>> result = await InvitationsApi.ListPendingAsync();
             if (result.HasValue)
             {
@@ -66,6 +93,27 @@ else if (invitations is not null)
         finally
         {
             loading = false;
+        }
+    }
+
+    private async Task AcceptAsync(WorkspaceInvitationDto invitation)
+    {
+        acceptingId = invitation.Id;
+        acceptError = null;
+        try
+        {
+            ApiResult<WorkspaceDto> result = await InvitationsApi.AcceptByIdAsync(invitation.Id);
+            if (result.HasValue)
+            {
+                Nav.NavigateTo($"workspaces/{result.Value.Id}");
+                return;
+            }
+
+            acceptError = result.Error ?? L["InvitationAcceptFailed"];
+        }
+        finally
+        {
+            acceptingId = null;
         }
     }
 

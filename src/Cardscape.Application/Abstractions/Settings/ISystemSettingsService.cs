@@ -10,7 +10,7 @@ namespace Cardscape.Application.Abstractions.Settings;
 /// </summary>
 public interface ISystemSettingsService
 {
-    /// <summary>Current settings. Secrets are never included (<see cref="AiSettings.ApiKey"/> is null).</summary>
+    /// <summary>Current settings. Secrets are never included (<see cref="AiSettings.ApiKey"/> and <see cref="EmailSettings.Password"/> are null).</summary>
     Task<SystemSettings> GetAsync(CancellationToken ct = default);
 
     /// <summary>Validates and stores <paramref name="settings"/>; returns the stored (secret-free) settings.</summary>
@@ -21,4 +21,7 @@ public interface ISystemSettingsService
 
     /// <summary>The stored AI API key in clear text, for the AI client only.</summary>
     Task<string?> GetAiApiKeyAsync(CancellationToken ct = default);
+
+    /// <summary>The stored SMTP password in clear text, for the email sender only.</summary>
+    Task<string?> GetSmtpPasswordAsync(CancellationToken ct = default);
 }

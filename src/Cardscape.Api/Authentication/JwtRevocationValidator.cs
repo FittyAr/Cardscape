@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions.Persistence;
+using Cardscape.Domain.Members;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Cardscape.Api.Authentication;
@@ -19,6 +21,13 @@ namespace Cardscape.Api.Authentication;
 /// scoped; the validator lives in a singleton
 /// pipeline) so the validation query does not share
 /// state with the request that follows.
+/// </para>
+/// <para>
+/// The same lookup scope also rejects tokens whose user has
+/// since been deactivated, soft-deleted or anonymised by an
+/// administrator, so locking a user out from the Users page
+/// takes effect on their next request instead of at token
+/// expiry.
 /// </para>
 /// </summary>
 public sealed class JwtRevocationValidator(
@@ -63,6 +72,21 @@ public sealed class JwtRevocationValidator(
             {
                 logger.RevokedJwtRejected(jti);
                 context.Fail("The access token has been revoked.");
+                return;
+            }
+
+            // Only user tokens carry a user id the users table
+            // knows; any other subject is left to its own checks.
+            string? rawUserId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (Guid.TryParse(rawUserId, out Guid userId))
+            {
+                IUserRepository users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+                User? user = await users.GetByIdAsync(new UserId(userId), context.HttpContext.RequestAborted);
+                if (user is not null && (!user.IsActive || user.IsDeleted || user.IsAnonymised))
+                {
+                    logger.LockedOutUserJwtRejected(userId);
+                    context.Fail("The account has been deactivated.");
+                }
             }
         }
         catch (Exception ex)

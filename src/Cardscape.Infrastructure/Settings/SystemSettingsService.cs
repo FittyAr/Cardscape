@@ -14,9 +14,9 @@ namespace Cardscape.Infrastructure.Settings;
 /// <summary>
 /// File-backed <see cref="ISystemSettingsService"/>. The document lives in
 /// <c>{DataRoot}/system_settings.json</c>, is replaced atomically on every
-/// write and cached in memory. The AI API key is encrypted with ASP.NET
-/// Data Protection and never leaves this class except through
-/// <see cref="GetAiApiKeyAsync"/>.
+/// write and cached in memory. The AI API key and the SMTP password are
+/// encrypted with ASP.NET Data Protection and never leave this class except
+/// through <see cref="GetAiApiKeyAsync"/> and <see cref="GetSmtpPasswordAsync"/>.
 /// </summary>
 public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
 {
@@ -69,13 +69,15 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         try
         {
             StoredSettings current = await LoadUnlockedAsync(ct);
-            string? protectedKey = settings.Ai.ApiKey switch
+            StoredSettings updated = new(
+                normalized,
+                ProtectSecret(settings.Ai.ApiKey, current.ProtectedAiApiKey, trim: true),
+                DateTimeOffset.UtcNow,
+                updatedBy)
             {
-                null => current.ProtectedAiApiKey,
-                "" => null,
-                string key => _protector.Protect(key.Trim()),
+                // Passwords may legitimately start or end with spaces.
+                ProtectedSmtpPassword = ProtectSecret(settings.Email.Password, current.ProtectedSmtpPassword, trim: false),
             };
-            StoredSettings updated = new(normalized, protectedKey, DateTimeOffset.UtcNow, updatedBy);
             await SaveUnlockedAsync(updated, ct);
             InfrastructureSettingsLogMessages.SettingsUpdated(_logger, updatedBy ?? "system", normalized.General.InstanceTitle);
             return Result.Success(updated.ToPublic());
@@ -121,12 +123,40 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         }
     }
 
+    public async Task<string?> GetSmtpPasswordAsync(CancellationToken ct = default)
+    {
+        StoredSettings stored = await LoadAsync(ct);
+        if (stored.ProtectedSmtpPassword is null)
+        {
+            return string.IsNullOrEmpty(_configuration["Smtp:Password"]) ? null : _configuration["Smtp:Password"];
+        }
+
+        try
+        {
+            return _protector.Unprotect(stored.ProtectedSmtpPassword);
+        }
+        catch (CryptographicException ex)
+        {
+            InfrastructureSettingsLogMessages.SmtpPasswordUnreadable(_logger, ex);
+            return null;
+        }
+    }
+
+    /// <summary>Write-only secret semantics: null keeps, empty removes, anything else replaces.</summary>
+    private string? ProtectSecret(string? submitted, string? currentProtected, bool trim) => submitted switch
+    {
+        null => currentProtected,
+        "" => null,
+        string value => _protector.Protect(trim ? value.Trim() : value),
+    };
+
     public void Dispose() => _lock.Dispose();
 
     /// <summary>
     /// Settings for a fresh instance. Values that used to live only in
-    /// appsettings (AI endpoint, seeder switch) seed the defaults so an
-    /// upgrade keeps behaving the same until an administrator edits them.
+    /// appsettings (AI endpoint, seeder switch, <c>Smtp:*</c>) seed the
+    /// defaults so an upgrade keeps behaving the same until an administrator
+    /// edits them.
     /// </summary>
     internal SystemSettings Defaults()
     {
@@ -135,6 +165,11 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         defaults.Ai.Model = NullIfBlank(_configuration["Ai:Model"]) ?? defaults.Ai.Model;
         defaults.Seeder.Enabled = _configuration.GetValue("Cardscape:Seeder:Enabled", defaultValue: false);
         defaults.Seeder.WipeBeforeSeed = _configuration.GetValue("Cardscape:Seeder:WipeBeforeSeed", defaultValue: false);
+        defaults.Email.Host = NullIfBlank(_configuration["Smtp:Host"]);
+        defaults.Email.Port = _configuration.GetValue("Smtp:Port", defaults.Email.Port);
+        defaults.Email.Username = NullIfBlank(_configuration["Smtp:Username"]);
+        defaults.Email.FromAddress = NullIfBlank(_configuration["Smtp:From"]);
+        defaults.Email.Enabled = defaults.Email.Host is not null && defaults.Email.FromAddress is not null;
         return defaults;
     }
 
@@ -222,6 +257,13 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
         copy.Ai.Model = copy.Ai.Model?.Trim() ?? string.Empty;
         copy.Ai.ApiKey = null;
         copy.Ai.HasApiKey = false;
+        copy.Email.Host = NullIfBlank(copy.Email.Host);
+        copy.Email.Username = NullIfBlank(copy.Email.Username);
+        copy.Email.FromAddress = NullIfBlank(copy.Email.FromAddress);
+        copy.Email.FromName = NullIfBlank(copy.Email.FromName);
+        copy.Email.PublicBaseUrl = NullIfBlank(copy.Email.PublicBaseUrl);
+        copy.Email.Password = null;
+        copy.Email.HasPassword = false;
         return copy;
     }
 
@@ -237,11 +279,15 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
     {
         public int SchemaVersion { get; init; } = SystemSettingsService.SchemaVersion;
 
+        public string? ProtectedSmtpPassword { get; init; }
+
         public SystemSettings ToPublic()
         {
             SystemSettings copy = Settings.DeepCopy();
             copy.Ai.ApiKey = null;
             copy.Ai.HasApiKey = ProtectedAiApiKey is not null;
+            copy.Email.Password = null;
+            copy.Email.HasPassword = ProtectedSmtpPassword is not null;
             return copy;
         }
     }

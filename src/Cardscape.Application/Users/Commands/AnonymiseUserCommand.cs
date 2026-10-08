@@ -35,6 +35,12 @@ public static class AnonymiseUserCommandHandler
             return Result.Success();
         }
 
+        Result guard = await LastAdminGuard.EnsureNotLastAdminAsync(user, users, cancellation);
+        if (guard.IsFailure)
+        {
+            return guard;
+        }
+
         // BETA-7-#4 — see test-results/BETA-TEST-REPORT.md.
         // Anonymisation did not drop the user's workspace /
         // board memberships, so the members list kept

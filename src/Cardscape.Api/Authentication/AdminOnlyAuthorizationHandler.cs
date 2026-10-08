@@ -41,15 +41,14 @@ public sealed class AdminOnlyAuthorizationHandler(
 
         // 1) Cached path — only consulted when the operator
         //    opted in via Cardscape:Api:AdminAuthorization:
-        //    CacheAdminClaim = true (the default). When the
+        //    CacheAdminClaim = true (off by default). When the
         //    claim is present the handler trusts it as the
         //    snapshot of the user's admin status at JWT
         //    mint time and never touches the database. When
         //    CacheAdminClaim is false, this branch is
         //    skipped entirely and every check hits the
-        //    users table — that's the recommended posture
-        //    for high-compliance deployments where admin
-        //    revocation must take effect immediately.
+        //    users table, so revoking admin, deactivating or
+        //    deleting a user takes effect on the next request.
         if (options.Value.CacheAdminClaim)
         {
             Claim? cached = context.User.FindFirst(IsAdminClaim);
@@ -66,9 +65,10 @@ public sealed class AdminOnlyAuthorizationHandler(
             return;
         }
 
-        // 2) Live lookup. Used only when claim caching is
-        //    disabled. A single-row seek by primary key; the
-        //    user table is small and indexed.
+        // 2) Live lookup (the default). A single-row seek by
+        //    primary key; the user table is small and indexed.
+        //    A deactivated, deleted or anonymised admin is no
+        //    longer an admin.
         string? rawUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrWhiteSpace(rawUserId) || !Guid.TryParse(rawUserId, out Guid userIdGuid))
         {
@@ -83,7 +83,7 @@ public sealed class AdminOnlyAuthorizationHandler(
             return;
         }
 
-        if (user.IsAdmin)
+        if (user.IsAdmin && user.IsActive && !user.IsDeleted && !user.IsAnonymised)
         {
             context.Succeed(requirement);
         }

@@ -17,6 +17,7 @@ public static class ChangeWorkspaceMemberRoleCommandHandler
     public static async Task<Result<WorkspaceDto>> HandleAsync(
         ChangeWorkspaceMemberRoleCommand command,
         IRepository<Workspace, WorkspaceId> workspaces,
+        IUserRepository users,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser,
         IClock clock,
@@ -35,7 +36,7 @@ public static class ChangeWorkspaceMemberRoleCommandHandler
             return Result.Failure<WorkspaceDto>(NotFound);
         }
 
-        if (!workspace.IsOwnedBy(currentUser.Id.Value))
+        if (!await WorkspaceAccess.CanManageMembersAsync(workspace, currentUser.Id, users, cancellationToken))
         {
             return Result.Failure<WorkspaceDto>(InsufficientPermissions);
         }

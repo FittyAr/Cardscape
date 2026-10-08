@@ -76,28 +76,23 @@ public sealed class McpSubscriptionsAdminEndpointTests
     }
 
     [Fact]
-    public async Task GetSnapshot_Token_Minted_Before_Promotion_Still_Returns_403()
+    public async Task GetSnapshot_Token_Minted_Before_Promotion_Is_Admitted()
     {
-        // The is_admin claim is embedded in the JWT at
-        // mint time. A token issued before the test fixture
-        // changes the underlying user still carries
-        // is_admin=false even after the DB row is
-        // updated — the operator has to re-authenticate
-        // (or wait for the access-token TTL, default
-        // 60 minutes) to pick up the new value. This
-        // test pins the contract so the implementation
-        // never silently falls back to the DB lookup for
-        // tokens that DO carry the claim.
+        // The default posture (CacheAdminClaim=false) reads
+        // users.IsAdmin on every admin request, so a token
+        // minted before the promotion is admitted as soon as
+        // the row changes — and, symmetrically, a revoked
+        // admin is refused on the next request. The policy
+        // passes and the endpoint answers 503 because the MCP
+        // process is not running in the test host.
         (HttpClient client, string email) = await CreateRegisteredClientAsync();
         await _factory.Services.PromoteUserToAdminAsync(
             email, TestContext.Current.CancellationToken);
-        // Same client, same token — no re-login. The
-        // is_admin claim is still false because the
-        // token was minted before the promotion.
+        // Same client, same token — no re-login.
         HttpResponseMessage resp = await client.GetAsync(
             "api/admin/mcp-subscriptions/", TestContext.Current.CancellationToken);
-        resp.StatusCode.Should().Be(HttpStatusCode.Forbidden,
-            "the cached is_admin claim wins over the DB row; the operator must re-login to pick up the change");
+        resp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable,
+            "the live users-table lookup wins over the stale is_admin=false claim");
     }
 
     // ── helpers ─────────────────────────────────────────────

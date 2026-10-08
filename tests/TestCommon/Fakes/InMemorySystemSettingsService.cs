@@ -9,6 +9,7 @@ public sealed class InMemorySystemSettingsService(SystemSettings? initial = null
 {
     private SystemSettings _settings = (initial ?? new SystemSettings()).DeepCopy();
     private string? _aiApiKey = aiApiKey;
+    private string? _smtpPassword;
 
     public Task<SystemSettings> GetAsync(CancellationToken ct = default) => Task.FromResult(Public());
 
@@ -26,6 +27,12 @@ public sealed class InMemorySystemSettingsService(SystemSettings? initial = null
             "" => null,
             string key => key,
         };
+        _smtpPassword = settings.Email.Password switch
+        {
+            null => _smtpPassword,
+            "" => null,
+            string password => password,
+        };
         _settings = settings.DeepCopy();
         return Task.FromResult(Result.Success(Public()));
     }
@@ -34,16 +41,21 @@ public sealed class InMemorySystemSettingsService(SystemSettings? initial = null
     {
         _settings = new SystemSettings();
         _aiApiKey = null;
+        _smtpPassword = null;
         return Task.FromResult(Public());
     }
 
     public Task<string?> GetAiApiKeyAsync(CancellationToken ct = default) => Task.FromResult(_aiApiKey);
+
+    public Task<string?> GetSmtpPasswordAsync(CancellationToken ct = default) => Task.FromResult(_smtpPassword);
 
     private SystemSettings Public()
     {
         SystemSettings copy = _settings.DeepCopy();
         copy.Ai.ApiKey = null;
         copy.Ai.HasApiKey = _aiApiKey is not null;
+        copy.Email.Password = null;
+        copy.Email.HasPassword = _smtpPassword is not null;
         return copy;
     }
 }

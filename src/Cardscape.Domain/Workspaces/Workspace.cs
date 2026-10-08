@@ -203,6 +203,16 @@ public sealed class Workspace : AggregateRoot<WorkspaceId>
     /// <summary>True if the user is a member of the workspace.</summary>
     public bool HasMember(Guid userId) => _members.Any(m => m.UserId == userId);
 
+    /// <summary>
+    /// True if the user may manage members and invitations: the owner
+    /// or any member with the <see cref="WorkspaceRole.Admin"/> role.
+    /// The owner stays protected regardless (see <see cref="RemoveMember"/>
+    /// and <see cref="ChangeMemberRole"/>).
+    /// </summary>
+    public bool CanManageMembers(Guid userId) =>
+        IsOwnedBy(userId)
+        || _members.Any(m => m.UserId == userId && m.Role == WorkspaceRole.Admin);
+
     /// <summary>Owner-only: change the workspace's data-residency region.
     /// Emits <c>WorkspaceRegionChanged</c>. Once the deployment
     /// has a region configured, changing the region of an existing

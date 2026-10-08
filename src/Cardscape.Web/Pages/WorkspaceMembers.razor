@@ -1,12 +1,20 @@
 @page "/workspaces/{WorkspaceId:guid}/members"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Security.Claims
+@using Cardscape.Contracts.Email
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.JSInterop
 @using Cardscape.Web.Shared
 @using Cardscape.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject IWorkspacesApiClient WorkspacesApi
 @inject IInvitationsApiClient InvitationsApi
+@inject AuthenticationStateProvider AuthState
+@inject DialogService DialogService
+@inject NavigationManager Nav
+@inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@L["MembersTitle"] @L["PageTitleSuffix"]</PageTitle>
@@ -20,9 +28,9 @@
 
     <PageHeader Title="@L["MembersTitle"]"
                 Subtitle="@(workspace?.Name ?? string.Empty)"
-                Actions="@(ShowInviteButton())" />
+                Actions="@(canManage ? ShowInviteButton() : null)" />
 
-    @if (showInvite)
+    @if (showInvite && canManage)
     {
         <RadzenCard>
             <RadzenTemplateForm TItem="InviteModel" Data="@inviteModel" Submit="@SendInviteAsync">
@@ -38,15 +46,24 @@
                                     Name="invite-role" Style="width:100%" />
                 </LabeledField>
 
-                @if (issuedToken is not null)
+                @if (issuedLink is not null)
                 {
                     <RadzenCard Variant="Variant.Outlined" Class="rz-mt-3">
                         <RadzenStack Gap="0.5rem">
                             <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H3" Text="@L["MembersInvitationCreated"]" />
-                            <RadzenText Text="@L["MembersInvitationSendTo", inviteModel.Email]" TextStyle="TextStyle.Body2" />
-                            <SecretBox Secret="@issuedToken" />
-                            <RadzenButton Text="@L["MembersInvitationSent"]" ButtonStyle="ButtonStyle.Primary"
-                                          Click="@DismissIssuedToken" />
+                            <RadzenAlert AlertStyle="@EmailStatusStyle" Variant="Variant.Flat" Shade="Shade.Lighter"
+                                         AllowClose="false" class="rz-m-0">
+                                @EmailStatusText
+                            </RadzenAlert>
+                            <SecretBox Secret="@issuedLink" AriaLabel="@L["MembersInvitationLink"]" />
+                            <RadzenText Text="@L["MembersInvitationLinkHint"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary" />
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                                <RadzenButton Text="@(linkCopied ? L["MembersInvitationLinkCopied"] : L["MembersInvitationCopyLink"])"
+                                              Icon="@(linkCopied ? "check" : "content_copy")"
+                                              ButtonStyle="ButtonStyle.Secondary" Click="@CopyLinkAsync" />
+                                <RadzenButton Text="@(issuedEmailStatus == EmailDeliveryStatus.Sent ? L["MembersInvitationDone"] : L["MembersInvitationSent"])"
+                                              ButtonStyle="ButtonStyle.Primary" Click="@DismissIssuedToken" />
+                            </RadzenStack>
                         </RadzenStack>
                     </RadzenCard>
                 }
@@ -89,53 +106,86 @@
             <Columns>
                 <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="DisplayName" Title="@L["MembersName"]" />
                 <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="Email" Title="@L["MembersEmail"]" />
-                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="Role" Title="@L["MembersRole"]">
+                <RadzenDataGridColumn TItem="WorkspaceMemberDto" Property="Role" Title="@L["MembersRole"]" Width="14rem">
                     <Template Context="m">
-                        @RoleName(m.Role)
+                        @if (canManage && !IsOwner(m))
+                        {
+                            <RadzenDropDown TValue="WorkspaceRole" Value="@m.Role" Data="@Roles"
+                                            TextProperty="Label" ValueProperty="Value"
+                                            Disabled="@(pendingUserId is not null)"
+                                            aria-label="@L["MembersChangeRoleAria", m.DisplayName]"
+                                            Change="@(value => ChangeRoleAsync(m, (WorkspaceRole)value))"
+                                            Style="width:100%" />
+                        }
+                        else
+                        {
+                            @RoleName(m.Role)
+                            @if (IsOwner(m))
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L["MembersOwner"]" class="rz-ms-1" />
+                            }
+                        }
                     </Template>
                 </RadzenDataGridColumn>
+                @if (canManage)
+                {
+                    <RadzenDataGridColumn TItem="WorkspaceMemberDto" Title="" Sortable="false" Filterable="false" Width="6rem" TextAlign="TextAlign.End">
+                        <Template Context="m">
+                            @if (!IsOwner(m))
+                            {
+                                <RadzenButton Icon="person_remove" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small"
+                                              Disabled="@(pendingUserId is not null)"
+                                              title="@L["MembersRemove"]" aria-label="@L["MembersRemoveAria", m.DisplayName]"
+                                              Click="@(() => RemoveAsync(m))" />
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                }
             </Columns>
         </RadzenDataGrid>
     }
 
-    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" Text="@L["MembersPendingInvitations"]" />
+    @if (canManage)
+    {
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" Text="@L["MembersPendingInvitations"]" />
 
-    @if (invitationsError is not null)
-    {
-        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@invitationsError</RadzenAlert>
-    }
-    else if (invitations is null)
-    {
-        <LoadingState Size="LoadingSize.Section" />
-    }
-    else if (invitations.Count == 0)
-    {
-        <RadzenText Text="@L["MembersNoInvitations"]" />
-    }
-    else
-    {
-        <RadzenDataGrid TItem="WorkspaceInvitationDto" Data="@invitations" AllowSorting="true" AllowPaging="true" PageSize="20">
-            <Columns>
-                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="Email" Title="@L["MembersEmail"]" />
-                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="Role" Title="@L["MembersRole"]">
-                    <Template Context="inv">
-                        @RoleName(inv.Role)
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="ExpiresAt" Title="@L["MembersExpires"]">
-                    <Template Context="inv">
-                        @inv.ExpiresAt.LocalDateTime.ToString("d")
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="TokenPrefix" Title="@L["ScimPrefix"]" />
-                <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Title="" Sortable="false" Filterable="false" Width="120px">
-                    <Template Context="inv">
-                        <RadzenButton Text="@L["ScimRevoke"]" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
-                                      Click="@(() => RevokeAsync(inv))" />
-                    </Template>
-                </RadzenDataGridColumn>
-            </Columns>
-        </RadzenDataGrid>
+        @if (invitationsError is not null)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@invitationsError</RadzenAlert>
+        }
+        else if (invitations is null)
+        {
+            <LoadingState Size="LoadingSize.Section" />
+        }
+        else if (invitations.Count == 0)
+        {
+            <RadzenText Text="@L["MembersNoInvitations"]" />
+        }
+        else
+        {
+            <RadzenDataGrid TItem="WorkspaceInvitationDto" Data="@invitations" AllowSorting="true" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="Email" Title="@L["MembersEmail"]" />
+                    <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="Role" Title="@L["MembersRole"]">
+                        <Template Context="inv">
+                            @RoleName(inv.Role)
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="ExpiresAt" Title="@L["MembersExpires"]">
+                        <Template Context="inv">
+                            @inv.ExpiresAt.LocalDateTime.ToString("d")
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Property="TokenPrefix" Title="@L["ScimPrefix"]" />
+                    <RadzenDataGridColumn TItem="WorkspaceInvitationDto" Title="" Sortable="false" Filterable="false" Width="120px">
+                        <Template Context="inv">
+                            <RadzenButton Text="@L["ScimRevoke"]" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                          Click="@(() => RevokeAsync(inv))" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        }
     }
 </RadzenStack>
 
@@ -151,7 +201,11 @@
     private string? workspaceError;
     private string? membersError;
     private string? invitationsError;
-    private string? issuedToken;
+    private string? issuedLink;
+    private EmailDeliveryStatus issuedEmailStatus;
+    private bool linkCopied;
+    private bool canManage;
+    private Guid? pendingUserId;
     private readonly InviteModel inviteModel = new();
 
     private IReadOnlyList<RoleOption> Roles =>
@@ -176,13 +230,10 @@
     {
         var wsTask = WorkspacesApi.GetAsync(WorkspaceId);
         var membersTask = WorkspacesApi.ListMembersAsync(WorkspaceId);
-        var invitationsTask = InvitationsApi.ListForWorkspaceAsync(WorkspaceId, includeTerminal: false);
-
-        await Task.WhenAll(wsTask, membersTask, invitationsTask);
+        await Task.WhenAll(wsTask, membersTask);
 
         ApiResult<WorkspaceDto> workspaceResult = await wsTask;
         ApiResult<IReadOnlyList<WorkspaceMemberDto>> membersResult = await membersTask;
-        ApiResult<IReadOnlyList<WorkspaceInvitationDto>> invitationsResult = await invitationsTask;
 
         workspace = workspaceResult.IsSuccess ? workspaceResult.Value : null;
         workspaceError = workspaceResult.IsSuccess
@@ -194,6 +245,18 @@
             ? null
             : membersResult.Error ?? L["WorkspaceMembersLoadFailed"];
 
+        canManage = await ComputeCanManageAsync();
+        if (!canManage)
+        {
+            // Members and observers see the roster only; the server
+            // refuses the invitation list to them anyway.
+            invitations = null;
+            invitationsError = null;
+            return;
+        }
+
+        ApiResult<IReadOnlyList<WorkspaceInvitationDto>> invitationsResult =
+            await InvitationsApi.ListForWorkspaceAsync(WorkspaceId, includeTerminal: false);
         invitations = invitationsResult.IsSuccess ? invitationsResult.Value : null;
         invitationsError = invitationsResult.IsSuccess
             ? null
@@ -220,7 +283,11 @@
                 return;
             }
 
-            issuedToken = result.Value!.CleartextToken;
+            // Prefer the link the server emailed, so both copies match.
+            WorkspaceInvitationIssuanceDto issued = result.Value!;
+            issuedLink = issued.AcceptUrl ?? InvitationsApi.BuildAcceptLink(Nav.BaseUri, issued.CleartextToken);
+            issuedEmailStatus = issued.EmailStatus;
+            linkCopied = false;
             await ReloadAsync();
             // The DataGrid is data-bound to `invitations`; an
             // in-place mutation through `await ReloadAsync()`
@@ -239,14 +306,113 @@
     {
         showInvite = false;
         error = null;
-        issuedToken = null;
+        issuedLink = null;
         inviteModel.Email = string.Empty;
     }
 
     private void DismissIssuedToken()
     {
-        issuedToken = null;
+        issuedLink = null;
+        linkCopied = false;
         inviteModel.Email = string.Empty;
+    }
+
+    private async Task CopyLinkAsync()
+    {
+        if (issuedLink is not null)
+        {
+            linkCopied = await JS.InvokeAsync<bool>("cardscape.copyText", issuedLink);
+        }
+    }
+
+    // Mirrors the server rule (Workspace.CanManageMembers + the
+    // instance-admin override); the API enforces it regardless.
+    private async Task<bool> ComputeCanManageAsync()
+    {
+        AuthenticationState auth = await AuthState.GetAuthenticationStateAsync();
+        if (auth.User.FindFirst("is_admin")?.Value == "true")
+        {
+            return true;
+        }
+
+        if (!Guid.TryParse(auth.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out Guid userId))
+        {
+            return false;
+        }
+
+        return workspace?.OwnerId == userId
+            || members?.Any(m => m.UserId == userId && m.Role == WorkspaceRole.Admin) == true;
+    }
+
+    private AlertStyle EmailStatusStyle => issuedEmailStatus switch
+    {
+        EmailDeliveryStatus.Sent => AlertStyle.Success,
+        EmailDeliveryStatus.Failed => AlertStyle.Warning,
+        _ => AlertStyle.Info,
+    };
+
+    private string EmailStatusText => issuedEmailStatus switch
+    {
+        EmailDeliveryStatus.Sent => L["MembersInvitationEmailed", inviteModel.Email],
+        EmailDeliveryStatus.Failed => L["MembersInvitationEmailFailed", inviteModel.Email],
+        _ => L["MembersInvitationEmailOff", inviteModel.Email],
+    };
+
+    private bool IsOwner(WorkspaceMemberDto member) => workspace?.OwnerId == member.UserId;
+
+    private async Task ChangeRoleAsync(WorkspaceMemberDto member, WorkspaceRole role)
+    {
+        if (role == member.Role)
+        {
+            return;
+        }
+
+        pendingUserId = member.UserId;
+        error = null;
+        try
+        {
+            ApiResult<WorkspaceDto> result = await WorkspacesApi.ChangeMemberRoleAsync(WorkspaceId, member.UserId, role);
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+            }
+
+            await ReloadAsync();
+        }
+        finally
+        {
+            pendingUserId = null;
+        }
+    }
+
+    private async Task RemoveAsync(WorkspaceMemberDto member)
+    {
+        bool confirmed = await DialogService.Confirm(
+            L["MembersRemoveConfirm", member.DisplayName, workspace?.Name ?? string.Empty],
+            L["MembersRemove"],
+            new ConfirmOptions { OkButtonText = L["MembersRemove"], CancelButtonText = L["ActionCancel"] }) ?? false;
+        if (!confirmed)
+        {
+            return;
+        }
+
+        pendingUserId = member.UserId;
+        error = null;
+        try
+        {
+            ApiResult<WorkspaceDto> result = await WorkspacesApi.RemoveMemberAsync(WorkspaceId, member.UserId);
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+                return;
+            }
+
+            await ReloadAsync();
+        }
+        finally
+        {
+            pendingUserId = null;
+        }
     }
 
     private async Task RevokeAsync(WorkspaceInvitationDto inv)
