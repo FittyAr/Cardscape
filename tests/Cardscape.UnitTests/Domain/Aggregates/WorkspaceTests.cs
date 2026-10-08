@@ -431,4 +431,72 @@ public sealed class WorkspaceTests
         workspace.ChangeMemberRole(admin, WorkspaceRole.Member, At).IsSuccess.Should().BeTrue();
         workspace.CanManageMembers(admin).Should().BeFalse("a demoted admin loses management at once");
     }
+
+    [Fact]
+    public void TransferOwnership_ToAMember_MakesThemOwnerAdmin_AndKeepsThePreviousOwnerAsAdmin()
+    {
+        var ownerId = Guid.NewGuid();
+        var workspace = NewWorkspace(ownerId);
+        Guid observer = Guid.NewGuid(), actor = Guid.NewGuid();
+        workspace.AddMember(observer, WorkspaceRole.Observer, At);
+        workspace.ClearDomainEvents();
+
+        var result = workspace.TransferOwnership(observer, actor, At);
+
+        result.IsSuccess.Should().BeTrue();
+        workspace.OwnerId.Should().Be(observer);
+        workspace.IsOwnedBy(observer).Should().BeTrue();
+        workspace.IsOwnedBy(ownerId).Should().BeFalse();
+        workspace.Members.Single(m => m.UserId == observer).Role.Should().Be(WorkspaceRole.Admin);
+        workspace.Members.Single(m => m.UserId == ownerId).Role.Should().Be(WorkspaceRole.Admin);
+        workspace.Members.Should().HaveCount(2);
+        var transferred = workspace.DomainEvents.Should().ContainSingle()
+            .Which.Should().BeOfType<WorkspaceOwnershipTransferred>().Subject;
+        transferred.PreviousOwnerId.Should().Be(ownerId);
+        transferred.NewOwnerId.Should().Be(observer);
+        transferred.ActorId.Should().Be(actor);
+    }
+
+    [Fact]
+    public void TransferOwnership_MovesTheOwnerProtection_ToTheNewOwner()
+    {
+        var ownerId = Guid.NewGuid();
+        var workspace = NewWorkspace(ownerId);
+        var next = Guid.NewGuid();
+        workspace.AddMember(next, WorkspaceRole.Member, At);
+
+        workspace.TransferOwnership(next, ownerId, At).IsSuccess.Should().BeTrue();
+
+        workspace.RemoveMember(next, At).Error.Should().Be(WorkspaceErrors.CannotRemoveOwner);
+        workspace.ChangeMemberRole(next, WorkspaceRole.Member, At).IsFailure.Should().BeTrue();
+        workspace.ChangeMemberRole(ownerId, WorkspaceRole.Member, At).IsSuccess
+            .Should().BeTrue("the previous owner is an ordinary Admin now");
+    }
+
+    [Fact]
+    public void TransferOwnership_ToANonMember_Fails()
+    {
+        var ownerId = Guid.NewGuid();
+        var workspace = NewWorkspace(ownerId);
+        workspace.ClearDomainEvents();
+
+        var result = workspace.TransferOwnership(Guid.NewGuid(), ownerId, At);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("workspaces.ownership.not_member");
+        workspace.OwnerId.Should().Be(ownerId);
+        workspace.DomainEvents.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TransferOwnership_ToTheCurrentOwner_Fails()
+    {
+        var ownerId = Guid.NewGuid();
+        var workspace = NewWorkspace(ownerId);
+
+        var result = workspace.TransferOwnership(ownerId, ownerId, At);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("workspaces.ownership.same_owner");
+    }
 }

@@ -227,7 +227,7 @@
         RunAsync(L["AdminUsersRestore"], L["AdminUsersRestoreConfirm", user.DisplayName],
             () => UsersApi.RestoreAsync(user.Id));
 
-    private async Task RunAsync(string title, string message, Func<Task<ApiResult>> action)
+    private async Task RunAsync(string title, string message, Func<Task<AdminUserActionResult>> action)
     {
         bool confirmed = await DialogService.Confirm(
             message,
@@ -238,16 +238,25 @@
             return;
         }
 
-        ApiResult result = await action();
+        AdminUserActionResult result = await action();
         if (!result.IsSuccess)
         {
-            Notifications.Notify(NotificationSeverity.Error, title, result.Error ?? L["AdminUsersActionFailed"]);
+            Notifications.Notify(NotificationSeverity.Error, title, FailureMessage(result));
             return;
         }
 
         Notifications.Notify(NotificationSeverity.Success, title, L["AdminUsersActionDone"]);
         await FetchAsync();
     }
+
+    // users.owns_workspaces: the account owns workspaces other people
+    // still use; ownership has to be transferred before it can go.
+    private string FailureMessage(AdminUserActionResult result) =>
+        result.Code == AdminUserActionResult.OwnsWorkspacesCode
+            ? L["AdminUsersOwnsWorkspaces", result.Workspaces.Count > 0
+                ? string.Join(", ", result.Workspaces)
+                : L["AdminUsersOwnsWorkspacesUnknown"]]
+            : result.Error ?? L["AdminUsersActionFailed"];
 
     private string StateLabel(AdminUserDto user) => user switch
     {

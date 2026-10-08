@@ -22,6 +22,14 @@ public enum ErrorType
 /// </summary>
 public sealed record DomainError(ErrorType Type, string Code, string Message)
 {
+    /// <summary>
+    /// Optional machine-readable details for the client (for example
+    /// the names of the workspaces that block an account deletion), so
+    /// a UI can render its own localized message. The API surfaces each
+    /// entry as an extension member of the RFC 7807 problem.
+    /// </summary>
+    public IReadOnlyDictionary<string, object?>? Details { get; init; }
+
     public static DomainError Validation(string code, string message) =>
         new(ErrorType.Validation, code, message);
 

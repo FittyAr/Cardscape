@@ -37,4 +37,18 @@ public static class WorkspaceErrors
         DomainError.Forbidden(
             "workspaces.region_change_forbidden",
             "Only the workspace owner can change the workspace's region.");
+
+    /// <summary>Returned by <see cref="Cardscape.Domain.Workspaces.Workspace.TransferOwnership"/>
+    /// when the proposed new owner is not a member of the workspace.</summary>
+    public static readonly DomainError OwnershipTargetNotMember =
+        DomainError.Validation(
+            "workspaces.ownership.not_member",
+            "Ownership can only be transferred to an existing member of the workspace.");
+
+    /// <summary>Returned by <see cref="Cardscape.Domain.Workspaces.Workspace.TransferOwnership"/>
+    /// when the proposed new owner already owns the workspace.</summary>
+    public static readonly DomainError OwnershipSameOwner =
+        DomainError.Conflict(
+            "workspaces.ownership.same_owner",
+            "This user already owns the workspace.");
 }

@@ -44,6 +44,13 @@ public static class SoftDeleteUserCommandHandler
             return guard;
         }
 
+        Result ownership = await WorkspaceOwnershipGuard.EnsureNoSharedOwnedWorkspacesAsync(
+            user, workspaces, users, cancellation);
+        if (ownership.IsFailure)
+        {
+            return ownership;
+        }
+
         // BETA-7-#4 — see test-results/BETA-TEST-REPORT.md.
         // A soft-deleted user kept their workspace + board
         // memberships, so the members list still showed a
@@ -63,7 +70,11 @@ public static class SoftDeleteUserCommandHandler
                 // anonymised-but-still-resolvable owner).
                 continue;
             }
-            ws.RemoveMember(user.Id.Value, clock.UtcNow);
+
+            // ListForUserAsync reads without tracking; load the
+            // aggregate tracked so the removal is actually saved.
+            Workspace? tracked = await workspaces.GetWithMembersAsync(ws.Id, cancellation);
+            tracked?.RemoveMember(user.Id.Value, clock.UtcNow);
         }
 
         // v1.2.0 plan §3 commit 2 — drop the user's

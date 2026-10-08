@@ -1103,4 +1103,9 @@
   <data name="AdminUsersBadgeUnverified" xml:space="preserve"><value>Email not verified</value></data>
   <data name="AdminUsersVerifyEmail" xml:space="preserve"><value>Mark email as verified</value></data>
   <data name="AdminUsersVerifyEmailConfirm" xml:space="preserve"><value>Mark {1} as verified for {0}? Do this only if you confirmed the address belongs to them.</value></data>
+  <data name="MembersTransferOwnership" xml:space="preserve"><value>Transfer ownership</value></data>
+  <data name="MembersTransferOwnershipAria" xml:space="preserve"><value>Make {0} the owner of the workspace</value></data>
+  <data name="MembersTransferOwnershipConfirm" xml:space="preserve"><value>Make {0} the owner of {1}? The current owner stays in the workspace as an Admin; only the new owner (or an instance administrator) can transfer ownership again.</value></data>
+  <data name="AdminUsersOwnsWorkspaces" xml:space="preserve"><value>This account owns workspaces that other members still use: {0}. Transfer ownership of each one to another member first (Workspace › Members).</value></data>
+  <data name="AdminUsersOwnsWorkspacesUnknown" xml:space="preserve"><value>one or more workspaces</value></data>
 </root>

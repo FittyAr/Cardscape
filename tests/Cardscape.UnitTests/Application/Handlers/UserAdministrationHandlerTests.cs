@@ -75,13 +75,13 @@ public sealed class UserAdministrationHandlerTests
 
         var deactivate = await SetUserActiveCommandHandler.HandleAsync(
             new SetUserActiveCommand(bob.Id.Value, false),
-            ctx.Users, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Users, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
         deactivate.IsSuccess.Should().BeTrue();
         bob.IsActive.Should().BeFalse();
 
         var reactivate = await SetUserActiveCommandHandler.HandleAsync(
             new SetUserActiveCommand(bob.Id.Value, true),
-            ctx.Users, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Users, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
         reactivate.IsSuccess.Should().BeTrue();
         bob.IsActive.Should().BeTrue();
     }
@@ -96,7 +96,7 @@ public sealed class UserAdministrationHandlerTests
 
         var result = await SetUserActiveCommandHandler.HandleAsync(
             new SetUserActiveCommand(admin.Id.Value, false),
-            ctx.Users, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Users, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("users.self_deactivation");
@@ -113,7 +113,7 @@ public sealed class UserAdministrationHandlerTests
 
         var result = await SetUserActiveCommandHandler.HandleAsync(
             new SetUserActiveCommand(admin.Id.Value, false),
-            ctx.Users, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Users, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("users.last_admin");
@@ -130,7 +130,7 @@ public sealed class UserAdministrationHandlerTests
 
         var result = await SetUserActiveCommandHandler.HandleAsync(
             new SetUserActiveCommand(bob.Id.Value, true),
-            ctx.Users, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
+            ctx.Users, ctx.Workspaces, ctx.UnitOfWork, ctx.CurrentUser, ctx.Clock, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("users.deleted");

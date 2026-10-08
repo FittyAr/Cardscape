@@ -134,6 +134,20 @@ public static class WorkspaceEndpoints
             return result.ToOk();
         }).Produces<WorkspaceDto>();
 
+        // Hands the workspace to another member. Only the current
+        // owner or an active instance admin may do this; the previous
+        // owner stays a member with the Admin role.
+        group.MapPost("/{workspaceId:guid}/transfer-ownership", async (
+            Guid workspaceId,
+            TransferWorkspaceOwnershipRequest body,
+            IMessageBus bus,
+            CancellationToken ct) =>
+        {
+            var result = await bus.InvokeAsync<Result<WorkspaceDto>>(
+                new TransferWorkspaceOwnershipCommand(workspaceId, body.UserId), ct);
+            return result.ToOk();
+        }).Produces<WorkspaceDto>();
+
         return app;
     }
 }
