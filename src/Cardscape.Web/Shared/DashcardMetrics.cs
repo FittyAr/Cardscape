@@ -22,14 +22,23 @@ public static class DashcardMetrics
     public const int ListedCards = 5;
 
     /// <param name="unassignedLabel">Bucket label for cards without a member / label.</param>
+    /// <param name="filter">Optional widget scope (list, label, person); null counts the whole board.</param>
     public static DashcardResult Compute(
         DashcardKind kind,
         IReadOnlyList<CardSummaryDto> cards,
         IReadOnlyList<BoardListDto> lists,
         DateTimeOffset now,
-        string unassignedLabel)
+        string unassignedLabel,
+        DashcardFilter? filter = null)
     {
-        List<CardSummaryDto> open = cards.Where(card => !card.IsCompleted && !card.IsArchived).ToList();
+        filter ??= DashcardFilter.None;
+        List<CardSummaryDto> open = cards
+            .Where(card => !card.IsCompleted && !card.IsArchived && filter.Matches(card))
+            .ToList();
+        if (filter.ListId is { } listId)
+        {
+            lists = lists.Where(list => list.Id == listId).ToList();
+        }
         return kind switch
         {
             DashcardKind.OverdueCount => Dated(open.Where(card => card.DueDate < now)),

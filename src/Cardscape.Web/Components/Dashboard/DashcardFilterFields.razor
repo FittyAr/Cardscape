@@ -1,0 +1,38 @@
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+
+@* The optional scope of a dashboard widget: list, label and person. Each
+   picker can be cleared; an empty picker means "the whole board". Shared
+   by the create form and the per-widget filter editor. *@
+
+<div class="cs-dash-filter-fields">
+    <LabeledField Text="@L["DashboardFilterList"]" Component="@($"{IdPrefix}-list")">
+        <RadzenDropDown @bind-Value="Model.ListId" Data="@Lists" TextProperty="Name" ValueProperty="Id"
+                        Name="@($"{IdPrefix}-list")" AllowClear="true" Placeholder="@L["DashboardFilterAny"]"
+                        Style="width:100%" />
+    </LabeledField>
+    <LabeledField Text="@L["DashboardFilterLabel"]" Component="@($"{IdPrefix}-label")">
+        <RadzenDropDown @bind-Value="Model.LabelId" Data="@Labels" TextProperty="Name" ValueProperty="Id"
+                        Name="@($"{IdPrefix}-label")" AllowClear="true" Placeholder="@L["DashboardFilterAny"]"
+                        Style="width:100%" />
+    </LabeledField>
+    <LabeledField Text="@L["DashboardFilterMember"]" Component="@($"{IdPrefix}-member")">
+        <RadzenDropDown @bind-Value="Model.MemberId" Data="@Members" TextProperty="DisplayName" ValueProperty="UserId"
+                        Name="@($"{IdPrefix}-member")" AllowClear="true" AllowFiltering="true"
+                        Placeholder="@L["DashboardFilterAny"]" Style="width:100%" />
+    </LabeledField>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public DashcardFilterModel Model { get; set; } = default!;
+
+    [Parameter] public IReadOnlyList<BoardListDto> Lists { get; set; } = [];
+
+    [Parameter] public IReadOnlyList<LabelDto> Labels { get; set; } = [];
+
+    [Parameter] public IReadOnlyList<WorkspaceMemberDto> Members { get; set; } = [];
+
+    /// <summary>Keeps input names unique when several editors are on screen.</summary>
+    [Parameter] public string IdPrefix { get; set; } = "dash-filter";
+}

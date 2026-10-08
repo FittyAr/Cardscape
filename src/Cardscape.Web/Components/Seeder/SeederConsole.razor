@@ -25,7 +25,7 @@
                 <RadzenBadge BadgeStyle="@((_options?.Enabled == true || _status?.Enabled == true) ? BadgeStyle.Info : BadgeStyle.Danger)" Text="@StatusBadge" />
                 @if (_options?.WipeBeforeSeed == true)
                 {
-                    <RadzenBadge BadgeStyle="@BadgeStyle.Warning" Text="wipe on seed" />
+                    <RadzenBadge BadgeStyle="@BadgeStyle.Warning" Text="@L["SeederWipeOnSeed"]" />
                 }
             </RadzenStack>
             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem" Wrap="@FlexWrap.Wrap">
@@ -89,7 +89,7 @@
                             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween" Wrap="@FlexWrap.Wrap" Gap="0.5rem">
                                 <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="0.5rem">
                                     <RadzenText TextStyle="@TextStyle.H5" TagName="@TagName.H3" Class="rz-m-0">@L["SeederLog"]</RadzenText>
-                                    <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="@($"{_entries.Count} lines")" />
+                                    <RadzenBadge BadgeStyle="@BadgeStyle.Light" Text="@L["SeederLogLines", _entries.Count]" />
                                 </RadzenStack>
                                 <RadzenText TextStyle="@TextStyle.Caption" class="rz-color-text-secondary">
                                     @StepLine
@@ -214,7 +214,7 @@
         ? 0
         : Math.Clamp((int)Math.Round(100.0 * _status.Report.CurrentStep / _status.Report.TotalSteps), 0, 100);
 
-    private string TableSummary => $"{_tables.Count} tables, {_tables.Sum(t => t.Rows)} rows total";
+    private string TableSummary => L["SeederTableSummaryText", _tables.Count, _tables.Sum(t => t.Rows)];
 
     protected override async Task OnInitializedAsync()
     {

@@ -1049,4 +1049,45 @@
   <data name="InvitationsAccept" xml:space="preserve"><value>Accept</value></data>
   <data name="InvitationsAcceptAria" xml:space="preserve"><value>Accept the invitation to {0}</value></data>
   <data name="RegisterInvitedTo" xml:space="preserve"><value>You were invited to {0}. Create your account with {1} to join.</value></data>
+  <data name="SetupTitle" xml:space="preserve"><value>Initial setup</value></data>
+  <data name="SetupChecking" xml:space="preserve"><value>Checking the system status…</value></data>
+  <data name="SetupAlreadyInitialized" xml:space="preserve"><value>The system is already set up. Redirecting…</value></data>
+  <data name="SetupEngine" xml:space="preserve"><value>Engine: {0}</value></data>
+  <data name="SetupEngineUnknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="SetupWelcome" xml:space="preserve"><value>Welcome to Cardscape. Create the main administrator account to initialise the platform.</value></data>
+  <data name="SetupAdminName" xml:space="preserve"><value>Administrator name</value></data>
+  <data name="SetupAdminNamePlaceholder" xml:space="preserve"><value>e.g. Administrator</value></data>
+  <data name="SetupAdminNameRequired" xml:space="preserve"><value>The administrator name is required.</value></data>
+  <data name="SetupCustomizeTitle" xml:space="preserve"><value>Customise the environment (optional)</value></data>
+  <data name="SetupInstanceTitle" xml:space="preserve"><value>Instance title</value></data>
+  <data name="SetupInitialWorkspace" xml:space="preserve"><value>Initial workspace</value></data>
+  <data name="SetupInitialWorkspaceDefault" xml:space="preserve"><value>Main workspace</value></data>
+  <data name="SetupSubmit" xml:space="preserve"><value>Initialise system</value></data>
+  <data name="SetupSubmitting" xml:space="preserve"><value>Initialising…</value></data>
+  <data name="SetupInvalidForm" xml:space="preserve"><value>Check the data you entered and that both passwords match.</value></data>
+  <data name="SetupFailed" xml:space="preserve"><value>Could not initialise the system.</value></data>
+  <data name="ActionConfirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="AppearancePreviewPrimary" xml:space="preserve"><value>Primary</value></data>
+  <data name="AppearancePreviewSecondary" xml:space="preserve"><value>Secondary</value></data>
+  <data name="AppearancePreviewBase" xml:space="preserve"><value>Base</value></data>
+  <data name="AppearancePreviewDanger" xml:space="preserve"><value>Danger</value></data>
+  <data name="AppearancePreviewSuccess" xml:space="preserve"><value>Success</value></data>
+  <data name="AppearancePreviewWarning" xml:space="preserve"><value>Warning</value></data>
+  <data name="AppearancePreviewInput" xml:space="preserve"><value>Sample input</value></data>
+  <data name="IntegrationEmailToBoard" xml:space="preserve"><value>Email to board</value></data>
+  <data name="IntegrationScim" xml:space="preserve"><value>SCIM provisioning</value></data>
+  <data name="SeederWipeOnSeed" xml:space="preserve"><value>wipes before seeding</value></data>
+  <data name="SeederLogLines" xml:space="preserve"><value>{0} lines</value></data>
+  <data name="SeederTableSummaryText" xml:space="preserve"><value>{0} tables, {1} rows in total</value></data>
+  <data name="DashboardFilterHint" xml:space="preserve"><value>Optional: count only the cards of one list, label or person.</value></data>
+  <data name="DashboardFilterList" xml:space="preserve"><value>List</value></data>
+  <data name="DashboardFilterLabel" xml:space="preserve"><value>Label</value></data>
+  <data name="DashboardFilterMember" xml:space="preserve"><value>Person</value></data>
+  <data name="DashboardFilterAny" xml:space="preserve"><value>Any</value></data>
+  <data name="DashboardFilterEdit" xml:space="preserve"><value>Filter this widget</value></data>
+  <data name="DashboardFilterClear" xml:space="preserve"><value>Clear filters</value></data>
+  <data name="DashboardChipList" xml:space="preserve"><value>List: {0}</value></data>
+  <data name="DashboardChipLabel" xml:space="preserve"><value>Label: {0}</value></data>
+  <data name="DashboardChipMember" xml:space="preserve"><value>Person: {0}</value></data>
+  <data name="DashboardChipDeleted" xml:space="preserve"><value>deleted</value></data>
 </root>

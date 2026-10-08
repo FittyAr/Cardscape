@@ -4,11 +4,13 @@
 @using Cardscape.Web.Services
 @using Cardscape.Web.Services.Api
 @using Cardscape.Web.Shared
+@using Cardscape.Web.Components.Dashboard
 @using Microsoft.Extensions.Localization
 @inject IDashboardsApiClient DashboardsApi
 @inject IBoardsApiClient BoardsApi
 @inject ICardsApiClient CardsApi
 @inject IListsApiClient ListsApi
+@inject ILabelsApiClient LabelsApi
 @inject IWorkspacesApiClient WorkspacesApi
 @inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
@@ -47,6 +49,8 @@
                 <RadzenTextBox @bind-Value="createModel.Title" Name="d-title" Style="width:100%"
                                Placeholder="@KindLabel(createModel.Kind)" />
             </LabeledField>
+            <RadzenText Text="@L["DashboardFilterHint"]" TextStyle="@TextStyle.Caption" class="rz-color-text-secondary rz-m-0" />
+            <DashcardFilterFields Model="@createFilter" Lists="@lists" Labels="@labels" Members="@members" IdPrefix="d-new" />
             <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.End"
                          Gap="0.5rem" Class="rz-mt-3">
                 <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="@ButtonStyle.Light"
@@ -78,7 +82,8 @@ else if (dashcards is not null)
     <div class="cs-dash-grid">
         @foreach (DashcardDto d in dashcards)
         {
-            DashcardResult metric = DashcardMetrics.Compute(d.Kind, cards, lists, now, UnassignedLabel(d.Kind));
+            DashcardFilter filter = DashcardFilter.Parse(d.ConfigurationJson);
+            DashcardResult metric = DashcardMetrics.Compute(d.Kind, cards, lists, now, UnassignedLabel(d.Kind), filter);
             <RadzenCard Variant="@Variant.Outlined" class="cs-dash-card">
                 <div class="cs-dash-card-header">
                     <span class="cs-dash-card-icon" aria-hidden="true"><RadzenIcon Icon="@KindIcon(d.Kind)" /></span>
@@ -89,9 +94,39 @@ else if (dashcards is not null)
                             <span class="cs-muted">@KindLabel(d.Kind)</span>
                         }
                     </div>
+                    <RadzenButton Icon="filter_list" ButtonStyle="@(filter.IsEmpty ? ButtonStyle.Base : ButtonStyle.Primary)"
+                                  Variant="@Variant.Text" Size="@ButtonSize.Small"
+                                  aria-label="@L["DashboardFilterEdit"]" title="@L["DashboardFilterEdit"]"
+                                  Click="@(() => ToggleFilterEditor(d, filter))" />
                     <RadzenButton Icon="delete" ButtonStyle="@ButtonStyle.Base" Variant="@Variant.Text" Size="@ButtonSize.Small"
                                   aria-label="@L["ActionDelete"]" title="@L["ActionDelete"]" Click="@(() => DeleteAsync(d.Id))" />
                 </div>
+
+                @if (!filter.IsEmpty)
+                {
+                    <div class="cs-dash-chips">
+                        @foreach (string chip in FilterChips(filter))
+                        {
+                            <span class="cs-dash-chip">@chip</span>
+                        }
+                    </div>
+                }
+
+                @if (editingId == d.Id)
+                {
+                    <div class="cs-dash-filter-editor">
+                        <DashcardFilterFields Model="@editFilter" Lists="@lists" Labels="@labels" Members="@members"
+                                              IdPrefix="@($"d-{d.Id:N}")" />
+                        <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.End" Gap="0.5rem">
+                            <RadzenButton Text="@L["DashboardFilterClear"]" ButtonStyle="@ButtonStyle.Light" Variant="@Variant.Text"
+                                          Size="@ButtonSize.Small" Click="@editFilter.Clear" />
+                            <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="@ButtonStyle.Light" Size="@ButtonSize.Small"
+                                          Click="@(() => editingId = null)" />
+                            <RadzenButton Text="@L["ActionSave"]" ButtonStyle="@ButtonStyle.Primary" Size="@ButtonSize.Small"
+                                          IsBusy="@busy" Click="@(() => SaveFilterAsync(d))" />
+                        </RadzenStack>
+                    </div>
+                }
 
                 @if (d.Kind is DashcardKind.OverdueCount or DashcardKind.DueThisWeek)
                 {
@@ -174,6 +209,11 @@ else if (dashcards is not null)
 
     private IReadOnlyList<CardSummaryDto> cards = [];
     private IReadOnlyList<BoardListDto> lists = [];
+    private IReadOnlyList<LabelDto> labels = [];
+    private IReadOnlyList<WorkspaceMemberDto> members = [];
+    private readonly DashcardFilterModel createFilter = new();
+    private DashcardFilterModel editFilter = new();
+    private Guid? editingId;
     private DateTimeOffset now = DateTimeOffset.Now;
 
     private sealed record KindOption(DashcardKind Kind, string Label);
@@ -190,13 +230,16 @@ else if (dashcards is not null)
             var dashTask = DashboardsApi.ListAsync(BoardId);
             var cardsTask = CardsApi.ListForBoardAsync(BoardId);
             var listsTask = ListsApi.ListForBoardAsync(BoardId);
+            var labelsTask = LabelsApi.ListForBoardAsync(BoardId);
 
-            await Task.WhenAll(boardTask, dashTask, cardsTask, listsTask);
+            await Task.WhenAll(boardTask, dashTask, cardsTask, listsTask, labelsTask);
             now = DateTimeOffset.Now;
             ApiResult<IReadOnlyList<CardSummaryDto>> cardsRes = await cardsTask;
             ApiResult<IReadOnlyList<BoardListDto>> listsRes = await listsTask;
             cards = cardsRes.HasValue ? cardsRes.Value : [];
-            lists = listsRes.HasValue ? listsRes.Value : [];
+            lists = listsRes.HasValue ? listsRes.Value.OrderBy(list => list.Position).ToList() : [];
+            ApiResult<IReadOnlyList<LabelDto>> labelsRes = await labelsTask;
+            labels = labelsRes.HasValue ? labelsRes.Value.OrderBy(label => label.Name, StringComparer.CurrentCultureIgnoreCase).ToList() : [];
 
             var boardRes = await boardTask;
             if (boardRes.HasValue)
@@ -207,6 +250,11 @@ else if (dashcards is not null)
                 {
                     workspace = wsRes.Value;
                 }
+
+                ApiResult<IReadOnlyList<WorkspaceMemberDto>> membersRes = await WorkspacesApi.ListMembersAsync(board.WorkspaceId);
+                members = membersRes.HasValue
+                    ? membersRes.Value.OrderBy(m => m.DisplayName, StringComparer.CurrentCultureIgnoreCase).ToList()
+                    : [];
             }
 
             var result = await dashTask;
@@ -234,7 +282,7 @@ else if (dashcards is not null)
             var result = await DashboardsApi.CreateAsync(new CreateDashcardRequest(
                 BoardId, createModel.Kind,
                 string.IsNullOrWhiteSpace(createModel.Title) ? KindLabel(createModel.Kind) : createModel.Title.Trim(),
-                "{}", dashcards?.Count ?? 0));
+                createFilter.ToFilter().ToJson(), dashcards?.Count ?? 0));
             if (!result.IsSuccess)
             {
                 error = result.Error;
@@ -243,11 +291,67 @@ else if (dashcards is not null)
 
             dashcards = [.. (dashcards ?? []), result.Value!];
             createModel.Title = string.Empty;
+            createFilter.Clear();
             showCreate = false;
         }
         finally
         {
             busy = false;
+        }
+    }
+
+    private void ToggleFilterEditor(DashcardDto dashcard, DashcardFilter filter)
+    {
+        if (editingId == dashcard.Id)
+        {
+            editingId = null;
+            return;
+        }
+
+        editFilter = DashcardFilterModel.From(filter);
+        editingId = dashcard.Id;
+    }
+
+    private async Task SaveFilterAsync(DashcardDto dashcard)
+    {
+        busy = true;
+        error = null;
+        try
+        {
+            ApiResult<DashcardDto> result = await DashboardsApi.UpdateConfigAsync(
+                BoardId, dashcard.Id, editFilter.ToFilter().ToJson());
+            if (!result.HasValue)
+            {
+                error = result.Error;
+                return;
+            }
+
+            dashcards = (dashcards ?? []).Select(d => d.Id == dashcard.Id ? result.Value : d).ToList();
+            editingId = null;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    // Human-readable scope of a widget; an id whose list, label or member
+    // no longer exists still shows, as "deleted", so the filter is not silent.
+    private IEnumerable<string> FilterChips(DashcardFilter filter)
+    {
+        if (filter.ListId is { } listId)
+        {
+            yield return L["DashboardChipList", lists.FirstOrDefault(l => l.Id == listId)?.Name ?? L["DashboardChipDeleted"]];
+        }
+
+        if (filter.LabelId is { } labelId)
+        {
+            yield return L["DashboardChipLabel", labels.FirstOrDefault(l => l.Id == labelId)?.Name ?? L["DashboardChipDeleted"]];
+        }
+
+        if (filter.MemberId is { } memberId)
+        {
+            yield return L["DashboardChipMember", members.FirstOrDefault(m => m.UserId == memberId)?.DisplayName ?? L["DashboardChipDeleted"]];
         }
     }
 

@@ -12,37 +12,37 @@
 @inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Configuración Inicial @L["PageTitleSuffix"]</PageTitle>
+<PageTitle>@L["SetupTitle"] @L["PageTitleSuffix"]</PageTitle>
 
 <RadzenStack Gap="1.5rem">
     @if (_loading)
     {
-        <LoadingState Text="Verificando estado del sistema…" />
+        <LoadingState Text="@L["SetupChecking"]" />
     }
     else if (_alreadyInitialized)
     {
         <RadzenAlert AlertStyle="@AlertStyle.Info" AllowClose="false" ShowIcon="true">
-            El sistema ya ha sido inicializado previamente. Redirigiendo...
+            @L["SetupAlreadyInitialized"]
         </RadzenAlert>
     }
     else
     {
         <RadzenStack Gap="0.5rem">
             <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
-                <RadzenText Text="Configuración Inicial" TextStyle="@TextStyle.H4" TagName="@TagName.H1" />
-                <RadzenBadge BadgeStyle="@BadgeStyle.Primary" Text="@($"Motor: {_databaseProvider}")" Variant="@Variant.Filled" />
+                <RadzenText Text="@L["SetupTitle"]" TextStyle="@TextStyle.H4" TagName="@TagName.H1" />
+                <RadzenBadge BadgeStyle="@BadgeStyle.Primary" Text="@L["SetupEngine", _databaseProvider ?? L["SetupEngineUnknown"]]" Variant="@Variant.Filled" />
             </RadzenStack>
-            <RadzenText Text="Bienvenido a Cardscape. Crea la cuenta de administrador principal para inicializar la plataforma."
+            <RadzenText Text="@L["SetupWelcome"]"
                         TextStyle="@TextStyle.Body2" Class="rz-color-text-secondary" />
         </RadzenStack>
 
         <RadzenTemplateForm TItem="SetupFormModel" Data="@_model" Submit="@HandleSubmitAsync">
             <RadzenStack Gap="1rem">
-                <RadzenFormField Text="Nombre del Administrador" Component="adminDisplayName">
+                <RadzenFormField Text="@L["SetupAdminName"]" Component="adminDisplayName">
                     <RadzenTextBox @bind-Value="_model.AdminDisplayName" Name="adminDisplayName" Style="width:100%"
-                                   autocomplete="name" Placeholder="Ej. Administrador" />
+                                   autocomplete="name" Placeholder="@L["SetupAdminNamePlaceholder"]" />
                 </RadzenFormField>
-                <RadzenRequiredValidator Component="adminDisplayName" Text="El nombre del administrador es obligatorio." />
+                <RadzenRequiredValidator Component="adminDisplayName" Text="@L["SetupAdminNameRequired"]" />
 
                 <RadzenFormField Text="@L["AuthEmail"]" Component="adminEmail">
                     <RadzenTextBox @bind-Value="_model.AdminEmail" Name="adminEmail" Style="width:100%"
@@ -54,7 +54,7 @@
                 <RadzenFormField Text="@L["AuthPassword"]" Component="adminPassword">
                     <RadzenPassword @bind-Value="_model.AdminPassword" Name="adminPassword" Style="width:100%"
                                     autocomplete="new-password" />
-                    <RadzenText Text="Mínimo 8 caracteres." TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
+                    <RadzenText Text="@L["AuthPasswordHint"]" TextStyle="@TextStyle.Caption" Class="rz-color-text-secondary" />
                 </RadzenFormField>
                 <RadzenRequiredValidator Component="adminPassword" Text="@L["ValidationRequired"]" />
 
@@ -71,15 +71,15 @@
 
                 <RadzenCard Variant="@Variant.Filled" Class="rz-p-3 rz-my-2">
                     <RadzenStack Gap="0.75rem">
-                        <RadzenText Text="Personalización del Entorno (Opcional)" TextStyle="@TextStyle.Subtitle2" />
-                        <RadzenFormField Text="Título de la Instancia" Component="instanceTitle">
+                        <RadzenText Text="@L["SetupCustomizeTitle"]" TextStyle="@TextStyle.Subtitle2" />
+                        <RadzenFormField Text="@L["SetupInstanceTitle"]" Component="instanceTitle">
                             <RadzenTextBox @bind-Value="_model.InstanceTitle" Name="instanceTitle" Style="width:100%"
                                            Placeholder="Cardscape" />
                         </RadzenFormField>
 
-                        <RadzenFormField Text="Espacio de Trabajo Inicial" Component="workspaceName">
+                        <RadzenFormField Text="@L["SetupInitialWorkspace"]" Component="workspaceName">
                             <RadzenTextBox @bind-Value="_model.InitialWorkspaceName" Name="workspaceName" Style="width:100%"
-                                           Placeholder="Espacio Principal" />
+                                           Placeholder="@L["SetupInitialWorkspaceDefault"]" />
                         </RadzenFormField>
                     </RadzenStack>
                 </RadzenCard>
@@ -92,12 +92,12 @@
                 }
 
                 <RadzenButton ButtonType="@ButtonType.Submit"
-                              Text="Inicializar Sistema"
+                              Text="@L["SetupSubmit"]"
                               Icon="rocket_launch"
                               ButtonStyle="@ButtonStyle.Primary"
                               Size="@ButtonSize.Large"
                               IsBusy="@_busy"
-                              BusyText="Inicializando..."
+                              BusyText="@L["SetupSubmitting"]"
                               Disabled="@(!CanSubmit())"
                               Style="width:100%" />
             </RadzenStack>
@@ -113,7 +113,7 @@
         public string AdminPassword { get; set; } = string.Empty;
         public string ConfirmPassword { get; set; } = string.Empty;
         public string InstanceTitle { get; set; } = "Cardscape";
-        public string InitialWorkspaceName { get; set; } = "Espacio Principal";
+        public string InitialWorkspaceName { get; set; } = string.Empty;
     }
 
     private readonly SetupFormModel _model = new();
@@ -121,10 +121,15 @@
     private bool _alreadyInitialized;
     private bool _busy;
     private string? _error;
-    private string _databaseProvider = "Desconocido";
+    private string? _databaseProvider;
 
     protected override async Task OnInitializedAsync()
     {
+        if (string.IsNullOrWhiteSpace(_model.InitialWorkspaceName))
+        {
+            _model.InitialWorkspaceName = L["SetupInitialWorkspaceDefault"];
+        }
+
         try
         {
             // Usually already cached by the router gate in App.razor, so
@@ -164,7 +169,7 @@
     {
         if (!CanSubmit())
         {
-            _error = "Por favor verifica los datos ingresados y que las contraseñas coincidan.";
+            _error = L["SetupInvalidForm"];
             return;
         }
 
@@ -183,7 +188,7 @@
             ApiResult<AuthResponseDto> result = await SetupApi.InitializeAsync(request);
             if (!result.IsSuccess)
             {
-                _error = result.Error ?? "Error al inicializar el sistema.";
+                _error = result.Error ?? L["SetupFailed"];
                 return;
             }
 

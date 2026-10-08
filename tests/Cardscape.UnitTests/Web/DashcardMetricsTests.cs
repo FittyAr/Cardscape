@@ -72,6 +72,46 @@ public sealed class DashcardMetricsTests
             new DashcardBucket("Bug", 1, "#d73a49"), new DashcardBucket("No label", 1, IsUnassigned: true));
     }
 
+    [Fact]
+    public void Filter_ScopesEveryKind_ToTheListLabelAndPerson()
+    {
+        CardSummaryDto match = Card("Match", Todo, due: Now.AddDays(-1), members: [Ada], labels: [Bug]);
+        CardSummaryDto[] cards =
+        [
+            match,
+            Card("Other list", Done, due: Now.AddDays(-1), members: [Ada], labels: [Bug]),
+            Card("No label", Todo, due: Now.AddDays(-1), members: [Ada]),
+            Card("Nobody", Todo, due: Now.AddDays(-1), labels: [Bug]),
+        ];
+        DashcardFilter filter = new(Todo.Id, Bug.Id, Ada.UserId);
+
+        DashcardMetrics.Compute(DashcardKind.OverdueCount, cards, [Todo, Done], Now, "—", filter)
+            .Cards.Should().Equal(match);
+        DashcardMetrics.Compute(DashcardKind.ByList, cards, [Todo, Done], Now, "—", filter)
+            .Buckets.Should().Equal(new DashcardBucket("To do", 1));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("{}")]
+    [InlineData("not json")]
+    [InlineData("[1,2]")]
+    public void Filter_ParsesMissingOrUnreadableConfiguration_AsNoFilter(string? json) =>
+        DashcardFilter.Parse(json).IsEmpty.Should().BeTrue();
+
+    [Fact]
+    public void Filter_RoundTripsThroughJson_WithoutEmptyKeys()
+    {
+        DashcardFilter filter = new(ListId: Todo.Id);
+
+        string json = filter.ToJson();
+
+        json.Should().Be($$"""{"listId":"{{Todo.Id}}"}""");
+        DashcardFilter.Parse(json).Should().Be(filter);
+        DashcardFilter.None.ToJson().Should().Be("{}");
+    }
+
     private static BoardListDto List(string name, double position) =>
         new(Guid.NewGuid(), Guid.Empty, name, position, IsArchived: false, Now, CardCount: 0);
 

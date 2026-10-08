@@ -42,7 +42,7 @@
         <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
             <RadzenCard Variant="Variant.Outlined">
                 <RadzenStack Gap="0.5rem">
-                    <RadzenText Text="Email-to-board" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                    <RadzenText Text="@L["IntegrationEmailToBoard"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
                     <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["EmailToBoardBlurb"]</RadzenText>
                     <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
                                   Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/integrations/email"))" />
@@ -64,7 +64,7 @@
         <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
             <RadzenCard Variant="Variant.Outlined">
                 <RadzenStack Gap="0.5rem">
-                    <RadzenText Text="SCIM provisioning" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                    <RadzenText Text="@L["IntegrationScim"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
                     <RadzenText TextStyle="TextStyle.Body2" class="rz-color-text-secondary">@L["ScimBlurb"]</RadzenText>
                     <RadzenButton Text="@L["ActionConfigure"]" ButtonStyle="ButtonStyle.Primary"
                                   Click="@(() => Nav.NavigateTo($"/workspaces/{WorkspaceId}/scim"))" />

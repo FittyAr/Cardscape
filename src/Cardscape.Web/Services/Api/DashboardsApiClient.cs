@@ -7,6 +7,7 @@ public interface IDashboardsApiClient
     Task<ApiResult<IReadOnlyList<DashcardDto>>> ListAsync(Guid boardId, CancellationToken ct = default);
     Task<ApiResult<DashcardDto>> CreateAsync(CreateDashcardRequest body, CancellationToken ct = default);
     Task<ApiResult> DeleteAsync(Guid boardId, Guid dashcardId, CancellationToken ct = default);
+    Task<ApiResult<DashcardDto>> UpdateConfigAsync(Guid boardId, Guid dashcardId, string configurationJson, CancellationToken ct = default);
 }
 
 public sealed class DashboardsApiClient(IHttpClientFactory http) : ApiClientBase(http), IDashboardsApiClient
@@ -22,6 +23,14 @@ public sealed class DashboardsApiClient(IHttpClientFactory http) : ApiClientBase
     {
         HttpResponseMessage response = await CreateClient().PostAsJsonAsync(
             $"api/boards/{body.BoardId}/dashcards/", body, JsonOptions, ct);
+        return await ReadAsync<DashcardDto>(response, ct);
+    }
+
+    public async Task<ApiResult<DashcardDto>> UpdateConfigAsync(
+        Guid boardId, Guid dashcardId, string configurationJson, CancellationToken ct = default)
+    {
+        HttpResponseMessage response = await CreateClient().PutAsJsonAsync(
+            $"api/boards/{boardId}/dashcards/{dashcardId}/config", new { configurationJson }, JsonOptions, ct);
         return await ReadAsync<DashcardDto>(response, ct);
     }
 
