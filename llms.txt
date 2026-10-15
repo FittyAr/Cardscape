@@ -1,0 +1,24 @@
+# Cardscape
+> The self-hostable kanban your AI can drive. Open-source project management with a first-class Model Context Protocol (MCP) server. Runs on .NET 10 with SQLite, PostgreSQL, MySQL or MariaDB.
+
+Cardscape is a server application (Docker Compose or the .NET SDK). It installs nothing on the user's computer. Boards, lists, cards, calendar, planner, automation rules, integrations (Slack, GitHub, email, Google Calendar, SCIM, SAML), API tokens and audit logs.
+
+## Key Resources
+- [Website](https://cardscape.fitty.ar): Landing page and screenshots (English and Spanish).
+- [Changelog](https://cardscape.fitty.ar/changelog.html): Release history.
+- [GitHub Repository](https://github.com/FittyAr/Cardscape): Source code and docs.
+- [Releases](https://github.com/FittyAr/Cardscape/releases)
+
+## Licensing
+- Cardscape: Reciprocal Public License 1.5 (RPL-1.5).
+
+## Quick start
+    git clone https://github.com/FittyAr/Cardscape.git && cd Cardscape
+    echo "CARDS_CAPE_JWT_KEY=$(openssl rand -base64 48)" > .env
+    docker compose up -d
+Then open http://localhost:7420.
+
+## Paths
+- Docker data: named volumes cardscape.data, cardscape.uploads, cardscape.keys, cardscape.postgres_data.
+- User config/data for local (non-Docker) tools: %APPDATA%\FittyAr\Cardscape (Windows), ~/.config/FittyAr/Cardscape (Linux), ~/Library/Application Support/FittyAr/Cardscape (macOS).
+- Installed apps (none today): %LOCALAPPDATA%\Programs\FittyAr\Cardscape.

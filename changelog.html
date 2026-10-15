@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cardscape | Changelog</title>
+  <meta name="description" content="What is new in every Cardscape release." />
+  <link rel="canonical" href="https://cardscape.fitty.ar/changelog.html" />
+  <meta name="theme-color" content="#0a0a0d" />
+
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://cardscape.fitty.ar/changelog.html" />
+  <meta property="og:title" content="Cardscape | Changelog" />
+  <meta property="og:description" content="What is new in every Cardscape release." />
+  <meta property="og:image" content="https://cardscape.fitty.ar/assets/social.png" />
+  <meta property="og:site_name" content="Cardscape" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Cardscape | Changelog" />
+  <meta name="twitter:description" content="What is new in every Cardscape release." />
+  <meta name="twitter:image" content="https://cardscape.fitty.ar/assets/social.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/changelog.css" />
+</head>
+
+<body data-page="changelog">
+  <header class="header">
+    <div class="container nav">
+      <a class="logo" href="index.html">
+        <img src="assets/icon.svg" alt="" width="32" height="32" />
+        <span>Card<b>scape</b></span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html#features" data-i18n="nav_features">Features</a>
+        <a href="index.html#tour" data-i18n="nav_tour">Tour</a>
+        <a href="index.html#gallery" data-i18n="nav_gallery">Screenshots</a>
+        <a href="index.html#install" data-i18n="nav_install">Install</a>
+        <a href="changelog.html" class="active-nav" data-i18n="nav_changelog">Changelog</a>
+        <a href="https://fitty.ar/" data-i18n="nav_back">Back to fitty.ar</a>
+      </nav>
+      <div class="nav-right">
+        <div class="lang-selector">
+          <button class="lang-btn" data-lang="en" onclick="switchLanguage('es')">ES</button>
+          <span class="lang-separator">|</span>
+          <button class="lang-btn" data-lang="en" onclick="switchLanguage('en')">EN</button>
+        </div>
+        <a class="nav-btn" href="https://github.com/FittyAr/Cardscape" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" style="padding: 72px 0 16px;">
+      <div class="container">
+        <a href="https://github.com/FittyAr/Cardscape/releases" target="_blank" rel="noopener" class="release-link">
+          <span class="badge" id="release-badge">
+            <span aria-hidden="true">◆</span> <span id="release-text" data-i18n="release_loading">Loading version...</span>
+          </span>
+        </a>
+        <h1 class="hero-title" data-i18n="changelog_title">Changelog</h1>
+        <p class="hero-subtitle" data-i18n="changelog_subtitle">What is new in every Cardscape release.</p>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top: 16px;">
+      <div class="container">
+        <div class="changelog-container" id="changelog-container">
+          <div style="color: var(--text-muted);" id="changelog-status" data-i18n="changelog_loading">Loading changelog...</div>
+        </div>
+        <div class="changelog-footer-actions" id="changelog-actions" style="display: none;">
+          <button class="btn-toggle-changelog" onclick="toggleOlderReleases()">
+            <span id="btn-toggle-text" data-i18n="btn_show_older">Show older releases</span>
+            <span id="btn-toggle-icon">▼</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="logo" style="margin-bottom: 8px; font-size: 1rem;">
+            <img src="assets/icon.svg" alt="" style="width: 24px; height: 24px;" />
+            <span>Card<b>scape</b></span>
+          </div>
+          <p style="margin: 0; font-size: 0.85rem;" data-i18n="footer_text">Cardscape is distributed under the Reciprocal Public License 1.5.</p>
+        </div>
+        <div class="footer-links">
+          <a href="https://fitty.ar/">fitty.ar</a>
+          <a href="https://fitty.ar/es/pages/projects.html" data-i18n="footer_projects">Projects</a>
+          <a href="https://github.com/FittyAr/Cardscape/releases" target="_blank" rel="noopener">Releases</a>
+          <a href="https://github.com/FittyAr/Cardscape" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/translations.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/changelog.js"></script>
+</body>
+
+</html>
