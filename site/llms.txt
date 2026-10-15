@@ -7,7 +7,7 @@ Cardscape is a server application (Docker Compose or the .NET SDK). It installs 
 - [Website](https://cardscape.fitty.ar): Landing page and screenshots (English and Spanish).
 - [Changelog](https://cardscape.fitty.ar/changelog.html): Release history.
 - [GitHub Repository](https://github.com/FittyAr/Cardscape): Source code and docs.
-- [Releases](https://github.com/FittyAr/Cardscape/releases)
+- [Version tags](https://github.com/FittyAr/Cardscape/tags): Every tagged version (the changelog is built from these and docs/community/CHANGELOG.md).
 
 ## Licensing
 - Cardscape: Reciprocal Public License 1.5 (RPL-1.5).

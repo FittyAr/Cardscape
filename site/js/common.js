@@ -1,4 +1,4 @@
-// Shared by every page: language switching and the release badge.
+// Shared by every page: language switching and the version badge.
 let currentLang = 'es';
 let latestRelease = null;
 const onLanguageChange = [];
@@ -61,25 +61,39 @@ function preferredLanguage() {
   return lang;
 }
 
-// Newest GitHub release (pre-releases included).
+// Newest version. data/version.json is generated at publish time from the
+// newest vX.Y.Z git tag (scripts/site-data.py); the GitHub tags API is only a
+// fallback for local previews where the file was not generated.
+const REPO_URL = 'https://github.com/FittyAr/Cardscape';
+
+function normaliseTag(tag) {
+  const m = /^(v\d+\.\d+\.\d+)/.exec(tag || '');
+  return m ? m[1] : tag;
+}
+
 async function fetchLatestRelease() {
   if (!document.getElementById('release-badge')) return;
   try {
-    const response = await fetch('https://api.github.com/repos/FittyAr/Cardscape/releases?per_page=5');
-    if (!response.ok) throw new Error('API request failed');
-    const releases = (await response.json()).filter(r => !r.draft);
-    if (releases.length === 0) throw new Error('No releases');
-    const r = releases[0];
-    const days = (Date.now() - new Date(r.published_at).getTime()) / 86400000;
-    latestRelease = { tag: r.tag_name, url: r.html_url, isNew: days <= 30, pre: r.prerelease };
-  } catch (error) {
-    console.error('Error fetching release data:', error);
-    latestRelease = {
-      tag: 'v1.1.0', // Newest known release, used when the API is unavailable.
-      url: 'https://github.com/FittyAr/Cardscape/releases',
-      isNew: false,
-      pre: false
-    };
+    const response = await fetch('data/version.json', { cache: 'no-cache' });
+    if (!response.ok) throw new Error('version.json not available');
+    const v = await response.json();
+    const days = v.date ? (Date.now() - new Date(v.date).getTime()) / 86400000 : Infinity;
+    latestRelease = { tag: v.version, url: v.url || REPO_URL + '/tags', isNew: days <= 30, pre: false };
+  } catch (_) {
+    try {
+      const response = await fetch('https://api.github.com/repos/FittyAr/Cardscape/tags?per_page=100');
+      if (!response.ok) throw new Error('API request failed');
+      const tags = (await response.json()).map(x => x.name).filter(n => /^v\d+\.\d+\.\d+/.test(n));
+      const key = n => normaliseTag(n).slice(1).split('.').map(Number);
+      tags.sort((a, b) => { const x = key(a), y = key(b); return (y[0] - x[0]) || (y[1] - x[1]) || (y[2] - x[2]); });
+      if (tags.length === 0) throw new Error('No tags');
+      latestRelease = { tag: normaliseTag(tags[0]), url: REPO_URL + '/releases/tag/' + encodeURIComponent(tags[0]), isNew: false, pre: false };
+    } catch (error) {
+      console.error('Error fetching version:', error);
+      const badge = document.getElementById('release-badge');
+      if (badge) badge.style.display = 'none';
+      return;
+    }
   }
   updateReleaseBadge();
 }

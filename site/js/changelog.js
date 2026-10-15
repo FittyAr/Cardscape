@@ -1,6 +1,10 @@
-// Changelog page: renders the GitHub releases of FittyAr/Cardscape.
-const RELEASES_URL = 'https://api.github.com/repos/FittyAr/Cardscape/releases?per_page=30';
+// Changelog page. data/changelog.json is generated at publish time from the
+// git tags and docs/community/CHANGELOG.md (scripts/site-data.py). The GitHub
+// tags API is only a fallback for local previews without that file.
+const CHANGELOG_URL = 'data/changelog.json';
+const TAGS_URL = 'https://api.github.com/repos/FittyAr/Cardscape/tags?per_page=100';
 const VISIBLE_RELEASES = 3;
+const LONG_BODY = 1200; // characters before a card's notes are collapsed
 let showOlder = false;
 let releases = [];
 
@@ -46,17 +50,20 @@ function render() {
   releases.forEach((r, idx) => {
     const item = document.createElement('div');
     item.className = 'changelog-item' + (idx >= VISIBLE_RELEASES ? ' older-release' : '') + (showOlder ? ' show' : '');
-    const date = r.published_at ? new Date(r.published_at).toLocaleDateString(currentLang) : '';
+    const date = r.date ? new Date(r.date + 'T12:00:00Z').toLocaleDateString(currentLang, { year: 'numeric', month: 'long', day: 'numeric' }) : '';
     item.innerHTML = `
       <div class="changelog-dot"></div>
       <div class="changelog-card">
         <div class="changelog-header">
-          <div class="changelog-version">${escapeHtml(r.name || r.tag_name)}
-            ${r.prerelease ? `<span class="latest-tag">${escapeHtml(t('changelog_prerelease'))}</span>` : ''}</div>
+          <div class="changelog-version">${escapeHtml(r.version)}
+            ${idx === 0 ? `<span class="latest-tag">${escapeHtml(t('changelog_latest'))}</span>` : ''}
+            ${r.codename ? `<span class="changelog-codename">${escapeHtml(r.codename)}</span>` : ''}</div>
           <div class="changelog-date">${escapeHtml(date)}</div>
         </div>
-        <div class="changelog-body">${renderBody(r.body)}
-          <p class="changelog-intro"><a href="${escapeHtml(r.html_url)}" target="_blank" rel="noopener">${escapeHtml(t('changelog_view'))}</a></p>
+        <div class="changelog-body${(r.body || '').length > LONG_BODY ? ' collapsed' : ''}">${renderBody(r.body)}</div>
+        ${(r.body || '').length > LONG_BODY ? `<button type="button" class="changelog-more" onclick="toggleBody(this)">${escapeHtml(t('changelog_more'))}</button>` : ''}
+        <div class="changelog-body">
+          <p class="changelog-intro"><a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">${escapeHtml(t('changelog_view'))}</a></p>
         </div>
       </div>`;
     container.appendChild(item);
@@ -68,6 +75,12 @@ function render() {
 function updateToggle() {
   document.getElementById('btn-toggle-text').textContent = t(showOlder ? 'btn_hide_older' : 'btn_show_older');
   document.getElementById('btn-toggle-icon').textContent = showOlder ? '▲' : '▼';
+}
+
+function toggleBody(button) {
+  const body = button.previousElementSibling;
+  const collapsed = body.classList.toggle('collapsed');
+  button.textContent = t(collapsed ? 'changelog_more' : 'changelog_less');
 }
 
 function toggleOlderReleases() {
@@ -84,20 +97,28 @@ function setStatus(key) {
   }
 }
 
+async function loadFromTagsApi() {
+  const response = await fetch(TAGS_URL);
+  if (!response.ok) throw new Error('Failed to fetch tags');
+  const key = n => n.slice(1).split(/[.-]/).slice(0, 3).map(Number);
+  return (await response.json())
+    .map(x => x.name)
+    .filter(n => /^v\d+\.\d+\.\d+/.test(n))
+    .sort((a, b) => { const x = key(a), y = key(b); return (y[0] - x[0]) || (y[1] - x[1]) || (y[2] - x[2]); })
+    .map(n => ({
+      tag: n, version: n.match(/^v\d+\.\d+\.\d+/)[0], codename: n.replace(/^v\d+\.\d+\.\d+-?/, ''),
+      date: '', body: '', url: 'https://github.com/FittyAr/Cardscape/releases/tag/' + encodeURIComponent(n)
+    }));
+}
+
 async function loadChangelog() {
   try {
-    const response = await fetch(RELEASES_URL);
-    if (!response.ok) throw new Error('Failed to fetch releases');
-    releases = (await response.json()).filter(r => !r.draft);
-    if (releases.length === 0) {
-      // No GitHub releases yet: fall back to the published tags.
-      const tags = await fetch('https://api.github.com/repos/FittyAr/Cardscape/tags?per_page=30');
-      if (tags.ok) {
-        releases = (await tags.json()).map(x => ({
-          tag_name: x.name, body: '', prerelease: /-/.test(x.name),
-          html_url: 'https://github.com/FittyAr/Cardscape/releases/tag/' + encodeURIComponent(x.name)
-        }));
-      }
+    try {
+      const response = await fetch(CHANGELOG_URL, { cache: 'no-cache' });
+      if (!response.ok) throw new Error('changelog.json not available');
+      releases = await response.json();
+    } catch (_) {
+      releases = await loadFromTagsApi();
     }
     if (releases.length === 0) { setStatus('changelog_empty'); return; }
     render();

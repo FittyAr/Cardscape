@@ -78,6 +78,36 @@
   vertical-align: middle;
 }
 
+.changelog-codename {
+  display: inline-block;
+  margin-left: 8px;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  vertical-align: middle;
+}
+
+.changelog-body.collapsed {
+  max-height: 16rem;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent);
+  mask-image: linear-gradient(to bottom, #000 70%, transparent);
+}
+
+.changelog-more {
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-soft);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.changelog-more:hover { text-decoration: underline; }
+
 .changelog-date {
   font-family: "JetBrains Mono", monospace;
   color: var(--text-muted);

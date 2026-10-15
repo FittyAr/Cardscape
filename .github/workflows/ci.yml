@@ -401,6 +401,13 @@ jobs:
       Configuration: Release
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Check Directory.Build.props <Version> matches the tag
+        # The tag is the single source of truth for the version (the
+        # website derives its badge and changelog from it). Fail the
+        # release when <Version> was not bumped along with the tag.
+        run: python3 scripts/site-data.py --check
       - name: Setup .NET
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:

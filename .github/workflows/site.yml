@@ -3,11 +3,21 @@ name: site
 on:
   push:
     branches: [master, main]
+    # Path filters are not evaluated for tag pushes, so every new
+    # version tag republishes the badge and the changelog.
+    tags: ['v*']
     paths:
       - 'site/**'
       - 'docs/status.md'
+      - 'docs/community/CHANGELOG.md'
+      - 'Directory.Build.props'
+      - 'scripts/site-data.py'
       - '.github/workflows/site.yml'
   workflow_dispatch:
+
+concurrency:
+  group: site-publish
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -37,6 +47,20 @@ jobs:
           else
             git worktree add --orphan -b site ../site
           fi
+
+      - name: Generate version + changelog data from git tags
+        # Single source of truth: the newest vX.Y.Z tag (codename suffix
+        # normalised away) plus docs/community/CHANGELOG.md. GitHub
+        # Releases are not used. Writes site/data/{version,changelog}.json
+        # (git-ignored on master) and warns if Directory.Build.props
+        # <Version> lags behind the newest tag.
+        shell: bash
+        working-directory: master
+        run: |
+          set -euo pipefail
+          git fetch --force --tags origin
+          python3 scripts/site-data.py
+          cat site/data/version.json
 
       - name: Sync static site assets (site/) into the work tree
         shell: bash

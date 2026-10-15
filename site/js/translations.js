@@ -116,11 +116,13 @@ const translations = {
     changelog_subtitle: "Lo nuevo en cada versión de Cardscape.",
     changelog_loading: "Cargando historial de cambios...",
     changelog_error: "No se pudo cargar el historial. Míralo directamente en GitHub.",
-    changelog_empty: "Aún no hay versiones publicadas en GitHub.",
+    changelog_empty: "Aún no hay versiones etiquetadas.",
     changelog_view: "Ver en GitHub ↗",
     btn_show_older: "Mostrar versiones anteriores",
     btn_hide_older: "Ocultar versiones anteriores",
-    changelog_prerelease: "Pre-lanzamiento"
+    changelog_latest: "Última",
+    changelog_more: "Ver más ▼",
+    changelog_less: "Ver menos ▲"
   },
   en: {
     title: "Cardscape | The self-hostable kanban your AI can drive",
@@ -239,10 +241,12 @@ const translations = {
     changelog_subtitle: "What is new in every Cardscape release.",
     changelog_loading: "Loading changelog...",
     changelog_error: "The changelog could not be loaded. See it directly on GitHub.",
-    changelog_empty: "No releases published on GitHub yet.",
+    changelog_empty: "No tagged versions yet.",
     changelog_view: "View on GitHub ↗",
     btn_show_older: "Show older releases",
     btn_hide_older: "Hide older releases",
-    changelog_prerelease: "Pre-release"
+    changelog_latest: "Latest",
+    changelog_more: "Show more ▼",
+    changelog_less: "Show less ▲"
   }
 };
