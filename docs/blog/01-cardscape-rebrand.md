@@ -190,7 +190,7 @@ state.
 
 If you want to follow along:
 
-- Watch the [GitHub repository](https://github.com/cardscape/cardscape)
+- Watch the [GitHub repository](https://github.com/FittyAr/Cardscape)
   for releases and Discussions.
 - Read the [roadmap](https://cardscape.fitty.ar/ROADMAP.md).
 - Read the [positioning doc](../roadmap/02-product-positioning.md)

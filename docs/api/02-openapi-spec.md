@@ -14,9 +14,10 @@
   [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
   `release` job boots the API, captures the spec into
   `artifacts/openapi/openapi.json`, and publishes it as a
-  workflow artifact. The artifact URL is
-  `https://github.com/cardscape/cardscape/releases/download/vX.Y.Z/openapi.json`
-  (or the workflow run's artifact list).
+  workflow artifact named `openapi-<tag>` (the project
+  publishes tags, not GitHub Releases). Find it in the
+  run's artifact list under
+  <https://github.com/FittyAr/Cardscape/actions/workflows/ci.yml>.
 - **Per-commit**: the `release` job runs on every `v*` tag
   push and every `master` push. The artifact URL pattern is
   `<run-id>`-`<sha>` in the Actions tab.
@@ -83,9 +84,11 @@ The OpenAPI document is the input to every code-generation
 tool. The recommended pipeline for a C# consumer:
 
 ```bash
-# Download the latest spec
-curl -L https://github.com/cardscape/cardscape/releases/latest/download/openapi.json \
-    -o cardscape-openapi.json
+# Download the spec captured by a tag's release run (workflow artifact)
+gh run download --repo FittyAr/Cardscape --name openapi-vX.Y.Z
+mv openapi.json cardscape-openapi.json
+# ...or take it from a running API in Development:
+# curl http://localhost:7420/openapi/v1.json -o cardscape-openapi.json
 
 # Generate a typed client (Kiota is the recommended tool)
 dotnet tool install --global Microsoft.OpenApi.Kiota

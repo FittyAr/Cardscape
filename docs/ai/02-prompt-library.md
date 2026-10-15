@@ -387,7 +387,7 @@ the prompts are not part of the official server image;
 they are loaded from a separate file or a separate repo.
 
 Until then, the community can share prompts in
-[GitHub Discussions → Show and tell](https://github.com/cardscape/cardscape/discussions/categories/show-and-tell).
+[GitHub Discussions → Show and tell](https://github.com/FittyAr/Cardscape/discussions/categories/show-and-tell).
 The maintainer promotes a community prompt to the
 canonical library when it has been tested by at least 3
 users and the maintainer reviews it.

@@ -492,7 +492,7 @@ Add a Markdown badge for the CI workflow in
 the top of `README.md`:
 
 ```markdown
-[![CI](https://github.com/cardscape/cardscape/actions/workflows/ci.yml/badge.svg)](https://github.com/cardscape/cardscape/actions/workflows/ci.yml)
+[![CI](https://github.com/FittyAr/Cardscape/actions/workflows/ci.yml/badge.svg)](https://github.com/FittyAr/Cardscape/actions/workflows/ci.yml)
 ```
 
 **Effort**: **S** (5 min).

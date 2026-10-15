@@ -4,7 +4,7 @@ title: "Cardscape"
 type: software
 date-released: 2026-07-27
 url: "https://cardscape.fitty.ar"
-repository-code: "https://github.com/cardscape/cardscape"
+repository-code: "https://github.com/FittyAr/Cardscape"
 license: RPL-1.5
 keywords:
   - kanban
@@ -40,6 +40,6 @@ references:
   - type: documentation
     url: "https://cardscape.fitty.ar/docs/"
   - type: documentation
-    url: "https://github.com/cardscape/cardscape/blob/master/README.md"
+    url: "https://github.com/FittyAr/Cardscape/blob/master/README.md"
   - type: license
-    url: "https://github.com/cardscape/cardscape/blob/master/LICENSE"
+    url: "https://github.com/FittyAr/Cardscape/blob/master/LICENSE"

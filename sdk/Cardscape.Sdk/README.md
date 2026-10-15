@@ -1,6 +1,6 @@
 # Cardscape.Sdk
 
-Typed C# client for the [Cardscape](https://github.com/cardscape/cardscape)
+Typed C# client for the [Cardscape](https://github.com/FittyAr/Cardscape)
 REST API. It targets .NET 10, matching the server and the rest of
 the maintained solution. Built and published automatically by
 `dotnet pack` (see `GeneratePackageOnBuild=true` in

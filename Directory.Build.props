@@ -25,7 +25,7 @@
     <Product>Cardscape</Product>
     <Authors>Cardscape Contributors</Authors>
     <Copyright>Copyright (c) $([System.DateTime]::UtcNow.Year) Cardscape. Licensed under RPL-1.5.</Copyright>
-    <RepositoryUrl>https://github.com/cardscape/cardscape</RepositoryUrl>
+    <RepositoryUrl>https://github.com/FittyAr/Cardscape</RepositoryUrl>
     <PackageLicenseExpression>RPL-1.5</PackageLicenseExpression>
     <Version>0.1.0</Version>
     <IncludeSymbols>true</IncludeSymbols>

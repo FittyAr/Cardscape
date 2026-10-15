@@ -15,7 +15,7 @@ per-contribution emoji rollup.
 
 | GitHub | Role |
 |---|---|
-| [@cardscape](https://github.com/cardscape) | creator, sole maintainer, release manager |
+| [@FittyAr](https://github.com/FittyAr) | creator, sole maintainer, release manager |
 
 (Updated as new maintainers join. See [MAINTAINERS.md](MAINTAINERS.md).)
 

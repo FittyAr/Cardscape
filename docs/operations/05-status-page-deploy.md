@@ -37,7 +37,7 @@ called for in the v1.1.0 plan §6.0).
    ```
 2. **In GitHub → Settings → Pages**, set the source to
    `Deploy from a branch` → `site` → `/ (root)`. GitHub
-   Pages will serve `https://cardscape.github.io/cardscape/`
+   Pages will serve `https://fittyar.github.io/Cardscape/`
    (or the custom domain in the `site/CNAME` file).
 3. **Add the deploy workflow** at
    `.github/workflows/site.yml`:
@@ -115,7 +115,7 @@ it up — this file is the recipe.
 ```bash
 # Clone the site branch locally and serve it with any
 # static-file server. The Python one-liner is enough.
-git clone --branch site --depth 1 https://github.com/cardscape/cardscape.git /tmp/cardscape-site
+git clone --branch site --depth 1 https://github.com/FittyAr/Cardscape.git /tmp/cardscape-site
 cd /tmp/cardscape-site
 python -m http.server 8080
 # open http://localhost:8080/status/

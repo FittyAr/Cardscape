@@ -7,7 +7,7 @@ assignees: []
 ---
 
 **Note**: open-ended questions are usually better in
-[GitHub Discussions → Q&A](https://github.com/cardscape/cardscape/discussions/categories/q-a).
+[GitHub Discussions → Q&A](https://github.com/FittyAr/Cardscape/discussions/categories/q-a).
 Use the issue tracker only for questions that have a
 specific, in-scope answer.
 

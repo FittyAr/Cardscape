@@ -61,7 +61,7 @@ For everything else, the maintainer's judgment is final.
 If you disagree with a decision the maintainer made:
 
 1. **Open a Discussion** in the
-   [Ideas category](https://github.com/cardscape/cardscape/discussions/categories/ideas).
+   [Ideas category](https://github.com/FittyAr/Cardscape/discussions/categories/ideas).
    Frame the disagreement in terms of the project's stated
    goals, not in terms of the maintainer's preferences.
 2. **Bring evidence** — links to docs, prior discussions,

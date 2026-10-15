@@ -10,12 +10,12 @@ questions, where to file bugs, and where **not** to ask.
 
 | If you want to… | Go to |
 |---|---|
-| Ask a "how do I…" question | [GitHub Discussions → Q&A](https://github.com/cardscape/cardscape/discussions/categories/q-a) |
-| Propose an idea or feature | [GitHub Discussions → Ideas](https://github.com/cardscape/cardscape/discussions/categories/ideas) |
-| Show what you built with Cardscape | [GitHub Discussions → Show and tell](https://github.com/cardscape/cardscape/discussions/categories/show-and-tell) |
-| Read the maintainer's announcements | [GitHub Discussions → Announcements](https://github.com/cardscape/cardscape/discussions/categories/announcements) |
-| Report a **bug** | [GitHub Issues](https://github.com/cardscape/cardscape/issues/new?template=bug_report.md) (use the **Bug report** template) |
-| Request a **feature** | [GitHub Issues](https://github.com/cardscape/cardscape/issues/new?template=feature_request.md) (use the **Feature request** template) |
+| Ask a "how do I…" question | [GitHub Discussions → Q&A](https://github.com/FittyAr/Cardscape/discussions/categories/q-a) |
+| Propose an idea or feature | [GitHub Discussions → Ideas](https://github.com/FittyAr/Cardscape/discussions/categories/ideas) |
+| Show what you built with Cardscape | [GitHub Discussions → Show and tell](https://github.com/FittyAr/Cardscape/discussions/categories/show-and-tell) |
+| Read the maintainer's announcements | [GitHub Discussions → Announcements](https://github.com/FittyAr/Cardscape/discussions/categories/announcements) |
+| Report a **bug** | [GitHub Issues](https://github.com/FittyAr/Cardscape/issues/new?template=bug_report.md) (use the **Bug report** template) |
+| Request a **feature** | [GitHub Issues](https://github.com/FittyAr/Cardscape/issues/new?template=feature_request.md) (use the **Feature request** template) |
 | Report a **security vulnerability** | [SECURITY.md](SECURITY.md) — **do not** file a public issue |
 | Discuss a specific PR | the PR's comment thread |
 | Discuss a specific issue | the issue's comment thread |

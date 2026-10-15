@@ -1,6 +1,6 @@
 # Cardscape
 
-[![CI](https://github.com/cardscape/cardscape/actions/workflows/ci.yml/badge.svg)](https://github.com/cardscape/cardscape/actions/workflows/ci.yml)
+[![CI](https://github.com/FittyAr/Cardscape/actions/workflows/ci.yml/badge.svg)](https://github.com/FittyAr/Cardscape/actions/workflows/ci.yml)
 [![License: RPL-1.5](https://img.shields.io/badge/License-RPL--1.5-blue.svg)](./LICENSE)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0--LTS-512BD4.svg)](https://dotnet.microsoft.com/)
 [![Radzen.Blazor](https://img.shields.io/badge/UI-Radzen.Blazor-FF6B35.svg)](https://blazor.radzen.com/)
@@ -212,7 +212,7 @@ The fastest way to a running Cardscape instance:
 
 ```bash
 # Clone the repo
-git clone https://github.com/cardscape/cardscape.git
+git clone https://github.com/FittyAr/Cardscape.git
 cd cardscape
 
 # Generate a real JWT signing key for production
@@ -240,7 +240,7 @@ docker compose -f docker-compose.dev.yml up -d
 For iterating on the source:
 
 ```bash
-git clone https://github.com/cardscape/cardscape.git
+git clone https://github.com/FittyAr/Cardscape.git
 cd cardscape
 dotnet build                       # 11 projects, 0 errors, 0 warnings
 dotnet test                        # 343 unit + 10 arch + 1 functional + 103 integration, all green
@@ -735,11 +735,11 @@ welcome.
 - The working contract every contributor (human or AI agent)
   reads first is [`docs/AGENTS.md`](docs/AGENTS.md).
 - For "how do I…" questions, use
-  [GitHub Discussions → Q&A](https://github.com/cardscape/cardscape/discussions/categories/q-a).
+  [GitHub Discussions → Q&A](https://github.com/FittyAr/Cardscape/discussions/categories/q-a).
 - For bug reports, use the
-  [bug report issue template](https://github.com/cardscape/cardscape/issues/new?template=bug_report.md).
+  [bug report issue template](https://github.com/FittyAr/Cardscape/issues/new?template=bug_report.md).
 - For feature requests, use the
-  [feature request issue template](https://github.com/cardscape/cardscape/issues/new?template=feature_request.md).
+  [feature request issue template](https://github.com/FittyAr/Cardscape/issues/new?template=feature_request.md).
 - For security disclosures, read [`SECURITY.md`](SECURITY.md)
   — do **not** file a public issue.
 

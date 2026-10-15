@@ -30,5 +30,5 @@ body:
       label: Links
       description: Links to the release, the docs, the PRs, the issues. One per line.
       placeholder: |
-        - Release: https://github.com/cardscape/cardscape/releases/tag/v0.1.0-mvp
+        - Tag: https://github.com/FittyAr/Cardscape/releases/tag/v0.1.0-mvp
         - Docs: docs/roadmap/01-implementation-plan.md
