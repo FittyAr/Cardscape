@@ -48,8 +48,12 @@ jobs:
         shell: bash
         run: |
           set -e
-          mkdir -p site/status
-          cp master/docs/status.md site/status/index.md
+          if [ -f master/docs/status.md ]; then
+            mkdir -p site/status
+            cp master/docs/status.md site/status/index.md
+          else
+            echo "docs/status.md not present; skipping status page."
+          fi
 
       - name: Commit and push
         shell: bash

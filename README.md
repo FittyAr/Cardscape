@@ -225,7 +225,7 @@ export CARDS_CAPE_DB_PASSWORD=cardscape-dev-password
 docker compose up -d
 
 # Open the UI
-open http://localhost:8080
+open http://localhost:7420
 ```
 
 You can also use the SQLite-only dev compose if you do not want
@@ -269,6 +269,31 @@ through configuration:
 Set `Database__Provider` to `Sqlite`, `PostgreSQL`, `MySql`, or `MariaDB`
 to match the connection string. Each engine has an EF Core migration
 history generated for its native types.
+
+### 4. Where things live (paths)
+
+Cardscape is a **server**: it installs nothing on your computer. The
+paths below follow the FittyAr convention for the cases where
+something does live on a machine.
+
+| What | Where |
+|---|---|
+| Docker data (database, uploads, DataProtection keys) | named volumes `cardscape.data`, `cardscape.uploads`, `cardscape.keys`, `cardscape.postgres_data` (unchanged) |
+| User config/data of a **non-Docker** run | Windows `%APPDATA%\FittyAr\Cardscape`; Linux `~/.config/FittyAr/Cardscape`; macOS `~/Library/Application Support/FittyAr/Cardscape` |
+| Installed app (none today; reserved if an installer is ever shipped) | Windows `%LOCALAPPDATA%\Programs\FittyAr\Cardscape`; Linux `~/.local/lib/FittyAr/Cardscape`; macOS `~/Applications/FittyAr/Cardscape` |
+| Dev SQLite database when using `scripts/` | `Data/cardscape.db` inside the checkout (git-ignored) |
+
+For a non-Docker run, point the settings at the user data folder, for
+example in PowerShell:
+
+```powershell
+$d = Join-Path $env:APPDATA 'FittyAr\Cardscape'
+$env:ConnectionStrings__Default = "Data Source=$d\cardscape.db"
+$env:Storage__LocalRoot = "$d\Storage"
+$env:Cardscape__DataProtection__KeyDirectory = "$d\DataProtectionKeys"
+```
+
+See [docs/operations/07-local-paths.md](docs/operations/07-local-paths.md).
 
 ---
 
