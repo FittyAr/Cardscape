@@ -53,6 +53,11 @@ services:
       Cardscape__Database__RunMigrationsOnStartup: "true"
       Cardscape__Seeder__Enabled: "false"
       Cardscape__Seeder__WipeBeforeSeed: "false"
+    # The same container also serves the MCP server for personal AI agents
+    # at /mcp (ADR 0015). It stays off until an administrator enables it in
+    # System settings > AI > "AI agents (MCP server)"; no extra service or
+    # port is needed. Behind a reverse proxy, keep /mcp unbuffered: it
+    # streams responses as server-sent events.
     ports:
       - "${CARDSCAPE_PORT:-7420}:8080"
     volumes:

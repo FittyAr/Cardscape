@@ -103,6 +103,11 @@ services:
       Cors__AllowedOrigins__1: http://127.0.0.1:7421
       Cors__AllowedOrigins__2: https://cardscape.home.fitty.ar
       Cardscape__Database__RunMigrationsOnStartup: "true"
+    # The same container also serves the MCP server for personal AI agents
+    # at /mcp (ADR 0015). It stays off until an administrator enables it in
+    # System settings > AI > "AI agents (MCP server)"; no extra service or
+    # port is needed. Behind a reverse proxy, keep /mcp unbuffered: it
+    # streams responses as server-sent events.
     ports:
       - "${CARDSCAPE_PROD_PORT:-7421}:8080"
     volumes:

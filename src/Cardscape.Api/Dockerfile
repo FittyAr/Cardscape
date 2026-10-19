@@ -15,6 +15,8 @@ COPY src/Cardscape.Infrastructure/Cardscape.Infrastructure.csproj src/Cardscape.
 COPY src/Cardscape.Migrations.PostgreSql/Cardscape.Migrations.PostgreSql.csproj src/Cardscape.Migrations.PostgreSql/
 COPY src/Cardscape.Migrations.MySql/Cardscape.Migrations.MySql.csproj src/Cardscape.Migrations.MySql/
 COPY src/Cardscape.Migrations.MariaDb/Cardscape.Migrations.MariaDb.csproj src/Cardscape.Migrations.MariaDb/
+# The MCP server is hosted inside the API (ADR 0015).
+COPY src/Cardscape.Mcp/Cardscape.Mcp.csproj                 src/Cardscape.Mcp/
 COPY src/Cardscape.Web/Cardscape.Web.csproj                 src/Cardscape.Web/
 COPY src/Cardscape.Api/Cardscape.Api.csproj                 src/Cardscape.Api/
 # Seeder ships in its own project (added in the seeder
