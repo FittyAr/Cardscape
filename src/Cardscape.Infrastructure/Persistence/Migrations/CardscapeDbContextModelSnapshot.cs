@@ -15,7 +15,7 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
             modelBuilder.Entity("Cardscape.Domain.Activities.Activity", b =>
                 {
@@ -23,6 +23,13 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("ActorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AgentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AgentName")
+                        .HasMaxLength(80)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("BoardId")
@@ -140,6 +147,13 @@ namespace Cardscape.Infrastructure.Persistence.Migrations
                     b.Property<string>("Action")
                         .IsRequired()
                         .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ActorAgentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ActorAgentName")
+                        .HasMaxLength(80)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ActorName")

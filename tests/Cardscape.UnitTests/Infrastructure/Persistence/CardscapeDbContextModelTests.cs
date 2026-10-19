@@ -90,6 +90,7 @@ public sealed class CardscapeDbContextModelTests
             [],
             processor,
             new AuditTrailWriter(services),
+            new AgentAttributionStamper(services),
             clock,
             NullLogger<DomainEventsInterceptor>.Instance);
         var options = new DbContextOptionsBuilder<CardscapeDbContext>()

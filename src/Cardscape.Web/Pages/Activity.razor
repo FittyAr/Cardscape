@@ -73,7 +73,9 @@ else
                         <span>@L["ActivityCard"]: </span>
                         <RadzenLink Path="@($"cards/{cardId}")" Text="@cardId.ToString()[..8]" />
                     }
-                    <span> · @L["ActivityActor"]: @a.ActorId.ToString()[..8]</span>
+                    <span> · @L["ActivityActor"]: </span>
+                    <ActorLabel Name="@(string.IsNullOrEmpty(a.ActorDisplayName) ? a.ActorId.ToString()[..8] : a.ActorDisplayName)"
+                                AgentName="@a.AgentName" />
                 </RadzenText>
                 @if (!string.IsNullOrEmpty(FormatPayload(a)))
                 {

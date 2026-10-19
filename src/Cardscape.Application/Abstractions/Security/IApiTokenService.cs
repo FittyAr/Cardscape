@@ -92,12 +92,14 @@ public sealed record ApiTokenIssuance(ApiTokenId Id, string CleartextSecret);
 /// <summary>
 /// Result of <see cref="IApiTokenService.ValidateAsync"/>. The
 /// <see cref="Scopes"/> are returned in their wire form
-/// (e.g. <c>"read"</c>, <c>"write"</c>).
+/// (e.g. <c>"read"</c>, <c>"cards:write"</c>). <see cref="Name"/> is the
+/// token's label, which names the AI agent that holds it.
 /// </summary>
 public sealed record ApiTokenValidation(
     UserId UserId,
     ApiTokenId TokenId,
-    IReadOnlyCollection<string> Scopes);
+    IReadOnlyCollection<string> Scopes,
+    string? Name = null);
 
 /// <summary>Compact projection of a token for the Web UI list.</summary>
 public sealed record ApiTokenSummary(

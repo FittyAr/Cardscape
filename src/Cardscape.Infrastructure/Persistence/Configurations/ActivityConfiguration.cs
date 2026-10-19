@@ -16,6 +16,8 @@ public sealed class ActivityConfiguration : IEntityTypeConfiguration<Activity>
             .IsRequired();
         builder.Property(x => x.CardId);
         builder.Property(x => x.ActorId).IsRequired();
+        builder.Property(x => x.AgentId);
+        builder.Property(x => x.AgentName).HasMaxLength(Activity.AgentNameMaxLength);
         builder.Property(x => x.Kind).HasConversion<int>().IsRequired();
         builder.Property(x => x.PayloadJson).IsRequired();
         builder.Property(x => x.OccurredAt).IsRequired();

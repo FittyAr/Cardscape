@@ -20,12 +20,12 @@ public static class ServiceCollectionExtensions
     public const string McpServerName = "Cardscape";
 
     /// <summary>
-    /// Registers the Model Context Protocol server on top of the
-    /// same Application + Infrastructure composition the REST API
-    /// uses. Auth is API-token bearer (long-lived tokens minted
-    /// by the user via the Web UI's "API tokens" page); tools are
-    /// static methods on classes decorated with
-    /// <see cref="McpServerToolAttribute"/>.
+    /// Composition for the standalone MCP host (Cardscape.Mcp.Host): the
+    /// same Application + Infrastructure composition the REST API uses,
+    /// agent-key bearer auth, the HTTP push back to the API's SignalR hub,
+    /// and the MCP server itself (<see cref="AddCardscapeMcpServer"/>).
+    /// The API registers only <see cref="AddCardscapeMcpServer"/> when it
+    /// hosts MCP in-process (ADR 0015).
     /// </summary>
     public static IServiceCollection AddCardscapeMcp(
         this IServiceCollection services,
@@ -49,7 +49,6 @@ public static class ServiceCollectionExtensions
         services.AddAuthorization();
         // Reuse Application's CurrentUser mapping. MCP owns only the
         // async-flow adapter populated from each propagated request principal.
-        services.AddSingleton<McpRequestCurrentUserAccessor>();
         services.AddSingleton<ICurrentUserAccessor>(provider =>
             provider.GetRequiredService<McpRequestCurrentUserAccessor>());
 
@@ -72,6 +71,23 @@ public static class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(10);
         });
         services.AddSingleton<IBoardPushClient, HttpBoardPushClient>();
+
+        return services.AddCardscapeMcpServer();
+    }
+
+    /// <summary>
+    /// Registers the Model Context Protocol server: tools, resources and
+    /// prompts (static methods on classes decorated with
+    /// <see cref="McpServerToolAttribute"/> and friends), the per-call scope
+    /// checks, and the resource-subscription broadcaster. The host supplies
+    /// the Application composition, authentication, an
+    /// <see cref="ICurrentUserAccessor"/> that consults
+    /// <see cref="McpRequestCurrentUserAccessor"/>, and an
+    /// <see cref="IBoardPushClient"/>.
+    /// </summary>
+    public static IServiceCollection AddCardscapeMcpServer(this IServiceCollection services)
+    {
+        services.AddSingleton<McpRequestCurrentUserAccessor>();
 
         // MCP subscriptions: per-board fan-out of ResourceUpdated
         // notifications. The broadcaster is process-wide; the
@@ -206,16 +222,28 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Maps authentication and the stateful Streamable HTTP MCP endpoint.
+    /// Standalone host pipeline: the administrator's on/off switch,
+    /// authentication and the stateful Streamable HTTP MCP endpoint.
     /// </summary>
     public static WebApplication UseCardscapeMcp(this WebApplication app)
     {
+        app.UseCardscapeMcpGate();
         app.UseAuthentication();
         app.UseAuthorization();
-        app.MapMcp("/mcp").RequireAuthorization();
+        app.MapCardscapeMcp().RequireAuthorization();
 
         return app;
     }
+
+    /// <summary>
+    /// Maps the stateful Streamable HTTP MCP endpoint at
+    /// <paramref name="pattern"/>. The caller adds the authorization
+    /// requirement and must also run <see cref="McpAvailabilityGate.UseCardscapeMcpGate"/>.
+    /// </summary>
+    public static IEndpointConventionBuilder MapCardscapeMcp(
+        this IEndpointRouteBuilder endpoints,
+        string pattern = McpEndpoint.DefaultPattern) =>
+        endpoints.MapMcp(pattern);
 
     public static WebApplication MapCardscapeHealthChecks(this WebApplication app)
     {

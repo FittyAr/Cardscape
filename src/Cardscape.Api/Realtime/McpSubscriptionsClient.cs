@@ -1,13 +1,15 @@
 using System.Text.Json;
 using Cardscape.Api.Logging;
 using Cardscape.Infrastructure.Configuration;
+using Cardscape.Mcp.Realtime;
 
 namespace Cardscape.Api.Realtime;
 
 /// <summary>
 /// HTTP client for the MCP server's
 /// <c>GET /api/internal/board-event/subscriptions</c>
-/// snapshot endpoint. The MCP runs in a separate process;
+/// snapshot endpoint when the MCP runs in a separate process
+/// (<c>Cardscape:Mcp:BaseUrl</c> set), or the in-process broadcaster otherwise;
 /// the API exposes the snapshot to the Web UI's
 /// <c>/admin/mcp-subscriptions</c> page through the
 /// <c>GET /api/admin/mcp-subscriptions</c> admin endpoint.
@@ -17,6 +19,7 @@ namespace Cardscape.Api.Realtime;
 public sealed class McpSubscriptionsClient(
     IHttpClientFactory factory,
     IConfiguration config,
+    McpResourceBroadcaster inProcess,
     ILogger<McpSubscriptionsClient> logger)
 {
 
@@ -39,8 +42,13 @@ public sealed class McpSubscriptionsClient(
     {
         if (string.IsNullOrWhiteSpace(_baseUrl))
         {
-            logger.McpSubscriptionsBaseUrlMissing();
-            return null;
+            // The MCP server hosted inside this process (ADR 0015).
+            McpResourceBroadcasterSnapshot local = inProcess.GetSnapshot();
+            return new McpSubscriptionsSnapshot(
+                local.Subscribers.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal),
+                [.. local.Events.Select(e => new McpSubscriptionEventDto(
+                    e.EventKind.ToString(), e.Uri, e.SessionId, e.Timestamp, e.Detail))],
+                local.CapturedAt);
         }
 
         if (string.IsNullOrWhiteSpace(_secret))

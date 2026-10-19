@@ -3,6 +3,7 @@ using System.Text.Encodings.Web;
 using Cardscape.Api.Logging;
 using Cardscape.Application.Abstractions.Persistence;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Domain.Common;
 using Cardscape.Domain.Security;
 using Cardscape.Infrastructure.Security;
@@ -42,7 +43,8 @@ public sealed class ApiTokenAuthenticationHandler(
     ILoggerFactory logger,
     UrlEncoder encoder,
     IApiTokenService tokens,
-    IApiTokenRepository repository)
+    IApiTokenRepository repository,
+    ISystemSettingsService settings)
         : AuthenticationHandler<ApiTokenAuthenticationOptions>(options, logger, encoder)
 {
     public const string SchemeName = "ApiToken";
@@ -50,6 +52,8 @@ public sealed class ApiTokenAuthenticationHandler(
 
     public IApiTokenService Tokens { get; } = tokens;
     public IApiTokenRepository Repository { get; } = repository;
+
+    public ISystemSettingsService Settings { get; } = settings;
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
@@ -83,19 +87,10 @@ public sealed class ApiTokenAuthenticationHandler(
         // token's configured limits.
         Context.Items[HttpContextItemKey] = aggregate;
 
-        ClaimsIdentity identity = new(SchemeName, ClaimTypes.Name, ClaimTypes.Role);
-        identity.AddClaim(new Claim(
-            ClaimTypes.NameIdentifier,
-            validation.Value.UserId.Value.ToString()));
-        identity.AddClaim(new Claim(
-            "token_id",
-            validation.Value.TokenId.Value.ToString()));
-        foreach (string scope in validation.Value.Scopes)
-        {
-            identity.AddClaim(new Claim("scope", scope));
-        }
-
-        ClaimsPrincipal principal = new(identity);
+        // The principal is the key's owner, marked as acting through the
+        // agent; the administrator's switch can make every key read-only.
+        bool writesAllowed = (await Settings.GetAsync(Context.RequestAborted)).Agents.AllowWrites;
+        ClaimsPrincipal principal = AgentIdentity.CreatePrincipal(SchemeName, validation.Value, writesAllowed);
         AuthenticationTicket ticket = new(principal, SchemeName);
         return AuthenticateResult.Success(ticket);
     }

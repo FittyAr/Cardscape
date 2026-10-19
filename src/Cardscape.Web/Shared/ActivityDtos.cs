@@ -12,7 +12,9 @@ public sealed record ActivityDto(
     string? ActorDisplayName,
     ActivityKind Kind,
     string PayloadJson,
-    DateTimeOffset OccurredAt);
+    DateTimeOffset OccurredAt,
+    Guid? AgentId = null,
+    string? AgentName = null);
 
 public sealed record ActivityPageDto(
     IReadOnlyList<ActivityDto> Items,

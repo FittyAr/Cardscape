@@ -17,7 +17,7 @@ namespace Cardscape.Migrations.MariaDb.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -29,6 +29,13 @@ namespace Cardscape.Migrations.MariaDb.Migrations
 
                     b.Property<Guid>("ActorId")
                         .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("AgentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("AgentName")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
 
                     b.Property<Guid>("BoardId")
                         .HasColumnType("char(36)");
@@ -146,6 +153,13 @@ namespace Cardscape.Migrations.MariaDb.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("varchar(64)");
+
+                    b.Property<Guid?>("ActorAgentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ActorAgentName")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
 
                     b.Property<string>("ActorName")
                         .IsRequired()

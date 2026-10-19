@@ -1,0 +1,28 @@
+@inject NavigationManager Navigation
+
+@* Personal AI agents connected through the built-in MCP server (ADR 0015):
+   whether the server runs at all, and whether agents may change anything.
+   Each user then mints their own agent key on /account/ai-agents. *@
+
+<SettingsCard Title="@L["SettingsAgentsTitle"]" Description="@L["SettingsAgentsDescription"]">
+    <SettingToggle Name="McpEnabled" @bind-Value="Model.McpEnabled" Label="@L["SettingsAgentsMcpEnabled"]"
+                   Help="@L["SettingsAgentsMcpEnabledHelp"]" />
+    <SettingToggle Name="AgentsAllowWrites" @bind-Value="Model.AllowWrites" Label="@L["SettingsAgentsAllowWrites"]"
+                   Help="@L["SettingsAgentsAllowWritesHelp"]" Disabled="@(!Model.McpEnabled)" />
+
+    <RadzenStack Gap="0.25rem">
+        <RadzenLabel Text="@L["SettingsAgentsEndpoint"]" Component="McpEndpointUrl" />
+        <RadzenTextBox Name="McpEndpointUrl" Value="@EndpointUrl" ReadOnly="true" Style="width: 100%;" />
+        <RadzenText Text="@L["SettingsAgentsEndpointHelp"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-m-0" />
+    </RadzenStack>
+
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" Icon="smart_toy">
+        @L["SettingsAgentsAttributionNote"]
+    </RadzenAlert>
+</SettingsCard>
+
+@code {
+    [Parameter, EditorRequired] public AgentSettings Model { get; set; } = default!;
+
+    private string EndpointUrl => Navigation.BaseUri.TrimEnd('/') + "/mcp";
+}

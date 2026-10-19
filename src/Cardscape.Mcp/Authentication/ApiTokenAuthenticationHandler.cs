@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Cardscape.Application.Abstractions.Security;
+using Cardscape.Application.Abstractions.Settings;
 using Cardscape.Infrastructure.Security;
 using Cardscape.Mcp.Logging;
 using Microsoft.AspNetCore.Authentication;
@@ -9,22 +10,21 @@ using Microsoft.Extensions.Options;
 namespace Cardscape.Mcp.Authentication;
 
 /// <summary>
-/// Authentication handler for the MCP server. v0.3 accepts the
-/// long-lived API tokens minted via <see cref="IApiTokenService"/>.
-/// The cleartext secret travels in the <c>Authorization: Bearer</c>
-/// header, the handler hashes it with the same SHA-256 used at
-/// issuance, and the <see cref="IApiTokenService"/> decides whether
-/// the token is active. A successful validation produces a
-/// <see cref="ClaimsPrincipal"/> with the user id (as
-/// <see cref="ClaimTypes.NameIdentifier"/>), the token id (as
-/// <c>"token_id"</c>), and one <c>"scope"</c> claim per granted
-/// scope.
+/// Authentication handler for the standalone MCP host. It accepts the
+/// agent keys (API tokens) minted via <see cref="IApiTokenService"/>: the
+/// cleartext secret travels in the <c>Authorization: Bearer</c> header, the
+/// handler hashes it with the same SHA-256 used at issuance, and the
+/// <see cref="IApiTokenService"/> decides whether the key is active. The
+/// resulting principal is the key's owner, marked as acting through the
+/// agent (see <see cref="AgentIdentity.CreatePrincipal"/>). When the API hosts
+/// MCP in-process it uses its own API-token handler instead.
 /// </summary>
 public sealed class ApiTokenAuthenticationHandler(
     IOptionsMonitor<ApiTokenAuthenticationOptions> options,
     ILoggerFactory logger,
     UrlEncoder encoder,
-    IApiTokenService tokens)
+    IApiTokenService tokens,
+    ISystemSettingsService settings)
         : AuthenticationHandler<ApiTokenAuthenticationOptions>(options, logger, encoder)
 {
     public const string SchemeName = "ApiToken";
@@ -61,19 +61,9 @@ public sealed class ApiTokenAuthenticationHandler(
             return AuthenticateResult.Fail(validation.Error.Message);
         }
 
-        ClaimsIdentity identity = new(SchemeName, ClaimTypes.Name, ClaimTypes.Role);
-        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier,
-                                   validation.Value.UserId.Value.ToString()));
-        identity.AddClaim(new Claim("token_id",
-                                   validation.Value.TokenId.Value.ToString()));
-        foreach (var scope in validation.Value.Scopes)
-        {
-            identity.AddClaim(new Claim("scope", scope));
-        }
-
-        ClaimsPrincipal principal = new(identity);
-        AuthenticationTicket ticket = new(principal, SchemeName);
-        return AuthenticateResult.Success(ticket);
+        bool writesAllowed = (await settings.GetAsync(Context.RequestAborted)).Agents.AllowWrites;
+        ClaimsPrincipal principal = AgentIdentity.CreatePrincipal(SchemeName, validation.Value, writesAllowed);
+        return AuthenticateResult.Success(new AuthenticationTicket(principal, SchemeName));
     }
 }
 

@@ -17,6 +17,7 @@ public sealed class AuditEntry
     public const int TargetTypeMaxLength = 32;
     public const int NameMaxLength = 320;
     public const int DetailsMaxLength = 2048;
+    public const int AgentNameMaxLength = 80;
 
     /// <summary>Stored actor name when nobody signed in did it (background jobs, tests, the seeder).</summary>
     public const string SystemActorName = "system";
@@ -36,6 +37,15 @@ public sealed class AuditEntry
     public Guid? ActorUserId { get; private set; }
 
     public string ActorName { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// The AI agent key the actor used, when the actor's agent did it rather
+    /// than the person (ADR 0015).
+    /// </summary>
+    public Guid? ActorAgentId { get; private set; }
+
+    /// <summary>Snapshot of the agent's name (its key's label) when <see cref="ActorAgentId"/> is set.</summary>
+    public string? ActorAgentName { get; private set; }
 
     /// <summary>Stable action code, e.g. <c>workspace.member_role_changed</c> (see <see cref="AuditActions"/>).</summary>
     public string Action { get; private set; } = string.Empty;
@@ -97,6 +107,14 @@ public sealed class AuditEntry
             BoardName = boardName is null ? null : Clip(boardName),
             Details = details
         };
+    }
+
+    /// <summary>Marks this entry as done by the actor's AI agent.</summary>
+    public void AttributeToAgent(Guid agentId, string agentName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(agentName);
+        ActorAgentId = agentId;
+        ActorAgentName = agentName.Length <= AgentNameMaxLength ? agentName : agentName[..AgentNameMaxLength];
     }
 
     /// <summary>

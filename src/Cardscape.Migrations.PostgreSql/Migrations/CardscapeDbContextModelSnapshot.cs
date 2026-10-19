@@ -17,7 +17,7 @@ namespace Cardscape.Migrations.PostgreSql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -29,6 +29,13 @@ namespace Cardscape.Migrations.PostgreSql.Migrations
 
                     b.Property<Guid>("ActorId")
                         .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AgentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AgentName")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
 
                     b.Property<Guid>("BoardId")
                         .HasColumnType("uuid");
@@ -146,6 +153,13 @@ namespace Cardscape.Migrations.PostgreSql.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("ActorAgentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActorAgentName")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
 
                     b.Property<string>("ActorName")
                         .IsRequired()

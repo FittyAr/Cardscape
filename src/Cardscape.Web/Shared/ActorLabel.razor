@@ -1,0 +1,36 @@
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+
+@*
+  ActorLabel — who made a change. A person shows as their name; a change
+  made by that person's AI agent (ADR 0015) shows as "Ivan · AI" with a
+  robot badge whose tooltip names the agent, so the history always tells
+  the person and their agent apart. AgentLabel.Text is the plain-text form
+  (exports, aria labels).
+*@
+
+@if (string.IsNullOrWhiteSpace(AgentName))
+{
+    <span class="@Class">@Name</span>
+}
+else
+{
+    <span class="cs-actor-agent @Class" title="@L["AgentActorTooltip", AgentName]"
+          aria-label="@AgentLabel.Text(Name, AgentName, L)">
+        <span>@Name</span>
+        <RadzenBadge BadgeStyle="BadgeStyle.Info" Variant="Variant.Outlined" Shade="Shade.Default" IsPill="true">
+            <RadzenIcon Icon="smart_toy" Style="font-size: 0.875rem; vertical-align: -0.125rem;" />
+            @L["AgentActorSuffix"]
+        </RadzenBadge>
+    </span>
+}
+
+@code {
+    [Parameter, EditorRequired] public string Name { get; set; } = string.Empty;
+
+    /// <summary>The agent's name when the change was made by the person's AI agent.</summary>
+    [Parameter] public string? AgentName { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+}

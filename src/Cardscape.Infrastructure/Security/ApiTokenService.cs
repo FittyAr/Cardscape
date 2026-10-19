@@ -107,7 +107,8 @@ public sealed class ApiTokenService(
         return Result.Success(new ApiTokenValidation(
             token.UserId,
             token.Id,
-            token.Scopes.Values.Select(s => s.ToWire()).ToList()));
+            token.Scopes.Values.Select(s => s.ToWire()).ToList(),
+            token.Name.Value));
     }
 
     public async Task<Result> RevokeAsync(ApiTokenId id, Guid by, string? reason, CancellationToken ct)

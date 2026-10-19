@@ -43,7 +43,10 @@ else
                         <LimitSettingsPanel Model="@draft.Limits" />
                     </RadzenTabsItem>
                     <RadzenTabsItem Text="@L["SettingsTabAi"]" Icon="auto_awesome">
-                        <AiSettingsPanel Model="@draft.Ai" HasUnsavedChanges="@Editor.HasChanges" />
+                        <RadzenStack Gap="1rem">
+                            <AiSettingsPanel Model="@draft.Ai" HasUnsavedChanges="@Editor.HasChanges" />
+                            <AgentSettingsPanel Model="@draft.Agents" />
+                        </RadzenStack>
                     </RadzenTabsItem>
                     <RadzenTabsItem Text="@L["SettingsTabEmail"]" Icon="mail">
                         <EmailSettingsPanel Model="@draft.Email" InstanceTitle="@draft.General.InstanceTitle"

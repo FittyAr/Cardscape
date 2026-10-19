@@ -364,16 +364,14 @@ by configuration.
 In local development:
 
 ```bash
-# Start the API (the MCP server shares the Application
-# layer; the API is a separate process for the REST API).
+# The API serves the MCP endpoint itself at /mcp (ADR 0015).
 dotnet run --project src/Cardscape.Api
-
-# In another terminal, start the MCP HTTP server.
-dotnet run --project src/Cardscape.Mcp
 ```
 
-Connect an MCP client to `http://localhost:59515/mcp` and
-send the minted API token as `Authorization: Bearer <secret>`.
+An administrator turns the server on in System settings > AI > AI agents
+(it is off by default). Then connect an MCP client to
+`http://localhost:5291/mcp` with an agent key from the AI agents page as
+`Authorization: Bearer <secret>`.
 
 The local dev setup is the same as the production setup,
 minus the reverse proxy and the monitoring.
@@ -382,10 +380,11 @@ minus the reverse proxy and the monitoring.
 
 ## 8. The MCP server's deployment
 
-The MCP server is an independent ASP.NET Core deployable. No MCP container is
-currently published. Publish `src/Cardscape.Mcp/Cardscape.Mcp.csproj`, run it
-as a supervised service, configure the same database as the API, and expose
-its authenticated `/mcp` Streamable HTTP endpoint through the reverse proxy.
+The MCP server ships inside the API image: there is nothing extra to deploy,
+and the administrator's switch decides whether `/mcp` answers. To scale it
+apart from the web app, publish `src/Cardscape.Mcp.Host/Cardscape.Mcp.Host.csproj`
+as its own service with the same database and data directory as the API, and
+route `/mcp` to it through the reverse proxy.
 
 The user's API token is created in the web UI (Settings →
 API tokens). The token is shown once, at creation time,

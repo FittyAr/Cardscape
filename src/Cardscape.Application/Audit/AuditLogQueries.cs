@@ -14,6 +14,8 @@ namespace Cardscape.Application.Audit;
 /// <param name="ActorName">Snapshot; <c>system</c> or <c>scim</c> when <paramref name="ActorUserId"/> is null.</param>
 /// <param name="Action">Stable code, see <see cref="AuditActions"/>.</param>
 /// <param name="Details">Action-specific facts, e.g. <c>from</c>/<c>to</c> roles.</param>
+/// <param name="ActorAgentId">Set when the actor's AI agent did it (ADR 0015).</param>
+/// <param name="ActorAgentName">The agent's name when <paramref name="ActorAgentId"/> is set.</param>
 public sealed record AuditEntryDto(
     Guid Id,
     DateTimeOffset OccurredAt,
@@ -27,7 +29,9 @@ public sealed record AuditEntryDto(
     string? WorkspaceName,
     Guid? BoardId,
     string? BoardName,
-    IReadOnlyDictionary<string, string> Details)
+    IReadOnlyDictionary<string, string> Details,
+    Guid? ActorAgentId = null,
+    string? ActorAgentName = null)
 {
     public static AuditEntryDto From(AuditEntry entry) => new(
         entry.Id,
@@ -42,7 +46,9 @@ public sealed record AuditEntryDto(
         entry.WorkspaceName,
         entry.BoardId,
         entry.BoardName,
-        ParseDetails(entry.Details));
+        ParseDetails(entry.Details),
+        entry.ActorAgentId,
+        entry.ActorAgentName);
 
     private static Dictionary<string, string> ParseDetails(string? json)
     {

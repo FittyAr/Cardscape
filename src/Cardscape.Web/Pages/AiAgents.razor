@@ -1,0 +1,376 @@
+@page "/account/ai-agents"
+@page "/account/api-tokens"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@implements IDisposable
+@using Cardscape.Web.Services
+@using Cardscape.Web.Services.Api
+@using Cardscape.Web.Shared
+@using Cardscape.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject ISecurityApiClient Security
+@inject InstanceSettingsState Instance
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
+
+@*
+  Personal AI agents (ADR 0015). Each user connects their own assistant to
+  the built-in MCP server with a key of their own; the agent acts as the
+  user, narrowed further by the permissions chosen here, and everything it
+  changes is recorded as "<name> · AI". The keys are ordinary API tokens.
+*@
+
+<PageTitle>@L["NavAiAgents"] @L["PageTitleSuffix"]</PageTitle>
+
+<RadzenStack Gap="1rem" Class="rz-mx-auto" Style="max-width: 80rem;">
+    <PageHeader Title="@L["NavAiAgents"]" Subtitle="@L["AgentsBlurb"]" Actions="@(NewAgentButton())" />
+
+    @if (!Instance.Current.McpEnabled)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" Icon="power_off">
+            @L["AgentsMcpDisabled"]
+        </RadzenAlert>
+    }
+    else
+    {
+        @if (!Instance.Current.AgentWritesAllowed)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" Icon="visibility">
+                @L["AgentsReadOnlyByAdmin"]
+            </RadzenAlert>
+        }
+
+        <RadzenCard Variant="Variant.Outlined">
+            <RadzenStack Gap="0.75rem">
+                <RadzenText Text="@L["AgentsConnectTitle"]" TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0" />
+                <RadzenText Text="@L["AgentsConnectHelp"]" TextStyle="TextStyle.Body2" class="rz-color-text-secondary rz-m-0" />
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                    <RadzenLabel Text="@L["AgentsServerUrl"]" Component="agents-mcp-url" />
+                    <RadzenTextBox Name="agents-mcp-url" Value="@McpUrl" ReadOnly="true" Style="flex: 1 1 18rem;" />
+                    <RadzenButton Text="@(urlCopied ? L["AgentsCopied"] : L["AgentsCopy"])" Icon="content_copy" ButtonStyle="ButtonStyle.Light"
+                                  Size="ButtonSize.Small" Click="@CopyUrlAsync" />
+                </RadzenStack>
+                <RadzenText Text="@L["AgentsConfigExample"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-m-0" />
+                <SecretBox Secret="@ConfigExample(issuedSecret ?? "<" + L["AgentsYourKey"] + ">")" AriaLabel="@L["AgentsConfigExample"]" />
+            </RadzenStack>
+        </RadzenCard>
+    }
+
+    @if (showCreate)
+    {
+        <RadzenCard>
+            <RadzenTemplateForm TItem="CreateModel" Data="@createModel" Submit="@CreateAgentAsync">
+                <LabeledField Text="@L["AgentsName"]" Component="agent-name">
+                    <RadzenTextBox @bind-Value="createModel.Name" Name="agent-name" MaxLength="80"
+                                   Placeholder="@L["AgentsNamePlaceholder"]" Style="width:100%" />
+                </LabeledField>
+                <RadzenRequiredValidator Component="agent-name" Text="@L["ValidationRequired"]" />
+
+                <RadzenText Text="@L["AgentsPermissions"]" TextStyle="TextStyle.Subtitle2" TagName="TagName.H3" class="rz-mt-3 rz-mb-1" />
+                <RadzenText Text="@L["AgentsPermissionsHelp"]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-mb-2" />
+                <RadzenStack Gap="0.75rem">
+                    @foreach (Permission permission in Permissions)
+                    {
+                        string id = "agent-perm-" + permission.Scope.Replace(':', '-');
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.75rem" AlignItems="AlignItems.Start">
+                            <RadzenCheckBox TValue="bool" Name="@id" Value="@createModel.Scopes.Contains(permission.Scope)"
+                                            ValueChanged="@(on => Toggle(permission.Scope, on))"
+                                            Disabled="@(permission.IsWrite && !Instance.Current.AgentWritesAllowed)" />
+                            <RadzenStack Gap="0">
+                                <RadzenLabel Text="@L[permission.LabelKey]" Component="@id" />
+                                <RadzenText Text="@L[permission.HelpKey]" TextStyle="TextStyle.Caption" class="rz-color-text-secondary rz-m-0" />
+                            </RadzenStack>
+                        </RadzenStack>
+                    }
+                </RadzenStack>
+
+                <RadzenRow Gap="1rem" class="rz-mt-3">
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <LabeledField Text="@L["ApiTokensRateLimit"]" Component="agent-rate" Help="@L["ApiTokensRateLimitHelp"]">
+                            <RadzenNumeric TValue="int" @bind-Value="createModel.RateLimitPerHour" Name="agent-rate"
+                                           Min="0" Max="100000" Style="width:100%" />
+                        </LabeledField>
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <LabeledField Text="@L["ApiTokensBurst"]" Component="agent-burst" Help="@L["ApiTokensBurstHelp"]">
+                            <RadzenNumeric TValue="int" @bind-Value="createModel.BurstSize" Name="agent-burst"
+                                           Min="1" Max="10000" Style="width:100%" />
+                        </LabeledField>
+                    </RadzenColumn>
+                </RadzenRow>
+
+                @if (error is not null)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false" Class="rz-mt-2">
+                        @error
+                    </RadzenAlert>
+                }
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-3">
+                    <RadzenButton Text="@L["ActionCancel"]" ButtonStyle="ButtonStyle.Light" Click="@CancelCreate" />
+                    <RadzenButton Text="@L["AgentsCreate"]" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary"
+                                  IsBusy="@busy" />
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    }
+
+    @if (issuedSecret is not null)
+    {
+        <RadzenCard Variant="Variant.Outlined">
+            <RadzenStack Gap="0.5rem">
+                <RadzenText Text="@L["AgentsKeyCreated"]" TextStyle="TextStyle.H5" TagName="TagName.H3" />
+                <RadzenText Text="@L["ApiTokensCopyNow"]" />
+                <SecretBox Secret="@issuedSecret" />
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <RadzenButton Text="@(secretCopied ? L["AgentsCopied"] : L["AgentsCopy"])" Icon="content_copy" ButtonStyle="ButtonStyle.Light"
+                                  Click="@CopySecretAsync" />
+                    <RadzenButton Text="@L["ApiTokensCopied"]" ButtonStyle="ButtonStyle.Primary"
+                                  Click="@DismissIssuedSecret" />
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    }
+
+    @if (loading)
+    {
+        <LoadingState Size="LoadingSize.Section" />
+    }
+    else if (loadError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" AllowClose="false">@loadError</RadzenAlert>
+    }
+    else if (tokens is { Count: 0 })
+    {
+        <RadzenText Text="@L["AgentsEmpty"]" />
+    }
+    else if (tokens is not null)
+    {
+        <RadzenStack Gap="0.5rem">
+            @foreach (ApiTokenSummaryDto token in tokens)
+            {
+                <RadzenCard Variant="Variant.Outlined">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                <RadzenIcon Icon="smart_toy" />
+                                <RadzenText Text="@token.Name" TextStyle="TextStyle.H6" TagName="TagName.H3" class="rz-m-0" />
+                            </RadzenStack>
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" Wrap="FlexWrap.Wrap">
+                                @foreach (string scope in token.Scopes)
+                                {
+                                    <RadzenBadge Text="@ScopeLabel(scope)" BadgeStyle="@(scope == "read" ? BadgeStyle.Secondary : BadgeStyle.Info)"
+                                                 Variant="Variant.Outlined" />
+                                }
+                            </RadzenStack>
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-text-secondary">
+                                <code>@token.SecretPrefix…</code>
+                                · @L["ApiTokensCreatedAt", token.CreatedAt.LocalDateTime.ToString("d")]
+                                @if (token.LastUsedAt is not null)
+                                {
+                                    <span> · @L["ApiTokensLastUsed", token.LastUsedAt.Value.LocalDateTime.ToString("g")]</span>
+                                }
+                                ·
+                                @if (token.RateLimitPerHour == 0)
+                                {
+                                    <span>@L["ApiTokensRateLimitDisabled"]</span>
+                                }
+                                else
+                                {
+                                    <span>@L["ApiTokensRateLimitSummary", token.RateLimitPerHour, token.BurstSize]</span>
+                                }
+                                @if (rateLimitById.TryGetValue(token.Id, out ApiTokenRateLimitStatusDto? status))
+                                {
+                                    <span> · @L["ApiTokensRemaining", Math.Floor(status.AvailableTokens), status.BurstSize]</span>
+                                }
+                            </RadzenText>
+                        </RadzenStack>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                            @if (token.RevokedAt is null)
+                            {
+                                <RadzenBadge Text="@L["WebhooksActive"]" BadgeStyle="BadgeStyle.Success" />
+                                <RadzenButton Text="@L["AgentsDisconnect"]" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                              Click="@(() => RevokeAsync(token))" />
+                            }
+                            else
+                            {
+                                <RadzenBadge Text="@L["ScimRevoked"]" BadgeStyle="BadgeStyle.Light" />
+                            }
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            }
+        </RadzenStack>
+    }
+</RadzenStack>
+
+@code {
+    private sealed record Permission(string Scope, string LabelKey, string HelpKey, bool IsWrite);
+
+    // Mirrors the scopes of Cardscape.Domain.Security.Scope (ADR 0015).
+    private static readonly Permission[] Permissions =
+    [
+        new("read", "AgentsPermRead", "AgentsPermReadHelp", IsWrite: false),
+        new("cards:write", "AgentsPermCards", "AgentsPermCardsHelp", IsWrite: true),
+        new("comments:write", "AgentsPermComments", "AgentsPermCommentsHelp", IsWrite: true),
+        new("boards:write", "AgentsPermBoards", "AgentsPermBoardsHelp", IsWrite: true),
+        new("workspace:write", "AgentsPermWorkspace", "AgentsPermWorkspaceHelp", IsWrite: true),
+    ];
+
+    private IReadOnlyList<ApiTokenSummaryDto>? tokens;
+    private Dictionary<Guid, ApiTokenRateLimitStatusDto> rateLimitById = new();
+    private bool showCreate;
+    private bool busy;
+    private bool loading;
+    private bool urlCopied;
+    private bool secretCopied;
+    private string? error;
+    private string? loadError;
+    private string? issuedSecret;
+    private CreateModel createModel = new();
+
+    private string McpUrl => Navigation.BaseUri.TrimEnd('/') + "/mcp";
+
+    private string ConfigExample(string key) =>
+        "{\n  \"mcpServers\": {\n    \"cardscape\": {\n      \"type\": \"http\",\n      \"url\": \"" + McpUrl
+        + "\",\n      \"headers\": { \"Authorization\": \"Bearer " + key + "\" }\n    }\n  }\n}";
+
+    private RenderFragment NewAgentButton() => __builder =>
+    {
+        <RadzenButton Text="@L["AgentsNew"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                      Click="@(() => showCreate = !showCreate)"
+                      Disabled="@(issuedSecret is not null || !Instance.Current.McpEnabled)" />
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        Instance.Changed += OnInstanceChanged;
+        await Instance.GetAsync();
+        await RefreshAsync();
+    }
+
+    public void Dispose() => Instance.Changed -= OnInstanceChanged;
+
+    private void OnInstanceChanged() => InvokeAsync(StateHasChanged);
+
+    private string ScopeLabel(string scope) => scope switch
+    {
+        "write" => L["AgentsPermAllWrites"],
+        _ => Permissions.FirstOrDefault(p => p.Scope == scope) is { } p ? L[p.LabelKey] : scope,
+    };
+
+    private void Toggle(string scope, bool on)
+    {
+        if (on)
+        {
+            createModel.Scopes.Add(scope);
+        }
+        else
+        {
+            createModel.Scopes.Remove(scope);
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        loading = true;
+        loadError = null;
+        try
+        {
+            ApiResult<IReadOnlyList<ApiTokenSummaryDto>> result = await Security.ListTokensAsync();
+            if (!result.IsSuccess || result.Value is null)
+            {
+                tokens = null;
+                rateLimitById.Clear();
+                loadError = result.Error ?? L["ApiTokensLoadFailed"];
+                return;
+            }
+
+            tokens = result.Value;
+            ApiTokenSummaryDto[] activeTokens = tokens.Where(t => t.RevokedAt is null).ToArray();
+            ApiResult<ApiTokenRateLimitStatusDto>[] statuses = await Task.WhenAll(
+                activeTokens.Select(t => Security.GetRateLimitStatusAsync(t.Id)));
+
+            rateLimitById = activeTokens
+                .Zip(statuses)
+                .Where(pair => pair.Second.IsSuccess && pair.Second.Value is not null)
+                .ToDictionary(pair => pair.First.Id, pair => pair.Second.Value!);
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task CreateAgentAsync()
+    {
+        busy = true;
+        error = null;
+        try
+        {
+            if (createModel.Scopes.Count == 0)
+            {
+                error = L["ApiTokensScopeRequired"];
+                return;
+            }
+
+            ApiResult<ApiTokenIssuanceDto> result = await Security.IssueTokenAsync(
+                createModel.Name, [.. createModel.Scopes], expiresAt: null,
+                rateLimitPerHour: createModel.RateLimitPerHour,
+                burstSize: createModel.BurstSize);
+            if (!result.IsSuccess)
+            {
+                error = result.Error;
+                return;
+            }
+
+            issuedSecret = result.Value!.CleartextSecret;
+            secretCopied = false;
+            createModel = new CreateModel();
+            showCreate = false;
+
+            await RefreshAsync();
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void CancelCreate()
+    {
+        showCreate = false;
+        error = null;
+        createModel = new CreateModel();
+    }
+
+    private void DismissIssuedSecret() => issuedSecret = null;
+
+    private async Task CopyUrlAsync() => urlCopied = await JS.InvokeAsync<bool>("cardscape.copyText", McpUrl);
+
+    private async Task CopySecretAsync() => secretCopied = await JS.InvokeAsync<bool>("cardscape.copyText", issuedSecret);
+
+    private async Task RevokeAsync(ApiTokenSummaryDto token)
+    {
+        ApiResult result = await Security.RevokeTokenAsync(token.Id, null);
+        if (result.IsSuccess)
+        {
+            await RefreshAsync();
+            return;
+        }
+
+        loadError = result.Error ?? L["ApiTokensRevokeFailed"];
+    }
+
+    private sealed class CreateModel
+    {
+        public string Name { get; set; } = string.Empty;
+
+        // A new agent starts able to read and to work on cards and comments;
+        // board structure and workspace administration are opt-in.
+        public HashSet<string> Scopes { get; } = ["read", "cards:write", "comments:write"];
+
+        public int RateLimitPerHour { get; set; } = 1000;
+
+        public int BurstSize { get; set; } = 50;
+    }
+}

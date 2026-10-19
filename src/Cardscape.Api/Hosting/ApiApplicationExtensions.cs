@@ -1,5 +1,6 @@
 using Cardscape.Api.Middleware;
 using Cardscape.Infrastructure.Persistence;
+using Cardscape.Mcp.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -68,6 +69,11 @@ internal static class ApiApplicationExtensions
         }
 
         app.UseHttpsRedirection();
+
+        // The built-in MCP server (ADR 0015) answers 404 while the
+        // administrator has it switched off — before authentication, so a
+        // disabled server does not even reveal whether an agent key is valid.
+        app.UseCardscapeMcpGate();
         app.UseAuthentication();
 
         // BETA-3-#5 — see test-results/BETA-TEST-REPORT.md. The
@@ -85,6 +91,8 @@ internal static class ApiApplicationExtensions
         app.UseMiddleware<Cardscape.Api.Middleware.PasswordChangeRequiredMiddleware>();
         app.UseMiddleware<Cardscape.Api.Middleware.MaintenanceModeMiddleware>();
         app.UseMiddleware<RateLimitMiddleware>();
+        app.UseMiddleware<AgentKeyScopeMiddleware>();
+        app.UseMiddleware<ActorLogContextMiddleware>();
 
         app.MapCardscapeEndpoints();
 
@@ -110,6 +118,7 @@ internal static class ApiApplicationExtensions
         app.MapWhen(
             context => !context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
                 && !context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase)
+                && !context.Request.Path.StartsWithSegments(McpEndpoint.DefaultPattern, StringComparison.OrdinalIgnoreCase)
                 && !context.Request.Path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase)
                 && !context.Request.Path.StartsWithSegments("/scalar", StringComparison.OrdinalIgnoreCase),
             branch => branch.UseStaticFiles().UseRouting().UseEndpoints(endpoints =>

@@ -1,3 +1,6 @@
+using Cardscape.Application.Abstractions.Settings;
+using Cardscape.Contracts.Settings;
+using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -216,6 +219,14 @@ public sealed class McpHostFactory : WebApplicationFactory<Cardscape.Mcp.Program
     {
         _port = port;
         _ = CreateClient();
+
+        // The MCP endpoint answers only while an administrator has it
+        // switched on (ADR 0015); this fixture exercises it.
+        using IServiceScope scope = Services.CreateScope();
+        ISystemSettingsService settings = scope.ServiceProvider.GetRequiredService<ISystemSettingsService>();
+        SystemSettings current = settings.GetAsync().GetAwaiter().GetResult();
+        current.Agents.McpEnabled = true;
+        settings.UpdateAsync(current, "e2e").GetAwaiter().GetResult().IsSuccess.Should().BeTrue();
     }
 
     protected override IHost CreateHost(IHostBuilder builder)

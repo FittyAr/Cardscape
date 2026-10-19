@@ -7,6 +7,8 @@ using Cardscape.Application.Abstractions.Realtime;
 using Cardscape.Application.DependencyInjection;
 using Cardscape.Infrastructure.DependencyInjection;
 using Cardscape.Infrastructure.Logging;
+using Cardscape.Mcp.Extensions;
+using Cardscape.Mcp.Realtime;
 using Cardscape.Seeder.DependencyInjection;
 
 namespace Cardscape.Api.Hosting;
@@ -109,6 +111,12 @@ internal static class ApiHostServiceCollectionExtensions
         // configured the same way as the reverse path
         // (Cardscape:Mcp:BaseUrl + Internal:Secret).
         builder.Services.AddSignalR();
+
+        // Built-in MCP server (ADR 0015). The API's own domain-event
+        // broadcasters already push every change to SignalR, so the
+        // tools' explicit push is a no-op in-process.
+        builder.Services.AddCardscapeMcpServer();
+        builder.Services.AddSingleton<IBoardPushClient, InProcessBoardPushClient>();
         builder.Services.AddSingleton<IBoardNotifier, CompositeBoardNotifier>();
         builder.Services.AddSingleton<HttpMcpResourceNotifier>();
         builder.Services.AddSingleton<McpSubscriptionsClient>();

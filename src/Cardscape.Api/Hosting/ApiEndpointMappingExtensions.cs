@@ -31,7 +31,9 @@ using Cardscape.Api.Endpoints.Users;
 using Cardscape.Api.Endpoints.Voting;
 using Cardscape.Api.Endpoints.Webhooks;
 using Cardscape.Api.Endpoints.Workspaces;
+using Cardscape.Api.Extensions;
 using Cardscape.Api.Hubs;
+using Cardscape.Mcp.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 
@@ -100,6 +102,9 @@ internal static class ApiEndpointMappingExtensions
         app.MapAdminSettingsEndpoints();
         app.MapAiEndpoints();
         app.MapMcpSubscriptionsAdminEndpoints();
+        // Built-in MCP server for personal AI agents (ADR 0015). Gated by
+        // the administrator's switch in UseCardscapeMcpGate.
+        app.MapCardscapeMcp().RequireAuthorization(AgentKeyPolicy.Name);
         app.MapUserDsrAdminEndpoints();
         app.MapAuditLogEndpoints();
         app.MapUserSelfEndpoints();

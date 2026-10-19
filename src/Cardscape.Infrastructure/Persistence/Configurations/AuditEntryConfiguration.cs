@@ -19,6 +19,8 @@ internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEn
         builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Ignore(x => x.OccurredAt);
         builder.Property(x => x.ActorName).HasMaxLength(AuditEntry.NameMaxLength).IsRequired();
+        builder.Property(x => x.ActorAgentId);
+        builder.Property(x => x.ActorAgentName).HasMaxLength(AuditEntry.AgentNameMaxLength);
         builder.Property(x => x.Action).HasMaxLength(AuditEntry.ActionMaxLength).IsRequired();
         builder.Property(x => x.TargetType).HasMaxLength(AuditEntry.TargetTypeMaxLength).IsRequired();
         builder.Property(x => x.TargetName).HasMaxLength(AuditEntry.NameMaxLength).IsRequired();

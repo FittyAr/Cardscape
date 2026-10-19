@@ -3,7 +3,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Cardscape.Mcp.Observability;
 
-internal sealed class DatabaseHealthCheck(IServiceScopeFactory scopeFactory) : IHealthCheck
+public sealed class DatabaseHealthCheck(IServiceScopeFactory scopeFactory) : IHealthCheck
 {
     public const string Name = "database";
 

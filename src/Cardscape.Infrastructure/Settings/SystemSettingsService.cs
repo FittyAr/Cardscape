@@ -237,6 +237,9 @@ public sealed class SystemSettingsService : ISystemSettingsService, IDisposable
 
     private async Task SaveUnlockedAsync(StoredSettings stored, CancellationToken ct)
     {
+        // The data directory exists since construction, but an operator (or a
+        // test host's cleanup) may remove it while the process runs.
+        Directory.CreateDirectory(Path.GetDirectoryName(_filePath)!);
         string tempFile = $"{_filePath}.{Guid.NewGuid():N}.tmp";
         await File.WriteAllTextAsync(tempFile, JsonSerializer.Serialize(stored, JsonOptions), ct);
         File.Move(tempFile, _filePath, overwrite: true);

@@ -231,6 +231,7 @@ public sealed class DomainEventOutboxTests
                 [Successful, Controllable],
                 Processor,
                 new AuditTrailWriter(_services),
+                new AgentAttributionStamper(_services),
                 Clock,
                 NullLogger<DomainEventsInterceptor>.Instance);
             var options = new DbContextOptionsBuilder<CardscapeDbContext>()

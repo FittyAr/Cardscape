@@ -78,6 +78,16 @@ public static partial class ServiceCollectionExtensions
         {
             AddAdminPolicy(options, AdminOnlyPolicy.Name);
             AddAdminPolicy(options, McpSubscriptionsAdminPolicy.Name);
+
+            // The built-in MCP endpoint accepts agent keys only: a browser
+            // session or a JWT must never reach it, so every MCP call is
+            // attributable to an agent (ADR 0015).
+            options.AddPolicy(
+                AgentKeyPolicy.Name,
+                policy => policy
+                    .AddAuthenticationSchemes(Authentication.ApiTokenAuthenticationHandler.SchemeName)
+                    .RequireAuthenticatedUser()
+                    .RequireClaim(Application.Abstractions.Security.AgentIdentity.TokenIdClaim));
         });
         services.Configure<AdminAuthorizationOptions>(
             configuration.GetSection(AdminAuthorizationOptions.SectionName));
@@ -98,6 +108,12 @@ public static partial class ServiceCollectionExtensions
                 ?? "Production",
             "Development",
             StringComparison.OrdinalIgnoreCase);
+}
+
+/// <summary>Name of the policy that admits only requests made with an AI agent key.</summary>
+public static class AgentKeyPolicy
+{
+    public const string Name = "AgentKey";
 }
 
 /// <summary>Name of the policy that restricts an endpoint to administrators.</summary>

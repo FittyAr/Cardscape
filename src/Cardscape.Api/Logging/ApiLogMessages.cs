@@ -97,17 +97,11 @@ internal static partial class ApiLogMessages
     [LoggerMessage(EventId = 4070, Level = LogLevel.Warning, Message = "Rejected JoinBoard for board {BoardId}: user {UserId} is not a member.")]
     internal static partial void BoardHubJoinRejected(this ILogger logger, Guid boardId, Guid userId);
 
-    [LoggerMessage(EventId = 4080, Level = LogLevel.Debug, Message = "Cardscape:Mcp:BaseUrl is not set on the API. MCP resource subscription fan-out is disabled.")]
-    internal static partial void McpResourceBaseUrlMissing(this ILogger logger);
-
     [LoggerMessage(EventId = 4081, Level = LogLevel.Debug, Message = "Internal:Secret is not set on the API. MCP resource subscription fan-out is disabled.")]
     internal static partial void McpResourceSecretMissing(this ILogger logger);
 
     [LoggerMessage(EventId = 4082, Level = LogLevel.Warning, Message = "API->MCP board-event for {BoardId} threw")]
     internal static partial void McpBoardEventNotificationFailed(this ILogger logger, Exception exception, Guid boardId);
-
-    [LoggerMessage(EventId = 4083, Level = LogLevel.Warning, Message = "Cardscape:Mcp:BaseUrl is not set on the API. MCP subscriptions snapshot is unavailable.")]
-    internal static partial void McpSubscriptionsBaseUrlMissing(this ILogger logger);
 
     [LoggerMessage(EventId = 4084, Level = LogLevel.Warning, Message = "Internal:Secret is not set on the API. MCP subscriptions snapshot is unavailable.")]
     internal static partial void McpSubscriptionsSecretMissing(this ILogger logger);

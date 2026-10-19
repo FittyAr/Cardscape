@@ -18,7 +18,9 @@ public sealed record AuditEntryDto(
     string? WorkspaceName,
     Guid? BoardId,
     string? BoardName,
-    IReadOnlyDictionary<string, string>? Details);
+    IReadOnlyDictionary<string, string>? Details,
+    Guid? ActorAgentId = null,
+    string? ActorAgentName = null);
 
 public sealed record AuditEntryPageDto(IReadOnlyList<AuditEntryDto> Items, int Total);
 

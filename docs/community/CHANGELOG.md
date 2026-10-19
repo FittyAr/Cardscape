@@ -82,6 +82,29 @@ matrix in [`docs/roadmap/05-plan-v1.2.0.md`](../roadmap/05-plan-v1.2.0.md)
   third-party pen test + SOC 2 Type II audit are explicit
   v3.0+ work.
 
+### Added — personal AI agents over the built-in MCP server (ADR 0015)
+
+- **MCP inside the app.** The API now serves the MCP server at `/mcp`;
+  an administrator switches it on in *System settings > AI > AI agents*
+  (off by default) and can make every agent read-only. While off, `/mcp`
+  answers 404. `Cardscape.Mcp` is now a library; the old standalone
+  process lives on as `Cardscape.Mcp.Host` for operators who want it apart.
+- **One key per agent, narrowed permissions.** *AI agents* (profile menu,
+  `/account/ai-agents`, formerly *API tokens*) lets each user connect their
+  own agent and choose what it may do: `read`, `cards:write`,
+  `comments:write`, `boards:write`, `workspace:write` (the old `write`
+  still grants them all). The agent always acts as its owner, so it can
+  never exceed the roles an administrator gave that person.
+- **Attribution.** Everything an agent changes is recorded as
+  "Ivan · AI" (with the agent's name) in board and card activity, in the
+  administration audit log and its CSV export, and in server logs
+  (`ActorKind=agent`, `AgentId`, `AgentName`). New nullable columns on
+  `activities` and `audit_entries` for all four providers.
+- **Security.** On REST, an agent key now needs the full `write` scope to
+  change anything, and can never use account, security, administration or
+  setup endpoints (so it cannot mint a broader key). Previously REST did
+  not check API-token scopes at all.
+
 ### Changed — BREAKING (enum fields on the wire)
 
 - **Five response fields are now camelCase enum names instead of

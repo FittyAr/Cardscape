@@ -57,27 +57,41 @@ public static class McpToolScopePolicy
             "labels_list", "lists_list", "oauth_apps_list", "workspaces_list", "workspaces_list_invitations",
         ];
 
-        string[] writeTools =
+        // Each write tool belongs to exactly one capability an agent key can
+        // be granted (ADR 0015); the legacy "write" scope grants them all.
+        (Scope Scope, string[] Tools)[] writeTools =
         [
-            "automation_create_rule", "automation_delete_rule", "automation_disable_rule", "automation_enable_rule",
-            "boards_create", "boards_create_dashcard", "boards_delete_dashcard", "boards_disable_extension",
-            "boards_enable_extension", "boards_star", "boards_unstar", "boards_update_extension_config",
-            "cards_add_checklist_item", "cards_archive", "cards_assign", "cards_attach_label", "cards_complete",
-            "cards_create", "cards_create_checklist", "cards_delete_checklist", "cards_delete_checklist_item",
-            "cards_delete_recurrence", "cards_mirror_to", "cards_move", "cards_rename_checklist",
-            "cards_rename_checklist_item", "cards_reopen", "cards_restore", "cards_set_aging_mode",
-            "cards_set_recurrence", "cards_snooze", "cards_toggle_checklist_item", "cards_toggle_vote",
-            "cards_unsnooze", "cards_update", "comments_add", "comments_delete", "comments_edit",
-            "custom_fields_create_definition", "custom_fields_delete_definition", "custom_fields_rename_definition",
-            "custom_fields_set_value", "imports_kanban_apply", "inbox_mark_all_read", "inbox_mark_read",
-            "integrations_github_create_issue", "integrations_github_link_pr",
-            "integrations_slack_connect", "integrations_slack_unlink_channel", "invitations_accept", "labels_create",
-            "lists_create", "lists_set_limit", "oauth_apps_create", "oauth_apps_revoke",
-            "workspaces_invite", "workspaces_revoke_invitation",
+            (Scope.CardsWrite,
+            [
+                "cards_add_checklist_item", "cards_archive", "cards_assign", "cards_attach_label", "cards_complete",
+                "cards_create", "cards_create_checklist", "cards_delete_checklist", "cards_delete_checklist_item",
+                "cards_delete_recurrence", "cards_mirror_to", "cards_move", "cards_rename_checklist",
+                "cards_rename_checklist_item", "cards_reopen", "cards_restore", "cards_set_aging_mode",
+                "cards_set_recurrence", "cards_snooze", "cards_toggle_checklist_item", "cards_toggle_vote",
+                "cards_unsnooze", "cards_update", "custom_fields_set_value", "inbox_mark_all_read", "inbox_mark_read",
+            ]),
+            (Scope.CommentsWrite,
+            [
+                "comments_add", "comments_delete", "comments_edit",
+            ]),
+            (Scope.BoardsWrite,
+            [
+                "automation_create_rule", "automation_delete_rule", "automation_disable_rule", "automation_enable_rule",
+                "boards_create", "boards_create_dashcard", "boards_delete_dashcard", "boards_disable_extension",
+                "boards_enable_extension", "boards_star", "boards_unstar", "boards_update_extension_config",
+                "custom_fields_create_definition", "custom_fields_delete_definition", "custom_fields_rename_definition",
+                "imports_kanban_apply", "labels_create", "lists_create", "lists_set_limit",
+            ]),
+            (Scope.WorkspaceWrite,
+            [
+                "integrations_github_create_issue", "integrations_github_link_pr",
+                "integrations_slack_connect", "integrations_slack_unlink_channel", "invitations_accept",
+                "oauth_apps_create", "oauth_apps_revoke", "workspaces_invite", "workspaces_revoke_invitation",
+            ]),
         ];
 
         return readTools.Select(name => (name, scope: Scope.Read))
-            .Concat(writeTools.Select(name => (name, scope: Scope.Write)))
+            .Concat(writeTools.SelectMany(group => group.Tools.Select(name => (name, scope: group.Scope))))
             .ToFrozenDictionary(item => item.name, item => item.scope, StringComparer.Ordinal);
     }
 }

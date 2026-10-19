@@ -16,7 +16,7 @@ namespace Cardscape.Migrations.MySql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("Cardscape.Domain.Activities.Activity", b =>
@@ -26,6 +26,13 @@ namespace Cardscape.Migrations.MySql.Migrations
 
                     b.Property<Guid>("ActorId")
                         .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("AgentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("AgentName")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
 
                     b.Property<Guid>("BoardId")
                         .HasColumnType("char(36)");
@@ -143,6 +150,13 @@ namespace Cardscape.Migrations.MySql.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("varchar(64)");
+
+                    b.Property<Guid?>("ActorAgentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ActorAgentName")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
 
                     b.Property<string>("ActorName")
                         .IsRequired()

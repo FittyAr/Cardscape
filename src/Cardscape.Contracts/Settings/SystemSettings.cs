@@ -26,6 +26,8 @@ public sealed record SystemSettings
 
     public AiSettings Ai { get; set; } = new();
 
+    public AgentSettings Agents { get; set; } = new();
+
     public EmailSettings Email { get; set; } = new();
 
     public SeederSettings Seeder { get; set; } = new();
@@ -38,6 +40,7 @@ public sealed record SystemSettings
         Notices = Notices with { },
         Limits = Limits with { },
         Ai = Ai with { },
+        Agents = Agents with { },
         Email = Email with { },
         Seeder = Seeder with { },
     };
@@ -65,6 +68,7 @@ public sealed record SystemSettings
         (nameof(Notices), Notices),
         (nameof(Limits), Limits),
         (nameof(Ai), Ai),
+        (nameof(Agents), Agents),
         (nameof(Email), Email),
         (nameof(Seeder), Seeder),
     ];
@@ -207,6 +211,23 @@ public sealed record AiSettings
 
     [Range(64, 32_768)]
     public int MaxTokens { get; set; } = 1024;
+}
+
+/// <summary>
+/// Personal AI agents connected through the built-in MCP server (ADR 0015).
+/// Each user mints their own agent key and narrows what it may do; these
+/// switches are the administrator's ceiling over all of them.
+/// </summary>
+public sealed record AgentSettings
+{
+    /// <summary>Whether the MCP server answers at <c>/mcp</c>. Off by default.</summary>
+    public bool McpEnabled { get; set; }
+
+    /// <summary>
+    /// Whether agents may change anything. When off every agent key is
+    /// read-only, whatever permissions its owner gave it.
+    /// </summary>
+    public bool AllowWrites { get; set; } = true;
 }
 
 /// <summary>

@@ -61,6 +61,7 @@ public static partial class InfrastructureServiceCollectionExtensions
 
         services.AddScoped<DomainEventsInterceptor>();
         services.AddScoped<Persistence.Audit.AuditTrailWriter>();
+        services.AddScoped<Persistence.Audit.AgentAttributionStamper>();
         services.AddSingleton<DomainEventOutboxProcessor>();
         services.AddHostedService<DomainEventOutboxDispatcherService>();
         services.AddScoped<IExternalMessageInbox, ExternalMessageInbox>();

@@ -29,7 +29,7 @@ public static class AuditPresentation
 
     public static string Actor(AuditEntryDto entry, IStringLocalizer<SharedResource> L) =>
         entry.ActorUserId is not null
-            ? entry.ActorName
+            ? AgentLabel.Text(entry.ActorName, entry.ActorAgentName, L)
             : string.Equals(entry.ActorName, "scim", StringComparison.OrdinalIgnoreCase)
                 ? L["AuditActorScim"]
                 : L["AuditActorSystem"];

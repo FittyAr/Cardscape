@@ -10,11 +10,22 @@ namespace Cardscape.Domain.Activities;
 /// </summary>
 public sealed class Activity : Entity<ActivityId>
 {
+    public const int AgentNameMaxLength = 80;
+
     private static readonly JsonSerializerOptions PayloadJsonOptions = new(JsonSerializerDefaults.Web);
 
     public BoardId BoardId { get; private set; } = null!;
     public Guid? CardId { get; private set; }
     public Guid ActorId { get; private set; }
+
+    /// <summary>
+    /// The AI agent key the actor used, when the change was made by the
+    /// actor's agent rather than by the person (ADR 0015).
+    /// </summary>
+    public Guid? AgentId { get; private set; }
+
+    /// <summary>Snapshot of the agent's name (its key's label) when <see cref="AgentId"/> is set.</summary>
+    public string? AgentName { get; private set; }
     public ActivityKind Kind { get; private set; }
     public string PayloadJson { get; private set; } = "{}";
     public DateTimeOffset OccurredAt { get; private set; }
@@ -48,6 +59,14 @@ public sealed class Activity : Entity<ActivityId>
         string payloadJson,
         DateTimeOffset occurredAt) =>
         new(ActivityId.New(), boardId, cardId, actorId, kind, payloadJson ?? "{}", occurredAt);
+
+    /// <summary>Marks this entry as made by the actor's AI agent.</summary>
+    public void AttributeToAgent(Guid agentId, string agentName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(agentName);
+        AgentId = agentId;
+        AgentName = agentName.Length <= AgentNameMaxLength ? agentName : agentName[..AgentNameMaxLength];
+    }
 
     /// <summary>
     /// Records an activity whose payload is serialised from

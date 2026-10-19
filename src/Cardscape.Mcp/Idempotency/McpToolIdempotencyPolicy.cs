@@ -31,7 +31,7 @@ public static class McpToolIdempotencyPolicy
 
         if (string.IsNullOrWhiteSpace(toolName)
             || !McpToolScopePolicy.RequiredScopes.TryGetValue(toolName, out Scope scope)
-            || scope != Scope.Write)
+            || !scope.IsWrite())
         {
             return await next();
         }

@@ -1242,4 +1242,46 @@
   <data name="SetupDemoAccount" xml:space="preserve"><value>Demo administrator: {0} · password {1}. Every demo person uses the same password.</value></data>
   <data name="SetupDemoSignIn" xml:space="preserve"><value>Sign in to the demo</value></data>
   <data name="SetupDemoFailed" xml:space="preserve"><value>Loading the demo data failed ({0}). Check the server log, or create the administrator instead.</value></data>
+  <data name="NavAiAgents" xml:space="preserve"><value>AI agents</value></data>
+  <data name="AgentsBlurb" xml:space="preserve"><value>Connect your own AI assistant (Claude, Cursor, ...) to Cardscape. Your agent acts as you, with your permissions and never more, narrowed further by what you allow below. Everything it changes is recorded as “your name · AI”, so anyone can tell you and your agent apart.</value></data>
+  <data name="AgentsMcpDisabled" xml:space="preserve"><value>The MCP server is turned off on this instance, so agents cannot connect. Ask an administrator to turn it on in Settings &gt; AI.</value></data>
+  <data name="AgentsReadOnlyByAdmin" xml:space="preserve"><value>An administrator has limited every agent to read-only access. The write permissions you choose take effect if that limit is lifted.</value></data>
+  <data name="AgentsConnectTitle" xml:space="preserve"><value>Connect an agent</value></data>
+  <data name="AgentsConnectHelp" xml:space="preserve"><value>Add Cardscape as a remote MCP server (Streamable HTTP) in your AI client, with one of your agent keys as the bearer token.</value></data>
+  <data name="AgentsServerUrl" xml:space="preserve"><value>MCP server URL</value></data>
+  <data name="AgentsCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="AgentsCopied" xml:space="preserve"><value>Copied</value></data>
+  <data name="AgentsConfigExample" xml:space="preserve"><value>Example client configuration</value></data>
+  <data name="AgentsYourKey" xml:space="preserve"><value>your-agent-key</value></data>
+  <data name="AgentsName" xml:space="preserve"><value>Agent name</value></data>
+  <data name="AgentsNamePlaceholder" xml:space="preserve"><value>For example, Claude Desktop on my laptop</value></data>
+  <data name="AgentsPermissions" xml:space="preserve"><value>What may this agent do?</value></data>
+  <data name="AgentsPermissionsHelp" xml:space="preserve"><value>These permissions only narrow your own: the agent can never do anything you cannot do on a board or workspace.</value></data>
+  <data name="AgentsPermRead" xml:space="preserve"><value>Read</value></data>
+  <data name="AgentsPermReadHelp" xml:space="preserve"><value>See your workspaces, boards, cards, comments and activity.</value></data>
+  <data name="AgentsPermCards" xml:space="preserve"><value>Work on cards</value></data>
+  <data name="AgentsPermCardsHelp" xml:space="preserve"><value>Create, edit, move, complete and archive cards; checklists, votes, card labels and field values; mark inbox items read.</value></data>
+  <data name="AgentsPermComments" xml:space="preserve"><value>Comment</value></data>
+  <data name="AgentsPermCommentsHelp" xml:space="preserve"><value>Add comments, and edit or delete its own.</value></data>
+  <data name="AgentsPermBoards" xml:space="preserve"><value>Manage boards</value></data>
+  <data name="AgentsPermBoardsHelp" xml:space="preserve"><value>Create boards and lists, labels, custom fields, automation rules, dashboard cards, extensions and imports.</value></data>
+  <data name="AgentsPermWorkspace" xml:space="preserve"><value>Manage workspaces</value></data>
+  <data name="AgentsPermWorkspaceHelp" xml:space="preserve"><value>Invite people, manage OAuth apps and integrations (GitHub, Slack).</value></data>
+  <data name="AgentsPermAllWrites" xml:space="preserve"><value>Full write access</value></data>
+  <data name="AgentsCreate" xml:space="preserve"><value>Create agent key</value></data>
+  <data name="AgentsKeyCreated" xml:space="preserve"><value>Agent key created</value></data>
+  <data name="AgentsEmpty" xml:space="preserve"><value>You have not connected any agent yet.</value></data>
+  <data name="AgentsNew" xml:space="preserve"><value>New agent</value></data>
+  <data name="AgentsDisconnect" xml:space="preserve"><value>Disconnect</value></data>
+  <data name="AgentActorSuffix" xml:space="preserve"><value>AI</value></data>
+  <data name="AgentActorTooltip" xml:space="preserve"><value>Done by the AI agent “{0}” on this person's behalf</value></data>
+  <data name="SettingsAgentsTitle" xml:space="preserve"><value>AI agents (MCP server)</value></data>
+  <data name="SettingsAgentsDescription" xml:space="preserve"><value>Lets each user connect their own AI agent to Cardscape through the built-in Model Context Protocol server. Every user creates their own agent key on the AI agents page.</value></data>
+  <data name="SettingsAgentsMcpEnabled" xml:space="preserve"><value>Run the MCP server</value></data>
+  <data name="SettingsAgentsMcpEnabledHelp" xml:space="preserve"><value>While off, the MCP endpoint does not answer: no agent can connect, whatever keys exist.</value></data>
+  <data name="SettingsAgentsAllowWrites" xml:space="preserve"><value>Agents may change data</value></data>
+  <data name="SettingsAgentsAllowWritesHelp" xml:space="preserve"><value>When off, every agent is read-only, whatever permissions its owner gave it.</value></data>
+  <data name="SettingsAgentsEndpoint" xml:space="preserve"><value>MCP endpoint</value></data>
+  <data name="SettingsAgentsEndpointHelp" xml:space="preserve"><value>Users point their AI client here with their own agent key as the bearer token.</value></data>
+  <data name="SettingsAgentsAttributionNote" xml:space="preserve"><value>An agent always acts as its owner, never above the roles you gave that person. Its changes are recorded in board activity and the audit log as “name · AI”.</value></data>
 </root>

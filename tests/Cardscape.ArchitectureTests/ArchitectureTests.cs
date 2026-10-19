@@ -162,8 +162,9 @@ public sealed class ArchitectureTests
                 ["Cardscape.Migrations.MariaDb"] = ["Cardscape.Infrastructure"],
                 ["Cardscape.Web"] = ["Cardscape.Contracts"],
                 ["Cardscape.Seeder"] = ["Cardscape.Application", "Cardscape.Domain", "Cardscape.Infrastructure"],
-                ["Cardscape.Mcp"] = ["Cardscape.Application", "Cardscape.Infrastructure", "Cardscape.Migrations.MariaDb", "Cardscape.Migrations.MySql", "Cardscape.Migrations.PostgreSql"],
-                ["Cardscape.Api"] = ["Cardscape.Application", "Cardscape.Infrastructure", "Cardscape.Migrations.MariaDb", "Cardscape.Migrations.MySql", "Cardscape.Migrations.PostgreSql", "Cardscape.Seeder", "Cardscape.Web"],
+                ["Cardscape.Mcp"] = ["Cardscape.Application", "Cardscape.Infrastructure"],
+                ["Cardscape.Mcp.Host"] = ["Cardscape.Mcp", "Cardscape.Migrations.MariaDb", "Cardscape.Migrations.MySql", "Cardscape.Migrations.PostgreSql"],
+                ["Cardscape.Api"] = ["Cardscape.Application", "Cardscape.Infrastructure", "Cardscape.Mcp", "Cardscape.Migrations.MariaDb", "Cardscape.Migrations.MySql", "Cardscape.Migrations.PostgreSql", "Cardscape.Seeder", "Cardscape.Web"],
             };
 
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
@@ -509,10 +510,10 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void WebApiTokens_DistinguishesLoadFailureAndLoadsStatusesConcurrently()
+    public void WebAiAgents_DistinguishesLoadFailureAndLoadsStatusesConcurrently()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
-        string path = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "ApiTokens.razor");
+        string path = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "AiAgents.razor");
         string source = File.ReadAllText(path);
 
         source.Should().Contain("else if (loadError is not null)");
@@ -631,10 +632,10 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void WebApiTokens_UsesLocalizedVisibleCopyAndCultureAwareDates()
+    public void WebAiAgents_UsesLocalizedVisibleCopyAndCultureAwareDates()
     {
         DirectoryInfo repositoryRoot = FindRepositoryRoot();
-        string path = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "ApiTokens.razor");
+        string path = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages", "AiAgents.razor");
         string source = File.ReadAllText(path);
 
         string[] forbiddenLiterals =
@@ -800,7 +801,7 @@ public sealed class ArchitectureTests
         string pagesRoot = Path.Combine(repositoryRoot.FullName, "src", "Cardscape.Web", "Pages");
         Dictionary<string, string[]> requiredInputs = new(StringComparer.Ordinal)
         {
-            ["ApiTokens.razor"] = ["token-name"],
+            ["AiAgents.razor"] = ["agent-name"],
             ["Automation.razor"] = ["rule-name"],
             ["BoardDetail.razor"] = ["list-name", "board-name"],
             ["Boards.razor"] = ["b-name"],

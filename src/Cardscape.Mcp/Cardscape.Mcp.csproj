@@ -1,11 +1,31 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <AssemblyName>Cardscape.Mcp</AssemblyName>
     <RootNamespace>Cardscape.Mcp</RootNamespace>
-    <UserSecretsId>cardscape-mcp-secrets</UserSecretsId>
-    <Description>Cardscape MCP server. Model Context Protocol surface that exposes tools / resources / prompts on top of the Application layer. See docs/architecture/03-mcp-server.md and ADR 0002.</Description>
+    <!-- MCP tool and prompt classes are instantiated by the SDK per call and
+         keep instance methods by design; as an executable the analyzer
+         skipped them, as a library it would ask to make them static. -->
+    <NoWarn>$(NoWarn);CA1822</NoWarn>
+    <Description>Cardscape MCP server surface: tools / resources / prompts on top of the Application layer, plus the API-key authorization around them. Hosted inside Cardscape.Api at /mcp (see ADR 0015) or standalone by Cardscape.Mcp.Host.</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- The implicit usings Microsoft.NET.Sdk.Web adds; the sources were written against them. -->
+  <ItemGroup>
+    <Using Include="Microsoft.AspNetCore.Builder" />
+    <Using Include="Microsoft.AspNetCore.Hosting" />
+    <Using Include="Microsoft.AspNetCore.Http" />
+    <Using Include="Microsoft.AspNetCore.Routing" />
+    <Using Include="Microsoft.Extensions.Configuration" />
+    <Using Include="Microsoft.Extensions.DependencyInjection" />
+    <Using Include="Microsoft.Extensions.Hosting" />
+    <Using Include="Microsoft.Extensions.Logging" />
+    <Using Include="System.Net.Http.Json" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
@@ -14,28 +34,11 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
-    <PackageReference Include="Serilog" />
-    <PackageReference Include="Serilog.AspNetCore" />
-    <PackageReference Include="Serilog.Enrichers.Environment" />
-    <PackageReference Include="Serilog.Enrichers.Process" />
-    <PackageReference Include="Serilog.Enrichers.Span" />
-    <PackageReference Include="Serilog.Enrichers.Thread" />
-    <PackageReference Include="Serilog.Exceptions" />
-    <PackageReference Include="Serilog.Formatting.Compact" />
-    <PackageReference Include="Serilog.Settings.Configuration" />
-    <PackageReference Include="Serilog.Sinks.Async" />
-    <PackageReference Include="Serilog.Sinks.Console" />
-    <PackageReference Include="Serilog.Sinks.Debug" />
-    <PackageReference Include="Serilog.Sinks.File" />
-    <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Cardscape.Application\Cardscape.Application.csproj" />
     <ProjectReference Include="..\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
-    <ProjectReference Include="..\Cardscape.Migrations.PostgreSql\Cardscape.Migrations.PostgreSql.csproj" />
-    <ProjectReference Include="..\Cardscape.Migrations.MySql\Cardscape.Migrations.MySql.csproj" />
-    <ProjectReference Include="..\Cardscape.Migrations.MariaDb\Cardscape.Migrations.MariaDb.csproj" />
   </ItemGroup>
 
 </Project>

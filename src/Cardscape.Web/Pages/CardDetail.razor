@@ -449,7 +449,7 @@ else
                                     : a.ActorId.ToString();
                                 string payload = FormatActivityPayload(a);
                                 <li class="cs-activity">
-                                    <strong>@actorLabel</strong>
+                                    <ActorLabel Name="@actorLabel" AgentName="@a.AgentName" Class="cs-activity-actor" />
                                     <span>@ActivityKindLabel(a.Kind)</span>
                                     @if (!string.IsNullOrWhiteSpace(payload))
                                     {

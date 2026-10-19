@@ -1,13 +1,17 @@
 using System.Security.Claims;
+using Cardscape.Application.Abstractions.Security;
 using Cardscape.Domain.Security;
 using ModelContextProtocol;
 
 namespace Cardscape.Mcp.Authorization;
 
-/// <summary>Enforces exact API-token scopes at the MCP transport boundary.</summary>
+/// <summary>
+/// Enforces agent-key scopes at the MCP transport boundary: the exact scope,
+/// or the legacy <c>write</c> scope for any write capability.
+/// </summary>
 public static class McpScopeAuthorization
 {
-    public const string ScopeClaimType = "scope";
+    public const string ScopeClaimType = AgentIdentity.ScopeClaim;
     public const string ForbiddenErrorCode = "mcp.scope.forbidden";
 
     public static void Authorize(Scope required, string operation, ClaimsPrincipal? principal)
@@ -15,9 +19,7 @@ public static class McpScopeAuthorization
         ArgumentException.ThrowIfNullOrWhiteSpace(operation);
 
         string requiredValue = required.ToWire();
-        bool granted = principal?.Identity?.IsAuthenticated == true
-            && principal.FindAll(ScopeClaimType)
-                .Any(claim => string.Equals(claim.Value, requiredValue, StringComparison.Ordinal));
+        bool granted = ScopeExtensions.Grants(AgentIdentity.GrantedScopes(principal), required);
 
         if (!granted)
         {

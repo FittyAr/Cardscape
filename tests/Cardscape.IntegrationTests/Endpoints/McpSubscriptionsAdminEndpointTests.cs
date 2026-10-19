@@ -21,7 +21,7 @@ namespace Cardscape.IntegrationTests.Endpoints;
 /// <list type="bullet">
 ///   <item>unauthenticated → 401</item>
 ///   <item>authenticated, NOT admin → 403</item>
-///   <item>authenticated, admin, MCP unreachable → 503</item>
+///   <item>authenticated, admin → 200 with the in-process MCP snapshot (503 only when an external MCP host is configured and unreachable)</item>
 ///   <item>authenticated, admin, MCP reachable → 200</item>
 /// </list>
 ///
@@ -58,21 +58,20 @@ public sealed class McpSubscriptionsAdminEndpointTests
     }
 
     [Fact]
-    public async Task GetSnapshot_For_Admin_Returns_503_When_Mcp_Unreachable()
+    public async Task GetSnapshot_For_Admin_Returns_The_InProcess_Snapshot()
     {
         // The McpSubscriptionsAdminPolicy passes (the test
         // user is promoted to admin and re-logs in to
-        // get a JWT with the fresh is_admin claim). The
-        // McpSubscriptionsClient then returns null because
-        // the MCP process is not running in the in-process
-        // test host, and the endpoint translates that to
-        // 503 + a structured problem body.
+        // get a JWT with the fresh is_admin claim). Without
+        // Cardscape:Mcp:BaseUrl the MCP server is the one the
+        // API hosts itself (ADR 0015), so the snapshot comes
+        // straight from the in-process broadcaster.
         HttpClient client = await CreateAdminClientAsync();
         HttpResponseMessage resp = await client.GetAsync(
             "api/admin/mcp-subscriptions/", TestContext.Current.CancellationToken);
-        resp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
         string body = await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        body.Should().Contain("MCP subscriptions snapshot is unavailable");
+        body.Should().Contain("subscribers").And.Contain("capturedAt");
     }
 
     [Fact]
@@ -83,15 +82,15 @@ public sealed class McpSubscriptionsAdminEndpointTests
         // minted before the promotion is admitted as soon as
         // the row changes — and, symmetrically, a revoked
         // admin is refused on the next request. The policy
-        // passes and the endpoint answers 503 because the MCP
-        // process is not running in the test host.
+        // passes and the endpoint answers with the in-process
+        // MCP server's snapshot.
         (HttpClient client, string email) = await CreateRegisteredClientAsync();
         await _factory.Services.PromoteUserToAdminAsync(
             email, TestContext.Current.CancellationToken);
         // Same client, same token — no re-login.
         HttpResponseMessage resp = await client.GetAsync(
             "api/admin/mcp-subscriptions/", TestContext.Current.CancellationToken);
-        resp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable,
+        resp.StatusCode.Should().Be(HttpStatusCode.OK,
             "the live users-table lookup wins over the stale is_admin=false claim");
     }
 

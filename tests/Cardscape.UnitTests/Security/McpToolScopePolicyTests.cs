@@ -8,6 +8,11 @@ public sealed class McpToolScopePolicyTests
     [Theory]
     [InlineData("boards_get", "read")]
     [InlineData("cards_create", "write")]
+    [InlineData("cards_create", "cards:write")]
+    [InlineData("comments_add", "comments:write")]
+    [InlineData("boards_create", "boards:write")]
+    [InlineData("workspaces_invite", "workspace:write")]
+    [InlineData("workspaces_invite", "write")]
     public void Authorize_WithRequiredScope_AllowsTool(string toolName, string scope)
     {
         ClaimsPrincipal principal = CreatePrincipal(scope);
@@ -19,7 +24,11 @@ public sealed class McpToolScopePolicyTests
 
     [Theory]
     [InlineData("boards_get", "write", "read")]
-    [InlineData("cards_create", "read", "write")]
+    [InlineData("cards_create", "read", "cards:write")]
+    [InlineData("boards_get", "cards:write", "read")]
+    [InlineData("comments_add", "cards:write", "comments:write")]
+    [InlineData("boards_create", "cards:write", "boards:write")]
+    [InlineData("workspaces_invite", "boards:write", "workspace:write")]
     public void Authorize_WithoutRequiredScope_DeniesTool(
         string toolName,
         string grantedScope,
@@ -65,6 +74,14 @@ public sealed class McpToolScopePolicyTests
 
         act.Should().Throw<ModelContextProtocol.McpException>()
             .WithMessage($"*{McpToolScopePolicy.ForbiddenErrorCode}*");
+    }
+
+    [Fact]
+    public void Catalog_ClassifiesEveryWriteToolIntoOneCapability()
+    {
+        McpToolScopePolicy.RequiredScopes.Values
+            .Should().NotContain(Cardscape.Domain.Security.Scope.Write,
+                "the legacy write scope grants capabilities; no tool should require it directly");
     }
 
     [Fact]

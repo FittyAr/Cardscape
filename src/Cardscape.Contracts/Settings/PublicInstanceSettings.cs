@@ -23,7 +23,9 @@ public sealed record PublicInstanceSettings(
     NoticeSeverity AnnouncementSeverity,
     string? MaintenanceMessage,
     bool AiEnabled,
-    IReadOnlyList<string>? AllowedEmailDomains = null)
+    IReadOnlyList<string>? AllowedEmailDomains = null,
+    bool McpEnabled = false,
+    bool AgentWritesAllowed = true)
 {
     [JsonIgnore]
     public bool IsInMaintenance => MaintenanceMessage is not null;

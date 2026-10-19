@@ -1242,4 +1242,46 @@
   <data name="SetupDemoAccount" xml:space="preserve"><value>Administrador de demo: {0} · contraseña {1}. Todas las personas de la demo usan la misma contraseña.</value></data>
   <data name="SetupDemoSignIn" xml:space="preserve"><value>Entrar a la demo</value></data>
   <data name="SetupDemoFailed" xml:space="preserve"><value>No se pudieron cargar los datos de demo ({0}). Revisá el log del servidor, o creá el administrador.</value></data>
+  <data name="NavAiAgents" xml:space="preserve"><value>Agentes IA</value></data>
+  <data name="AgentsBlurb" xml:space="preserve"><value>Conectá tu propio asistente de IA (Claude, Cursor, …) a Cardscape. Tu agente actúa como vos, con tus permisos y nunca más, y lo que permitas abajo lo limita todavía más. Todo lo que cambie queda registrado como “tu nombre · IA”, así cualquiera distingue lo que hiciste vos de lo que hizo tu agente.</value></data>
+  <data name="AgentsMcpDisabled" xml:space="preserve"><value>El servidor MCP está apagado en esta instancia, así que los agentes no pueden conectarse. Pedí a un administrador que lo active en Configuración &gt; IA.</value></data>
+  <data name="AgentsReadOnlyByAdmin" xml:space="preserve"><value>Un administrador limitó todos los agentes a solo lectura. Los permisos de escritura que elijas se aplican si se levanta ese límite.</value></data>
+  <data name="AgentsConnectTitle" xml:space="preserve"><value>Conectar un agente</value></data>
+  <data name="AgentsConnectHelp" xml:space="preserve"><value>Agregá Cardscape como servidor MCP remoto (Streamable HTTP) en tu cliente de IA, con una de tus claves de agente como token bearer.</value></data>
+  <data name="AgentsServerUrl" xml:space="preserve"><value>URL del servidor MCP</value></data>
+  <data name="AgentsCopy" xml:space="preserve"><value>Copiar</value></data>
+  <data name="AgentsCopied" xml:space="preserve"><value>Copiado</value></data>
+  <data name="AgentsConfigExample" xml:space="preserve"><value>Ejemplo de configuración del cliente</value></data>
+  <data name="AgentsYourKey" xml:space="preserve"><value>tu-clave-de-agente</value></data>
+  <data name="AgentsName" xml:space="preserve"><value>Nombre del agente</value></data>
+  <data name="AgentsNamePlaceholder" xml:space="preserve"><value>Por ejemplo, Claude Desktop en mi notebook</value></data>
+  <data name="AgentsPermissions" xml:space="preserve"><value>¿Qué puede hacer este agente?</value></data>
+  <data name="AgentsPermissionsHelp" xml:space="preserve"><value>Estos permisos solo recortan los tuyos: el agente nunca puede hacer algo que vos no puedas hacer en un tablero o espacio de trabajo.</value></data>
+  <data name="AgentsPermRead" xml:space="preserve"><value>Leer</value></data>
+  <data name="AgentsPermReadHelp" xml:space="preserve"><value>Ver tus espacios de trabajo, tableros, tarjetas, comentarios y actividad.</value></data>
+  <data name="AgentsPermCards" xml:space="preserve"><value>Trabajar en tarjetas</value></data>
+  <data name="AgentsPermCardsHelp" xml:space="preserve"><value>Crear, editar, mover, completar y archivar tarjetas; checklists, votos, etiquetas y campos de la tarjeta; marcar la bandeja como leída.</value></data>
+  <data name="AgentsPermComments" xml:space="preserve"><value>Comentar</value></data>
+  <data name="AgentsPermCommentsHelp" xml:space="preserve"><value>Agregar comentarios y editar o borrar los propios.</value></data>
+  <data name="AgentsPermBoards" xml:space="preserve"><value>Gestionar tableros</value></data>
+  <data name="AgentsPermBoardsHelp" xml:space="preserve"><value>Crear tableros y listas, etiquetas, campos personalizados, reglas de automatización, tarjetas de panel, extensiones e importaciones.</value></data>
+  <data name="AgentsPermWorkspace" xml:space="preserve"><value>Gestionar espacios de trabajo</value></data>
+  <data name="AgentsPermWorkspaceHelp" xml:space="preserve"><value>Invitar personas, gestionar apps OAuth e integraciones (GitHub, Slack).</value></data>
+  <data name="AgentsPermAllWrites" xml:space="preserve"><value>Escritura completa</value></data>
+  <data name="AgentsCreate" xml:space="preserve"><value>Crear clave del agente</value></data>
+  <data name="AgentsKeyCreated" xml:space="preserve"><value>Clave del agente creada</value></data>
+  <data name="AgentsEmpty" xml:space="preserve"><value>Todavía no conectaste ningún agente.</value></data>
+  <data name="AgentsNew" xml:space="preserve"><value>Nuevo agente</value></data>
+  <data name="AgentsDisconnect" xml:space="preserve"><value>Desconectar</value></data>
+  <data name="AgentActorSuffix" xml:space="preserve"><value>IA</value></data>
+  <data name="AgentActorTooltip" xml:space="preserve"><value>Hecho por el agente IA “{0}” en nombre de esta persona</value></data>
+  <data name="SettingsAgentsTitle" xml:space="preserve"><value>Agentes IA (servidor MCP)</value></data>
+  <data name="SettingsAgentsDescription" xml:space="preserve"><value>Permite que cada usuario conecte su propio agente de IA a Cardscape mediante el servidor Model Context Protocol integrado. Cada usuario crea su propia clave de agente en la página Agentes IA.</value></data>
+  <data name="SettingsAgentsMcpEnabled" xml:space="preserve"><value>Ejecutar el servidor MCP</value></data>
+  <data name="SettingsAgentsMcpEnabledHelp" xml:space="preserve"><value>Mientras esté apagado, el endpoint MCP no responde: ningún agente puede conectarse, existan las claves que existan.</value></data>
+  <data name="SettingsAgentsAllowWrites" xml:space="preserve"><value>Los agentes pueden modificar datos</value></data>
+  <data name="SettingsAgentsAllowWritesHelp" xml:space="preserve"><value>Si está apagado, todos los agentes son de solo lectura, sin importar los permisos que les dio su dueño.</value></data>
+  <data name="SettingsAgentsEndpoint" xml:space="preserve"><value>Endpoint MCP</value></data>
+  <data name="SettingsAgentsEndpointHelp" xml:space="preserve"><value>Los usuarios apuntan su cliente de IA acá, con su propia clave de agente como token bearer.</value></data>
+  <data name="SettingsAgentsAttributionNote" xml:space="preserve"><value>Un agente siempre actúa como su dueño, nunca por encima de los roles que le diste a esa persona. Sus cambios quedan en la actividad de los tableros y en el registro de auditoría como “nombre · IA”.</value></data>
 </root>

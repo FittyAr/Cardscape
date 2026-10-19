@@ -14,7 +14,8 @@ namespace Cardscape.Infrastructure.Persistence.Interceptors;
 /// Collects domain events from tracked aggregate roots and stores one durable
 /// delivery per broadcaster in the same <c>SaveChangesAsync</c> transaction,
 /// together with the administration audit entries they imply
-/// (<see cref="AuditTrailWriter"/>).
+/// (<see cref="AuditTrailWriter"/>), marked as an AI agent's when the caller
+/// used an agent key (<see cref="AgentAttributionStamper"/>).
 /// Also normalises entity state for new owned/child rows that EF
 /// mis-marks as <see cref="EntityState.Modified"/> when their parent
 /// navigation changes.
@@ -23,6 +24,7 @@ internal sealed class DomainEventsInterceptor(
     IEnumerable<IDomainEventBroadcaster> broadcasters,
     DomainEventOutboxProcessor outboxProcessor,
     AuditTrailWriter auditTrail,
+    AgentAttributionStamper agentAttribution,
     IClock clock,
     ILogger<DomainEventsInterceptor> logger) : SaveChangesInterceptor
 {
@@ -37,6 +39,10 @@ internal sealed class DomainEventsInterceptor(
             // (and therefore the same transaction) as the change it
             // describes, while the request's caller is still known.
             await auditTrail.RecordAsync(eventData.Context, cancellationToken);
+
+            // A change made with an AI agent key is the owner's AI's change,
+            // not the owner's: stamp the new activity and audit rows.
+            agentAttribution.Stamp(eventData.Context);
 
             // EF occasionally marks a brand-new child entity (e.g. a
             // BoardStar added to Board._stars) as Modified instead

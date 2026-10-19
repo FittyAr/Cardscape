@@ -2,6 +2,8 @@ using Cardscape.Domain.Activities;
 
 namespace Cardscape.Application.Activities.Queries;
 
+/// <param name="AgentId">Set when the actor's AI agent made the change (ADR 0015).</param>
+/// <param name="AgentName">The agent's name when <paramref name="AgentId"/> is set.</param>
 public sealed record ActivityDto(
     Guid Id,
     Guid BoardId,
@@ -10,7 +12,9 @@ public sealed record ActivityDto(
     string? ActorDisplayName,
     ActivityKind Kind,
     string PayloadJson,
-    DateTimeOffset OccurredAt)
+    DateTimeOffset OccurredAt,
+    Guid? AgentId = null,
+    string? AgentName = null)
 {
     public static ActivityDto FromEntity(Activity activity, IReadOnlyDictionary<Guid, string> actorDisplayNames) => new(
         activity.Id.Value,
@@ -20,7 +24,9 @@ public sealed record ActivityDto(
         actorDisplayNames.GetValueOrDefault(activity.ActorId, string.Empty),
         activity.Kind,
         activity.PayloadJson,
-        activity.OccurredAt);
+        activity.OccurredAt,
+        activity.AgentId,
+        activity.AgentName);
 }
 
 /// <summary>

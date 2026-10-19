@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Cardscape.Api.Logging;
 using Cardscape.Infrastructure.Configuration;
+using Cardscape.Mcp.Realtime;
 
 namespace Cardscape.Api.Realtime;
 
@@ -14,10 +15,15 @@ namespace Cardscape.Api.Realtime;
 /// SignalR fan-out. The board change is durable in the
 /// database — AI clients can re-fetch the resource on
 /// their next poll if they miss the push.
+///
+/// Without <c>Cardscape:Mcp:BaseUrl</c> the MCP server is the one hosted
+/// inside this process (ADR 0015) and the notification goes straight to its
+/// <see cref="McpResourceBroadcaster"/>.
 /// </summary>
 public sealed class HttpMcpResourceNotifier(
     IHttpClientFactory factory,
     IConfiguration config,
+    McpResourceBroadcaster inProcess,
     ILogger<HttpMcpResourceNotifier> logger)
 {
 
@@ -38,7 +44,7 @@ public sealed class HttpMcpResourceNotifier(
 
         if (string.IsNullOrWhiteSpace(_baseUrl))
         {
-            logger.McpResourceBaseUrlMissing();
+            await inProcess.BroadcastAsync(boardId, ct);
             return;
         }
 

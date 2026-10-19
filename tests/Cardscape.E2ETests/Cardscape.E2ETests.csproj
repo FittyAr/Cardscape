@@ -30,7 +30,7 @@
     <ProjectReference Include="..\..\src\Cardscape.Application\Cardscape.Application.csproj" />
     <ProjectReference Include="..\..\src\Cardscape.Infrastructure\Cardscape.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Cardscape.Api\Cardscape.Api.csproj" />
-    <ProjectReference Include="..\..\src\Cardscape.Mcp\Cardscape.Mcp.csproj" />
+    <ProjectReference Include="..\..\src\Cardscape.Mcp.Host\Cardscape.Mcp.Host.csproj" />
   </ItemGroup>
 
 </Project>

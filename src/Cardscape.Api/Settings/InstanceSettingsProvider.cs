@@ -44,6 +44,8 @@ public sealed class InstanceSettingsProvider(
             AnnouncementSeverity: notices.AnnouncementSeverity,
             MaintenanceMessage: notices.MaintenanceEnabled ? notices.MaintenanceMessage ?? string.Empty : null,
             AiEnabled: current.Ai.Enabled,
-            AllowedEmailDomains: current.Access.AllowedDomainList());
+            AllowedEmailDomains: current.Access.AllowedDomainList(),
+            McpEnabled: current.Agents.McpEnabled,
+            AgentWritesAllowed: current.Agents.AllowWrites);
     }
 }
